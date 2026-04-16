@@ -16,7 +16,7 @@
   - _Boundary: templates/.gitignore_
 
 - [ ] 2. Core: rw_light.py への cmd_init() 実装
-- [ ] 2.1 (P) モジュールレベル定数とユーティリティ関数の追加
+- [x] 2.1 (P) モジュールレベル定数とユーティリティ関数の追加
   - `VAULT_DIRS` リスト定数（全22ディレクトリの相対パス）をモジュールレベルに追加する
   - `DEV_ROOT` 定数を `str(Path(__file__).resolve().parent.parent)` で定義する
   - `is_existing_vault(path: str) -> bool` 関数を追加する（CLAUDE.md または index.md の存在で判定）
