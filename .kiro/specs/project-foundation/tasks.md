@@ -9,7 +9,7 @@
   - _Requirements: 2.2, 2.3, 2.4_
   - _Boundary: templates/CLAUDE.md_
 
-- [ ] 1.2 (P) Vault用.gitignoreテンプレート（templates/.gitignore）の作成
+- [x] 1.2 (P) Vault用.gitignoreテンプレート（templates/.gitignore）の作成
   - `raw/incoming/`、`.obsidian/workspace.json`、`.obsidian/workspace-mobile.json`、`.DS_Store` を除外エントリとして記述する
   - `templates/.gitignore` が存在し、指定された4エントリを含む
   - _Requirements: 3.2, 3.3_
