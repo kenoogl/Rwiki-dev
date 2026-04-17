@@ -83,7 +83,7 @@
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
   - _Boundary: README.md_
 
-- [ ] 3.2 (P) CHANGELOG.md の作成
+- [x] 3.2 (P) CHANGELOG.md の作成
   - Keep a Changelog形式（`## [バージョン] - 日付`）で作成する
   - 初版として project-foundation スペックの成果物（rw init コマンド、templates/CLAUDE.md、Vaultディレクトリ構造、Git初期化、シンボリックリンク、README.md）を記録する
   - CHANGELOG.md が存在し、Keep a Changelog形式の見出しと初版エントリを含む
