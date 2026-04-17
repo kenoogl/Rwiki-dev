@@ -1088,20 +1088,27 @@ def cmd_init(args: list[str]) -> int:
       print(f"[WARN] ディレクトリ作成失敗 '{dir_path}': {e}")
   report["dirs_created"] = dirs_created
 
-  # --- CLAUDE.md コピー ---
+  # --- CLAUDE.md コピー（re-init 時はバックアップ後上書き） ---
   dest_claude = os.path.join(target_path, "CLAUDE.md")
   try:
+    if os.path.exists(dest_claude):
+      os.rename(dest_claude, dest_claude + ".bak")
     shutil.copy2(tmpl_claude, dest_claude)
     report["templates_copied"].append("CLAUDE.md")
   except Exception as e:
     print(f"[WARN] CLAUDE.md コピー失敗: {e}")
     report["skipped"].append({"item": "CLAUDE.md", "reason": str(e)})
 
-  # --- AGENTS/ コピー ---
+  # --- AGENTS/ コピー（re-init 時はバックアップ後上書き） ---
   tmpl_agents = os.path.join(DEV_ROOT, "templates", "AGENTS")
   dest_agents = os.path.join(target_path, "AGENTS")
   if os.path.isdir(tmpl_agents):
     try:
+      if os.path.isdir(dest_agents):
+        bak_agents = dest_agents + ".bak"
+        if os.path.isdir(bak_agents):
+          shutil.rmtree(bak_agents)
+        os.rename(dest_agents, bak_agents)
       shutil.copytree(tmpl_agents, dest_agents, dirs_exist_ok=True)
       report["templates_copied"].append("AGENTS/")
     except Exception as e:

@@ -52,7 +52,7 @@
   - _Depends: 1.2, 2.1, 2.2_
   - _Boundary: scripts/rw_light.py (cmd_init 関数: Git初期化〜.gitignoreコピー〜シンボリックリンク作成〜report dict 追記・出力)_
 
-- [ ] 2.4 re-initフロー（バックアップポリシー）の実装
+- [x] 2.4 re-initフロー（バックアップポリシー）の実装
   - タスク2.2のテンプレートコピー処理およびタスク2.3のシンボリックリンク作成処理を修正し、re-init時のバックアップロジックを各ステップの直前に挿入する（cross-cutting修正）
   - 既存Vault上書き確認後の各アセットバックアップポリシー:
     - CLAUDE.md: 既存を `CLAUDE.md.bak` に `os.rename()` でリネーム後、新テンプレートをコピー（タスク2.2のコピー処理を修正）
