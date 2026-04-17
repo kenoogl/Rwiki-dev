@@ -1016,3 +1016,242 @@ class TestParseFixResponse:
         assert isinstance(result, dict)
         assert "fixes" in result
         assert "files" in result
+
+
+# ---------------------------------------------------------------------------
+# cmd_query_extract() のテスト
+# ---------------------------------------------------------------------------
+
+MOCK_EXTRACT_RESPONSE = json.dumps({
+    "query": {"text": "test question", "query_type": "fact", "scope": "all", "date": "2026-04-17"},
+    "answer": {"content": "# Answer\n\nThis is the answer with enough content to pass lint.\n\n## Details\n\nMore content here."},
+    "evidence": {"blocks": [{"source": "wiki/concepts/test.md", "excerpt": "relevant text"}]},
+    "metadata": {"query_id": "old-id", "query_type": "fact", "scope": "all", "sources": ["wiki/concepts/test.md"], "created_at": "2026-04-17T12:00:00+09:00"},
+    "referenced_pages": ["wiki/concepts/test.md"]
+})
+
+
+def _setup_mock_vault_for_query(tmp_path, monkeypatch):
+    """cmd_query_extract テスト用の Vault 環境を設定する。"""
+    # ディレクトリ構造作成
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    agents_dir = tmp_path / "AGENTS"
+    agents_dir.mkdir()
+    review_query_dir = tmp_path / "review" / "query"
+    review_query_dir.mkdir(parents=True)
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+
+    # wiki ファイル（小規模: 3ファイル）
+    (wiki_dir / "concepts").mkdir()
+    (wiki_dir / "concepts" / "test.md").write_text(
+        "# Test\n\nThis is a test wiki page with content.", encoding="utf-8"
+    )
+
+    # CLAUDE.md（マッピング表含む）
+    claude_md = tmp_path / "CLAUDE.md"
+    claude_md.write_text(
+        "| Task | Agent | Policy | Execution Mode |\n"
+        "|---|---|---|---|\n"
+        "| query_extract | AGENTS/query_extract.md | AGENTS/naming.md | Prompt |\n",
+        encoding="utf-8",
+    )
+
+    # AGENTS/ ファイル
+    (agents_dir / "query_extract.md").write_text("AGENT query_extract", encoding="utf-8")
+    (agents_dir / "naming.md").write_text("POLICY naming", encoding="utf-8")
+
+    # index.md
+    (tmp_path / "index.md").write_text("# Index\n\n- [[test]]", encoding="utf-8")
+
+    # rw_light のグローバル変数を tmp_path に向ける
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(review_query_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_light, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
+
+    return tmp_path, review_query_dir
+
+
+class TestCmdQueryExtract:
+    """cmd_query_extract() のユニットテスト"""
+
+    def test_empty_question_returns_1(self, tmp_path, monkeypatch):
+        """空の質問文 → return 1"""
+        _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        result = rw_light.cmd_query_extract([])
+        assert result == 1
+
+    def test_empty_string_question_returns_1(self, tmp_path, monkeypatch):
+        """空文字列の質問文 → return 1"""
+        _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        result = rw_light.cmd_query_extract([""])
+        assert result == 1
+
+    def test_whitespace_only_question_returns_1(self, tmp_path, monkeypatch):
+        """空白のみの質問文 → return 1"""
+        _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        result = rw_light.cmd_query_extract(["   "])
+        assert result == 1
+
+    def test_wiki_missing_returns_1(self, tmp_path, monkeypatch):
+        """wiki/ が存在しない → return 1"""
+        _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        # wiki/ を削除
+        import shutil
+        shutil.rmtree(str(tmp_path / "wiki"))
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+        result = rw_light.cmd_query_extract(["test question"])
+        assert result == 1
+
+    def test_claude_md_missing_returns_1(self, tmp_path, monkeypatch):
+        """CLAUDE.md が存在しない → return 1"""
+        _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        # CLAUDE.md を削除
+        (tmp_path / "CLAUDE.md").unlink()
+        result = rw_light.cmd_query_extract(["test question"])
+        assert result == 1
+
+    def test_duplicate_query_id_returns_1(self, tmp_path, monkeypatch):
+        """同一 query_id ディレクトリが既存 → return 1"""
+        _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+
+        # 事前に同一 query_id ディレクトリを作成
+        query_id = rw_light.generate_query_id("test question")
+        (review_query_dir / query_id).mkdir(parents=True)
+
+        result = rw_light.cmd_query_extract(["test question"])
+        assert result == 1
+
+    def test_success_creates_4_files(self, tmp_path, monkeypatch):
+        """成功パス: 4ファイルが review/query/<query_id>/ に作成されること"""
+        _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+
+        result = rw_light.cmd_query_extract(["test question"])
+
+        # 終了コードは 0 または 2（lint 結果による）
+        assert result in (0, 2)
+
+        # query_id ディレクトリが作成されていること
+        query_id = rw_light.generate_query_id("test question")
+        query_dir = review_query_dir / query_id
+        assert query_dir.is_dir(), f"query_dir not found: {query_dir}"
+
+        # 4ファイルが存在すること
+        for fname in ["question.md", "answer.md", "evidence.md", "metadata.json"]:
+            assert (query_dir / fname).exists(), f"Missing file: {fname}"
+
+    def test_success_with_scope_arg(self, tmp_path, monkeypatch):
+        """--scope 引数が正しく解析されること"""
+        _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+
+        scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
+        called_scopes = []
+
+        def mock_call_claude(p):
+            return MOCK_EXTRACT_RESPONSE
+
+        monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+
+        result = rw_light.cmd_query_extract(["test question", "--scope", scope_path])
+        assert result in (0, 2)
+
+    def test_success_with_type_arg(self, tmp_path, monkeypatch):
+        """--type 引数が正しく解析されること"""
+        _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+
+        result = rw_light.cmd_query_extract(["test question", "--type", "fact"])
+        assert result in (0, 2)
+
+    def test_large_wiki_triggers_2stage(self, tmp_path, monkeypatch):
+        """ファイル数>20 かつ scope=None の場合: 2段階方式が呼び出されること"""
+        _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+
+        # wiki/ に 21 ファイル追加
+        wiki_dir = tmp_path / "wiki"
+        for i in range(21):
+            (wiki_dir / f"page_{i:02d}.md").write_text(
+                f"# Page {i}\n\nContent {i}.", encoding="utf-8"
+            )
+
+        call_count = []
+        stage1_response = json.dumps({"identified_pages": ["wiki/concepts/test.md"]})
+
+        def mock_call_claude(p):
+            call_count.append(p)
+            if len(call_count) == 1:
+                # ステージ1: 関連ページ特定
+                return stage1_response
+            else:
+                # ステージ2: 本プロンプト
+                return MOCK_EXTRACT_RESPONSE
+
+        monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+
+        result = rw_light.cmd_query_extract(["test question"])
+        assert result in (0, 2)
+        # 2回 call_claude が呼ばれていること（2段階方式）
+        assert len(call_count) == 2, f"Expected 2 calls, got {len(call_count)}"
+
+    def test_lint_fail_returns_2(self, tmp_path, monkeypatch):
+        """lint status=FAIL の場合: return 2"""
+        _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+
+        # lint_single_query_dir を FAIL を返すモックに差し替え
+        def mock_lint(query_dir):
+            return {
+                "target": query_dir,
+                "status": "FAIL",
+                "errors": ["QL001 missing file: answer.md"],
+                "warnings": [],
+                "infos": [],
+                "checks": [{"id": "QL001", "severity": "ERROR", "message": "missing file"}],
+            }
+
+        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+
+        result = rw_light.cmd_query_extract(["test question"])
+        assert result == 2
+
+    def test_lint_pass_returns_0(self, tmp_path, monkeypatch):
+        """lint status=PASS の場合: return 0"""
+        _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+
+        # lint_single_query_dir を PASS を返すモックに差し替え
+        def mock_lint(query_dir):
+            return {
+                "target": query_dir,
+                "status": "PASS",
+                "errors": [],
+                "warnings": [],
+                "infos": [],
+                "checks": [],
+            }
+
+        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+
+        result = rw_light.cmd_query_extract(["test question"])
+        assert result == 0

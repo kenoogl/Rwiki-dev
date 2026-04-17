@@ -68,7 +68,7 @@
   - _Boundary: Output_
 
 - [ ] 3. サブコマンド実装
-- [ ] 3.1 cmd_query_extract を実装する
+- [x] 3.1 cmd_query_extract を実装する
   - 引数パース（question, --scope, --type）。質問文が空の場合はエラー終了（exit 1）
   - 前提条件チェック（wiki/ 存在、CLAUDE.md/AGENTS/ 存在、warn_if_dirty_paths(["wiki"], "query extract")）
   - generate_query_id() で query_id 生成。同一 query_id ディレクトリ存在時はエラーメッセージ（手動削除で再生成可能である旨を案内）を表示して exit 1

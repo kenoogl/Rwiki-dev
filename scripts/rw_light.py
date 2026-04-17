@@ -1192,6 +1192,176 @@ def parse_fix_response(response: str) -> dict[str, Any]:
 
 
 # -------------------------
+# query commands
+# -------------------------
+
+def cmd_query_extract(args: list[str]) -> int:
+    """rw query extract サブコマンド。終了コードを返す。"""
+    # 1. 引数パース（question, --scope, --type）
+    question: str = ""
+    scope: str | None = None
+    query_type: str | None = None
+
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--scope":
+            i += 1
+            if i < len(args):
+                scope = args[i]
+        elif a == "--type":
+            i += 1
+            if i < len(args):
+                query_type = args[i]
+        elif not a.startswith("--") and not question:
+            question = a
+        i += 1
+
+    # 質問文が空の場合はエラー終了
+    if not question or not question.strip():
+        print("[ERROR] question is required")
+        return 1
+
+    # 2. 前提条件チェック
+    # wiki/ 存在チェック
+    if not os.path.isdir(WIKI):
+        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {WIKI}")
+        return 1
+
+    # CLAUDE.md 存在チェック
+    if not os.path.exists(os.path.join(ROOT, "CLAUDE.md")):
+        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(ROOT, 'CLAUDE.md')}")
+        return 1
+
+    # AGENTS/ 存在チェック
+    if not os.path.isdir(os.path.join(ROOT, "AGENTS")):
+        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(ROOT, 'AGENTS')}")
+        return 1
+
+    warn_if_dirty_paths(["wiki"], "query extract")
+
+    # 3. query_id 生成
+    try:
+        query_id = generate_query_id(question)
+    except ValueError as e:
+        print(f"[ERROR] {e}")
+        return 1
+
+    query_dir = os.path.join(QUERY_REVIEW, query_id)
+    if os.path.isdir(query_dir):
+        print(
+            f"[ERROR] query_id '{query_id}' のディレクトリが既に存在します: {query_dir}\n"
+            f"手動で削除することで再生成できます: rm -rf {query_dir}"
+        )
+        return 1
+
+    # 4. load_task_prompts
+    try:
+        task_prompts = load_task_prompts("query_extract")
+    except (ValueError, FileNotFoundError) as e:
+        print(f"[ERROR] load_task_prompts 失敗: {e}")
+        return 1
+
+    # 5. wiki サイズチェックと wiki_content 取得
+    try:
+        num_files = len(list_md_files(WIKI))
+        if num_files > 20 and scope is None:
+            # 2段階方式: ステージ1で関連ページ特定
+            try:
+                index_content = read_text(INDEX_MD)
+            except FileNotFoundError:
+                index_content = ""
+
+            stage1_prompt = (
+                f"{task_prompts}\n\n"
+                f"## Wiki Index\n\n{index_content}\n\n"
+                f"## 質問\n\n{question}\n\n"
+                "## タスク\n\n"
+                "上記の wiki インデックスと質問から、回答に関連するwikiページのパスを特定してください。\n"
+                '{"identified_pages": ["wiki/path1.md", "wiki/path2.md"]} の形式でJSONのみを出力してください。'
+            )
+            stage1_response = call_claude(stage1_prompt)
+
+            # ステージ1のレスポンスから関連ページを特定
+            identified_pages: list[str] = []
+            try:
+                stage1_data = json.loads(_strip_code_block(stage1_response))
+                identified_pages = stage1_data.get("identified_pages", [])
+            except (json.JSONDecodeError, AttributeError):
+                identified_pages = []
+
+            if identified_pages:
+                # 特定されたページを読み込む
+                parts: list[str] = []
+                for page_path in identified_pages:
+                    full_path = os.path.join(ROOT, page_path) if not os.path.isabs(page_path) else page_path
+                    if os.path.isfile(full_path):
+                        parts.append(f"<!-- file: {page_path} -->\n{read_text(full_path)}")
+                    elif os.path.isfile(page_path):
+                        parts.append(f"<!-- file: {page_path} -->\n{read_text(page_path)}")
+                wiki_content = "\n\n".join(parts) if parts else index_content
+            else:
+                # フォールバック: index.md を使用
+                wiki_content = index_content
+        else:
+            wiki_content = read_wiki_content(scope)
+    except FileNotFoundError as e:
+        print(f"[ERROR] wiki コンテンツ読み込み失敗: {e}")
+        return 1
+    except ValueError as e:
+        print(f"[ERROR] wiki コンテンツ読み込み失敗: {e}")
+        return 1
+
+    # 6. プロンプト構築
+    prompt = build_query_prompt(
+        task_prompts,
+        question,
+        wiki_content,
+        output_format="json",
+        query_type=query_type,
+    )
+
+    # 7. Claude 呼び出し
+    try:
+        response = call_claude(prompt)
+    except RuntimeError as e:
+        print(f"[ERROR] Claude 呼び出し失敗: {e}")
+        return 1
+
+    # 8. レスポンスパース
+    try:
+        data = parse_extract_response(response)
+    except ValueError as e:
+        print(f"[ERROR] レスポンスパース失敗: {e}")
+        return 1
+
+    # 9. アーティファクト書き出し
+    try:
+        file_paths = write_query_artifacts(query_id, data)
+    except Exception as e:
+        print(f"[ERROR] アーティファクト書き出し失敗: {e}")
+        return 1
+
+    # 10. lint 検証
+    lint_result = lint_single_query_dir(query_dir)
+
+    # 11. 結果に基づいて終了コードを返す
+    if lint_result["status"] == "FAIL":
+        print(f"[WARN] lint 検証失敗: {lint_result['target']}")
+        for err in lint_result["errors"]:
+            print(f"  [ERROR] {err}")
+        print("[INFO] アーティファクトは生成されましたが lint に失敗しました。")
+        for p in file_paths:
+            print(f"  {relpath(p)}")
+        return 2
+    else:
+        print(f"[DONE] query extract 完了: {query_id}")
+        for p in file_paths:
+            print(f"  {relpath(p)}")
+        return 0
+
+
+# -------------------------
 # query lint
 # -------------------------
 def count_evidence_blocks(text: str) -> int:
