@@ -8,7 +8,7 @@
 
 ---
 
-- [ ] 1. Prompt Engine 基盤
+- [x] 1. Prompt Engine 基盤
 - [x] 1.1 CLAUDE.md マッピングパーサーとエージェント+ポリシーローダーを実装する
   - CLAUDE.md のマッピング表をパースし、タスク名→エージェント+ポリシーの辞書を返す parse_agent_mapping() を実装する
   - ヘッダー列名（Task, Agent, Policy, Execution Mode）で位置特定し、列順変更に耐性を持たせる
@@ -47,7 +47,7 @@
   - _Depends: 1.1_
   - _Boundary: Prompt Engine_
 
-- [ ] 2. クエリ出力ユーティリティ
+- [x] 2. クエリ出力ユーティリティ
 - [x] 2.1 query_id 生成とアーティファクト書き出しを実装する
   - generate_query_id(question) を実装する（YYYYMMDD-slugify(question) 形式、既存 slugify 使用、80文字上限）
   - 空の質問文に対するバリデーション（slugify("") → "untitled" のケースを防ぐ）
@@ -67,7 +67,7 @@
   - _Requirements: 6.2_
   - _Boundary: Output_
 
-- [ ] 3. サブコマンド実装
+- [x] 3. サブコマンド実装
 - [x] 3.1 cmd_query_extract を実装する
   - 引数パース（question, --scope, --type）。質問文が空の場合はエラー終了（exit 1）
   - 前提条件チェック（wiki/ 存在、CLAUDE.md/AGENTS/ 存在、warn_if_dirty_paths(["wiki"], "query extract")）
@@ -99,7 +99,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 5.1, 5.2, 5.5, 5.6, 6.3_
   - _Depends: 3.1_
 
-- [ ] 4. CLI 統合
+- [x] 4. CLI 統合
 - [x] 4.1 ディスパッチャ・usage・例外ハンドラを更新する
   - main() に if cmd == "query" ブロックを追加し、sys.argv[2] で extract/answer/fix にルーティングする
   - rw query（サブコマンドなし）で query 用 usage を表示する
@@ -108,7 +108,7 @@
   - rw query extract/answer/fix が正しくルーティングされ、rw query が usage を表示し、ValueError が適切にキャッチされること
   - _Requirements: 1.9, 6.5_
 
-- [ ] 5. 実行モード更新
+- [x] 5. 実行モード更新
 - [x] 5.1 templates/CLAUDE.md のマッピング表で query_extract・query_answer・query_fix の Execution Mode を CLI (Hybrid) に更新する
   - 更新後のマッピング表に3行が CLI (Hybrid) と記載されていること
   - _Requirements: 8.1_
@@ -124,7 +124,7 @@
   - _Requirements: 8.3_
   - _Boundary: Execution Mode 更新_
 
-- [ ] 6. ドキュメント・CHANGELOG 更新
+- [x] 6. ドキュメント・CHANGELOG 更新
 - [x] 6.1 docs/user-guide.md に rw query extract・rw query answer・rw query fix の使用方法・引数・出力例を追記する
   - user-guide.md に3サブコマンドのリファレンスが追記されていること
   - _Requirements: 7.1_
@@ -133,7 +133,7 @@
   - CHANGELOG.md に cli-query の変更内容が記載されていること
   - _Requirements: 7.2_
 
-- [ ] 7. 統合検証
+- [x] 7. 統合検証
 - [x] 7.1 extract → lint → fix ワークフローの E2E 検証を実施する
   - extract で4ファイル生成 → lint で FAIL を意図的に含むケースを作成 → fix で修復 → lint 再検証で PASS を確認する
   - AGENTS/ファイル更新反映: AGENTS/ファイル変更後に extract を実行し、変更がプロンプトに反映されることを確認する（Req 9.2）
