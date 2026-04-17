@@ -27,7 +27,7 @@
   - _Requirements: 6.1_
   - _Boundary: Prompt Engine_
 
-- [ ] 1.3 Wiki コンテンツ収集関数を実装する
+- [x] 1.3 Wiki コンテンツ収集関数を実装する
   - read_wiki_content(scope) を実装する。scope 指定時は指定ページのみ読み込む
   - scope=None かつ wiki/ のファイル数が 20 以下の場合は全ファイルを読み込む
   - scope=None かつ wiki/ のファイル数が 20 超の場合は、cmd_* がオーケストレーションする2段階方式のために index.md のみを返す（2段階方式のフロー制御は cmd_* 側の責務）。cmd_* が2段階方式の要否を判別できるよう、戻り値をタプル `(content: str, is_complete: bool)` とするか、cmd_* 側でファイル数を事前チェックする方式とするかを実装時に決定する

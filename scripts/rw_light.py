@@ -903,6 +903,45 @@ def call_claude(prompt: str) -> str:
     return result.stdout.strip()
 
 
+def read_wiki_content(scope: str | None) -> str:
+    """wiki/ のコンテンツを収集して返す。
+
+    Args:
+        scope: 指定時はそのページのみ読み込む。None 時は全ファイル読み込み（小規模 wiki）
+               またはindex.md のみ（大規模 wiki、ファイル数 > 20）。
+
+    Returns:
+        wiki コンテンツ文字列。
+
+    Raises:
+        FileNotFoundError: wiki/ が存在しない場合、または scope で指定されたページが存在しない場合
+        ValueError: wiki/ に .md ファイルが存在しない場合
+    """
+    if scope is not None:
+        # scope 指定: そのファイルのみ読み込む
+        if not os.path.isfile(scope):
+            raise FileNotFoundError(f"指定されたwikiページが見つかりません: {scope}")
+        return read_text(scope)
+
+    # scope=None: wiki/ ディレクトリを対象とする
+    if not os.path.isdir(WIKI):
+        raise FileNotFoundError(f"wiki/ ディレクトリが見つかりません: {WIKI}")
+
+    md_files = list_md_files(WIKI)
+    if not md_files:
+        raise ValueError(f"wiki/ に .md ファイルが存在しません: {WIKI}")
+
+    # 小規模 wiki (≤20): 全ファイルを結合して返す
+    if len(md_files) <= 20:
+        parts: list[str] = []
+        for path in md_files:
+            parts.append(f"<!-- file: {relpath(path)} -->\n{read_text(path)}")
+        return "\n\n".join(parts)
+
+    # 大規模 wiki (>20): index.md のみを返す（cmd_* が2段階方式でオーケストレーションする）
+    return read_text(INDEX_MD)
+
+
 # -------------------------
 # query lint
 # -------------------------

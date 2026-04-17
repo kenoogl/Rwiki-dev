@@ -334,3 +334,141 @@ class TestCallClaude:
             rw_light.call_claude("test prompt")
 
         assert "specific error detail" in str(exc_info.value)
+
+
+# ---------------------------------------------------------------------------
+# read_wiki_content() のテスト
+# ---------------------------------------------------------------------------
+
+class TestReadWikiContent:
+    """read_wiki_content() のユニットテスト"""
+
+    def _setup_wiki(self, tmp_path, monkeypatch, num_files=1, with_index=True):
+        """tmp_path 配下に wiki/ ディレクトリと .md ファイルを作成し、ROOT を向ける。"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+
+        # index.md を ROOT 直下に作成
+        if with_index:
+            index_md = tmp_path / "index.md"
+            index_md.write_text("# Index\n\nThis is the index.", encoding="utf-8")
+
+        # .md ファイルを指定数作成
+        for i in range(num_files):
+            md_file = wiki_dir / f"page_{i:02d}.md"
+            md_file.write_text(f"# Page {i}\n\nContent of page {i}.", encoding="utf-8")
+
+        # ROOT / WIKI / INDEX_MD を tmp_path に向ける
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+
+        return wiki_dir
+
+    # --- 正常系: scope 指定 ---
+
+    def test_scope_existing_file_returns_content(self, tmp_path, monkeypatch):
+        """scope 指定・ファイル存在: そのファイルの内容を返すこと"""
+        wiki_dir = self._setup_wiki(tmp_path, monkeypatch)
+        scope_path = str(wiki_dir / "page_00.md")
+
+        result = rw_light.read_wiki_content(scope_path)
+
+        assert "Content of page 0" in result
+
+    def test_scope_returns_only_specified_file(self, tmp_path, monkeypatch):
+        """scope 指定時: 指定ファイルの内容のみ返すこと（他ファイルは含まない）"""
+        wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=3)
+        scope_path = str(wiki_dir / "page_00.md")
+
+        result = rw_light.read_wiki_content(scope_path)
+
+        assert "Content of page 0" in result
+        assert "Content of page 1" not in result
+        assert "Content of page 2" not in result
+
+    # --- エラー系: scope 指定 ---
+
+    def test_scope_missing_file_raises_file_not_found(self, tmp_path, monkeypatch):
+        """scope 指定・ファイル不在: FileNotFoundError を raise すること"""
+        self._setup_wiki(tmp_path, monkeypatch)
+        missing_path = str(tmp_path / "wiki" / "nonexistent.md")
+
+        with pytest.raises(FileNotFoundError):
+            rw_light.read_wiki_content(missing_path)
+
+    # --- エラー系: scope=None ---
+
+    def test_scope_none_wiki_missing_raises_file_not_found(self, tmp_path, monkeypatch):
+        """scope=None・wiki/ 不在: FileNotFoundError を raise すること"""
+        # wiki/ を作らずに ROOT のみ設定
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+
+        with pytest.raises(FileNotFoundError):
+            rw_light.read_wiki_content(None)
+
+    def test_scope_none_no_md_files_raises_value_error(self, tmp_path, monkeypatch):
+        """scope=None・.md ファイルゼロ: ValueError を raise すること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        # .md ファイルなし（.txt ファイルのみ）
+        (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
+
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+
+        with pytest.raises(ValueError):
+            rw_light.read_wiki_content(None)
+
+    # --- 正常系: scope=None, 小規模 wiki (≤20) ---
+
+    def test_scope_none_small_wiki_returns_all_content(self, tmp_path, monkeypatch):
+        """scope=None・ファイル数≤20: 全ファイル内容を結合して返すこと"""
+        wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=3)
+
+        result = rw_light.read_wiki_content(None)
+
+        assert "Content of page 0" in result
+        assert "Content of page 1" in result
+        assert "Content of page 2" in result
+
+    def test_scope_none_exactly_20_files_returns_all(self, tmp_path, monkeypatch):
+        """scope=None・ファイル数=20: 全ファイル内容を返すこと（境界値）"""
+        wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=20)
+
+        result = rw_light.read_wiki_content(None)
+
+        for i in range(20):
+            assert f"Content of page {i}" in result
+
+    # --- 正常系: scope=None, 大規模 wiki (>20) ---
+
+    def test_scope_none_large_wiki_returns_index_only(self, tmp_path, monkeypatch):
+        """scope=None・ファイル数>20: index.md の内容のみ返すこと"""
+        wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=21)
+
+        result = rw_light.read_wiki_content(None)
+
+        # index.md の内容を含む
+        assert "This is the index" in result
+        # wiki/ ファイルの内容は含まない
+        assert "Content of page 0" not in result
+
+    def test_scope_none_exactly_21_files_returns_index(self, tmp_path, monkeypatch):
+        """scope=None・ファイル数=21: index.md のみ返すこと（境界値）"""
+        wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=21)
+
+        result = rw_light.read_wiki_content(None)
+
+        assert "This is the index" in result
+        assert "Content of page" not in result
+
+    def test_scope_none_large_wiki_index_missing_raises_file_not_found(self, tmp_path, monkeypatch):
+        """scope=None・ファイル数>20・index.md 不在: FileNotFoundError を raise すること"""
+        wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=21, with_index=False)
+
+        with pytest.raises(FileNotFoundError):
+            rw_light.read_wiki_content(None)
