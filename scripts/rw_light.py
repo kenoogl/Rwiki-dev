@@ -729,6 +729,162 @@ def cmd_approve() -> int:
 
 
 # -------------------------
+# Prompt Engine
+# -------------------------
+
+def parse_agent_mapping(claude_md_path: str) -> dict[str, dict[str, Any]]:
+    """CLAUDE.md のマッピング表をパースし、タスク→エージェント+ポリシーの辞書を返す。
+
+    パース手順:
+    1. CLAUDE.md を read_text() で読み込む
+    2. ヘッダー列名（Task, Agent, Policy, Execution Mode）でテーブル位置と列順を特定
+    3. 各データ行を解析し、Policy 列はカンマ区切りでリスト化
+
+    バリデーション:
+    - 必須列（Task, Agent, Policy）が存在すること
+    - 各行の Agent パスが空でないこと
+
+    Returns:
+        {"query_extract": {"agent": "AGENTS/query_extract.md",
+                           "policies": ["AGENTS/naming.md", "AGENTS/page_policy.md"],
+                           "mode": "Prompt"}, ...}
+
+    Raises:
+        ValueError: マッピング表が見つからない、必須列が欠落、またはパース不能な場合
+    """
+    content = read_text(claude_md_path)
+
+    # マッピングテーブルのヘッダー行を探す
+    header_line: str | None = None
+    header_line_idx: int = -1
+    lines = content.splitlines()
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        # ヘッダー候補: Task, Agent, Policy の3列が全て含まれているか
+        cells = [c.strip() for c in stripped.strip("|").split("|")]
+        lower_cells = [c.lower() for c in cells]
+        if "task" in lower_cells and "agent" in lower_cells and "policy" in lower_cells:
+            header_line = stripped
+            header_line_idx = i
+            break
+
+    if header_line is None:
+        raise ValueError(
+            f"CLAUDE.md のマッピング表が見つかりません: {claude_md_path}"
+        )
+
+    # 列インデックスを特定
+    header_cells = [c.strip() for c in header_line.strip("|").split("|")]
+    lower_header = [c.lower() for c in header_cells]
+
+    required_cols = ["task", "agent", "policy"]
+    for col in required_cols:
+        if col not in lower_header:
+            raise ValueError(
+                f"CLAUDE.md のマッピング表に必須列 '{col}' が見つかりません"
+            )
+
+    idx_task = lower_header.index("task")
+    idx_agent = lower_header.index("agent")
+    idx_policy = lower_header.index("policy")
+    # Execution Mode 列はオプション
+    idx_mode = lower_header.index("execution mode") if "execution mode" in lower_header else None
+
+    mapping: dict[str, dict[str, Any]] = {}
+
+    # ヘッダー行の次の行からデータ行を処理
+    for line in lines[header_line_idx + 1:]:
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            # テーブル終端
+            break
+        # 区切り行（|---|---|...）をスキップ
+        if re.match(r"^\|[-|\s:]+\|$", stripped):
+            continue
+
+        cells = [c.strip() for c in stripped.strip("|").split("|")]
+        # 列数が不足している場合はスキップ
+        max_required = max(idx_task, idx_agent, idx_policy)
+        if len(cells) <= max_required:
+            continue
+
+        task_name = cells[idx_task].strip()
+        agent_path = cells[idx_agent].strip()
+        policy_raw = cells[idx_policy].strip()
+        mode = cells[idx_mode].strip() if idx_mode is not None and idx_mode < len(cells) else ""
+
+        if not task_name:
+            continue
+
+        if not agent_path:
+            raise ValueError(
+                f"CLAUDE.md マッピング表の行 '{task_name}' に Agent パスが空です"
+            )
+
+        # Policy はカンマ区切りでリスト化
+        policies = [p.strip() for p in policy_raw.split(",") if p.strip()]
+
+        mapping[task_name] = {
+            "agent": agent_path,
+            "policies": policies,
+            "mode": mode,
+        }
+
+    if not mapping:
+        raise ValueError(
+            f"CLAUDE.md のマッピング表にデータ行が見つかりません: {claude_md_path}"
+        )
+
+    return mapping
+
+
+def load_task_prompts(task_name: str) -> str:
+    """タスクに必要なエージェント+ポリシーを CLAUDE.md マッピングに基づいて読み込み、結合して返す。
+
+    手順:
+    1. parse_agent_mapping() でマッピングを取得
+    2. task_name に対応するエージェントファイルを読み込む
+    3. 対応するポリシーを全て読み込む
+    4. エージェント + ポリシーを結合して返す
+
+    Raises:
+        ValueError: task_name がマッピング表に存在しない場合
+        FileNotFoundError: エージェントまたはポリシーファイルが存在しない場合
+    """
+    claude_md_path = os.path.join(ROOT, "CLAUDE.md")
+    mapping = parse_agent_mapping(claude_md_path)
+
+    if task_name not in mapping:
+        raise ValueError(
+            f"タスク '{task_name}' は CLAUDE.md のマッピング表に存在しません"
+        )
+
+    entry = mapping[task_name]
+    agent_path = os.path.join(ROOT, entry["agent"])
+    policy_paths = [os.path.join(ROOT, p) for p in entry["policies"]]
+
+    if not os.path.isfile(agent_path):
+        raise FileNotFoundError(
+            f"エージェントファイルが見つかりません: {agent_path}"
+        )
+
+    for pol_path in policy_paths:
+        if not os.path.isfile(pol_path):
+            raise FileNotFoundError(
+                f"ポリシーファイルが見つかりません: {pol_path}"
+            )
+
+    parts: list[str] = [read_text(agent_path)]
+    for pol_path in policy_paths:
+        parts.append(read_text(pol_path))
+
+    return "\n\n".join(parts)
+
+
+# -------------------------
 # query lint
 # -------------------------
 def count_evidence_blocks(text: str) -> int:
