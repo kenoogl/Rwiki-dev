@@ -1758,6 +1758,125 @@ def cmd_lint_query(args: list[str]) -> int:
     return 0
 
 
+def cmd_query_fix(args: list[str]) -> int:
+    """rw query fix サブコマンド。終了コードを返す。"""
+    # 1. 引数パース（query_id）
+    if not args:
+        print("[ERROR] query_id is required")
+        return 1
+
+    query_id = args[0]
+
+    # 2. 前提条件チェック
+    query_dir = os.path.join(QUERY_REVIEW, query_id)
+    if not os.path.isdir(query_dir):
+        print(f"[ERROR] query_id ディレクトリが見つかりません: {query_dir}")
+        return 1
+
+    if not os.path.exists(os.path.join(ROOT, "CLAUDE.md")):
+        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(ROOT, 'CLAUDE.md')}")
+        return 1
+
+    if not os.path.isdir(os.path.join(ROOT, "AGENTS")):
+        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(ROOT, 'AGENTS')}")
+        return 1
+
+    warn_if_dirty_paths(["wiki"], "query fix")
+
+    # 3. 事前 lint
+    pre_lint = lint_single_query_dir(query_dir)
+    if not pre_lint["errors"]:
+        print(f"[INFO] 修復不要: {query_id} は lint 検証をパスしています")
+        return 0
+
+    # 4. load_task_prompts
+    try:
+        task_prompts = load_task_prompts("query_fix")
+    except (ValueError, FileNotFoundError) as e:
+        print(f"[ERROR] load_task_prompts 失敗: {e}")
+        return 1
+
+    # 5. wiki コンテンツ取得
+    try:
+        wiki_content = read_wiki_content(scope=None)
+    except FileNotFoundError as e:
+        print(f"[ERROR] wiki コンテンツ読み込み失敗: {e}")
+        return 1
+    except ValueError as e:
+        print(f"[ERROR] wiki コンテンツ読み込み失敗: {e}")
+        return 1
+
+    # 6. 既存アーティファクト読み込み
+    artifact_paths = {
+        "question.md": os.path.join(query_dir, "question.md"),
+        "answer.md": os.path.join(query_dir, "answer.md"),
+        "evidence.md": os.path.join(query_dir, "evidence.md"),
+        "metadata.json": os.path.join(query_dir, "metadata.json"),
+    }
+    existing_artifacts: dict[str, str] = {}
+    for filename, path in artifact_paths.items():
+        if os.path.exists(path):
+            existing_artifacts[filename] = read_text(path)
+
+    # 7. プロンプト構築
+    prompt = build_query_prompt(
+        task_prompts,
+        question="",
+        wiki_content=wiki_content,
+        output_format="json",
+        lint_results=pre_lint,
+        existing_artifacts=existing_artifacts,
+    )
+
+    # 8. Claude 呼び出し
+    try:
+        response = call_claude(prompt)
+    except RuntimeError as e:
+        print(f"[ERROR] Claude 呼び出し失敗: {e}")
+        return 1
+
+    # 9. レスポンスパース
+    try:
+        fix_data = parse_fix_response(response)
+    except ValueError as e:
+        print(f"[ERROR] レスポンスパース失敗: {e}")
+        return 1
+
+    # 10. 変更が必要なファイルのみ書き出し（None はスキップ）
+    written_files: list[str] = []
+    for filename, content in fix_data["files"].items():
+        if content is not None:
+            file_path = os.path.join(query_dir, filename)
+            write_text(file_path, content)
+            written_files.append(filename)
+
+    # 11. 修復結果と skipped 項目を報告
+    print(f"[FIX] {query_id}: {len(written_files)} ファイルを修復")
+    for fix in fix_data.get("fixes", []):
+        print(f"  [{fix.get('ql_code', '?')}] {fix.get('file', '?')}: {fix.get('action', '')}")
+
+    skipped = fix_data.get("skipped", [])
+    if skipped:
+        print(f"[SKIP] 修復不可能な項目: {len(skipped)} 件")
+        for skip in skipped:
+            print(f"  [{skip.get('ql_code', '?')}] {skip.get('reason', '')}")
+
+    # 12. post-fix lint 再検証
+    post_lint = lint_single_query_dir(query_dir)
+
+    # 13. post-fix lint 結果を表示
+    print(f"\n[POST-FIX LINT] status: {post_lint['status']}")
+    for err in post_lint.get("errors", []):
+        print(f"  [ERROR] {err}")
+    for warn in post_lint.get("warnings", []):
+        print(f"  [WARN] {warn}")
+
+    # 14. 終了コード決定
+    if post_lint["errors"]:
+        return 2
+    return 0
+
+
 # -------------------------
 # cmd_init
 # -------------------------

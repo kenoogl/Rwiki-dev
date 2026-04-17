@@ -88,7 +88,7 @@
   - rw query answer "test question" が stdout に回答と参照ページを表示し、review/query/ にファイルを生成しないこと
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 3.3 cmd_query_fix を実装する
+- [x] 3.3 cmd_query_fix を実装する
   - 引数パース（query_id）
   - 前提条件チェック（query_id ディレクトリ存在、CLAUDE.md/AGENTS/ 存在、warn_if_dirty_paths(["wiki"], "query fix")）
   - lint_single_query_dir(query_dir) で事前 lint。FAIL==0 なら「修復不要」exit 0

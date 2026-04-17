@@ -1414,3 +1414,276 @@ class TestCmdQueryAnswer:
 
         assert result == 0
         assert received_scopes == [scope_path]
+
+
+# ---------------------------------------------------------------------------
+# cmd_query_fix() のテスト
+# ---------------------------------------------------------------------------
+
+MOCK_FIX_RESPONSE = json.dumps({
+    "fixes": [{"file": "answer.md", "ql_code": "QL006", "action": "expanded content"}],
+    "files": {
+        "question.md": None,
+        "answer.md": "# Answer\n\nExpanded answer content with enough length to pass lint validation checks.\n\n## Details\n\nMore detailed content here for evidence.",
+        "evidence.md": None,
+        "metadata.json": None,
+    },
+    "skipped": [],
+})
+
+
+def _setup_mock_vault_for_fix(tmp_path, monkeypatch):
+    """cmd_query_fix テスト用の Vault 環境を設定する。"""
+    # ディレクトリ構造作成
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    agents_dir = tmp_path / "AGENTS"
+    agents_dir.mkdir()
+    review_query_dir = tmp_path / "review" / "query"
+    review_query_dir.mkdir(parents=True)
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+
+    # wiki ファイル
+    (wiki_dir / "concepts").mkdir()
+    (wiki_dir / "concepts" / "test.md").write_text(
+        "# Test\n\nThis is a test wiki page with content.", encoding="utf-8"
+    )
+
+    # CLAUDE.md（マッピング表含む）
+    claude_md = tmp_path / "CLAUDE.md"
+    claude_md.write_text(
+        "| Task | Agent | Policy | Execution Mode |\n"
+        "|---|---|---|---|\n"
+        "| query_fix | AGENTS/query_fix.md | AGENTS/naming.md | Prompt |\n",
+        encoding="utf-8",
+    )
+
+    # AGENTS/ ファイル
+    (agents_dir / "query_fix.md").write_text("AGENT query_fix", encoding="utf-8")
+    (agents_dir / "naming.md").write_text("POLICY naming", encoding="utf-8")
+
+    # index.md
+    (tmp_path / "index.md").write_text("# Index\n\n- [[test]]", encoding="utf-8")
+
+    # query_id ディレクトリと4ファイルを作成
+    query_id = "20260417-test-query"
+    query_dir = review_query_dir / query_id
+    query_dir.mkdir(parents=True)
+
+    (query_dir / "question.md").write_text(
+        "query: test question\nquery_type: fact\nscope: all\ndate: 2026-04-17\n",
+        encoding="utf-8",
+    )
+    (query_dir / "answer.md").write_text(
+        "Short.",
+        encoding="utf-8",
+    )
+    (query_dir / "evidence.md").write_text(
+        "source: wiki/concepts/test.md\nsome evidence text here",
+        encoding="utf-8",
+    )
+    (query_dir / "metadata.json").write_text(
+        json.dumps({
+            "query_id": query_id,
+            "query_type": "fact",
+            "scope": "all",
+            "sources": ["wiki/concepts/test.md"],
+            "created_at": "2026-04-17T12:00:00",
+        }, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    # rw_light のグローバル変数を tmp_path に向ける
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(review_query_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_light, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
+
+    return tmp_path, review_query_dir, query_id, query_dir
+
+
+class TestCmdQueryFix:
+    """cmd_query_fix() のユニットテスト"""
+
+    def test_missing_query_id_dir_returns_1(self, tmp_path, monkeypatch):
+        """query_id ディレクトリが存在しない → return 1 (Req 6.3)"""
+        _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+        result = rw_light.cmd_query_fix(["nonexistent-query-id"])
+        assert result == 1
+
+    def test_claude_md_missing_returns_1(self, tmp_path, monkeypatch):
+        """CLAUDE.md が存在しない → return 1"""
+        _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+        (tmp_path / "CLAUDE.md").unlink()
+        result = rw_light.cmd_query_fix([query_id])
+        assert result == 1
+
+    def test_no_lint_errors_returns_0_with_message(self, tmp_path, monkeypatch, capsys):
+        """lint エラーなし（PASS）→ 修復不要メッセージを表示して return 0 (Req 3.7)"""
+        _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+
+        def mock_lint(_query_dir, **kwargs):
+            return {
+                "target": _query_dir,
+                "status": "PASS",
+                "errors": [],
+                "warnings": [],
+                "infos": [],
+                "checks": [],
+            }
+
+        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+        result = rw_light.cmd_query_fix([query_id])
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "修復不要" in captured.out
+
+    def test_success_fix_returns_0(self, tmp_path, monkeypatch):
+        """lint FAIL → fix → post-fix PASS → return 0"""
+        _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+
+        lint_call_count = [0]
+
+        def mock_lint(_query_dir, **kwargs):
+            lint_call_count[0] += 1
+            if lint_call_count[0] == 1:
+                # 事前 lint: FAIL
+                return {
+                    "target": _query_dir,
+                    "status": "FAIL",
+                    "errors": ["QL006 answer.md is empty or too short"],
+                    "warnings": [],
+                    "infos": [],
+                    "checks": [{"id": "QL006", "severity": "ERROR", "message": "answer.md is empty or too short"}],
+                }
+            else:
+                # 事後 lint: PASS
+                return {
+                    "target": _query_dir,
+                    "status": "PASS",
+                    "errors": [],
+                    "warnings": [],
+                    "infos": [],
+                    "checks": [],
+                }
+
+        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+        result = rw_light.cmd_query_fix([query_id])
+        assert result == 0
+
+    def test_non_none_files_written_none_skipped(self, tmp_path, monkeypatch):
+        """non-None ファイルは書き出され、None ファイルはスキップされること (Req 5.2)"""
+        _, _, query_id, query_dir = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+
+        original_answer_content = (query_dir / "question.md").read_text(encoding="utf-8")
+
+        def mock_lint(_query_dir, **kwargs):
+            return {
+                "target": _query_dir,
+                "status": "FAIL",
+                "errors": ["QL006 answer.md is empty or too short"],
+                "warnings": [],
+                "infos": [],
+                "checks": [{"id": "QL006", "severity": "ERROR", "message": "answer.md is empty or too short"}],
+            }
+
+        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+        rw_light.cmd_query_fix([query_id])
+
+        # answer.md (non-None) は更新されていること
+        new_answer = (query_dir / "answer.md").read_text(encoding="utf-8")
+        fix_data = json.loads(MOCK_FIX_RESPONSE)
+        assert new_answer == fix_data["files"]["answer.md"]
+
+        # question.md (None) は変更されていないこと
+        assert (query_dir / "question.md").read_text(encoding="utf-8") == original_answer_content
+
+    def test_skipped_items_reported(self, tmp_path, monkeypatch, capsys):
+        """skipped 項目が報告されること"""
+        _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+
+        fix_response_with_skipped = json.dumps({
+            "fixes": [{"file": "answer.md", "ql_code": "QL006", "action": "expanded content"}],
+            "files": {
+                "question.md": None,
+                "answer.md": "# Answer\n\nExpanded answer content here with enough text to pass.\n\n## Details\n\nMore here.",
+                "evidence.md": None,
+                "metadata.json": None,
+            },
+            "skipped": [{"ql_code": "QL009", "reason": "Cannot auto-fix source references"}],
+        })
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: fix_response_with_skipped)
+
+        def mock_lint(_query_dir, **kwargs):
+            return {
+                "target": _query_dir,
+                "status": "FAIL",
+                "errors": ["QL006 answer too short"],
+                "warnings": [],
+                "infos": [],
+                "checks": [],
+            }
+
+        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+        rw_light.cmd_query_fix([query_id])
+
+        captured = capsys.readouterr()
+        assert "QL009" in captured.out or "Cannot auto-fix" in captured.out
+
+    def test_post_fix_lint_fail_returns_2(self, tmp_path, monkeypatch):
+        """post-fix lint FAIL → return 2 (Req 3.8, 3.9)"""
+        _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+
+        def mock_lint(_query_dir, **kwargs):
+            # 事前も事後も FAIL のまま
+            return {
+                "target": _query_dir,
+                "status": "FAIL",
+                "errors": ["QL006 answer.md still too short"],
+                "warnings": [],
+                "infos": [],
+                "checks": [],
+            }
+
+        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+        result = rw_light.cmd_query_fix([query_id])
+        assert result == 2
+
+    def test_no_files_written_to_wiki(self, tmp_path, monkeypatch):
+        """wiki/ ディレクトリには何も書き出されないこと (Req 5.2)"""
+        _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+
+        wiki_dir = tmp_path / "wiki"
+        # wiki/ の初期ファイルリストを記録
+        initial_wiki_files = set(str(p) for p in wiki_dir.rglob("*") if p.is_file())
+
+        def mock_lint(_query_dir, **kwargs):
+            return {
+                "target": _query_dir,
+                "status": "FAIL",
+                "errors": ["QL006 answer too short"],
+                "warnings": [],
+                "infos": [],
+                "checks": [],
+            }
+
+        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+        rw_light.cmd_query_fix([query_id])
+
+        # wiki/ に新しいファイルが作成されていないこと
+        final_wiki_files = set(str(p) for p in wiki_dir.rglob("*") if p.is_file())
+        assert initial_wiki_files == final_wiki_files, (
+            f"wiki/ に新しいファイルが作成された: {final_wiki_files - initial_wiki_files}"
+        )
