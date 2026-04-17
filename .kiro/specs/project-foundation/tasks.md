@@ -40,7 +40,7 @@
   - _Depends: 1.1, 1.2, 2.1_
   - _Boundary: scripts/rw_light.py (cmd_init 関数: 引数解析〜テンプレートチェック〜ターゲットパス作成〜Vault検出〜ディレクトリ生成〜テンプレートコピー〜初期ファイル生成 + report dict 初期化)_
 
-- [ ] 2.3 Git初期化、.gitignore配置、シンボリックリンク作成、完了レポートの実装
+- [x] 2.3 Git初期化、.gitignore配置、シンボリックリンク作成、完了レポートの実装
   - `.git/` が存在しない場合、`subprocess.run(["git", "init"], cwd=target)` でGitリポジトリを初期化する（既存時はスキップ）。git init 失敗時は警告を表示し、処理を続行する
   - `.gitignore` が存在しない場合、`templates/.gitignore` を `shutil.copy2()` でコピーする（既存時はスキップ）
   - `DEV_ROOT/scripts/rw_light.py` への絶対パスシンボリックリンクを `target/scripts/rw` として `os.symlink()` で作成する

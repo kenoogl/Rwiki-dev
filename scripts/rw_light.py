@@ -1133,6 +1133,78 @@ def cmd_init(args: list[str]) -> int:
   else:
     report["skipped"].append({"item": "log.md", "reason": "既存ファイルを保護"})
 
+  # --- Git 初期化 ---
+  git_dir = os.path.join(target_path, ".git")
+  if not os.path.exists(git_dir):
+    try:
+      result = subprocess.run(
+        ["git", "init"], cwd=target_path, capture_output=True, text=True
+      )
+      if result.returncode == 0:
+        report["git_init"] = "initialized"
+      else:
+        print(f"[WARN] git init 失敗: {result.stderr.strip()}")
+        report["git_init"] = f"failed: {result.stderr.strip()}"
+    except Exception as e:
+      print(f"[WARN] git init 実行失敗: {e}")
+      report["git_init"] = f"failed: {e}"
+  else:
+    report["git_init"] = "skipped (existing .git/)"
+
+  # --- .gitignore コピー ---
+  dest_gitignore = os.path.join(target_path, ".gitignore")
+  if not os.path.exists(dest_gitignore):
+    try:
+      shutil.copy2(tmpl_gitignore, dest_gitignore)
+      report["gitignore"] = "copied"
+    except Exception as e:
+      print(f"[WARN] .gitignore コピー失敗: {e}")
+      report["gitignore"] = f"failed: {e}"
+  else:
+    report["gitignore"] = "skipped (existing .gitignore)"
+    report["skipped"].append({"item": ".gitignore", "reason": "既存ファイルを保護"})
+
+  # --- シンボリックリンク作成 ---
+  rw_src = os.path.join(DEV_ROOT, "scripts", "rw_light.py")
+  rw_link = os.path.join(target_path, "scripts", "rw")
+
+  # rw_light.py に実行権限を付与
+  try:
+    current_mode = os.stat(rw_src).st_mode
+    if not (current_mode & 0o111):
+      os.chmod(rw_src, current_mode | 0o755)
+  except Exception as e:
+    print(f"[WARN] rw_light.py の実行権限付与失敗: {e}")
+
+  # 既存リンクは削除して再作成
+  if os.path.islink(rw_link):
+    try:
+      os.remove(rw_link)
+    except Exception as e:
+      print(f"[WARN] 既存シンボリックリンク削除失敗: {e}")
+
+  try:
+    os.symlink(rw_src, rw_link)
+    report["symlink"] = f"created: {rw_link} -> {rw_src}"
+  except Exception as e:
+    print(f"[WARN] シンボリックリンク作成失敗: {e}")
+    print(f"[INFO] 手動で作成するには: ln -s {rw_src} {rw_link}")
+    report["symlink"] = f"failed: {e}"
+
+  # --- 完了レポート出力 ---
+  print("\n=== rw init 完了レポート ===")
+  print(f"対象: {report['target']}")
+  print(f"ディレクトリ生成: {report['dirs_created']} 個")
+  print(f"テンプレートコピー: {', '.join(report['templates_copied']) or 'なし'}")
+  print(f"Git初期化: {report.get('git_init', 'N/A')}")
+  print(f".gitignore: {report.get('gitignore', 'N/A')}")
+  print(f"シンボリックリンク: {report.get('symlink', 'N/A')}")
+  if report["skipped"]:
+    print("スキップ項目:")
+    for s in report["skipped"]:
+      print(f"  - {s['item']}: {s['reason']}")
+  print("===========================")
+
   return 0
 
 
