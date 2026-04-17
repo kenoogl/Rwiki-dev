@@ -1255,3 +1255,162 @@ class TestCmdQueryExtract:
 
         result = rw_light.cmd_query_extract(["test question"])
         assert result == 0
+
+
+# ---------------------------------------------------------------------------
+# cmd_query_answer() のテスト
+# ---------------------------------------------------------------------------
+
+MOCK_ANSWER_RESPONSE = "This is the answer.\n\n## Details\n\nAnswer content here.\n---\nReferenced: wiki/concepts/test.md, wiki/methods/method.md"
+
+
+def _setup_mock_vault_for_answer(tmp_path, monkeypatch):
+    """cmd_query_answer テスト用の Vault 環境を設定する。"""
+    # ディレクトリ構造作成
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    agents_dir = tmp_path / "AGENTS"
+    agents_dir.mkdir()
+    review_query_dir = tmp_path / "review" / "query"
+    review_query_dir.mkdir(parents=True)
+
+    # wiki ファイル（小規模: 1ファイル）
+    (wiki_dir / "concepts").mkdir()
+    (wiki_dir / "concepts" / "test.md").write_text(
+        "# Test\n\nThis is a test wiki page with content.", encoding="utf-8"
+    )
+
+    # CLAUDE.md（マッピング表含む）
+    claude_md = tmp_path / "CLAUDE.md"
+    claude_md.write_text(
+        "| Task | Agent | Policy | Execution Mode |\n"
+        "|---|---|---|---|\n"
+        "| query_answer | AGENTS/query_answer.md | AGENTS/page_policy.md | Prompt |\n",
+        encoding="utf-8",
+    )
+
+    # AGENTS/ ファイル
+    (agents_dir / "query_answer.md").write_text("AGENT query_answer", encoding="utf-8")
+    (agents_dir / "page_policy.md").write_text("POLICY page_policy", encoding="utf-8")
+
+    # index.md
+    (tmp_path / "index.md").write_text("# Index\n\n- [[test]]", encoding="utf-8")
+
+    # rw_light のグローバル変数を tmp_path に向ける
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(review_query_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+
+    return tmp_path, review_query_dir
+
+
+class TestCmdQueryAnswer:
+    """cmd_query_answer() のユニットテスト"""
+
+    def test_empty_question_returns_1(self, tmp_path, monkeypatch):
+        """空の質問文 → return 1"""
+        _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        result = rw_light.cmd_query_answer([])
+        assert result == 1
+
+    def test_whitespace_only_question_returns_1(self, tmp_path, monkeypatch):
+        """空白のみの質問文 → return 1"""
+        _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        result = rw_light.cmd_query_answer(["   "])
+        assert result == 1
+
+    def test_wiki_missing_returns_1(self, tmp_path, monkeypatch):
+        """wiki/ が存在しない → return 1"""
+        _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        import shutil
+        shutil.rmtree(str(tmp_path / "wiki"))
+        result = rw_light.cmd_query_answer(["test question"])
+        assert result == 1
+
+    def test_claude_md_missing_returns_1(self, tmp_path, monkeypatch):
+        """CLAUDE.md が存在しない → return 1"""
+        _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        (tmp_path / "CLAUDE.md").unlink()
+        result = rw_light.cmd_query_answer(["test question"])
+        assert result == 1
+
+    def test_success_returns_0(self, tmp_path, monkeypatch):
+        """成功パス: return 0 かつ review/query/ にファイルが生成されないこと"""
+        _, review_query_dir = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+
+        result = rw_light.cmd_query_answer(["test question"])
+        assert result == 0
+
+    def test_success_no_file_created_in_query_review(self, tmp_path, monkeypatch):
+        """成功パス: review/query/ にファイルが生成されないこと（Req 2.3）"""
+        _, review_query_dir = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+
+        rw_light.cmd_query_answer(["test question"])
+
+        # review/query/ 配下にファイルやディレクトリが生成されていないこと
+        entries = list(review_query_dir.iterdir())
+        assert entries == [], f"Unexpected files in review/query/: {entries}"
+
+    def test_success_stdout_contains_answer_text(self, tmp_path, monkeypatch, capsys):
+        """成功パス: stdout に回答テキストが含まれること"""
+        _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+
+        rw_light.cmd_query_answer(["test question"])
+
+        captured = capsys.readouterr()
+        assert "This is the answer." in captured.out
+        assert "Answer content here." in captured.out
+
+    def test_success_stdout_contains_referenced_pages(self, tmp_path, monkeypatch, capsys):
+        """成功パス: stdout に参照ページ（Referenced: セクション）が含まれること"""
+        _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+
+        rw_light.cmd_query_answer(["test question"])
+
+        captured = capsys.readouterr()
+        assert "wiki/concepts/test.md" in captured.out
+        assert "wiki/methods/method.md" in captured.out
+
+    def test_response_without_referenced_section_still_returns_0(self, tmp_path, monkeypatch, capsys):
+        """---\\nReferenced: セパレータなし → 全体を回答として出力し return 0"""
+        _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        no_ref_response = "This is an answer without referenced section."
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: no_ref_response)
+
+        result = rw_light.cmd_query_answer(["test question"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "This is an answer without referenced section." in captured.out
+
+    def test_scope_option_passes_to_read_wiki_content(self, tmp_path, monkeypatch):
+        """--scope オプションが read_wiki_content に渡されること"""
+        _, _ = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+
+        scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
+        received_scopes = []
+
+        original_read_wiki = rw_light.read_wiki_content
+
+        def mock_read_wiki(scope):
+            received_scopes.append(scope)
+            return original_read_wiki(scope)
+
+        monkeypatch.setattr(rw_light, "read_wiki_content", mock_read_wiki)
+
+        result = rw_light.cmd_query_answer(["test question", "--scope", scope_path])
+
+        assert result == 0
+        assert received_scopes == [scope_path]

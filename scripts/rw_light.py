@@ -1361,6 +1361,102 @@ def cmd_query_extract(args: list[str]) -> int:
         return 0
 
 
+def cmd_query_answer(args: list[str]) -> int:
+    """rw query answer サブコマンド。終了コードを返す。"""
+    # 1. 引数パース（question, --scope）
+    question: str = ""
+    scope: str | None = None
+
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--scope":
+            i += 1
+            if i < len(args):
+                scope = args[i]
+        elif not a.startswith("--") and not question:
+            question = a
+        i += 1
+
+    # 質問文が空の場合はエラー終了
+    if not question or not question.strip():
+        print("[ERROR] question is required")
+        return 1
+
+    # 2. 前提条件チェック
+    # wiki/ 存在チェック
+    if not os.path.isdir(WIKI):
+        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {WIKI}")
+        return 1
+
+    # CLAUDE.md 存在チェック
+    if not os.path.exists(os.path.join(ROOT, "CLAUDE.md")):
+        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(ROOT, 'CLAUDE.md')}")
+        return 1
+
+    # AGENTS/ 存在チェック
+    if not os.path.isdir(os.path.join(ROOT, "AGENTS")):
+        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(ROOT, 'AGENTS')}")
+        return 1
+
+    warn_if_dirty_paths(["wiki"], "query answer")
+
+    # 3. load_task_prompts
+    try:
+        task_prompts = load_task_prompts("query_answer")
+    except (ValueError, FileNotFoundError) as e:
+        print(f"[ERROR] load_task_prompts 失敗: {e}")
+        return 1
+
+    # 4. wiki コンテンツ取得
+    try:
+        wiki_content = read_wiki_content(scope)
+    except FileNotFoundError as e:
+        print(f"[ERROR] wiki コンテンツ読み込み失敗: {e}")
+        return 1
+    except ValueError as e:
+        print(f"[ERROR] wiki コンテンツ読み込み失敗: {e}")
+        return 1
+
+    # 5. プロンプト構築
+    prompt = build_query_prompt(
+        task_prompts,
+        question,
+        wiki_content,
+        output_format="plaintext",
+    )
+
+    # 6. Claude 呼び出し
+    try:
+        response = call_claude(prompt)
+    except RuntimeError as e:
+        print(f"[ERROR] Claude 呼び出し失敗: {e}")
+        return 1
+
+    # 7. レスポンスパース: "---\nReferenced:" で分割
+    separator = "\n---\nReferenced:"
+    if separator in response:
+        parts = response.split(separator, 1)
+        answer_text = parts[0]
+        referenced_raw = parts[1].strip()
+        referenced_pages = [p.strip() for p in referenced_raw.split(",") if p.strip()]
+    else:
+        answer_text = response
+        referenced_pages = []
+
+    # 8. 回答テキストを stdout に表示
+    print(answer_text)
+
+    # 9. 参照ページセクションを stdout に表示
+    if referenced_pages:
+        print("\n---")
+        print("Referenced:")
+        for page in referenced_pages:
+            print(f"  {page}")
+
+    return 0
+
+
 # -------------------------
 # query lint
 # -------------------------

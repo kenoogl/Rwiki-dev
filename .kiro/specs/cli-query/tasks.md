@@ -78,7 +78,7 @@
   - rw query extract "test question" が review/query/ に4ファイルを生成し、lint 検証結果を表示して正しい終了コードで終了すること
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 4.5, 4.7, 5.1, 5.2, 5.5, 5.6_
 
-- [ ] 3.2 cmd_query_answer を実装する
+- [x] 3.2 cmd_query_answer を実装する
   - 引数パース（question, --scope）。質問文が空の場合はエラー終了（exit 1）
   - 前提条件チェック（wiki/ 存在、CLAUDE.md/AGENTS/ 存在、warn_if_dirty_paths(["wiki"], "query answer")）
   - load_task_prompts("query_answer") → read_wiki_content(scope) → build_query_prompt(output_format="plaintext") → call_claude()
