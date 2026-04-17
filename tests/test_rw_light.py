@@ -1972,3 +1972,58 @@ class TestMainDispatcher:
         assert exc_info.value.code == 1
         captured = capsys.readouterr()
         assert "[FAIL]" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# TestDocumentationUpdates のテスト (tasks 6.1-6.2)
+# ---------------------------------------------------------------------------
+
+class TestDocumentationUpdates:
+    """ドキュメント更新を確認するテスト (tasks 6.1-6.2)"""
+
+    PROJECT_ROOT = os.path.join(os.path.dirname(__file__), "..")
+
+    def _read_file(self, rel_path):
+        full_path = os.path.join(self.PROJECT_ROOT, rel_path)
+        with open(full_path, encoding="utf-8") as f:
+            return f.read()
+
+    def test_user_guide_exists(self):
+        """docs/user-guide.md が存在すること"""
+        full_path = os.path.join(self.PROJECT_ROOT, "docs", "user-guide.md")
+        assert os.path.isfile(full_path), f"docs/user-guide.md が存在しない: {full_path}"
+
+    def test_user_guide_contains_query_extract_section(self):
+        """user-guide.md に rw query extract の説明が含まれること"""
+        content = self._read_file("docs/user-guide.md")
+        assert "rw query extract" in content, "docs/user-guide.md に 'rw query extract' が含まれていない"
+
+    def test_user_guide_contains_query_answer_section(self):
+        """user-guide.md に rw query answer の説明が含まれること"""
+        content = self._read_file("docs/user-guide.md")
+        assert "rw query answer" in content, "docs/user-guide.md に 'rw query answer' が含まれていない"
+
+    def test_user_guide_contains_query_fix_section(self):
+        """user-guide.md に rw query fix の説明が含まれること"""
+        content = self._read_file("docs/user-guide.md")
+        assert "rw query fix" in content, "docs/user-guide.md に 'rw query fix' が含まれていない"
+
+    def test_changelog_contains_unreleased_section(self):
+        """CHANGELOG.md に [Unreleased] セクションが存在すること"""
+        content = self._read_file("CHANGELOG.md")
+        assert "[Unreleased]" in content, "CHANGELOG.md に '[Unreleased]' セクションが存在しない"
+
+    def test_changelog_contains_query_extract_entry(self):
+        """CHANGELOG.md に rw query extract の変更内容が記載されていること"""
+        content = self._read_file("CHANGELOG.md")
+        assert "rw query extract" in content, "CHANGELOG.md に 'rw query extract' エントリが含まれていない"
+
+    def test_changelog_contains_query_answer_entry(self):
+        """CHANGELOG.md に rw query answer の変更内容が記載されていること"""
+        content = self._read_file("CHANGELOG.md")
+        assert "rw query answer" in content, "CHANGELOG.md に 'rw query answer' エントリが含まれていない"
+
+    def test_changelog_contains_query_fix_entry(self):
+        """CHANGELOG.md に rw query fix の変更内容が記載されていること"""
+        content = self._read_file("CHANGELOG.md")
+        assert "rw query fix" in content, "CHANGELOG.md に 'rw query fix' エントリが含まれていない"

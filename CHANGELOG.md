@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added — cli-query スペック
+
+- `rw query extract` — wiki 知識から構造化クエリアーティファクトを生成するサブコマンド
+- `rw query answer` — wiki 知識に基づく直接回答を stdout に表示するサブコマンド
+- `rw query fix` — lint 結果に基づくクエリアーティファクト修復サブコマンド
+- Prompt Engine: CLAUDE.md マッピングに基づく AGENTS/ ファイルの動的読み込み（プロンプト一元管理）
+- query_id 自動生成（YYYYMMDD-slug 形式）
+- 自動 lint 検証（extract/fix コマンド実行後）
+
+### Changed — cli-query スペック
+
+- query_extract・query_answer・query_fix の Execution Mode を `Prompt` → `CLI (Hybrid)` に更新
+
 ### Added — agents-system スペック
 
 - `templates/AGENTS/` ディレクトリ: タスク種別ごとのサブプロンプト体系を新設

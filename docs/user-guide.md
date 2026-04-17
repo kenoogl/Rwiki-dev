@@ -216,6 +216,87 @@ git commit -m "approve: promote synthesis"
 
 ---
 
+### `rw query`
+
+wiki 知識に対するクエリ操作を行う。
+
+#### `rw query extract`
+
+```
+rw query extract "<質問文>" [--scope <wikiページパス>] [--type <クエリタイプ>]
+```
+
+wiki 知識から構造化されたクエリアーティファクトを抽出し `review/query/<query_id>/` に4ファイルを生成する。実行後に自動で lint 検証が行われる。
+
+**引数**:
+- `<質問文>` (必須): 抽出したい知識に関する質問
+- `--scope <パス>` (省略可): 参照する wiki ページを限定する
+- `--type <タイプ>` (省略可): クエリタイプ (`fact` / `structure` / `comparison` / `why` / `hypothesis`)
+
+**出力例**:
+```
+review/query/20260417-example-question/question.md
+review/query/20260417-example-question/answer.md
+review/query/20260417-example-question/evidence.md
+review/query/20260417-example-question/metadata.json
+Lint Result: PASS
+```
+
+**終了コード**: 0（成功・lint PASS）/ 1（入力エラー）/ 2（生成成功・lint FAIL）
+
+---
+
+#### `rw query answer`
+
+```
+rw query answer "<質問文>" [--scope <wikiページパス>]
+```
+
+wiki 知識に基づく直接回答を標準出力に表示する。アーティファクトファイルは生成しない。
+
+**引数**:
+- `<質問文>` (必須): 回答を得たい質問
+- `--scope <パス>` (省略可): 参照する wiki ページを限定する
+
+**stdout 出力例**:
+```
+SINDy（Sparse Identification of Nonlinear Dynamics）は非線形力学系の方程式を
+スパース回帰によって同定する手法です。
+
+## 詳細
+
+計測データから支配方程式を自動抽出し、解釈可能な数式モデルを得ることができます。
+
+---
+Referenced: wiki/methods/sindy.md, wiki/concepts/sparse-regression.md
+```
+
+**終了コード**: 0（成功）/ 1（入力エラー）
+
+---
+
+#### `rw query fix`
+
+```
+rw query fix <query_id>
+```
+
+lint 結果に基づき、既存クエリアーティファクトの lint エラーを自動修復する。修復後に再 lint 検証を行う。
+
+**引数**:
+- `<query_id>` (必須): 修復対象のクエリID（`YYYYMMDD-slug` 形式）
+
+**出力例**:
+```
+[FIX] answer.md: QL006 → expanded content
+Skipped: QL009 (Cannot auto-fix source references)
+Post-fix Lint Result: PASS
+```
+
+**終了コード**: 0（成功・post-fix lint PASS）/ 1（クエリ不在・入力エラー）/ 2（fix 実行・post-fix lint FAIL）
+
+---
+
 ## プロンプトレベルタスクの実行
 
 ### Claude CLIでのエージェントロード手順

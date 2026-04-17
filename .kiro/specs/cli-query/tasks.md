@@ -125,11 +125,11 @@
   - _Boundary: Execution Mode 更新_
 
 - [ ] 6. ドキュメント・CHANGELOG 更新
-- [ ] 6.1 docs/user-guide.md に rw query extract・rw query answer・rw query fix の使用方法・引数・出力例を追記する
+- [x] 6.1 docs/user-guide.md に rw query extract・rw query answer・rw query fix の使用方法・引数・出力例を追記する
   - user-guide.md に3サブコマンドのリファレンスが追記されていること
   - _Requirements: 7.1_
 
-- [ ] 6.2 (P) CHANGELOG.md の [Unreleased] に cli-query スペック成果物を追記する
+- [x] 6.2 (P) CHANGELOG.md の [Unreleased] に cli-query スペック成果物を追記する
   - CHANGELOG.md に cli-query の変更内容が記載されていること
   - _Requirements: 7.2_
 
