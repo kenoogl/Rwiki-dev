@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Foundation: テンプレートファイル作成
+- [x] 1. Foundation: テンプレートファイル作成
 - [x] 1.1 (P) Wiki運用カーネル（templates/CLAUDE.md）の作成
   - docs/CLAUDE.md を templates/CLAUDE.md としてコピーする
   - グローバルルール6項目（rawの完全性、reviewの強制、承認要件、書き込み権限、インデックスとログ整合性、コミット分離）が含まれることを確認する
@@ -15,7 +15,7 @@
   - _Requirements: 3.2, 3.3_
   - _Boundary: templates/.gitignore_
 
-- [ ] 2. Core: rw_light.py への cmd_init() 実装
+- [x] 2. Core: rw_light.py への cmd_init() 実装
 - [x] 2.1 (P) モジュールレベル定数とユーティリティ関数の追加
   - `VAULT_DIRS` リスト定数（全22ディレクトリの相対パス）をモジュールレベルに追加する
   - `DEV_ROOT` 定数を `str(Path(__file__).resolve().parent.parent)` で定義する
@@ -73,7 +73,7 @@
   - _Depends: 2.2, 2.3_
   - _Boundary: scripts/rw_light.py (main 関数の init 分岐 + print_usage 関数)_
 
-- [ ] 3. ドキュメント作成
+- [x] 3. ドキュメント作成
 - [x] 3.1 (P) README.md の作成
   - プロジェクトの目的と概要（Karpathy式LLM Wikiを参考にした知識ベース構築システム）を記述する
   - `rw init` によるVaultセットアップ手順を記載する
