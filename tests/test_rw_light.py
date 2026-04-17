@@ -472,3 +472,184 @@ class TestReadWikiContent:
 
         with pytest.raises(FileNotFoundError):
             rw_light.read_wiki_content(None)
+
+
+# ---------------------------------------------------------------------------
+# build_query_prompt() のテスト
+# ---------------------------------------------------------------------------
+
+class TestBuildQueryPrompt:
+    """build_query_prompt() のユニットテスト"""
+
+    TASK_PROMPTS = "AGENT_CONTENT: You are a query agent.\n\nPOLICY_CONTENT: Follow naming rules."
+    QUESTION = "What is the main topic of the wiki?"
+    WIKI_CONTENT = "# Wiki\n\nThis wiki covers machine learning topics."
+
+    def test_json_format_contains_json_schema_markers(self):
+        """output_format='json' の場合、JSON スキーマ指示が含まれること"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+        )
+        assert isinstance(result, str)
+        # JSON スキーマ関連のマーカーが含まれること
+        assert "json" in result.lower() or "JSON" in result
+
+    def test_json_format_contains_extract_schema_fields(self):
+        """output_format='json' の場合、4ファイル抽出スキーマのフィールドが含まれること"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+        )
+        # 抽出スキーマのキーフィールドが含まれること
+        assert "query" in result
+        assert "answer" in result
+        assert "evidence" in result
+        assert "metadata" in result
+        assert "referenced_pages" in result
+
+    def test_plaintext_format_contains_referenced_instruction(self):
+        """output_format='plaintext' の場合、Referenced: 指示が含まれること"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="plaintext",
+        )
+        assert "Referenced" in result or "referenced" in result
+
+    def test_plaintext_format_does_not_contain_json_schema(self):
+        """output_format='plaintext' の場合、JSONスキーマ指示が含まれないこと"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="plaintext",
+        )
+        # 4ファイルスキーマの構造は含まれないこと
+        assert "referenced_pages" not in result
+
+    def test_query_type_specified_included_in_prompt(self):
+        """query_type 指定時: プロンプトに query_type が含まれること"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+            query_type="fact",
+        )
+        assert "fact" in result
+
+    def test_query_type_none_not_explicitly_set(self):
+        """query_type=None の場合: 明示的なクエリタイプ指定がプロンプトに含まれないこと"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+            query_type=None,
+        )
+        # 特定の query_type 値（fact, structure等）が明示的に指定されていないこと
+        # ただしスキーマ内のサンプル値は除く（"fact|structure|..." 形式は許容）
+        # query_type: fact のような形式が含まれないことを確認
+        assert "query_type: fact" not in result
+        assert "query_type: structure" not in result
+        assert "query_type: why" not in result
+        assert "query_type: comparison" not in result
+        assert "query_type: hypothesis" not in result
+
+    def test_lint_results_included_when_provided(self):
+        """lint_results 提供時: プロンプトに lint 結果が含まれること"""
+        lint_results = {
+            "errors": [{"code": "QL001", "message": "missing file: answer.md"}],
+            "warnings": [],
+        }
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+            lint_results=lint_results,
+        )
+        assert "QL001" in result or "lint" in result.lower() or "missing file" in result
+
+    def test_existing_artifacts_included_when_provided(self):
+        """existing_artifacts 提供時: プロンプトに既存アーティファクトが含まれること"""
+        existing_artifacts = {
+            "question.md": "# Question\n\nWhat is ML?",
+            "answer.md": "# Answer\n\nML is machine learning.",
+        }
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+            existing_artifacts=existing_artifacts,
+        )
+        assert "What is ML?" in result or "question.md" in result
+
+    def test_task_prompts_included_in_result(self):
+        """task_prompts の内容がプロンプトに含まれること（エージェント+ポリシー）"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+        )
+        assert "AGENT_CONTENT" in result
+        assert "POLICY_CONTENT" in result
+
+    def test_wiki_content_included_in_result(self):
+        """wiki_content の内容がプロンプトに含まれること（知識ソース）"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+        )
+        assert "machine learning topics" in result
+
+    def test_question_included_in_result(self):
+        """question がプロンプトに含まれること"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+        )
+        assert self.QUESTION in result
+
+    def test_fix_format_contains_fix_schema(self):
+        """lint_results 提供時 (fix モード): fix スキーマが含まれること"""
+        lint_results = {
+            "errors": [{"code": "QL001", "message": "missing file: answer.md"}],
+            "warnings": [],
+        }
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+            lint_results=lint_results,
+        )
+        # fix スキーマのキーが含まれること
+        assert "fixes" in result or "skipped" in result
+
+    def test_prompt_structure_order(self):
+        """プロンプト構造: task_prompts → wiki_content → question の順序であること"""
+        result = rw_light.build_query_prompt(
+            self.TASK_PROMPTS,
+            self.QUESTION,
+            self.WIKI_CONTENT,
+            output_format="json",
+        )
+        pos_agent = result.find("AGENT_CONTENT")
+        pos_wiki = result.find("machine learning topics")
+        pos_question = result.find(self.QUESTION)
+
+        assert pos_agent < pos_wiki, "task_prompts は wiki_content より前にあること"
+        assert pos_wiki < pos_question, "wiki_content は question より前にあること"

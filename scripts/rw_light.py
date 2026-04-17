@@ -884,6 +884,114 @@ def load_task_prompts(task_name: str) -> str:
     return "\n\n".join(parts)
 
 
+def build_query_prompt(
+    task_prompts: str,
+    question: str,
+    wiki_content: str,
+    *,
+    output_format: str = "json",
+    query_type: str | None = None,
+    lint_results: dict[str, Any] | None = None,
+    existing_artifacts: dict[str, str] | None = None,
+) -> str:
+    """エージェント+ポリシーの内容とコンテキストからプロンプトを構築する。
+
+    プロンプト構造:
+    1. エージェント+ポリシーの内容（ルール定義）
+    2. wikiコンテンツ（知識ソース）
+    3. 質問文またはタスク指示
+    4. 出力形式指定（output_format に基づく）
+    """
+    parts: list[str] = []
+
+    # 1. エージェント+ポリシー（ルール定義）
+    parts.append(task_prompts)
+
+    # 2. wiki コンテンツ（知識ソース）
+    parts.append("## Wiki コンテンツ\n\n" + wiki_content)
+
+    # 3. 質問文またはタスク指示
+    if query_type is not None:
+        parts.append(f"## 質問（query_type: {query_type}）\n\n{question}")
+    else:
+        # query_type=None → Claude に自動判定させる
+        parts.append(f"## 質問\n\n{question}")
+
+    # fix モード: lint_results と existing_artifacts を含める
+    if lint_results is not None:
+        lint_json = json.dumps(lint_results, ensure_ascii=False, indent=2)
+        parts.append(f"## Lint 結果\n\n```json\n{lint_json}\n```")
+
+    if existing_artifacts is not None:
+        artifact_parts: list[str] = ["## 既存アーティファクト"]
+        for filename, content in existing_artifacts.items():
+            artifact_parts.append(f"### {filename}\n\n{content}")
+        parts.append("\n\n".join(artifact_parts))
+
+    # 4. 出力形式指定
+    if output_format == "plaintext":
+        output_instruction = (
+            "## 出力形式\n\n"
+            "回答をプレーンテキスト（Markdown）で出力してください。\n"
+            "回答の末尾に必ず以下の形式で参照ページリストを付与してください:\n\n"
+            "---\n"
+            "Referenced: page1.md, page2.md"
+        )
+    elif lint_results is not None:
+        # fix モード: fix スキーマ
+        fix_schema = {
+            "fixes": [{"file": "...", "ql_code": "...", "action": "..."}],
+            "files": {
+                "question.md": "...",
+                "answer.md": "...",
+                "evidence.md": None,
+                "metadata.json": None,
+            },
+            "skipped": [{"ql_code": "...", "reason": "..."}],
+        }
+        fix_schema_json = json.dumps(fix_schema, ensure_ascii=False, indent=2)
+        output_instruction = (
+            "## 出力形式\n\n"
+            "以下の JSON スキーマに従って、修正内容を JSON 形式で出力してください。\n"
+            "コードブロック（```json ... ```）で囲まずに、JSONのみを出力してください。\n\n"
+            f"```json\n{fix_schema_json}\n```"
+        )
+    else:
+        # extract モード: 4ファイル抽出スキーマ
+        extract_schema = {
+            "query": {
+                "text": "...",
+                "query_type": "fact|structure|comparison|why|hypothesis",
+                "scope": "...",
+                "date": "YYYY-MM-DD",
+            },
+            "answer": {"content": "Markdown"},
+            "evidence": {
+                "blocks": [{"source": "wiki/path.md", "excerpt": "..."}]
+            },
+            "metadata": {
+                "query_id": "...",
+                "query_type": "...",
+                "scope": "...",
+                "sources": ["..."],
+                "created_at": "...",
+            },
+            "referenced_pages": ["wiki/path.md"],
+        }
+        extract_schema_json = json.dumps(extract_schema, ensure_ascii=False, indent=2)
+        output_instruction = (
+            "## 出力形式\n\n"
+            "以下の JSON スキーマに従って、回答を JSON 形式で出力してください。\n"
+            "コードブロック（```json ... ```）で囲まずに、JSONのみを出力してください。\n"
+            "推測・推定を含む場合は [INFERENCE] マーカーを付与してください。\n\n"
+            f"```json\n{extract_schema_json}\n```"
+        )
+
+    parts.append(output_instruction)
+
+    return "\n\n".join(parts)
+
+
 def call_claude(prompt: str) -> str:
     """Claude CLI を呼び出してレスポンスを返す。
 

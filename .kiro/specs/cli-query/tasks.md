@@ -36,7 +36,7 @@
   - _Requirements: 5.3, 5.4, 6.4_
   - _Boundary: Prompt Engine_
 
-- [ ] 1.4 プロンプト構築関数を実装する
+- [x] 1.4 プロンプト構築関数を実装する
   - build_query_prompt(task_prompts, question, wiki_content, output_format, ...) を実装する
   - プロンプト構造: エージェント+ポリシー内容 → wiki コンテンツ → 質問文 → 出力形式指定
   - output_format="json"（extract/fix）で JSON スキーマ指示を、"plaintext"（answer）で参照ページリスト指示を含める
