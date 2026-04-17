@@ -9,10 +9,10 @@
 
 ## Execution Mode
 
-**Prompt** — Claude CLIまたは対話型プロンプトで実行。
-このエージェントをロードしてから実行すること。
+**CLI (Hybrid)** — `rw query extract "<question>"` コマンドで実行。
+CLIがエージェントルールに従い、wiki知識の読み込み・Claude呼び出し・アーティファクト書き出しを自動で行う。
 
-実行宣言（必須）:
+実行宣言（CLIが自動で行う）:
 - Task Type: query_extract
 - Loaded Agents: query_extract.md, naming.md, page_policy.md
 - Execution Plan: [クエリ内容・スコープ・query_id]

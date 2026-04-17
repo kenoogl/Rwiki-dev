@@ -11,10 +11,10 @@
 
 ## Execution Mode
 
-**Prompt** — Claude CLIまたは対話型プロンプトで実行。
-このエージェントをロードしてから実行すること。
+**CLI (Hybrid)** — `rw query answer "<question>"` コマンドで実行。
+CLIがエージェントルールに従い、wiki知識の読み込み・Claude呼び出し・回答の標準出力を自動で行う。
 
-実行宣言（必須）:
+実行宣言（CLIが自動で行う）:
 - Task Type: query_answer
 - Loaded Agents: query_answer.md, page_policy.md
 - Execution Plan: [質問内容]

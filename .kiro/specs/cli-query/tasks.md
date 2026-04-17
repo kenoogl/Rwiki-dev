@@ -109,17 +109,17 @@
   - _Requirements: 1.9, 6.5_
 
 - [ ] 5. 実行モード更新
-- [ ] 5.1 templates/CLAUDE.md のマッピング表で query_extract・query_answer・query_fix の Execution Mode を CLI (Hybrid) に更新する
+- [x] 5.1 templates/CLAUDE.md のマッピング表で query_extract・query_answer・query_fix の Execution Mode を CLI (Hybrid) に更新する
   - 更新後のマッピング表に3行が CLI (Hybrid) と記載されていること
   - _Requirements: 8.1_
   - _Boundary: Execution Mode 更新_
 
-- [ ] 5.2 (P) templates/AGENTS/query_extract.md・query_answer.md・query_fix.md の Execution Mode セクションと関連説明文を CLI (Hybrid) に更新する
+- [x] 5.2 (P) templates/AGENTS/query_extract.md・query_answer.md・query_fix.md の Execution Mode セクションと関連説明文を CLI (Hybrid) に更新する
   - 各ファイルの Execution Mode が CLI (Hybrid) に変更され、実行手順・実行宣言の説明が CLI 実態に合わせて更新されていること
   - _Requirements: 8.2_
   - _Boundary: Execution Mode 更新_
 
-- [ ] 5.3 (P) templates/AGENTS/README.md のエージェント一覧テーブルで query_extract・query_answer・query_fix の実行モードを CLI (Hybrid) に更新する
+- [x] 5.3 (P) templates/AGENTS/README.md のエージェント一覧テーブルで query_extract・query_answer・query_fix の実行モードを CLI (Hybrid) に更新する
   - README.md のテーブルで3行が CLI (Hybrid) と記載されていること
   - _Requirements: 8.3_
   - _Boundary: Execution Mode 更新_

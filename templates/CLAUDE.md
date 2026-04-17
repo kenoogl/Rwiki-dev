@@ -142,9 +142,9 @@ Do NOT load all files under AGENTS/ by default.
 | synthesize | AGENTS/synthesize.md | AGENTS/page_policy.md, AGENTS/naming.md | Prompt |
 | synthesize_logs | AGENTS/synthesize_logs.md | AGENTS/naming.md | CLI (Hybrid) |
 | approve | AGENTS/approve.md | AGENTS/git_ops.md, AGENTS/page_policy.md | CLI |
-| query_answer | AGENTS/query_answer.md | AGENTS/page_policy.md | Prompt |
-| query_extract | AGENTS/query_extract.md | AGENTS/naming.md, AGENTS/page_policy.md | Prompt |
-| query_fix | AGENTS/query_fix.md | AGENTS/naming.md | Prompt |
+| query_answer | AGENTS/query_answer.md | AGENTS/page_policy.md | CLI (Hybrid) |
+| query_extract | AGENTS/query_extract.md | AGENTS/naming.md, AGENTS/page_policy.md | CLI (Hybrid) |
+| query_fix | AGENTS/query_fix.md | AGENTS/naming.md | CLI (Hybrid) |
 | audit | AGENTS/audit.md | AGENTS/page_policy.md, AGENTS/naming.md, AGENTS/git_ops.md | Prompt |
 
 ---

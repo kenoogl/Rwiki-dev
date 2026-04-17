@@ -1690,6 +1690,147 @@ class TestCmdQueryFix:
 
 
 # ---------------------------------------------------------------------------
+# TestExecutionModeUpdates のテスト (tasks 5.1-5.3)
+# ---------------------------------------------------------------------------
+
+class TestExecutionModeUpdates:
+    """Templates の Execution Mode 更新を確認するテスト (tasks 5.1-5.3)"""
+
+    TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
+
+    def _read_file(self, rel_path):
+        full_path = os.path.join(self.TEMPLATES_DIR, rel_path)
+        with open(full_path, encoding="utf-8") as f:
+            return f.read()
+
+    # --- Task 5.1: templates/CLAUDE.md マッピング表 ---
+
+    def test_claude_md_query_extract_mode_is_cli_hybrid(self):
+        """templates/CLAUDE.md: query_extract の Execution Mode が CLI (Hybrid) であること"""
+        content = self._read_file("CLAUDE.md")
+        for line in content.splitlines():
+            if "query_extract" in line and "|" in line:
+                assert "CLI (Hybrid)" in line, (
+                    f"query_extract の Execution Mode が CLI (Hybrid) でない: {line!r}"
+                )
+                return
+        pytest.fail("templates/CLAUDE.md に query_extract のマッピング行が見つからない")
+
+    def test_claude_md_query_answer_mode_is_cli_hybrid(self):
+        """templates/CLAUDE.md: query_answer の Execution Mode が CLI (Hybrid) であること"""
+        content = self._read_file("CLAUDE.md")
+        for line in content.splitlines():
+            if "query_answer" in line and "|" in line:
+                assert "CLI (Hybrid)" in line, (
+                    f"query_answer の Execution Mode が CLI (Hybrid) でない: {line!r}"
+                )
+                return
+        pytest.fail("templates/CLAUDE.md に query_answer のマッピング行が見つからない")
+
+    def test_claude_md_query_fix_mode_is_cli_hybrid(self):
+        """templates/CLAUDE.md: query_fix の Execution Mode が CLI (Hybrid) であること"""
+        content = self._read_file("CLAUDE.md")
+        for line in content.splitlines():
+            if "query_fix" in line and "|" in line:
+                assert "CLI (Hybrid)" in line, (
+                    f"query_fix の Execution Mode が CLI (Hybrid) でない: {line!r}"
+                )
+                return
+        pytest.fail("templates/CLAUDE.md に query_fix のマッピング行が見つからない")
+
+    # --- Task 5.2: AGENTS/query_*.md Execution Mode セクション ---
+
+    def test_agents_query_extract_execution_mode_section(self):
+        """AGENTS/query_extract.md の Execution Mode セクションが CLI (Hybrid) であること"""
+        content = self._read_file("AGENTS/query_extract.md")
+        in_section = False
+        for line in content.splitlines():
+            if line.strip() == "## Execution Mode":
+                in_section = True
+                continue
+            if in_section:
+                if line.startswith("## "):
+                    break
+                if "**" in line:
+                    assert "CLI (Hybrid)" in line, (
+                        f"query_extract.md Execution Mode が CLI (Hybrid) でない: {line!r}"
+                    )
+                    return
+        pytest.fail("AGENTS/query_extract.md に Execution Mode セクションの bold テキストが見つからない")
+
+    def test_agents_query_answer_execution_mode_section(self):
+        """AGENTS/query_answer.md の Execution Mode セクションが CLI (Hybrid) であること"""
+        content = self._read_file("AGENTS/query_answer.md")
+        in_section = False
+        for line in content.splitlines():
+            if line.strip() == "## Execution Mode":
+                in_section = True
+                continue
+            if in_section:
+                if line.startswith("## "):
+                    break
+                if "**" in line:
+                    assert "CLI (Hybrid)" in line, (
+                        f"query_answer.md Execution Mode が CLI (Hybrid) でない: {line!r}"
+                    )
+                    return
+        pytest.fail("AGENTS/query_answer.md に Execution Mode セクションの bold テキストが見つからない")
+
+    def test_agents_query_fix_execution_mode_section(self):
+        """AGENTS/query_fix.md の Execution Mode セクションが CLI (Hybrid) であること"""
+        content = self._read_file("AGENTS/query_fix.md")
+        in_section = False
+        for line in content.splitlines():
+            if line.strip() == "## Execution Mode":
+                in_section = True
+                continue
+            if in_section:
+                if line.startswith("## "):
+                    break
+                if "**" in line:
+                    assert "CLI (Hybrid)" in line, (
+                        f"query_fix.md Execution Mode が CLI (Hybrid) でない: {line!r}"
+                    )
+                    return
+        pytest.fail("AGENTS/query_fix.md に Execution Mode セクションの bold テキストが見つからない")
+
+    # --- Task 5.3: AGENTS/README.md テーブル ---
+
+    def test_agents_readme_query_extract_mode(self):
+        """AGENTS/README.md テーブルで query_extract が CLI (Hybrid) であること"""
+        content = self._read_file("AGENTS/README.md")
+        for line in content.splitlines():
+            if "query_extract" in line and "|" in line:
+                assert "CLI (Hybrid)" in line, (
+                    f"README.md の query_extract 行の実行モードが CLI (Hybrid) でない: {line!r}"
+                )
+                return
+        pytest.fail("AGENTS/README.md に query_extract のテーブル行が見つからない")
+
+    def test_agents_readme_query_answer_mode(self):
+        """AGENTS/README.md テーブルで query_answer が CLI (Hybrid) であること"""
+        content = self._read_file("AGENTS/README.md")
+        for line in content.splitlines():
+            if "query_answer" in line and "|" in line:
+                assert "CLI (Hybrid)" in line, (
+                    f"README.md の query_answer 行の実行モードが CLI (Hybrid) でない: {line!r}"
+                )
+                return
+        pytest.fail("AGENTS/README.md に query_answer のテーブル行が見つからない")
+
+    def test_agents_readme_query_fix_mode(self):
+        """AGENTS/README.md テーブルで query_fix が CLI (Hybrid) であること"""
+        content = self._read_file("AGENTS/README.md")
+        for line in content.splitlines():
+            if "query_fix" in line and "|" in line:
+                assert "CLI (Hybrid)" in line, (
+                    f"README.md の query_fix 行の実行モードが CLI (Hybrid) でない: {line!r}"
+                )
+                return
+        pytest.fail("AGENTS/README.md に query_fix のテーブル行が見つからない")
+
+
+# ---------------------------------------------------------------------------
 # print_usage() のテスト
 # ---------------------------------------------------------------------------
 
