@@ -56,7 +56,7 @@ wikiが不完全な場合は明示的に述べる:
 
 - チャットスタイルの明確な回答を生成する
 - 4ファイルアーティファクト契約を強制しない
-- 抽出モードへの明示的な切り替え指示がない限り `query.md`・`answer.md`・`evidence.md`・`metadata.json` を生成しない
+- 抽出モードへの明示的な切り替え指示がない限り `question.md`・`answer.md`・`evidence.md`・`metadata.json` を生成しない
 
 ### ルール3: 構造化されているが軽量な回答
 

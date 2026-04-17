@@ -1,10 +1,10 @@
 # Requirements Document
 
 ## Introduction
-Rwiki知識ベースシステムにおいて、CLAUDE.mdカーネルの肥大化を防ぎつつ、Claudeがタスク実行時に適切なルールをオンデマンドで読み込める仕組みを構築する。仕様案で定義された9タスク種別に対応するサブプロンプト（AGENTS/）を `docs/` の素案に基づきレビュー・精査し、`templates/AGENTS/` に正式配置する。カーネルにはエージェント選択ルールのみを記載し、詳細実行ルールはAGENTS/に委譲する。ポリシー系ファイル（page_policy, naming, git_ops）の配置先も決定する。ユーザーガイド初版およびCHANGELOG追記も含む。
+Rwiki知識ベースシステムにおいて、CLAUDE.mdカーネルの肥大化を防ぎつつ、Claudeがタスク実行時に適切なルールをオンデマンドで読み込める仕組みを構築する。仕様案で定義された9タスク種別に対応するサブプロンプト（AGENTS/）を `docs/` の素案に基づきレビュー・精査し、`templates/AGENTS/` に正式配置する。カーネルにはエージェント選択ルールのみを記載し、詳細実行ルールはAGENTS/に委譲する。ポリシー（page_policy, naming, git_ops）は `templates/AGENTS/` に独立ファイルとして配置し、必要なタスクから選択的にロードする。ユーザーガイド初版およびCHANGELOG追記も含む。
 
 ## Boundary Context
-- **In scope**: 9タスク別エージェントファイルの精査・正式配置、ポリシーファイルの配置先決定・配置、CLAUDE.mdカーネルへのエージェントロード指示の統合、AGENTS/README.md、docs/user-guide.md 初版、CHANGELOG.md追記
+- **In scope**: 9タスク別エージェントファイルの精査・正式配置、3ポリシー（page_policy, naming, git_ops）の `templates/AGENTS/` への独立ファイル配置、CLAUDE.mdカーネルへのエージェントロード指示の統合、AGENTS/README.md、docs/user-guide.md 初版、CHANGELOG.md追記
 - **Out of scope**: CLIコマンドの実装変更（cli-query、cli-auditスペック）、テスト体系（test-suiteスペック）、Obsidian Vault設定
 - **Adjacent expectations**: project-foundation が `templates/CLAUDE.md` カーネルと `rw init` コマンド（templates/AGENTS/ をVaultにコピーする機能）を提供済み。cli-audit は本スペックの audit エージェント定義に依存する。cli-query は query系エージェント定義を参照する（roadmap 上も agents-system への依存関係あり。AGENTS/ ファイルを直接読み込む方式を前提とする）。既存CLIコマンド（ingest, lint, synthesize-logs, approve）はPythonでルールを実装しており、対応するAGENTS/ファイルとルールの二重管理が生じる。将来的なCLI側の一元化（AGENTS/ファイルをCLIから参照する方式への移行）は本スペックのスコープ外だが、エージェントファイル設計時にCLIとの整合性を意識すること
 
@@ -16,7 +16,7 @@ Rwiki知識ベースシステムにおいて、CLAUDE.mdカーネルの肥大化
 #### Acceptance Criteria
 1. The `templates/AGENTS/` shall エージェントファイルとして以下の9ファイルを含む: `ingest.md`, `lint.md`, `synthesize.md`, `synthesize_logs.md`, `query_extract.md`, `query_answer.md`, `query_fix.md`, `audit.md`, `approve.md`
 2. The 各エージェントファイル shall `docs/` の対応する素案をベースとし、仕様案のタスクモデル・実行モデルとの整合性を確保した内容を持つ。整合性の確認観点: レイヤー境界（入力元・出力先が仕様案の知識フローに違反しないか）、タスク分類（仕様案の9種と1:1対応するか）、禁止パターン（仕様案のマルチステップルール違反がないか）
-3. The 各エージェントファイル shall 当該タスクの実行に必要十分な情報を含み、他のタスクエージェントファイルへの依存なしにロード可能である（ただし、ポリシーファイルの参照または埋め込みは許容する。その方針はReq 4で定義する）
+3. The 各エージェントファイル shall 当該タスクの実行に必要十分な情報を含み、他のタスクエージェントファイルへの依存なしにロード可能である（ただし、`templates/AGENTS/` に配置されたポリシーの併載ロードは許容する。ロード対象はReq 4で定義する）
 4. The エージェント体系 shall 将来のタスク種別追加に対して拡張可能な構造とする。新しいエージェントファイルの追加手順（ファイル作成、マッピング表への追記、README更新）が明確に定義されている
 5. The agents-system shall ファイル名とタスク種別の対応関係を明確にする。ファイル名はタスク種別名と1:1対応を原則とする（`query_extract` → `query_extract.md`、`approve` → `approve.md`）。設計時に命名方針を確定する
 6. The `audit.md` shall 仕様案の監査モデルで定義された4階層の監査ティア（Micro-check、Structural、Semantic、Strategic）の定義と実行条件を含む
@@ -46,16 +46,15 @@ Rwiki知識ベースシステムにおいて、CLAUDE.mdカーネルの肥大化
 9. The `templates/CLAUDE.md` shall タスク→エージェントマッピング表が将来のエージェント追加に対応できるよう、マッピング表の拡張ルール（新タスク種別とエージェントの追加方法）を記載する
 10. The `templates/CLAUDE.md` shall カーネルのグローバルルールがエージェントファイルの指示に常に優先するというルール階層原則を明記する。If エージェントファイルの記述がカーネルのグローバルルールと矛盾する場合, the Claude shall カーネルのルールに従う
 
-### Requirement 4: ポリシーファイルの配置とロード方針
-**Objective:** Rwiki運用者として、タスク横断的なポリシー（ページ種別、命名規則、Git操作ルール）が適切に配置され、必要なタスクから参照可能であってほしい。複数タスクで共通のルールを一貫して適用できるようにするため。
+### Requirement 4: ポリシーの配置とロード方針
+**Objective:** Rwiki運用者として、タスク横断的なポリシー（ページ種別、命名規則、Git操作ルール）が `templates/AGENTS/` に独立ファイルとして配置され、必要なタスクから選択的にロード可能であってほしい。複数タスクで共通のルールを一貫して適用できるようにするため。
 
 #### Acceptance Criteria
-1. The agents-system shall `page_policy.md`（ページ種別と選択ルール）、`naming.md`（命名規則）、`git_ops.md`（コミット規律）の3ポリシーの内容を配置する（独立ファイル、CLAUDE.mdカーネルへの統合、エージェントファイルへの埋め込みのいずれかの形式で。配置形式は設計時に決定する）
-2. The 各ポリシー shall `docs/` の対応する素案をベースとした内容を持つ
-3. The ポリシー shall 必要とするエージェントから参照可能な形式で配置される
-4. If ポリシーがCLAUDE.mdカーネルに統合される場合, the 統合内容 shall 元の素案の主要ルールを網羅する
-5. The agents-system shall 各タスクがどのポリシーを必要とするか（例: synthesizeはpage_policy + naming、approveはgit_ops）を定義し、タスク→エージェント+ポリシーの複合的なロード対象をカーネルまたはエージェントファイル内で明示する
-6. If ポリシーがエージェントファイルに埋め込まれる場合, the 埋め込み内容 shall `docs/` の対応する素案の主要ルールとの整合性を維持する
+1. The `templates/AGENTS/` shall `page_policy.md`（ページ種別と選択ルール）、`naming.md`（命名規則）、`git_ops.md`（コミット規律）の3ポリシーを独立ファイルとして含む
+2. The 各ポリシー shall `docs/` の対応する素案をベースとし、主要ルールを網羅した内容を持つ
+3. The 各ポリシー shall タスクエージェントと同じディレクトリ（`templates/AGENTS/`）に配置され、エージェントと組み合わせてロード可能である
+4. The `templates/CLAUDE.md` のマッピング表 shall 各タスクがどのポリシーを必要とするか（例: synthesize は page_policy + naming、approve は git_ops + page_policy）を明示する
+5. The ポリシー shall エージェントとは異なり単体でロードされることはなく、必ずタスクエージェントと組み合わせてロードされる
 
 ### Requirement 5: AGENTS/ドキュメント
 **Objective:** Rwiki運用者として、AGENTS/ディレクトリの構成と各ファイルの役割を把握できるドキュメントがほしい。エージェント体系の全体像を素早く理解できるようにするため。
@@ -63,7 +62,7 @@ Rwiki知識ベースシステムにおいて、CLAUDE.mdカーネルの肥大化
 #### Acceptance Criteria
 1. The `templates/AGENTS/README.md` shall エージェント体系の概要（目的、カーネルとの関係、ロードルール）を説明する
 2. The `templates/AGENTS/README.md` shall 全エージェントファイルの一覧と各ファイルの役割を記載する
-3. Where ポリシーファイルが `templates/AGENTS/` に配置される場合, the `README.md` shall ポリシーファイルの位置づけ（タスクエージェントとの違い）を説明する
+3. The `templates/AGENTS/README.md` shall ポリシーの位置づけ（タスクエージェントとの違い: 単体ロード不可、エージェントとの併載ロード）を説明する
 4. The `templates/AGENTS/README.md` shall 新しいエージェントの追加手順（ファイル作成規約、マッピング表への追記、README自体の更新方法）を記載する
 
 ### Requirement 6: ユーザーガイド初版
@@ -79,4 +78,4 @@ Rwiki知識ベースシステムにおいて、CLAUDE.mdカーネルの肥大化
 **Objective:** プロジェクト関係者として、agents-systemスペックの成果物を変更履歴に記録したい。何がいつ変更されたかを追跡するため。
 
 #### Acceptance Criteria
-1. The `CHANGELOG.md` shall agents-systemスペックの成果物（AGENTS/エージェントファイル9種、ポリシー、CLAUDE.mdカーネル更新、AGENTS/README.md、docs/user-guide.md）を記録する
+1. The `CHANGELOG.md` shall agents-systemスペックの成果物（AGENTS/エージェントファイル9種、ポリシー3種、CLAUDE.mdカーネル更新、AGENTS/README.md、docs/user-guide.md）を記録する

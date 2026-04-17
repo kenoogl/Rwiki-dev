@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `templates/AGENTS/query_extract.md`: 構造化クエリアーティファクト生成ルール（Prompt）
   - `templates/AGENTS/query_fix.md`: クエリアーティファクトのlint修復ルール（Prompt）
   - `templates/AGENTS/audit.md`: wiki整合性・一貫性・構造監査ルール（Prompt、4ティア）
-- **3ポリシーファイル**:
+- **3ポリシー**:
   - `templates/AGENTS/page_policy.md`: Wikiページ種別定義と選択ルール
   - `templates/AGENTS/naming.md`: ファイル名・スラッグ・frontmatterの命名規則
   - `templates/AGENTS/git_ops.md`: Gitオペレーション・コミット分離ルール

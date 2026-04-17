@@ -845,7 +845,7 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
             result["infos"].append(f"{code} {message}")
 
     required_files = {
-        "query.md": os.path.join(query_dir, "query.md"),
+        "question.md": os.path.join(query_dir, "question.md"),
         "answer.md": os.path.join(query_dir, "answer.md"),
         "evidence.md": os.path.join(query_dir, "evidence.md"),
         "metadata.json": os.path.join(query_dir, "metadata.json"),
@@ -861,7 +861,7 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
         result["status"] = "FAIL"
         return result
 
-    query_text = read_text(required_files["query.md"])
+    query_text = read_text(required_files["question.md"])
     answer_text = read_text(required_files["answer.md"])
     evidence_text = read_text(required_files["evidence.md"])
 

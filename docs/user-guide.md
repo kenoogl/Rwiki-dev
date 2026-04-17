@@ -248,7 +248,7 @@ Loaded Agents: query_extract.md, naming.md, page_policy.md
 Execution Plan: query_id: 20260417-sindy-dimensionality でクエリアーティファクトを生成する
 ```
 
-出力先: `review/query/<query_id>/` 配下の4ファイル（query.md / answer.md / evidence.md / metadata.json）
+出力先: `review/query/<query_id>/` 配下の4ファイル（question.md / answer.md / evidence.md / metadata.json）
 
 ### query_answer タスク
 

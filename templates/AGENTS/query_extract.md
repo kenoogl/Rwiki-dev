@@ -43,14 +43,14 @@
 
 | ファイル | 内容 |
 |---|---|
-| `query.md` | クエリ・クエリタイプ・スコープ・日付 |
+| `question.md` | クエリ・クエリタイプ・スコープ・日付 |
 | `answer.md` | 構造化された回答（エビデンス基盤） |
 | `evidence.md` | 支持するwikiの抜粋（source: 付き） |
 | `metadata.json` | メタデータ（必須フィールド含む） |
 
 全4ファイルを必ず生成すること。wikiが不十分な場合でも4ファイルを生成し、限界を明示する。
 
-#### query.md 必須フィールド
+#### question.md 必須フィールド
 - `query`: クエリテキスト
 - `query_type`: `fact` / `structure` / `comparison` / `why` / `hypothesis` の1つ
 - `scope`: 対象スコープ
