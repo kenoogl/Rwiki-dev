@@ -100,7 +100,7 @@
   - _Depends: 3.1_
 
 - [ ] 4. CLI 統合
-- [ ] 4.1 ディスパッチャ・usage・例外ハンドラを更新する
+- [x] 4.1 ディスパッチャ・usage・例外ハンドラを更新する
   - main() に if cmd == "query" ブロックを追加し、sys.argv[2] で extract/answer/fix にルーティングする
   - rw query（サブコマンドなし）で query 用 usage を表示する
   - print_usage() に query サブコマンドの使用方法を追加する

@@ -2067,10 +2067,14 @@ def cmd_init(args: list[str]) -> int:
 # main
 # -------------------------
 def print_usage() -> None:
-    print("Usage: rw [lint|ingest|synthesize-logs|approve|init]")
+    print("Usage: rw [lint|ingest|synthesize-logs|approve|init|query]")
     print("       rw lint")
     print("       rw lint query [--path review/query/<query_id>] [--strict] [--format text|json]")
     print("       rw init [<path>]")
+    print("       rw query <subcommand>")
+    print('           extract "<question>" [--scope <page>] [--type <query_type>]')
+    print('           answer  "<question>" [--scope <page>]')
+    print("           fix     <query_id>")
 
 
 def main() -> None:
@@ -2094,12 +2098,31 @@ def main() -> None:
         if cmd == "init":
             sys.exit(cmd_init(sys.argv[2:]))
 
+        if cmd == "query":
+            if len(sys.argv) < 3:
+                print_usage()
+                sys.exit(1)
+            subcmd = sys.argv[2]
+            if subcmd == "extract":
+                sys.exit(cmd_query_extract(sys.argv[3:]))
+            elif subcmd == "answer":
+                sys.exit(cmd_query_answer(sys.argv[3:]))
+            elif subcmd == "fix":
+                sys.exit(cmd_query_fix(sys.argv[3:]))
+            else:
+                print(f"Unknown query subcommand: {subcmd}")
+                print_usage()
+                sys.exit(1)
+
         print_usage()
         sys.exit(1)
     except FileNotFoundError as e:
         print(f"[FAIL] {e}")
         sys.exit(1)
     except RuntimeError as e:
+        print(f"[FAIL] {e}")
+        sys.exit(1)
+    except ValueError as e:
         print(f"[FAIL] {e}")
         sys.exit(1)
     except subprocess.CalledProcessError as e:

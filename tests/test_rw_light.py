@@ -1687,3 +1687,147 @@ class TestCmdQueryFix:
         assert initial_wiki_files == final_wiki_files, (
             f"wiki/ に新しいファイルが作成された: {final_wiki_files - initial_wiki_files}"
         )
+
+
+# ---------------------------------------------------------------------------
+# print_usage() のテスト
+# ---------------------------------------------------------------------------
+
+class TestPrintUsage:
+    """print_usage() のユニットテスト"""
+
+    def test_print_usage_contains_query_subcommand(self, capsys):
+        """print_usage() の出力に 'query' が含まれること"""
+        rw_light.print_usage()
+        captured = capsys.readouterr()
+        assert "query" in captured.out
+
+    def test_print_usage_contains_extract(self, capsys):
+        """print_usage() の出力に 'extract' が含まれること"""
+        rw_light.print_usage()
+        captured = capsys.readouterr()
+        assert "extract" in captured.out
+
+    def test_print_usage_contains_answer(self, capsys):
+        """print_usage() の出力に 'answer' が含まれること"""
+        rw_light.print_usage()
+        captured = capsys.readouterr()
+        assert "answer" in captured.out
+
+    def test_print_usage_contains_fix(self, capsys):
+        """print_usage() の出力に 'fix' が含まれること"""
+        rw_light.print_usage()
+        captured = capsys.readouterr()
+        assert "fix" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# main() ディスパッチャのテスト
+# ---------------------------------------------------------------------------
+
+class TestMainDispatcher:
+    """main() の query ルーティングと例外ハンドラのテスト"""
+
+    def test_query_extract_routes_to_cmd_query_extract(self, monkeypatch, capsys):
+        """rw query extract "q" → cmd_query_extract(["q"]) が呼ばれること"""
+        called_with = []
+
+        def mock_cmd_query_extract(args):
+            called_with.append(args)
+            return 0
+
+        monkeypatch.setattr(sys, "argv", ["rw", "query", "extract", "q"])
+        monkeypatch.setattr(rw_light, "cmd_query_extract", mock_cmd_query_extract)
+
+        with pytest.raises(SystemExit) as exc_info:
+            rw_light.main()
+
+        assert exc_info.value.code == 0
+        assert called_with == [["q"]]
+
+    def test_query_answer_routes_to_cmd_query_answer(self, monkeypatch):
+        """rw query answer "q" → cmd_query_answer(["q"]) が呼ばれること"""
+        called_with = []
+
+        def mock_cmd_query_answer(args):
+            called_with.append(args)
+            return 0
+
+        monkeypatch.setattr(sys, "argv", ["rw", "query", "answer", "q"])
+        monkeypatch.setattr(rw_light, "cmd_query_answer", mock_cmd_query_answer)
+
+        with pytest.raises(SystemExit) as exc_info:
+            rw_light.main()
+
+        assert exc_info.value.code == 0
+        assert called_with == [["q"]]
+
+    def test_query_fix_routes_to_cmd_query_fix(self, monkeypatch):
+        """rw query fix qid → cmd_query_fix(["qid"]) が呼ばれること"""
+        called_with = []
+
+        def mock_cmd_query_fix(args):
+            called_with.append(args)
+            return 0
+
+        monkeypatch.setattr(sys, "argv", ["rw", "query", "fix", "qid"])
+        monkeypatch.setattr(rw_light, "cmd_query_fix", mock_cmd_query_fix)
+
+        with pytest.raises(SystemExit) as exc_info:
+            rw_light.main()
+
+        assert exc_info.value.code == 0
+        assert called_with == [["qid"]]
+
+    def test_query_no_subcommand_exits_1(self, monkeypatch, capsys):
+        """rw query（サブコマンドなし）→ sys.exit(1)"""
+        monkeypatch.setattr(sys, "argv", ["rw", "query"])
+
+        with pytest.raises(SystemExit) as exc_info:
+            rw_light.main()
+
+        assert exc_info.value.code == 1
+
+    def test_query_no_subcommand_shows_usage(self, monkeypatch, capsys):
+        """rw query（サブコマンドなし）→ usage に 'query' が含まれること"""
+        monkeypatch.setattr(sys, "argv", ["rw", "query"])
+
+        with pytest.raises(SystemExit):
+            rw_light.main()
+
+        captured = capsys.readouterr()
+        assert "query" in captured.out
+
+    def test_query_unknown_subcommand_exits_1(self, monkeypatch):
+        """rw query unknown → sys.exit(1)"""
+        monkeypatch.setattr(sys, "argv", ["rw", "query", "unknown"])
+
+        with pytest.raises(SystemExit) as exc_info:
+            rw_light.main()
+
+        assert exc_info.value.code == 1
+
+    def test_no_command_exits_1(self, monkeypatch):
+        """rw（コマンドなし）→ sys.exit(1)"""
+        monkeypatch.setattr(sys, "argv", ["rw"])
+
+        with pytest.raises(SystemExit) as exc_info:
+            rw_light.main()
+
+        assert exc_info.value.code == 1
+
+    def test_value_error_caught_and_exits_1(self, monkeypatch, capsys):
+        """cmd_query_extract が ValueError を raise → sys.exit(1) かつ '[FAIL]' が出力されること"""
+
+        def mock_cmd_query_extract(args):
+            raise ValueError("test error")
+
+        monkeypatch.setattr(sys, "argv", ["rw", "query", "extract", "q"])
+        monkeypatch.setattr(rw_light, "cmd_query_extract", mock_cmd_query_extract)
+
+        with pytest.raises(SystemExit) as exc_info:
+            rw_light.main()
+
+        assert exc_info.value.code == 1
+        captured = capsys.readouterr()
+        assert "[FAIL]" in captured.out
