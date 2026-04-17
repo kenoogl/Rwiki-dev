@@ -74,7 +74,7 @@
   - _Boundary: scripts/rw_light.py (main 関数の init 分岐 + print_usage 関数)_
 
 - [ ] 3. ドキュメント作成
-- [ ] 3.1 (P) README.md の作成
+- [x] 3.1 (P) README.md の作成
   - プロジェクトの目的と概要（Karpathy式LLM Wikiを参考にした知識ベース構築システム）を記述する
   - `rw init` によるVaultセットアップ手順を記載する
   - 基本的な運用サイクル（ingest → lint → synthesize → approve → audit）の概要を記載する
