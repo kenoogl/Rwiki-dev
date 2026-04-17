@@ -1,4 +1,5 @@
 """Unit tests for rw_light.py — Task 1.1: parse_agent_mapping / load_task_prompts"""
+import json
 import os
 import sys
 import textwrap
@@ -653,3 +654,164 @@ class TestBuildQueryPrompt:
 
         assert pos_agent < pos_wiki, "task_prompts は wiki_content より前にあること"
         assert pos_wiki < pos_question, "wiki_content は question より前にあること"
+
+
+# ---------------------------------------------------------------------------
+# generate_query_id() のテスト
+# ---------------------------------------------------------------------------
+
+class TestGenerateQueryId:
+    """generate_query_id() のユニットテスト"""
+
+    def test_ascii_question_generates_slug(self, monkeypatch):
+        """ASCII 質問文からスラッグが生成されること"""
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        result = rw_light.generate_query_id("What is machine learning?")
+        assert result == "20260417-what-is-machine-learning"
+
+    def test_non_ascii_question_slugified(self, monkeypatch):
+        """非ASCII 質問文が slugify されること（ASCII 変換後にスラッグ生成）"""
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        result = rw_light.generate_query_id("機械学習とは何か？")
+        # 非ASCII は除去されて "untitled" または空になるケース
+        assert result.startswith("20260417-")
+        # 少なくとも日付プレフィックスを含むこと
+        assert len(result) > 9
+
+    def test_empty_question_raises_value_error(self, monkeypatch):
+        """空の質問文で ValueError が raise されること"""
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        with pytest.raises(ValueError, match=".*"):
+            rw_light.generate_query_id("")
+
+    def test_whitespace_only_raises_value_error(self, monkeypatch):
+        """空白のみの質問文で ValueError が raise されること"""
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        with pytest.raises(ValueError, match=".*"):
+            rw_light.generate_query_id("   ")
+
+    def test_date_prefix_is_8_digits(self, monkeypatch):
+        """日付プレフィックスが YYYYMMDD 形式 (8桁) であること"""
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        result = rw_light.generate_query_id("test question")
+        prefix = result.split("-")[0]
+        assert len(prefix) == 8
+        assert prefix.isdigit()
+        assert prefix == "20260417"
+
+    def test_max_slug_length_80_chars(self, monkeypatch):
+        """非常に長い質問文でスラッグ部分が 80 文字以下になること"""
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        long_question = "a " * 100  # 200文字の質問
+        result = rw_light.generate_query_id(long_question)
+        # プレフィックス "20260417-" を除いたスラッグ部分
+        slug_part = result[9:]  # "20260417-" は9文字
+        assert len(slug_part) <= 80, f"Slug part too long: {len(slug_part)} chars"
+
+    def test_format_is_yyyymmdd_hyphen_slug(self, monkeypatch):
+        """YYYYMMDD-{slug} 形式であること"""
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-01-15")
+        result = rw_light.generate_query_id("hello world")
+        assert result == "20260115-hello-world"
+
+
+# ---------------------------------------------------------------------------
+# write_query_artifacts() のテスト
+# ---------------------------------------------------------------------------
+
+class TestWriteQueryArtifacts:
+    """write_query_artifacts() のユニットテスト"""
+
+    QUERY_ID = "20260417-what-is-ml"
+
+    SAMPLE_DATA = {
+        "query": {
+            "text": "What is ML?",
+            "query_type": "fact",
+            "scope": "wiki/ml.md",
+            "date": "2026-04-17",
+        },
+        "answer": {
+            "content": "## Answer\n\nML stands for Machine Learning. It is a subfield of AI.",
+        },
+        "evidence": {
+            "blocks": [
+                {"source": "wiki/ml.md", "excerpt": "ML is a method of data analysis."},
+                {"source": "wiki/ai.md", "excerpt": "AI encompasses many fields."},
+            ]
+        },
+        "metadata": {
+            "query_id": "old-id-from-claude",
+            "query_type": "fact",
+            "scope": "wiki/ml.md",
+            "sources": ["wiki/ml.md", "wiki/ai.md"],
+            "created_at": "2026-04-17T10:00:00",
+        },
+        "referenced_pages": ["wiki/ml.md", "wiki/ai.md"],
+    }
+
+    def _setup(self, tmp_path, monkeypatch):
+        """QUERY_REVIEW を tmp_path/review/query に向ける"""
+        review_query_dir = tmp_path / "review" / "query"
+        review_query_dir.mkdir(parents=True)
+        monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(review_query_dir))
+        return review_query_dir
+
+    def test_creates_query_id_directory(self, tmp_path, monkeypatch):
+        """review/query/<query_id>/ ディレクトリが作成されること"""
+        review_query_dir = self._setup(tmp_path, monkeypatch)
+        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        expected_dir = review_query_dir / self.QUERY_ID
+        assert expected_dir.is_dir(), f"Expected directory: {expected_dir}"
+
+    def test_creates_4_files(self, tmp_path, monkeypatch):
+        """4ファイル (question.md, answer.md, evidence.md, metadata.json) が作成されること"""
+        review_query_dir = self._setup(tmp_path, monkeypatch)
+        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        target_dir = review_query_dir / self.QUERY_ID
+        for filename in ["question.md", "answer.md", "evidence.md", "metadata.json"]:
+            assert (target_dir / filename).exists(), f"Missing file: {filename}"
+
+    def test_returns_list_of_4_paths(self, tmp_path, monkeypatch):
+        """ファイルパスのリスト（4要素）が返ること"""
+        self._setup(tmp_path, monkeypatch)
+        result = rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        assert isinstance(result, list)
+        assert len(result) == 4
+
+    def test_metadata_json_query_id_overridden(self, tmp_path, monkeypatch):
+        """metadata.json の query_id が CLI 生成の query_id で上書きされること"""
+        review_query_dir = self._setup(tmp_path, monkeypatch)
+        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        metadata_path = review_query_dir / self.QUERY_ID / "metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        assert metadata["query_id"] == self.QUERY_ID
+        assert metadata["query_id"] != "old-id-from-claude"
+
+    def test_question_md_key_value_format(self, tmp_path, monkeypatch):
+        """question.md がキーバリュー形式で書き出されること"""
+        review_query_dir = self._setup(tmp_path, monkeypatch)
+        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        question_path = review_query_dir / self.QUERY_ID / "question.md"
+        content = question_path.read_text(encoding="utf-8")
+        assert "query: What is ML?" in content
+        assert "query_type: fact" in content
+        assert "scope: wiki/ml.md" in content
+        assert "date: 2026-04-17" in content
+
+    def test_answer_md_contains_answer_content(self, tmp_path, monkeypatch):
+        """answer.md に answer content が含まれること"""
+        review_query_dir = self._setup(tmp_path, monkeypatch)
+        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        answer_path = review_query_dir / self.QUERY_ID / "answer.md"
+        content = answer_path.read_text(encoding="utf-8")
+        assert "ML stands for Machine Learning" in content
+
+    def test_evidence_md_contains_source_lines(self, tmp_path, monkeypatch):
+        """evidence.md にエビデンスブロックの source: 行が含まれること"""
+        review_query_dir = self._setup(tmp_path, monkeypatch)
+        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        evidence_path = review_query_dir / self.QUERY_ID / "evidence.md"
+        content = evidence_path.read_text(encoding="utf-8")
+        assert "source: wiki/ml.md" in content
+        assert "source: wiki/ai.md" in content

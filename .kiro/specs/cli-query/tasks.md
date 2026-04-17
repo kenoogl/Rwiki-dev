@@ -48,7 +48,7 @@
   - _Boundary: Prompt Engine_
 
 - [ ] 2. クエリ出力ユーティリティ
-- [ ] 2.1 query_id 生成とアーティファクト書き出しを実装する
+- [x] 2.1 query_id 生成とアーティファクト書き出しを実装する
   - generate_query_id(question) を実装する（YYYYMMDD-slugify(question) 形式、既存 slugify 使用、80文字上限）
   - 空の質問文に対するバリデーション（slugify("") → "untitled" のケースを防ぐ）
   - write_query_artifacts(query_id, data) を実装する。review/query/<query_id>/ に question.md, answer.md, evidence.md, metadata.json を書き出す

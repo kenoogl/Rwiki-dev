@@ -1051,6 +1051,77 @@ def read_wiki_content(scope: str | None) -> str:
 
 
 # -------------------------
+# Output utilities
+# -------------------------
+
+def generate_query_id(question: str) -> str:
+    """YYYYMMDD-<slugify(question)> 形式の query_id を生成する。
+
+    slugify は既存関数を使用（ASCII, lowercase, hyphen, max 80 chars）。
+
+    Raises:
+        ValueError: question が空または空白のみの場合
+    """
+    if not question or not question.strip():
+        raise ValueError("question must not be empty")
+    date_prefix = today().replace("-", "")
+    slug = slugify(question)
+    return f"{date_prefix}-{slug}"
+
+
+def write_query_artifacts(
+    query_id: str,
+    data: dict[str, Any],
+) -> list[str]:
+    """review/query/<query_id>/ に4ファイルを書き出す。
+
+    CLI が generate_query_id() で生成した query_id を正とする。
+    Claude CLI レスポンス内の query_id は無視し、CLI 生成の query_id で
+    metadata.json の query_id フィールドおよびディレクトリ名を上書きする。
+
+    Returns:
+        生成したファイルパスのリスト
+    """
+    base_dir = os.path.join(QUERY_REVIEW, query_id)
+    os.makedirs(base_dir, exist_ok=True)
+
+    # question.md: キーバリュー形式
+    query = data["query"]
+    question_content = (
+        f"query: {query['text']}\n"
+        f"query_type: {query['query_type']}\n"
+        f"scope: {query['scope']}\n"
+        f"date: {query['date']}\n"
+    )
+    question_path = os.path.join(base_dir, "question.md")
+    write_text(question_path, question_content)
+
+    # answer.md: Markdown コンテンツそのまま
+    answer_path = os.path.join(base_dir, "answer.md")
+    write_text(answer_path, data["answer"]["content"])
+
+    # evidence.md: evidence blocks から source: 行を含む形式で書き出す
+    blocks = data["evidence"]["blocks"]
+    evidence_lines: list[str] = []
+    for block in blocks:
+        evidence_lines.append(f"source: {block['source']}")
+        if block.get("excerpt"):
+            evidence_lines.append(block["excerpt"])
+        evidence_lines.append("")
+    evidence_content = "\n".join(evidence_lines).rstrip() + "\n"
+    evidence_path = os.path.join(base_dir, "evidence.md")
+    write_text(evidence_path, evidence_content)
+
+    # metadata.json: CLI 生成の query_id で上書き
+    metadata = dict(data["metadata"])
+    metadata["query_id"] = query_id
+    metadata_path = os.path.join(base_dir, "metadata.json")
+    write_text(metadata_path, json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
+
+    return [question_path, answer_path, evidence_path, metadata_path]
+
+
+# -------------------------
 # query lint
 # -------------------------
 def count_evidence_blocks(text: str) -> int:
