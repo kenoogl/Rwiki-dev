@@ -65,7 +65,7 @@
   - _Depends: 2.2, 2.3_
   - _Boundary: scripts/rw_light.py (cmd_init 関数: re-init分岐のバックアップガード — タスク2.2/2.3のコード内に挿入)_
 
-- [ ] 2.5 main() ディスパッチと print_usage() の更新
+- [x] 2.5 main() ディスパッチと print_usage() の更新
   - `main()` に `"init"` コマンドの分岐を追加し、`cmd_init(sys.argv[2:])` を呼び出す
   - `print_usage()` に `rw init [path]` の使用方法を追加する
   - `python scripts/rw_light.py init` をコマンドラインから実行し、カレントディレクトリに対してVaultセットアップが開始される

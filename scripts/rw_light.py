@@ -1219,9 +1219,10 @@ def cmd_init(args: list[str]) -> int:
 # main
 # -------------------------
 def print_usage() -> None:
-    print("Usage: rw [lint|ingest|synthesize-logs|approve]")
+    print("Usage: rw [lint|ingest|synthesize-logs|approve|init]")
     print("       rw lint")
     print("       rw lint query [--path review/query/<query_id>] [--strict] [--format text|json]")
+    print("       rw init [<path>]")
 
 
 def main() -> None:
@@ -1242,6 +1243,8 @@ def main() -> None:
             sys.exit(cmd_synthesize_logs())
         if cmd == "approve":
             sys.exit(cmd_approve())
+        if cmd == "init":
+            sys.exit(cmd_init(sys.argv[2:]))
 
         print_usage()
         sys.exit(1)
