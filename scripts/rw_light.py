@@ -884,6 +884,25 @@ def load_task_prompts(task_name: str) -> str:
     return "\n\n".join(parts)
 
 
+def call_claude(prompt: str) -> str:
+    """Claude CLI を呼び出してレスポンスを返す。
+
+    Raises:
+        RuntimeError: Claude CLI がエラーを返した場合（stderrを含む）
+    """
+    result = subprocess.run(
+        ["claude", "-p", prompt],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    if result.returncode != 0:
+        print(result.stdout[:500], file=sys.stderr)
+        raise RuntimeError(result.stderr.strip() or "claude call failed")
+    return result.stdout.strip()
+
+
 # -------------------------
 # query lint
 # -------------------------

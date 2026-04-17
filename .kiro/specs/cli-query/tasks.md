@@ -19,7 +19,7 @@
   - _Requirements: 9.1, 9.2, 6.5_
   - _Boundary: Prompt Engine_
 
-- [ ] 1.2 Claude CLI 呼び出し汎用関数を実装する
+- [x] 1.2 Claude CLI 呼び出し汎用関数を実装する
   - subprocess.run(["claude", "-p", prompt]) ラッパーの call_claude() を実装する
   - returncode != 0 で RuntimeError を raise し、stderr を含めるエラーメッセージにする
   - 呼び出し失敗時に生レスポンス先頭500文字を stderr に出力するデバッグ支援を含める

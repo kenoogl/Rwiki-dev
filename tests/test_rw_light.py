@@ -253,3 +253,84 @@ def _setup_mock_vault(tmp_path, monkeypatch):
 
     # rw_light.ROOT を tmp_path に向ける
     monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+
+
+# ---------------------------------------------------------------------------
+# call_claude() のテスト
+# ---------------------------------------------------------------------------
+
+class TestCallClaude:
+    """call_claude() のユニットテスト"""
+
+    def test_success_returns_stdout(self, monkeypatch):
+        """成功時: stdout を返すこと"""
+        import subprocess
+
+        mock_result = subprocess.CompletedProcess(
+            args=["claude", "-p", "test"],
+            returncode=0,
+            stdout="  hello from claude  \n",
+            stderr="",
+        )
+
+        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
+
+        result = rw_light.call_claude("test prompt")
+        assert result == "hello from claude"
+
+    def test_failure_raises_runtime_error(self, monkeypatch):
+        """失敗時 (returncode != 0): RuntimeError を raise し、stderr を含むこと"""
+        import subprocess
+
+        mock_result = subprocess.CompletedProcess(
+            args=["claude", "-p", "test"],
+            returncode=1,
+            stdout="partial output",
+            stderr="claude error: something went wrong",
+        )
+
+        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
+
+        with pytest.raises(RuntimeError, match="claude error: something went wrong"):
+            rw_light.call_claude("test prompt")
+
+    def test_failure_prints_stdout_to_stderr(self, monkeypatch, capsys):
+        """失敗時: stdout の先頭500文字が stderr に出力されること"""
+        import subprocess
+
+        long_stdout = "X" * 600
+        mock_result = subprocess.CompletedProcess(
+            args=["claude", "-p", "test"],
+            returncode=1,
+            stdout=long_stdout,
+            stderr="error message",
+        )
+
+        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
+
+        with pytest.raises(RuntimeError):
+            rw_light.call_claude("test prompt")
+
+        captured = capsys.readouterr()
+        # stderr に stdout 先頭500文字が含まれること
+        assert "X" * 500 in captured.err
+        # 501文字目以降は含まれないこと（正確に500文字でトリム）
+        assert "X" * 501 not in captured.err
+
+    def test_failure_error_message_contains_stderr(self, monkeypatch):
+        """失敗時: RuntimeError メッセージが stderr 内容を含むこと"""
+        import subprocess
+
+        mock_result = subprocess.CompletedProcess(
+            args=["claude", "-p", "test"],
+            returncode=2,
+            stdout="",
+            stderr="specific error detail",
+        )
+
+        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
+
+        with pytest.raises(RuntimeError) as exc_info:
+            rw_light.call_claude("test prompt")
+
+        assert "specific error detail" in str(exc_info.value)
