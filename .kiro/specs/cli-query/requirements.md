@@ -139,7 +139,7 @@ extract は `review/query/` にファイルを生成する。fix は `review/que
 
 6.4. If `wiki/` ディレクトリが存在しない、または `.md` ファイルが1つも存在しない場合, then the CLI shall エラーメッセージを表示し、終了コード 1 で終了する
 
-6.5. If プロンプト構築に必要な AGENTS/ファイルが存在しない場合, then the CLI shall エラーメッセージを表示し、終了コード 1 で終了する
+6.5. If プロンプト構築に必要な AGENTS/ファイルが存在しない、または CLAUDE.md のマッピング表がパースできない場合, then the CLI shall エラーメッセージを表示し、終了コード 1 で終了する
 
 ### Requirement 7: ドキュメント更新
 

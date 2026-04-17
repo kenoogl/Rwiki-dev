@@ -24,7 +24,7 @@
 
 ### This Spec Owns
 - `rw query extract / answer / fix` の3サブコマンドの実装
-- AGENTS/ファイルを読み込んでプロンプトを構築する一元管理パターン（`read_agent_file()`, `build_query_prompt()`）
+- CLAUDE.mdマッピング表をパースしAGENTS/ファイルを読み込んでプロンプトを構築する一元管理パターン（`parse_agent_mapping()`, `load_task_prompts()`, `build_query_prompt()`）
 - extract が生成する4ファイルの書き出しロジック
 - query_id の生成ロジック
 - 自動lint検証の呼び出しと終了コード決定
@@ -33,7 +33,7 @@
 
 ### Out of Boundary
 - AGENTS/ファイルのルール定義・処理内容の変更
-- `rw lint query` のバリデーションロジック変更
+- `rw lint query` のバリデーションロジック変更（ただし出力ファイル名 `query.md` → `question.md` の改名は本スペックで実施済み）
 - `rw approve` の拡張（query結果の昇格）
 - 既存の `call_claude_for_log_synthesis()` の改修（synthesize-logs のハードコード解消は別スコープ）
 
@@ -41,10 +41,12 @@
 - `scripts/rw_light.py` の既存ユーティリティ（`read_text`, `write_text`, `slugify`, `build_frontmatter`, `warn_if_dirty_paths`, `list_md_files`, `today`）
 - `lint_single_query_dir()` 関数（自動lint検証に使用）
 - `QUERY_REVIEW`, `WIKI`, `ROOT` 等の既存パス定数
-- `templates/AGENTS/query_extract.md`, `query_answer.md`, `query_fix.md` — プロンプトソース
+- `CLAUDE.md` — マッピング表の正規ソース（`parse_agent_mapping()` でパース）
+- `AGENTS/query_extract.md`, `query_answer.md`, `query_fix.md` + 関連ポリシー — プロンプトソース（Vault ルート相対。開発リポジトリでは `templates/AGENTS/`）
 - `claude` CLI — 外部プロセスとして呼び出し
 
 ### Revalidation Triggers
+- CLAUDE.md マッピング表の形式変更（列名・区切り・行構造の変更は `parse_agent_mapping()` に影響）
 - AGENTS/query_*.md のセクション構造変更（プロンプト埋め込み方式に影響）
 - lint query の QL コード追加・変更（fix の修復対象に影響）
 - Claude CLI の `-p` フラグの動作変更
@@ -62,6 +64,8 @@
 
 cli-query はこのパターンを踏襲し、新規関数を同一ファイルに追加する。
 
+cli-query の全コマンドは Vault ルート（`ROOT = os.getcwd()`）で実行される前提である。CLAUDE.md は `ROOT/CLAUDE.md`、AGENTS/ は `ROOT/AGENTS/` を参照する。開発リポジトリの `templates/CLAUDE.md` や `templates/AGENTS/` ではない。
+
 ### Architecture Pattern & Boundary Map
 
 ```mermaid
@@ -74,7 +78,8 @@ graph TB
     end
 
     subgraph PromptEngine[Prompt Engine - new]
-        ReadAgent[read_agent_files]
+        LoadPrompts[load_task_prompts]
+        ParseMapping[parse_agent_mapping]
         ReadWiki[read_wiki_content]
         BuildPrompt[build_query_prompt]
         CallClaude[call_claude]
@@ -86,6 +91,7 @@ graph TB
     end
 
     subgraph External
+        ClaudeMd[CLAUDE.md]
         AgentsFiles[AGENTS/*.md files]
         WikiFiles[wiki/*.md files]
         ClaudeCLI[claude CLI process]
@@ -95,14 +101,16 @@ graph TB
     Dispatcher --> CmdAnswer
     Dispatcher --> CmdFix
 
-    CmdExtract --> ReadAgent
+    CmdExtract --> LoadPrompts
     CmdExtract --> ReadWiki
-    CmdAnswer --> ReadAgent
+    CmdAnswer --> LoadPrompts
     CmdAnswer --> ReadWiki
-    CmdFix --> ReadAgent
+    CmdFix --> LoadPrompts
     CmdFix --> ReadWiki
 
-    ReadAgent --> AgentsFiles
+    LoadPrompts --> ParseMapping
+    ParseMapping --> ClaudeMd
+    LoadPrompts --> AgentsFiles
     ReadWiki --> WikiFiles
 
     CmdExtract --> BuildPrompt
@@ -138,12 +146,13 @@ graph TB
 ```
 scripts/
 └── rw_light.py    # 既存ファイルに以下を追加:
-                   # - Prompt Engine 関数群（read_agent_file, read_wiki_content, build_query_prompt, call_claude）
+                   # - Prompt Engine 関数群（parse_agent_mapping, load_task_prompts, read_wiki_content, build_query_prompt, call_claude）
                    # - cmd_query_extract(), cmd_query_answer(), cmd_query_fix()
                    # - generate_query_id()
                    # - write_query_artifacts()
                    # - parse_extract_response(), parse_fix_response()
                    # - main() ディスパッチャに query サブコマンド追加
+                   # - print_usage() に query サブコマンドの使用方法を追加
 ```
 
 ```
@@ -179,12 +188,15 @@ sequenceDiagram
     participant Lint as lint_single_query_dir
 
     User->>CLI: rw query extract "question" [--scope] [--type]
-    CLI->>FS: wiki/ 存在確認
-    CLI->>FS: AGENTS/query_extract.md 存在確認
-    CLI->>PE: build_query_prompt(agent=query_extract, question, scope, type)
-    PE->>FS: read_agent_file(query_extract)
-    PE->>FS: read_wiki_content(scope)
-    Note over PE: scope なし: 2段階方式で関連ページ特定
+    CLI->>FS: wiki/ 存在確認・dirty 警告
+    CLI->>FS: CLAUDE.md / AGENTS/ 存在確認
+    CLI->>PE: load_task_prompts query_extract
+    PE->>FS: parse_agent_mapping CLAUDE.md
+    PE->>FS: read agent + policy files
+    PE-->>CLI: task_prompts
+    CLI->>FS: read_wiki_content scope
+    Note over CLI: scope なし: 2段階方式で関連ページ特定
+    CLI->>PE: build_query_prompt task_prompts, question, wiki_content
     PE->>Claude: claude -p prompt
     Claude-->>PE: JSON response
     PE-->>CLI: parsed response
@@ -208,10 +220,14 @@ sequenceDiagram
     participant FS as File System
 
     User->>CLI: rw query answer "question" [--scope]
-    CLI->>FS: wiki/ 存在確認
+    CLI->>FS: wiki/ 存在確認・dirty 警告
     CLI->>FS: CLAUDE.md / AGENTS/ 存在確認
-    Note over CLI: dirty wiki 警告（該当時）
-    CLI->>PE: build_query_prompt(agent=query_answer, question, scope)
+    CLI->>PE: load_task_prompts query_answer
+    PE->>FS: parse_agent_mapping CLAUDE.md
+    PE->>FS: read agent + policy files
+    PE-->>CLI: task_prompts
+    CLI->>FS: read_wiki_content scope
+    CLI->>PE: build_query_prompt task_prompts, question, wiki_content
     PE->>Claude: claude -p prompt
     Claude-->>PE: plain text response
     PE-->>CLI: answer text + referenced pages
@@ -237,7 +253,12 @@ sequenceDiagram
     alt FAIL == 0
         CLI-->>User: 修復不要, exit 0
     else FAIL > 0
-        CLI->>PE: build_query_prompt(agent=query_fix, lint_results, artifacts, wiki)
+        CLI->>PE: load_task_prompts query_fix
+        PE->>FS: parse_agent_mapping CLAUDE.md
+        PE->>FS: read agent + policy files
+        PE-->>CLI: task_prompts
+        CLI->>FS: read_wiki_content for evidence
+        CLI->>PE: build_query_prompt task_prompts, lint_results, artifacts, wiki_content
         PE->>Claude: claude -p prompt
         Claude-->>PE: JSON response
         PE-->>CLI: parsed fixes
@@ -270,12 +291,12 @@ sequenceDiagram
 | 4.5, 4.7 | 自動lint検証・FAIL時非ゼロ終了 | cmd_query_extract（lint呼び出し） | extract フロー |
 | 4.6 | query_id 形式・naming.md準拠 | generate_query_id, slugify | — |
 | 5.1-5.4 | 知識フロー遵守 | 全コマンド（出力先・ソース制約） | — |
-| 5.5 | dirty wiki 警告 | cmd_query_extract, cmd_query_answer | — |
+| 5.5 | dirty wiki 警告 | cmd_query_extract, cmd_query_answer, cmd_query_fix | — |
 | 5.6 | 自動コミットなし | 全コマンド（コミット呼び出しなし） | — |
 | 6.1-6.5 | エラー処理 | 全コマンド | 各フロー |
 | 7.1-7.2 | ドキュメント更新 | docs/user-guide.md, CHANGELOG.md | — |
 | 8.1-8.3 | 実行モード更新 | templates/CLAUDE.md, AGENTS/*.md, README.md | — |
-| 9.1-9.2 | プロンプト一元管理 | read_agent_file, build_query_prompt | — |
+| 9.1-9.2 | プロンプト一元管理 | parse_agent_mapping, load_task_prompts, build_query_prompt | — |
 
 ## Components and Interfaces
 
@@ -360,7 +381,7 @@ def read_wiki_content(scope: str | None) -> str:
                または cmd_* が2段階方式でオーケストレーションする。
 
     Raises:
-        FileNotFoundError: wiki/ が存在しない場合
+        FileNotFoundError: wiki/ が存在しない場合、または scope で指定されたページが存在しない場合
         ValueError: wiki/ に .md ファイルが存在しない場合
     """
 
@@ -369,6 +390,7 @@ def build_query_prompt(
     question: str,
     wiki_content: str,
     *,
+    output_format: str = "json",
     query_type: str | None = None,
     lint_results: dict[str, Any] | None = None,
     existing_artifacts: dict[str, str] | None = None,
@@ -377,12 +399,13 @@ def build_query_prompt(
 
     Args:
         task_prompts: load_task_prompts() の結果（エージェント+ポリシーの結合テキスト）
+        output_format: "json"（extract/fix）または "plaintext"（answer）
 
     プロンプト構造:
     1. エージェント+ポリシーの内容（ルール定義）
     2. wikiコンテンツ（知識ソース）
     3. 質問文またはタスク指示
-    4. 出力形式指定（extract/fix: JSON, answer: plaintext）
+    4. 出力形式指定（output_format に基づく）
     """
 
 def call_claude(prompt: str) -> str:
@@ -413,15 +436,17 @@ def call_claude(prompt: str) -> str:
 | Requirements | 1.1-1.8, 4.1-4.7, 5.1-5.6, 6.1-6.2, 6.4-6.5 |
 
 **フロー**:
-1. 引数パース（question, --scope, --type）
-2. 前提条件チェック（wiki/ 存在、AGENTS/ 存在、dirty 警告）
+1. 引数パース（question, --scope, --type）。質問文が空の場合はエラー終了
+2. 前提条件チェック（wiki/ 存在、CLAUDE.md / AGENTS/ 存在、`warn_if_dirty_paths(["wiki"], "query extract")`）
 3. `generate_query_id(question)` で query_id 生成、重複チェック
-4. `build_query_prompt(agent_name="query_extract", ...)` でプロンプト構築
-5. `call_claude(prompt)` → JSON レスポンス
-6. `parse_extract_response(response)` → 4ファイルデータ
-7. `write_query_artifacts(query_id, data)` → ファイル書き出し
-8. `lint_single_query_dir(query_dir)` → 自動lint検証
-9. lint結果に基づく終了コード（0: PASS, 2: FAIL）
+4. `load_task_prompts("query_extract")` でエージェント+ポリシー読み込み
+5. `read_wiki_content(scope)` で wiki コンテンツ収集（scope なし時は2段階方式）
+6. `build_query_prompt(task_prompts, question, wiki_content, ...)` でプロンプト構築
+7. `call_claude(prompt)` → JSON レスポンス
+8. `parse_extract_response(response)` → 4ファイルデータ
+9. `write_query_artifacts(query_id, data)` → ファイル書き出し
+10. `lint_single_query_dir(query_dir)` → 自動lint検証
+11. lint結果に基づく終了コード（0: PASS, 2: FAIL）
 
 ### cmd_query_answer
 
@@ -431,12 +456,14 @@ def call_claude(prompt: str) -> str:
 | Requirements | 2.1-2.6, 5.2-5.5, 6.1, 6.4-6.5 |
 
 **フロー**:
-1. 引数パース（question, --scope）
-2. 前提条件チェック（wiki/ 存在、AGENTS/ 存在、dirty 警告）
-3. `build_query_prompt(agent_name="query_answer", ...)` でプロンプト構築
-4. `call_claude(prompt)` → プレーンテキストレスポンス
-5. 回答と参照ページを stdout に表示
-6. 終了コード 0
+1. 引数パース（question, --scope）。質問文が空の場合はエラー終了
+2. 前提条件チェック（wiki/ 存在、CLAUDE.md / AGENTS/ 存在、`warn_if_dirty_paths(["wiki"], "query answer")`）
+3. `load_task_prompts("query_answer")` でエージェント+ポリシー読み込み
+4. `read_wiki_content(scope)` で wiki コンテンツ収集
+5. `build_query_prompt(task_prompts, question, wiki_content, output_format="plaintext")` でプロンプト構築
+6. `call_claude(prompt)` → プレーンテキストレスポンス
+7. 回答と参照ページを stdout に表示
+8. 終了コード 0
 
 ### cmd_query_fix
 
@@ -447,15 +474,17 @@ def call_claude(prompt: str) -> str:
 
 **フロー**:
 1. 引数パース（query_id）
-2. 前提条件チェック（query_id ディレクトリ存在、AGENTS/ 存在）
+2. 前提条件チェック（query_id ディレクトリ存在、CLAUDE.md / AGENTS/ 存在、`warn_if_dirty_paths(["wiki"], "query fix")`）
 3. `lint_single_query_dir(query_dir)` → 事前lint
 4. FAIL == 0 → 「修復不要」exit 0
-5. `build_query_prompt(agent_name="query_fix", lint_results=..., existing_artifacts=..., wiki_content=...)` でプロンプト構築
-6. `call_claude(prompt)` → JSON レスポンス
-7. `parse_fix_response(response)` → 修正データ
-8. 修正ファイル書き出し（変更が必要なファイルのみ）
-9. `lint_single_query_dir(query_dir)` → 修復後lint再検証
-10. lint結果に基づく終了コード（0: PASS, 2: FAIL残存）
+5. `load_task_prompts("query_fix")` でエージェント+ポリシー読み込み
+6. `read_wiki_content(scope=None)` で wiki コンテンツ収集（evidence 補完用）
+7. `build_query_prompt(task_prompts, question="", wiki_content, lint_results=..., existing_artifacts=...)` でプロンプト構築
+8. `call_claude(prompt)` → JSON レスポンス
+9. `parse_fix_response(response)` → 修正データ
+10. 修正ファイル書き出し（変更が必要なファイルのみ）
+11. `lint_single_query_dir(query_dir)` → 修復後lint再検証
+12. lint結果に基づく終了コード（0: PASS, 2: FAIL残存）
 
 ### write_query_artifacts
 
@@ -573,16 +602,20 @@ date: <YYYY-MM-DD>
 
 全コマンドで共通のエラー処理パターン:
 1. 前提条件チェック（ファイル存在、ディレクトリ存在）→ 即座にエラーメッセージ + exit 1
-2. Claude CLI 呼び出し → RuntimeError キャッチ → エラーメッセージ + exit 1
-3. レスポンスパース → ValueError/json.JSONDecodeError キャッチ → パースエラー + exit 1（部分書き込みなし）
-4. 自動lint検証 → FAIL 時は exit 2（ファイルは保持）
+2. マッピング表パースエラー → ValueError キャッチ → エラーメッセージ + exit 1
+3. Claude CLI 呼び出し → RuntimeError キャッチ → エラーメッセージ + exit 1
+4. レスポンスパース → ValueError/json.JSONDecodeError キャッチ → パースエラー + exit 1（部分書き込みなし）
+5. 自動lint検証 → FAIL 時は exit 2（ファイルは保持）
 
 ### Error Categories and Responses
 
 | エラー種別 | 検出タイミング | 終了コード | 対応 |
 |-----------|-------------|-----------|------|
+| 質問文が空 | 引数パース後 | 1 | — |
+| --scope 指定ページ不在 | read_wiki_content() | 1 | — |
 | wiki/ 不在・空 | 前提条件チェック | 1 | 6.4 |
-| AGENTS/ 不在 | 前提条件チェック | 1 | 6.5 |
+| CLAUDE.md パースエラー | parse_agent_mapping() | 1 | 6.5 |
+| AGENTS/ 不在 | load_task_prompts() | 1 | 6.5 |
 | query_id 重複 | query_id 生成後 | 1 | 1.7 |
 | query_id ディレクトリ不在（fix） | 前提条件チェック | 1 | 6.3 |
 | Claude CLI 失敗 | call_claude() | 1 | 6.1 |
@@ -594,7 +627,8 @@ date: <YYYY-MM-DD>
 
 ### Unit Tests
 - `generate_query_id()`: 日付プレフィックス・スラッグ生成・80文字上限・非ASCII処理（4.6）
-- `read_agent_file()`: 正常読み込み・ファイル不在時のエラー（9.1, 6.5）
+- `parse_agent_mapping()`: CLAUDE.md テーブルパース・必須列検証・不正形式時エラー（9.1）
+- `load_task_prompts()`: エージェント+ポリシー読み込み・ファイル不在時エラー（9.1, 9.2, 6.5）
 - `parse_extract_response()`: 正常JSON・不正JSON・必須フィールド欠落（6.2, 4.1-4.4）
 - `parse_fix_response()`: 正常JSON・修復項目パース・スキップ項目パース（3.2, 3.8）
 - `write_query_artifacts()`: 4ファイル書き出し・ディレクトリ作成（4.1-4.4）
@@ -618,3 +652,7 @@ date: <YYYY-MM-DD>
 - 2段階方式の wiki コンテンツ特定（scope なし時）: 1回目の Claude CLI 呼び出しで関連ページのパスリストを JSON で返させ、2回目でそれらのページ内容を含めた本プロンプトを構築する。小規模wiki（ファイル数 ≤ 20）の場合はこの手順をスキップし、全ファイルを含める
 - query answer の参照ページ表示（2.2）: Claude CLI のレスポンスに参照ページリストを含めるよう指示する。プレーンテキスト末尾に `---\nReferenced: page1.md, page2.md` 形式で出力
 - 終了コード 2（lint FAIL）は既存の `cmd_lint_query()` の体系と一致させる
+- query_id 重複時の再生成（1.7）: 運用者が既存ディレクトリを手動削除してから再実行する方式を採用する。`--force` オプションは初期リリースでは実装しない。需要に応じて将来検討する
+- デバッグ支援: Claude CLI 呼び出し失敗またはパースエラー時、標準エラー出力に Claude CLI の生レスポンス（先頭500文字）を表示する。正常時はレスポンスを表示しない
+- main() の例外ハンドラに ValueError を追加する（既存の FileNotFoundError, RuntimeError, CalledProcessError に加えて）。parse_agent_mapping() の ValueError がスタックトレースとして表示されるのを防ぐ
+- lint 結果の判定: `lint_single_query_dir()` の戻り値の `status` フィールドが `"FAIL"` の場合に exit 2、それ以外は exit 0 とする。既存の `cmd_lint_query()` と同じ判定ロジックを使用する
