@@ -58,7 +58,7 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.6_
   - _Boundary: Output_
 
-- [ ] 2.2 Claude CLI レスポンスパーサーを実装する
+- [x] 2.2 Claude CLI レスポンスパーサーを実装する
   - parse_extract_response(response) を実装する。JSON をパースし query/answer/evidence/metadata の各セクションを抽出する
   - parse_fix_response(response) を実装する。fixes/files/skipped の各セクションを抽出する
   - 不正 JSON や必須フィールド欠落時に ValueError を raise する

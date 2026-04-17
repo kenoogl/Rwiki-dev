@@ -1121,6 +1121,76 @@ def write_query_artifacts(
     return [question_path, answer_path, evidence_path, metadata_path]
 
 
+def _strip_code_block(response: str) -> str:
+    """マークダウンコードブロック（```json ... ``` や ``` ... ```）を除去する。"""
+    stripped = response.strip()
+    # ```json\n...\n``` または ```\n...\n``` 形式を除去
+    match = re.match(r"^```(?:json)?\s*\n([\s\S]*?)\n```\s*$", stripped)
+    if match:
+        return match.group(1)
+    return stripped
+
+
+def parse_extract_response(response: str) -> dict[str, Any]:
+    """Claude CLI の extract レスポンス（JSON）をパースする。
+
+    Args:
+        response: Claude CLI のレスポンス文字列（JSON または ```json...``` 形式）
+
+    Returns:
+        パースした dict（query/answer/evidence/metadata の各キーを含む）
+
+    Raises:
+        ValueError: 不正な JSON、または必須フィールド（query/answer/evidence/metadata）が欠落した場合
+    """
+    required_keys = ("query", "answer", "evidence", "metadata")
+    try:
+        cleaned = _strip_code_block(response)
+        data = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        print(response[:500], file=sys.stderr)
+        raise ValueError(f"extract レスポンスの JSON パースに失敗しました: {e}") from e
+
+    missing = [k for k in required_keys if k not in data]
+    if missing:
+        print(response[:500], file=sys.stderr)
+        raise ValueError(
+            f"extract レスポンスに必須フィールドが欠落しています: {', '.join(missing)}"
+        )
+
+    return data
+
+
+def parse_fix_response(response: str) -> dict[str, Any]:
+    """Claude CLI の fix レスポンス（JSON）をパースする。
+
+    Args:
+        response: Claude CLI のレスポンス文字列（JSON または ```json...``` 形式）
+
+    Returns:
+        パースした dict（fixes/files/skipped の各キーを含む）
+
+    Raises:
+        ValueError: 不正な JSON、または必須フィールド（fixes/files）が欠落した場合
+    """
+    required_keys = ("fixes", "files")
+    try:
+        cleaned = _strip_code_block(response)
+        data = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        print(response[:500], file=sys.stderr)
+        raise ValueError(f"fix レスポンスの JSON パースに失敗しました: {e}") from e
+
+    missing = [k for k in required_keys if k not in data]
+    if missing:
+        print(response[:500], file=sys.stderr)
+        raise ValueError(
+            f"fix レスポンスに必須フィールドが欠落しています: {', '.join(missing)}"
+        )
+
+    return data
+
+
 # -------------------------
 # query lint
 # -------------------------

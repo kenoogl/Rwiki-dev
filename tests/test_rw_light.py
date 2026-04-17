@@ -815,3 +815,204 @@ class TestWriteQueryArtifacts:
         content = evidence_path.read_text(encoding="utf-8")
         assert "source: wiki/ml.md" in content
         assert "source: wiki/ai.md" in content
+
+
+# ---------------------------------------------------------------------------
+# parse_extract_response() のテスト
+# ---------------------------------------------------------------------------
+
+class TestParseExtractResponse:
+    """parse_extract_response() のユニットテスト"""
+
+    VALID_JSON = json.dumps({
+        "query": {
+            "text": "What is ML?",
+            "query_type": "fact",
+            "scope": "wiki/ml.md",
+            "date": "2026-04-17",
+        },
+        "answer": {"content": "## Answer\n\nML is machine learning."},
+        "evidence": {
+            "blocks": [{"source": "wiki/ml.md", "excerpt": "ML is..."}]
+        },
+        "metadata": {
+            "query_id": "20260417-what-is-ml",
+            "query_type": "fact",
+            "scope": "wiki/ml.md",
+            "sources": ["wiki/ml.md"],
+            "created_at": "2026-04-17T10:00:00",
+        },
+        "referenced_pages": ["wiki/ml.md"],
+    }, ensure_ascii=False)
+
+    def test_valid_json_returns_dict_with_required_keys(self):
+        """正常な JSON → query/answer/evidence/metadata を含む dict が返ること"""
+        result = rw_light.parse_extract_response(self.VALID_JSON)
+        assert isinstance(result, dict)
+        for key in ("query", "answer", "evidence", "metadata"):
+            assert key in result, f"Missing key: {key}"
+
+    def test_valid_json_values_are_correct(self):
+        """正常な JSON → 各フィールドの値が正しくパースされること"""
+        result = rw_light.parse_extract_response(self.VALID_JSON)
+        assert result["query"]["text"] == "What is ML?"
+        assert result["answer"]["content"] == "## Answer\n\nML is machine learning."
+        assert result["evidence"]["blocks"][0]["source"] == "wiki/ml.md"
+        assert result["metadata"]["query_id"] == "20260417-what-is-ml"
+
+    def test_invalid_json_raises_value_error(self):
+        """不正な JSON → ValueError が raise されること"""
+        with pytest.raises(ValueError):
+            rw_light.parse_extract_response("not json at all {{{")
+
+    def test_invalid_json_prints_to_stderr(self, capsys):
+        """不正な JSON → stderr にレスポンス先頭500文字が出力されること"""
+        long_invalid = "X" * 600 + "{{{"
+        with pytest.raises(ValueError):
+            rw_light.parse_extract_response(long_invalid)
+        captured = capsys.readouterr()
+        assert "X" * 500 in captured.err
+        assert "X" * 501 not in captured.err
+
+    def test_missing_answer_key_raises_value_error(self):
+        """必須フィールド 'answer' が欠落 → ValueError が raise されること"""
+        data = json.loads(self.VALID_JSON)
+        del data["answer"]
+        with pytest.raises(ValueError, match=".*answer.*"):
+            rw_light.parse_extract_response(json.dumps(data))
+
+    def test_missing_query_key_raises_value_error(self):
+        """必須フィールド 'query' が欠落 → ValueError が raise されること"""
+        data = json.loads(self.VALID_JSON)
+        del data["query"]
+        with pytest.raises(ValueError):
+            rw_light.parse_extract_response(json.dumps(data))
+
+    def test_missing_evidence_key_raises_value_error(self):
+        """必須フィールド 'evidence' が欠落 → ValueError が raise されること"""
+        data = json.loads(self.VALID_JSON)
+        del data["evidence"]
+        with pytest.raises(ValueError):
+            rw_light.parse_extract_response(json.dumps(data))
+
+    def test_missing_metadata_key_raises_value_error(self):
+        """必須フィールド 'metadata' が欠落 → ValueError が raise されること"""
+        data = json.loads(self.VALID_JSON)
+        del data["metadata"]
+        with pytest.raises(ValueError):
+            rw_light.parse_extract_response(json.dumps(data))
+
+    def test_missing_field_prints_to_stderr(self, capsys):
+        """必須フィールド欠落時 → stderr にレスポンス先頭500文字が出力されること"""
+        data = json.loads(self.VALID_JSON)
+        del data["answer"]
+        response = json.dumps(data)
+        with pytest.raises(ValueError):
+            rw_light.parse_extract_response(response)
+        captured = capsys.readouterr()
+        assert len(captured.err) > 0
+
+    def test_json_wrapped_in_code_block_parsed_correctly(self):
+        """```json ... ``` で囲まれた JSON → 正常にパースされること"""
+        wrapped = f"```json\n{self.VALID_JSON}\n```"
+        result = rw_light.parse_extract_response(wrapped)
+        assert isinstance(result, dict)
+        for key in ("query", "answer", "evidence", "metadata"):
+            assert key in result
+
+    def test_json_wrapped_in_plain_code_block_parsed_correctly(self):
+        """``` ... ``` （言語指定なし）で囲まれた JSON → 正常にパースされること"""
+        wrapped = f"```\n{self.VALID_JSON}\n```"
+        result = rw_light.parse_extract_response(wrapped)
+        assert isinstance(result, dict)
+        assert "query" in result
+
+
+# ---------------------------------------------------------------------------
+# parse_fix_response() のテスト
+# ---------------------------------------------------------------------------
+
+class TestParseFixResponse:
+    """parse_fix_response() のユニットテスト"""
+
+    VALID_JSON = json.dumps({
+        "fixes": [
+            {"file": "answer.md", "ql_code": "QL006", "action": "rewrite"},
+        ],
+        "files": {
+            "question.md": "query: What is ML?\n",
+            "answer.md": "## Answer\n\nML is machine learning.",
+            "evidence.md": None,
+            "metadata.json": None,
+        },
+        "skipped": [
+            {"ql_code": "QL001", "reason": "file already exists"},
+        ],
+    }, ensure_ascii=False)
+
+    def test_valid_json_returns_dict_with_required_keys(self):
+        """正常な JSON → fixes/files/skipped を含む dict が返ること"""
+        result = rw_light.parse_fix_response(self.VALID_JSON)
+        assert isinstance(result, dict)
+        for key in ("fixes", "files", "skipped"):
+            assert key in result, f"Missing key: {key}"
+
+    def test_valid_json_values_are_correct(self):
+        """正常な JSON → 各フィールドの値が正しくパースされること"""
+        result = rw_light.parse_fix_response(self.VALID_JSON)
+        assert len(result["fixes"]) == 1
+        assert result["fixes"][0]["file"] == "answer.md"
+        assert result["files"]["question.md"] == "query: What is ML?\n"
+        assert result["skipped"][0]["ql_code"] == "QL001"
+
+    def test_invalid_json_raises_value_error(self):
+        """不正な JSON → ValueError が raise されること"""
+        with pytest.raises(ValueError):
+            rw_light.parse_fix_response("{invalid json}")
+
+    def test_invalid_json_prints_to_stderr(self, capsys):
+        """不正な JSON → stderr にレスポンス先頭500文字が出力されること"""
+        long_invalid = "Y" * 600 + "{invalid"
+        with pytest.raises(ValueError):
+            rw_light.parse_fix_response(long_invalid)
+        captured = capsys.readouterr()
+        assert "Y" * 500 in captured.err
+        assert "Y" * 501 not in captured.err
+
+    def test_missing_fixes_key_raises_value_error(self):
+        """必須フィールド 'fixes' が欠落 → ValueError が raise されること"""
+        data = json.loads(self.VALID_JSON)
+        del data["fixes"]
+        with pytest.raises(ValueError, match=".*fixes.*"):
+            rw_light.parse_fix_response(json.dumps(data))
+
+    def test_missing_files_key_raises_value_error(self):
+        """必須フィールド 'files' が欠落 → ValueError が raise されること"""
+        data = json.loads(self.VALID_JSON)
+        del data["files"]
+        with pytest.raises(ValueError):
+            rw_light.parse_fix_response(json.dumps(data))
+
+    def test_null_values_in_files_handled_correctly(self):
+        """files 内の null 値 → Python None として正常にパースされること"""
+        result = rw_light.parse_fix_response(self.VALID_JSON)
+        assert result["files"]["evidence.md"] is None
+        assert result["files"]["metadata.json"] is None
+
+    def test_missing_field_prints_to_stderr(self, capsys):
+        """必須フィールド欠落時 → stderr にレスポンス先頭500文字が出力されること"""
+        data = json.loads(self.VALID_JSON)
+        del data["fixes"]
+        response = json.dumps(data)
+        with pytest.raises(ValueError):
+            rw_light.parse_fix_response(response)
+        captured = capsys.readouterr()
+        assert len(captured.err) > 0
+
+    def test_json_wrapped_in_code_block_parsed_correctly(self):
+        """```json ... ``` で囲まれた JSON → 正常にパースされること"""
+        wrapped = f"```json\n{self.VALID_JSON}\n```"
+        result = rw_light.parse_fix_response(wrapped)
+        assert isinstance(result, dict)
+        assert "fixes" in result
+        assert "files" in result
