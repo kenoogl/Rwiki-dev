@@ -134,7 +134,7 @@
   - _Requirements: 7.2_
 
 - [ ] 7. 統合検証
-- [ ] 7.1 extract → lint → fix ワークフローの E2E 検証を実施する
+- [x] 7.1 extract → lint → fix ワークフローの E2E 検証を実施する
   - extract で4ファイル生成 → lint で FAIL を意図的に含むケースを作成 → fix で修復 → lint 再検証で PASS を確認する
   - AGENTS/ファイル更新反映: AGENTS/ファイル変更後に extract を実行し、変更がプロンプトに反映されることを確認する（Req 9.2）
   - --scope オプション: 特定ページのみをソースとした extract/answer の実行を確認する

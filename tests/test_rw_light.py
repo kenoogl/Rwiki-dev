@@ -2027,3 +2027,393 @@ class TestDocumentationUpdates:
         """CHANGELOG.md に rw query fix の変更内容が記載されていること"""
         content = self._read_file("CHANGELOG.md")
         assert "rw query fix" in content, "CHANGELOG.md に 'rw query fix' エントリが含まれていない"
+
+
+# ---------------------------------------------------------------------------
+# TestE2EWorkflow — extract → lint → fix E2E 統合検証 (task 7.1)
+# ---------------------------------------------------------------------------
+
+def _setup_e2e_vault(tmp_path, monkeypatch):
+    """E2Eテスト用の完全な Vault 構造を作成する"""
+    # wiki/
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    (wiki_dir / "concepts").mkdir()
+    (wiki_dir / "concepts" / "machine_learning.md").write_text(
+        "# Machine Learning\n\nML is a field of AI.\n\nsource: textbook\n", encoding="utf-8"
+    )
+    (wiki_dir / "concepts" / "deep_learning.md").write_text(
+        "# Deep Learning\n\nDeep learning uses neural networks.\n\nsource: textbook\n", encoding="utf-8"
+    )
+
+    # review/query/
+    query_dir = tmp_path / "review" / "query"
+    query_dir.mkdir(parents=True)
+
+    # logs/
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+
+    # index.md
+    index_md = tmp_path / "index.md"
+    index_md.write_text("# Index\n\n- [[machine_learning]]\n- [[deep_learning]]\n", encoding="utf-8")
+
+    # CLAUDE.md (with mapping table)
+    claude_md = tmp_path / "CLAUDE.md"
+    claude_md.write_text(
+        "# CLAUDE.md\n\n"
+        "# Task → AGENTS Mapping (Default)\n\n"
+        "| Task | Agent | Policy | Execution Mode |\n"
+        "|---|---|---|---|\n"
+        "| ingest | AGENTS/ingest.md | AGENTS/git_ops.md | CLI |\n"
+        "| lint | AGENTS/lint.md | AGENTS/naming.md | CLI |\n"
+        "| synthesize | AGENTS/synthesize.md | AGENTS/page_policy.md, AGENTS/naming.md | Prompt |\n"
+        "| synthesize_logs | AGENTS/synthesize_logs.md | AGENTS/naming.md | CLI (Hybrid) |\n"
+        "| approve | AGENTS/approve.md | AGENTS/git_ops.md, AGENTS/page_policy.md | CLI |\n"
+        "| query_answer | AGENTS/query_answer.md | AGENTS/page_policy.md | CLI (Hybrid) |\n"
+        "| query_extract | AGENTS/query_extract.md | AGENTS/naming.md, AGENTS/page_policy.md | CLI (Hybrid) |\n"
+        "| query_fix | AGENTS/query_fix.md | AGENTS/naming.md | CLI (Hybrid) |\n"
+        "| audit | AGENTS/audit.md | AGENTS/page_policy.md, AGENTS/naming.md, AGENTS/git_ops.md | Prompt |\n",
+        encoding="utf-8",
+    )
+
+    # AGENTS/ directory
+    agents_dir = tmp_path / "AGENTS"
+    agents_dir.mkdir()
+    agent_files = {
+        "ingest.md": "AGENT ingest",
+        "lint.md": "AGENT lint",
+        "synthesize.md": "AGENT synthesize",
+        "synthesize_logs.md": "AGENT synthesize_logs",
+        "approve.md": "AGENT approve",
+        "query_answer.md": "AGENT query_answer - initial content",
+        "query_extract.md": "AGENT query_extract - initial content",
+        "query_fix.md": "AGENT query_fix",
+        "audit.md": "AGENT audit",
+        "git_ops.md": "POLICY git_ops",
+        "naming.md": "POLICY naming",
+        "page_policy.md": "POLICY page_policy",
+    }
+    for filename, content in agent_files.items():
+        (agents_dir / filename).write_text(content, encoding="utf-8")
+
+    # Patch rw_light module constants
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(query_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(index_md))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_light, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
+
+    return tmp_path, wiki_dir, query_dir, agents_dir
+
+
+def _make_extract_response(query_text="What is ML?", query_type="fact"):
+    return json.dumps({
+        "query": {"text": query_text, "query_type": query_type, "scope": "all", "date": "2026-04-17"},
+        "answer": {
+            "content": (
+                "# Answer\n\nMachine Learning is a field of AI.\n\n"
+                "## Details\n\nML uses statistical methods to learn from data."
+            )
+        },
+        "evidence": {
+            "blocks": [{"source": "wiki/concepts/machine_learning.md", "excerpt": "ML is a field of AI."}]
+        },
+        "metadata": {
+            "query_id": "old-id",
+            "query_type": query_type,
+            "scope": "all",
+            "sources": ["wiki/concepts/machine_learning.md"],
+            "created_at": "2026-04-17T12:00:00+09:00",
+        },
+        "referenced_pages": ["wiki/concepts/machine_learning.md"],
+    })
+
+
+def _make_fix_response(query_id):
+    return json.dumps({
+        "fixes": [{"file": "answer.md", "ql_code": "QL006", "action": "expanded content"}],
+        "files": {
+            "question.md": None,
+            "answer.md": (
+                "# Answer\n\nThis is a comprehensive answer about Machine Learning.\n\n"
+                "## What is ML?\n\nML is a subfield of AI that uses statistical methods.\n\n"
+                "## Key Concepts\n\nSupervised learning, unsupervised learning, reinforcement learning."
+            ),
+            "evidence.md": None,
+            "metadata.json": None,
+        },
+        "skipped": [],
+    })
+
+
+class TestE2EWorkflow:
+    """extract → lint → fix E2E 統合検証テスト (task 7.1)"""
+
+    # ------------------------------------------------------------------
+    # Test 1: extract で 4ファイル生成
+    # ------------------------------------------------------------------
+
+    def test_extract_creates_4_files(self, tmp_path, monkeypatch):
+        """extract → review/query/<query_id>/ に 4ファイルが作成されること"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+
+        result = rw_light.cmd_query_extract(["What is ML?"])
+
+        assert result in (0, 2), f"Expected 0 or 2, got {result}"
+
+        query_id = rw_light.generate_query_id("What is ML?")
+        qdir = query_dir / query_id
+        assert qdir.is_dir(), f"query directory not found: {qdir}"
+
+        for fname in ["question.md", "answer.md", "evidence.md", "metadata.json"]:
+            assert (qdir / fname).exists(), f"Missing file: {fname}"
+
+    # ------------------------------------------------------------------
+    # Test 2: extract → lint PASS
+    # ------------------------------------------------------------------
+
+    def test_extract_then_lint_pass(self, tmp_path, monkeypatch):
+        """extract → lint が PASS を返すこと"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+
+        extract_result = rw_light.cmd_query_extract(["What is ML?"])
+        assert extract_result in (0, 2), f"extract failed: {extract_result}"
+
+        query_id = rw_light.generate_query_id("What is ML?")
+        qdir = str(query_dir / query_id)
+        lint_result = rw_light.lint_single_query_dir(qdir)
+
+        assert lint_result["status"] in ("PASS", "PASS_WITH_WARNINGS"), (
+            f"lint should PASS after extract, got: {lint_result['status']}, errors: {lint_result['errors']}"
+        )
+
+    # ------------------------------------------------------------------
+    # Test 3: extract → corrupt answer → lint FAIL → fix → lint PASS
+    # ------------------------------------------------------------------
+
+    def test_extract_lint_fail_fix_workflow(self, tmp_path, monkeypatch):
+        """extract → answer.md を短縮 → lint FAIL → fix → lint PASS ワークフローの検証"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+
+        # Step 1: extract
+        extract_result = rw_light.cmd_query_extract(["What is ML?"])
+        assert extract_result in (0, 2), f"extract failed: {extract_result}"
+
+        query_id = rw_light.generate_query_id("What is ML?")
+        qdir = query_dir / query_id
+
+        # Step 2: answer.md を意図的に短縮して QL006 を引き起こす
+        (qdir / "answer.md").write_text("short", encoding="utf-8")
+
+        # Step 3: lint → FAIL
+        lint_result = rw_light.lint_single_query_dir(str(qdir))
+        assert lint_result["status"] == "FAIL", (
+            f"lint should FAIL after corrupting answer.md, got: {lint_result['status']}"
+        )
+        assert any("QL006" in e for e in lint_result["errors"]), (
+            f"QL006 error expected, got: {lint_result['errors']}"
+        )
+
+        # Step 4: fix（call_claude を fix レスポンスにすり替え）
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_fix_response(query_id))
+        fix_result = rw_light.cmd_query_fix([query_id])
+        assert fix_result in (0, 2), f"fix command returned unexpected code: {fix_result}"
+
+        # Step 5: lint 再検証 → PASS
+        post_lint = rw_light.lint_single_query_dir(str(qdir))
+        assert post_lint["status"] in ("PASS", "PASS_WITH_WARNINGS"), (
+            f"lint should PASS after fix, got: {post_lint['status']}, errors: {post_lint['errors']}"
+        )
+
+    # ------------------------------------------------------------------
+    # Test 4: AGENTS ファイル更新 → extract に反映 (Req 9.2)
+    # ------------------------------------------------------------------
+
+    def test_agents_file_update_reflected(self, tmp_path, monkeypatch):
+        """AGENTS/query_extract.md 変更後に extract を実行すると新内容がプロンプトに反映されること (Req 9.2)"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+
+        # 1回目: 初期内容でプロンプトをキャプチャ
+        captured_prompts_1 = []
+
+        def mock_claude_1(p):
+            captured_prompts_1.append(p)
+            return _make_extract_response("What is ML? first")
+
+        monkeypatch.setattr(rw_light, "call_claude", mock_claude_1)
+        result1 = rw_light.cmd_query_extract(["What is ML? first"])
+        assert result1 in (0, 2), f"first extract failed: {result1}"
+        assert len(captured_prompts_1) >= 1
+
+        # AGENTS/query_extract.md を更新
+        new_content = "AGENT query_extract - UPDATED CONTENT v2"
+        (agents_dir / "query_extract.md").write_text(new_content, encoding="utf-8")
+
+        # 2回目: 更新後のプロンプトをキャプチャ
+        captured_prompts_2 = []
+
+        def mock_claude_2(p):
+            captured_prompts_2.append(p)
+            return _make_extract_response("What is ML? second")
+
+        monkeypatch.setattr(rw_light, "call_claude", mock_claude_2)
+        result2 = rw_light.cmd_query_extract(["What is ML? second"])
+        assert result2 in (0, 2), f"second extract failed: {result2}"
+        assert len(captured_prompts_2) >= 1
+
+        # 1回目のプロンプトには初期内容が、2回目には新内容が含まれること
+        assert "initial content" in captured_prompts_1[0], (
+            "first prompt should contain initial AGENTS content"
+        )
+        assert "UPDATED CONTENT v2" in captured_prompts_2[0], (
+            "second prompt should contain updated AGENTS content (Req 9.2)"
+        )
+        assert "UPDATED CONTENT v2" not in captured_prompts_1[0], (
+            "first prompt should NOT contain updated content"
+        )
+
+    # ------------------------------------------------------------------
+    # Test 5: --scope オプションで特定ページのみ参照
+    # ------------------------------------------------------------------
+
+    def test_scope_option_limits_wiki_content(self, tmp_path, monkeypatch):
+        """--scope 指定時、そのページのみが wiki コンテンツとして読み込まれること"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+
+        # read_wiki_content の呼び出し引数をキャプチャ
+        captured_scope = []
+        original_read_wiki = rw_light.read_wiki_content
+
+        def mock_read_wiki(scope):
+            captured_scope.append(scope)
+            return original_read_wiki(scope)
+
+        monkeypatch.setattr(rw_light, "read_wiki_content", mock_read_wiki)
+
+        scope_path = str(wiki_dir / "concepts" / "machine_learning.md")
+        captured_prompts = []
+
+        def mock_claude(p):
+            captured_prompts.append(p)
+            return _make_extract_response("What is ML? scoped")
+
+        monkeypatch.setattr(rw_light, "call_claude", mock_claude)
+        result = rw_light.cmd_query_extract(["What is ML? scoped", "--scope", scope_path])
+        assert result in (0, 2), f"scope extract failed: {result}"
+
+        # read_wiki_content が scope 付きで呼ばれたこと
+        assert len(captured_scope) >= 1
+        assert captured_scope[0] == scope_path, (
+            f"Expected scope={scope_path}, got {captured_scope[0]}"
+        )
+
+        # プロンプトに machine_learning.md のコンテンツが含まれること
+        assert len(captured_prompts) >= 1
+        assert "Machine Learning" in captured_prompts[0], (
+            "prompt should contain scoped page content"
+        )
+
+    # ------------------------------------------------------------------
+    # Test 6: answer コマンドはファイルを作成しない (Req 2.3)
+    # ------------------------------------------------------------------
+
+    def test_answer_no_files_created(self, tmp_path, monkeypatch):
+        """answer コマンド実行後、review/query/ にファイルが作成されないこと (Req 2.3)"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: "ML is a field of AI.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
+
+        result = rw_light.cmd_query_answer(["What is ML?"])
+        assert result == 0, f"answer command failed: {result}"
+
+        # review/query/ 内にディレクトリが作成されていないこと
+        subdirs = [d for d in query_dir.iterdir() if d.is_dir()]
+        assert len(subdirs) == 0, (
+            f"answer should not create files in review/query/, found: {subdirs}"
+        )
+
+    # ------------------------------------------------------------------
+    # Test 7: answer --scope オプション (Req 2.4)
+    # ------------------------------------------------------------------
+
+    def test_answer_scope_option(self, tmp_path, monkeypatch):
+        """answer --scope オプションが read_wiki_content に正しく渡されること"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+
+        captured_scope = []
+        original_read_wiki = rw_light.read_wiki_content
+
+        def mock_read_wiki(scope):
+            captured_scope.append(scope)
+            return original_read_wiki(scope)
+
+        monkeypatch.setattr(rw_light, "read_wiki_content", mock_read_wiki)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: "Answer about ML.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
+
+        scope_path = str(wiki_dir / "concepts" / "machine_learning.md")
+        result = rw_light.cmd_query_answer(["What is ML?", "--scope", scope_path])
+        assert result == 0, f"answer with scope failed: {result}"
+
+        assert len(captured_scope) >= 1
+        assert captured_scope[0] == scope_path, (
+            f"Expected scope={scope_path}, got {captured_scope[0]}"
+        )
+
+    # ------------------------------------------------------------------
+    # Error cases
+    # ------------------------------------------------------------------
+
+    def test_error_wiki_missing(self, tmp_path, monkeypatch):
+        """wiki/ が存在しない → cmd_query_extract が 1 を返すこと"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        import shutil
+        shutil.rmtree(str(wiki_dir))
+
+        result = rw_light.cmd_query_extract(["What is ML?"])
+        assert result == 1, f"Expected 1 for missing wiki/, got {result}"
+
+    def test_error_agents_missing(self, tmp_path, monkeypatch):
+        """AGENTS/ が存在しない → cmd_query_extract が 1 を返すこと"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        import shutil
+        shutil.rmtree(str(agents_dir))
+
+        result = rw_light.cmd_query_extract(["What is ML?"])
+        assert result == 1, f"Expected 1 for missing AGENTS/, got {result}"
+
+    def test_error_claude_md_parse_fail(self, tmp_path, monkeypatch):
+        """CLAUDE.md にマッピング表がない → cmd_query_extract が 1 を返すこと"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        # CLAUDE.md をマッピング表なしの内容に上書き
+        (tmp_path / "CLAUDE.md").write_text(
+            "# CLAUDE.md\n\nNo table here, just text.\n", encoding="utf-8"
+        )
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+
+        result = rw_light.cmd_query_extract(["What is ML?"])
+        assert result == 1, f"Expected 1 for invalid CLAUDE.md, got {result}"
+
+    def test_error_empty_question(self, tmp_path, monkeypatch):
+        """空の質問文 → cmd_query_extract が 1 を返すこと"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+
+        result = rw_light.cmd_query_extract([""])
+        assert result == 1, f"Expected 1 for empty question, got {result}"
+
+    def test_error_scope_page_missing(self, tmp_path, monkeypatch):
+        """--scope で存在しないページを指定 → cmd_query_extract が 1 を返すこと"""
+        tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+
+        nonexistent_scope = str(wiki_dir / "concepts" / "nonexistent_page.md")
+        result = rw_light.cmd_query_extract(["What is ML?", "--scope", nonexistent_scope])
+        assert result == 1, f"Expected 1 for missing scope page, got {result}"
