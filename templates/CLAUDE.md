@@ -133,9 +133,9 @@ Do NOT load all files under AGENTS/ by default.
 - lint → AGENTS/lint.md
 - synthesize → AGENTS/synthesize.md
 - synthesize_logs → AGENTS/synthesize_logs.md
-- approve → AGENTS/approve_synthesis.md
+- approve → AGENTS/approve.md
 - query_answer → AGENTS/query_answer.md
-- query_extract → AGENTS/query.md
+- query_extract → AGENTS/query_extract.md
 - query_fix → AGENTS/query_fix.md
 - audit → AGENTS/audit.md
 

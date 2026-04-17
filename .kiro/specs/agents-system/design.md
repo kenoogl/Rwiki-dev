@@ -86,11 +86,11 @@ flowchart TD
             A2[lint.md]
             A3[synthesize.md]
             A4[synthesize_logs.md]
-            A5[query.md]
+            A5[query_extract.md]
             A6[query_answer.md]
             A7[query_fix.md]
             A8[audit.md]
-            A9[approve_synthesis.md]
+            A9[approve.md]
         end
         subgraph Policies["ポリシー"]
             P1[page_policy.md]
@@ -126,11 +126,11 @@ templates/
     ├── lint.md                  # New: lintエージェント
     ├── synthesize.md            # New: synthesizeエージェント
     ├── synthesize_logs.md       # New: synthesize_logsエージェント
-    ├── query.md                 # New: query_extractエージェント
+    ├── query_extract.md          # New: query_extractエージェント
     ├── query_answer.md          # New: query_answerエージェント
     ├── query_fix.md             # New: query_fixエージェント
     ├── audit.md                 # New: auditエージェント
-    ├── approve_synthesis.md     # New: approveエージェント
+    ├── approve.md               # New: approveエージェント
     ├── page_policy.md           # New: ページ種別ポリシー
     ├── naming.md                # New: 命名規則ポリシー
     └── git_ops.md               # New: Git操作ポリシー
@@ -302,9 +302,9 @@ sequenceDiagram
 | lint | AGENTS/lint.md | AGENTS/naming.md | CLI |
 | synthesize | AGENTS/synthesize.md | AGENTS/page_policy.md, AGENTS/naming.md | Prompt |
 | synthesize_logs | AGENTS/synthesize_logs.md | AGENTS/naming.md | CLI (Hybrid) |
-| approve | AGENTS/approve_synthesis.md | AGENTS/git_ops.md, AGENTS/page_policy.md | CLI |
+| approve | AGENTS/approve.md | AGENTS/git_ops.md, AGENTS/page_policy.md | CLI |
 | query_answer | AGENTS/query_answer.md | AGENTS/page_policy.md | Prompt |
-| query_extract | AGENTS/query.md | AGENTS/naming.md, AGENTS/page_policy.md | Prompt |
+| query_extract | AGENTS/query_extract.md | AGENTS/naming.md, AGENTS/page_policy.md | Prompt |
 | query_fix | AGENTS/query_fix.md | AGENTS/naming.md | Prompt |
 | audit | AGENTS/audit.md | AGENTS/page_policy.md, AGENTS/naming.md, AGENTS/git_ops.md | Prompt |
 ```
@@ -460,16 +460,16 @@ lint → ingest → synthesize → approve → audit
   - Agent Loading Procedure（新規）: Agent Loading Rule セクション内に追記
   - Failure Conditions 判定基準（更新）: 既存 Failure Conditions（L186-197）に判定基準を追記
   - Extension Guide（新規）: Failure Conditions の直後、Final Principle の直前に挿入
-- ファイル名は現行名（query.md, approve_synthesis.md）を維持する。マッピング表のタスク種別列とファイル名列で対応関係を明示する
+- ファイル名はタスク種別名と1:1対応とする。query_extract は `query_extract.md`、approve は `approve.md` に改名（docs/ 素案はそれぞれ `query.md`、`approve_synthesis.md`）。docs/ 素案は参照元であり成果物ではないため、素案との命名不一致は許容する
 - ポリシーファイルは docs/ の素案をほぼそのまま使用可能（page_policy: 30行、naming: 47行、git_ops: 65行）。共通テンプレートのフォーマットに軽微な調整のみ必要
-- docs/ 素案に含まれるエージェント間の参照（例: query_answer.md の「query.md にエスカレーション」）は、ファイル名での直接参照ではなくタスク種別名での言及に変換する（例: 「query_extract タスクにエスカレーション」）。これによりファイルの独立性（Req 1.3）を維持しつつ、運用者への情報を保持する
+- docs/ 素案に含まれるエージェント間の参照（例: query_answer.md の「query.md にエスカレーション」）は、ファイル名での直接参照ではなくタスク種別名での言及に変換する（例: 「query_extract タスクにエスカレーション」）。これによりファイルの独立性（Req 1.3）を維持しつつ、運用者への情報を保持する。なお、素案のファイル名 `query.md` は正式版では `query_extract.md` に改名されている
 - カーネルに残すべきグローバルルールの判断基準: (1) 2つ以上のタスク種別に共通して適用される、かつ (2) 違反するとシステムの整合性（レイヤー分離、知識フロー、承認プロセス）が損なわれるルール。この基準に該当しないタスク固有のルールはAGENTS/に委譲する
 - サブファイル分割時の参照メカニズム: メインファイルの Processing Rules セクション冒頭に「詳細プロセスは `AGENTS/{task}_process.md` を参照」と記載する。マッピング表にはメインファイルのみを記載し、サブファイルはメインファイル経由で間接参照する。Claude はメインファイルロード後、参照指示に従いサブファイルも Read ツールで追加ロードする
 - CLAUDE.md 更新時の既存コンテンツ保存原則: 更新対象セクション（Agent Loading Rule, Task → AGENTS Mapping, Failure Conditions）の既存テキストはすべて保持し、新コンテンツを追記または拡張する。既存テキストの削除・書き換えは行わない（マッピング表のフォーマット変更を除く）
-- query_extract（query.md）の出力契約は cli-query スペックの前提条件となる。docs/query.md に定義された出力構造（`review/query/<query_id>/` ディレクトリ内に query.md, answer.md, evidence.md, metadata.json の4ファイル）を精査時に保持すること。この契約はエージェントファイルの Output セクションに明記する
+- query_extract（query_extract.md）の出力契約は cli-query スペックの前提条件となる。docs/query.md に定義された出力構造（`review/query/<query_id>/` ディレクトリ内に query.md, answer.md, evidence.md, metadata.json の4ファイル）を精査時に保持すること。この契約はエージェントファイルの Output セクションに明記する
 - 権威ソースの定義: CLAUDE.md のマッピング表・Extension Guide が権威ソース。AGENTS/README.md の一覧・マトリクス・追加手順は利便性のための派生コピーとする。エージェント追加・変更時は CLAUDE.md を先に更新し、README.md を同期更新する。この同期義務を README.md 冒頭に注記する
 - CLI実装との初期整合性: CLI モードのエージェント（ingest, lint, synthesize_logs, approve）は、対応する rw_light.py の cmd_* 関数の実装ルールとエージェントファイルのルールを照合し、初期整合性を確保すること。具体的には: (a) 入出力パスが CLI 定数と一致するか、(b) 検証条件・閾値が同一か、(c) コミットメッセージ形式が git_ops.md と一致するか、(d) エラー処理・終了条件が矛盾しないか。特に synthesize_logs は CLI のハードコードプロンプト（rw_light.py L435-468）と docs/synthesize_logs.md 素案の両方を参照し、ルールの統合を行う
-- approve_synthesis.md の承認メタデータ契約: CLI の approved_candidate_files()（rw_light.py L583-597）が検証する4フィールド（`status: approved`、`reviewed_by` 非空、`approved` が有効 ISO 日付、`promoted != true`）はエージェントファイルの Output セクションに必須フィールドとして明記すること。この契約は approve CLI コマンドが正しく動作するための前提条件である
+- approve.md の承認メタデータ契約: CLI の approved_candidate_files()（rw_light.py L583-597）が検証する4フィールド（`status: approved`、`reviewed_by` 非空、`approved` が有効 ISO 日付、`promoted != true`）はエージェントファイルの Output セクションに必須フィールドとして明記すること。この契約は approve CLI コマンドが正しく動作するための前提条件である
 
 ## Testing Strategy
 
@@ -481,7 +481,7 @@ lint → ingest → synthesize → approve → audit
 | 共通テンプレート8セクション | 全エージェントファイル | セクション見出し検証 | 2.1 |
 | レイヤー境界の仕様案整合 | 全エージェントファイル | 入出力セクションと仕様案の知識フロー照合 | 1.2, 2.2 |
 | 禁止パターン非違反 | 全エージェントファイル | Processing Rules にマルチステップルール違反がないか確認（例: ingest→wiki直接移動の指示がないか） | 1.2 |
-| エージェント間の直接参照なし | 全エージェントファイル | grep で他エージェントファイル名（例: `query.md`、`ingest.md`）への直接参照がないことを確認 | 1.3 |
+| エージェント間の直接参照なし | 全エージェントファイル | grep で他エージェントファイル名（例: `query_extract.md`、`ingest.md`）への直接参照がないことを確認 | 1.3 |
 | audit 4ティア | audit.md | Micro/Structural/Semantic/Strategic の記載確認 | 1.6 |
 | マッピング表完全性 | CLAUDE.md | 9タスク全行の存在確認 | 3.2 |
 | グローバルルール保全 | CLAUDE.md | 更新前後のdiff でCore Principles/Execution Model未変更確認 | 3.4 |

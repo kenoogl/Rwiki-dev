@@ -28,7 +28,7 @@
 
 ## Out of Boundary
 - query結果の承認・昇格プロセス
-- AGENTS/query.mdの内容（agents-systemスペック）
+- AGENTS/query_extract.mdの内容（agents-systemスペック）
 - テスト（test-suiteスペック）
 
 ## Upstream / Downstream
@@ -37,7 +37,7 @@
 
 ## Existing Spec Touchpoints
 - **Extends**: なし
-- **Adjacent**: agents-system（query実行時のプロンプトはAGENTS/query.mdを参照する可能性）
+- **Adjacent**: agents-system（query実行時のプロンプトはAGENTS/query_extract.mdを参照する可能性）
 
 ## Constraints
 - query結果はreview/query/に配置（wikiへ直行禁止）

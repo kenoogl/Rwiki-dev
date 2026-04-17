@@ -8,7 +8,7 @@
 - scripts/rw_light.pyのsynthesize-logsコマンドがClaude CLIを直接呼び出すプロンプトをハードコードしている
 - `docs/` に事前検討済みのサブプロンプト素案が存在する：
   - **カーネル**: CLAUDE.md（Wiki運用用の絶対原則）
-  - **AGENTS系**: ingest.md, lint.md, synthesize.md, synthesize_logs.md, query.md, query_answer.md, query_fix.md, audit.md
+  - **AGENTS系**: ingest.md, lint.md, synthesize.md, synthesize_logs.md, query_extract.md, query_answer.md, query_fix.md, audit.md
   - **ポリシー系**: page_policy.md, naming.md, git_ops.md
 - これらの素案をレビュー・精査し、`templates/` に正式配置する必要がある
 
@@ -22,7 +22,7 @@
 `docs/` の素案をベースに、仕様案の「タスクモデル」「実行モデル」「監査モデル」との整合性をレビューし、`templates/` に正式版を配置する。CLAUDE.mdカーネルにはエージェント選択ルールのみを記載し、詳細はAGENTS/に委譲する。ポリシー系（page_policy, naming, git_ops）はAGENTS/とは別にCLAUDE.mdに統合するか独立配置するかを設計時に判断する。
 
 ## Scope
-- **In**: `docs/` の素案をレビュー・精査し `templates/AGENTS/` に正式配置（ingest.md, lint.md, synthesize.md, synthesize_logs.md, query.md（=query_extract用）, query_answer.md, query_fix.md, audit.md, approve_synthesis.md, README.md）、ポリシー系（page_policy.md, naming.md, git_ops.md）の配置先決定、`templates/CLAUDE.md` へのエージェントロード指示追記、docs/user-guide.md 初版作成（運用サイクル概要・既存コマンドリファレンス）、CHANGELOG.md追記
+- **In**: `docs/` の素案をレビュー・精査し `templates/AGENTS/` に正式配置（ingest.md, lint.md, synthesize.md, synthesize_logs.md, query_extract.md, query_answer.md, query_fix.md, audit.md, approve.md, README.md）、ポリシー系（page_policy.md, naming.md, git_ops.md）の配置先決定、`templates/CLAUDE.md` へのエージェントロード指示追記、docs/user-guide.md 初版作成（運用サイクル概要・既存コマンドリファレンス）、CHANGELOG.md追記
 - **Out**: CLIコマンドの実装変更、テスト
 
 ## Boundary Candidates

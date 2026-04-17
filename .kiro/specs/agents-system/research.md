@@ -26,7 +26,7 @@
 | query_answer.md | 297 | エージェント | page_policy (暗黙) |
 | query_fix.md | 106 | エージェント | naming (暗黙) |
 | audit.md | 174 | エージェント | 全3ポリシー（メタ監査） |
-| approve_synthesis.md | 220 | エージェント | git_ops, page_policy (暗黙) |
+| approve_synthesis.md（→ approve.md に改名） | 220 | エージェント | git_ops, page_policy (暗黙) |
 | page_policy.md | 30 | ポリシー | — |
 | naming.md | 47 | ポリシー | — |
 | git_ops.md | 65 | ポリシー | — |
@@ -68,13 +68,13 @@
 - **Context**: タスク種別とファイル名の非対称（query_extract → query.md、approve → approve_synthesis.md）
 - **Alternatives Considered**:
   1. 現行名維持 — docs/素案との一貫性、既存マッピングの継続
-  2. タスク種別名に統一 — query_extract.md、approve.md に改名、1:1マッピング
-- **Selected Approach**: 現行名維持（query.md、approve_synthesis.md）
-- **Rationale**: docs/素案との追跡可能性を維持。マッピング表で対応関係を明示すれば運用上の混乱は回避可能。改名するとdocs/との対応が崩れ、レビュー時の照合が困難になる
-- **Trade-offs**: マッピング表での非対称が残るが、README.mdとマッピング表で十分に補える
+  2. タスク種別名に統一 — 全ファイルを1:1マッピング（query_extract.md、approve.md）
+- **Selected Approach**: タスク種別名に統一（query.md → query_extract.md、approve_synthesis.md → approve.md）
+- **Rationale**: 9ファイル全てがタスク種別名と1:1対応となり、マッピング表の非対称説明が不要になる。query.md は query_answer, query_fix と並ぶ3ファイルの中で曖昧、approve_synthesis.md は過剰に詳細。docs/ 素案は参照元であり成果物ではないため、素案との命名不一致は許容可能
+- **Trade-offs**: docs/ 素案との追跡時にファイル名が異なる（query.md → query_extract.md、approve_synthesis.md → approve.md）。design.md Implementation Notes にマッピングを明記して対応する
 
 ### Decision: 大規模エージェントファイルの分割方針
-- **Context**: query.md(278行), query_answer.md(297行), approve_synthesis.md(220行) の分割要否
+- **Context**: query_extract.md（素案query.md: 278行）, query_answer.md(297行), approve.md（素案approve_synthesis.md: 220行）の分割要否
 - **Alternatives Considered**:
   1. 即座に分割 — サブファイル参照構造を導入
   2. 単一ファイル維持 + 閾値ガイドライン — 精査後の最終サイズで再判定

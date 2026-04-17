@@ -14,11 +14,11 @@ Rwiki知識ベースシステムにおいて、CLAUDE.mdカーネルの肥大化
 **Objective:** Rwiki運用者として、9タスク種別それぞれに対応するエージェントファイルが `templates/AGENTS/` に配置されていてほしい。Claudeがタスク実行時に必要なルールを選択的にロードできるようにするため。
 
 #### Acceptance Criteria
-1. The `templates/AGENTS/` shall エージェントファイルとして以下の9ファイルを含む: `ingest.md`, `lint.md`, `synthesize.md`, `synthesize_logs.md`, `query.md`, `query_answer.md`, `query_fix.md`, `audit.md`, `approve_synthesis.md`
+1. The `templates/AGENTS/` shall エージェントファイルとして以下の9ファイルを含む: `ingest.md`, `lint.md`, `synthesize.md`, `synthesize_logs.md`, `query_extract.md`, `query_answer.md`, `query_fix.md`, `audit.md`, `approve.md`
 2. The 各エージェントファイル shall `docs/` の対応する素案をベースとし、仕様案のタスクモデル・実行モデルとの整合性を確保した内容を持つ。整合性の確認観点: レイヤー境界（入力元・出力先が仕様案の知識フローに違反しないか）、タスク分類（仕様案の9種と1:1対応するか）、禁止パターン（仕様案のマルチステップルール違反がないか）
 3. The 各エージェントファイル shall 当該タスクの実行に必要十分な情報を含み、他のタスクエージェントファイルへの依存なしにロード可能である（ただし、ポリシーファイルの参照または埋め込みは許容する。その方針はReq 4で定義する）
 4. The エージェント体系 shall 将来のタスク種別追加に対して拡張可能な構造とする。新しいエージェントファイルの追加手順（ファイル作成、マッピング表への追記、README更新）が明確に定義されている
-5. The agents-system shall ファイル名とタスク種別の対応関係を明確にする。現在の非対称な命名（タスク種別 `query_extract` に対しファイル名 `query.md`、タスク種別 `approve` に対しファイル名 `approve_synthesis.md`）について、設計時に命名方針を確定する
+5. The agents-system shall ファイル名とタスク種別の対応関係を明確にする。ファイル名はタスク種別名と1:1対応を原則とする（`query_extract` → `query_extract.md`、`approve` → `approve.md`）。設計時に命名方針を確定する
 6. The `audit.md` shall 仕様案の監査モデルで定義された4階層の監査ティア（Micro-check、Structural、Semantic、Strategic）の定義と実行条件を含む
 
 ### Requirement 2: エージェントファイルの共通構造
