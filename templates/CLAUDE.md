@@ -125,19 +125,27 @@ Do NOT load all files under AGENTS/ by default.
 - CLAUDE.md defines control
 - AGENTS define execution
 
+## Agent Loading Procedure
+
+1. Identify task type from the request
+2. Look up required Agent and Policy files in the Task → AGENTS Mapping table
+3. Load each file using Read tool: `Read("AGENTS/<file>.md")`
+
 ---
 
 # Task → AGENTS Mapping (Default)
 
-- ingest → AGENTS/ingest.md
-- lint → AGENTS/lint.md
-- synthesize → AGENTS/synthesize.md
-- synthesize_logs → AGENTS/synthesize_logs.md
-- approve → AGENTS/approve.md
-- query_answer → AGENTS/query_answer.md
-- query_extract → AGENTS/query_extract.md
-- query_fix → AGENTS/query_fix.md
-- audit → AGENTS/audit.md
+| Task | Agent | Policy | Execution Mode |
+|---|---|---|---|
+| ingest | AGENTS/ingest.md | AGENTS/git_ops.md | CLI |
+| lint | AGENTS/lint.md | AGENTS/naming.md | CLI |
+| synthesize | AGENTS/synthesize.md | AGENTS/page_policy.md, AGENTS/naming.md | Prompt |
+| synthesize_logs | AGENTS/synthesize_logs.md | AGENTS/naming.md | CLI (Hybrid) |
+| approve | AGENTS/approve.md | AGENTS/git_ops.md, AGENTS/page_policy.md | CLI |
+| query_answer | AGENTS/query_answer.md | AGENTS/page_policy.md | Prompt |
+| query_extract | AGENTS/query_extract.md | AGENTS/naming.md, AGENTS/page_policy.md | Prompt |
+| query_fix | AGENTS/query_fix.md | AGENTS/naming.md | Prompt |
+| audit | AGENTS/audit.md | AGENTS/page_policy.md, AGENTS/naming.md, AGENTS/git_ops.md | Prompt |
 
 ---
 
@@ -173,6 +181,43 @@ Rule:
 
 ---
 
+# Execution Flow
+
+## Prompt Execution (5 steps)
+
+When handling a task in interactive / prompt mode:
+
+1. Classify task type from the request
+2. Identify required Agent and Policy files from the Mapping table
+3. Load Agent and Policy files using Read tool
+4. Declare: Task Type / Loaded Agents / Execution Plan
+5. Execute according to the loaded Agent rules
+
+## Agent Lifecycle
+
+- Load ONLY the files required for the current task
+- Do NOT retain agent context across different task types
+- Re-load if task type changes within a session
+
+## CLI Execution
+
+For CLI-based tasks (ingest, lint, synthesize_logs, approve):
+
+- The command itself acts as the execution declaration
+- Agent files define the rules that the CLI implementation follows
+- No interactive agent loading is required
+
+## Rule Hierarchy
+
+1. Core Principles (this file) — always in effect
+2. Task Model rules (this file) — always in effect
+3. Agent rules (AGENTS/*.md) — loaded per task
+4. Policy rules (AGENTS/page_policy.md etc.) — loaded alongside agent
+
+When conflicts arise between layers, higher layer takes precedence.
+
+---
+
 # Audit Rule
 
 audit is read-only and evaluates the integrity, consistency, and structure of the wiki.
@@ -194,6 +239,25 @@ STOP immediately if:
 - required AGENTS are not identified
 - attempting to write to wiki without approved review artifacts
 - attempting to use uncommitted source inputs for downstream tasks
+
+## Failure Condition Judgment Criteria for "required AGENTS are not identified"
+
+Stop if ANY of the following:
+
+1. Task type maps to an agent file that does not exist under AGENTS/
+2. Agent file is present but does not contain the required 8 sections (Purpose / Execution Mode / Prerequisites / Input / Output / Processing Rules / Prohibited Actions / Failure Conditions)
+3. Task type cannot be determined from the request (ambiguity rule also applies)
+
+---
+
+# Extension Guide
+
+To add a new task type:
+
+1. Create `AGENTS/<new-task>.md` with all 8 required sections
+2. Add a row to the Task → AGENTS Mapping table (Task / Agent / Policy / Execution Mode)
+3. Add the new task type to the Task Types list in Task Model
+4. Update `AGENTS/README.md` with the new agent entry and dependency matrix
 
 ---
 

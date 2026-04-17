@@ -4,10 +4,12 @@
 
 <!-- タスク実装中に判明したクロスカッティングな知見をここに記録する -->
 
+- **approve / synthesize-logs コミット不整合**: `cmd_approve()` および `cmd_synthesize_logs()` はgitコミットを実行しない。git_ops.md は `approve commit`（review/ と wiki/ の分離コミット）および `synthesize-logs commit` を定義しているが、CLI実装では自動コミットなし。CLIを正とし、各エージェントファイルの「コミットについて」セクションにユーザー手動コミットである旨を記載した。rw_light.py はOut of Boundaryのため修正しない。
+
 ---
 
-- [ ] 1. ポリシーファイルの確立
-- [ ] 1.1 page_policy.md を templates/AGENTS/ に作成する
+- [x] 1. ポリシーファイルの確立
+- [x] 1.1 page_policy.md を templates/AGENTS/ に作成する
   - `templates/AGENTS/` ディレクトリを作成する（このタスクで初めてディレクトリを作成）
   - `docs/page_policy.md` 素案をベースに、ポリシー形式（Purpose / Rules）に変換する
   - Wikiページ種別（concepts, methods, projects, entities, synthesis）と各種別の選択ルールを網羅する
@@ -15,22 +17,22 @@
   - _Requirements: 4.1, 4.2, 4.3_
   - _Boundary: ポリシーファイル_
 
-- [ ] 1.2 (P) naming.md を templates/AGENTS/ に作成する
+- [x] 1.2 (P) naming.md を templates/AGENTS/ に作成する
   - `docs/naming.md` 素案をベースに、ポリシー形式（Purpose / Rules）に変換する
   - ファイル名・ディレクトリ名・frontmatterフィールドの命名規則を網羅する
   - `templates/AGENTS/naming.md` が存在し、docs/ 素案の主要ルールが含まれていること
   - _Requirements: 4.1, 4.2, 4.3_
   - _Boundary: ポリシーファイル_
 
-- [ ] 1.3 (P) git_ops.md を templates/AGENTS/ に作成する
+- [x] 1.3 (P) git_ops.md を templates/AGENTS/ に作成する
   - `docs/git_ops.md` 素案をベースに、ポリシー形式（Purpose / Rules）に変換する
   - コミット分離ルール・コミットメッセージ形式・ステージング規則を網羅する
   - `templates/AGENTS/git_ops.md` が存在し、docs/ 素案の主要ルールが含まれていること
   - _Requirements: 4.1, 4.2, 4.3_
   - _Boundary: ポリシーファイル_
 
-- [ ] 2. CLIモードタスクエージェントの作成
-- [ ] 2.1 ingest.md を templates/AGENTS/ に作成する
+- [x] 2. CLIモードタスクエージェントの作成
+- [x] 2.1 ingest.md を templates/AGENTS/ に作成する
   - `docs/ingest.md` 素案（50行）を8セクション共通テンプレート（Purpose / Execution Mode / Prerequisites / Input / Output / Processing Rules / Prohibited Actions / Failure Conditions）に変換する
   - 実行モードを「CLI」として明記し、入力元（`raw/incoming/`）・出力先（`raw/各カテゴリ`）のレイヤー境界制約を定義する
   - `rw_light.py` の `cmd_ingest()` と照合し、入出力パス・エラー処理・コミットルールを整合させる。不整合がある場合は CLI の現行動作を正としてエージェントファイルを合わせ、差異を Implementation Notes に記録する（rw_light.py はスコープ外のため修正しない）
@@ -40,7 +42,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 2.2 (P) lint.md を templates/AGENTS/ に作成する
+- [x] 2.2 (P) lint.md を templates/AGENTS/ に作成する
   - `docs/lint.md` 素案（58行）を8セクション共通テンプレートに変換する
   - 実行モードを「CLI」として明記し、入力元（`raw/`）・出力なし（検証のみ）のレイヤー境界制約を定義する
   - `rw_light.py` の `cmd_lint()` と照合し、検証項目・終了コードを整合させる。不整合がある場合は CLI を正とし、差異を Implementation Notes に記録する
@@ -50,7 +52,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 2.3 (P) synthesize_logs.md を templates/AGENTS/ に作成する
+- [x] 2.3 (P) synthesize_logs.md を templates/AGENTS/ に作成する
   - `docs/synthesize_logs.md` 素案（155行）を8セクション共通テンプレートに変換する
   - 実行モードを「CLI (Hybrid)」として明記する
   - `rw_light.py` の `cmd_synthesize_logs()` 内ハードコードプロンプト（`build_synth_prompt` 関数付近を検索）と素案ルールを照合し、両ソースを統合した内容にする。不整合がある場合は CLI を正とし、差異を Implementation Notes に記録する
@@ -60,7 +62,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 2.4 (P) approve.md を templates/AGENTS/ に作成する
+- [x] 2.4 (P) approve.md を templates/AGENTS/ に作成する
   - `docs/approve_synthesis.md` 素案（220行）を8セクション共通テンプレートに変換し、`approve.md` として配置する
   - 実行モードを「CLI」として明記する
   - `git_ops.md` および `page_policy.md` との整合性を確認する（コミットルールとページ種別検証が一致すること）
@@ -71,8 +73,8 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 3. プロンプトモードタスクエージェントの作成
-- [ ] 3.1 synthesize.md を templates/AGENTS/ に作成する
+- [x] 3. プロンプトモードタスクエージェントの作成
+- [x] 3.1 synthesize.md を templates/AGENTS/ に作成する
   - `docs/synthesize.md` 素案（175行）を8セクション共通テンプレートに変換する
   - 実行モードを「Prompt」として明記し、入力元（`review/synthesis_candidates/`）・出力先（`wiki/`）のレイヤー境界制約を定義する
   - Processing Rules にマルチステップルール違反パターン（review経由せずwikiへ直接移動等）がないことを確認する
@@ -82,7 +84,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 3.2 (P) query_extract.md を templates/AGENTS/ に作成する
+- [x] 3.2 (P) query_extract.md を templates/AGENTS/ に作成する
   - `docs/query.md` 素案（278行）を8セクション共通テンプレートに変換し、`query_extract.md` として配置する
   - 実行モードを「Prompt」として明記する
   - Output セクションに出力契約（`review/query/<query_id>/` 配下の4ファイル: `query.md`, `answer.md`, `evidence.md`, `metadata.json`）を明記する（cli-query スペックの前提条件）
@@ -95,7 +97,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 3.3 (P) query_answer.md を templates/AGENTS/ に作成する
+- [x] 3.3 (P) query_answer.md を templates/AGENTS/ に作成する
   - `docs/query_answer.md` 素案（297行）を8セクション共通テンプレートに変換する
   - 実行モードを「Prompt」として明記し、入出力先（`review/query/<query_id>/`）を定義する
   - 他エージェントへの直接ファイル参照を除去し、タスク種別名（`query_extract タスク`）での言及に変換する
@@ -106,7 +108,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 3.4 (P) query_fix.md を templates/AGENTS/ に作成する
+- [x] 3.4 (P) query_fix.md を templates/AGENTS/ に作成する
   - `docs/query_fix.md` 素案（106行）を8セクション共通テンプレートに変換する
   - 実行モードを「Prompt」として明記し、入出力先（`review/query/<query_id>/`）を定義する
   - `naming.md` との整合性を確認する
@@ -115,7 +117,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 3.5 (P) audit.md を templates/AGENTS/ に作成する
+- [x] 3.5 (P) audit.md を templates/AGENTS/ に作成する
   - `docs/audit.md` 素案（174行）を8セクション共通テンプレートに変換する
   - 実行モードを「Prompt」として明記する
   - Processing Rules に4監査ティア（Micro-check・Structural・Semantic・Strategic）の定義と各ティアの実行条件を明記する
@@ -124,8 +126,8 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.6, 2.1, 2.2, 2.3, 2.4_
   - _Boundary: 9タスクエージェントファイル_
 
-- [ ] 4. CLAUDE.md カーネルの更新
-- [ ] 4.1 タスク→エージェント+ポリシー+実行モードのマッピング表を更新する
+- [x] 4. CLAUDE.md カーネルの更新
+- [x] 4.1 タスク→エージェント+ポリシー+実行モードのマッピング表を更新する
   - 既存マッピング表（Task → AGENTS Mapping セクションを検索）の既存9行の対応関係を保持したまま、ポリシー列・実行モード列を追加してテーブルを拡張する（既存情報の削除は不可。テーブルフォーマットの拡張のみ許可）
   - 9タスク種別すべての行（タスク種別・エージェントパス・ポリシーパス・実行モード）を含む
   - 更新対象セクション以外（Core Principles, Knowledge Flow, Execution Model 等）に変更がないことを確認する
@@ -133,7 +135,7 @@
   - _Requirements: 3.2, 4.5_
   - _Boundary: CLAUDE.md カーネル更新_
 
-- [ ] 4.2 実行フロー・ロード手順・失敗条件判定基準・拡張ガイドを追記する
+- [x] 4.2 実行フロー・ロード手順・失敗条件判定基準・拡張ガイドを追記する
   - Execution Model セクション直後にExecution Flowセクション（Prompt実行5ステップ・エージェントライフサイクル・CLI実行・Rule Hierarchy）を挿入する
   - Agent Loading Rule セクション内にAgent Loading Procedure（Readツール使用の3ステップ）を追記する
   - Failure Conditions セクションに「required AGENTS are not identified」の3判定基準を追記する
@@ -145,7 +147,7 @@
   - _Boundary: CLAUDE.md カーネル更新_
   - _Depends: 4.1_
 
-- [ ] 5. AGENTS/README.md の作成
+- [x] 5. AGENTS/README.md の作成
   - エージェント体系の概要（目的・カーネルとの関係・ロードルール）を記載する
   - 全9エージェントファイルの一覧（ファイル名・タスク種別・実行モード・説明）をテーブルで記載する
   - 全3ポリシーファイルの一覧と位置づけ（タスクエージェントとの違い）を記載する
@@ -157,7 +159,7 @@
   - _Boundary: AGENTS/README.md_
   - _Depends: 4.2_
 
-- [ ] 6. (P) docs/user-guide.md 初版の作成
+- [x] 6. (P) docs/user-guide.md 初版の作成
   - 基本的な運用サイクル（lint → ingest → synthesize → approve → audit）の詳細手順を記載する
   - 既存CLIコマンド（init, ingest, lint, lint query, synthesize-logs, approve）のリファレンス（使用方法・引数・出力例）を記載する
   - プロンプトレベルタスク（synthesize, query_answer, query_extract, query_fix, audit）のClaude CLIでのAGENTSロード手順を記載する
@@ -167,7 +169,7 @@
   - _Boundary: docs/user-guide.md_
   - _Depends: 4.2_
 
-- [ ] 7. 統合検証
+- [x] 7. 統合検証
   - `templates/AGENTS/` 配下に9エージェント + 3ポリシー + README.md = 計13ファイル（分割ファイルがある場合はそれを含む）が存在することを確認する
   - 全エージェントファイルに Purpose, Execution Mode, Prerequisites, Input, Output, Processing Rules, Prohibited Actions, Failure Conditions の8セクション見出しが存在することを確認する
   - grep で全エージェントファイル内に他エージェントファイル名（例: `query_extract.md`, `ingest.md`）への直接参照がないことを確認する
@@ -179,7 +181,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.6, 2.1, 2.2, 3.2, 3.3, 3.4_
   - _Depends: 5, 6_
 
-- [ ] 8. CHANGELOG.md への agents-system エントリ追記
+- [x] 8. CHANGELOG.md への agents-system エントリ追記
   - `[Unreleased]` セクションに agents-system スペック成果物を追記する
   - 成果物として、9エージェントファイル・3ポリシーファイル・CLAUDE.md更新・AGENTS/README.md・docs/user-guide.md を列挙する
   - `CHANGELOG.md` に agents-system の追記セクションが存在すること
