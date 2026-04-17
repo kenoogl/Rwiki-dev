@@ -1030,6 +1030,113 @@ def cmd_lint_query(args: list[str]) -> int:
 
 
 # -------------------------
+# cmd_init
+# -------------------------
+def cmd_init(args: list[str]) -> int:
+  """
+  Vaultセットアップを実行する。
+
+  args: コマンドライン引数（target_path を含む場合あり）
+  returns: 終了コード（0: 成功, 1: エラー）
+  """
+  # --- 引数解析 ---
+  target_path = args[0] if args else os.getcwd()
+
+  # --- report dict 初期化 ---
+  report: dict[str, Any] = {
+    "target": target_path,
+    "dirs_created": 0,
+    "templates_copied": [],
+    "skipped": [],
+  }
+
+  # --- テンプレートチェック ---
+  tmpl_claude = os.path.join(DEV_ROOT, "templates", "CLAUDE.md")
+  tmpl_gitignore = os.path.join(DEV_ROOT, "templates", ".gitignore")
+  if not os.path.exists(tmpl_claude):
+    print(f"[ERROR] templates/CLAUDE.md not found: {tmpl_claude}")
+    return 1
+  if not os.path.exists(tmpl_gitignore):
+    print(f"[ERROR] templates/.gitignore not found: {tmpl_gitignore}")
+    return 1
+
+  # --- ターゲットパス作成 ---
+  if not os.path.exists(target_path):
+    try:
+      os.makedirs(target_path)
+    except OSError as e:
+      print(f"[ERROR] failed to create target path '{target_path}': {e}")
+      return 1
+
+  # --- Vault検出 ---
+  if is_existing_vault(target_path):
+    ans = input(
+      f"[WARN] '{target_path}' は既存のVaultです。上書きしますか？ [y/N]: "
+    ).strip().lower()
+    if ans != "y":
+      print("[INFO] セットアップを中断しました。")
+      return 0
+
+  # --- ディレクトリ生成 ---
+  dirs_created = 0
+  for d in VAULT_DIRS:
+    dir_path = os.path.join(target_path, d)
+    try:
+      os.makedirs(dir_path, exist_ok=True)
+      dirs_created += 1
+    except OSError as e:
+      print(f"[WARN] ディレクトリ作成失敗 '{dir_path}': {e}")
+  report["dirs_created"] = dirs_created
+
+  # --- CLAUDE.md コピー ---
+  dest_claude = os.path.join(target_path, "CLAUDE.md")
+  try:
+    shutil.copy2(tmpl_claude, dest_claude)
+    report["templates_copied"].append("CLAUDE.md")
+  except Exception as e:
+    print(f"[WARN] CLAUDE.md コピー失敗: {e}")
+    report["skipped"].append({"item": "CLAUDE.md", "reason": str(e)})
+
+  # --- AGENTS/ コピー ---
+  tmpl_agents = os.path.join(DEV_ROOT, "templates", "AGENTS")
+  dest_agents = os.path.join(target_path, "AGENTS")
+  if os.path.isdir(tmpl_agents):
+    try:
+      shutil.copytree(tmpl_agents, dest_agents, dirs_exist_ok=True)
+      report["templates_copied"].append("AGENTS/")
+    except Exception as e:
+      print(f"[WARN] AGENTS/ コピー失敗: {e}")
+      report["skipped"].append({"item": "AGENTS/", "reason": str(e)})
+  else:
+    report["skipped"].append({"item": "AGENTS/", "reason": "templates/AGENTS/ が存在しない"})
+
+  # --- 初期ファイル生成 ---
+  index_md = os.path.join(target_path, "index.md")
+  if not os.path.exists(index_md):
+    try:
+      write_text(index_md, "# Index\n")
+      report["templates_copied"].append("index.md")
+    except Exception as e:
+      print(f"[WARN] index.md 生成失敗: {e}")
+      report["skipped"].append({"item": "index.md", "reason": str(e)})
+  else:
+    report["skipped"].append({"item": "index.md", "reason": "既存ファイルを保護"})
+
+  log_md = os.path.join(target_path, "log.md")
+  if not os.path.exists(log_md):
+    try:
+      write_text(log_md, "# Log\n")
+      report["templates_copied"].append("log.md")
+    except Exception as e:
+      print(f"[WARN] log.md 生成失敗: {e}")
+      report["skipped"].append({"item": "log.md", "reason": str(e)})
+  else:
+    report["skipped"].append({"item": "log.md", "reason": "既存ファイルを保護"})
+
+  return 0
+
+
+# -------------------------
 # main
 # -------------------------
 def print_usage() -> None:

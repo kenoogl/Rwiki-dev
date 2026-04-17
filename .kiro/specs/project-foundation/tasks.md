@@ -24,7 +24,7 @@
   - _Requirements: 1.1, 1.4_
   - _Boundary: scripts/rw_light.py (モジュールレベル定数 VAULT_DIRS, DEV_ROOT + is_existing_vault 関数)_
 
-- [ ] 2.2 cmd_init() 新規Vault作成フローの実装
+- [x] 2.2 cmd_init() 新規Vault作成フローの実装
   - エラーハンドリング方針: 各ステップをtry-exceptで個別にエラー処理し、致命的エラー（テンプレート不在、パス作成失敗）は即座に終了コード1で中断、非致命的エラー（Git、symlink）は警告付きで続行する
   - 引数解析: `args` からターゲットパスを取得し、省略時は `os.getcwd()` を使用する
   - テンプレート存在チェック: `templates/CLAUDE.md` と `templates/.gitignore` が不在の場合、エラーメッセージを表示して終了コード1で中断する
