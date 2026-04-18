@@ -1484,6 +1484,213 @@ def run_micro_checks(
 # audit: static checks — weekly
 
 
+def check_orphan_pages(
+    pages: list["WikiPage"],
+    all_pages_set: set[str],
+    index_links: set[str],
+) -> list["Finding"]:
+    """孤立ページ（他ページからリンクされていない。index.md リンクは除外）を検出する。
+
+    判定: pages 内の全ページから被リンク集合を構築し、
+    どのページの links にも含まれず、かつ index_links にも含まれないページを孤立と判定。
+
+    除外: ファイル名が "index.md" のページは孤立チェックから除外する。
+    Severity: WARN
+    """
+    LINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
+
+    # 被リンク集合を構築（basename で正規化）
+    inbound_basenames: set[str] = set()
+    for page in pages:
+        for link_name in page.links:
+            if not link_name.endswith(".md"):
+                link_name = link_name + ".md"
+            inbound_basenames.add(os.path.basename(link_name))
+
+    # index_links も basename で正規化
+    index_basenames: set[str] = set()
+    for link_name in index_links:
+        if not link_name.endswith(".md"):
+            link_name = link_name + ".md"
+        index_basenames.add(os.path.basename(link_name))
+
+    findings: list[Finding] = []
+    for page in pages:
+        # ファイル名が "index.md" のページは除外
+        if page.filename == "index.md":
+            continue
+        page_basename = os.path.basename(page.path)
+        if page_basename not in inbound_basenames and page_basename not in index_basenames:
+            findings.append(Finding(
+                severity="WARN",
+                category="orphan_page",
+                page=page.path,
+                message="他のページからリンクされていない",
+                sub_severity="",
+                marker="",
+            ))
+    return findings
+
+
+def check_bidirectional_links(
+    pages: list["WikiPage"],
+    all_pages_set: set[str],
+) -> "tuple[list[Finding], dict[str, int]]":
+    """双方向リンクの欠落を検出する。Severity: WARN
+
+    定義: ページ A が [[B]] でリンクしているとき、ページ B にも [[A]] へのリンクが
+    存在するかを検査する。全リンクペアに対してチェックし、片方向のみのペアを報告する。
+
+    注意: index.md からのリンクは双方向チェックの対象外とする。
+
+    Returns:
+        (findings, stats) のタプル。
+        stats: {"total_pairs": int, "bidirectional_pairs": int}
+    """
+    # basename → path のマッピング（リンク解決用）
+    basename_to_path: dict[str, str] = {}
+    for entry in all_pages_set:
+        basename_to_path[os.path.basename(entry)] = entry
+
+    # ページ path → links の basename セット（高速参照用）
+    page_links_map: dict[str, set[str]] = {}
+    for page in pages:
+        link_basenames: set[str] = set()
+        for link_name in page.links:
+            if not link_name.endswith(".md"):
+                link_name = link_name + ".md"
+            link_basenames.add(os.path.basename(link_name))
+        page_links_map[os.path.basename(page.path)] = link_basenames
+
+    # 有向リンクペアを収集（index.md 発信リンクは除外）
+    # 処理済みペアを追跡（{frozenset(a, b)} で重複防止）
+    checked_pairs: set[frozenset] = set()
+    findings: list[Finding] = []
+    total_pairs = 0
+    bidirectional_pairs = 0
+
+    for page in pages:
+        # index.md からのリンクは除外
+        if page.filename == "index.md":
+            continue
+        page_basename = os.path.basename(page.path)
+        for link_name in page.links:
+            if not link_name.endswith(".md"):
+                link_name = link_name + ".md"
+            target_basename = os.path.basename(link_name)
+
+            # 自己参照はスキップ
+            if target_basename == page_basename:
+                continue
+            # all_pages_set に存在しないリンクはスキップ（broken link は別チェック）
+            if target_basename not in basename_to_path:
+                continue
+            # index.md へのリンクはスキップ（index.md 発信を除外しているので対称）
+            if target_basename == "index.md":
+                continue
+
+            pair = frozenset([page_basename, target_basename])
+            if pair in checked_pairs:
+                continue
+            checked_pairs.add(pair)
+
+            total_pairs += 1
+            # 逆方向リンクを確認
+            target_links = page_links_map.get(target_basename, set())
+            if page_basename in target_links:
+                bidirectional_pairs += 1
+            else:
+                findings.append(Finding(
+                    severity="WARN",
+                    category="missing_backlink",
+                    page=page.path,
+                    message=f"[[{link_name.replace('.md', '')}]] への逆リンクが欠落",
+                    sub_severity="",
+                    marker="",
+                ))
+
+    stats = {"total_pairs": total_pairs, "bidirectional_pairs": bidirectional_pairs}
+    return findings, stats
+
+
+def check_naming_convention(pages: list["WikiPage"]) -> list["Finding"]:
+    """命名規則違反（小文字・ハイフン区切り・ASCII のみ）を検出する。Severity: WARN
+
+    regex: ^[a-z0-9]+(-[a-z0-9]+)*\\.md$ にマッチしないファイルを違反として報告。
+    """
+    NAMING_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*\.md$")
+    findings: list[Finding] = []
+    for page in pages:
+        if not NAMING_RE.match(page.filename):
+            findings.append(Finding(
+                severity="WARN",
+                category="naming_violation",
+                page=page.path,
+                message=f"命名規則違反: `{page.filename}` は小文字・ハイフン区切り・ASCII のみを使用してください",
+                sub_severity="",
+                marker="",
+            ))
+    return findings
+
+
+def check_source_field(pages: list["WikiPage"]) -> list["Finding"]:
+    """source: フィールドの空・欠落を検出する。Severity: INFO"""
+    findings: list[Finding] = []
+    for page in pages:
+        source_val = page.frontmatter.get("source", None)
+        if source_val is None or source_val == "":
+            findings.append(Finding(
+                severity="INFO",
+                category="missing_source",
+                page=page.path,
+                message="source フィールドが空または欠落",
+                sub_severity="",
+                marker="",
+            ))
+    return findings
+
+
+def check_required_sections(
+    pages: list["WikiPage"],
+    page_policy: "dict | None",
+) -> list["Finding"]:
+    """page_policy.md の必須セクション定義に基づく欠落を検出する。
+
+    現行の page_policy.md には具体的な必須セクション名の定義がないため no-op。
+    将来の拡張構造のみ用意する。
+    """
+    # 現行 page_policy.md は必須セクション定義なし → no-op
+    return []
+
+
+def run_weekly_checks(
+    pages: list["WikiPage"],
+    all_pages_set: set[str],
+    index_content: "str | None",
+    index_links: set[str],
+    page_policy: "dict | None",
+) -> "tuple[list[Finding], dict]":
+    """weekly 固有チェック項目（orphan, bidirectional, naming, source, required_sections）を実行する。
+
+    Returns:
+        (findings, metrics_stats) のタプル。
+        findings: 全 weekly チェックの Finding リスト
+        metrics_stats: {"total_pairs": int, "bidirectional_pairs": int}
+    """
+    findings: list[Finding] = []
+
+    findings.extend(check_orphan_pages(pages, all_pages_set, index_links))
+
+    bidir_findings, bidir_stats = check_bidirectional_links(pages, all_pages_set)
+    findings.extend(bidir_findings)
+
+    findings.extend(check_naming_convention(pages))
+    findings.extend(check_source_field(pages))
+    findings.extend(check_required_sections(pages, page_policy))
+
+    return findings, bidir_stats
+
+
 # audit: LLM engine
 
 

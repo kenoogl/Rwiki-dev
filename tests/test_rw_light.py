@@ -3932,3 +3932,308 @@ class TestRunMicroChecks:
         self._make_wiki_setup(tmp_path, monkeypatch)
         result = rw_light.run_micro_checks([], set(), "# Index\n")
         assert result == []
+
+
+# ---------------------------------------------------------------------------
+# Task 2.2: weekly static checks
+# ---------------------------------------------------------------------------
+
+
+class TestCheckOrphanPages:
+    """check_orphan_pages() のユニットテスト"""
+
+    def test_no_orphan_when_all_linked(self):
+        """すべてのページが他ページからリンクされている場合は Finding なし"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
+        page_b = _make_wiki_page(path="b.md", filename="b.md", links=["a"])
+        all_pages_set = {"a.md", "b.md"}
+        index_links = set()
+        result = rw_light.check_orphan_pages([page_a, page_b], all_pages_set, index_links)
+        assert result == []
+
+    def test_orphan_detected_when_no_inbound_links(self):
+        """他ページからリンクされず index_links にもないページは WARN Finding"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
+        page_b = _make_wiki_page(path="b.md", filename="b.md", links=[])
+        all_pages_set = {"a.md", "b.md"}
+        index_links = set()
+        result = rw_light.check_orphan_pages([page_a, page_b], all_pages_set, index_links)
+        orphan_cats = [f for f in result if f.category == "orphan_page"]
+        assert len(orphan_cats) == 2
+        assert all(f.severity == "WARN" for f in orphan_cats)
+
+    def test_index_linked_pages_are_not_orphan(self):
+        """index_links に含まれるページは孤立と見なさない"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
+        all_pages_set = {"a.md"}
+        index_links = {"a.md"}  # a.md は index にリンクあり
+        result = rw_light.check_orphan_pages([page_a], all_pages_set, index_links)
+        assert result == []
+
+    def test_index_md_filename_excluded(self):
+        """ファイル名が index.md のページは孤立チェックから除外される"""
+        page_index = _make_wiki_page(path="subdir/index.md", filename="index.md", links=[])
+        all_pages_set = {"subdir/index.md"}
+        index_links = set()
+        result = rw_light.check_orphan_pages([page_index], all_pages_set, index_links)
+        assert result == []
+
+    def test_linked_page_not_orphan_even_if_not_in_index(self):
+        """他ページからリンクされているページは index なしでも孤立でない"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
+        page_b = _make_wiki_page(path="b.md", filename="b.md", links=[])
+        all_pages_set = {"a.md", "b.md"}
+        index_links = set()
+        result = rw_light.check_orphan_pages([page_a, page_b], all_pages_set, index_links)
+        # a.md はリンクを張っているが誰からもリンクされていない → orphan
+        # b.md は a.md からリンクされている → 非 orphan
+        orphan_pages = [f.page for f in result if f.category == "orphan_page"]
+        assert "b.md" not in orphan_pages
+        assert "a.md" in orphan_pages
+
+
+class TestCheckBidirectionalLinks:
+    """check_bidirectional_links() のユニットテスト"""
+
+    def test_no_findings_when_no_links(self):
+        """リンクなしのページは Finding なし・stats は total_pairs=0"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
+        all_pages_set = {"a.md"}
+        findings, stats = rw_light.check_bidirectional_links([page_a], all_pages_set)
+        assert findings == []
+        assert stats["total_pairs"] == 0
+        assert stats["bidirectional_pairs"] == 0
+
+    def test_bidirectional_pair_no_finding(self):
+        """A→B かつ B→A の双方向リンクは Finding なし"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
+        page_b = _make_wiki_page(path="b.md", filename="b.md", links=["a"])
+        all_pages_set = {"a.md", "b.md"}
+        findings, stats = rw_light.check_bidirectional_links([page_a, page_b], all_pages_set)
+        assert findings == []
+        assert stats["total_pairs"] == 1
+        assert stats["bidirectional_pairs"] == 1
+
+    def test_unidirectional_link_is_finding(self):
+        """A→B だが B→A がない場合は WARN Finding"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
+        page_b = _make_wiki_page(path="b.md", filename="b.md", links=[])
+        all_pages_set = {"a.md", "b.md"}
+        findings, stats = rw_light.check_bidirectional_links([page_a, page_b], all_pages_set)
+        assert len(findings) == 1
+        assert findings[0].severity == "WARN"
+        assert findings[0].category == "missing_backlink"
+        assert stats["total_pairs"] == 1
+        assert stats["bidirectional_pairs"] == 0
+
+    def test_index_md_links_excluded(self):
+        """index.md からのリンクは双方向チェック対象外"""
+        page_index = _make_wiki_page(path="index.md", filename="index.md", links=["other"])
+        page_other = _make_wiki_page(path="other.md", filename="other.md", links=[])
+        all_pages_set = {"index.md", "other.md"}
+        findings, stats = rw_light.check_bidirectional_links([page_index, page_other], all_pages_set)
+        # index.md からのリンクは除外されるため total_pairs = 0
+        assert stats["total_pairs"] == 0
+        assert findings == []
+
+    def test_returns_tuple_with_stats(self):
+        """戻り値が (findings, dict) のタプルであること"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
+        all_pages_set = {"a.md"}
+        result = rw_light.check_bidirectional_links([page_a], all_pages_set)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        findings, stats = result
+        assert isinstance(findings, list)
+        assert isinstance(stats, dict)
+        assert "total_pairs" in stats
+        assert "bidirectional_pairs" in stats
+
+
+class TestCheckNamingConvention:
+    """check_naming_convention() のユニットテスト"""
+
+    def test_valid_filename_no_finding(self):
+        """有効な命名（小文字・ハイフン区切り）は Finding なし"""
+        page = _make_wiki_page(path="my-concept.md", filename="my-concept.md")
+        result = rw_light.check_naming_convention([page])
+        assert result == []
+
+    def test_uppercase_filename_is_finding(self):
+        """大文字を含むファイル名は WARN Finding"""
+        page = _make_wiki_page(path="MyPage.md", filename="MyPage.md")
+        result = rw_light.check_naming_convention([page])
+        assert len(result) == 1
+        assert result[0].severity == "WARN"
+        assert result[0].category == "naming_violation"
+
+    def test_underscore_filename_is_finding(self):
+        """アンダースコアを含むファイル名は WARN Finding"""
+        page = _make_wiki_page(path="my_page.md", filename="my_page.md")
+        result = rw_light.check_naming_convention([page])
+        assert len(result) == 1
+        assert result[0].severity == "WARN"
+
+    def test_space_in_filename_is_finding(self):
+        """スペースを含むファイル名は WARN Finding"""
+        page = _make_wiki_page(path="my page.md", filename="my page.md")
+        result = rw_light.check_naming_convention([page])
+        assert len(result) == 1
+        assert result[0].severity == "WARN"
+
+    def test_valid_with_numbers_no_finding(self):
+        """数字を含む有効なファイル名は Finding なし"""
+        page = _make_wiki_page(path="page-01.md", filename="page-01.md")
+        result = rw_light.check_naming_convention([page])
+        assert result == []
+
+    def test_index_md_is_valid(self):
+        """index.md は有効な命名として Finding なし"""
+        page = _make_wiki_page(path="index.md", filename="index.md")
+        result = rw_light.check_naming_convention([page])
+        assert result == []
+
+    def test_multiple_pages_mixed(self):
+        """有効・無効が混在する場合、違反のみ Finding"""
+        valid = _make_wiki_page(path="valid-page.md", filename="valid-page.md")
+        invalid = _make_wiki_page(path="Invalid_Page.md", filename="Invalid_Page.md")
+        result = rw_light.check_naming_convention([valid, invalid])
+        assert len(result) == 1
+        assert result[0].page == "Invalid_Page.md"
+
+
+class TestCheckSourceField:
+    """check_source_field() のユニットテスト"""
+
+    def test_source_present_no_finding(self):
+        """source フィールドが存在する場合は Finding なし"""
+        page = _make_wiki_page(frontmatter={"title": "Test", "source": "https://example.com"})
+        result = rw_light.check_source_field([page])
+        assert result == []
+
+    def test_source_missing_is_info(self):
+        """source フィールドが欠落している場合は INFO Finding"""
+        page = _make_wiki_page(frontmatter={"title": "Test"})
+        result = rw_light.check_source_field([page])
+        assert len(result) == 1
+        assert result[0].severity == "INFO"
+        assert result[0].category == "missing_source"
+
+    def test_source_empty_string_is_info(self):
+        """source フィールドが空文字列の場合は INFO Finding"""
+        page = _make_wiki_page(frontmatter={"title": "Test", "source": ""})
+        result = rw_light.check_source_field([page])
+        assert len(result) == 1
+        assert result[0].severity == "INFO"
+
+    def test_multiple_pages(self):
+        """複数ページで source あり/なしが正しく処理される"""
+        page_ok = _make_wiki_page(
+            path="ok.md", filename="ok.md",
+            frontmatter={"title": "OK", "source": "web"},
+        )
+        page_missing = _make_wiki_page(
+            path="missing.md", filename="missing.md",
+            frontmatter={"title": "Missing"},
+        )
+        result = rw_light.check_source_field([page_ok, page_missing])
+        assert len(result) == 1
+        assert result[0].page == "missing.md"
+
+
+class TestCheckRequiredSections:
+    """check_required_sections() のユニットテスト"""
+
+    def test_no_findings_when_page_policy_is_none(self):
+        """page_policy が None の場合は no-op（Finding なし）"""
+        page = _make_wiki_page()
+        result = rw_light.check_required_sections([page], None)
+        assert result == []
+
+    def test_no_findings_when_page_policy_is_empty(self):
+        """page_policy が空 dict の場合は no-op（Finding なし）"""
+        page = _make_wiki_page()
+        result = rw_light.check_required_sections([page], {})
+        assert result == []
+
+    def test_no_findings_with_current_page_policy(self):
+        """現行 page_policy.md は必須セクション定義がないため Finding なし"""
+        page = _make_wiki_page(body="# Title\n\nSome body text.")
+        # 現行の page_policy.md には具体的なセクション定義がない
+        page_policy = {"concepts": "何であるか/なぜ重要か"}
+        result = rw_light.check_required_sections([page], page_policy)
+        assert result == []
+
+
+class TestRunWeeklyChecks:
+    """run_weekly_checks() のユニットテスト"""
+
+    def test_returns_tuple(self):
+        """戻り値が (list, dict) のタプルであること"""
+        page = _make_wiki_page()
+        all_pages_set = {"page.md"}
+        index_links = set()
+        result = rw_light.run_weekly_checks([page], all_pages_set, None, index_links, None)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        findings, stats = result
+        assert isinstance(findings, list)
+        assert isinstance(stats, dict)
+
+    def test_stats_contain_required_keys(self):
+        """stats に total_pairs と bidirectional_pairs が含まれること"""
+        page = _make_wiki_page()
+        all_pages_set = {"page.md"}
+        index_links = set()
+        _, stats = rw_light.run_weekly_checks([page], all_pages_set, None, index_links, None)
+        assert "total_pairs" in stats
+        assert "bidirectional_pairs" in stats
+
+    def test_orphan_finding_included(self):
+        """孤立ページが正しく検出されること"""
+        page = _make_wiki_page(path="orphan.md", filename="orphan.md", links=[])
+        all_pages_set = {"orphan.md"}
+        index_links = set()
+        findings, _ = rw_light.run_weekly_checks([page], all_pages_set, None, index_links, None)
+        orphan_findings = [f for f in findings if f.category == "orphan_page"]
+        assert len(orphan_findings) >= 1
+
+    def test_naming_violation_included(self):
+        """命名規則違反が正しく検出されること"""
+        page = _make_wiki_page(path="BadName.md", filename="BadName.md", links=[])
+        all_pages_set = {"BadName.md"}
+        index_links = set()
+        findings, _ = rw_light.run_weekly_checks([page], all_pages_set, None, index_links, None)
+        naming_findings = [f for f in findings if f.category == "naming_violation"]
+        assert len(naming_findings) >= 1
+
+    def test_bidirectional_stats_propagated(self):
+        """check_bidirectional_links の stats が正しく伝搬されること"""
+        page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
+        page_b = _make_wiki_page(path="b.md", filename="b.md", links=["a"])
+        all_pages_set = {"a.md", "b.md"}
+        index_links = set()
+        _, stats = rw_light.run_weekly_checks(
+            [page_a, page_b], all_pages_set, None, index_links, None
+        )
+        assert stats["total_pairs"] == 1
+        assert stats["bidirectional_pairs"] == 1
+
+    def test_all_five_checks_run(self):
+        """5 つのチェック関数（orphan, bidir, naming, source, required_sections）がすべて実行されること"""
+        # 命名違反 + source なし + 孤立 の複合ケース
+        page = _make_wiki_page(
+            path="BadName.md",
+            filename="BadName.md",
+            frontmatter={"title": "Test"},  # source なし
+            links=[],
+        )
+        all_pages_set = {"BadName.md"}
+        index_links = set()
+        findings, stats = rw_light.run_weekly_checks(
+            [page], all_pages_set, None, index_links, None
+        )
+        categories = {f.category for f in findings}
+        assert "orphan_page" in categories
+        assert "naming_violation" in categories
+        assert "missing_source" in categories

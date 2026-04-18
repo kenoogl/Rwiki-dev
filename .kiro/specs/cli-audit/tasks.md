@@ -49,7 +49,7 @@
   - _Requirements: 1.1, 7.7, 7.8_
   - _Boundary: StaticCheckEngine — micro_
 
-- [ ] 2.2 (P) weekly チェック関数群 + run_weekly_checks
+- [x] 2.2 (P) weekly チェック関数群 + run_weekly_checks
   - check_orphan_pages: 被リンク集合を構築し、どのページからもリンクされず index_links にも含まれないページを検出。ファイル名 "index.md" は除外。Severity: WARN
   - check_bidirectional_links: 全リンクペアの双方向チェック。index.md からのリンクは対象外。(findings, {"total_pairs": N, "bidirectional_pairs": M}) のタプルを返却
   - check_naming_convention: `^[a-z0-9]+(-[a-z0-9]+)*\.md$` にマッチしないファイル名を検出。Severity: WARN
@@ -135,3 +135,7 @@
   - エラーケース: wiki/ 不在 → exit 1、AGENTS/ 不在（monthly）→ exit 1、micro 対象 0 件 → exit 0
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
   - _Depends: 5.1, 5.2, 5.3, 6.1, 6.2_
+
+## Implementation Notes
+- task 2.2: `check_orphan_pages` に未使用の `LINK_RE` 変数と未参照の `all_pages_set` パラメータあり（dead code）。5.2 実装時に整理すること
+- task 2.2: `run_weekly_checks` では `read_error` ページの除外をしていない。5.2 の `cmd_audit_weekly` で両者連携時に対処すること
