@@ -2249,7 +2249,7 @@ def cmd_audit_weekly() -> int:
     )
     frontmatter_errors_count = sum(1 for f in findings if f.category == "frontmatter_error")
     orphan_pages_count = sum(1 for f in findings if f.category == "orphan_page")
-    source_missing_count = sum(1 for f in findings if f.category == "source_missing")
+    source_missing_count = sum(1 for f in findings if f.category == "missing_source")
     naming_violations_count = sum(1 for f in findings if f.category == "naming_violation")
 
     metrics = {
