@@ -14,8 +14,7 @@
 ### CLI ツール
 **Location**: `scripts/rw_light.py`
 **Purpose**: 全コマンドを集約したモノリシック CLI
-**Implemented**: `lint`, `ingest`, `synthesize-logs`, `approve`, `query-extract`, `query-answer`, `lint-query`, `query-fix`, `init`
-**Planned**: `audit`（cli-audit スペック実装待ち）
+**Implemented**: `lint`, `ingest`, `synthesize-logs`, `approve`, `query-extract`, `query-answer`, `lint-query`, `query-fix`, `init`, `audit`（micro/weekly/monthly/quarterly の 4 サブコマンド）
 **Pattern**: ユーティリティ関数群 → コマンドハンドラ → argparse エントリポイント
 
 ### プロンプトテンプレート
@@ -65,3 +64,5 @@ from typing import Optional, List, Dict, Tuple
 
 ---
 _created_at: 2026-04-18_
+_updated_at: 2026-04-18_
+_change: audit コマンド実装完了を反映_
