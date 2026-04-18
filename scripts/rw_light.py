@@ -1694,6 +1694,148 @@ def run_weekly_checks(
 # audit: LLM engine
 
 
+def map_severity(claude_severity: str) -> tuple[str, str]:
+  """AGENTS/audit.md の4段階 severity を CLI 3水準にマッピングする。
+
+  Args:
+      claude_severity: Claude が返す severity 文字列
+          ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW")
+  Returns:
+      (cli_severity, sub_severity) のタプル。
+      sub_severity は空文字列で「なし」を表現。
+      例: ("ERROR", "CRITICAL"), ("ERROR", "HIGH"), ("WARN", ""), ("INFO", "")
+  """
+  if claude_severity == "CRITICAL":
+    return ("ERROR", "CRITICAL")
+  elif claude_severity == "HIGH":
+    return ("ERROR", "HIGH")
+  elif claude_severity == "MEDIUM":
+    return ("WARN", "")
+  else:
+    # LOW およびその他
+    return ("INFO", "")
+
+
+def build_audit_prompt(tier: str, task_prompts: str, wiki_content: str) -> str:
+  """audit 用プロンプトを構築する。
+
+  Args:
+      tier: "monthly" | "quarterly"
+      task_prompts: load_task_prompts("audit") で読み込んだプロンプト文字列
+      wiki_content: read_all_wiki_content() で取得した wiki 全文
+  Returns:
+      Claude CLI に渡すプロンプト文字列
+
+  プロンプト構成（既存 build_query_prompt() パターンに準拠）:
+  1. タスクプロンプト（AGENTS/audit.md + ポリシー）
+  2. ティア指示 + フォーマットオーバーライド + Execution Declaration 抑制
+  3. wiki コンテンツ（ユーザー提供データ）
+  4. 出力形式指示（具体的 JSON サンプル付き）— 必ず最後に配置
+  """
+  parts: list[str] = []
+
+  # 1. タスクプロンプト（AGENTS/audit.md + ポリシー）— Req 10.1
+  parts.append(task_prompts)
+
+  # 2. ティア指示 + フォーマットオーバーライド + Execution Declaration 抑制
+  if tier == "monthly":
+    tier_label = "Tier 2: Semantic Audit"
+    exclude_tiers = "Tier 0 (Micro-check), Tier 1 (Structural Audit), Tier 3 (Strategic Audit)"
+  else:
+    # quarterly
+    tier_label = "Tier 3: Strategic Audit"
+    exclude_tiers = "Tier 0 (Micro-check), Tier 1 (Structural Audit), Tier 2 (Semantic Audit)"
+
+  tier_instruction = (
+    "## 実行指示\n\n"
+    f"以下の4ティアのうち、{tier_label} のみを実行してください。\n"
+    f"{exclude_tiers} の\n"
+    "チェック項目は実行しないでください。Tier 0/1 の構造チェックは CLI が Python で\n"
+    "実行済みであり、重複を避ける必要があります。\n\n"
+    "注意: AGENTS/audit.md の「出力フォーマット」セクションに定義された Markdown 形式は\n"
+    "対話型プロンプト実行用のフォーマットです。CLI モードでは末尾の「出力形式」セクションの\n"
+    "JSON スキーマに従って出力してください。Markdown 形式では出力しないでください。\n\n"
+    "実行宣言は不要です。JSON のみを出力してください。"
+  )
+  parts.append(tier_instruction)
+
+  # 3. wiki コンテンツ（ユーザー提供データ）
+  parts.append("## Wiki コンテンツ\n\n" + wiki_content)
+
+  # 4. 出力形式指示（JSON サンプル付き）— 必ず末尾に配置（セキュリティ考慮）
+  if tier == "monthly":
+    schema_sample = {
+      "findings": [
+        {
+          "severity": "HIGH",
+          "category": "contradicting_definition",
+          "page": "concepts/my-concept.md",
+          "message": "page-a.md と page-b.md で定義が矛盾している",
+          "marker": "CONFLICT",
+          "recommendation": "定義を統一するか、条件分岐を明記する",
+        },
+        {
+          "severity": "MEDIUM",
+          "category": "ambiguous_definition",
+          "page": "entities/some-tool.md",
+          "message": "機能の説明が不十分で解釈が分かれる",
+          "marker": "AMBIGUOUS",
+          "recommendation": "具体的な使用例を追記する",
+        },
+      ],
+      "metrics": {
+        "pages_scanned": 42,
+        "total_findings": 2,
+        "conflict_count": 1,
+        "tension_count": 0,
+        "ambiguous_count": 1,
+      },
+      "recommended_actions": [
+        "concepts/my-concept.md の定義を確認する",
+        "entities/some-tool.md に使用例を追記する",
+      ],
+    }
+  else:
+    # quarterly
+    schema_sample = {
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "category": "isolated_cluster",
+          "page": None,
+          "message": "methods/ 配下のページが concepts/ とほぼクロスリンクされていない",
+          "recommendation": "methods の各ページに関連 concept へのリンクを追加する",
+        },
+        {
+          "severity": "LOW",
+          "category": "coverage_gap",
+          "page": None,
+          "message": "concepts に対して synthesis ページが不足している（synthesis/ 全体のカバレッジ不足）",
+          "recommendation": "synthesis 候補を review に追加する",
+        },
+      ],
+      "metrics": {
+        "pages_scanned": 42,
+        "total_findings": 2,
+      },
+      "recommended_actions": [
+        "methods と concepts のクロスリンクを強化する",
+        "synthesis ページの充実を検討する",
+      ],
+    }
+
+  schema_json = json.dumps(schema_sample, ensure_ascii=False, indent=2)
+  output_instruction = (
+    "## 出力形式\n\n"
+    "以下の JSON スキーマに従って、監査結果を JSON 形式で出力してください。\n"
+    "コードブロック（```json ... ```）で囲まずに、JSONのみを出力してください。\n\n"
+    f"```json\n{schema_json}\n```"
+  )
+  parts.append(output_instruction)
+
+  return "\n\n".join(parts)
+
+
 # audit: report engine
 
 

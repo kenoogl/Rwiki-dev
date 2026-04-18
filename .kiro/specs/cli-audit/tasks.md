@@ -61,7 +61,7 @@
   - _Boundary: StaticCheckEngine — weekly_
 
 - [ ] 3. Core — LLM 監査エンジン
-- [ ] 3.1 (P) build_audit_prompt + map_severity
+- [x] 3.1 (P) build_audit_prompt + map_severity
   - build_audit_prompt(tier, task_prompts, wiki_content): ティア指示テンプレート（排他的限定 + Markdown→JSON オーバーライド + Execution Declaration 抑制）+ wiki コンテンツ + JSON スキーマサンプル（末尾配置）
   - map_severity(claude_severity): CRITICAL→("ERROR","CRITICAL"), HIGH→("ERROR","HIGH"), MEDIUM→("WARN",""), LOW→("INFO","")
   - monthly と quarterly でティア指示と JSON サンプルが正しく切り替わること。map_severity の 4 パターンが正しくマッピングされること

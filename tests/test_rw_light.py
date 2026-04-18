@@ -4237,3 +4237,125 @@ class TestRunWeeklyChecks:
         assert "orphan_page" in categories
         assert "naming_violation" in categories
         assert "missing_source" in categories
+
+
+# ---------------------------------------------------------------------------
+# Task 3.1: build_audit_prompt() + map_severity()
+# ---------------------------------------------------------------------------
+
+
+class TestMapSeverity:
+    """map_severity() の全4パターンをテストする"""
+
+    def test_critical_maps_to_error_critical(self):
+        """CRITICAL → ("ERROR", "CRITICAL") にマッピングされること"""
+        cli_sev, sub_sev = rw_light.map_severity("CRITICAL")
+        assert cli_sev == "ERROR"
+        assert sub_sev == "CRITICAL"
+
+    def test_high_maps_to_error_high(self):
+        """HIGH → ("ERROR", "HIGH") にマッピングされること"""
+        cli_sev, sub_sev = rw_light.map_severity("HIGH")
+        assert cli_sev == "ERROR"
+        assert sub_sev == "HIGH"
+
+    def test_medium_maps_to_warn(self):
+        """MEDIUM → ("WARN", "") にマッピングされること"""
+        cli_sev, sub_sev = rw_light.map_severity("MEDIUM")
+        assert cli_sev == "WARN"
+        assert sub_sev == ""
+
+    def test_low_maps_to_info(self):
+        """LOW → ("INFO", "") にマッピングされること"""
+        cli_sev, sub_sev = rw_light.map_severity("LOW")
+        assert cli_sev == "INFO"
+        assert sub_sev == ""
+
+
+class TestBuildAuditPrompt:
+    """build_audit_prompt() のティア別動作をテストする"""
+
+    TASK_PROMPTS = "## AGENTS/audit.md content here\nSome rules."
+    WIKI_CONTENT = "<!-- file: wiki/page.md -->\nPage content."
+
+    def test_monthly_contains_tier2_instruction(self):
+        """monthly のプロンプトに Tier 2: Semantic Audit の指示が含まれること"""
+        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        assert "Tier 2" in result
+        assert "Semantic Audit" in result
+
+    def test_monthly_excludes_tier3(self):
+        """monthly のプロンプトに Tier 3: Strategic Audit の除外指示が含まれること"""
+        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        # monthly は Tier 3 を除外する
+        assert "Tier 3" in result  # 除外リストとして言及される
+        # Tier 3 を「実行しない」旨の指示が含まれること
+        assert "Strategic Audit" in result
+
+    def test_quarterly_contains_tier3_instruction(self):
+        """quarterly のプロンプトに Tier 3: Strategic Audit の指示が含まれること"""
+        result = rw_light.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        assert "Tier 3" in result
+        assert "Strategic Audit" in result
+
+    def test_quarterly_excludes_tier2(self):
+        """quarterly のプロンプトに Tier 2: Semantic Audit の除外指示が含まれること"""
+        result = rw_light.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        # quarterly は Tier 2 を除外する
+        assert "Tier 2" in result  # 除外リストとして言及される
+        assert "Semantic Audit" in result
+
+    def test_monthly_and_quarterly_prompts_differ(self):
+        """monthly と quarterly でプロンプト内容が異なること（ティア指示が切り替わる）"""
+        monthly_result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        quarterly_result = rw_light.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        assert monthly_result != quarterly_result
+
+    def test_task_prompts_included(self):
+        """task_prompts の内容がプロンプトに含まれること（AGENTS/audit.md 一元管理 Req 10.1）"""
+        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        assert self.TASK_PROMPTS in result
+
+    def test_wiki_content_included(self):
+        """wiki_content がプロンプトに含まれること"""
+        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        assert self.WIKI_CONTENT in result
+
+    def test_json_schema_at_end(self):
+        """JSON スキーマサンプルがプロンプトの末尾に配置されること（セキュリティ考慮）"""
+        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        # JSON スキーマ指示がプロンプトに含まれること
+        assert "findings" in result
+        assert "metrics" in result
+        assert "recommended_actions" in result
+        # wiki_content よりも JSON スキーマ指示が後に来ること
+        wiki_idx = result.find(self.WIKI_CONTENT)
+        findings_idx = result.rfind("findings")
+        assert wiki_idx < findings_idx, "JSON スキーマ指示は wiki_content の後に配置されるべき"
+
+    def test_monthly_json_schema_includes_marker(self):
+        """monthly の JSON スキーマサンプルに marker フィールドが含まれること"""
+        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        assert "marker" in result
+
+    def test_quarterly_json_schema_lacks_marker(self):
+        """quarterly の JSON スキーマサンプルに marker フィールドが含まれないこと"""
+        result = rw_light.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        # quarterly スキーマには marker フィールドがない
+        # ただし monthly の除外指示で "marker" という語が出る可能性は考慮しないで
+        # JSON サンプルセクション以降のみチェック
+        json_section_idx = result.find("## 出力形式")
+        assert json_section_idx != -1
+        json_section = result[json_section_idx:]
+        assert "marker" not in json_section
+
+    def test_markdown_override_instruction(self):
+        """Markdown 形式ではなく JSON で出力する旨の指示が含まれること"""
+        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        assert "JSON" in result
+        assert "Markdown" in result  # Markdown を使用しない旨の言及
+
+    def test_execution_declaration_suppressed(self):
+        """実行宣言を出力しない旨の指示が含まれること"""
+        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        assert "実行宣言" in result
