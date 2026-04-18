@@ -5117,3 +5117,250 @@ class TestGenerateAuditReportIntegration:
     assert "[WARN] methods/page.md: index 未登録" in out
     assert "audit micro: ERROR 1, WARN 1, INFO 1" in out
     assert report_path in out
+
+
+# ---------------------------------------------------------------------------
+# cmd_audit / cmd_audit_micro のテスト（task 5.1）
+# ---------------------------------------------------------------------------
+
+def _setup_wiki_for_cmd_audit(tmp_path, monkeypatch, num_files=2):
+  """cmd_audit_micro テスト用の最小 Vault を構築する。"""
+  wiki_dir = tmp_path / "wiki"
+  wiki_dir.mkdir()
+  logs_dir = tmp_path / "logs"
+  logs_dir.mkdir()
+
+  for i in range(num_files):
+    page = wiki_dir / f"page-{i:02d}.md"
+    page.write_text(
+      f"---\ntitle: Page {i}\nsource: web\n---\n\n# Page {i}\n\nBody text.\n",
+      encoding="utf-8",
+    )
+
+  monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+  monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+  monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+  return wiki_dir, logs_dir
+
+
+class TestCmdAuditDispatch:
+  """cmd_audit() ディスパッチャのテスト（Req 5.5）"""
+
+  def test_cmd_audit_exists(self):
+    """cmd_audit 関数が定義されていること"""
+    assert hasattr(rw_light, "cmd_audit")
+    assert callable(rw_light.cmd_audit)
+
+  def test_cmd_audit_no_args_returns_1(self, tmp_path, monkeypatch, capsys):
+    """サブコマンドなしで呼び出した場合 exit 1 相当（return 1）で usage を表示すること"""
+    _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    result = rw_light.cmd_audit([])
+    assert result == 1
+
+  def test_cmd_audit_no_args_prints_usage(self, tmp_path, monkeypatch, capsys):
+    """サブコマンドなしで呼び出した場合に使用方法が表示されること"""
+    _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    rw_light.cmd_audit([])
+    out = capsys.readouterr().out
+    assert "micro" in out
+    assert "weekly" in out
+    assert "monthly" in out
+    assert "quarterly" in out
+
+  def test_cmd_audit_unknown_subcmd_returns_1(self, tmp_path, monkeypatch, capsys):
+    """不明なサブコマンドの場合 return 1 すること"""
+    _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    result = rw_light.cmd_audit(["unknown-subcmd"])
+    assert result == 1
+
+  def test_cmd_audit_unknown_subcmd_prints_error(self, tmp_path, monkeypatch, capsys):
+    """不明なサブコマンドの場合エラーメッセージを表示すること"""
+    _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    rw_light.cmd_audit(["invalid"])
+    out = capsys.readouterr().out
+    assert "invalid" in out or "Unknown" in out or "usage" in out.lower() or "audit" in out
+
+
+class TestCmdAuditMicro:
+  """cmd_audit_micro() のテスト（Req 1.1-1.8）"""
+
+  def test_cmd_audit_micro_exists(self):
+    """cmd_audit_micro 関数が定義されていること"""
+    assert hasattr(rw_light, "cmd_audit_micro")
+    assert callable(rw_light.cmd_audit_micro)
+
+  def test_cmd_audit_micro_returns_int(self, tmp_path, monkeypatch):
+    """cmd_audit_micro が int を返すこと"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    # _git_list_files を空リスト返却にモック（変更なし扱い）
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    result = rw_light.cmd_audit_micro()
+    assert isinstance(result, int)
+
+  def test_cmd_audit_micro_no_wiki_returns_1(self, tmp_path, monkeypatch, capsys):
+    """wiki/ が存在しない場合 exit 1（Req 7.1）"""
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path / "logs"))
+    result = rw_light.cmd_audit_micro()
+    assert result == 1
+
+  def test_cmd_audit_micro_no_wiki_prints_error(self, tmp_path, monkeypatch, capsys):
+    """wiki/ が存在しない場合 [ERROR] を表示すること"""
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path / "logs"))
+    rw_light.cmd_audit_micro()
+    out = capsys.readouterr().out
+    assert "[ERROR]" in out
+
+  def test_cmd_audit_micro_no_changes_returns_0(self, tmp_path, monkeypatch, capsys):
+    """対象ファイル 0 件のとき exit 0（Req 1.7）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    # 変更なしにモック
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    result = rw_light.cmd_audit_micro()
+    assert result == 0
+
+  def test_cmd_audit_micro_no_changes_prints_info(self, tmp_path, monkeypatch, capsys):
+    """対象ファイル 0 件のとき [INFO] 変更なしを表示すること（Req 1.7）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    rw_light.cmd_audit_micro()
+    out = capsys.readouterr().out
+    assert "[INFO]" in out
+
+  def test_cmd_audit_micro_no_changes_generates_report(self, tmp_path, monkeypatch, capsys):
+    """対象ファイル 0 件のとき pages_scanned: 0 のレポートを生成すること（Req 1.7）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    rw_light.cmd_audit_micro()
+    # logs/ にレポートファイルが生成されること
+    report_files = list(logs_dir.glob("audit-micro-*.md"))
+    assert len(report_files) == 1
+    content = report_files[0].read_text(encoding="utf-8")
+    assert "pages_scanned: 0" in content
+
+  def test_cmd_audit_micro_with_changes_generates_report(self, tmp_path, monkeypatch):
+    """変更ファイルがある場合 logs/ にレポートが生成されること（Req 1.4）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    page_path = wiki_dir / "page-00.md"
+    # _git_list_files が wiki ページを返すようモック
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(page_path)] if "diff" in args else []
+    )
+    rw_light.cmd_audit_micro()
+    report_files = list(logs_dir.glob("audit-micro-*.md"))
+    assert len(report_files) == 1
+
+  def test_cmd_audit_micro_report_in_logs_only(self, tmp_path, monkeypatch):
+    """レポートが logs/ にのみ出力され wiki/ には書き込まれないこと（Req 6.1）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    rw_light.cmd_audit_micro()
+    # wiki/ 内に新規ファイルがないこと
+    wiki_files_after = list(wiki_dir.rglob("*.md"))
+    assert len(wiki_files_after) == 2  # 元の 2 ファイルのみ
+
+  def test_cmd_audit_micro_no_error_returns_0(self, tmp_path, monkeypatch):
+    """ERROR なしの場合 exit 0（Req 1.5）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    page_path = wiki_dir / "page-00.md"
+    # 正常ページ（リンク切れなし）
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(page_path)] if "diff" in args else []
+    )
+    result = rw_light.cmd_audit_micro()
+    # ERROR finding なし（title/source は設定済み）→ exit 0
+    assert result == 0
+
+  def test_cmd_audit_micro_with_error_returns_1(self, tmp_path, monkeypatch):
+    """ERROR finding がある場合 exit 1（Req 1.6）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    # broken link を含むページを作成
+    broken_page = wiki_dir / "broken.md"
+    broken_page.write_text(
+      "---\ntitle: Broken\nsource: web\n---\n\n# Broken\n\n[[nonexistent-page]] をリンク。\n",
+      encoding="utf-8",
+    )
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(broken_page)] if "diff" in args else []
+    )
+    result = rw_light.cmd_audit_micro()
+    assert result == 1
+
+  def test_cmd_audit_micro_summary_displayed(self, tmp_path, monkeypatch, capsys):
+    """完了後にサマリーが表示されること（Req 1.3）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    page_path = wiki_dir / "page-00.md"
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(page_path)] if "diff" in args else []
+    )
+    rw_light.cmd_audit_micro()
+    out = capsys.readouterr().out
+    assert "audit micro:" in out
+
+  def test_cmd_audit_micro_report_path_displayed(self, tmp_path, monkeypatch, capsys):
+    """レポートパスが標準出力に表示されること（Req 5.7）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    page_path = wiki_dir / "page-00.md"
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(page_path)] if "diff" in args else []
+    )
+    rw_light.cmd_audit_micro()
+    out = capsys.readouterr().out
+    assert "audit-micro-" in out
+
+  def test_cmd_audit_micro_metrics_in_report(self, tmp_path, monkeypatch):
+    """レポートに metrics（pages_scanned, broken_links 等）が含まれること（Req 5.4）"""
+    wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
+    page_path = wiki_dir / "page-00.md"
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(page_path)] if "diff" in args else []
+    )
+    rw_light.cmd_audit_micro()
+    report_files = list(logs_dir.glob("audit-micro-*.md"))
+    assert report_files
+    content = report_files[0].read_text(encoding="utf-8")
+    assert "pages_scanned" in content
+    assert "broken_links" in content
+    assert "total_findings" in content
+
+
+class TestMainAuditDispatch:
+  """main() での audit コマンドのディスパッチテスト"""
+
+  def test_main_dispatches_audit(self, monkeypatch):
+    """main() が 'audit' コマンドを cmd_audit に委譲すること"""
+    called = []
+
+    def mock_cmd_audit(args):
+      called.append(args)
+      return 0
+
+    monkeypatch.setattr(rw_light, "cmd_audit", mock_cmd_audit)
+    monkeypatch.setattr(sys, "argv", ["rw", "audit", "micro"])
+
+    with pytest.raises(SystemExit) as exc:
+      rw_light.main()
+    assert exc.value.code == 0
+    assert called  # cmd_audit が呼ばれたこと
+
+
+class TestPrintUsageAudit:
+  """print_usage() に audit ヘルプ行が含まれるテスト"""
+
+  def test_print_usage_contains_audit(self, capsys):
+    """print_usage() の出力に 'audit' が含まれること"""
+    rw_light.print_usage()
+    out = capsys.readouterr().out
+    assert "audit" in out

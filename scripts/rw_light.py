@@ -2080,6 +2080,105 @@ def print_audit_summary(tier: str, findings: list, report_path: str) -> None:
 # audit: commands — dispatch+micro
 
 
+def cmd_audit(args: list[str]) -> int:
+    """audit サブコマンドのディスパッチ。
+
+    Args:
+        args: sys.argv[2:] 以降の引数リスト
+    Returns:
+        終了コード（0: PASS, 1: FAIL）
+    """
+    if not args:
+        print("Usage: rw audit <subcommand>")
+        print("  subcommands: micro, weekly, monthly, quarterly")
+        return 1
+
+    subcmd = args[0]
+    if subcmd == "micro":
+        return cmd_audit_micro()
+    elif subcmd == "weekly":
+        return cmd_audit_weekly()
+    elif subcmd == "monthly":
+        return cmd_audit_monthly(args[1:])
+    elif subcmd == "quarterly":
+        return cmd_audit_quarterly(args[1:])
+    else:
+        print(f"[ERROR] Unknown audit subcommand: {subcmd}")
+        print("Usage: rw audit <subcommand>")
+        print("  subcommands: micro, weekly, monthly, quarterly")
+        return 1
+
+
+def cmd_audit_micro() -> int:
+    """micro 監査を実行する。グローバル定数 ROOT, WIKI, INDEX_MD を使用。
+
+    Returns:
+        終了コード（0: ERROR なし, 1: ERROR あり）
+    """
+    # 1. wiki/ の事前検証
+    if not validate_wiki_dir():
+        return 1
+
+    # 2. 対象ファイル取得
+    target_files = get_recent_wiki_changes()
+
+    # 3. 対象 0 件の場合
+    if not target_files:
+        print("[INFO] 変更なし: チェック対象の wiki ページがありません")
+        metrics = {
+            "pages_scanned": 0,
+            "broken_links": 0,
+            "index_missing": 0,
+            "frontmatter_errors": 0,
+            "total_findings": 0,
+        }
+        report_path = generate_audit_report("micro", [], metrics)
+        print_audit_summary("micro", [], report_path)
+        return 0
+
+    # 4. WikiPage リスト生成
+    pages = load_wiki_pages(WIKI, target_files)
+
+    # 5. all_pages_set 構築（全 wiki ページのファイル名セット）
+    all_md_files = list_md_files(WIKI)
+    all_pages_set: set[str] = set()
+    for f in all_md_files:
+        rel = os.path.relpath(f, WIKI)
+        all_pages_set.add(rel)
+
+    # 6. index_content 読み込み（不在時は None）
+    index_content: str | None = None
+    if os.path.isfile(INDEX_MD):
+        index_content = read_text(INDEX_MD)
+
+    # 7. micro チェック実行
+    findings = run_micro_checks(pages, all_pages_set, index_content)
+
+    # 8. metrics 算出
+    broken_links_count = sum(1 for f in findings if f.category == "broken_link")
+    index_missing_count = sum(
+        1 for f in findings if f.category == "index_missing" and f.page != ""
+    )
+    frontmatter_errors_count = sum(1 for f in findings if f.category == "frontmatter_error")
+    metrics = {
+        "pages_scanned": len(pages),
+        "broken_links": broken_links_count,
+        "index_missing": index_missing_count,
+        "frontmatter_errors": frontmatter_errors_count,
+        "total_findings": len(findings),
+    }
+
+    # 9. レポート生成
+    report_path = generate_audit_report("micro", findings, metrics)
+
+    # 10. サマリー表示
+    print_audit_summary("micro", findings, report_path)
+
+    # 11. ERROR の finding があれば exit 1、なければ exit 0（Req 1.5 / 1.6）
+    has_error = any(f.severity == "ERROR" for f in findings)
+    return 1 if has_error else 0
+
+
 # audit: commands — weekly
 
 
@@ -3103,7 +3202,7 @@ def cmd_init(args: list[str]) -> int:
 # main
 # -------------------------
 def print_usage() -> None:
-    print("Usage: rw [lint|ingest|synthesize-logs|approve|init|query]")
+    print("Usage: rw [lint|ingest|synthesize-logs|approve|init|query|audit]")
     print("       rw lint")
     print("       rw lint query [--path review/query/<query_id>] [--strict] [--format text|json]")
     print("       rw init [<path>]")
@@ -3111,6 +3210,11 @@ def print_usage() -> None:
     print('           extract "<question>" [--scope <page>] [--type <query_type>]')
     print('           answer  "<question>" [--scope <page>]')
     print("           fix     <query_id>")
+    print("       rw audit <subcommand>")
+    print("           micro      最近更新されたページを対象とした静的チェック")
+    print("           weekly     全ページを対象とした構造チェック")
+    print("           monthly    Claude CLI を使用した意味的監査")
+    print("           quarterly  Claude CLI を使用した戦略的監査")
 
 
 def main() -> None:
@@ -3149,6 +3253,9 @@ def main() -> None:
                 print(f"Unknown query subcommand: {subcmd}")
                 print_usage()
                 sys.exit(1)
+
+        if cmd == "audit":
+            sys.exit(cmd_audit(sys.argv[2:]))
 
         print_usage()
         sys.exit(1)

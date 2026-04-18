@@ -85,7 +85,7 @@
   - _Boundary: ReportEngine_
 
 - [ ] 5. Integration — コマンドハンドラ統合
-- [ ] 5.1 cmd_audit ディスパッチャ + cmd_audit_micro + main/print_usage 更新
+- [x] 5.1 cmd_audit ディスパッチャ + cmd_audit_micro + main/print_usage 更新
   - cmd_audit(args): サブコマンド分岐（micro/weekly/monthly/quarterly）。サブコマンドなし or 不明→ audit 専用 usage + exit 1
   - cmd_audit_micro(): validate_wiki_dir → get_recent_wiki_changes → 対象 0 件チェック（レポート出力 + exit 0）→ load_wiki_pages(target_files) → all_pages_set 構築 → index_content 読み込み（read_text(INDEX_MD)、不在時は None）→ run_micro_checks → findings から metrics dict 算出（pages_scanned, broken_links, index_missing, frontmatter_errors, total_findings）→ generate_audit_report → print_audit_summary → exit 0 or 1。ensure_dirs() は使用しない（wiki/ / review/ にディレクトリを作成し Req 6.1, 6.3 に違反するため）
   - main() に `if cmd == "audit": sys.exit(cmd_audit(sys.argv[2:]))` を追加
