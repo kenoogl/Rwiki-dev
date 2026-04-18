@@ -1062,6 +1062,80 @@ def read_wiki_content(scope: str | None) -> str:
 # audit: data loading
 
 
+def validate_wiki_dir() -> bool:
+    """wiki/ ディレクトリの事前検証を行う。グローバル定数 WIKI を使用。
+
+    検証項目:
+    - wiki/ ディレクトリの存在（Req 7.1）— 不在時はエラーメッセージ表示
+    - wiki/ 内の .md ファイルの存在（Req 7.1）— 不在時はエラーメッセージ表示
+    - Git working tree の dirty チェック（Req 7.6）— dirty 時は警告表示
+
+    Returns:
+        True: 検証パス（続行可能）, False: 検証失敗（呼び出し元が exit 1）
+    """
+    if not os.path.isdir(WIKI):
+        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {WIKI}")
+        return False
+
+    md_files = list_md_files(WIKI)
+    if not md_files:
+        print(f"[ERROR] wiki/ に .md ファイルが存在しません: {WIKI}")
+        return False
+
+    warn_if_dirty_paths(["wiki"], "audit")
+    return True
+
+
+def load_wiki_pages(wiki_dir: str, target_files: list[str] | None = None) -> list["WikiPage"]:
+    """wiki/ 内の .md ファイルを読み込んで WikiPage リストを返す。
+
+    Args:
+        wiki_dir: wiki ディレクトリパス（グローバル定数 WIKI）
+        target_files: 指定時はそのファイルのみ読み込む（micro 用）。
+                      None の場合は全 .md ファイルを読み込む（weekly 用）。
+    Returns:
+        WikiPage のリスト。読み込みエラーのファイルも read_error 付きで含む。
+    """
+    LINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
+
+    if target_files is not None:
+        files = [f for f in target_files if f.endswith(".md")]
+    else:
+        files = list_md_files(wiki_dir)
+
+    pages: list[WikiPage] = []
+    for file_path in files:
+        # wiki/ からの相対パス（wiki/ プレフィックスなし）
+        rel = os.path.relpath(file_path, wiki_dir)
+        filename = os.path.basename(file_path)
+
+        try:
+            raw_text = read_text(file_path)
+            frontmatter, body = parse_frontmatter(raw_text)
+            links = LINK_RE.findall(body)
+            pages.append(WikiPage(
+                path=rel,
+                filename=filename,
+                raw_text=raw_text,
+                frontmatter=frontmatter,
+                body=body,
+                links=links,
+                read_error="",
+            ))
+        except (OSError, UnicodeDecodeError) as e:
+            pages.append(WikiPage(
+                path=rel,
+                filename=filename,
+                raw_text="",
+                frontmatter={},
+                body="",
+                links=[],
+                read_error=str(e),
+            ))
+
+    return pages
+
+
 class Finding(NamedTuple):
     """監査で検出された個別の問題。"""
     severity: str      # "ERROR" | "WARN" | "INFO"

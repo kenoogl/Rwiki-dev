@@ -14,7 +14,7 @@
   - _Requirements: 7.2_
   - _Boundary: DataLoading, Prompt Engine_
 
-- [ ] 1.2 validate_wiki_dir + load_wiki_pages
+- [x] 1.2 validate_wiki_dir + load_wiki_pages
   - validate_wiki_dir(): wiki/ ディレクトリ存在、.md ファイル存在チェック。不在時は [ERROR] メッセージ + False 返却。dirty tree は warn_if_dirty_paths(["wiki"], "audit ...") で警告
   - load_wiki_pages(wiki_dir, target_files=None): ファイル読み込み + parse_frontmatter + `\[\[([^\]|]+)(?:\|[^\]]+)?\]\]` regex で body から [[link]] 抽出
   - (OSError, UnicodeDecodeError) を捕捉し read_error に設定。正常時は read_error=""

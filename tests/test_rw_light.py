@@ -2714,3 +2714,301 @@ class TestAuditSectionHeaders:
         assert idx_audit_data < idx_output, (
             "audit ヘッダーは Output utilities の前に配置されるべき"
         )
+
+
+# ---------------------------------------------------------------------------
+# Task 1.2: validate_wiki_dir() + load_wiki_pages()
+# ---------------------------------------------------------------------------
+
+
+def _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=2):
+    """audit テスト用の wiki ディレクトリを tmp_path に作成する。"""
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+
+    # 正常な .md ファイルを作成
+    for i in range(num_files):
+        page = wiki_dir / f"page-{i:02d}.md"
+        page.write_text(
+            f"---\ntitle: Page {i}\nsource: web\n---\n\n# Page {i}\n\nBody [[other-page]] text.\n",
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    return wiki_dir
+
+
+class TestValidateWikiDir:
+    """validate_wiki_dir() のユニットテスト"""
+
+    def test_returns_true_when_wiki_exists_with_md_files(self, tmp_path, monkeypatch):
+        """wiki/ が存在し .md ファイルがある場合 True を返すこと"""
+        _setup_wiki_for_audit(tmp_path, monkeypatch)
+        result = rw_light.validate_wiki_dir()
+        assert result is True
+
+    def test_returns_false_when_wiki_dir_missing(self, tmp_path, monkeypatch):
+        """wiki/ が存在しない場合 False を返すこと"""
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+        result = rw_light.validate_wiki_dir()
+        assert result is False
+
+    def test_prints_error_when_wiki_dir_missing(self, tmp_path, monkeypatch, capsys):
+        """wiki/ が存在しない場合 [ERROR] メッセージを表示すること"""
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+        rw_light.validate_wiki_dir()
+        captured = capsys.readouterr()
+        assert "[ERROR]" in captured.out
+
+    def test_returns_false_when_no_md_files(self, tmp_path, monkeypatch):
+        """wiki/ が存在するが .md ファイルがない場合 False を返すこと"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        result = rw_light.validate_wiki_dir()
+        assert result is False
+
+    def test_prints_error_when_no_md_files(self, tmp_path, monkeypatch, capsys):
+        """wiki/ に .md ファイルがない場合 [ERROR] メッセージを表示すること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        rw_light.validate_wiki_dir()
+        captured = capsys.readouterr()
+        assert "[ERROR]" in captured.out
+
+    def test_calls_warn_if_dirty_paths(self, tmp_path, monkeypatch):
+        """dirty working tree の場合 warn_if_dirty_paths を呼び出すこと"""
+        _setup_wiki_for_audit(tmp_path, monkeypatch)
+        called_with = []
+
+        def mock_warn(paths, action_name):
+            called_with.append((paths, action_name))
+
+        monkeypatch.setattr(rw_light, "warn_if_dirty_paths", mock_warn)
+        rw_light.validate_wiki_dir()
+        # warn_if_dirty_paths が "wiki" パスを含む引数で呼ばれること
+        assert len(called_with) == 1
+        assert "wiki" in called_with[0][0]
+
+    def test_returns_true_with_single_md_file(self, tmp_path, monkeypatch):
+        """wiki/ に .md ファイルが 1 つあれば True を返すこと"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "page.md").write_text("# Page\n\nContent.", encoding="utf-8")
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        result = rw_light.validate_wiki_dir()
+        assert result is True
+
+
+class TestLoadWikiPages:
+    """load_wiki_pages() のユニットテスト"""
+
+    def test_returns_list_of_wiki_pages(self, tmp_path, monkeypatch):
+        """正常ケース: WikiPage リストが返ること"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=2)
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert all(isinstance(p, rw_light.WikiPage) for p in result)
+
+    def test_wiki_page_path_is_wiki_relative(self, tmp_path, monkeypatch):
+        """WikiPage.path が wiki/ からの相対パスであること"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert len(result) == 1
+        # path は wiki/ プレフィックスなし（例: "page-00.md"）
+        assert not result[0].path.startswith("wiki/")
+        assert result[0].path.endswith(".md")
+
+    def test_wiki_page_filename_is_basename(self, tmp_path, monkeypatch):
+        """WikiPage.filename がファイル名のみであること"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert result[0].filename == "page-00.md"
+
+    def test_wiki_page_frontmatter_parsed(self, tmp_path, monkeypatch):
+        """WikiPage.frontmatter が parse_frontmatter() でパース済みであること"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert isinstance(result[0].frontmatter, dict)
+        assert result[0].frontmatter.get("title") == "Page 0"
+
+    def test_wiki_page_body_contains_text(self, tmp_path, monkeypatch):
+        """WikiPage.body が frontmatter 以降の本文テキストであること"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert "Body" in result[0].body
+
+    def test_wiki_page_links_extracted_from_body(self, tmp_path, monkeypatch):
+        """WikiPage.links が body から [[link]] regex で抽出されること"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        # page-00.md の body は "Body [[other-page]] text."
+        assert "other-page" in result[0].links
+
+    def test_wiki_page_links_alias_syntax_extracts_page_name(self, tmp_path, monkeypatch):
+        """[[page|alias]] 形式のリンクで page 名のみが抽出されること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "test.md").write_text(
+            "---\ntitle: Test\n---\n\n[[target-page|Display Text]] and [[simple-page]]\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert "target-page" in result[0].links
+        assert "simple-page" in result[0].links
+        # "Display Text" はリンク名として含まれないこと
+        assert "Display Text" not in result[0].links
+
+    def test_wiki_page_links_not_from_frontmatter(self, tmp_path, monkeypatch):
+        """frontmatter 内の [[link]] は抽出対象外であること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "test.md").write_text(
+            "---\ntitle: Test\nrelated: [[frontmatter-link]]\n---\n\n[[body-link]] text.\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert "body-link" in result[0].links
+        assert "frontmatter-link" not in result[0].links
+
+    def test_wiki_page_read_error_empty_on_success(self, tmp_path, monkeypatch):
+        """正常読み込み時 WikiPage.read_error が空文字列であること"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert result[0].read_error == ""
+
+    def test_wiki_page_encoding_error_sets_read_error(self, tmp_path, monkeypatch):
+        """エンコーディングエラーのファイルで read_error が設定されること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        # 正常ファイル
+        (wiki_dir / "normal.md").write_text("---\ntitle: Normal\n---\n\nNormal body.\n", encoding="utf-8")
+        # 非 UTF-8 ファイル（latin-1 のバイト列）
+        bad_file = wiki_dir / "broken.md"
+        bad_file.write_bytes(b"\xff\xfe broken content that is not valid UTF-8 \x80\x81\x82")
+
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert len(result) == 2
+
+        broken_pages = [p for p in result if p.filename == "broken.md"]
+        assert len(broken_pages) == 1
+        broken = broken_pages[0]
+        assert broken.read_error != ""
+        assert broken.frontmatter == {}
+        assert broken.body == ""
+        assert broken.links == []
+        assert broken.raw_text == ""
+
+    def test_encoding_error_does_not_stop_other_pages(self, tmp_path, monkeypatch):
+        """エンコーディングエラーがあっても残りのページが読み込まれること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "aaa-normal.md").write_text("---\ntitle: A\n---\n\nContent A.\n", encoding="utf-8")
+        bad_file = wiki_dir / "bbb-broken.md"
+        bad_file.write_bytes(b"\xff\xfe\x80")
+        (wiki_dir / "ccc-normal.md").write_text("---\ntitle: C\n---\n\nContent C.\n", encoding="utf-8")
+
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert len(result) == 3
+        normal_pages = [p for p in result if p.read_error == ""]
+        assert len(normal_pages) == 2
+
+    def test_target_files_filters_to_specified_files(self, tmp_path, monkeypatch):
+        """target_files 指定時は指定ファイルのみ読み込むこと"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=3)
+        target = [str(wiki_dir / "page-00.md")]
+        result = rw_light.load_wiki_pages(str(wiki_dir), target_files=target)
+        assert len(result) == 1
+        assert result[0].filename == "page-00.md"
+
+    def test_target_files_none_reads_all_files(self, tmp_path, monkeypatch):
+        """target_files=None 時は全 .md ファイルを読み込むこと"""
+        wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=3)
+        result = rw_light.load_wiki_pages(str(wiki_dir), target_files=None)
+        assert len(result) == 3
+
+    def test_returns_empty_list_when_no_md_files(self, tmp_path, monkeypatch):
+        """wiki/ に .md ファイルがない場合は空リストを返すこと"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert result == []
+
+    def test_subdirectory_pages_included(self, tmp_path, monkeypatch):
+        """サブディレクトリ内のページが含まれること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        concepts = wiki_dir / "concepts"
+        concepts.mkdir()
+        (concepts / "my-concept.md").write_text(
+            "---\ntitle: My Concept\n---\n\nBody text.\n", encoding="utf-8"
+        )
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert len(result) == 1
+        # path にサブディレクトリが含まれること
+        assert "concepts" in result[0].path
+        assert result[0].filename == "my-concept.md"
+
+    def test_raw_text_preserved(self, tmp_path, monkeypatch):
+        """WikiPage.raw_text に生テキストが保持されること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        raw = "---\ntitle: Raw Test\n---\n\nBody content here.\n"
+        (wiki_dir / "raw-test.md").write_text(raw, encoding="utf-8")
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        result = rw_light.load_wiki_pages(str(wiki_dir))
+        assert result[0].raw_text == raw
+
+
+class TestAllPagesSetConstruction:
+    """all_pages_set 構築ヘルパーのテスト（list_md_files + relpath + wiki/ プレフィックス除去）"""
+
+    def test_all_pages_set_excludes_wiki_prefix(self, tmp_path, monkeypatch):
+        """all_pages_set の各要素が wiki/ プレフィックスを含まないこと"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "page.md").write_text("# Page\n", encoding="utf-8")
+        concepts = wiki_dir / "concepts"
+        concepts.mkdir()
+        (concepts / "concept.md").write_text("# Concept\n", encoding="utf-8")
+
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+
+        # all_pages_set の構築: list_md_files → relpath → wiki/ 除去
+        files = rw_light.list_md_files(str(wiki_dir))
+        all_pages_set = set()
+        for f in files:
+            rel = os.path.relpath(f, str(wiki_dir))
+            all_pages_set.add(rel)
+
+        assert "page.md" in all_pages_set
+        assert "concepts/concept.md" in all_pages_set
+        # wiki/ プレフィックスなし
+        for entry in all_pages_set:
+            assert not entry.startswith("wiki/"), f"wiki/ prefix found: {entry}"
