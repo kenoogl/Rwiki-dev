@@ -140,6 +140,67 @@
   - conftest.py のフィクスチャ設計（Vault 構築ヘルパーの粒度）
   - Git 操作テストの実 Git vs モック方針
   - init テストのテンプレート参照方針
-- **Research Items**:
-  - cmd_lint の内部フロントマター検証ルールの詳細把握
-  - cmd_approve の index.md 更新・ディレクトリ振り分けロジックの詳細把握
+- **Research Items**: 設計フェーズで全項目調査完了（下記）
+
+---
+
+## Design Phase Discovery
+
+### Summary
+- **Feature**: test-suite
+- **Discovery Scope**: Extension（既存テストパターンの拡張）
+- **Key Findings**:
+  - rw_light.py の 17 モジュール定数はモジュールロード時に評価済みのため、派生定数も個別に monkeypatch が必要
+  - synthesize-logs は Prompt Engine を使用せず独自の `call_claude_for_log_synthesis()` を使用（モック境界が query/audit と異なる）
+  - cmd_init は DEV_ROOT 経由でテンプレートを参照するため、mock_templates フィクスチャは DEV_ROOT をパッチして解決
+
+### Research Log
+
+#### cmd_lint の内部ロジック詳細
+- **Context**: 要件フェーズで Research Items として残されていた
+- **Findings**:
+  - FAIL 条件: `not text.strip()` (空ファイル)
+  - WARN 条件: `len(text) < 80` (短いファイル)
+  - PASS 条件: 上記以外
+  - ensure_basic_frontmatter を各ファイルに適用（title, source, added を補完）
+  - lint_latest.json: `{"timestamp": str, "files": [{"path": str, "status": str, "warnings": list, "errors": list, "fixes": list}], "summary": {"pass": int, "warn": int, "fail": int}}`
+
+#### cmd_approve の内部ロジック詳細
+- **Context**: 要件フェーズで Research Items として残されていた
+- **Findings**:
+  - approved_candidate_files の 4 条件（AND）: status=="approved", reviewed_by 非空, approved が有効 ISO 日付, promoted!="true"
+  - promote_candidate: type を "synthesis" に変更して wiki/synthesis/ に書き込み、元ファイルに promoted/promoted_at/promoted_to を設定
+  - merge_synthesis: 既存 wiki ファイルにセパレータ付きで本文追記、updated と candidate_source を更新
+  - index.md の synthesis セクション再生成
+
+#### フィクスチャ設計判断
+- **Context**: Vault 構築ヘルパーの粒度を決定する必要があった
+- **Decision**: ファクトリパターンを採用。vault_path は VAULT_DIRS を使用してディレクトリを作成、make_md_file / lint_json / query_artifacts はファクトリ callable を返す
+- **Rationale**: 1 テスト内で複数のファイル/アーティファクトを異なるパラメータで生成する必要があるため
+
+#### Git 操作テストの方針
+- **Context**: 実 Git リポジトリ vs subprocess.run モックの選択
+- **Decision**: subprocess.run モックを採用
+- **Rationale**: 既存テストパターンとの一貫性、テスト速度、環境依存の排除
+
+#### init テストのテンプレート参照方針
+- **Context**: 実テンプレート vs モックテンプレートの選択
+- **Decision**: モックテンプレートを採用（mock_templates フィクスチャで DEV_ROOT をパッチ）
+- **Rationale**: テストの独立性確保。実テンプレートの変更がテストに影響しない
+
+### Design Decisions
+
+#### Decision: conftest.py autouse=False
+- **Context**: conftest.py のフィクスチャが既存テスト 450+ に副作用を与えるリスク
+- **Selected Approach**: 全フィクスチャを `autouse=False` で定義
+- **Rationale**: 既存テストは独自の `_setup_*` ヘルパーで動作しており、conftest.py フィクスチャの自動適用は既存テストの動作を変更しうる
+- **Trade-offs**: 新規テストでは毎回フィクスチャを明示的に引数指定する必要があるが、安全性を優先
+
+#### Decision: モック境界の使い分け
+- **Context**: synthesize-logs と query/audit でモック境界が異なる
+- **Selected Approach**:
+  - synthesize-logs: `rw_light.call_claude_for_log_synthesis` を関数レベルでモック
+  - Git 操作: `subprocess.run` をモック
+  - cmd_init の git init: `subprocess.run` をモック
+  - cmd_ingest の git_commit: `rw_light.git_commit` を関数レベルでモック（cmd_approve は git_commit を使用しない）
+- **Rationale**: 各コマンドのテスト目的に最適な粒度でモック。Git 操作テスト自体は subprocess.run をモック、Git 操作を使うコマンドは git_commit 関数をモック（Git 操作は test_git_ops.py で検証済みのため）
