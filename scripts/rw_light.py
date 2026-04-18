@@ -1836,6 +1836,100 @@ def build_audit_prompt(tier: str, task_prompts: str, wiki_content: str) -> str:
   return "\n\n".join(parts)
 
 
+def parse_audit_response(response: str) -> dict:
+  """Claude CLI のレスポンスから JSON をパースし、スキーマ検証を行う。
+
+  既存の _strip_code_block() ヘルパーでコードブロックを除去してから
+  json.loads() でパース。
+
+  スキーマ検証（プロンプトインジェクション・モデル幻覚への防御）:
+  1. トップレベル必須キー: "findings"（list）, "metrics"（dict）, "recommended_actions"（list）
+  2. 各 finding の必須キー: "severity"（str）, "page"（str or None）, "message"（str）
+  3. severity の値が CRITICAL / HIGH / MEDIUM / LOW のいずれかであること
+  4. finding.message に改行が含まれる場合は空白に置換する
+  5. finding.marker / finding.page が JSON null の場合は空文字列 "" に変換する
+
+  検証失敗時: severity が不正値の場合は当該 finding をスキップし [WARN] を標準出力に表示。
+  finding の必須キー欠落も finding をスキップして [WARN] を標準出力に表示。
+  トップレベルキー欠落・型不一致の場合は ValueError を raise。
+
+  パース失敗時は ValueError を raise。
+
+  Args:
+      response: Claude CLI のレスポンス文字列（JSON または ```json...``` 形式）
+
+  Returns:
+      {"findings": [...], "metrics": {...}, "recommended_actions": [...]} の dict
+
+  Raises:
+      ValueError: 不正な JSON またはトップレベルスキーマ違反の場合
+  """
+  _VALID_SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
+  _FINDING_REQUIRED_KEYS = ("severity", "page", "message")
+
+  # コードブロック除去 + JSON パース
+  try:
+    cleaned = _strip_code_block(response)
+    data = json.loads(cleaned)
+  except json.JSONDecodeError as e:
+    raise ValueError(f"audit レスポンスの JSON パースに失敗しました: {e}") from e
+
+  # ステップ 1: トップレベル必須キーの型チェック
+  if not isinstance(data.get("findings"), list):
+    raise ValueError(
+      "audit レスポンスに必須フィールドが欠落または型不一致です: findings（list が必要）"
+    )
+  if not isinstance(data.get("metrics"), dict):
+    raise ValueError(
+      "audit レスポンスに必須フィールドが欠落または型不一致です: metrics（dict が必要）"
+    )
+  if not isinstance(data.get("recommended_actions"), list):
+    raise ValueError(
+      "audit レスポンスに必須フィールドが欠落または型不一致です: recommended_actions（list が必要）"
+    )
+
+  # ステップ 2-5: finding ごとの検証と変換
+  valid_findings: list[dict] = []
+  for finding in data["findings"]:
+    # ステップ 2: finding 必須キー検証
+    missing_keys = [k for k in _FINDING_REQUIRED_KEYS if k not in finding]
+    if missing_keys:
+      print(
+        f"[WARN] audit finding に必須キーが欠落しています（スキップ）: {', '.join(missing_keys)}"
+      )
+      continue
+
+    # ステップ 3: severity 値検証
+    severity = finding.get("severity")
+    if severity not in _VALID_SEVERITIES:
+      print(
+        f"[WARN] audit finding の severity が不正値のためスキップします: {severity!r}"
+        f"（有効値: {', '.join(sorted(_VALID_SEVERITIES))}）"
+      )
+      continue
+
+    # コピーして変換処理（元の dict を破壊しない）
+    f = dict(finding)
+
+    # ステップ 4: message の改行→空白置換
+    if "message" in f and f["message"]:
+      f["message"] = f["message"].replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+
+    # ステップ 5: null → "" 変換（page, marker）
+    if f.get("page") is None:
+      f["page"] = ""
+    if f.get("marker") is None:
+      f["marker"] = ""
+
+    valid_findings.append(f)
+
+  return {
+    "findings": valid_findings,
+    "metrics": data["metrics"],
+    "recommended_actions": data["recommended_actions"],
+  }
+
+
 # audit: report engine
 
 

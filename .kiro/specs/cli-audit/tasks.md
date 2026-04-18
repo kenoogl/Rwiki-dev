@@ -68,7 +68,7 @@
   - _Requirements: 3.2, 4.2, 5.3, 10.1, 10.2_
   - _Boundary: LLMAuditEngine_
 
-- [ ] 3.2 parse_audit_response（スキーマ検証付き）
+- [x] 3.2 parse_audit_response（スキーマ検証付き）
   - _strip_code_block() でコードブロック除去 + json.loads() でパース
   - スキーマ検証 5 ステップ: トップレベル必須キー（findings/metrics/recommended_actions の型チェック）、finding 必須キー（severity/page/message）、severity 値検証（CRITICAL/HIGH/MEDIUM/LOW）、message 改行→空白置換、null→"" 変換
   - severity 不正値の finding はスキップし [WARN] 表示。トップレベル不備は ValueError

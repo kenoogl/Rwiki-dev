@@ -4359,3 +4359,376 @@ class TestBuildAuditPrompt:
         """実行宣言を出力しない旨の指示が含まれること"""
         result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert "実行宣言" in result
+
+
+# ---------------------------------------------------------------------------
+# Task 3.2: parse_audit_response（スキーマ検証付き）
+# ---------------------------------------------------------------------------
+
+
+class TestParseAuditResponse:
+  """parse_audit_response のスキーマ検証テスト"""
+
+  VALID_MONTHLY = {
+    "findings": [
+      {
+        "severity": "HIGH",
+        "category": "contradicting_definition",
+        "page": "concepts/my-concept.md",
+        "message": "page-a.md と page-b.md で定義が矛盾している",
+        "marker": "CONFLICT",
+        "recommendation": "定義を統一する",
+      }
+    ],
+    "metrics": {
+      "pages_scanned": 42,
+      "total_findings": 1,
+      "conflict_count": 1,
+      "tension_count": 0,
+      "ambiguous_count": 0,
+    },
+    "recommended_actions": ["concepts/my-concept.md の定義を確認する"],
+  }
+
+  def _to_json(self, d: dict) -> str:
+    return json.dumps(d, ensure_ascii=False)
+
+  # ── 正常系 ─────────────────────────────────────────────────────
+
+  def test_valid_json_returns_dict(self):
+    """正常 JSON をパースして dict を返すこと"""
+    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    assert isinstance(result, dict)
+    assert "findings" in result
+    assert "metrics" in result
+    assert "recommended_actions" in result
+
+  def test_valid_json_findings_preserved(self):
+    """正常 JSON の findings が保持されること"""
+    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "HIGH"
+    assert result["findings"][0]["page"] == "concepts/my-concept.md"
+
+  def test_code_block_stripped(self):
+    """```json ... ``` で囲まれた JSON もパースできること"""
+    raw = "```json\n" + self._to_json(self.VALID_MONTHLY) + "\n```"
+    result = rw_light.parse_audit_response(raw)
+    assert isinstance(result, dict)
+    assert len(result["findings"]) == 1
+
+  def test_all_severity_values_accepted(self):
+    """CRITICAL / HIGH / MEDIUM / LOW の全 severity が受け入れられること"""
+    for sev in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+      data = {
+        "findings": [
+          {
+            "severity": sev,
+            "category": "test",
+            "page": "test.md",
+            "message": "test message",
+          }
+        ],
+        "metrics": {"pages_scanned": 1, "total_findings": 1},
+        "recommended_actions": [],
+      }
+      result = rw_light.parse_audit_response(self._to_json(data))
+      assert len(result["findings"]) == 1, f"severity={sev} で finding が消えた"
+
+  # ── 改行含み message ─────────────────────────────────────────
+
+  def test_newline_in_message_replaced_with_space(self):
+    """message の改行が空白に置換されること"""
+    data = {
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "category": "test",
+          "page": "test.md",
+          "message": "line1\nline2\nline3",
+        }
+      ],
+      "metrics": {"pages_scanned": 1, "total_findings": 1},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    assert "\n" not in result["findings"][0]["message"]
+    assert "line1 line2 line3" == result["findings"][0]["message"]
+
+  def test_crlf_in_message_replaced_with_space(self):
+    """message の CRLF も空白に置換されること"""
+    data = {
+      "findings": [
+        {
+          "severity": "LOW",
+          "category": "test",
+          "page": "test.md",
+          "message": "line1\r\nline2",
+        }
+      ],
+      "metrics": {"pages_scanned": 1, "total_findings": 1},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    assert "\n" not in result["findings"][0]["message"]
+    assert "\r" not in result["findings"][0]["message"]
+
+  # ── null → "" 変換 ──────────────────────────────────────────
+
+  def test_null_page_converted_to_empty_string(self):
+    """page が null の場合は空文字列に変換されること"""
+    data = {
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "category": "coverage_gap",
+          "page": None,
+          "message": "カバレッジ不足",
+        }
+      ],
+      "metrics": {"pages_scanned": 10, "total_findings": 1},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    assert result["findings"][0]["page"] == ""
+
+  def test_null_marker_converted_to_empty_string(self):
+    """marker が null の場合は空文字列に変換されること"""
+    data = {
+      "findings": [
+        {
+          "severity": "LOW",
+          "category": "test",
+          "page": "test.md",
+          "message": "test",
+          "marker": None,
+        }
+      ],
+      "metrics": {"pages_scanned": 1, "total_findings": 1},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    assert result["findings"][0]["marker"] == ""
+
+  # ── 不正 severity: スキップ ──────────────────────────────────
+
+  def test_invalid_severity_finding_skipped(self):
+    """不正 severity の finding はスキップされること"""
+    data = {
+      "findings": [
+        {
+          "severity": "INVALID",
+          "category": "test",
+          "page": "test.md",
+          "message": "不正なseverity",
+        },
+        {
+          "severity": "HIGH",
+          "category": "valid",
+          "page": "valid.md",
+          "message": "正常なfinding",
+        },
+      ],
+      "metrics": {"pages_scanned": 2, "total_findings": 2},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    # 不正 severity はスキップされ、有効な finding のみが残る
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "HIGH"
+
+  def test_invalid_severity_prints_warn(self, capsys):
+    """不正 severity の finding をスキップする際に [WARN] を表示すること"""
+    data = {
+      "findings": [
+        {
+          "severity": "BOGUS",
+          "category": "test",
+          "page": "test.md",
+          "message": "test",
+        }
+      ],
+      "metrics": {"pages_scanned": 1, "total_findings": 1},
+      "recommended_actions": [],
+    }
+    rw_light.parse_audit_response(self._to_json(data))
+    captured = capsys.readouterr()
+    assert "[WARN]" in captured.out
+
+  def test_all_invalid_severity_returns_empty_findings(self):
+    """全ての finding が不正 severity の場合は空リストが返ること"""
+    data = {
+      "findings": [
+        {
+          "severity": "UNKNOWN",
+          "category": "test",
+          "page": "test.md",
+          "message": "test",
+        }
+      ],
+      "metrics": {"pages_scanned": 1, "total_findings": 1},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    assert result["findings"] == []
+
+  # ── 不正スキーマ: ValueError ────────────────────────────────
+
+  def test_invalid_json_raises_value_error(self):
+    """不正 JSON は ValueError を raise すること"""
+    import pytest
+    with pytest.raises(ValueError):
+      rw_light.parse_audit_response("not a valid json {{{")
+
+  def test_missing_findings_key_raises_value_error(self):
+    """findings キー欠落は ValueError を raise すること"""
+    import pytest
+    data = {
+      "metrics": {"pages_scanned": 1},
+      "recommended_actions": [],
+    }
+    with pytest.raises(ValueError):
+      rw_light.parse_audit_response(self._to_json(data))
+
+  def test_missing_metrics_key_raises_value_error(self):
+    """metrics キー欠落は ValueError を raise すること"""
+    import pytest
+    data = {
+      "findings": [],
+      "recommended_actions": [],
+    }
+    with pytest.raises(ValueError):
+      rw_light.parse_audit_response(self._to_json(data))
+
+  def test_missing_recommended_actions_raises_value_error(self):
+    """recommended_actions キー欠落は ValueError を raise すること"""
+    import pytest
+    data = {
+      "findings": [],
+      "metrics": {"pages_scanned": 1},
+    }
+    with pytest.raises(ValueError):
+      rw_light.parse_audit_response(self._to_json(data))
+
+  def test_findings_not_list_raises_value_error(self):
+    """findings が list でない場合は ValueError を raise すること"""
+    import pytest
+    data = {
+      "findings": "not a list",
+      "metrics": {"pages_scanned": 1},
+      "recommended_actions": [],
+    }
+    with pytest.raises(ValueError):
+      rw_light.parse_audit_response(self._to_json(data))
+
+  def test_metrics_not_dict_raises_value_error(self):
+    """metrics が dict でない場合は ValueError を raise すること"""
+    import pytest
+    data = {
+      "findings": [],
+      "metrics": ["not", "a", "dict"],
+      "recommended_actions": [],
+    }
+    with pytest.raises(ValueError):
+      rw_light.parse_audit_response(self._to_json(data))
+
+  def test_recommended_actions_not_list_raises_value_error(self):
+    """recommended_actions が list でない場合は ValueError を raise すること"""
+    import pytest
+    data = {
+      "findings": [],
+      "metrics": {"pages_scanned": 1},
+      "recommended_actions": "not a list",
+    }
+    with pytest.raises(ValueError):
+      rw_light.parse_audit_response(self._to_json(data))
+
+  # ── finding 必須キー欠落: スキップ or ValueError ──────────────
+
+  def test_finding_missing_severity_skipped(self):
+    """finding に severity キーが欠落している場合はスキップされること"""
+    data = {
+      "findings": [
+        {
+          "category": "test",
+          "page": "test.md",
+          "message": "severity なし",
+        },
+        {
+          "severity": "LOW",
+          "category": "valid",
+          "page": "valid.md",
+          "message": "正常",
+        },
+      ],
+      "metrics": {"pages_scanned": 1},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "LOW"
+
+  def test_finding_missing_page_skipped(self):
+    """finding に page キーが欠落している場合はスキップされること"""
+    data = {
+      "findings": [
+        {
+          "severity": "HIGH",
+          "category": "test",
+          "message": "page なし",
+        },
+        {
+          "severity": "LOW",
+          "category": "valid",
+          "page": "valid.md",
+          "message": "正常",
+        },
+      ],
+      "metrics": {"pages_scanned": 1},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "LOW"
+
+  def test_finding_missing_message_skipped(self):
+    """finding に message キーが欠落している場合はスキップされること"""
+    data = {
+      "findings": [
+        {
+          "severity": "HIGH",
+          "category": "test",
+          "page": "test.md",
+        },
+        {
+          "severity": "LOW",
+          "category": "valid",
+          "page": "valid.md",
+          "message": "正常",
+        },
+      ],
+      "metrics": {"pages_scanned": 1},
+      "recommended_actions": [],
+    }
+    result = rw_light.parse_audit_response(self._to_json(data))
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "LOW"
+
+  # ── 返却値の構造確認 ────────────────────────────────────────
+
+  def test_return_value_has_required_keys(self):
+    """返却値が findings / metrics / recommended_actions を持つこと"""
+    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    assert set(result.keys()) >= {"findings", "metrics", "recommended_actions"}
+
+  def test_metrics_preserved(self):
+    """metrics がそのまま返却されること"""
+    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    assert result["metrics"]["pages_scanned"] == 42
+    assert result["metrics"]["conflict_count"] == 1
+
+  def test_recommended_actions_preserved(self):
+    """recommended_actions がそのまま返却されること"""
+    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    assert len(result["recommended_actions"]) == 1
+    assert "my-concept" in result["recommended_actions"][0]
