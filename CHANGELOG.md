@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added — cli-audit スペック
+
+- `rw audit micro` — 直近の更新ページを対象とした高速静的チェック（Tier 0: Micro-check）。リンク切れ・index.md 未登録・frontmatter パースエラーを検出。Claude CLI 不使用
+- `rw audit weekly` — 全ページを対象とした構造チェック（Tier 1: Structural Audit）。micro のスーパーセット。孤立ページ・双方向リンク欠落・命名規則違反・source フィールド欠落を追加検出。Claude CLI 不使用
+- `rw audit monthly` — LLM 支援による意味的監査（Tier 2: Semantic Audit）。wiki ページ間の矛盾（`[CONFLICT]`）・緊張関係（`[TENSION]`）・曖昧さ（`[AMBIGUOUS]`）を Claude CLI で検出
+- `rw audit quarterly` — LLM 支援による戦略的監査（Tier 3: Strategic Audit）。wiki グラフ構造の俯瞰・カバレッジギャップ・スキーマ改訂提案を Claude CLI で生成
+- 統一レポート出力: `logs/audit-<tier>-<YYYYMMDD-HHMMSS>.md` 形式。Summary・Findings・Metrics・Recommended Actions セクションを含む
+- プロジェクト標準3水準 severity（ERROR / WARN / INFO）と統一終了コード（exit 0: PASS / exit 1: FAIL）
+- Claude 内部4段階（CRITICAL / HIGH / MEDIUM / LOW）→ CLI 3水準へのマッピング（CRITICAL/HIGH → ERROR、MEDIUM → WARN、LOW → INFO）
+- `docs/user-guide.md`: `rw audit micro`・`rw audit weekly`・`rw audit monthly`・`rw audit quarterly` のリファレンスを追記
+
+### Changed — cli-audit スペック
+
+- `templates/CLAUDE.md`: audit の Execution Mode を `Prompt` → `CLI (Hybrid)` に更新
+- `templates/AGENTS/audit.md`: Execution Mode セクションを CLI (Hybrid) の実態に合わせて更新
+- `templates/AGENTS/README.md`: エージェント一覧テーブルの audit 行を `CLI (Hybrid)` に更新
+- `docs/user-guide.md`: 基本的な運用サイクルの audit ステップ説明を `Prompt` → `CLI Hybrid` に更新
+
 ### Added — cli-query スペック
 
 - `rw query extract` — wiki 知識から構造化クエリアーティファクトを生成するサブコマンド

@@ -13,7 +13,7 @@ Rwikiは制御された知識パイプラインです。LLMが知識を直接編
 [2] ingest      raw/incoming/ を raw/ へ移動・コミット
 [3] synthesize  raw/ から review/ への知識候補生成（Prompt）
 [4] approve     review/ の承認済み候補を wiki/ へ昇格（CLI）
-[5] audit       wiki/ の整合性・一貫性を検証（Prompt）
+[5] audit       wiki/ の整合性・一貫性を検証（CLI Hybrid）
 ```
 
 ### ステップ詳細
@@ -79,18 +79,18 @@ git add wiki/synthesis/ wiki/index.md wiki/log.md
 git commit -m "approve: promote synthesis"
 ```
 
-**ステップ5: audit（Prompt）**
+**ステップ5: audit（CLI Hybrid）**
 
-Claude CLIで audit エージェントをロードして実行する。
+CLIコマンドで wiki/ の整合性を監査する。4段階のティアを用途に応じて使い分ける:
 
-実行宣言:
+```bash
+rw audit micro      # 直近の更新ページを対象とした高速チェック（更新後に実行）
+rw audit weekly     # 全ページの構造チェック（週次）
+rw audit monthly    # LLM支援による意味的監査（月次）
+rw audit quarterly  # LLM支援による戦略的監査（四半期）
 ```
-Task Type: audit
-Loaded Agents: audit.md, page_policy.md, naming.md, git_ops.md
-Execution Plan: Tier 1 Structural Audit を wiki/ 全体に対して実行する
-```
 
-audit はレポートのみ。ファイルを変更しない。
+audit はレポートのみ（`logs/` に出力）。`wiki/`・`raw/`・`review/` を変更しない。
 
 ---
 
@@ -297,6 +297,176 @@ Post-fix Lint Result: PASS
 
 ---
 
+### `rw audit`
+
+wiki/ の整合性・構造・完全性を4段階の監査サイクルで検証する。すべての audit は読み取り専用であり、`wiki/`・`raw/`・`review/` へのファイル書き込みを行わない。監査結果は `logs/` に Markdown レポートとして出力される。
+
+サブコマンドなしで実行すると使用方法を表示する:
+
+```bash
+rw audit
+```
+
+**終了コード**: 0（ERROR なし）/ 1（ERROR あり）
+
+---
+
+#### `rw audit micro`
+
+直近の更新ページを対象とした高速な静的チェック（Tier 0: Micro-check）。wiki 更新後に実行することを想定している。Claude CLI を使用せず Python のみで完結する。
+
+```bash
+rw audit micro
+```
+
+**引数**: なし
+
+**スコープ**: git diff で検出された直近の更新ページのみ（全ページスキャンなし）
+
+**チェック項目**:
+- リンク切れ（`[[link]]` の参照先ページ不在）→ ERROR
+- `index.md` への未登録ページ → WARN
+- frontmatter の YAML パースエラー（パース不能な YAML）→ ERROR
+
+**出力**:
+- 標準出力: 各 Finding の severity 付き一覧とサマリー
+- `logs/audit-micro-<YYYYMMDD-HHMMSS>.md`（Markdown レポート）
+
+**出力例**:
+```
+[ERROR] concepts/my-page.md: [[nonexistent]] のリンク先が存在しない
+[WARN] methods/sindy.md: index.md に未登録
+---
+audit micro: ERROR 1, WARN 1, INFO 0 — FAIL
+レポート: logs/audit-micro-20260418-153000.md
+```
+
+**対象ページが 0 件の場合**（直近の wiki 更新なし）:
+```
+[INFO] チェック対象なし（直近の wiki 更新が検出されませんでした）
+レポート: logs/audit-micro-20260418-153000.md
+```
+
+---
+
+#### `rw audit weekly`
+
+全ページを対象とした構造チェック（Tier 1: Structural Audit）。micro のスーパーセットであり、micro の全チェック項目に加えて構造的な問題も検出する。Claude CLI を使用せず Python のみで完結する。
+
+```bash
+rw audit weekly
+```
+
+**引数**: なし
+
+**スコープ**: wiki/ 内の全ページ
+
+**チェック項目**（micro のチェック項目を全ページに拡張して含む）:
+- リンク切れ → ERROR
+- `index.md` への未登録ページ → WARN
+- frontmatter の YAML パースエラー → ERROR
+- 孤立ページ（他ページからリンクされていない、index.md リンクを除く）→ WARN
+- 双方向リンクの欠落 → WARN
+- 命名規則違反（小文字・ハイフン区切り・ASCII のみ）→ WARN
+- `source:` フィールドの空・欠落 → INFO
+
+**出力**:
+- 標準出力: 各 Finding の severity 付き一覧とサマリー
+- `logs/audit-weekly-<YYYYMMDD-HHMMSS>.md`（Markdown レポート）
+
+**出力例**:
+```
+[ERROR] concepts/broken-link.md: [[nonexistent-page]] のリンク先が存在しない
+[WARN] methods/orphan-page.md: 他のページからリンクされていない
+[WARN] methods/sindy.md: title フィールドが欠落
+[INFO] entities/some-tool.md: source フィールドが空
+---
+audit weekly: ERROR 1, WARN 2, INFO 1 — FAIL
+レポート: logs/audit-weekly-20260418-090000.md
+```
+
+---
+
+#### `rw audit monthly`
+
+LLM 支援による意味的監査（Tier 2: Semantic Audit）。Claude CLI を呼び出して wiki 内ページ間の矛盾・曖昧さを検出する。`AGENTS/audit.md` をプロンプトの正規ソースとして使用する。
+
+```bash
+rw audit monthly [--timeout <秒>]
+```
+
+**引数**:
+- `--timeout <秒>`（省略可）: Claude CLI のタイムアウト秒数（デフォルト: 300）
+
+**スコープ**: wiki/ 内の全ページ（LLM が分析）
+
+**検出対象**:
+- ページ間の定義の矛盾 → `[CONFLICT]` マーカー
+- 緊張関係・不整合 → `[TENSION]` マーカー
+- 曖昧な定義・解釈の揺れ → `[AMBIGUOUS]` マーカー
+
+**severity マッピング**（AGENTS/audit.md 4段階 → CLI 3水準）:
+
+| Claude 内部 | 標準出力 | レポートファイル | 終了コードへの影響 |
+|---|---|---|---|
+| CRITICAL | `[ERROR]` | `[ERROR:CRITICAL]` | FAIL |
+| HIGH | `[ERROR]` | `[ERROR:HIGH]` | FAIL |
+| MEDIUM | `[WARN]` | `[WARN]` | — |
+| LOW | `[INFO]` | `[INFO]` | — |
+
+**出力**:
+- 標準出力: 処理中メッセージ・各 Finding の severity 付き一覧・サマリー
+- `logs/audit-monthly-<YYYYMMDD-HHMMSS>.md`（Markdown レポート）
+- `logs/audit-monthly-<YYYYMMDD-HHMMSS>-raw.txt`（Claude 生レスポンス、デバッグ用）
+
+**出力例**:
+```
+[INFO] monthly 監査を実行中...
+[ERROR] concepts/page-a.md: page-b.md と定義が矛盾している
+[ERROR] projects/proj-x.md: status フィールドと Current Status セクションが不一致
+[WARN] entities/person-y.md: 所属の記述が methods/method-z.md と異なる
+---
+audit monthly: ERROR 2, WARN 1, INFO 0 — FAIL
+レポート: logs/audit-monthly-20260418-020000.md
+```
+
+---
+
+#### `rw audit quarterly`
+
+LLM 支援による戦略的監査（Tier 3: Strategic Audit）。Claude CLI を呼び出して wiki のグラフ構造の俯瞰・カバレッジギャップ・スキーマ改訂提案を行う。`AGENTS/audit.md` をプロンプトの正規ソースとして使用する。
+
+```bash
+rw audit quarterly [--timeout <秒>]
+```
+
+**引数**:
+- `--timeout <秒>`（省略可）: Claude CLI のタイムアウト秒数（デフォルト: 300）
+
+**スコープ**: wiki/ 内の全ページ（LLM が分析）
+
+**検出・提案対象**:
+- wiki グラフの孤立クラスター
+- カバレッジギャップ（トピック・種別の偏り）
+- スキーマ・構造の改訂提案
+
+**出力**:
+- 標準出力: 処理中メッセージ・各 Finding の severity 付き一覧・サマリー
+- `logs/audit-quarterly-<YYYYMMDD-HHMMSS>.md`（Markdown レポート）
+- `logs/audit-quarterly-<YYYYMMDD-HHMMSS>-raw.txt`（Claude 生レスポンス、デバッグ用）
+
+**出力例**:
+```
+[INFO] quarterly 監査を実行中...
+[WARN] methods/ 配下のページが concepts/ とほぼクロスリンクされていない
+[INFO] synthesis ページが concepts に対して不足している（カバレッジ不足）
+---
+audit quarterly: ERROR 0, WARN 1, INFO 1 — PASS
+レポート: logs/audit-quarterly-20260418-000000.md
+```
+
+---
+
 ## プロンプトレベルタスクの実行
 
 ### Claude CLIでのエージェントロード手順
@@ -353,10 +523,13 @@ lint結果（QLコード）を提供した上で実行する。
 
 ### audit タスク
 
-```
-Task Type: audit
-Loaded Agents: audit.md, page_policy.md, naming.md, git_ops.md
-Execution Plan: Tier 1 Structural Audit / Tier 0 Micro-check（直近のingest後）
+audit コマンドは CLI で実行する（「CLIコマンドリファレンス」の `rw audit` セクションを参照）。
+
+```bash
+rw audit micro      # Tier 0: 直近の更新ページを対象とした高速チェック
+rw audit weekly     # Tier 1: 全ページの構造チェック
+rw audit monthly    # Tier 2: LLM支援による意味的監査
+rw audit quarterly  # Tier 3: LLM支援による戦略的監査
 ```
 
 ---

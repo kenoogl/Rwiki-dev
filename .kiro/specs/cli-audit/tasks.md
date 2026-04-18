@@ -119,7 +119,7 @@
   - _Requirements: 9.1, 9.2, 9.3_
   - _Boundary: templates_
 
-- [ ] 6.2 (P) docs/user-guide.md + CHANGELOG.md
+- [x] 6.2 (P) docs/user-guide.md + CHANGELOG.md
   - docs/user-guide.md に audit コマンドのリファレンスセクションを追加（micro/weekly/monthly/quarterly の使用方法・引数・出力例）
   - CHANGELOG.md の [Unreleased] セクションに cli-audit の変更内容を追記
   - user-guide.md に 4 サブコマンドのリファレンスが記載されていること
