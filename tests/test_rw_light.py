@@ -5566,3 +5566,361 @@ class TestCmdAuditWeekly:
     report_files = list(logs_dir.glob("audit-weekly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
     assert "bad.md" in content
+
+
+# ---------------------------------------------------------------------------
+# Task 5.3: _run_llm_audit / cmd_audit_monthly / cmd_audit_quarterly
+# ---------------------------------------------------------------------------
+
+
+def _setup_vault_for_llm_audit(tmp_path, monkeypatch):
+  """cmd_audit_monthly/quarterly テスト用の最小 Vault を構築する。"""
+  wiki_dir = tmp_path / "wiki"
+  wiki_dir.mkdir()
+  logs_dir = tmp_path / "logs"
+  logs_dir.mkdir()
+
+  # AGENTS/ ディレクトリと audit.md を作成
+  agents_dir = tmp_path / "AGENTS"
+  agents_dir.mkdir()
+  (agents_dir / "audit.md").write_text("# Audit Agent\n", encoding="utf-8")
+
+  # CLAUDE.md を作成（ダミー）
+  (tmp_path / "CLAUDE.md").write_text("# CLAUDE.md\n", encoding="utf-8")
+
+  # wiki ページを 1 つ作成
+  (wiki_dir / "page-00.md").write_text(
+    "---\ntitle: Page 0\nsource: web\n---\n\n# Page 0\n\nBody text.\n",
+    encoding="utf-8",
+  )
+
+  monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+  monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+  monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+  monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+  monkeypatch.setattr(rw_light, "AGENTS_DIR", str(agents_dir))
+
+  return wiki_dir, logs_dir, agents_dir
+
+
+def _make_valid_monthly_response():
+  """有効な monthly JSON レスポンスを返す。"""
+  return json.dumps({
+    "findings": [
+      {
+        "severity": "HIGH",
+        "category": "contradicting_definition",
+        "page": "page-00.md",
+        "message": "page-a.md と page-b.md で定義が矛盾している",
+        "marker": "CONFLICT",
+        "recommendation": "定義を統一するか、条件分岐を明記する",
+      }
+    ],
+    "metrics": {
+      "pages_scanned": 1,
+      "total_findings": 1,
+      "conflict_count": 1,
+      "tension_count": 0,
+      "ambiguous_count": 0,
+    },
+    "recommended_actions": ["concepts/my-concept.md の定義を確認する"],
+  })
+
+
+def _make_valid_quarterly_response():
+  """有効な quarterly JSON レスポンスを返す。"""
+  return json.dumps({
+    "findings": [
+      {
+        "severity": "MEDIUM",
+        "category": "coverage_gap",
+        "page": "",
+        "message": "synthesis ページが不足している",
+        "recommendation": "synthesis 候補を review に追加する",
+      }
+    ],
+    "metrics": {
+      "pages_scanned": 1,
+      "total_findings": 1,
+    },
+    "recommended_actions": ["synthesis ページの充実を検討する"],
+  })
+
+
+class TestRunLlmAudit:
+  """_run_llm_audit() のテスト（Req 3.1-3.8, 4.1-4.6, 7.2, 7.3, 7.5）"""
+
+  def test_run_llm_audit_exists(self):
+    """_run_llm_audit 関数が定義されていること"""
+    assert hasattr(rw_light, "_run_llm_audit")
+    assert callable(rw_light._run_llm_audit)
+
+  def test_cmd_audit_monthly_exists(self):
+    """cmd_audit_monthly 関数が定義されていること"""
+    assert hasattr(rw_light, "cmd_audit_monthly")
+    assert callable(rw_light.cmd_audit_monthly)
+
+  def test_cmd_audit_quarterly_exists(self):
+    """cmd_audit_quarterly 関数が定義されていること"""
+    assert hasattr(rw_light, "cmd_audit_quarterly")
+    assert callable(rw_light.cmd_audit_quarterly)
+
+  def test_monthly_returns_0_on_warn_only(self, tmp_path, monkeypatch):
+    """monthly: WARN only (HIGH → ERROR) の場合 return 1 であること"""
+    # HIGH は ERROR にマッピングされるので return 1 — ここは WARN のみテスト
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+
+    warn_response = json.dumps({
+      "findings": [
+        {
+          "severity": "MEDIUM",
+          "category": "ambiguous_definition",
+          "page": "page-00.md",
+          "message": "曖昧な記述がある",
+          "marker": "AMBIGUOUS",
+          "recommendation": "記述を明確にする",
+        }
+      ],
+      "metrics": {"pages_scanned": 1, "total_findings": 1,
+                  "conflict_count": 0, "tension_count": 0, "ambiguous_count": 1},
+      "recommended_actions": ["記述を明確にする"],
+    })
+
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: warn_response)
+
+    result = rw_light.cmd_audit_monthly([])
+    assert result == 0
+
+  def test_monthly_returns_1_on_error(self, tmp_path, monkeypatch):
+    """monthly: ERROR finding がある場合 return 1 であること（Req 3.7）"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+
+    result = rw_light.cmd_audit_monthly([])
+    # HIGH → ERROR へマッピングされるので return 1
+    assert result == 1
+
+  def test_quarterly_returns_0_on_no_error(self, tmp_path, monkeypatch):
+    """quarterly: ERROR なし（MEDIUM のみ）の場合 return 0 であること（Req 4.4）"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
+
+    result = rw_light.cmd_audit_quarterly([])
+    # MEDIUM → WARN にマッピングされるので ERROR なし → return 0
+    assert result == 0
+
+  def test_raw_response_saved(self, tmp_path, monkeypatch):
+    """Claude 生レスポンスが logs/audit-{tier}-{ts}-raw.txt に保存されること"""
+    _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+
+    rw_light.cmd_audit_monthly([])
+    raw_files = list(logs_dir.glob("audit-monthly-*-raw.txt"))
+    assert len(raw_files) == 1
+    content = raw_files[0].read_text(encoding="utf-8")
+    assert "findings" in content
+
+  def test_report_generated(self, tmp_path, monkeypatch):
+    """レポートファイルが logs/audit-monthly-*.md として生成されること（Req 3.4）"""
+    _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+
+    rw_light.cmd_audit_monthly([])
+    report_files = list(logs_dir.glob("audit-monthly-*.md"))
+    assert len(report_files) == 1
+
+  def test_severity_mapping_applied(self, tmp_path, monkeypatch):
+    """severity マッピング（HIGH → ERROR）が適用されてレポートに記載されること（Req 5.3）"""
+    _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+
+    rw_light.cmd_audit_monthly([])
+    report_files = list(logs_dir.glob("audit-monthly-*.md"))
+    content = report_files[0].read_text(encoding="utf-8")
+    # HIGH → ERROR:HIGH にマッピングされること
+    assert "ERROR" in content
+
+  def test_category_from_claude_response(self, tmp_path, monkeypatch):
+    """Finding の category フィールドが Claude レスポンスの category から取得されること"""
+    _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+
+    rw_light.cmd_audit_monthly([])
+    report_files = list(logs_dir.glob("audit-monthly-*.md"))
+    content = report_files[0].read_text(encoding="utf-8")
+    # category フィールド（contradicting_definition）がレポートに含まれること
+    assert "contradicting_definition" in content
+
+  def test_timeout_option_applied(self, tmp_path, monkeypatch):
+    """--timeout オプションが call_claude に渡されること（Req 7.2 関連）"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    called_with = []
+
+    def mock_call_claude(prompt, timeout=None):
+      called_with.append(timeout)
+      return _make_valid_monthly_response()
+
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+
+    rw_light.cmd_audit_monthly(["--timeout", "600"])
+    assert called_with == [600]
+
+  def test_default_timeout_applied(self, tmp_path, monkeypatch):
+    """--timeout 未指定時はデフォルト 300 が適用されること"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    called_with = []
+
+    def mock_call_claude(prompt, timeout=None):
+      called_with.append(timeout)
+      return _make_valid_monthly_response()
+
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+
+    rw_light.cmd_audit_monthly([])
+    assert called_with == [300]
+
+  def test_missing_claude_md_returns_1(self, tmp_path, monkeypatch, capsys):
+    """CLAUDE.md が存在しない場合 return 1 かつ [ERROR] 表示（Req 7.5）"""
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    agents_dir = tmp_path / "AGENTS"
+    agents_dir.mkdir()
+    (wiki_dir / "page.md").write_text("---\ntitle: T\n---\n# T\n", encoding="utf-8")
+
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    # CLAUDE.md を作成しない
+    monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(agents_dir))
+
+    result = rw_light.cmd_audit_monthly([])
+    assert result == 1
+    out = capsys.readouterr().out
+    assert "[ERROR]" in out
+
+  def test_missing_agents_dir_returns_1(self, tmp_path, monkeypatch, capsys):
+    """AGENTS/ ディレクトリが存在しない場合 return 1 かつ [ERROR] 表示（Req 7.5）"""
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    (tmp_path / "CLAUDE.md").write_text("# CLAUDE\n", encoding="utf-8")
+    (wiki_dir / "page.md").write_text("---\ntitle: T\n---\n# T\n", encoding="utf-8")
+
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+    # AGENTS/ を作成しない
+    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_path / "AGENTS"))
+
+    result = rw_light.cmd_audit_monthly([])
+    assert result == 1
+    out = capsys.readouterr().out
+    assert "[ERROR]" in out
+
+  def test_claude_failure_returns_1(self, tmp_path, monkeypatch, capsys):
+    """Claude CLI 呼び出し失敗時 return 1 かつ [ERROR] 表示（Req 7.2）"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude", lambda prompt, timeout=None: (_ for _ in ()).throw(RuntimeError("Claude 失敗"))
+    )
+
+    result = rw_light.cmd_audit_monthly([])
+    assert result == 1
+    out = capsys.readouterr().out
+    assert "[ERROR]" in out
+
+  def test_parse_failure_returns_1_with_raw_path(self, tmp_path, monkeypatch, capsys):
+    """パース失敗時 return 1 + raw ファイルパスが [INFO] 表示されること（Req 7.3）"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: "not valid json {{{")
+
+    result = rw_light.cmd_audit_monthly([])
+    assert result == 1
+    out = capsys.readouterr().out
+    assert "[ERROR]" in out
+    assert "[INFO]" in out
+    assert "raw" in out
+
+  def test_processing_message_printed(self, tmp_path, monkeypatch, capsys):
+    """処理中メッセージが標準出力に表示されること（Req 3.1, 4.1）"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+
+    rw_light.cmd_audit_monthly([])
+    out = capsys.readouterr().out
+    assert "[INFO]" in out
+    assert "monthly" in out
+
+  def test_quarterly_uses_tier3_prompt(self, tmp_path, monkeypatch):
+    """quarterly の場合 build_audit_prompt に tier='quarterly' が渡されること"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    tiers_used = []
+
+    orig_build = rw_light.build_audit_prompt
+
+    def capture_build(tier, task_prompts, wiki_content):
+      tiers_used.append(tier)
+      return orig_build(tier, task_prompts, wiki_content)
+
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "build_audit_prompt", capture_build)
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
+
+    rw_light.cmd_audit_quarterly([])
+    assert tiers_used == ["quarterly"]
+
+  def test_load_task_prompts_called_with_audit(self, tmp_path, monkeypatch):
+    """load_task_prompts が 'audit' で呼び出されること（Req 3.8, 10.1）"""
+    _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    prompts_called = []
+
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: (prompts_called.append(name), "task prompts")[1])
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+
+    rw_light.cmd_audit_monthly([])
+    assert "audit" in prompts_called
+
+  def test_quarterly_report_generated(self, tmp_path, monkeypatch):
+    """quarterly のレポートが logs/audit-quarterly-*.md として生成されること（Req 4.3）"""
+    _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
+
+    rw_light.cmd_audit_quarterly([])
+    report_files = list(logs_dir.glob("audit-quarterly-*.md"))
+    assert len(report_files) == 1

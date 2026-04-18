@@ -101,7 +101,7 @@
   - _Depends: 2.1, 2.2, 4.1_
   - _Boundary: audit commands — weekly_
 
-- [ ] 5.3 (P) _run_llm_audit + cmd_audit_monthly/quarterly
+- [x] 5.3 (P) _run_llm_audit + cmd_audit_monthly/quarterly
   - _run_llm_audit(tier, args): args から --timeout パース（デフォルト 300）→ validate_wiki_dir → CLAUDE.md/AGENTS/ 明示チェック → load_task_prompts("audit") → read_all_wiki_content → build_audit_prompt → [INFO] 表示 → call_claude(timeout=N) → 生レスポンス保存（logs/audit-{tier}-{ts}-raw.txt）→ parse_audit_response → map_severity で Finding 変換 → generate_audit_report → print_audit_summary
   - cmd_audit_monthly/quarterly: _run_llm_audit に委譲する 1 行関数
   - 内部エラーハンドリング: 各ステップの例外を [ERROR] メッセージ付きで捕捉。パース失敗時は raw ファイルパスを [INFO] 表示

@@ -29,6 +29,8 @@ QUERY_LINT_LOG = os.path.join(LOGDIR, "query_lint_latest.json")
 
 INDEX_MD = os.path.join(ROOT, "index.md")
 CHANGE_LOG_MD = os.path.join(ROOT, "log.md")
+CLAUDE_MD = os.path.join(ROOT, "CLAUDE.md")
+AGENTS_DIR = os.path.join(ROOT, "AGENTS")
 
 ALLOWED_QUERY_TYPES = {"fact", "structure", "comparison", "why", "hypothesis"}
 
@@ -1989,10 +1991,11 @@ def generate_audit_report(
     else:
       sev_tag = f"[{f.severity}]"
     marker_suffix = f" [{f.marker}]" if f.marker else ""
+    category_suffix = f" ({f.category})" if f.category else ""
     if f.page:
-      return f"- {sev_tag} {f.page}: {f.message}{marker_suffix}"
+      return f"- {sev_tag} {f.page}{category_suffix}: {f.message}{marker_suffix}"
     else:
-      return f"- {sev_tag} {f.message}{marker_suffix}"
+      return f"- {sev_tag}{category_suffix} {f.message}{marker_suffix}"
 
   # レポート本文を構築
   lines = []
@@ -2273,6 +2276,126 @@ def cmd_audit_weekly() -> int:
 
 
 # audit: commands — monthly/quarterly
+
+
+def _run_llm_audit(tier: str, args: list[str]) -> int:
+  """monthly/quarterly 共通の LLM 監査フローを実行する。
+  グローバル定数 ROOT, WIKI, INDEX_MD, CLAUDE_MD, AGENTS_DIR, LOGDIR を使用。
+
+  Args:
+      tier: "monthly" | "quarterly"
+      args: オプション引数。`--timeout <秒>` でタイムアウトをオーバーライド（デフォルト 300）
+  Returns:
+      終了コード（0: ERROR なし, 1: ERROR あり）
+  """
+  # 1. args から --timeout パース（デフォルト 300）
+  timeout = 300
+  i = 0
+  while i < len(args):
+    if args[i] == "--timeout" and i + 1 < len(args):
+      try:
+        timeout = int(args[i + 1])
+      except ValueError:
+        print(f"[ERROR] --timeout の値が不正です: {args[i + 1]}")
+        return 1
+      i += 2
+    else:
+      i += 1
+
+  # 2. validate_wiki_dir() → False なら return 1
+  if not validate_wiki_dir():
+    return 1
+
+  # 3. CLAUDE.md と AGENTS/ の存在確認（Req 7.5）
+  if not os.path.isfile(CLAUDE_MD):
+    print(f"[ERROR] CLAUDE.md が見つかりません: {CLAUDE_MD}")
+    return 1
+  if not os.path.isdir(AGENTS_DIR):
+    print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {AGENTS_DIR}")
+    return 1
+
+  # 4. load_task_prompts("audit") で AGENTS/audit.md + ポリシーファイルを読み込む
+  try:
+    task_prompts = load_task_prompts("audit")
+  except (ValueError, FileNotFoundError) as e:
+    print(f"[ERROR] load_task_prompts 失敗: {e}")
+    return 1
+
+  # 5. read_all_wiki_content() で wiki コンテンツ取得
+  try:
+    wiki_content = read_all_wiki_content()
+  except (FileNotFoundError, ValueError) as e:
+    print(f"[ERROR] wiki コンテンツ読み込み失敗: {e}")
+    return 1
+
+  # 6. build_audit_prompt(tier, task_prompts, wiki_content) でプロンプト生成
+  prompt = build_audit_prompt(tier, task_prompts, wiki_content)
+
+  # 7. [INFO] {tier} 監査を実行中... を標準出力に表示
+  print(f"[INFO] {tier} 監査を実行中...")
+
+  # タイムスタンプ生成（raw ファイル名とレポートで共用）
+  ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+  # 8. call_claude(prompt, timeout=timeout) で Claude 呼び出し
+  try:
+    raw_response = call_claude(prompt, timeout=timeout)
+  except RuntimeError as e:
+    print(f"[ERROR] Claude 呼び出し失敗: {e}")
+    return 1
+
+  # 9. raw レスポンスを logs/audit-{tier}-{ts}-raw.txt に保存
+  raw_path = os.path.join(LOGDIR, f"audit-{tier}-{ts}-raw.txt")
+  write_text(raw_path, raw_response)
+
+  # 10. parse_audit_response(raw_response) でパース
+  try:
+    data = parse_audit_response(raw_response)
+  except ValueError as e:
+    # 11. パース失敗時: [ERROR] 表示 + raw ファイルパスを [INFO] 表示 + return 1
+    print(f"[ERROR] レスポンスパース失敗: {e}")
+    print(f"[INFO] Claude の生レスポンスは {raw_path} に保存されています")
+    return 1
+
+  # 12. map_severity で Finding に変換
+  raw_findings = data.get("findings", [])
+  findings: list[Finding] = []
+  for f in raw_findings:
+    cli_severity, sub_severity = map_severity(f["severity"])
+    category = f.get("category", "")
+    page = f.get("page") or ""
+    message = f.get("message", "")
+    marker = f.get("marker") or ""
+    findings.append(Finding(
+      severity=cli_severity,
+      category=category,
+      page=page,
+      message=message,
+      sub_severity=sub_severity,
+      marker=marker,
+    ))
+
+  # 13. generate_audit_report でレポート生成
+  metrics = data.get("metrics", {})
+  recommended_actions = data.get("recommended_actions", [])
+  report_path = generate_audit_report(tier, findings, metrics, recommended_actions, timestamp=ts)
+
+  # 14. print_audit_summary
+  print_audit_summary(tier, findings, report_path)
+
+  # 15. ERROR あれば return 1、なければ return 0
+  has_error = any(f.severity == "ERROR" for f in findings)
+  return 1 if has_error else 0
+
+
+def cmd_audit_monthly(args: list[str]) -> int:
+  """monthly 監査を実行する。_run_llm_audit("monthly", args) に委譲。"""
+  return _run_llm_audit("monthly", args)
+
+
+def cmd_audit_quarterly(args: list[str]) -> int:
+  """quarterly 監査を実行する。_run_llm_audit("quarterly", args) に委譲。"""
+  return _run_llm_audit("quarterly", args)
 
 
 # -------------------------
