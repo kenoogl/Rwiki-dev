@@ -127,7 +127,7 @@
   - _Boundary: docs_
 
 - [ ] 7. E2E 統合検証
-- [ ] 7.1 全 4 ティアの動作確認 + 読み取り専用保証
+- [x] 7.1 全 4 ティアの動作確認 + 読み取り専用保証
   - テスト用 Vault（wiki/ に複数ページ、index.md、log.md を配置）で rw audit micro / weekly / monthly / quarterly を順次実行
   - 各ティアのレポートが logs/ に正しいファイル名・セクション構成で生成されること
   - monthly/quarterly の raw レスポンスファイルが logs/ に保存されること

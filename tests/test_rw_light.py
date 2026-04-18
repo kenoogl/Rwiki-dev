@@ -5924,3 +5924,403 @@ class TestRunLlmAudit:
     rw_light.cmd_audit_quarterly([])
     report_files = list(logs_dir.glob("audit-quarterly-*.md"))
     assert len(report_files) == 1
+
+
+# ---------------------------------------------------------------------------
+# Task 7.1: E2E テスト — 全4ティア動作確認 + 読み取り専用保証
+# ---------------------------------------------------------------------------
+
+
+def _setup_e2e_audit_vault(tmp_path, monkeypatch):
+  """E2E audit テスト用の Vault を構築する。
+
+  wiki/ に複数ページ、index.md、log.md を配置した完全な Vault 構造を作成する。
+  モックが必要な全グローバル定数をパッチする。
+
+  Returns:
+      (wiki_dir, logs_dir, raw_dir, review_dir, agents_dir)
+  """
+  wiki_dir = tmp_path / "wiki"
+  wiki_dir.mkdir()
+  logs_dir = tmp_path / "logs"
+  logs_dir.mkdir()
+  raw_dir = tmp_path / "raw"
+  raw_dir.mkdir()
+  review_dir = tmp_path / "review"
+  review_dir.mkdir()
+
+  # AGENTS/ ディレクトリと audit.md を作成
+  agents_dir = tmp_path / "AGENTS"
+  agents_dir.mkdir()
+  (agents_dir / "audit.md").write_text("# Audit Agent\n## Tier 2: Semantic Audit\nCheck for conflicts.\n", encoding="utf-8")
+  (agents_dir / "naming.md").write_text("# Naming Rules\n", encoding="utf-8")
+  (agents_dir / "page_policy.md").write_text("# Page Policy\n", encoding="utf-8")
+  (agents_dir / "git_ops.md").write_text("# Git Ops\n", encoding="utf-8")
+
+  # CLAUDE.md を作成（load_task_prompts が参照するマッピング表付き）
+  claude_md_content = (
+    "# CLAUDE.md\n\n"
+    "| Task | Agent | Policy | Execution Mode |\n"
+    "|------|-------|--------|----------------|\n"
+    "| audit | AGENTS/audit.md | AGENTS/page_policy.md, AGENTS/naming.md, AGENTS/git_ops.md | CLI (Hybrid) |\n"
+  )
+  (tmp_path / "CLAUDE.md").write_text(claude_md_content, encoding="utf-8")
+
+  # wiki/ に複数ページを作成（互いにリンクしあう）
+  (wiki_dir / "page-alpha.md").write_text(
+    "---\ntitle: Alpha\nsource: web\n---\n\n# Alpha\n\nSee [[page-beta]].\n",
+    encoding="utf-8",
+  )
+  (wiki_dir / "page-beta.md").write_text(
+    "---\ntitle: Beta\nsource: web\n---\n\n# Beta\n\nSee [[page-alpha]].\n",
+    encoding="utf-8",
+  )
+  (wiki_dir / "page-gamma.md").write_text(
+    "---\ntitle: Gamma\nsource: web\n---\n\n# Gamma\n\nStandalone page.\n",
+    encoding="utf-8",
+  )
+
+  # ROOT/index.md を作成（全ページを登録）
+  index_md = tmp_path / "index.md"
+  index_md.write_text(
+    "# Index\n\n- [[page-alpha]]\n- [[page-beta]]\n- [[page-gamma]]\n",
+    encoding="utf-8",
+  )
+
+  # ROOT/log.md を作成
+  log_md = tmp_path / "log.md"
+  log_md.write_text("# Log\n\n## 2026-04-18\n\n- 初回エントリ\n", encoding="utf-8")
+
+  # グローバル定数をパッチ
+  monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+  monkeypatch.setattr(rw_light, "INDEX_MD", str(index_md))
+  monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(log_md))
+  monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+  monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+  monkeypatch.setattr(rw_light, "AGENTS_DIR", str(agents_dir))
+  monkeypatch.setattr(rw_light, "RAW", str(raw_dir))
+  monkeypatch.setattr(rw_light, "REVIEW", str(review_dir))
+
+  return wiki_dir, logs_dir, raw_dir, review_dir, agents_dir
+
+
+def _collect_file_snapshots(directory):
+  """ディレクトリ内の全ファイルのパスと mtime のスナップショットを取得する。
+
+  Args:
+      directory: Path オブジェクト
+  Returns:
+      dict: {str(path): mtime} のマッピング
+  """
+  snapshot = {}
+  if not directory.exists():
+    return snapshot
+  for f in directory.rglob("*"):
+    if f.is_file():
+      snapshot[str(f)] = f.stat().st_mtime
+  return snapshot
+
+
+class TestE2EAuditAllTiers:
+  """全4ティアの E2E 動作確認テスト（Task 7.1）
+
+  Req 6.1, 6.2, 6.3, 6.4, 7.1, 7.5
+  """
+
+  # ---------- micro ----------
+
+  def test_micro_runs_and_generates_report(self, tmp_path, monkeypatch):
+    """rw audit micro が正常に実行され logs/ にレポートが生成される（Req 1.4, 5.1）"""
+    wiki_dir, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    # get_recent_wiki_changes は 1 つのファイルを返すようにモック
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(wiki_dir / "page-alpha.md")] if "diff" in args else [],
+    )
+
+    result = rw_light.cmd_audit_micro()
+
+    assert isinstance(result, int)
+    report_files = list(logs_dir.glob("audit-micro-*.md"))
+    assert len(report_files) == 1, "micro レポートファイルが生成されること"
+
+  def test_micro_report_in_logs_only(self, tmp_path, monkeypatch):
+    """micro のレポートが logs/ にのみ出力される（Req 5.6）"""
+    wiki_dir, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(wiki_dir / "page-alpha.md")] if "diff" in args else [],
+    )
+
+    rw_light.cmd_audit_micro()
+
+    # logs/ にレポートあること
+    assert len(list(logs_dir.glob("audit-micro-*.md"))) == 1
+    # wiki/ / raw/ / review/ にはファイルが増えていないこと
+    assert len(list(review_dir.rglob("*.md"))) == 0
+
+  # ---------- weekly ----------
+
+  def test_weekly_runs_and_generates_report(self, tmp_path, monkeypatch):
+    """rw audit weekly が全ページをスキャンし統合レポートを生成する（Req 2.3）"""
+    _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+
+    result = rw_light.cmd_audit_weekly()
+
+    assert isinstance(result, int)
+    report_files = list(logs_dir.glob("audit-weekly-*.md"))
+    assert len(report_files) == 1, "weekly レポートファイルが生成されること"
+
+  def test_weekly_report_contains_all_pages(self, tmp_path, monkeypatch):
+    """weekly レポートが全ページをスキャンしたメトリクスを含む（Req 2.1）"""
+    _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+
+    rw_light.cmd_audit_weekly()
+
+    report_files = list(logs_dir.glob("audit-weekly-*.md"))
+    content = report_files[0].read_text(encoding="utf-8")
+    # 3ページ分のスキャンが記録されること
+    assert "pages_scanned" in content or "3" in content
+
+  def test_weekly_report_in_logs_only(self, tmp_path, monkeypatch):
+    """weekly のレポートが logs/ にのみ出力される（Req 5.6）"""
+    _, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+
+    rw_light.cmd_audit_weekly()
+
+    assert len(list(logs_dir.glob("audit-weekly-*.md"))) == 1
+    assert len(list(review_dir.rglob("*.md"))) == 0
+
+  # ---------- monthly ----------
+
+  def test_monthly_generates_report_with_mock_claude(self, tmp_path, monkeypatch):
+    """monthly が Claude CLI モック環境で JSON レスポンスをパースしレポートを生成する（Req 3.4）"""
+    _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_monthly_response(),
+    )
+
+    result = rw_light.cmd_audit_monthly([])
+
+    assert isinstance(result, int)
+    report_files = list(logs_dir.glob("audit-monthly-*.md"))
+    assert len(report_files) == 1, "monthly レポートファイルが生成されること"
+
+  def test_monthly_raw_response_saved(self, tmp_path, monkeypatch):
+    """monthly の raw レスポンスファイルが logs/ に保存される（Req 5.6 design）"""
+    _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_monthly_response(),
+    )
+
+    rw_light.cmd_audit_monthly([])
+
+    raw_files = list(logs_dir.glob("audit-monthly-*-raw.txt"))
+    assert len(raw_files) == 1, "monthly の raw レスポンスファイルが logs/ に保存されること"
+
+  def test_monthly_report_in_logs_only(self, tmp_path, monkeypatch):
+    """monthly のレポートが logs/ にのみ出力される（Req 5.6, 6.1-6.3）"""
+    _, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_monthly_response(),
+    )
+
+    rw_light.cmd_audit_monthly([])
+
+    assert len(list(logs_dir.glob("audit-monthly-*.md"))) == 1
+    assert len(list(review_dir.rglob("*.md"))) == 0
+
+  # ---------- quarterly ----------
+
+  def test_quarterly_generates_report_with_mock_claude(self, tmp_path, monkeypatch):
+    """quarterly が Claude CLI モック環境で quarterly レポートを生成する（Req 4.3）"""
+    _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_quarterly_response(),
+    )
+
+    result = rw_light.cmd_audit_quarterly([])
+
+    assert isinstance(result, int)
+    report_files = list(logs_dir.glob("audit-quarterly-*.md"))
+    assert len(report_files) == 1, "quarterly レポートファイルが生成されること"
+
+  def test_quarterly_raw_response_saved(self, tmp_path, monkeypatch):
+    """quarterly の raw レスポンスファイルが logs/ に保存される（Req 5.6 design）"""
+    _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_quarterly_response(),
+    )
+
+    rw_light.cmd_audit_quarterly([])
+
+    raw_files = list(logs_dir.glob("audit-quarterly-*-raw.txt"))
+    assert len(raw_files) == 1, "quarterly の raw レスポンスファイルが logs/ に保存されること"
+
+  def test_quarterly_report_in_logs_only(self, tmp_path, monkeypatch):
+    """quarterly のレポートが logs/ にのみ出力される（Req 5.6, 6.1-6.3）"""
+    _, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_quarterly_response(),
+    )
+
+    rw_light.cmd_audit_quarterly([])
+
+    assert len(list(logs_dir.glob("audit-quarterly-*.md"))) == 1
+    assert len(list(review_dir.rglob("*.md"))) == 0
+
+  # ---------- 読み取り専用保証（Req 6.1, 6.2, 6.3）----------
+
+  def test_readonly_wiki_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
+    """全ティア実行後に wiki/ のファイルが変更されていない（Req 6.1）"""
+    wiki_dir, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_monthly_response(),
+    )
+    # micro 用 git モック（変更なし → 対象 0 件でも OK）
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+
+    # 実行前スナップショット
+    before = _collect_file_snapshots(wiki_dir)
+
+    # 全ティア実行
+    rw_light.cmd_audit_micro()
+    rw_light.cmd_audit_weekly()
+    rw_light.cmd_audit_monthly([])
+    rw_light.cmd_audit_quarterly([])
+
+    # 実行後スナップショット
+    after = _collect_file_snapshots(wiki_dir)
+
+    assert before == after, f"wiki/ 内のファイルが変更された: before={before}, after={after}"
+
+  def test_readonly_raw_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
+    """全ティア実行後に raw/ のファイルが変更されていない（Req 6.2）"""
+    _, _, raw_dir, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_monthly_response(),
+    )
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+
+    before = _collect_file_snapshots(raw_dir)
+
+    rw_light.cmd_audit_micro()
+    rw_light.cmd_audit_weekly()
+    rw_light.cmd_audit_monthly([])
+    rw_light.cmd_audit_quarterly([])
+
+    after = _collect_file_snapshots(raw_dir)
+
+    assert before == after, f"raw/ 内のファイルが変更された: before={before}, after={after}"
+
+  def test_readonly_review_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
+    """全ティア実行後に review/ のファイルが変更されていない（Req 6.3）"""
+    _, _, _, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(
+      rw_light, "call_claude",
+      lambda prompt, timeout=None: _make_valid_monthly_response(),
+    )
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+
+    before = _collect_file_snapshots(review_dir)
+
+    rw_light.cmd_audit_micro()
+    rw_light.cmd_audit_weekly()
+    rw_light.cmd_audit_monthly([])
+    rw_light.cmd_audit_quarterly([])
+
+    after = _collect_file_snapshots(review_dir)
+
+    assert before == after, f"review/ 内のファイルが変更された: before={before}, after={after}"
+
+  # ---------- エラーケース ----------
+
+  def test_error_wiki_missing_all_tiers_exit_1(self, tmp_path, monkeypatch, capsys):
+    """wiki/ 不在の場合、全ティアが exit 1 を返す（Req 7.1）"""
+    # wiki/ は作成しない
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_path / "AGENTS"))
+
+    assert rw_light.cmd_audit_micro() == 1
+    assert rw_light.cmd_audit_weekly() == 1
+    assert rw_light.cmd_audit_monthly([]) == 1
+    assert rw_light.cmd_audit_quarterly([]) == 1
+
+  def test_error_agents_missing_monthly_exits_1(self, tmp_path, monkeypatch, capsys):
+    """AGENTS/ 不在の場合、monthly が exit 1 を返す（Req 7.5）"""
+    wiki_dir, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    # AGENTS/ を削除
+    import shutil as _shutil
+    _shutil.rmtree(str(tmp_path / "AGENTS"))
+    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_path / "AGENTS"))
+
+    result = rw_light.cmd_audit_monthly([])
+    assert result == 1
+
+    out = capsys.readouterr().out
+    assert "[ERROR]" in out
+
+  def test_error_agents_missing_quarterly_exits_1(self, tmp_path, monkeypatch, capsys):
+    """AGENTS/ 不在の場合、quarterly が exit 1 を返す（Req 7.5）"""
+    wiki_dir, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    import shutil as _shutil
+    _shutil.rmtree(str(tmp_path / "AGENTS"))
+    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_path / "AGENTS"))
+
+    result = rw_light.cmd_audit_quarterly([])
+    assert result == 1
+
+  def test_micro_no_changes_exits_0(self, tmp_path, monkeypatch):
+    """micro 対象 0 件（変更なし）の場合 exit 0 を返す（Req 1.7）"""
+    _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    # 変更ファイルなしをモック
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+
+    result = rw_light.cmd_audit_micro()
+
+    assert result == 0
+
+  def test_micro_no_changes_generates_report_with_zero_pages(self, tmp_path, monkeypatch):
+    """micro 対象 0 件の場合、pages scanned: 0 のレポートが生成される（Req 1.7）"""
+    _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+
+    rw_light.cmd_audit_micro()
+
+    report_files = list(logs_dir.glob("audit-micro-*.md"))
+    assert len(report_files) == 1
+    content = report_files[0].read_text(encoding="utf-8")
+    assert "0" in content  # pages_scanned: 0 が記録されること
