@@ -13,7 +13,9 @@
 
 ### CLI ツール
 **Location**: `scripts/rw_light.py`
-**Purpose**: 全コマンド（lint, ingest, query, audit, approve, init）を集約したモノリシック CLI
+**Purpose**: 全コマンドを集約したモノリシック CLI
+**Implemented**: `lint`, `ingest`, `synthesize-logs`, `approve`, `query-extract`, `query-answer`, `lint-query`, `query-fix`, `init`
+**Planned**: `audit`（cli-audit スペック実装待ち）
 **Pattern**: ユーティリティ関数群 → コマンドハンドラ → argparse エントリポイント
 
 ### プロンプトテンプレート

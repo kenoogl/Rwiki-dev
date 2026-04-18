@@ -1,7 +1,7 @@
 # Implementation Plan
 
 - [ ] 1. Foundation — データ構造・基盤ユーティリティ
-- [ ] 1.1 Finding / WikiPage NamedTuple 定義 + call_claude() timeout 拡張 + audit セクションヘッダー配置
+- [x] 1.1 Finding / WikiPage NamedTuple 定義 + call_claude() timeout 拡張 + audit セクションヘッダー配置
   - `from typing import Any, NamedTuple` に変更
   - Finding NamedTuple を定義（severity, category, page, message, sub_severity, marker の 6 フィールド、全て str）
   - WikiPage NamedTuple を定義（path, filename, raw_text, frontmatter, body, links, read_error の 7 フィールド）

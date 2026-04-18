@@ -2417,3 +2417,300 @@ class TestE2EWorkflow:
         nonexistent_scope = str(wiki_dir / "concepts" / "nonexistent_page.md")
         result = rw_light.cmd_query_extract(["What is ML?", "--scope", nonexistent_scope])
         assert result == 1, f"Expected 1 for missing scope page, got {result}"
+
+
+# ---------------------------------------------------------------------------
+# Task 1.1: Finding / WikiPage NamedTuple + call_claude() timeout 拡張
+# ---------------------------------------------------------------------------
+
+class TestFindingNamedTuple:
+    """Finding NamedTuple の定義テスト"""
+
+    def test_finding_has_six_fields(self):
+        """Finding NamedTuple は 6 フィールドを持つこと"""
+        f = rw_light.Finding(
+            severity="ERROR",
+            category="broken_link",
+            page="concepts/my-page.md",
+            message="リンク先が存在しない",
+            sub_severity="CRITICAL",
+            marker="CONFLICT",
+        )
+        assert f.severity == "ERROR"
+        assert f.category == "broken_link"
+        assert f.page == "concepts/my-page.md"
+        assert f.message == "リンク先が存在しない"
+        assert f.sub_severity == "CRITICAL"
+        assert f.marker == "CONFLICT"
+
+    def test_finding_fields_all_str(self):
+        """Finding の全フィールドが str 型であること"""
+        f = rw_light.Finding(
+            severity="WARN",
+            category="orphan_page",
+            page="methods/orphan.md",
+            message="孤立ページ",
+            sub_severity="",
+            marker="",
+        )
+        for field in (f.severity, f.category, f.page, f.message, f.sub_severity, f.marker):
+            assert isinstance(field, str), f"Expected str, got {type(field)}"
+
+    def test_finding_is_named_tuple(self):
+        """Finding が NamedTuple であること"""
+        import typing
+        assert issubclass(rw_light.Finding, tuple)
+        assert hasattr(rw_light.Finding, "_fields")
+        assert set(rw_light.Finding._fields) == {
+            "severity", "category", "page", "message", "sub_severity", "marker"
+        }
+
+
+class TestWikiPageNamedTuple:
+    """WikiPage NamedTuple の定義テスト"""
+
+    def test_wiki_page_has_seven_fields(self):
+        """WikiPage NamedTuple は 7 フィールドを持つこと"""
+        wp = rw_light.WikiPage(
+            path="concepts/my-page.md",
+            filename="my-page.md",
+            raw_text="---\ntitle: My Page\n---\n\nBody text.",
+            frontmatter={"title": "My Page"},
+            body="Body text.",
+            links=["other-page"],
+            read_error="",
+        )
+        assert wp.path == "concepts/my-page.md"
+        assert wp.filename == "my-page.md"
+        assert wp.raw_text == "---\ntitle: My Page\n---\n\nBody text."
+        assert wp.frontmatter == {"title": "My Page"}
+        assert wp.body == "Body text."
+        assert wp.links == ["other-page"]
+        assert wp.read_error == ""
+
+    def test_wiki_page_links_is_list(self):
+        """WikiPage.links が list[str] であること"""
+        wp = rw_light.WikiPage(
+            path="methods/sindy.md",
+            filename="sindy.md",
+            raw_text="",
+            frontmatter={},
+            body="",
+            links=["page-a", "page-b"],
+            read_error="",
+        )
+        assert isinstance(wp.links, list)
+        assert all(isinstance(lnk, str) for lnk in wp.links)
+
+    def test_wiki_page_frontmatter_is_dict(self):
+        """WikiPage.frontmatter が dict であること"""
+        wp = rw_light.WikiPage(
+            path="entities/tool.md",
+            filename="tool.md",
+            raw_text="",
+            frontmatter={"title": "Tool", "source": "web"},
+            body="",
+            links=[],
+            read_error="",
+        )
+        assert isinstance(wp.frontmatter, dict)
+
+    def test_wiki_page_is_named_tuple(self):
+        """WikiPage が NamedTuple であること"""
+        assert issubclass(rw_light.WikiPage, tuple)
+        assert hasattr(rw_light.WikiPage, "_fields")
+        assert set(rw_light.WikiPage._fields) == {
+            "path", "filename", "raw_text", "frontmatter", "body", "links", "read_error"
+        }
+
+    def test_wiki_page_read_error_str(self):
+        """WikiPage.read_error が str であること（エラー時のメッセージ）"""
+        wp = rw_light.WikiPage(
+            path="wiki/broken.md",
+            filename="broken.md",
+            raw_text="",
+            frontmatter={},
+            body="",
+            links=[],
+            read_error="UnicodeDecodeError: invalid byte",
+        )
+        assert isinstance(wp.read_error, str)
+        assert "UnicodeDecodeError" in wp.read_error
+
+
+class TestCallClaudeTimeout:
+    """call_claude() の timeout パラメータ拡張テスト"""
+
+    def test_timeout_parameter_accepted(self, monkeypatch):
+        """timeout パラメータを指定しても正常動作すること"""
+        import subprocess
+
+        mock_result = subprocess.CompletedProcess(
+            args=["claude", "-p", "test"],
+            returncode=0,
+            stdout="response text\n",
+            stderr="",
+        )
+
+        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
+
+        result = rw_light.call_claude("test prompt", timeout=300)
+        assert result == "response text"
+
+    def test_timeout_none_is_default(self, monkeypatch):
+        """timeout=None がデフォルトで既存動作と同一であること"""
+        import subprocess
+
+        mock_result = subprocess.CompletedProcess(
+            args=["claude", "-p", "test"],
+            returncode=0,
+            stdout="default response\n",
+            stderr="",
+        )
+
+        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
+
+        result = rw_light.call_claude("test prompt")
+        assert result == "default response"
+
+    def test_timeout_passed_to_subprocess(self, monkeypatch):
+        """timeout が subprocess.run に渡されること"""
+        import subprocess
+
+        captured_kwargs = {}
+
+        def mock_run(*args, **kwargs):
+            captured_kwargs.update(kwargs)
+            return subprocess.CompletedProcess(
+                args=args[0], returncode=0, stdout="ok\n", stderr=""
+            )
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        rw_light.call_claude("test prompt", timeout=120)
+        assert captured_kwargs.get("timeout") == 120
+
+    def test_timeout_none_not_passed_to_subprocess(self, monkeypatch):
+        """timeout=None の場合、subprocess.run に timeout=None が渡されるか
+        またはデフォルト動作（タイムアウトなし）であること"""
+        import subprocess
+
+        captured_kwargs = {}
+
+        def mock_run(*args, **kwargs):
+            captured_kwargs.update(kwargs)
+            return subprocess.CompletedProcess(
+                args=args[0], returncode=0, stdout="ok\n", stderr=""
+            )
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        rw_light.call_claude("test prompt", timeout=None)
+        # timeout=None が渡されても subprocess は無制限タイムアウトとして動作する
+        timeout_val = captured_kwargs.get("timeout")
+        assert timeout_val is None
+
+    def test_timeout_expired_raises_runtime_error(self, monkeypatch):
+        """TimeoutExpired が RuntimeError に変換されること"""
+        import subprocess
+
+        def mock_run(*args, **kwargs):
+            raise subprocess.TimeoutExpired(cmd=["claude"], timeout=300)
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        with pytest.raises(RuntimeError) as exc_info:
+            rw_light.call_claude("test prompt", timeout=300)
+
+        assert "300" in str(exc_info.value)
+
+    def test_timeout_expired_message_contains_seconds(self, monkeypatch):
+        """TimeoutExpired の RuntimeError メッセージにタイムアウト秒数が含まれること"""
+        import subprocess
+
+        def mock_run(*args, **kwargs):
+            raise subprocess.TimeoutExpired(cmd=["claude"], timeout=60)
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        with pytest.raises(RuntimeError) as exc_info:
+            rw_light.call_claude("test prompt", timeout=60)
+
+        error_msg = str(exc_info.value)
+        assert "60" in error_msg
+
+
+class TestAuditSectionHeaders:
+    """rw_light.py に audit セクションヘッダーが配置されていること"""
+
+    def test_audit_data_loading_header_exists(self):
+        """# audit: data loading ヘッダーが存在すること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        assert "# audit: data loading" in source
+
+    def test_audit_static_checks_micro_header_exists(self):
+        """# audit: static checks — micro ヘッダーが存在すること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        assert "# audit: static checks \u2014 micro" in source
+
+    def test_audit_static_checks_weekly_header_exists(self):
+        """# audit: static checks — weekly ヘッダーが存在すること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        assert "# audit: static checks \u2014 weekly" in source
+
+    def test_audit_llm_engine_header_exists(self):
+        """# audit: LLM engine ヘッダーが存在すること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        assert "# audit: LLM engine" in source
+
+    def test_audit_report_engine_header_exists(self):
+        """# audit: report engine ヘッダーが存在すること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        assert "# audit: report engine" in source
+
+    def test_audit_commands_dispatch_header_exists(self):
+        """# audit: commands — dispatch+micro ヘッダーが存在すること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        assert "# audit: commands \u2014 dispatch+micro" in source
+
+    def test_audit_commands_weekly_header_exists(self):
+        """# audit: commands — weekly ヘッダーが存在すること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        assert "# audit: commands \u2014 weekly" in source
+
+    def test_audit_commands_monthly_quarterly_header_exists(self):
+        """# audit: commands — monthly/quarterly ヘッダーが存在すること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        assert "# audit: commands \u2014 monthly/quarterly" in source
+
+    def test_audit_headers_after_read_wiki_content(self):
+        """audit ヘッダーが read_wiki_content の後にあること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        idx_read_wiki = source.find("def read_wiki_content(")
+        idx_audit_data = source.find("# audit: data loading")
+        assert idx_read_wiki != -1, "read_wiki_content が見つからない"
+        assert idx_audit_data != -1, "audit: data loading ヘッダーが見つからない"
+        assert idx_read_wiki < idx_audit_data, (
+            "audit ヘッダーは read_wiki_content の後に配置されるべき"
+        )
+
+    def test_audit_headers_before_output_utilities(self):
+        """audit ヘッダーが Output utilities セクションの前にあること"""
+        import inspect
+        source = inspect.getsource(rw_light)
+        idx_output = source.find("# Output utilities")
+        idx_audit_data = source.find("# audit: data loading")
+        assert idx_output != -1, "Output utilities が見つからない"
+        assert idx_audit_data != -1, "audit: data loading ヘッダーが見つからない"
+        assert idx_audit_data < idx_output, (
+            "audit ヘッダーは Output utilities の前に配置されるべき"
+        )

@@ -8,7 +8,7 @@ import sys
 import unicodedata
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 ROOT = os.getcwd()
 
@@ -992,19 +992,28 @@ def build_query_prompt(
     return "\n\n".join(parts)
 
 
-def call_claude(prompt: str) -> str:
+def call_claude(prompt: str, timeout: int | None = None) -> str:
     """Claude CLI を呼び出してレスポンスを返す。
 
+    Args:
+        prompt: Claude に送信するプロンプト
+        timeout: タイムアウト秒数。None の場合はタイムアウトなし（既存動作と同一）
+    Returns:
+        Claude の応答文字列
     Raises:
-        RuntimeError: Claude CLI がエラーを返した場合（stderrを含む）
+        RuntimeError: Claude CLI が非ゼロ終了、またはタイムアウト
     """
-    result = subprocess.run(
-        ["claude", "-p", prompt],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            ["claude", "-p", prompt],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"Claude CLI がタイムアウトしました ({timeout}秒)")
     if result.returncode != 0:
         print(result.stdout[:500], file=sys.stderr)
         raise RuntimeError(result.stderr.strip() or "claude call failed")
@@ -1048,6 +1057,51 @@ def read_wiki_content(scope: str | None) -> str:
 
     # 大規模 wiki (>20): index.md のみを返す（cmd_* が2段階方式でオーケストレーションする）
     return read_text(INDEX_MD)
+
+
+# audit: data loading
+
+
+class Finding(NamedTuple):
+    """監査で検出された個別の問題。"""
+    severity: str      # "ERROR" | "WARN" | "INFO"
+    category: str      # チェックカテゴリ（例: "broken_link", "orphan_page"）
+    page: str          # 対象ページパス（wiki/ からの相対パス）
+    message: str       # 問題の説明
+    sub_severity: str  # monthly/quarterly の元の優先度（"CRITICAL" | "HIGH" | ""）
+    marker: str        # monthly のマーカー（"CONFLICT" | "TENSION" | "AMBIGUOUS" | ""）
+
+
+class WikiPage(NamedTuple):
+    """wiki ページの読み込み済みデータ。"""
+    path: str                  # wiki/ からの相対パス（例: "concepts/my-page.md"）
+    filename: str              # ファイル名（例: "my-page.md"）
+    raw_text: str              # 読み込んだ生テキスト（frontmatter 検査用）
+    frontmatter: dict          # parse_frontmatter() でパース済み frontmatter
+    body: str                  # parse_frontmatter() が返す本文
+    links: list                # body から [[link]] regex で抽出したページ名リスト
+    read_error: str            # 読み込みエラーがあった場合のメッセージ（正常時は ""）
+
+
+# audit: static checks — micro
+
+
+# audit: static checks — weekly
+
+
+# audit: LLM engine
+
+
+# audit: report engine
+
+
+# audit: commands — dispatch+micro
+
+
+# audit: commands — weekly
+
+
+# audit: commands — monthly/quarterly
 
 
 # -------------------------
