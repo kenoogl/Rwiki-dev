@@ -1,7 +1,7 @@
 # Implementation Plan
 
 - [ ] 1. テストインフラ基盤: conftest.py
-- [ ] 1.1 conftest.py コアフィクスチャの実装
+- [x] 1.1 conftest.py コアフィクスチャの実装
   - rw_light モジュールのインポートに必要な sys.path 操作を conftest.py 先頭に定義し、新規テストファイルでの個別 sys.path.insert を不要にする
   - vault_path フィクスチャで rw_light.VAULT_DIRS の全ディレクトリを tmp_path 上に構築する。VAULT_DIRS を直接参照しハードコード回避
   - patch_constants フィクスチャで rw_light の 17 グローバル定数（ROOT, RAW, INCOMING, LLM_LOGS, REVIEW, SYNTH_CANDIDATES, QUERY_REVIEW, WIKI, WIKI_SYNTH, LOGDIR, LINT_LOG, QUERY_LINT_LOG, INDEX_MD, CHANGE_LOG_MD, CLAUDE_MD, AGENTS_DIR, DEV_ROOT）を vault_path ベースに差し替える。モジュールロード時評価済みのため派生定数も個別パッチ
