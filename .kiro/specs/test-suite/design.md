@@ -318,6 +318,9 @@ def mock_templates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
   - AGENTS/ ディレクトリ（2-3 個のダミー .md ファイル。
     Req 9.4 で「コンテンツごとコピー」を検証するため、
     ファイル数とファイル名の保持を assert 可能にする）
+  - scripts/rw_light.py（ダミーファイル。cmd_init が
+    DEV_ROOT/scripts/rw_light.py に os.stat で実行権限チェックを
+    行うため、不在だと全テストの capsys に [WARN] が混入する）
   DEV_ROOT を tmp_path にパッチ。
   テンプレートルートの Path を返す。"""
   ...
@@ -377,7 +380,7 @@ def mock_templates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 |-------|---------------|-----------|---------|
 | TestGitCommit | git_commit | 4 | subprocess.run |
 | TestGitStatusPorcelain | git_status_porcelain | 1 | subprocess.run |
-| TestGitPathIsDirty | git_path_is_dirty | 2+ | subprocess.run (via git_status_porcelain) |
+| TestGitPathIsDirty | git_path_is_dirty | 2 | subprocess.run (via git_status_porcelain) |
 
 **Dependencies**: なし（subprocess.run モックのみで完結。git_commit / git_status_porcelain / git_path_is_dirty はモジュール定数を参照しない）
 

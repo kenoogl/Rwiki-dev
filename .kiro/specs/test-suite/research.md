@@ -35,10 +35,10 @@
 - `rw_light.ROOT` — Vault ルートパス
 - `rw_light.WIKI` — wiki/ ディレクトリ
 - `rw_light.INDEX_MD` — index.md パス
-- `rw_light.LOG_MD` — log.md パス
+- `rw_light.CHANGE_LOG_MD` — log.md パス（旧名 LOG_MD — design.md で CHANGE_LOG_MD に統一）
 - `rw_light.REVIEW` — review/ ディレクトリ
 - `rw_light.RAW` — raw/ ディレクトリ
-- `rw_light.LOGS` — logs/ ディレクトリ
+- `rw_light.LOGDIR` — logs/ ディレクトリ（旧名 LOGS — design.md で LOGDIR に統一）
 - `rw_light.AGENTS_DIR` — AGENTS/ ディレクトリ
 - `rw_light.today` — 日付関数
 
@@ -46,7 +46,7 @@
 
 | コマンド | 関数 | 行 | モック方法 |
 |---------|------|------|----------|
-| synthesize-logs | cmd_synthesize_logs | L536 内 | subprocess.run モック |
+| synthesize-logs | cmd_synthesize_logs | L536 内 | rw_light.call_claude_for_log_synthesis を関数レベルでモック（Design Phase Discovery で決定） |
 | query-extract | cmd_query_extract | L2631, L2674 | subprocess.run モック（2 段階呼び出し） |
 | query-answer | cmd_query_answer | L2779 | subprocess.run モック |
 | query-fix | cmd_query_fix | L3181 | subprocess.run モック |
@@ -60,7 +60,7 @@
 | lint | incoming/ 読み込み → サブディレクトリ移動 | なし | なし | フロントマター検証、ファイル移動ロジック |
 | ingest | pending → raw/ 移動 | git_commit | なし | ディレクトリ判定、コミット呼び出し |
 | synthesize-logs | llm_logs/ 読み込み → review/ 書き出し | なし | call_claude | プロンプト構築、レスポンスパース |
-| approve | review/synthesis_candidates/ → wiki/ 移動 | git_commit | なし | index.md 更新、ディレクトリ振り分け |
+| approve | review/synthesis_candidates/ → wiki/ 移動 | なし | なし | index.md 更新、ディレクトリ振り分け（git_commit 不使用 — Design Phase Discovery で確認） |
 | lint-query | review/query/ 読み込み | なし | なし | 品質スコア計算、logs/ JSON 出力 |
 | init | ディレクトリ作成、テンプレートコピー | git init | なし | 構造検証、テンプレート整合性 |
 | audit-monthly | wiki/ 読み込み | なし | call_claude | プロンプト構築、レスポンスパース |

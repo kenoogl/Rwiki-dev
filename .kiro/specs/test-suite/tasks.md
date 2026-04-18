@@ -1,0 +1,144 @@
+# Implementation Plan
+
+- [ ] 1. テストインフラ基盤: conftest.py
+- [ ] 1.1 conftest.py コアフィクスチャの実装
+  - rw_light モジュールのインポートに必要な sys.path 操作を conftest.py 先頭に定義し、新規テストファイルでの個別 sys.path.insert を不要にする
+  - vault_path フィクスチャで rw_light.VAULT_DIRS の全ディレクトリを tmp_path 上に構築する。VAULT_DIRS を直接参照しハードコード回避
+  - patch_constants フィクスチャで rw_light の 17 グローバル定数（ROOT, RAW, INCOMING, LLM_LOGS, REVIEW, SYNTH_CANDIDATES, QUERY_REVIEW, WIKI, WIKI_SYNTH, LOGDIR, LINT_LOG, QUERY_LINT_LOG, INDEX_MD, CHANGE_LOG_MD, CLAUDE_MD, AGENTS_DIR, DEV_ROOT）を vault_path ベースに差し替える。モジュールロード時評価済みのため派生定数も個別パッチ
+  - fixed_today フィクスチャで rw_light.today を固定日付 '2025-01-15' に差し替え、テストの決定性を保証する
+  - make_md_file ファクトリフィクスチャで、指定パスにフロントマター付き Markdown ファイルを生成する（親ディレクトリの自動作成含む）
+  - 全フィクスチャが autouse=False, scope="function" であり、既存テスト（test_rw_light.py）に副作用を与えない
+  - conftest.py が作成され、`python -c "import conftest"` がエラーなく完了する（フィクスチャの実検証は Task 2 のテスト実行時に行われる）
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
+
+- [ ] 1.2 conftest.py 拡張フィクスチャの実装
+  - lint_json ファクトリフィクスチャで lint_latest.json（timestamp, files, summary の 3 キー構造）を vault_path/logs/ に生成する。patch_constants 非依存のため書き込み先パスを直接使用
+  - query_artifacts ファクトリフィクスチャで指定 query_id のアーティファクト 4 ファイル（question.md, answer.md, evidence.md, metadata.json）を vault_path/review/query/ に生成する。patch_constants 非依存
+  - mock_templates フィクスチャでモックテンプレート（CLAUDE.md, .gitignore, AGENTS/ + ダミー .md ファイル 2-3 個）を tmp_path/templates/ に構築し、DEV_ROOT をパッチする。加えて tmp_path/scripts/rw_light.py にダミーファイルを作成する（cmd_init が DEV_ROOT/scripts/rw_light.py に os.stat で実行権限チェックを行うため、不在だと全テストの capsys に [WARN] が混入する）。patch_constants とは排他関係（同一テストで併用禁止 — 両方が DEV_ROOT をパッチするため）
+  - 3 フィクスチャ追加後、`python -c "import conftest"` がエラーなく完了する（フィクスチャの実検証は Task 2 のテスト実行時に行われる）
+  - _Requirements: 1.9, 1.10, 1.11_
+
+- [ ] 2. テストファイル実装
+- [ ] 2.1 (P) ユーティリティ関数の単体テスト
+  - parse_frontmatter の 3 パターン検証: 正常な YAML フロントマター → メタデータ辞書と本文分離、フロントマターなし → 空辞書と全文、開始 `---` のみで閉じなし → 空辞書と全文
+  - build_frontmatter の 2 パターン検証: メタデータ辞書 → 有効な YAML ブロック生成、build→parse 往復テスト（YAML 特殊文字 `"Python: A Guide"` 等を含む値で往復しても元データが復元される）
+  - slugify の 3 パターン検証: 日本語文字列 → ASCII スラッグ、記号・スペース混在 → ハイフン区切り・80 文字上限、空文字列 → "untitled"
+  - list_md_files の 2 パターン検証: .md と非 .md の混在ディレクトリ → .md のみ再帰収集、存在しないディレクトリ → 空リスト
+  - first_h1 の 2 パターン検証: H1 見出しあり → テキスト抽出、H1 なし → None
+  - ensure_basic_frontmatter の 2 パターン検証: title/source/added 欠落 → 自動補完（title 推定は first_h1 優先 > basename フォールバック、added に fixed_today の日付）、全フィールド存在 → 変更なし（False, 空リスト, 元テキスト）
+  - read_text / write_text / append_text の UTF-8 日本語文字列の読み書き・追記検証
+  - read_json の 2 パターン検証: 有効 JSON → 辞書読み込み、不正 JSON → 例外
+  - make_md_file と fixed_today のみ使用。vault_path / patch_constants / mock_templates は不使用（純関数テスト + tmp_path 直接使用）
+  - `pytest tests/test_utils.py -v` で全 19 テストが PASS
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 2.13, 2.14_
+  - _Boundary: test_utils.py_
+
+- [ ] 2.2 (P) Git 操作関数のテスト
+  - git_commit 正常系: subprocess.run モック（呼び出し記録リスト）で git add → diff returncode=1（変更あり）→ commit の 3 段階呼び出しを部分一致で検証
+  - git_commit スキップ: diff returncode=0（変更なし）→ commit 呼び出しが存在しないことを検証
+  - git_commit 失敗（2 テスト）: git add 失敗と git commit 失敗をそれぞれ CalledProcessError で検証（args 内容に応じた条件分岐で送出）
+  - git_status_porcelain: subprocess.run モックで stdout 返却を検証
+  - git_path_is_dirty（2 テスト）: パスプレフィックス指定での dirty / clean 判定を subprocess.run 経由で間接検証
+  - conftest.py フィクスチャ不使用（subprocess.run モックのみで完結。git_commit / git_status_porcelain / git_path_is_dirty はモジュール定数を参照しない）
+  - `pytest tests/test_git_ops.py -v` で全 7 テストが PASS
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+  - _Boundary: test_git_ops.py_
+
+- [ ] 2.3 (P) init コマンドのテスト: 新規初期化
+  - 全テストで subprocess.run を no-op モック（CompletedProcess(returncode=0) 返却）として git init 実行を抑止。mock_templates フィクスチャで DEV_ROOT をパッチ（patch_constants は不使用 — DEV_ROOT パッチ競合防止）
+  - ディレクトリ作成（2 テスト）: 空ディレクトリ指定 → VAULT_DIRS 全エントリ存在 + exit 0、存在しないパス → 自動作成してセットアップ続行
+  - テンプレートコピー（3 テスト）: CLAUDE.md 内容一致、AGENTS/ ファイル数・名前一致（コンテンツごとコピー検証）、.gitignore 内容一致
+  - 初期ファイル生成（1 テスト）: index.md（# Index）・log.md（# Log）の見出し検証
+  - Git 初期化制御（2 テスト）: .git/ 不在 → subprocess.run 記録に "git init" あり、.git/ 存在 → "git init" なし
+  - symlink 作成（1 テスト）: scripts/rw → scripts/rw_light.py のリンク先確認
+  - 完了レポート（1 テスト）: capsys で主要項目（ディレクトリ数、テンプレート名）の部分一致検証
+  - cmd_init には必ず明示的パス引数を渡す（`cmd_init([])` 禁止 — os.getcwd() 事故防止）
+  - `pytest tests/test_init.py::TestCmdInit` で 10 テストが PASS
+  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.7, 9.8, 9.9, 9.11, 9.12_
+  - _Boundary: test_init.py_
+
+- [ ] 2.9 (P) init コマンドのテスト: 再初期化・エラー処理
+  - Task 2.3 と同一ファイル（test_init.py）に追記。subprocess.run no-op モック + mock_templates フィクスチャは 2.3 と同じ設定
+  - 上書き保護（2 テスト）: 既存 index.md/log.md が存在する場合に上書きしない、既存 .gitignore が不変
+  - 再初期化フロー（3 テスト）: input() モックでプロンプト引数キャプチャ（"既存のVault" in prompts[0]）、上書き承認 → exit 0 + .bak 作成 + 新テンプレートコピー、上書き拒否 → exit 0 + ファイル不変
+  - テンプレート不在エラー（2 テスト）: CLAUDE.md 不在 → exit 1 + "[ERROR]"、.gitignore 不在 → exit 1 + "[ERROR]"
+  - `pytest tests/test_init.py -v` で全 17 テストが PASS（2.3 + 2.9 の合計）
+  - _Requirements: 9.6, 9.10, 9.13, 9.14, 9.15, 9.16, 9.17_
+  - _Depends: 2.3_
+  - _Boundary: test_init.py_
+
+- [ ] 2.4 (P) lint コマンドのテスト
+  - PASS/WARN/FAIL 判定（3 テスト）: 十分な内容 → exit 0 + "[PASS]"、空ファイル → exit 1 + "[FAIL]"（cmd_lint 内部で空ファイルは ensure_basic_frontmatter を呼ばずに continue する — モック不要、この動作自体を検証）、補完後 80 文字未満 → exit 0 + "[WARN]"
+  - 空ディレクトリ（1 テスト）: incoming/ にファイルなし → exit 0、summary 全 0
+  - JSON ログ出力（1 テスト）: lint_latest.json に timestamp, files, summary の 3 キー存在（timestamp は値でなく存在のみ検証）
+  - 終了コード検証（2 テスト）: FAIL 1 件以上 → exit 1、FAIL なし（PASS+WARN 混在）→ exit 0
+  - フロントマター書き戻し（1 テスト）: incoming/ ファイルの補完後に title, source, added が設定済み（source は infer_source_from_path 依存でサブディレクトリ名に基づく）
+  - subprocess.run モック不要（cmd_lint は Git/Claude 非使用）。fixed_today は ensure_basic_frontmatter 内の today() 用。patch_constants のみ使用（mock_templates は不使用 — DEV_ROOT パッチ競合防止）
+  - `pytest tests/test_lint.py -v` で全 8 テストが PASS
+  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8_
+  - _Boundary: test_lint.py_
+
+- [ ] 2.5 (P) ingest コマンドのテスト
+  - ファイル移動（1 テスト）: incoming/ → raw/ への相対パス保持移動（incoming/sub/file.md → raw/sub/file.md）
+  - 空ディレクトリ（1 テスト）: incoming/ にファイルなし → exit 0
+  - Git 連携（1 テスト）: git_commit モック（monkeypatch で rw_light.git_commit を差し替え）の呼び出し記録検証
+  - FAIL ブロック（1 テスト）: lint_json ファクトリに fail>0 のデータを引数で渡して lint_latest.json を生成 → exit 1、ファイル未移動
+  - git_commit 失敗（1 テスト）: CalledProcessError を送出する関数にモック差し替え → exit 1
+  - lint 未実行（1 テスト）: lint_latest.json 不在 → FileNotFoundError（load_lint_summary が os.path.exists で不在を検出し明示的に raise する）
+  - 移動先重複（1 テスト）: plan_ingest_moves が os.path.exists で検出 → RuntimeError（ファイル移動前）
+  - ロールバック（1 テスト）: 2 ファイル用意、2 番目の移動でエラー発生 → 1 番目が元の位置（incoming/）に復元され、移動先（raw/）から消失していることを両方検証
+  - patch_constants のみ使用（mock_templates は不使用 — DEV_ROOT パッチ競合防止）
+  - `pytest tests/test_ingest.py -v` で全 8 テストが PASS
+  - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8_
+  - _Boundary: test_ingest.py_
+
+- [ ] 2.6 (P) synthesize-logs コマンドのテスト
+  - 全テストで git_path_is_dirty を monkeypatch（False 返却の no-op）。call_claude_for_log_synthesis を関数レベルでモック（subprocess.run ではなく rw_light.call_claude_for_log_synthesis を差し替え）
+  - 正常系（1 テスト）: モック戻り値（topics 配列の JSON 文字列、各 topic に title/summary/decision/reason/alternatives/reusable_pattern/tags）→ synthesis_candidates/ に候補ファイル生成
+  - 空ディレクトリ（1 テスト）: llm_logs/ にファイルなし → exit 0、候補ファイルなし
+  - log.md 追記（1 テスト）: 候補生成後に CHANGE_LOG_MD にエントリ存在
+  - フロントマター検証（1 テスト）: 候補ファイルに title, source, type="synthesis_candidate", status="pending" + created/updated が fixed_today の日付
+  - エラー継続（1 テスト）: (a) call_claude_for_log_synthesis が Exception、(b) 不正 JSON で JSONDecodeError → "[FAIL]" 報告 + 次ファイルの "[READ]" で継続確認
+  - 全 FAIL 時（1 テスト）: 終了コード 0
+  - 事前存在ファイルとの重複スキップ（1 テスト）: synthesis_candidates/ に同名候補が既存 → "[SKIP]" + 既存ファイル不変
+  - 単一レスポンス内 slug 衝突（1 テスト）: topics 内で slugify 結果が同一の 2 トピック（"Python Guide" / "Python: Guide!"）→ 1 つ目作成、2 つ目は os.path.exists で検出されスキップ（false confidence 防止テスト）
+  - dirty 警告（1 テスト）: git_path_is_dirty=True → "[WARN]" in stdout
+  - patch_constants のみ使用（mock_templates は不使用 — DEV_ROOT パッチ競合防止）
+  - `pytest tests/test_synthesize_logs.py -v` で全 9 テストが PASS
+  - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
+  - _Boundary: test_synthesize_logs.py_
+
+- [ ] 2.7 (P) approve コマンドのテスト
+  - 全テストで git_path_is_dirty を monkeypatch（False 返却の no-op）。cmd_approve は git_commit を使用しない
+  - 昇格正常系（1 テスト）: 承認済み候補（status=approved, reviewed_by 非空, approved=有効 ISO 日付, promoted=false）→ wiki/synthesis/ に type="synthesis" で新規作成
+  - 4 条件拒否（4 テスト）: status 不一致 / reviewed_by 空 / approved 無効日付 / promoted true → 各条件で個別テストメソッド、wiki/synthesis/ にファイルなし
+  - mark_candidate_promoted（1 テスト）: 元候補に promoted="true", promoted_at, promoted_to が設定され書き戻される
+  - merge_synthesis（1 テスト）: 既存 wiki ファイルにセパレータ付き追記 + updated/candidate_source 更新 + 既存フィールド（tags 等）保持（false confidence 防止）
+  - index.md 更新（1 テスト）: wiki/synthesis/ 走査 → index.md の ## synthesis セクション再生成
+  - log.md 追記（1 テスト）: CHANGE_LOG_MD に昇格エントリのタイムスタンプ付き追記
+  - 終了コード（1 テスト）: 承認ファイル有無に関わらず exit 0
+  - dirty 警告（1 テスト）: git_path_is_dirty=True → "[WARN]" in stdout
+  - patch_constants のみ使用（mock_templates は不使用 — DEV_ROOT パッチ競合防止）
+  - `pytest tests/test_approve.py -v` で全 11 テストが PASS
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8_
+  - _Boundary: test_approve.py_
+
+- [ ] 2.8 (P) lint-query コマンドのテスト
+  - 構造検証（1 テスト）: 4 ファイル揃い → "Lint Result" in stdout
+  - QL001 検出（1 テスト）: 必須ファイル欠落 → "QL001" in stdout（ERROR レベル）
+  - ログ出力（1 テスト）: 結果 JSON に timestamp, results, summary の 3 キー存在
+  - 終了コード 5 パターン（5 テスト）: ERROR なし → 0、WARN のみ（QL003/QL005）→ 1、ERROR（QL001）→ 2、パス不存在 → 4、引数エラー（--path 値なし / --unknown）→ 3
+  - 引数は cmd_lint_query(["--path", str(query_dir)]) 形式で直接渡す（argparse 不使用の手動パース）
+  - patch_constants のみ使用（mock_templates は不使用 — DEV_ROOT パッチ競合防止）
+  - `pytest tests/test_lint_query.py -v` で全 8 テストが PASS
+  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8_
+  - _Boundary: test_lint_query.py_
+
+- [ ] 3. ドキュメント整備: developer-guide.md と CHANGELOG.md
+  - docs/developer-guide.md を作成: テスト実行方法（pytest コマンド例 4 パターン）、テストファイル構成（既存 test_rw_light.py + 新規 8 ファイルの責務分担）、テスト追加手順（命名規約、フィクスチャ使用法、2 スペースインデント）
+  - モック戦略セクション: monkeypatch.setattr のみ使用の方針、17 定数パッチ、subprocess.run 呼び出し記録パターン、LLM モック境界（call_claude vs call_claude_for_log_synthesis）
+  - アーキテクチャ概要セクション: 3 層パイプライン（raw → review → wiki）、コマンドハンドラ構造、Prompt Engine チェーン
+  - CHANGELOG.md の [Unreleased] セクションに Added — test-suite スペック エントリを追記（Keep a Changelog フォーマット）
+  - docs/developer-guide.md が存在し、テスト実行・モック戦略・アーキテクチャの 3 主要セクションを含む
+  - _Requirements: 10.1, 10.2, 10.3, 10.4_
+  - _Depends: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9_
