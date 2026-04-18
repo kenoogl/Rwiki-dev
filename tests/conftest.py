@@ -68,3 +68,80 @@ def make_md_file() -> Callable[[Path, dict, str], Path]:
     path.write_text(content, encoding="utf-8")
     return path
   return _make
+
+
+@pytest.fixture
+def lint_json(vault_path: Path) -> Callable[[dict], Path]:
+  """lint_latest.json を vault_path / "logs" / "lint_latest.json" に生成するファクトリ。
+  rw_light.LINT_LOG は参照しない（patch_constants 非依存にするため）。
+  引数: (data: dict) — timestamp, files, summary の 3 キー構造。
+  書き込んだ Path を返す。"""
+  import json
+
+  def _make(data: dict) -> Path:
+    log_path = vault_path / "logs" / "lint_latest.json"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return log_path
+
+  return _make
+
+
+@pytest.fixture
+def query_artifacts(vault_path: Path) -> Callable[[str], Path]:
+  """指定 query_id で vault_path / "review" / "query" / <query_id>/ に
+  question.md, answer.md, evidence.md, metadata.json を生成。
+  rw_light.QUERY_REVIEW は参照しない（patch_constants 非依存にするため）。
+  クエリディレクトリの Path を返す。"""
+  import json
+
+  def _make(query_id: str) -> Path:
+    query_dir = vault_path / "review" / "query" / query_id
+    query_dir.mkdir(parents=True, exist_ok=True)
+    (query_dir / "question.md").write_text("# Question\nWhat is X?", encoding="utf-8")
+    (query_dir / "answer.md").write_text("# Answer\nX is Y.", encoding="utf-8")
+    (query_dir / "evidence.md").write_text("# Evidence\nSource: Z.", encoding="utf-8")
+    metadata = {
+      "query_id": query_id,
+      "query_type": "factual",
+      "created_at": "2025-01-15",
+    }
+    (query_dir / "metadata.json").write_text(
+      json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return query_dir
+
+  return _make
+
+
+# 排他制約: mock_templates と patch_constants は同一テストで併用しない。
+# 両フィクスチャが rw_light.DEV_ROOT をパッチするため、後から適用された方が勝ち、
+# 挙動が不定になる。test_init.py は mock_templates のみ使用し、
+# 他のテストファイルは patch_constants のみ使用する設計とする。
+@pytest.fixture
+def mock_templates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+  """tmp_path / "templates"/ にモックテンプレートを作成し、
+  rw_light.DEV_ROOT を tmp_path にパッチする。
+  - templates/CLAUDE.md: 最小限のテキスト
+  - templates/.gitignore: 最小限のテキスト
+  - templates/AGENTS/: ダミー .md ファイル 2 個
+  - scripts/rw_light.py: ダミーファイル（cmd_init の os.stat チェック対策）
+  テンプレートルート (tmp_path / "templates") の Path を返す。"""
+  tmpl_root = tmp_path / "templates"
+  tmpl_root.mkdir(parents=True, exist_ok=True)
+
+  (tmpl_root / "CLAUDE.md").write_text("# CLAUDE\nTest kernel", encoding="utf-8")
+  (tmpl_root / ".gitignore").write_text("*.pyc\n.DS_Store\n", encoding="utf-8")
+
+  agents_dir = tmpl_root / "AGENTS"
+  agents_dir.mkdir(parents=True, exist_ok=True)
+  (agents_dir / "agent_a.md").write_text("# Agent A\nDummy agent.", encoding="utf-8")
+  (agents_dir / "agent_b.md").write_text("# Agent B\nDummy agent.", encoding="utf-8")
+
+  scripts_dir = tmp_path / "scripts"
+  scripts_dir.mkdir(parents=True, exist_ok=True)
+  (scripts_dir / "rw_light.py").write_text("# dummy\n", encoding="utf-8")
+
+  monkeypatch.setattr(rw_light, "DEV_ROOT", str(tmp_path))
+
+  return tmpl_root

@@ -11,7 +11,7 @@
   - conftest.py が作成され、`python -c "import conftest"` がエラーなく完了する（フィクスチャの実検証は Task 2 のテスト実行時に行われる）
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
 
-- [ ] 1.2 conftest.py 拡張フィクスチャの実装
+- [x] 1.2 conftest.py 拡張フィクスチャの実装
   - lint_json ファクトリフィクスチャで lint_latest.json（timestamp, files, summary の 3 キー構造）を vault_path/logs/ に生成する。patch_constants 非依存のため書き込み先パスを直接使用
   - query_artifacts ファクトリフィクスチャで指定 query_id のアーティファクト 4 ファイル（question.md, answer.md, evidence.md, metadata.json）を vault_path/review/query/ に生成する。patch_constants 非依存
   - mock_templates フィクスチャでモックテンプレート（CLAUDE.md, .gitignore, AGENTS/ + ダミー .md ファイル 2-3 個）を tmp_path/templates/ に構築し、DEV_ROOT をパッチする。加えて tmp_path/scripts/rw_light.py にダミーファイルを作成する（cmd_init が DEV_ROOT/scripts/rw_light.py に os.stat で実行権限チェックを行うため、不在だと全テストの capsys に [WARN] が混入する）。patch_constants とは排他関係（同一テストで併用禁止 — 両方が DEV_ROOT をパッチするため）
