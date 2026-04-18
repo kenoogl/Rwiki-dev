@@ -6,7 +6,7 @@
 ## Current State
 - auditコマンドは未実装
 - 仕様案に4段階の監査サイクルが定義されている（micro/weekly/monthly/quarterly）
-- lint queryで一部の検証ロジックは存在するが、wiki全体の整合性チェックは未対応
+- 既存の検証コマンドは `rw lint`（raw/incoming/ の frontmatter 検証）と `rw lint query`（review/query/ のアーティファクト構造検証）であり、いずれも wiki/ の整合性チェックは対象外
 
 ## Desired Outcome
 - `rw audit micro` でingest後のマイクロチェック（リンク切れ・index更新漏れ・frontmatter崩れ）
