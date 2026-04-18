@@ -3947,18 +3947,16 @@ class TestCheckOrphanPages:
         """すべてのページが他ページからリンクされている場合は Finding なし"""
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=["a"])
-        all_pages_set = {"a.md", "b.md"}
         index_links = set()
-        result = rw_light.check_orphan_pages([page_a, page_b], all_pages_set, index_links)
+        result = rw_light.check_orphan_pages([page_a, page_b], index_links)
         assert result == []
 
     def test_orphan_detected_when_no_inbound_links(self):
         """他ページからリンクされず index_links にもないページは WARN Finding"""
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=[])
-        all_pages_set = {"a.md", "b.md"}
         index_links = set()
-        result = rw_light.check_orphan_pages([page_a, page_b], all_pages_set, index_links)
+        result = rw_light.check_orphan_pages([page_a, page_b], index_links)
         orphan_cats = [f for f in result if f.category == "orphan_page"]
         assert len(orphan_cats) == 2
         assert all(f.severity == "WARN" for f in orphan_cats)
@@ -3966,26 +3964,23 @@ class TestCheckOrphanPages:
     def test_index_linked_pages_are_not_orphan(self):
         """index_links に含まれるページは孤立と見なさない"""
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
-        all_pages_set = {"a.md"}
         index_links = {"a.md"}  # a.md は index にリンクあり
-        result = rw_light.check_orphan_pages([page_a], all_pages_set, index_links)
+        result = rw_light.check_orphan_pages([page_a], index_links)
         assert result == []
 
     def test_index_md_filename_excluded(self):
         """ファイル名が index.md のページは孤立チェックから除外される"""
         page_index = _make_wiki_page(path="subdir/index.md", filename="index.md", links=[])
-        all_pages_set = {"subdir/index.md"}
         index_links = set()
-        result = rw_light.check_orphan_pages([page_index], all_pages_set, index_links)
+        result = rw_light.check_orphan_pages([page_index], index_links)
         assert result == []
 
     def test_linked_page_not_orphan_even_if_not_in_index(self):
         """他ページからリンクされているページは index なしでも孤立でない"""
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=[])
-        all_pages_set = {"a.md", "b.md"}
         index_links = set()
-        result = rw_light.check_orphan_pages([page_a, page_b], all_pages_set, index_links)
+        result = rw_light.check_orphan_pages([page_a, page_b], index_links)
         # a.md はリンクを張っているが誰からもリンクされていない → orphan
         # b.md は a.md からリンクされている → 非 orphan
         orphan_pages = [f.page for f in result if f.category == "orphan_page"]
@@ -5364,3 +5359,210 @@ class TestPrintUsageAudit:
     rw_light.print_usage()
     out = capsys.readouterr().out
     assert "audit" in out
+
+
+# ---------------------------------------------------------------------------
+# cmd_audit_weekly のテスト（task 5.2）
+# ---------------------------------------------------------------------------
+
+def _setup_wiki_for_weekly(tmp_path, monkeypatch, num_files=2):
+  """cmd_audit_weekly テスト用の最小 Vault を構築する。"""
+  wiki_dir = tmp_path / "wiki"
+  wiki_dir.mkdir()
+  logs_dir = tmp_path / "logs"
+  logs_dir.mkdir()
+
+  for i in range(num_files):
+    page = wiki_dir / f"page-{i:02d}.md"
+    page.write_text(
+      f"---\ntitle: Page {i}\nsource: web\n---\n\n# Page {i}\n\nBody text.\n",
+      encoding="utf-8",
+    )
+
+  monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+  monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+  monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+  return wiki_dir, logs_dir
+
+
+class TestCmdAuditWeekly:
+  """cmd_audit_weekly() のテスト（Req 2.1-2.6）"""
+
+  def test_cmd_audit_weekly_exists(self):
+    """cmd_audit_weekly 関数が定義されていること"""
+    assert hasattr(rw_light, "cmd_audit_weekly")
+    assert callable(rw_light.cmd_audit_weekly)
+
+  def test_cmd_audit_weekly_returns_int(self, tmp_path, monkeypatch):
+    """cmd_audit_weekly が int を返すこと"""
+    _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    result = rw_light.cmd_audit_weekly()
+    assert isinstance(result, int)
+
+  def test_cmd_audit_weekly_no_wiki_returns_1(self, tmp_path, monkeypatch, capsys):
+    """wiki/ が存在しない場合 exit 1（Req 7.1）"""
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path / "logs"))
+    result = rw_light.cmd_audit_weekly()
+    assert result == 1
+
+  def test_cmd_audit_weekly_no_wiki_prints_error(self, tmp_path, monkeypatch, capsys):
+    """wiki/ が存在しない場合 [ERROR] を表示すること"""
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path / "logs"))
+    rw_light.cmd_audit_weekly()
+    out = capsys.readouterr().out
+    assert "[ERROR]" in out
+
+  def test_cmd_audit_weekly_scans_all_pages(self, tmp_path, monkeypatch):
+    """全ページをスキャンすること（Req 2.1, 2.2）"""
+    wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch, num_files=3)
+    rw_light.cmd_audit_weekly()
+    report_files = list(logs_dir.glob("audit-weekly-*.md"))
+    assert len(report_files) == 1
+    content = report_files[0].read_text(encoding="utf-8")
+    # 3ページをスキャン
+    assert "pages_scanned: 3" in content
+
+  def test_cmd_audit_weekly_generates_report(self, tmp_path, monkeypatch):
+    """logs/ にレポートが生成されること（Req 2.3）"""
+    wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    rw_light.cmd_audit_weekly()
+    report_files = list(logs_dir.glob("audit-weekly-*.md"))
+    assert len(report_files) == 1
+
+  def test_cmd_audit_weekly_report_in_logs_only(self, tmp_path, monkeypatch):
+    """レポートが logs/ にのみ出力され wiki/ には書き込まれないこと（Req 6.1）"""
+    wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    original_wiki_files = set(wiki_dir.rglob("*.md"))
+    rw_light.cmd_audit_weekly()
+    wiki_files_after = set(wiki_dir.rglob("*.md"))
+    assert original_wiki_files == wiki_files_after
+
+  def test_cmd_audit_weekly_no_error_returns_0(self, tmp_path, monkeypatch):
+    """ERROR なしの場合 exit 0（Req 2.4）"""
+    _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    result = rw_light.cmd_audit_weekly()
+    assert result == 0
+
+  def test_cmd_audit_weekly_with_error_returns_1(self, tmp_path, monkeypatch):
+    """ERROR finding がある場合 exit 1（Req 2.5）"""
+    wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    broken_page = wiki_dir / "broken.md"
+    broken_page.write_text(
+      "---\ntitle: Broken\nsource: web\n---\n\n# Broken\n\n[[nonexistent-page]] リンク。\n",
+      encoding="utf-8",
+    )
+    result = rw_light.cmd_audit_weekly()
+    assert result == 1
+
+  def test_cmd_audit_weekly_summary_displayed(self, tmp_path, monkeypatch, capsys):
+    """完了後にサマリーが表示されること（Req 2.3）"""
+    _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    rw_light.cmd_audit_weekly()
+    out = capsys.readouterr().out
+    assert "audit weekly:" in out
+
+  def test_cmd_audit_weekly_report_path_displayed(self, tmp_path, monkeypatch, capsys):
+    """レポートパスが標準出力に表示されること（Req 5.7）"""
+    _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    rw_light.cmd_audit_weekly()
+    out = capsys.readouterr().out
+    assert "audit-weekly-" in out
+
+  def test_cmd_audit_weekly_metrics_in_report(self, tmp_path, monkeypatch):
+    """レポートに weekly 必須メトリクスが含まれること（Req 5.4）"""
+    _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    rw_light.cmd_audit_weekly()
+    report_files = list((tmp_path / "logs").glob("audit-weekly-*.md"))
+    assert report_files
+    content = report_files[0].read_text(encoding="utf-8")
+    assert "pages_scanned" in content
+    assert "broken_links" in content
+    assert "orphan_pages" in content
+    assert "bidirectional_compliance" in content
+    assert "source_missing" in content
+    assert "naming_violations" in content
+    assert "total_findings" in content
+
+  def test_cmd_audit_weekly_includes_micro_checks(self, tmp_path, monkeypatch):
+    """weekly は micro チェック項目（broken_links, index_missing, frontmatter）も実行すること（Req 2.2）"""
+    wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    broken_page = wiki_dir / "broken.md"
+    broken_page.write_text(
+      "---\ntitle: Broken\nsource: web\n---\n\n# Broken\n\n[[nonexistent-page]] リンク。\n",
+      encoding="utf-8",
+    )
+    rw_light.cmd_audit_weekly()
+    report_files = list(logs_dir.glob("audit-weekly-*.md"))
+    content = report_files[0].read_text(encoding="utf-8")
+    # broken_links: 1 が metrics に含まれること
+    assert "broken_links: 1" in content
+
+  def test_cmd_audit_weekly_bidirectional_compliance_in_report(self, tmp_path, monkeypatch):
+    """bidirectional_compliance が % 形式でレポートに含まれること"""
+    _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    rw_light.cmd_audit_weekly()
+    report_files = list((tmp_path / "logs").glob("audit-weekly-*.md"))
+    content = report_files[0].read_text(encoding="utf-8")
+    assert "bidirectional_compliance:" in content
+    assert "%" in content
+
+  def test_cmd_audit_weekly_report_has_sections(self, tmp_path, monkeypatch):
+    """レポートに必須セクションが含まれること（Req 5.2）"""
+    _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    rw_light.cmd_audit_weekly()
+    report_files = list((tmp_path / "logs").glob("audit-weekly-*.md"))
+    content = report_files[0].read_text(encoding="utf-8")
+    assert "## Summary" in content
+    assert "## Findings" in content
+    assert "## Metrics" in content
+    assert "## Recommended Actions" in content
+
+  def test_cmd_audit_weekly_no_claude_called(self, tmp_path, monkeypatch):
+    """Claude CLI を呼び出さないこと（Req 2.6）"""
+    _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    claude_called = []
+
+    def mock_call_claude(prompt, timeout=None):
+      claude_called.append(prompt)
+      return "{}"
+
+    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+    rw_light.cmd_audit_weekly()
+    assert claude_called == []
+
+  def test_cmd_audit_weekly_read_error_pages_excluded_from_checks(self, tmp_path, monkeypatch):
+    """read_error のあるページが weekly チェックから除外されること（実装メモより）"""
+    wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
+    # load_wiki_pages が read_error 付きページを含むよう monkeypatch
+    normal_page = rw_light.WikiPage(
+      path="page-00.md",
+      filename="page-00.md",
+      raw_text="---\ntitle: Normal\nsource: web\n---\n# Normal\n",
+      frontmatter={"title": "Normal", "source": "web"},
+      body="# Normal\n",
+      links=[],
+      read_error="",
+    )
+    error_page = rw_light.WikiPage(
+      path="bad.md",
+      filename="bad.md",
+      raw_text="",
+      frontmatter={},
+      body="",
+      links=[],
+      read_error="UnicodeDecodeError: bad encoding",
+    )
+    monkeypatch.setattr(rw_light, "load_wiki_pages", lambda wiki_dir, target_files=None: [normal_page, error_page])
+    result = rw_light.cmd_audit_weekly()
+    # read_error ページが ERROR finding として報告され、exit 1 であること
+    assert result == 1
+    report_files = list(logs_dir.glob("audit-weekly-*.md"))
+    content = report_files[0].read_text(encoding="utf-8")
+    assert "bad.md" in content

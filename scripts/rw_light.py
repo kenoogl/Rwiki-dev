@@ -1486,7 +1486,6 @@ def run_micro_checks(
 
 def check_orphan_pages(
     pages: list["WikiPage"],
-    all_pages_set: set[str],
     index_links: set[str],
 ) -> list["Finding"]:
     """孤立ページ（他ページからリンクされていない。index.md リンクは除外）を検出する。
@@ -1497,8 +1496,6 @@ def check_orphan_pages(
     除外: ファイル名が "index.md" のページは孤立チェックから除外する。
     Severity: WARN
     """
-    LINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
-
     # 被リンク集合を構築（basename で正規化）
     inbound_basenames: set[str] = set()
     for page in pages:
@@ -1679,7 +1676,7 @@ def run_weekly_checks(
     """
     findings: list[Finding] = []
 
-    findings.extend(check_orphan_pages(pages, all_pages_set, index_links))
+    findings.extend(check_orphan_pages(pages, index_links))
 
     bidir_findings, bidir_stats = check_bidirectional_links(pages, all_pages_set)
     findings.extend(bidir_findings)
@@ -2180,6 +2177,99 @@ def cmd_audit_micro() -> int:
 
 
 # audit: commands — weekly
+
+
+def cmd_audit_weekly() -> int:
+    """weekly 監査を実行する。グローバル定数 ROOT, WIKI, INDEX_MD を使用。
+
+    Returns:
+        終了コード（0: ERROR なし, 1: ERROR あり）
+    """
+    # 1. wiki/ の事前検証
+    if not validate_wiki_dir():
+        return 1
+
+    # 2. 全ページ読み込み
+    pages = load_wiki_pages(WIKI, None)
+
+    # 3. all_pages_set 構築
+    all_md_files = list_md_files(WIKI)
+    all_pages_set: set[str] = set()
+    for f in all_md_files:
+        rel = os.path.relpath(f, WIKI)
+        all_pages_set.add(rel)
+
+    # 4. index_content 読み込み（INDEX_MD 不在時は None）
+    index_content: str | None = None
+    if os.path.isfile(INDEX_MD):
+        index_content = read_text(INDEX_MD)
+
+    # 5. index_links 構築（index_content から [[link]] regex で抽出、basename のみ）
+    index_links: set[str] = set()
+    if index_content:
+        raw_links = re.findall(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]", index_content)
+        for link in raw_links:
+            basename = os.path.basename(link)
+            if not basename.endswith(".md"):
+                basename = basename + ".md"
+            index_links.add(basename)
+
+    # 6. page_policy=None を渡す（現行 page_policy.md に必須セクション定義なし → no-op）
+    page_policy = None
+
+    # 7. micro チェック実行（全ページ対象）
+    micro_findings = run_micro_checks(pages, all_pages_set, index_content)
+
+    # 8. ok_pages 構築（read_error のあるページを weekly checks から除外）
+    ok_pages = [p for p in pages if not p.read_error]
+
+    # 9. weekly チェック実行
+    weekly_findings, bidir_stats = run_weekly_checks(
+        ok_pages, all_pages_set, index_content, index_links, page_policy
+    )
+
+    # 10. findings 統合（micro + weekly）
+    findings = micro_findings + weekly_findings
+
+    # 11. bidirectional_compliance 算出
+    total_pairs = bidir_stats.get("total_pairs", 0)
+    bidir_pairs = bidir_stats.get("bidirectional_pairs", 0)
+    if total_pairs == 0:
+        bidirectional_compliance = 100.0
+    else:
+        bidirectional_compliance = bidir_pairs / total_pairs * 100
+
+    # 12. metrics dict 構築
+    broken_links_count = sum(1 for f in findings if f.category == "broken_link")
+    index_missing_count = sum(
+        1 for f in findings if f.category == "index_missing" and f.page != ""
+    )
+    frontmatter_errors_count = sum(1 for f in findings if f.category == "frontmatter_error")
+    orphan_pages_count = sum(1 for f in findings if f.category == "orphan_page")
+    source_missing_count = sum(1 for f in findings if f.category == "source_missing")
+    naming_violations_count = sum(1 for f in findings if f.category == "naming_violation")
+
+    metrics = {
+        "pages_scanned": len(pages),
+        "broken_links": broken_links_count,
+        "index_missing": index_missing_count,
+        "frontmatter_errors": frontmatter_errors_count,
+        "orphan_pages": orphan_pages_count,
+        "bidirectional_compliance": f"{bidirectional_compliance:.1f}%",
+        "source_missing": source_missing_count,
+        "naming_violations": naming_violations_count,
+        "total_findings": len(findings),
+    }
+
+    # 13. レポート生成
+    report_path = generate_audit_report("weekly", findings, metrics)
+
+    # 14. サマリー表示
+    print_audit_summary("weekly", findings, report_path)
+
+    # 15. ERROR の finding があれば exit 1、なければ exit 0（Req 2.4 / 2.5）
+    has_error = any(f.severity == "ERROR" for f in findings)
+    return 1 if has_error else 0
 
 
 # audit: commands — monthly/quarterly

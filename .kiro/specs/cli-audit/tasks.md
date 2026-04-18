@@ -94,7 +94,7 @@
   - _Requirements: 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 5.5_
   - _Depends: 2.1, 4.1_
 
-- [ ] 5.2 (P) cmd_audit_weekly
+- [x] 5.2 (P) cmd_audit_weekly
   - cmd_audit_weekly(): validate_wiki_dir → load_wiki_pages(全ページ) → all_pages_set + index_content + index_links 構築 → page_policy は None を渡す（現行 page_policy.md に必須セクション定義がないため no-op）→ run_micro_checks（list[Finding]）+ run_weekly_checks（tuple[list[Finding], dict]）→ findings 統合 → run_weekly_checks の返却 stats から bidirectional_compliance を算出し metrics dict を構築（pages_scanned, broken_links, index_missing, frontmatter_errors, orphan_pages, bidirectional_compliance, source_coverage, naming_violations, total_findings）→ generate_audit_report → print_audit_summary → exit 0 or 1
   - `rw audit weekly` が全ページをスキャンし、micro + weekly チェックの結果を統合したレポートを生成すること
   - _Requirements: 2.3, 2.4, 2.5, 2.6_
