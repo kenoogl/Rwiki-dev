@@ -1286,6 +1286,201 @@ class WikiPage(NamedTuple):
 # audit: static checks — micro
 
 
+def _resolve_link(link_name: str, all_pages_set: set[str]) -> bool:
+    """リンク名を all_pages_set と照合して解決可能かを返す。
+
+    リンク解決ルール:
+    1. link_name に .md がなければ付加する
+    2. all_pages_set 内でファイル名部分が一致するエントリを検索
+    3. 1件以上一致 → 解決成功（True）、0件 → False
+    """
+    # 拡張子がなければ付加
+    if not link_name.endswith(".md"):
+        target = link_name + ".md"
+    else:
+        target = link_name
+
+    # ファイル名部分（basename）で一致検索
+    target_basename = os.path.basename(target)
+    for entry in all_pages_set:
+        if os.path.basename(entry) == target_basename:
+            return True
+    return False
+
+
+def check_broken_links(pages: list["WikiPage"], all_pages_set: set[str]) -> list["Finding"]:
+    """wiki 内 [[link]] の参照先ページ不在を検出する。Severity: ERROR
+
+    pages 内の各ページの links を all_pages_set と照合する。
+    リンク解決はリンク解決ルールに従う。
+    """
+    findings: list[Finding] = []
+    for page in pages:
+        for link_name in page.links:
+            if not _resolve_link(link_name, all_pages_set):
+                findings.append(Finding(
+                    severity="ERROR",
+                    category="broken_link",
+                    page=page.path,
+                    message=f"[[{link_name}]] のリンク先が存在しない",
+                    sub_severity="",
+                    marker="",
+                ))
+    return findings
+
+
+def check_index_registration(pages: list["WikiPage"], index_content: "str | None") -> list["Finding"]:
+    """Vault ルート直下の index.md に未登録のページを検出する。
+    index.md 不在時はチェックをスキップし WARNING を Finding として返す（Req 7.7）。
+
+    Severity: WARN
+    """
+    if index_content is None:
+        return [Finding(
+            severity="WARN",
+            category="index_missing",
+            page="",
+            message="index.md が存在しないため index 登録チェックをスキップします",
+            sub_severity="",
+            marker="",
+        )]
+
+    # index.md から [[link]] を抽出
+    LINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
+    raw_index_links = LINK_RE.findall(index_content)
+
+    # index_links を解決可能なファイル名セットに変換（basename）
+    index_basenames: set[str] = set()
+    for link_name in raw_index_links:
+        if not link_name.endswith(".md"):
+            link_name = link_name + ".md"
+        index_basenames.add(os.path.basename(link_name))
+
+    findings: list[Finding] = []
+    for page in pages:
+        page_basename = os.path.basename(page.path)
+        if page_basename not in index_basenames:
+            findings.append(Finding(
+                severity="WARN",
+                category="index_missing",
+                page=page.path,
+                message=f"index.md に未登録",
+                sub_severity="",
+                marker="",
+            ))
+    return findings
+
+
+def check_frontmatter(pages: list["WikiPage"]) -> list["Finding"]:
+    """frontmatter の構造的問題を検出する。
+
+    検出対象:
+    1. `---` ブロックが存在するが中身が完全に空 → ERROR
+    2. `---` ブロック内に `:` を含まない行が存在する → ERROR
+    3. `---` の開始はあるが閉じがない → ERROR
+    4. title フィールドの欠落 → WARN
+
+    frontmatter なし時: 1-3 はスキップ、4 のみ適用。
+    """
+    findings: list[Finding] = []
+
+    for page in pages:
+        raw = page.raw_text
+
+        if has_frontmatter(raw):
+            # frontmatter ブロックの構造解析
+            parts = raw.split("---", 2)
+            if len(parts) < 3:
+                # 閉じ --- がない（未閉じ frontmatter）
+                findings.append(Finding(
+                    severity="ERROR",
+                    category="frontmatter_error",
+                    page=page.path,
+                    message="frontmatter の閉じ `---` がない（未閉じ frontmatter）",
+                    sub_severity="",
+                    marker="",
+                ))
+            else:
+                raw_meta = parts[1].strip()
+                if not raw_meta:
+                    # 空ブロック
+                    findings.append(Finding(
+                        severity="ERROR",
+                        category="frontmatter_error",
+                        page=page.path,
+                        message="frontmatter ブロックが空",
+                        sub_severity="",
+                        marker="",
+                    ))
+                else:
+                    # 各行を検査: `:` を含まない行は不正
+                    for line in raw_meta.splitlines():
+                        line = line.strip()
+                        if line and ":" not in line:
+                            findings.append(Finding(
+                                severity="ERROR",
+                                category="frontmatter_error",
+                                page=page.path,
+                                message=f"frontmatter に不正な行がある: `{line}`",
+                                sub_severity="",
+                                marker="",
+                            ))
+                            break
+
+        # title 欠落チェック（frontmatter の有無に関わらず適用）
+        if not page.frontmatter.get("title"):
+            findings.append(Finding(
+                severity="WARN",
+                category="frontmatter_warn",
+                page=page.path,
+                message="title フィールドが欠落",
+                sub_severity="",
+                marker="",
+            ))
+
+    return findings
+
+
+def run_micro_checks(
+    pages: list["WikiPage"],
+    all_pages_set: set[str],
+    index_content: "str | None",
+) -> list["Finding"]:
+    """micro チェック項目（broken_links, index_registration, frontmatter）を実行する。
+
+    read_error が設定された WikiPage は ERROR Finding として記録し、
+    個別チェックからは除外する。
+    """
+    findings: list[Finding] = []
+
+    # read_error のあるページを分離
+    ok_pages: list[WikiPage] = []
+    for page in pages:
+        if page.read_error:
+            findings.append(Finding(
+                severity="ERROR",
+                category="read_error",
+                page=page.path,
+                message=f"ファイル読み込みエラー: {page.read_error}",
+                sub_severity="",
+                marker="",
+            ))
+        else:
+            ok_pages.append(page)
+
+    if not ok_pages:
+        # ok_pages が空の場合、index チェックのみ（None なら WARNING）
+        if index_content is None:
+            findings.extend(check_index_registration([], index_content))
+        return findings
+
+    findings.extend(check_broken_links(ok_pages, all_pages_set))
+    findings.extend(check_index_registration(ok_pages, index_content))
+    findings.extend(check_frontmatter(ok_pages))
+
+    return findings
+
+
 # audit: static checks — weekly
 
 

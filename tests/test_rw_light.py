@@ -3443,3 +3443,492 @@ class TestReadAllWikiContent:
         assert "<!-- file: wiki/my-page.md -->" in result
         # ページコンテンツが含まれること
         assert "Content." in result
+
+
+# ---------------------------------------------------------------------------
+# Task 2.1: check_broken_links / check_index_registration / check_frontmatter
+#           / run_micro_checks
+# ---------------------------------------------------------------------------
+
+
+def _make_wiki_page(
+    path="page.md",
+    filename="page.md",
+    raw_text="---\ntitle: Test\n---\n\nBody.\n",
+    frontmatter=None,
+    body="Body.\n",
+    links=None,
+    read_error="",
+) -> "rw_light.WikiPage":
+    """テスト用 WikiPage を生成するヘルパー。"""
+    if frontmatter is None:
+        frontmatter = {"title": "Test"}
+    if links is None:
+        links = []
+    return rw_light.WikiPage(
+        path=path,
+        filename=filename,
+        raw_text=raw_text,
+        frontmatter=frontmatter,
+        body=body,
+        links=links,
+        read_error=read_error,
+    )
+
+
+class TestCheckBrokenLinks:
+    """check_broken_links() のユニットテスト"""
+
+    def test_no_findings_when_no_links(self):
+        """リンクなしのページは Finding なしであること"""
+        page = _make_wiki_page(links=[])
+        all_pages_set = {"page.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert result == []
+
+    def test_no_findings_when_link_resolves(self):
+        """リンク先が all_pages_set に存在する場合は Finding なしであること"""
+        page = _make_wiki_page(links=["target-page"])
+        all_pages_set = {"page.md", "target-page.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert result == []
+
+    def test_finding_when_link_not_found(self):
+        """リンク先が all_pages_set に存在しない場合 ERROR Finding を返すこと"""
+        page = _make_wiki_page(path="page.md", links=["nonexistent"])
+        all_pages_set = {"page.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert len(result) == 1
+        assert result[0].severity == "ERROR"
+        assert result[0].category == "broken_link"
+        assert result[0].page == "page.md"
+        assert "nonexistent" in result[0].message
+
+    def test_finding_severity_is_error(self):
+        """broken_link の severity が ERROR であること"""
+        page = _make_wiki_page(links=["missing-page"])
+        all_pages_set = {"page.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert all(f.severity == "ERROR" for f in result)
+
+    def test_link_resolves_with_md_extension_appended(self):
+        """拡張子なしリンク名に .md を付加して解決されること"""
+        # [[target]] → target.md として all_pages_set を検索
+        page = _make_wiki_page(links=["target"])
+        all_pages_set = {"target.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert result == []
+
+    def test_link_resolves_by_filename_match_in_subdirectory(self):
+        """サブディレクトリをまたいでファイル名部分マッチで解決されること"""
+        page = _make_wiki_page(links=["my-concept"])
+        all_pages_set = {"concepts/my-concept.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert result == []
+
+    def test_multiple_broken_links_all_reported(self):
+        """複数のリンク切れがすべて報告されること"""
+        page = _make_wiki_page(links=["missing-a", "missing-b"])
+        all_pages_set = {"page.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert len(result) == 2
+
+    def test_link_with_md_extension_in_all_pages_set(self):
+        """リンク名が .md 付きで all_pages_set に存在する場合も解決されること"""
+        page = _make_wiki_page(links=["target.md"])
+        all_pages_set = {"target.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert result == []
+
+    def test_multiple_pages_checked(self):
+        """複数ページのリンクがすべてチェックされること"""
+        page1 = _make_wiki_page(path="a.md", filename="a.md", links=["missing"])
+        page2 = _make_wiki_page(path="b.md", filename="b.md", links=["also-missing"])
+        all_pages_set = {"a.md", "b.md"}
+        result = rw_light.check_broken_links([page1, page2], all_pages_set)
+        assert len(result) == 2
+        pages_in_findings = {f.page for f in result}
+        assert "a.md" in pages_in_findings
+        assert "b.md" in pages_in_findings
+
+    def test_finding_fields_are_strings(self):
+        """Finding の全フィールドが文字列であること"""
+        page = _make_wiki_page(links=["nonexistent"])
+        all_pages_set = {"page.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert len(result) == 1
+        f = result[0]
+        assert isinstance(f.severity, str)
+        assert isinstance(f.category, str)
+        assert isinstance(f.page, str)
+        assert isinstance(f.message, str)
+        assert isinstance(f.sub_severity, str)
+        assert isinstance(f.marker, str)
+
+    def test_sub_severity_is_empty(self):
+        """micro チェックでは sub_severity が空文字列であること"""
+        page = _make_wiki_page(links=["missing"])
+        all_pages_set = {"page.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert result[0].sub_severity == ""
+
+    def test_marker_is_empty(self):
+        """micro チェックでは marker が空文字列であること"""
+        page = _make_wiki_page(links=["missing"])
+        all_pages_set = {"page.md"}
+        result = rw_light.check_broken_links([page], all_pages_set)
+        assert result[0].marker == ""
+
+    def test_does_not_mutate_page_links(self):
+        """check_broken_links が WikiPage.links を変更しないこと"""
+        original_links = ["missing", "another-missing"]
+        page = _make_wiki_page(links=list(original_links))
+        all_pages_set = {"page.md"}
+        rw_light.check_broken_links([page], all_pages_set)
+        assert page.links == original_links
+
+
+class TestCheckIndexRegistration:
+    """check_index_registration() のユニットテスト"""
+
+    def _make_index_content(self, page_names: list[str]) -> str:
+        """index.md のコンテンツを生成するヘルパー。"""
+        lines = ["# Index\n"]
+        for name in page_names:
+            lines.append(f"- [[{name}]]")
+        return "\n".join(lines)
+
+    def test_no_findings_when_all_registered(self):
+        """全ページが index.md に登録済みの場合 Finding なしであること"""
+        page = _make_wiki_page(path="my-page.md", filename="my-page.md")
+        index_content = self._make_index_content(["my-page"])
+        result = rw_light.check_index_registration([page], index_content)
+        assert result == []
+
+    def test_finding_when_page_not_in_index(self):
+        """index.md に未登録のページで WARN Finding を返すこと"""
+        page = _make_wiki_page(path="unregistered.md", filename="unregistered.md")
+        index_content = self._make_index_content([])  # 空の index
+        result = rw_light.check_index_registration([page], index_content)
+        assert len(result) == 1
+        assert result[0].severity == "WARN"
+        assert result[0].category == "index_missing"
+        assert result[0].page == "unregistered.md"
+
+    def test_finding_severity_is_warn(self):
+        """index_missing の severity が WARN であること"""
+        page = _make_wiki_page(path="not-in-index.md", filename="not-in-index.md")
+        index_content = self._make_index_content([])
+        result = rw_light.check_index_registration([page], index_content)
+        assert all(f.severity == "WARN" for f in result)
+
+    def test_returns_warning_finding_when_index_content_is_none(self):
+        """index_content が None（index.md 不在）の場合 WARNING Finding を返すこと（Req 7.7）"""
+        page = _make_wiki_page()
+        result = rw_light.check_index_registration([page], None)
+        # チェックをスキップし WARNING を返す
+        assert len(result) == 1
+        assert result[0].severity == "WARN"
+
+    def test_returns_no_page_findings_when_index_missing(self):
+        """index.md 不在時はページ個別の未登録 Finding を返さないこと"""
+        page1 = _make_wiki_page(path="p1.md", filename="p1.md")
+        page2 = _make_wiki_page(path="p2.md", filename="p2.md")
+        result = rw_light.check_index_registration([page1, page2], None)
+        # index.md 不在の WARNING 1件のみ（ページ別 Finding は含まない）
+        assert len(result) == 1
+
+    def test_index_link_resolved_by_filename_match(self):
+        """index.md の [[link]] がファイル名部分マッチで解決されること"""
+        page = _make_wiki_page(path="concepts/my-concept.md", filename="my-concept.md")
+        # index.md には "my-concept" として登録
+        index_content = self._make_index_content(["my-concept"])
+        result = rw_light.check_index_registration([page], index_content)
+        assert result == []
+
+    def test_multiple_unregistered_pages_all_reported(self):
+        """複数の未登録ページがすべて報告されること"""
+        page1 = _make_wiki_page(path="p1.md", filename="p1.md")
+        page2 = _make_wiki_page(path="p2.md", filename="p2.md")
+        index_content = self._make_index_content([])
+        result = rw_light.check_index_registration([page1, page2], index_content)
+        assert len(result) == 2
+
+    def test_partially_registered_reports_only_unregistered(self):
+        """部分的に登録されている場合、未登録のページのみが報告されること"""
+        page1 = _make_wiki_page(path="registered.md", filename="registered.md")
+        page2 = _make_wiki_page(path="unregistered.md", filename="unregistered.md")
+        index_content = self._make_index_content(["registered"])
+        result = rw_light.check_index_registration([page1, page2], index_content)
+        assert len(result) == 1
+        assert result[0].page == "unregistered.md"
+
+    def test_empty_page_list_no_findings(self):
+        """ページリストが空の場合 Finding なしであること"""
+        index_content = self._make_index_content(["some-page"])
+        result = rw_light.check_index_registration([], index_content)
+        assert result == []
+
+
+class TestCheckFrontmatter:
+    """check_frontmatter() のユニットテスト"""
+
+    def test_no_findings_for_valid_frontmatter(self):
+        """正常な frontmatter のページは Finding なしであること"""
+        raw = "---\ntitle: My Page\nsource: web\n---\n\nBody.\n"
+        page = _make_wiki_page(
+            raw_text=raw,
+            frontmatter={"title": "My Page", "source": "web"},
+            body="Body.\n",
+        )
+        result = rw_light.check_frontmatter([page])
+        assert result == []
+
+    def test_error_for_empty_frontmatter_block(self):
+        """frontmatter ブロックが空の場合 ERROR Finding を返すこと"""
+        raw = "---\n---\n\nBody.\n"
+        page = _make_wiki_page(
+            raw_text=raw,
+            frontmatter={},
+            body="Body.\n",
+        )
+        result = rw_light.check_frontmatter([page])
+        errors = [f for f in result if f.severity == "ERROR"]
+        assert len(errors) >= 1
+
+    def test_error_for_invalid_line_in_frontmatter(self):
+        """frontmatter ブロック内に `:` を含まない行がある場合 ERROR Finding を返すこと"""
+        raw = "---\ntitle: My Page\ninvalid line without colon\n---\n\nBody.\n"
+        page = _make_wiki_page(
+            raw_text=raw,
+            frontmatter={"title": "My Page"},
+            body="Body.\n",
+        )
+        result = rw_light.check_frontmatter([page])
+        errors = [f for f in result if f.severity == "ERROR"]
+        assert len(errors) >= 1
+
+    def test_error_for_unclosed_frontmatter(self):
+        """frontmatter の閉じ `---` がない場合 ERROR Finding を返すこと"""
+        raw = "---\ntitle: My Page\n\nBody content without closing delimiter.\n"
+        page = _make_wiki_page(
+            raw_text=raw,
+            frontmatter={},
+            body=raw,  # parse_frontmatter は {} を返す
+        )
+        result = rw_light.check_frontmatter([page])
+        errors = [f for f in result if f.severity == "ERROR"]
+        assert len(errors) >= 1
+
+    def test_warn_for_missing_title_with_frontmatter(self):
+        """frontmatter はあるが title が欠落している場合 WARN Finding を返すこと"""
+        raw = "---\nsource: web\n---\n\nBody.\n"
+        page = _make_wiki_page(
+            raw_text=raw,
+            frontmatter={"source": "web"},
+            body="Body.\n",
+        )
+        result = rw_light.check_frontmatter([page])
+        warns = [f for f in result if f.severity == "WARN"]
+        assert len(warns) >= 1
+
+    def test_warn_for_missing_title_without_frontmatter(self):
+        """frontmatter 自体が存在しないページも title 欠落として WARN を返すこと"""
+        raw = "# Page\n\nBody without frontmatter.\n"
+        page = _make_wiki_page(
+            raw_text=raw,
+            frontmatter={},
+            body=raw,
+        )
+        result = rw_light.check_frontmatter([page])
+        warns = [f for f in result if f.severity == "WARN"]
+        assert len(warns) >= 1
+
+    def test_no_error_when_no_frontmatter(self):
+        """frontmatter がない場合は ERROR Finding を返さないこと"""
+        raw = "# Page\n\nBody without frontmatter.\n"
+        page = _make_wiki_page(
+            raw_text=raw,
+            frontmatter={},
+            body=raw,
+        )
+        result = rw_light.check_frontmatter([page])
+        errors = [f for f in result if f.severity == "ERROR"]
+        assert errors == []
+
+    def test_finding_page_is_correct(self):
+        """Finding.page が WikiPage.path と一致すること"""
+        raw = "---\nsource: web\n---\n\nBody.\n"
+        page = _make_wiki_page(
+            path="concepts/my-page.md",
+            filename="my-page.md",
+            raw_text=raw,
+            frontmatter={"source": "web"},
+            body="Body.\n",
+        )
+        result = rw_light.check_frontmatter([page])
+        assert all(f.page == "concepts/my-page.md" for f in result)
+
+    def test_error_finding_category(self):
+        """ERROR Finding の category が frontmatter_error であること"""
+        raw = "---\n---\n\nBody.\n"
+        page = _make_wiki_page(raw_text=raw, frontmatter={}, body="Body.\n")
+        result = rw_light.check_frontmatter([page])
+        errors = [f for f in result if f.severity == "ERROR"]
+        assert all(f.category == "frontmatter_error" for f in errors)
+
+    def test_warn_finding_category(self):
+        """WARN Finding の category が frontmatter_warn であること"""
+        raw = "---\nsource: web\n---\n\nBody.\n"
+        page = _make_wiki_page(
+            raw_text=raw,
+            frontmatter={"source": "web"},
+            body="Body.\n",
+        )
+        result = rw_light.check_frontmatter([page])
+        warns = [f for f in result if f.severity == "WARN"]
+        assert all(f.category == "frontmatter_warn" for f in warns)
+
+    def test_does_not_mutate_page_frontmatter(self):
+        """check_frontmatter が WikiPage.frontmatter を変更しないこと"""
+        original_fm = {"title": "Test", "source": "web"}
+        raw = "---\ntitle: Test\nsource: web\n---\n\nBody.\n"
+        page = _make_wiki_page(raw_text=raw, frontmatter=dict(original_fm), body="Body.\n")
+        rw_light.check_frontmatter([page])
+        assert page.frontmatter == original_fm
+
+
+class TestRunMicroChecks:
+    """run_micro_checks() のユニットテスト"""
+
+    def _make_wiki_setup(self, tmp_path, monkeypatch):
+        """テスト用 wiki と index.md を作成する。"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        return wiki_dir
+
+    def test_returns_list_of_findings(self, tmp_path, monkeypatch):
+        """run_micro_checks は Finding のリストを返すこと"""
+        self._make_wiki_setup(tmp_path, monkeypatch)
+        page = _make_wiki_page(
+            raw_text="---\ntitle: Test\n---\n\nBody.\n",
+            frontmatter={"title": "Test"},
+            body="Body.\n",
+            links=[],
+        )
+        all_pages_set = {"page.md"}
+        index_content = "# Index\n\n- [[page]]\n"
+        result = rw_light.run_micro_checks([page], all_pages_set, index_content)
+        assert isinstance(result, list)
+        assert all(isinstance(f, rw_light.Finding) for f in result)
+
+    def test_broken_link_returns_error_finding(self, tmp_path, monkeypatch):
+        """broken link があるページで ERROR Finding が返されること"""
+        self._make_wiki_setup(tmp_path, monkeypatch)
+        page = _make_wiki_page(
+            path="page.md",
+            filename="page.md",
+            raw_text="---\ntitle: Test\n---\n\nBody [[nonexistent]] text.\n",
+            frontmatter={"title": "Test"},
+            body="Body [[nonexistent]] text.\n",
+            links=["nonexistent"],
+        )
+        all_pages_set = {"page.md"}
+        result = rw_light.run_micro_checks([page], all_pages_set, "# Index\n")
+        errors = [f for f in result if f.severity == "ERROR"]
+        assert any(f.category == "broken_link" for f in errors)
+
+    def test_unregistered_page_returns_warn_finding(self, tmp_path, monkeypatch):
+        """index.md に未登録のページで WARN Finding が返されること"""
+        self._make_wiki_setup(tmp_path, monkeypatch)
+        page = _make_wiki_page(
+            path="unregistered.md",
+            filename="unregistered.md",
+            raw_text="---\ntitle: Test\n---\n\nBody.\n",
+            frontmatter={"title": "Test"},
+            body="Body.\n",
+            links=[],
+        )
+        all_pages_set = {"unregistered.md"}
+        result = rw_light.run_micro_checks([page], all_pages_set, "# Index\n")
+        warns = [f for f in result if f.severity == "WARN"]
+        assert any(f.category == "index_missing" for f in warns)
+
+    def test_read_error_page_excluded_from_checks(self, tmp_path, monkeypatch):
+        """read_error が設定された WikiPage は個別チェックから除外されること"""
+        self._make_wiki_setup(tmp_path, monkeypatch)
+        bad_page = rw_light.WikiPage(
+            path="broken.md",
+            filename="broken.md",
+            raw_text="",
+            frontmatter={},
+            body="",
+            links=[],
+            read_error="UnicodeDecodeError: 'utf-8' codec ...",
+        )
+        all_pages_set = {"broken.md"}
+        result = rw_light.run_micro_checks([bad_page], all_pages_set, "# Index\n")
+        # read_error ページは ERROR Finding として記録される
+        error_findings = [f for f in result if f.severity == "ERROR"]
+        assert any(f.page == "broken.md" for f in error_findings)
+
+    def test_read_error_page_not_included_in_link_check(self, tmp_path, monkeypatch):
+        """read_error のページはリンクチェック対象に含まれないこと"""
+        self._make_wiki_setup(tmp_path, monkeypatch)
+        bad_page = rw_light.WikiPage(
+            path="broken.md",
+            filename="broken.md",
+            raw_text="",
+            frontmatter={},
+            body="",
+            links=[],
+            read_error="read failed",
+        )
+        all_pages_set = {"broken.md"}
+        result = rw_light.run_micro_checks([bad_page], all_pages_set, "# Index\n")
+        # broken_link カテゴリの Finding は broken.md に対してないこと
+        link_check_findings = [f for f in result if f.category == "broken_link" and f.page == "broken.md"]
+        assert len(link_check_findings) == 0
+
+    def test_none_index_content_passes_through_to_index_check(self, tmp_path, monkeypatch):
+        """index_content が None の場合、index 不在の WARNING が含まれること"""
+        self._make_wiki_setup(tmp_path, monkeypatch)
+        page = _make_wiki_page(
+            raw_text="---\ntitle: Test\n---\n\nBody.\n",
+            frontmatter={"title": "Test"},
+            body="Body.\n",
+            links=[],
+        )
+        all_pages_set = {"page.md"}
+        result = rw_light.run_micro_checks([page], all_pages_set, None)
+        warns = [f for f in result if f.severity == "WARN"]
+        # index.md 不在の WARNING が含まれること
+        assert len(warns) >= 1
+
+    def test_all_three_checks_run(self, tmp_path, monkeypatch):
+        """3 つのチェック（broken_link, index_registration, frontmatter）がすべて実行されること"""
+        self._make_wiki_setup(tmp_path, monkeypatch)
+        # broken link + index 未登録 + title なし の複合ページ
+        page = _make_wiki_page(
+            path="multi-issue.md",
+            filename="multi-issue.md",
+            raw_text="---\nsource: web\n---\n\nBody [[missing]] text.\n",
+            frontmatter={"source": "web"},  # title なし
+            body="Body [[missing]] text.\n",
+            links=["missing"],
+        )
+        all_pages_set = {"multi-issue.md"}
+        result = rw_light.run_micro_checks([page], all_pages_set, "# Index\n")
+        categories = {f.category for f in result}
+        assert "broken_link" in categories
+        assert "index_missing" in categories
+        assert "frontmatter_warn" in categories
+
+    def test_empty_pages_no_findings(self, tmp_path, monkeypatch):
+        """ページリストが空の場合は Finding なし（index 不在の場合を除く）"""
+        self._make_wiki_setup(tmp_path, monkeypatch)
+        result = rw_light.run_micro_checks([], set(), "# Index\n")
+        assert result == []

@@ -39,7 +39,7 @@
   - _Boundary: DataLoading_
 
 - [ ] 2. Core — 静的チェックエンジン
-- [ ] 2.1 (P) micro チェック関数群 + run_micro_checks
+- [x] 2.1 (P) micro チェック関数群 + run_micro_checks
   - check_broken_links: WikiPage.links を all_pages_set と照合。リンク解決ルール（ファイル名部分マッチ、.md 付加）を実装。Severity: ERROR
   - check_index_registration: ROOT/index.md（INDEX_MD）から [[link]] を抽出し、ページの登録状況を検証。index.md 不在時はチェックスキップ + WARNING の Finding を返却。Severity: WARN
   - check_frontmatter: raw_text を直接検査（空ブロック→ERROR、不正行→ERROR、未閉じ→ERROR）。parse_frontmatter() 結果で title 欠落→WARN。frontmatter なし時は title 欠落のみ
