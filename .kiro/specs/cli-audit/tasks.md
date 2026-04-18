@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Foundation — データ構造・基盤ユーティリティ
+- [x] 1. Foundation — データ構造・基盤ユーティリティ
 - [x] 1.1 Finding / WikiPage NamedTuple 定義 + call_claude() timeout 拡張 + audit セクションヘッダー配置
   - `from typing import Any, NamedTuple` に変更
   - Finding NamedTuple を定義（severity, category, page, message, sub_severity, marker の 6 フィールド、全て str）
@@ -38,7 +38,7 @@
   - _Requirements: 3.1, 4.1_
   - _Boundary: DataLoading_
 
-- [ ] 2. Core — 静的チェックエンジン
+- [x] 2. Core — 静的チェックエンジン
 - [x] 2.1 (P) micro チェック関数群 + run_micro_checks
   - check_broken_links: WikiPage.links を all_pages_set と照合。リンク解決ルール（ファイル名部分マッチ、.md 付加）を実装。Severity: ERROR
   - check_index_registration: ROOT/index.md（INDEX_MD）から [[link]] を抽出し、ページの登録状況を検証。index.md 不在時はチェックスキップ + WARNING の Finding を返却。Severity: WARN
@@ -60,7 +60,7 @@
   - _Requirements: 2.1, 2.2_
   - _Boundary: StaticCheckEngine — weekly_
 
-- [ ] 3. Core — LLM 監査エンジン
+- [x] 3. Core — LLM 監査エンジン
 - [x] 3.1 (P) build_audit_prompt + map_severity
   - build_audit_prompt(tier, task_prompts, wiki_content): ティア指示テンプレート（排他的限定 + Markdown→JSON オーバーライド + Execution Declaration 抑制）+ wiki コンテンツ + JSON スキーマサンプル（末尾配置）
   - map_severity(claude_severity): CRITICAL→("ERROR","CRITICAL"), HIGH→("ERROR","HIGH"), MEDIUM→("WARN",""), LOW→("INFO","")
@@ -76,7 +76,7 @@
   - _Requirements: 7.3_
   - _Boundary: LLMAuditEngine_
 
-- [ ] 4. Core — レポートエンジン
+- [x] 4. Core — レポートエンジン
 - [x] 4.1 (P) generate_audit_report + print_audit_summary
   - generate_audit_report(tier, findings, metrics, recommended_actions=None, timestamp=None): Markdown レポートを logs/ に write_text() で出力。ファイル名 `audit-{tier}-{timestamp}.md`。セクション: Summary / Findings（Structural/Semantic/Strategic）/ Metrics / Recommended Actions。recommended_actions=None の場合（micro/weekly）は findings の ERROR/WARN 項目から推奨アクションを自動生成する（関数内部で処理。呼び出し元は None を渡すだけ）。自動生成ルール: category ごとに findings を集約し、「{category} が {N} 件検出されました。対象ページを確認してください」形式で生成する。monthly/quarterly は Claude が返す recommended_actions をそのまま渡す
   - print_audit_summary(tier, findings, report_path): `[{severity}] {page}: {message}` 形式で各 Finding を表示。page="" 時はページ省略。サマリー行 `audit {tier}: ERROR N, WARN N, INFO N — PASS/FAIL`。最終行にレポートパス
@@ -84,7 +84,7 @@
   - _Requirements: 5.1, 5.2, 5.4, 5.6, 5.7, 7.4_
   - _Boundary: ReportEngine_
 
-- [ ] 5. Integration — コマンドハンドラ統合
+- [x] 5. Integration — コマンドハンドラ統合
 - [x] 5.1 cmd_audit ディスパッチャ + cmd_audit_micro + main/print_usage 更新
   - cmd_audit(args): サブコマンド分岐（micro/weekly/monthly/quarterly）。サブコマンドなし or 不明→ audit 専用 usage + exit 1
   - cmd_audit_micro(): validate_wiki_dir → get_recent_wiki_changes → 対象 0 件チェック（レポート出力 + exit 0）→ load_wiki_pages(target_files) → all_pages_set 構築 → index_content 読み込み（read_text(INDEX_MD)、不在時は None）→ run_micro_checks → findings から metrics dict 算出（pages_scanned, broken_links, index_missing, frontmatter_errors, total_findings）→ generate_audit_report → print_audit_summary → exit 0 or 1。ensure_dirs() は使用しない（wiki/ / review/ にディレクトリを作成し Req 6.1, 6.3 に違反するため）
@@ -110,7 +110,7 @@
   - _Depends: 3.1, 3.2, 4.1_
   - _Boundary: audit commands — monthly/quarterly_
 
-- [ ] 6. ファイル更新
+- [x] 6. ファイル更新
 - [x] 6.1 (P) Execution Mode 更新
   - templates/CLAUDE.md: マッピング表の audit 行の Execution Mode を `Prompt` → `CLI (Hybrid)` に変更
   - templates/AGENTS/audit.md: Execution Mode セクションを CLI (Hybrid) に更新
@@ -126,7 +126,7 @@
   - _Requirements: 8.1, 8.2_
   - _Boundary: docs_
 
-- [ ] 7. E2E 統合検証
+- [x] 7. E2E 統合検証
 - [x] 7.1 全 4 ティアの動作確認 + 読み取り専用保証
   - テスト用 Vault（wiki/ に複数ページ、index.md、log.md を配置）で rw audit micro / weekly / monthly / quarterly を順次実行
   - 各ティアのレポートが logs/ に正しいファイル名・セクション構成で生成されること
