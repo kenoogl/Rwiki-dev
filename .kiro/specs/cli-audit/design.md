@@ -725,8 +725,16 @@ def run_micro_checks(pages: list[WikiPage], all_pages_set: set[str], index_conte
     read_error が設定された WikiPage は ERROR Finding として記録し、
     個別チェックからは除外する。"""
 
-def run_weekly_checks(pages: list[WikiPage], all_pages_set: set[str], index_content: str | None, index_links: set[str], page_policy: dict | None) -> list[Finding]:
-    """weekly 固有チェック項目（orphan, bidirectional, naming, source, required_sections）を実行する。"""
+def run_weekly_checks(pages: list[WikiPage], all_pages_set: set[str], index_content: str | None, index_links: set[str], page_policy: dict | None) -> tuple[list[Finding], dict]:
+    """weekly 固有チェック項目（orphan, bidirectional, naming, source, required_sections）を実行する。
+
+    Returns:
+        (findings, metrics_stats) のタプル。
+        findings: 全 weekly チェックの Finding リスト
+        metrics_stats: bidirectional_compliance 算出用の stats
+          {"total_pairs": int, "bidirectional_pairs": int}
+          （check_bidirectional_links の stats をそのまま伝搬）
+    """
 ```
 
 #### get_recent_wiki_changes
