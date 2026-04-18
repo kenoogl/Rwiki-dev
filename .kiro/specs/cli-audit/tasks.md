@@ -77,7 +77,7 @@
   - _Boundary: LLMAuditEngine_
 
 - [ ] 4. Core — レポートエンジン
-- [ ] 4.1 (P) generate_audit_report + print_audit_summary
+- [x] 4.1 (P) generate_audit_report + print_audit_summary
   - generate_audit_report(tier, findings, metrics, recommended_actions=None, timestamp=None): Markdown レポートを logs/ に write_text() で出力。ファイル名 `audit-{tier}-{timestamp}.md`。セクション: Summary / Findings（Structural/Semantic/Strategic）/ Metrics / Recommended Actions。recommended_actions=None の場合（micro/weekly）は findings の ERROR/WARN 項目から推奨アクションを自動生成する（関数内部で処理。呼び出し元は None を渡すだけ）。自動生成ルール: category ごとに findings を集約し、「{category} が {N} 件検出されました。対象ページを確認してください」形式で生成する。monthly/quarterly は Claude が返す recommended_actions をそのまま渡す
   - print_audit_summary(tier, findings, report_path): `[{severity}] {page}: {message}` 形式で各 Finding を表示。page="" 時はページ省略。サマリー行 `audit {tier}: ERROR N, WARN N, INFO N — PASS/FAIL`。最終行にレポートパス
   - micro 用 findings でレポートファイルが生成され、サマリーが標準出力に表示されること

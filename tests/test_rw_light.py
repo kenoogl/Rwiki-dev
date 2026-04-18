@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import textwrap
+from pathlib import Path
 import pytest
 
 # scripts/ を sys.path に追加
@@ -4732,3 +4733,387 @@ class TestParseAuditResponse:
     result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
     assert len(result["recommended_actions"]) == 1
     assert "my-concept" in result["recommended_actions"][0]
+
+
+# ---------------------------------------------------------------------------
+# Task 4.1: generate_audit_report() + print_audit_summary()
+# ---------------------------------------------------------------------------
+
+
+def _make_finding(
+  severity="ERROR",
+  category="broken_link",
+  page="concepts/my-page.md",
+  message="テストメッセージ",
+  sub_severity="",
+  marker="",
+):
+  return rw_light.Finding(
+    severity=severity,
+    category=category,
+    page=page,
+    message=message,
+    sub_severity=sub_severity,
+    marker=marker,
+  )
+
+
+class TestGenerateAuditReport:
+  """generate_audit_report() のテスト。"""
+
+  def _micro_findings(self):
+    return [
+      _make_finding("ERROR", "broken_link", "concepts/page-a.md", "リンク切れ"),
+      _make_finding("WARN", "index_missing", "methods/page-b.md", "index.md 未登録"),
+      _make_finding("INFO", "source_field", "entities/tool.md", "source フィールドが空"),
+    ]
+
+  def _micro_metrics(self):
+    return {
+      "pages_scanned": 3,
+      "broken_links": 1,
+      "index_missing": 1,
+      "frontmatter_errors": 0,
+      "total_findings": 3,
+    }
+
+  def test_returns_path_object(self, tmp_path, monkeypatch):
+    """ファイルパス文字列を返すこと"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    assert isinstance(result, str)
+
+  def test_file_created_in_logs(self, tmp_path, monkeypatch):
+    """logs/ にレポートファイルが生成されること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    assert Path(result).exists()
+
+  def test_filename_format(self, tmp_path, monkeypatch):
+    """ファイル名が audit-{tier}-{timestamp}.md 形式であること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-153000"
+    )
+    assert Path(result).name == "audit-micro-20260418-153000.md"
+
+  def test_timestamp_auto_generated_when_none(self, tmp_path, monkeypatch):
+    """timestamp=None のとき、ファイル名にタイムスタンプが含まれること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "weekly", [], {}, timestamp=None
+    )
+    name = Path(result).name
+    assert name.startswith("audit-weekly-")
+    assert name.endswith(".md")
+
+  def test_summary_section_exists(self, tmp_path, monkeypatch):
+    """Summary セクションが含まれること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "## Summary" in content
+
+  def test_summary_contains_tier(self, tmp_path, monkeypatch):
+    """Summary にティア名が含まれること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "micro" in content
+
+  def test_summary_error_warn_info_counts(self, tmp_path, monkeypatch):
+    """Summary に ERROR/WARN/INFO カウントが含まれること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "ERROR" in content
+    assert "WARN" in content
+    assert "INFO" in content
+
+  def test_summary_pass_when_no_errors_no_warns(self, tmp_path, monkeypatch):
+    """ERROR=0 かつ WARN=0 の場合 PASS と表示されること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    findings = [
+      _make_finding("INFO", "source_field", "entities/tool.md", "source 空"),
+    ]
+    result = rw_light.generate_audit_report(
+      "micro", findings, {}, timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "PASS" in content
+
+  def test_summary_fail_when_errors_exist(self, tmp_path, monkeypatch):
+    """ERROR がある場合 FAIL と表示されること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "FAIL" in content
+
+  def test_findings_section_exists(self, tmp_path, monkeypatch):
+    """Findings セクションが含まれること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "## Findings" in content
+
+  def test_micro_structural_findings_label(self, tmp_path, monkeypatch):
+    """micro は Structural Findings ラベルであること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "Structural Findings" in content
+
+  def test_weekly_structural_findings_label(self, tmp_path, monkeypatch):
+    """weekly は Structural Findings ラベルであること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "weekly", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "Structural Findings" in content
+
+  def test_monthly_semantic_findings_label(self, tmp_path, monkeypatch):
+    """monthly は Semantic Findings ラベルであること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "monthly", [], {}, timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "Semantic Findings" in content
+
+  def test_quarterly_strategic_findings_label(self, tmp_path, monkeypatch):
+    """quarterly は Strategic Findings ラベルであること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "quarterly", [], {}, timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "Strategic Findings" in content
+
+  def test_findings_grouped_by_severity(self, tmp_path, monkeypatch):
+    """ERROR -> Structural, WARN -> Semantic, INFO -> Strategic にグループ化されること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    # ERROR finding が含まれること
+    assert "[ERROR]" in content
+    # WARN finding が含まれること
+    assert "[WARN]" in content
+    # INFO finding が含まれること
+    assert "[INFO]" in content
+
+  def test_metrics_section_exists(self, tmp_path, monkeypatch):
+    """Metrics セクションが含まれること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "## Metrics" in content
+
+  def test_metrics_dict_contents(self, tmp_path, monkeypatch):
+    """metrics dict の内容が Metrics セクションに含まれること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "pages_scanned" in content
+    assert "broken_links" in content
+
+  def test_recommended_actions_section_exists(self, tmp_path, monkeypatch):
+    """Recommended Actions セクションが含まれること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    result = rw_light.generate_audit_report(
+      "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "## Recommended Actions" in content
+
+  def test_micro_recommended_actions_auto_generated(self, tmp_path, monkeypatch):
+    """micro で recommended_actions=None のとき、findings から自動生成されること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    findings = [
+      _make_finding("ERROR", "broken_link", "concepts/page-a.md", "リンク切れ"),
+      _make_finding("WARN", "index_missing", "methods/page-b.md", "未登録"),
+    ]
+    result = rw_light.generate_audit_report(
+      "micro", findings, {}, recommended_actions=None, timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    # category ごとの集約メッセージが含まれること
+    assert "broken_link" in content or "件検出" in content
+
+  def test_micro_auto_actions_group_by_category(self, tmp_path, monkeypatch):
+    """micro 自動生成アクションは category ごとに集約されること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    findings = [
+      _make_finding("ERROR", "broken_link", "concepts/page-a.md", "リンク切れA"),
+      _make_finding("ERROR", "broken_link", "concepts/page-b.md", "リンク切れB"),
+      _make_finding("WARN", "index_missing", "methods/page-c.md", "未登録"),
+    ]
+    result = rw_light.generate_audit_report(
+      "micro", findings, {}, recommended_actions=None, timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    # broken_link 2件、index_missing 1件 -> 2行
+    assert "broken_link" in content
+    assert "index_missing" in content
+
+  def test_monthly_uses_passed_recommended_actions(self, tmp_path, monkeypatch):
+    """monthly は passed recommended_actions をそのまま出力すること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    actions = ["具体的なアクション1", "具体的なアクション2"]
+    result = rw_light.generate_audit_report(
+      "monthly", [], {}, recommended_actions=actions, timestamp="20260418-120000"
+    )
+    content = Path(result).read_text(encoding="utf-8")
+    assert "具体的なアクション1" in content
+    assert "具体的なアクション2" in content
+
+  def test_logs_dir_created_if_absent(self, tmp_path, monkeypatch):
+    """logs/ ディレクトリが存在しなくても自動作成されること（write_text の既存動作）"""
+    new_logdir = tmp_path / "new_logs"
+    monkeypatch.setattr(rw_light, "LOGDIR", str(new_logdir))
+    result = rw_light.generate_audit_report(
+      "micro", [], {}, timestamp="20260418-120000"
+    )
+    assert Path(result).exists()
+
+
+class TestPrintAuditSummary:
+  """print_audit_summary() のテスト。"""
+
+  def _findings(self):
+    return [
+      _make_finding("ERROR", "broken_link", "concepts/page-a.md", "リンク切れ"),
+      _make_finding("WARN", "index_missing", "methods/page-b.md", "未登録"),
+      _make_finding("WARN", "frontmatter", "methods/page-c.md", "title 欠落"),
+      _make_finding("INFO", "source_field", "entities/tool.md", "source 空"),
+    ]
+
+  def test_each_finding_printed(self, capsys):
+    """各 Finding が [severity] page: message 形式で表示されること"""
+    rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
+    out = capsys.readouterr().out
+    assert "[ERROR] concepts/page-a.md: リンク切れ" in out
+
+  def test_page_empty_omits_page_part(self, capsys):
+    """page="" のとき [severity] message 形式（ページ省略）で表示されること"""
+    findings = [_make_finding("INFO", "coverage_gap", "", "カバレッジ不足")]
+    rw_light.print_audit_summary("quarterly", findings, "logs/audit-quarterly-test.md")
+    out = capsys.readouterr().out
+    assert "[INFO] カバレッジ不足" in out
+    # ページパスが含まれないこと（": " のコロンがある場合はページ付き形式）
+    assert "[INFO] : カバレッジ不足" not in out
+
+  def test_summary_line_format(self, capsys):
+    """サマリー行が audit {tier}: ERROR N, WARN N, INFO N — PASS/FAIL 形式であること"""
+    rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
+    out = capsys.readouterr().out
+    assert "audit micro: ERROR 1, WARN 2, INFO 1" in out
+
+  def test_fail_when_error_exists(self, capsys):
+    """ERROR > 0 のとき FAIL と表示されること"""
+    rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
+    out = capsys.readouterr().out
+    assert "FAIL" in out
+
+  def test_fail_when_warn_exists_no_error(self, capsys):
+    """WARN > 0（ERROR = 0）のとき FAIL と表示されること"""
+    findings = [_make_finding("WARN", "index_missing", "methods/page.md", "未登録")]
+    rw_light.print_audit_summary("weekly", findings, "logs/audit-weekly-test.md")
+    out = capsys.readouterr().out
+    assert "FAIL" in out
+
+  def test_pass_when_only_info(self, capsys):
+    """ERROR=0 かつ WARN=0 のとき PASS と表示されること"""
+    findings = [_make_finding("INFO", "source_field", "entities/tool.md", "source 空")]
+    rw_light.print_audit_summary("micro", findings, "logs/audit-micro-test.md")
+    out = capsys.readouterr().out
+    assert "PASS" in out
+
+  def test_pass_when_no_findings(self, capsys):
+    """findings が空のとき PASS と表示されること"""
+    rw_light.print_audit_summary("micro", [], "logs/audit-micro-test.md")
+    out = capsys.readouterr().out
+    assert "PASS" in out
+
+  def test_report_path_in_output(self, capsys):
+    """レポートパスが最終行付近に表示されること"""
+    rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-20260418-120000.md")
+    out = capsys.readouterr().out
+    assert "logs/audit-micro-20260418-120000.md" in out
+
+  def test_warn_count_in_summary(self, capsys):
+    """サマリー行に WARN カウントが含まれること"""
+    rw_light.print_audit_summary("micro", self._findings(), "logs/test.md")
+    out = capsys.readouterr().out
+    assert "WARN 2" in out
+
+  def test_info_count_in_summary(self, capsys):
+    """サマリー行に INFO カウントが含まれること"""
+    rw_light.print_audit_summary("micro", self._findings(), "logs/test.md")
+    out = capsys.readouterr().out
+    assert "INFO 1" in out
+
+
+class TestGenerateAuditReportIntegration:
+  """generate_audit_report + print_audit_summary の統合テスト（task 4.1 要件）。"""
+
+  def test_micro_report_file_and_summary(self, tmp_path, monkeypatch, capsys):
+    """micro findings でレポートファイルが生成され、サマリーが標準出力に表示されること"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+
+    findings = [
+      rw_light.Finding("ERROR", "broken_link", "concepts/page.md", "リンク切れ", "", ""),
+      rw_light.Finding("WARN", "index_missing", "methods/page.md", "index 未登録", "", ""),
+      rw_light.Finding("INFO", "source_field", "entities/tool.md", "source 空", "", ""),
+    ]
+    metrics = {
+      "pages_scanned": 3,
+      "broken_links": 1,
+      "index_missing": 1,
+      "frontmatter_errors": 0,
+      "total_findings": 3,
+    }
+
+    report_path = rw_light.generate_audit_report(
+      "micro", findings, metrics, timestamp="20260418-153000"
+    )
+    rw_light.print_audit_summary("micro", findings, report_path)
+
+    # レポートファイルの検証
+    assert Path(report_path).exists()
+    assert Path(report_path).name == "audit-micro-20260418-153000.md"
+    content = Path(report_path).read_text(encoding="utf-8")
+    assert "## Summary" in content
+    assert "## Findings" in content
+    assert "## Metrics" in content
+    assert "## Recommended Actions" in content
+    assert "FAIL" in content
+
+    # 標準出力の検証
+    out = capsys.readouterr().out
+    assert "[ERROR] concepts/page.md: リンク切れ" in out
+    assert "[WARN] methods/page.md: index 未登録" in out
+    assert "audit micro: ERROR 1, WARN 1, INFO 1" in out
+    assert report_path in out

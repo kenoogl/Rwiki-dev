@@ -1933,6 +1933,150 @@ def parse_audit_response(response: str) -> dict:
 # audit: report engine
 
 
+def generate_audit_report(
+  tier: str,
+  findings: list,
+  metrics: dict,
+  recommended_actions=None,
+  timestamp=None,
+) -> str:
+  """Markdown 形式の監査レポートを生成して logs/ に出力する。
+
+  Args:
+    tier: "micro" | "weekly" | "monthly" | "quarterly"
+    findings: 検出された問題のリスト（Finding NamedTuple）
+    metrics: ティア固有のメトリクス dict
+    recommended_actions: 推奨アクション（monthly/quarterly は Claude が返す。
+                         None の場合（micro/weekly）は findings から自動生成）
+    timestamp: ファイル名とレポートヘッダーに使用するタイムスタンプ文字列
+               （YYYYMMDD-HHMMSS 形式）。None の場合は datetime.now() から生成。
+  Returns:
+    生成されたレポートファイルのパス文字列
+  """
+  if timestamp is None:
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+  # カウント集計
+  error_count = sum(1 for f in findings if f.severity == "ERROR")
+  warn_count = sum(1 for f in findings if f.severity == "WARN")
+  info_count = sum(1 for f in findings if f.severity == "INFO")
+  status = "FAIL" if (error_count > 0 or warn_count > 0) else "PASS"
+
+  # Findings セクションのラベル決定
+  if tier in ("micro", "weekly"):
+    findings_label = "Structural Findings"
+  elif tier == "monthly":
+    findings_label = "Semantic Findings"
+  else:
+    findings_label = "Strategic Findings"
+
+  # Recommended Actions の自動生成（micro/weekly: recommended_actions=None の場合）
+  if recommended_actions is None:
+    # ERROR/WARN の category ごとに集約
+    from collections import Counter
+    cat_counter: Counter = Counter()
+    for f in findings:
+      if f.severity in ("ERROR", "WARN"):
+        cat_counter[f.category] += 1
+    auto_actions = []
+    for cat, count in sorted(cat_counter.items()):
+      auto_actions.append(
+        f"{cat} が {count} 件検出されました。対象ページを確認してください"
+      )
+    recommended_actions = auto_actions
+
+  # Finding の行フォーマット
+  def _format_finding_line(f) -> str:
+    if f.sub_severity:
+      sev_tag = f"[{f.severity}:{f.sub_severity}]"
+    else:
+      sev_tag = f"[{f.severity}]"
+    marker_suffix = f" [{f.marker}]" if f.marker else ""
+    if f.page:
+      return f"- {sev_tag} {f.page}: {f.message}{marker_suffix}"
+    else:
+      return f"- {sev_tag} {f.message}{marker_suffix}"
+
+  # レポート本文を構築
+  lines = []
+  lines.append(f"# Audit Report: {tier}")
+  lines.append("")
+
+  # Summary セクション
+  lines.append("## Summary")
+  lines.append("")
+  lines.append(f"- tier: {tier}")
+  lines.append(f"- timestamp: {timestamp}")
+  lines.append(f"- ERROR: {error_count}")
+  lines.append(f"- WARN: {warn_count}")
+  lines.append(f"- INFO: {info_count}")
+  lines.append(f"- status: {status}")
+  lines.append("")
+
+  # Findings セクション
+  lines.append("## Findings")
+  lines.append("")
+  lines.append(f"### {findings_label}")
+  lines.append("")
+  if findings:
+    for f in findings:
+      lines.append(_format_finding_line(f))
+  else:
+    lines.append("- 問題は検出されませんでした")
+  lines.append("")
+
+  # Metrics セクション
+  lines.append("## Metrics")
+  lines.append("")
+  if metrics:
+    for key, value in metrics.items():
+      lines.append(f"- {key}: {value}")
+  else:
+    lines.append("- N/A")
+  lines.append("")
+
+  # Recommended Actions セクション
+  lines.append("## Recommended Actions")
+  lines.append("")
+  if recommended_actions:
+    for action in recommended_actions:
+      lines.append(f"- {action}")
+  else:
+    lines.append("- なし")
+  lines.append("")
+
+  content = "\n".join(lines)
+  report_path = os.path.join(LOGDIR, f"audit-{tier}-{timestamp}.md")
+  write_text(report_path, content)
+  return report_path
+
+
+def print_audit_summary(tier: str, findings: list, report_path: str) -> None:
+  """標準出力に監査サマリーを表示する。
+
+  表示内容:
+  - 各 Finding を [severity] page: message 形式（page="" 時はページ省略）
+  - サマリー行: audit {tier}: ERROR N, WARN N, INFO N — PASS/FAIL
+  - 最終行にレポートファイルパス
+  """
+  # 個別 Finding を表示
+  for f in findings:
+    if f.page:
+      print(f"[{f.severity}] {f.page}: {f.message}")
+    else:
+      print(f"[{f.severity}] {f.message}")
+
+  # カウント集計
+  error_count = sum(1 for f in findings if f.severity == "ERROR")
+  warn_count = sum(1 for f in findings if f.severity == "WARN")
+  info_count = sum(1 for f in findings if f.severity == "INFO")
+  status = "FAIL" if (error_count > 0 or warn_count > 0) else "PASS"
+
+  print("---")
+  print(f"audit {tier}: ERROR {error_count}, WARN {warn_count}, INFO {info_count} \u2014 {status}")
+  print(f"レポート: {report_path}")
+
+
 # audit: commands — dispatch+micro
 
 
