@@ -3012,3 +3012,250 @@ class TestAllPagesSetConstruction:
         # wiki/ プレフィックスなし
         for entry in all_pages_set:
             assert not entry.startswith("wiki/"), f"wiki/ prefix found: {entry}"
+
+
+# ---------------------------------------------------------------------------
+# Task 1.3: _git_list_files / get_recent_wiki_changes
+# ---------------------------------------------------------------------------
+
+class TestGitListFiles:
+    """_git_list_files() のユニットテスト"""
+
+    def test_returns_list_of_file_paths(self, monkeypatch):
+        """git コマンドが成功した場合、改行区切りのファイルパスリストを返すこと"""
+        import subprocess
+
+        fake_result = type("R", (), {"returncode": 0, "stdout": "wiki/page-a.md\nwiki/page-b.md\n"})()
+
+        def fake_run(cmd, **kwargs):
+            return fake_result
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+        result = rw_light._git_list_files(["diff", "--name-only", "--", "wiki/"])
+        assert result == ["wiki/page-a.md", "wiki/page-b.md"]
+
+    def test_returns_empty_list_on_failure(self, monkeypatch):
+        """git コマンドが失敗した場合（returncode != 0）は空リストを返すこと"""
+        import subprocess
+
+        fake_result = type("R", (), {"returncode": 1, "stdout": ""})()
+
+        def fake_run(cmd, **kwargs):
+            return fake_result
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+        result = rw_light._git_list_files(["diff", "--name-only"])
+        assert result == []
+
+    def test_returns_empty_list_on_exception(self, monkeypatch):
+        """subprocess が例外を raise した場合は空リストを返すこと"""
+        import subprocess
+
+        def fake_run(cmd, **kwargs):
+            raise OSError("git not found")
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+        result = rw_light._git_list_files(["diff"])
+        assert result == []
+
+    def test_excludes_empty_lines(self, monkeypatch):
+        """出力に空行が含まれる場合は除外されること"""
+        import subprocess
+
+        fake_result = type("R", (), {"returncode": 0, "stdout": "wiki/a.md\n\nwiki/b.md\n"})()
+
+        def fake_run(cmd, **kwargs):
+            return fake_result
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+        result = rw_light._git_list_files(["diff", "--name-only"])
+        assert "" not in result
+        assert result == ["wiki/a.md", "wiki/b.md"]
+
+    def test_passes_correct_args_to_git(self, monkeypatch):
+        """_git_list_files に渡した引数が git コマンドに正しく付加されること"""
+        import subprocess
+
+        captured = {}
+        fake_result = type("R", (), {"returncode": 0, "stdout": ""})()
+
+        def fake_run(cmd, **kwargs):
+            captured["cmd"] = cmd
+            return fake_result
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+        rw_light._git_list_files(["diff", "--name-only", "HEAD~1..HEAD", "--", "wiki/"])
+        assert captured["cmd"] == ["git", "diff", "--name-only", "HEAD~1..HEAD", "--", "wiki/"]
+
+    def test_call_claude_not_affected(self, monkeypatch):
+        """_git_list_files のモックが call_claude には影響しないこと（独立性の確認）"""
+        import subprocess
+
+        git_call_count = 0
+        original_run = subprocess.run
+
+        def counting_fake_run(cmd, **kwargs):
+            nonlocal git_call_count
+            if cmd and cmd[0] == "git":
+                git_call_count += 1
+                return type("R", (), {"returncode": 0, "stdout": "wiki/page.md\n"})()
+            return original_run(cmd, **kwargs)
+
+        monkeypatch.setattr(subprocess, "run", counting_fake_run)
+        result = rw_light._git_list_files(["status"])
+        assert git_call_count == 1
+        assert result == ["wiki/page.md"]
+
+
+class TestGetRecentWikiChanges:
+    """get_recent_wiki_changes() のユニットテスト"""
+
+    def _make_wiki(self, tmp_path, files: dict[str, str]) -> str:
+        """wiki/ ディレクトリとファイルを作成してパスを返す"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir(parents=True, exist_ok=True)
+        for name, content in files.items():
+            p = wiki_dir / name
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content, encoding="utf-8")
+        return str(wiki_dir)
+
+    def test_returns_files_with_uncommitted_changes(self, tmp_path, monkeypatch):
+        """未コミット変更のある wiki/.md ファイルがリストに含まれること"""
+        wiki_dir = self._make_wiki(tmp_path, {"page-a.md": "# A\n"})
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+
+        def fake_git_list_files(args):
+            if args[:2] == ["diff", "--name-only"] and "HEAD~1..HEAD" not in args:
+                return [os.path.join(wiki_dir, "page-a.md")]
+            return []
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert any("page-a.md" in p for p in result)
+
+    def test_returns_files_from_last_commit(self, tmp_path, monkeypatch):
+        """直近コミットの変更ファイルがリストに含まれること"""
+        wiki_dir = self._make_wiki(tmp_path, {"page-b.md": "# B\n"})
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+
+        def fake_git_list_files(args):
+            if "HEAD~1..HEAD" in args:
+                return [os.path.join(wiki_dir, "page-b.md")]
+            return []
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert any("page-b.md" in p for p in result)
+
+    def test_deduplicates_results(self, tmp_path, monkeypatch):
+        """未コミット変更と直近コミット変更に同じファイルがある場合、重複が除去されること"""
+        wiki_dir = self._make_wiki(tmp_path, {"page-dup.md": "# Dup\n"})
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        dup_path = os.path.join(wiki_dir, "page-dup.md")
+
+        def fake_git_list_files(args):
+            return [dup_path]
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert result.count(dup_path) == 1
+
+    def test_excludes_deleted_files(self, tmp_path, monkeypatch):
+        """削除されたファイル（ディスク上に存在しない）は除外されること"""
+        wiki_dir = self._make_wiki(tmp_path, {})
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        deleted_path = os.path.join(wiki_dir, "deleted.md")  # ファイルを作成しない
+
+        def fake_git_list_files(args):
+            return [deleted_path]
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert deleted_path not in result
+
+    def test_excludes_non_md_files(self, tmp_path, monkeypatch):
+        """.md 以外のファイルは除外されること"""
+        wiki_dir = self._make_wiki(tmp_path, {"page.md": "# OK\n"})
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        txt_path = os.path.join(wiki_dir, "readme.txt")
+        open(txt_path, "w").close()
+        md_path = os.path.join(wiki_dir, "page.md")
+
+        def fake_git_list_files(args):
+            return [txt_path, md_path]
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert txt_path not in result
+        assert md_path in result
+
+    def test_returns_empty_list_when_no_changes(self, tmp_path, monkeypatch):
+        """変更がない場合は空リストを返すこと"""
+        wiki_dir = self._make_wiki(tmp_path, {})
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+
+        def fake_git_list_files(args):
+            return []
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert result == []
+
+    def test_head1_not_found_fallback(self, tmp_path, monkeypatch):
+        """HEAD~1 が存在しない場合は HEAD の全追加ファイルにフォールバックすること"""
+        wiki_dir = self._make_wiki(tmp_path, {"initial.md": "# Initial\n"})
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        initial_path = os.path.join(wiki_dir, "initial.md")
+
+        def fake_git_list_files(args):
+            if "HEAD~1..HEAD" in args:
+                # HEAD~1 が存在しないケースをシミュレート（空リスト）
+                return []
+            if "--diff-filter=A" in args and "HEAD" in args:
+                # フォールバック: HEAD の全追加ファイル
+                return [initial_path]
+            return []
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert initial_path in result
+
+    def test_returns_list_of_absolute_paths(self, tmp_path, monkeypatch):
+        """返されるパスが文字列のリストであること"""
+        wiki_dir = self._make_wiki(tmp_path, {"page.md": "# P\n"})
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        page_path = os.path.join(wiki_dir, "page.md")
+
+        def fake_git_list_files(args):
+            return [page_path]
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert isinstance(result, list)
+        assert all(isinstance(p, str) for p in result)
+
+    def test_union_of_uncommitted_and_last_commit(self, tmp_path, monkeypatch):
+        """未コミット変更と直近コミット変更の和集合が返されること"""
+        wiki_dir = self._make_wiki(tmp_path, {
+            "page-uncommitted.md": "# U\n",
+            "page-committed.md": "# C\n",
+        })
+        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        uncommitted_path = os.path.join(wiki_dir, "page-uncommitted.md")
+        committed_path = os.path.join(wiki_dir, "page-committed.md")
+
+        def fake_git_list_files(args):
+            if "HEAD~1..HEAD" in args:
+                return [committed_path]
+            if "--diff-filter=A" in args:
+                return []
+            # 未コミット（git diff --name-only または ls-files）
+            if "ls-files" in args:
+                return []
+            return [uncommitted_path]
+
+        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        result = rw_light.get_recent_wiki_changes()
+        assert uncommitted_path in result
+        assert committed_path in result

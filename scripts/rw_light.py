@@ -1062,6 +1062,83 @@ def read_wiki_content(scope: str | None) -> str:
 # audit: data loading
 
 
+def _git_list_files(args: list[str]) -> list[str]:
+    """git コマンドを実行しファイルリストを返す。失敗時は空リスト。
+
+    テスト時にモンキーパッチ可能な薄いラッパー。
+    get_recent_wiki_changes() が内部で使用する。
+    call_claude() とは独立してモック可能にするために分離。
+
+    Args:
+        args: git サブコマンドと引数のリスト（例: ["diff", "--name-only", "--", "wiki/"]）
+    Returns:
+        コマンド出力を改行で分割したファイルパスリスト。空行は除外。
+    """
+    try:
+        result = subprocess.run(
+            ["git"] + args,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+    except Exception:
+        return []
+    if result.returncode != 0:
+        return []
+    return [line for line in result.stdout.splitlines() if line.strip()]
+
+
+def get_recent_wiki_changes() -> list[str]:
+    """git diff で最近更新された wiki ページのファイルパスリストを返す。
+    グローバル定数 WIKI を使用。内部で _git_list_files() を呼び出す。
+
+    検出方法:
+    1. 未コミット変更: git diff --name-only -- wiki/
+       + git ls-files --others -- wiki/
+    2. 直近コミットの変更: git diff --name-only HEAD~1..HEAD -- wiki/
+       - HEAD~1 が存在しない場合（初回コミット）: git diff --name-only --diff-filter=A HEAD -- wiki/
+         で HEAD の全追加ファイルを対象とする
+    3. 1 と 2 の和集合から重複を除去
+    4. 削除されたファイルを除外（os.path.isfile() で存在確認）
+    5. .md ファイルのみにフィルタリング
+
+    Returns:
+        wiki/ 配下の .md ファイルパスリスト。
+        git リポジトリでない場合は空リストを返す。
+    """
+    wiki_rel = os.path.relpath(WIKI, os.getcwd()) if os.path.isabs(WIKI) else WIKI
+
+    # 1. 未コミット変更（ステージ済み・未ステージ・untracked）
+    uncommitted: list[str] = []
+    uncommitted += _git_list_files(["diff", "--name-only", "--", wiki_rel + "/"])
+    uncommitted += _git_list_files(["diff", "--cached", "--name-only", "--", wiki_rel + "/"])
+    uncommitted += _git_list_files(["ls-files", "--others", "--exclude-standard", "--", wiki_rel + "/"])
+
+    # 2. 直近コミットの変更（HEAD~1..HEAD）
+    last_commit = _git_list_files(["diff", "--name-only", "HEAD~1..HEAD", "--", wiki_rel + "/"])
+    if not last_commit:
+        # HEAD~1 が存在しない場合（初回コミット）はフォールバック
+        last_commit = _git_list_files(["diff", "--name-only", "--diff-filter=A", "HEAD", "--", wiki_rel + "/"])
+
+    # 3. 和集合（重複除去）
+    all_files_set: set[str] = set()
+    for path in uncommitted + last_commit:
+        # パスが絶対パスでない場合はプロジェクトルート基準で解決
+        if not os.path.isabs(path):
+            abs_path = os.path.join(os.getcwd(), path)
+        else:
+            abs_path = path
+        all_files_set.add(abs_path)
+
+    # 4. 削除ファイル除外 + 5. .md フィルタ
+    result: list[str] = [
+        p for p in sorted(all_files_set)
+        if os.path.isfile(p) and p.endswith(".md")
+    ]
+    return result
+
+
 def validate_wiki_dir() -> bool:
     """wiki/ ディレクトリの事前検証を行う。グローバル定数 WIKI を使用。
 

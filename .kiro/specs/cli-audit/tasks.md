@@ -23,7 +23,7 @@
   - _Requirements: 7.1, 7.6, 7.8_
   - _Boundary: DataLoading, Validation_
 
-- [ ] 1.3 _git_list_files + get_recent_wiki_changes
+- [x] 1.3 _git_list_files + get_recent_wiki_changes
   - _git_list_files(args): subprocess.run(["git"] + args) のラッパー。失敗時は空リスト。call_claude() と独立してモック可能
   - get_recent_wiki_changes(): 未コミット変更 + 直近コミット変更の和集合。HEAD~1 不在時は HEAD の全追加ファイルにフォールバック。削除ファイル除外 + .md フィルタ
   - git リポジトリで wiki/ に変更がある場合にファイルパスリストが返ること。変更なしの場合は空リスト
