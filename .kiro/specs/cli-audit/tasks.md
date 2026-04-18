@@ -111,7 +111,7 @@
   - _Boundary: audit commands — monthly/quarterly_
 
 - [ ] 6. ファイル更新
-- [ ] 6.1 (P) Execution Mode 更新
+- [x] 6.1 (P) Execution Mode 更新
   - templates/CLAUDE.md: マッピング表の audit 行の Execution Mode を `Prompt` → `CLI (Hybrid)` に変更
   - templates/AGENTS/audit.md: Execution Mode セクションを CLI (Hybrid) に更新
   - templates/AGENTS/README.md: エージェント一覧テーブルの audit 行を CLI (Hybrid) に更新

@@ -145,7 +145,7 @@ Do NOT load all files under AGENTS/ by default.
 | query_answer | AGENTS/query_answer.md | AGENTS/page_policy.md | CLI (Hybrid) |
 | query_extract | AGENTS/query_extract.md | AGENTS/naming.md, AGENTS/page_policy.md | CLI (Hybrid) |
 | query_fix | AGENTS/query_fix.md | AGENTS/naming.md | CLI (Hybrid) |
-| audit | AGENTS/audit.md | AGENTS/page_policy.md, AGENTS/naming.md, AGENTS/git_ops.md | Prompt |
+| audit | AGENTS/audit.md | AGENTS/page_policy.md, AGENTS/naming.md, AGENTS/git_ops.md | CLI (Hybrid) |
 
 ---
 

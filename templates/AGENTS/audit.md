@@ -11,13 +11,12 @@ wikiの整合性・一貫性・構造を読み取り専用で評価する。
 
 ## Execution Mode
 
-**Prompt** — Claude CLIまたは対話型プロンプトで実行。
-このエージェントをロードしてから実行すること。
+**CLI (Hybrid)** — `rw audit <tier>` コマンドで実行。
+- `rw audit micro` / `rw audit weekly`: Python静的チェック（Claude CLI不使用）
+- `rw audit monthly` / `rw audit quarterly`: 本ファイルをプロンプトソースとして Claude CLI を呼び出す
 
-実行宣言（必須）:
-- Task Type: audit
-- Loaded Agents: audit.md, page_policy.md, naming.md, git_ops.md
-- Execution Plan: [監査ティア・スコープ]
+CLI実行時はコマンド自体が実行宣言を兼ねる。
+対話型プロンプトで直接実行する場合は、本ファイルをロードしてから実行すること。
 
 ---
 
