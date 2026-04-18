@@ -3258,4 +3258,188 @@ class TestGetRecentWikiChanges:
         monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert uncommitted_path in result
-        assert committed_path in result
+
+
+# ---------------------------------------------------------------------------
+# Task 1.4: read_all_wiki_content
+# ---------------------------------------------------------------------------
+
+
+def _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=2,
+                              create_index=True, create_log=True):
+    """read_all_wiki_content テスト用の wiki ディレクトリと ROOT ファイルを作成する。"""
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+
+    for i in range(num_files):
+        page = wiki_dir / f"page-{i:02d}.md"
+        page.write_text(
+            f"---\ntitle: Page {i}\n---\n\n# Page {i}\n\nContent {i}.\n",
+            encoding="utf-8",
+        )
+
+    if create_index:
+        (tmp_path / "index.md").write_text("# Index\n\nTop-level index.\n", encoding="utf-8")
+    if create_log:
+        (tmp_path / "log.md").write_text("# Log\n\nChange log.\n", encoding="utf-8")
+
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+    return wiki_dir
+
+
+class TestReadAllWikiContent:
+    """read_all_wiki_content() のユニットテスト（Task 1.4）"""
+
+    def test_returns_string(self, tmp_path, monkeypatch):
+        """正常ケース: 文字列を返すこと"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1)
+        result = rw_light.read_all_wiki_content()
+        assert isinstance(result, str)
+
+    def test_all_wiki_pages_included(self, tmp_path, monkeypatch):
+        """wiki/ の全 .md ファイルが結合に含まれること"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=3)
+        result = rw_light.read_all_wiki_content()
+        assert "Content 0" in result
+        assert "Content 1" in result
+        assert "Content 2" in result
+
+    def test_each_file_has_file_header(self, tmp_path, monkeypatch):
+        """各ファイルが <!-- file: ... --> ヘッダー付きで結合されること"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=2)
+        result = rw_light.read_all_wiki_content()
+        assert "<!-- file:" in result
+        # wiki ページのヘッダーが含まれること
+        assert "page-00.md" in result
+        assert "page-01.md" in result
+
+    def test_index_md_included_in_result(self, tmp_path, monkeypatch):
+        """ROOT/index.md が結合に含まれること"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1, create_index=True)
+        result = rw_light.read_all_wiki_content()
+        assert "Top-level index." in result
+
+    def test_log_md_included_in_result(self, tmp_path, monkeypatch):
+        """ROOT/log.md が結合に含まれること"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1, create_log=True)
+        result = rw_light.read_all_wiki_content()
+        assert "Change log." in result
+
+    def test_index_md_header_format(self, tmp_path, monkeypatch):
+        """ROOT/index.md が <!-- file: index.md --> ヘッダー付きで含まれること"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1, create_index=True)
+        result = rw_light.read_all_wiki_content()
+        assert "<!-- file: index.md -->" in result
+
+    def test_log_md_header_format(self, tmp_path, monkeypatch):
+        """ROOT/log.md が <!-- file: log.md --> ヘッダー付きで含まれること"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1, create_log=True)
+        result = rw_light.read_all_wiki_content()
+        assert "<!-- file: log.md -->" in result
+
+    def test_index_md_missing_skipped_not_error(self, tmp_path, monkeypatch):
+        """index.md が存在しない場合はスキップしてエラーにならないこと"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1,
+                                  create_index=False, create_log=True)
+        result = rw_light.read_all_wiki_content()
+        # index.md ヘッダーが含まれないこと
+        assert "<!-- file: index.md -->" not in result
+        # log.md は含まれること
+        assert "Change log." in result
+
+    def test_log_md_missing_skipped_not_error(self, tmp_path, monkeypatch):
+        """log.md が存在しない場合はスキップしてエラーにならないこと"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1,
+                                  create_index=True, create_log=False)
+        result = rw_light.read_all_wiki_content()
+        # log.md ヘッダーが含まれないこと
+        assert "<!-- file: log.md -->" not in result
+        # index.md は含まれること
+        assert "Top-level index." in result
+
+    def test_both_index_and_log_missing_skipped(self, tmp_path, monkeypatch):
+        """index.md と log.md の両方が存在しない場合もスキップして続行すること"""
+        _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1,
+                                  create_index=False, create_log=False)
+        result = rw_light.read_all_wiki_content()
+        # wiki ページは含まれること
+        assert "Content 0" in result
+
+    def test_raises_file_not_found_when_wiki_missing(self, tmp_path, monkeypatch):
+        """wiki/ が存在しない場合 FileNotFoundError を raise すること"""
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+        import pytest
+        with pytest.raises(FileNotFoundError):
+            rw_light.read_all_wiki_content()
+
+    def test_raises_value_error_when_no_md_files(self, tmp_path, monkeypatch):
+        """wiki/ に .md ファイルがない場合 ValueError を raise すること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+        import pytest
+        with pytest.raises(ValueError):
+            rw_light.read_all_wiki_content()
+
+    def test_warns_when_page_count_exceeds_150(self, tmp_path, monkeypatch, capsys):
+        """150 ページ超の場合に標準出力に警告を表示すること（処理は続行）"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        # 151 ページ作成
+        for i in range(151):
+            page = wiki_dir / f"page-{i:03d}.md"
+            page.write_text(f"---\ntitle: P{i}\n---\n\n# P{i}\n", encoding="utf-8")
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+
+        result = rw_light.read_all_wiki_content()
+        captured = capsys.readouterr()
+        # 警告が表示されること
+        assert "150" in captured.out or "警告" in captured.out or "WARN" in captured.out
+        # 処理は続行され、全ページが結合されること
+        assert "page-000.md" in result or "P0" in result
+
+    def test_exactly_150_pages_no_warning(self, tmp_path, monkeypatch, capsys):
+        """ちょうど 150 ページの場合は警告を表示しないこと"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        for i in range(150):
+            page = wiki_dir / f"page-{i:03d}.md"
+            page.write_text(f"# P{i}\n", encoding="utf-8")
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+
+        rw_light.read_all_wiki_content()
+        captured = capsys.readouterr()
+        # 150 ページ以下なので警告は出ないこと
+        assert "WARN" not in captured.out
+
+    def test_wiki_page_file_header_format(self, tmp_path, monkeypatch):
+        """wiki ページが <!-- file: wiki/page-name.md --> 形式のヘッダー付きで結合されること"""
+        wiki_dir = tmp_path / "wiki"
+        wiki_dir.mkdir()
+        (wiki_dir / "my-page.md").write_text("# My Page\n\nContent.\n", encoding="utf-8")
+        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+
+        result = rw_light.read_all_wiki_content()
+        # wiki/ プレフィックス付きのヘッダー
+        assert "<!-- file: wiki/my-page.md -->" in result
+        # ページコンテンツが含まれること
+        assert "Content." in result

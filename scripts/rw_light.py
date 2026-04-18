@@ -1061,6 +1061,55 @@ def read_wiki_content(scope: str | None) -> str:
 
 # audit: data loading
 
+LARGE_WIKI_THRESHOLD = 150
+
+
+def read_all_wiki_content() -> str:
+    """wiki/ 内の全 .md ファイル + ROOT/index.md + ROOT/log.md を結合して返す。
+    グローバル定数 WIKI, INDEX_MD, CHANGE_LOG_MD を使用。
+
+    各ファイルは `<!-- file: wiki/page-name.md -->` ヘッダー付きで結合する。
+    ROOT 直下のファイルは `<!-- file: index.md -->`, `<!-- file: log.md -->` として結合する。
+
+    ページ数が LARGE_WIKI_THRESHOLD（150）を超える場合は、標準出力に警告を表示する。
+    ただし処理は続行する。
+
+    index.md / log.md が存在しない場合はスキップする（エラーにしない）。
+
+    Raises:
+        FileNotFoundError: wiki/ が存在しない場合
+        ValueError: wiki/ に .md ファイルが存在しない場合
+    """
+    if not os.path.isdir(WIKI):
+        raise FileNotFoundError(f"wiki/ が存在しません: {WIKI}")
+
+    md_files = list_md_files(WIKI)
+    if not md_files:
+        raise ValueError(f"wiki/ に .md ファイルが存在しません: {WIKI}")
+
+    if len(md_files) > LARGE_WIKI_THRESHOLD:
+        print(
+            f"[WARN] wiki ページ数が {len(md_files)} 件（閾値 {LARGE_WIKI_THRESHOLD} 超）です。"
+            " Claude のコンテキストウィンドウ上限に近づいている可能性があります。"
+        )
+
+    parts: list[str] = []
+
+    # wiki/ 配下の全 .md ファイル
+    for path in md_files:
+        header = f"<!-- file: {relpath(path)} -->"
+        parts.append(f"{header}\n{read_text(path)}")
+
+    # ROOT/index.md（存在する場合のみ）
+    if os.path.isfile(INDEX_MD):
+        parts.append(f"<!-- file: index.md -->\n{read_text(INDEX_MD)}")
+
+    # ROOT/log.md（存在する場合のみ）
+    if os.path.isfile(CHANGE_LOG_MD):
+        parts.append(f"<!-- file: log.md -->\n{read_text(CHANGE_LOG_MD)}")
+
+    return "\n\n".join(parts)
+
 
 def _git_list_files(args: list[str]) -> list[str]:
     """git コマンドを実行しファイルリストを返す。失敗時は空リスト。

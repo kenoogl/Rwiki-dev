@@ -30,7 +30,7 @@
   - _Requirements: 1.2_
   - _Boundary: DataLoading_
 
-- [ ] 1.4 read_all_wiki_content
+- [x] 1.4 read_all_wiki_content
   - wiki/ 全 .md + ROOT/index.md + ROOT/log.md を `<!-- file: ... -->` ヘッダー付きで結合
   - 150 ページ超で標準出力に警告表示（処理は続行）
   - index.md / log.md が存在しない場合はスキップ（エラーにしない）
