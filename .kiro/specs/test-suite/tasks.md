@@ -67,7 +67,7 @@
   - _Depends: 2.3_
   - _Boundary: test_init.py_
 
-- [ ] 2.4 (P) lint コマンドのテスト
+- [x] 2.4 (P) lint コマンドのテスト
   - PASS/WARN/FAIL 判定（3 テスト）: 十分な内容 → exit 0 + "[PASS]"、空ファイル → exit 1 + "[FAIL]"（cmd_lint 内部で空ファイルは ensure_basic_frontmatter を呼ばずに continue する — モック不要、この動作自体を検証）、補完後 80 文字未満 → exit 0 + "[WARN]"
   - 空ディレクトリ（1 テスト）: incoming/ にファイルなし → exit 0、summary 全 0
   - JSON ログ出力（1 テスト）: lint_latest.json に timestamp, files, summary の 3 キー存在（timestamp は値でなく存在のみ検証）
