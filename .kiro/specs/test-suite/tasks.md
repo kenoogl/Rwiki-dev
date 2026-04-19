@@ -57,7 +57,7 @@
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.7, 9.8, 9.9, 9.11, 9.12_
   - _Boundary: test_init.py_
 
-- [ ] 2.9 (P) init コマンドのテスト: 再初期化・エラー処理
+- [x] 2.9 (P) init コマンドのテスト: 再初期化・エラー処理
   - Task 2.3 と同一ファイル（test_init.py）に追記。subprocess.run no-op モック + mock_templates フィクスチャは 2.3 と同じ設定
   - 上書き保護（2 テスト）: 既存 index.md/log.md が存在する場合に上書きしない、既存 .gitignore が不変
   - 再初期化フロー（3 テスト）: input() モックでプロンプト引数キャプチャ（"既存のVault" in prompts[0]）、上書き承認 → exit 0 + .bak 作成 + 新テンプレートコピー、上書き拒否 → exit 0 + ファイル不変
