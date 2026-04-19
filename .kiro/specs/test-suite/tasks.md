@@ -108,7 +108,7 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
   - _Boundary: test_synthesize_logs.py_
 
-- [ ] 2.7 (P) approve コマンドのテスト
+- [x] 2.7 (P) approve コマンドのテスト
   - 全テストで git_path_is_dirty を monkeypatch（False 返却の no-op）。cmd_approve は git_commit を使用しない
   - 昇格正常系（1 テスト）: 承認済み候補（status=approved, reviewed_by 非空, approved=有効 ISO 日付, promoted=false）→ wiki/synthesis/ に type="synthesis" で新規作成
   - 4 条件拒否（4 テスト）: status 不一致 / reviewed_by 空 / approved 無効日付 / promoted true → 各条件で個別テストメソッド、wiki/synthesis/ にファイルなし
