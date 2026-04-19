@@ -24,13 +24,13 @@
 
 ### ドキュメント
 **Location**: `docs/`
-**Purpose**: ユーザーガイド、運用仕様、CHANGELOG
-**Pattern**: 機能別に分割（user-guide.md, git_ops.md, audit.md）
+**Purpose**: ユーザーガイド、開発者ガイド、運用仕様、CHANGELOG
+**Pattern**: 機能別に分割（user-guide.md, developer-guide.md, git_ops.md, audit.md）
 
 ### テスト
 **Location**: `tests/`
 **Purpose**: CLI のユニットテスト・E2E テスト
-**Pattern**: `test_rw_light.py` に集約
+**Pattern**: コマンド・機能領域ごとにファイル分割（`test_utils.py`, `test_git_ops.py`, `test_lint.py`, `test_ingest.py` 等）、共有フィクスチャは `conftest.py` に集約
 
 ### ログ出力
 **Location**: `logs/`
@@ -64,5 +64,5 @@ from typing import Optional, List, Dict, Tuple
 
 ---
 _created_at: 2026-04-18_
-_updated_at: 2026-04-18_
-_change: audit コマンド実装完了を反映_
+_updated_at: 2026-04-19_
+_change: test-suite 完了によるテスト構成（単一→マルチファイル）と developer-guide.md 追加を反映_

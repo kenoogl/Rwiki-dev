@@ -29,7 +29,7 @@
 
 ### Testing
 - **Framework**: pytest
-- テストファイル: `tests/test_rw_light.py`
+- テストファイル: コマンド・機能領域ごとに分割（`tests/test_*.py`）、共有フィクスチャは `tests/conftest.py`
 - TDD アプローチ（テスト先行 → 実装）
 
 ## Development Environment
@@ -55,3 +55,5 @@
 
 ---
 _created_at: 2026-04-18_
+_updated_at: 2026-04-19_
+_change: test-suite 完了によるテスト構成（単一→マルチファイル）を反映_
