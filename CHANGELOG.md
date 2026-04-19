@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added — test-suite スペック
+
+- `tests/conftest.py` — 共通フィクスチャ（vault_path, patch_constants, fixed_today, make_md_file 等）
+- ユーティリティ関数テスト（`test_utils.py`）— parse_frontmatter, slugify, ensure_basic_frontmatter 等 11 関数
+- Git 操作テスト（`test_git_ops.py`）— git_commit, git_status_porcelain, git_path_is_dirty
+- CLI コマンドテスト（`test_lint.py`, `test_ingest.py`, `test_synthesize_logs.py`, `test_approve.py`, `test_lint_query.py`, `test_init.py`）— 未テスト 6 コマンドのカバレッジ追加
+- `docs/developer-guide.md` — テスト実行方法、モック戦略、アーキテクチャ概要
+
 ### Added — cli-audit スペック
 
 - `rw audit micro` — 直近の更新ページを対象とした高速静的チェック（Tier 0: Micro-check）。リンク切れ・index.md 未登録・frontmatter パースエラーを検出。Claude CLI 不使用

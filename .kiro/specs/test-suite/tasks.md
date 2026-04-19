@@ -134,7 +134,7 @@
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8_
   - _Boundary: test_lint_query.py_
 
-- [ ] 3. ドキュメント整備: developer-guide.md と CHANGELOG.md
+- [x] 3. ドキュメント整備: developer-guide.md と CHANGELOG.md
   - docs/developer-guide.md を作成: テスト実行方法（pytest コマンド例 4 パターン）、テストファイル構成（既存 test_rw_light.py + 新規 8 ファイルの責務分担）、テスト追加手順（命名規約、フィクスチャ使用法、2 スペースインデント）
   - モック戦略セクション: monkeypatch.setattr のみ使用の方針、17 定数パッチ、subprocess.run 呼び出し記録パターン、LLM モック境界（call_claude vs call_claude_for_log_synthesis）
   - アーキテクチャ概要セクション: 3 層パイプライン（raw → review → wiki）、コマンドハンドラ構造、Prompt Engine チェーン
