@@ -123,7 +123,7 @@
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8_
   - _Boundary: test_approve.py_
 
-- [ ] 2.8 (P) lint-query コマンドのテスト
+- [x] 2.8 (P) lint-query コマンドのテスト
   - 構造検証（1 テスト）: 4 ファイル揃い → "Lint Result" in stdout
   - QL001 検出（1 テスト）: 必須ファイル欠落 → "QL001" in stdout（ERROR レベル）
   - ログ出力（1 テスト）: 結果 JSON に timestamp, results, summary の 3 キー存在
