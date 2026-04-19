@@ -44,7 +44,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
   - _Boundary: test_git_ops.py_
 
-- [ ] 2.3 (P) init コマンドのテスト: 新規初期化
+- [x] 2.3 (P) init コマンドのテスト: 新規初期化
   - 全テストで subprocess.run を no-op モック（CompletedProcess(returncode=0) 返却）として git init 実行を抑止。mock_templates フィクスチャで DEV_ROOT をパッチ（patch_constants は不使用 — DEV_ROOT パッチ競合防止）
   - ディレクトリ作成（2 テスト）: 空ディレクトリ指定 → VAULT_DIRS 全エントリ存在 + exit 0、存在しないパス → 自動作成してセットアップ続行
   - テンプレートコピー（3 テスト）: CLAUDE.md 内容一致、AGENTS/ ファイル数・名前一致（コンテンツごとコピー検証）、.gitignore 内容一致
