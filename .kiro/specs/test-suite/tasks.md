@@ -78,7 +78,7 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8_
   - _Boundary: test_lint.py_
 
-- [ ] 2.5 (P) ingest コマンドのテスト
+- [x] 2.5 (P) ingest コマンドのテスト
   - ファイル移動（1 テスト）: incoming/ → raw/ への相対パス保持移動（incoming/sub/file.md → raw/sub/file.md）
   - 空ディレクトリ（1 テスト）: incoming/ にファイルなし → exit 0
   - Git 連携（1 テスト）: git_commit モック（monkeypatch で rw_light.git_commit を差し替え）の呼び出し記録検証
