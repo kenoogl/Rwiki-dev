@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. テストインフラ基盤: conftest.py
+- [x] 1. テストインフラ基盤: conftest.py
 - [x] 1.1 conftest.py コアフィクスチャの実装
   - rw_light モジュールのインポートに必要な sys.path 操作を conftest.py 先頭に定義し、新規テストファイルでの個別 sys.path.insert を不要にする
   - vault_path フィクスチャで rw_light.VAULT_DIRS の全ディレクトリを tmp_path 上に構築する。VAULT_DIRS を直接参照しハードコード回避
@@ -18,7 +18,7 @@
   - 3 フィクスチャ追加後、`python -c "import conftest"` がエラーなく完了する（フィクスチャの実検証は Task 2 のテスト実行時に行われる）
   - _Requirements: 1.9, 1.10, 1.11_
 
-- [ ] 2. テストファイル実装
+- [x] 2. テストファイル実装
 - [x] 2.1 (P) ユーティリティ関数の単体テスト
   - parse_frontmatter の 3 パターン検証: 正常な YAML フロントマター → メタデータ辞書と本文分離、フロントマターなし → 空辞書と全文、開始 `---` のみで閉じなし → 空辞書と全文
   - build_frontmatter の 2 パターン検証: メタデータ辞書 → 有効な YAML ブロック生成、build→parse 往復テスト（YAML 特殊文字 `"Python: A Guide"` 等を含む値で往復しても元データが復元される）
