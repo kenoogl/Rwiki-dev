@@ -33,7 +33,7 @@
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 2.13, 2.14_
   - _Boundary: test_utils.py_
 
-- [ ] 2.2 (P) Git 操作関数のテスト
+- [x] 2.2 (P) Git 操作関数のテスト
   - git_commit 正常系: subprocess.run モック（呼び出し記録リスト）で git add → diff returncode=1（変更あり）→ commit の 3 段階呼び出しを部分一致で検証
   - git_commit スキップ: diff returncode=0（変更なし）→ commit 呼び出しが存在しないことを検証
   - git_commit 失敗（2 テスト）: git add 失敗と git commit 失敗をそれぞれ CalledProcessError で検証（args 内容に応じた条件分岐で送出）
