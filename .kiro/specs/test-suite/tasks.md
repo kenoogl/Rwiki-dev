@@ -92,7 +92,7 @@
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8_
   - _Boundary: test_ingest.py_
 
-- [ ] 2.6 (P) synthesize-logs コマンドのテスト
+- [x] 2.6 (P) synthesize-logs コマンドのテスト
   - 全テストで git_path_is_dirty を monkeypatch（False 返却の no-op）。call_claude_for_log_synthesis を関数レベルでモック（subprocess.run ではなく rw_light.call_claude_for_log_synthesis を差し替え）
   - 正常系（1 テスト）: モック戻り値（topics 配列の JSON 文字列、各 topic に title/summary/decision/reason/alternatives/reusable_pattern/tags）→ synthesis_candidates/ に候補ファイル生成
   - 空ディレクトリ（1 テスト）: llm_logs/ にファイルなし → exit 0、候補ファイルなし
