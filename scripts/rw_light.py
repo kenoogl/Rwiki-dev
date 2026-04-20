@@ -11,242 +11,15 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import rw_config
-
-
-# -------------------------
-# Utility
-# -------------------------
-def is_existing_vault(path: str) -> bool:
-    """CLAUDE.md または index.md が存在する場合、既存の Vault と判定する。"""
-    p = Path(path)
-    return (p / "CLAUDE.md").exists() or (p / "index.md").exists()
-
-
-def ensure_dirs() -> None:
-    for d in [rw_config.LOGDIR, rw_config.SYNTH_CANDIDATES, rw_config.WIKI_SYNTH, rw_config.QUERY_REVIEW]:
-        os.makedirs(d, exist_ok=True)
-
-
-def read_text(path: str) -> str:
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
-
-
-def write_text(path: str, text: str) -> None:
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(text)
-
-
-def append_text(path: str, text: str) -> None:
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(text)
-
-
-def relpath(path: str) -> str:
-    return os.path.relpath(path, rw_config.ROOT)
-
-
-def today() -> str:
-    return datetime.today().date().isoformat()
-
-
-def is_valid_iso_date(value: str) -> bool:
-    if not isinstance(value, str):
-        return False
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value.strip()):
-        return False
-    try:
-        datetime.strptime(value.strip(), "%Y-%m-%d")
-        return True
-    except ValueError:
-        return False
-
-
-def slugify(text: str) -> str:
-    text = unicodedata.normalize("NFKD", text)
-    text = text.encode("ascii", "ignore").decode("ascii")
-    text = text.lower()
-    text = re.sub(r"[^a-z0-9\s-]", "", text)
-    text = re.sub(r"\s+", "-", text)
-    text = re.sub(r"-+", "-", text)
-    text = text.strip("-")
-    return text[:80] if text else "untitled"
-
-
-def list_md_files(root_dir: str) -> list[str]:
-    if not os.path.isdir(root_dir):
-        return []
-    files: list[str] = []
-    for root, _, filenames in os.walk(root_dir):
-        for filename in filenames:
-            if filename.endswith(".md"):
-                files.append(os.path.join(root, filename))
-    return sorted(files)
-
-
-def list_query_dirs(root_dir: str) -> list[str]:
-    if not os.path.isdir(root_dir):
-        return []
-    result: list[str] = []
-    for entry in sorted(os.listdir(root_dir)):
-        path = os.path.join(root_dir, entry)
-        if os.path.isdir(path):
-            result.append(path)
-    return result
-
-
-def has_frontmatter(text: str) -> bool:
-    return text.startswith("---\n") or text == "---" or text.startswith("---\r\n")
-
-
-def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
-    if not has_frontmatter(text):
-        return {}, text
-
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return {}, text
-
-    raw_meta = parts[1].strip()
-    body = parts[2].lstrip("\n")
-    meta: dict[str, str] = {}
-
-    for line in raw_meta.splitlines():
-        if ":" not in line:
-            continue
-        key, value = line.split(":", 1)
-        meta[key.strip()] = value.strip().strip('"').strip("'")
-
-    return meta, body
-
-
-def build_frontmatter(meta: dict[str, Any]) -> str:
-    lines = ["---"]
-    for key, value in meta.items():
-        if isinstance(value, list):
-            rendered = "[" + ", ".join(str(v) for v in value) + "]"
-            lines.append(f"{key}: {rendered}")
-        elif isinstance(value, bool):
-            lines.append(f"{key}: {'true' if value else 'false'}")
-        else:
-            lines.append(f'{key}: "{value}"')
-    lines.append("---\n")
-    return "\n".join(lines)
-
-
-def first_h1(text: str) -> str | None:
-    for line in text.splitlines():
-        if line.startswith("# "):
-            return line[2:].strip()
-    return None
-
-
-def infer_source_from_path(path: str) -> str:
-    norm = path.replace("\\", "/")
-    if "/articles/" in norm:
-        return "web"
-    if "/papers/zotero/" in norm:
-        return "zotero"
-    if "/papers/local/" in norm:
-        return "local"
-    if "/meeting-notes/" in norm:
-        return "meeting"
-    if "/code-snippets/" in norm:
-        return "code"
-    return "unknown"
-
-
-def ensure_basic_frontmatter(path: str, default_source: str) -> tuple[bool, list[str], str]:
-    text = read_text(path)
-    fixes: list[str] = []
-
-    meta, body = parse_frontmatter(text)
-
-    if not meta:
-        meta = {}
-        fixes.append("added frontmatter")
-
-    if not meta.get("title"):
-        meta["title"] = first_h1(body) or os.path.basename(path)
-        fixes.append("filled title")
-
-    if not meta.get("source"):
-        meta["source"] = default_source
-        fixes.append("filled source")
-
-    if not meta.get("added"):
-        meta["added"] = today()
-        fixes.append("filled added")
-
-    new_text = build_frontmatter(meta) + "\n" + body.strip() + "\n"
-    modified = new_text != text
-    if modified:
-        write_text(path, new_text)
-
-    return modified, fixes, new_text
-
-
-def read_json(path: str) -> dict[str, Any]:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def safe_read_json(path: str) -> tuple[dict[str, Any] | None, str | None]:
-    try:
-        return read_json(path), None
-    except Exception as e:
-        return None, str(e)
-
-
-def git_status_porcelain() -> str:
-    result = subprocess.run(
-        ["git", "status", "--porcelain"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
-    return result.stdout
-
-
-def git_path_is_dirty(path_prefix: str) -> bool:
-    prefix = path_prefix.rstrip("/") + "/"
-    for line in git_status_porcelain().splitlines():
-        if len(line) < 4:
-            continue
-        path = line[3:].strip()
-        if path == path_prefix.rstrip("/") or path.startswith(prefix):
-            return True
-    return False
-
-
-def warn_if_dirty_paths(paths: list[str], action_name: str) -> None:
-    dirty = [p for p in paths if git_path_is_dirty(p)]
-    if dirty:
-        joined = ", ".join(dirty)
-        print(f"[WARN] {action_name} is using uncommitted paths: {joined}")
-
-
-def git_commit(paths: list[str], message: str) -> None:
-    subprocess.run(["git", "add", *paths], check=True)
-    diff = subprocess.run(["git", "diff", "--cached", "--quiet"], check=False)
-    if diff.returncode == 0:
-        return
-    subprocess.run(["git", "commit", "-m", message], check=True)
+import rw_utils
 
 
 # -------------------------
 # lint
 # -------------------------
 def cmd_lint() -> int:
-    ensure_dirs()
-    files = list_md_files(rw_config.INCOMING)
+    rw_utils.ensure_dirs()
+    files = rw_utils.list_md_files(rw_config.INCOMING)
 
     results = []
     severity_counts: dict[str, int] = {"critical": 0, "error": 0, "warn": 0, "info": 0}
@@ -255,13 +28,13 @@ def cmd_lint() -> int:
 
     for path in files:
         entry: dict = {
-            "path": relpath(path),
+            "path": rw_utils.relpath(path),
             "status": "PASS",
             "checks": [],
             "fixes": [],
         }
 
-        raw = read_text(path)
+        raw = rw_utils.read_text(path)
         if len(raw.strip()) == 0:
             entry["checks"].append({"severity": "ERROR", "message": "empty file"})
             entry["status"] = "FAIL"
@@ -271,7 +44,7 @@ def cmd_lint() -> int:
             print(f"[FAIL] {entry['path']} empty file")
             continue
 
-        _, fixes, new_text = ensure_basic_frontmatter(path, infer_source_from_path(path))
+        _, fixes, new_text = rw_utils.ensure_basic_frontmatter(path, rw_utils.infer_source_from_path(path))
         entry["fixes"].extend(fixes)
 
         if len(new_text.strip()) < 80:
@@ -299,15 +72,15 @@ def cmd_lint() -> int:
         "drift_events": [],
     }
 
-    write_text(rw_config.LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    rw_utils.write_text(rw_config.LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
     sc = severity_counts
     print(
       f"\nlint: CRITICAL {sc['critical']}, ERROR {sc['error']},"
       f" WARN {sc['warn']}, INFO {sc['info']} — {run_status}"
     )
-    print(f"Log: {relpath(rw_config.LINT_LOG)}")
+    print(f"Log: {rw_utils.relpath(rw_config.LINT_LOG)}")
 
-    return _compute_exit_code(run_status, had_runtime_error=False)
+    return rw_utils._compute_exit_code(run_status, had_runtime_error=False)
 
 
 # -------------------------
@@ -316,7 +89,7 @@ def cmd_lint() -> int:
 def load_lint_summary() -> dict[str, Any]:
     if not os.path.exists(rw_config.LINT_LOG):
         raise FileNotFoundError("lint log not found. run `rw lint` first.")
-    return json.loads(read_text(rw_config.LINT_LOG))
+    return json.loads(rw_utils.read_text(rw_config.LINT_LOG))
 
 
 def plan_ingest_moves(files: list[str]) -> list[tuple[str, str]]:
@@ -346,7 +119,7 @@ def execute_ingest_moves(moves: list[tuple[str, str]]) -> None:
 
 
 def cmd_ingest() -> int:
-    ensure_dirs()
+    rw_utils.ensure_dirs()
     lint_result = load_lint_summary()
     top_status = lint_result.get("status")
     has_fail = lint_result["summary"]["fail"] > 0 or top_status not in {None, "PASS"}
@@ -354,7 +127,7 @@ def cmd_ingest() -> int:
         print("FAIL exists in lint_latest.json. abort ingest.", file=sys.stderr)
         return 1
 
-    files = list_md_files(rw_config.INCOMING)
+    files = rw_utils.list_md_files(rw_config.INCOMING)
     if not files:
         print("No files found in raw/incoming/")
         return 0
@@ -362,12 +135,12 @@ def cmd_ingest() -> int:
     moves = plan_ingest_moves(files)
 
     for src, _ in moves:
-        print(f"[MOVE] {relpath(src)}")
+        print(f"[MOVE] {rw_utils.relpath(src)}")
 
     execute_ingest_moves(moves)
 
     try:
-        git_commit(["raw/"], "ingest: batch import")
+        rw_utils.git_commit(["raw/"], "ingest: batch import")
     except subprocess.CalledProcessError as e:
         print(f"[FAIL] git commit failed: {e}")
         return 1
@@ -407,11 +180,11 @@ JSON schema:
 }}
 
 対象ファイル:
-{relpath(log_path)}
+{rw_utils.relpath(log_path)}
 
 対象テキスト:
 \"\"\"
-{read_text(log_path)}
+{rw_utils.read_text(log_path)}
 \"\"\"
 """.strip()
 
@@ -448,14 +221,14 @@ def render_candidate_note(topic: dict[str, Any], source_rel: str) -> str:
     if not isinstance(tags, list):
         tags = []
 
-    return build_frontmatter({
+    return rw_utils.build_frontmatter({
         "title": title,
         "source": source_rel,
         "type": "synthesis_candidate",
         "status": "pending",
         "reviewed_by": "",
-        "created": today(),
-        "updated": today(),
+        "created": rw_utils.today(),
+        "updated": rw_utils.today(),
         "tags": tags,
     }) + f"""
 ## Summary
@@ -476,14 +249,14 @@ def render_candidate_note(topic: dict[str, Any], source_rel: str) -> str:
 
 
 def candidate_note_path(title: str) -> str:
-    return os.path.join(rw_config.SYNTH_CANDIDATES, f"{slugify(title)}.md")
+    return os.path.join(rw_config.SYNTH_CANDIDATES, f"{rw_utils.slugify(title)}.md")
 
 
 def cmd_synthesize_logs() -> int:
-    ensure_dirs()
-    warn_if_dirty_paths(["raw/llm_logs"], "synthesize-logs")
+    rw_utils.ensure_dirs()
+    rw_utils.warn_if_dirty_paths(["raw/llm_logs"], "synthesize-logs")
 
-    log_files = list_md_files(rw_config.LLM_LOGS)
+    log_files = rw_utils.list_md_files(rw_config.LLM_LOGS)
     if not log_files:
         print("No llm logs found in raw/llm_logs/")
         return 0
@@ -491,31 +264,31 @@ def cmd_synthesize_logs() -> int:
     generated: list[str] = []
 
     for log_path in log_files:
-        print(f"[READ] {relpath(log_path)}")
+        print(f"[READ] {rw_utils.relpath(log_path)}")
         try:
             output = call_claude_for_log_synthesis(log_path)
             topics = parse_topics(output)
         except Exception as e:
-            print(f"[FAIL] {relpath(log_path)}: {e}")
+            print(f"[FAIL] {rw_utils.relpath(log_path)}: {e}")
             continue
 
         for topic in topics:
             path = candidate_note_path(str(topic.get("title", "Untitled")))
             if os.path.exists(path):
-                print(f"[SKIP] existing candidate: {relpath(path)}")
+                print(f"[SKIP] existing candidate: {rw_utils.relpath(path)}")
                 continue
-            note = render_candidate_note(topic, relpath(log_path))
-            write_text(path, note)
-            generated.append(relpath(path))
-            print(f"[CANDIDATE] {relpath(path)}")
+            note = render_candidate_note(topic, rw_utils.relpath(log_path))
+            rw_utils.write_text(path, note)
+            generated.append(rw_utils.relpath(path))
+            print(f"[CANDIDATE] {rw_utils.relpath(path)}")
 
     if generated:
         if not os.path.exists(rw_config.CHANGE_LOG_MD):
-            write_text(rw_config.CHANGE_LOG_MD, "# Log\n")
+            rw_utils.write_text(rw_config.CHANGE_LOG_MD, "# Log\n")
         body = f"\n## {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
         for g in generated:
             body += f"- synthesis candidate generated: {g}\n"
-        append_text(rw_config.CHANGE_LOG_MD, body)
+        rw_utils.append_text(rw_config.CHANGE_LOG_MD, body)
 
     print(f"[DONE] generated {len(generated)} candidate notes")
     return 0
@@ -525,19 +298,19 @@ def cmd_synthesize_logs() -> int:
 # approve
 # -------------------------
 def candidate_files() -> list[str]:
-    return list_md_files(rw_config.SYNTH_CANDIDATES)
+    return rw_utils.list_md_files(rw_config.SYNTH_CANDIDATES)
 
 
 def approved_candidate_files() -> list[str]:
     approved_paths: list[str] = []
     for path in candidate_files():
-        text = read_text(path)
-        meta, _ = parse_frontmatter(text)
+        text = rw_utils.read_text(path)
+        meta, _ = rw_utils.parse_frontmatter(text)
 
         if (
             meta.get("status") == "approved"
             and bool(str(meta.get("reviewed_by", "")).strip())
-            and is_valid_iso_date(str(meta.get("approved", "")).strip())
+            and rw_utils.is_valid_iso_date(str(meta.get("approved", "")).strip())
             and str(meta.get("promoted", "")).lower() != "true"
         ):
             approved_paths.append(path)
@@ -546,14 +319,14 @@ def approved_candidate_files() -> list[str]:
 
 
 def synthesis_target_path(title: str) -> str:
-    return os.path.join(rw_config.WIKI_SYNTH, f"{slugify(title)}.md")
+    return os.path.join(rw_config.WIKI_SYNTH, f"{rw_utils.slugify(title)}.md")
 
 
 def merge_synthesis(existing_path: str, new_meta: dict[str, str], new_body: str) -> None:
-    old_text = read_text(existing_path)
-    old_meta, old_body = parse_frontmatter(old_text)
+    old_text = rw_utils.read_text(existing_path)
+    old_meta, old_body = rw_utils.parse_frontmatter(old_text)
 
-    old_meta["updated"] = today()
+    old_meta["updated"] = rw_utils.today()
     if new_meta.get("reviewed_by"):
         old_meta["reviewed_by"] = new_meta["reviewed_by"]
     if new_meta.get("approved"):
@@ -572,48 +345,48 @@ def merge_synthesis(existing_path: str, new_meta: dict[str, str], new_body: str)
             old_meta["candidate_source"] = new_candidate_source
 
     merged = (
-        build_frontmatter(old_meta)
+        rw_utils.build_frontmatter(old_meta)
         + "\n"
         + old_body.rstrip()
-        + f"\n\n---\n\n## Update {today()}\n"
+        + f"\n\n---\n\n## Update {rw_utils.today()}\n"
         + new_body.strip()
         + "\n"
     )
-    write_text(existing_path, merged)
+    rw_utils.write_text(existing_path, merged)
 
 
 def promote_candidate(path: str) -> tuple[str, str]:
-    text = read_text(path)
-    meta, body = parse_frontmatter(text)
+    text = rw_utils.read_text(path)
+    meta, body = rw_utils.parse_frontmatter(text)
 
     title = meta.get("title", Path(path).stem)
     target = synthesis_target_path(title)
 
     promoted_meta = dict(meta)
     promoted_meta["type"] = "synthesis"
-    promoted_meta["updated"] = today()
-    promoted_meta["candidate_source"] = relpath(path)
+    promoted_meta["updated"] = rw_utils.today()
+    promoted_meta["candidate_source"] = rw_utils.relpath(path)
 
-    promoted_text = build_frontmatter(promoted_meta) + "\n" + body.strip() + "\n"
+    promoted_text = rw_utils.build_frontmatter(promoted_meta) + "\n" + body.strip() + "\n"
 
     if os.path.exists(target):
         merge_synthesis(target, promoted_meta, body)
-        return "merged", relpath(target)
+        return "merged", rw_utils.relpath(target)
 
-    write_text(target, promoted_text)
-    return "created", relpath(target)
+    rw_utils.write_text(target, promoted_text)
+    return "created", rw_utils.relpath(target)
 
 
 def mark_candidate_promoted(path: str, target: str) -> None:
-    text = read_text(path)
-    meta, body = parse_frontmatter(text)
+    text = rw_utils.read_text(path)
+    meta, body = rw_utils.parse_frontmatter(text)
 
     meta["promoted"] = "true"
-    meta["promoted_at"] = today()
+    meta["promoted_at"] = rw_utils.today()
     meta["promoted_to"] = target
-    meta["updated"] = today()
+    meta["updated"] = rw_utils.today()
 
-    write_text(path, build_frontmatter(meta) + "\n" + body.strip() + "\n")
+    rw_utils.write_text(path, rw_utils.build_frontmatter(meta) + "\n" + body.strip() + "\n")
 
 
 def update_index_synthesis() -> None:
@@ -621,16 +394,16 @@ def update_index_synthesis() -> None:
     if parent:
         os.makedirs(parent, exist_ok=True)
     if not os.path.exists(rw_config.INDEX_MD):
-        write_text(rw_config.INDEX_MD, "# Index\n")
+        rw_utils.write_text(rw_config.INDEX_MD, "# Index\n")
 
-    files = list_md_files(rw_config.WIKI_SYNTH)
+    files = rw_utils.list_md_files(rw_config.WIKI_SYNTH)
     lines = ["## synthesis\n"]
     for path in sorted(files):
         name = Path(path).stem
         lines.append(f"- [[{name}]]\n")
     new_section = "".join(lines)
 
-    current = read_text(rw_config.INDEX_MD)
+    current = rw_utils.read_text(rw_config.INDEX_MD)
     if "## synthesis" in current:
         current = re.sub(r"## synthesis[\s\S]*?(?=\n## |\Z)", new_section.rstrip() + "\n", current)
     else:
@@ -638,23 +411,23 @@ def update_index_synthesis() -> None:
             current += "\n"
         current += "\n" + new_section
 
-    write_text(rw_config.INDEX_MD, current)
+    rw_utils.write_text(rw_config.INDEX_MD, current)
 
 
 def append_approval_log(entries: list[str]) -> None:
     if not os.path.exists(rw_config.CHANGE_LOG_MD):
-        write_text(rw_config.CHANGE_LOG_MD, "# Log\n")
+        rw_utils.write_text(rw_config.CHANGE_LOG_MD, "# Log\n")
 
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     body = f"\n## {stamp}\n"
     for entry in entries:
         body += f"- {entry}\n"
-    append_text(rw_config.CHANGE_LOG_MD, body)
+    rw_utils.append_text(rw_config.CHANGE_LOG_MD, body)
 
 
 def cmd_approve() -> int:
-    ensure_dirs()
-    warn_if_dirty_paths(["review/synthesis_candidates"], "approve")
+    rw_utils.ensure_dirs()
+    rw_utils.warn_if_dirty_paths(["review/synthesis_candidates"], "approve")
 
     files = approved_candidate_files()
     if not files:
@@ -664,10 +437,10 @@ def cmd_approve() -> int:
     entries: list[str] = []
 
     for path in files:
-        print(f"[APPROVE] {relpath(path)}")
+        print(f"[APPROVE] {rw_utils.relpath(path)}")
         action, target_rel = promote_candidate(path)
         mark_candidate_promoted(path, target_rel)
-        entries.append(f"{action} synthesis: {target_rel} from {relpath(path)}")
+        entries.append(f"{action} synthesis: {target_rel} from {rw_utils.relpath(path)}")
 
     update_index_synthesis()
     append_approval_log(entries)
@@ -684,7 +457,7 @@ def parse_agent_mapping(claude_md_path: str) -> dict[str, dict[str, Any]]:
     """CLAUDE.md のマッピング表をパースし、タスク→エージェント+ポリシーの辞書を返す。
 
     パース手順:
-    1. CLAUDE.md を read_text() で読み込む
+    1. CLAUDE.md を rw_utils.read_text() で読み込む
     2. ヘッダー列名（Task, Agent, Policy, Execution Mode）でテーブル位置と列順を特定
     3. 各データ行を解析し、Policy 列はカンマ区切りでリスト化
 
@@ -700,7 +473,7 @@ def parse_agent_mapping(claude_md_path: str) -> dict[str, dict[str, Any]]:
     Raises:
         ValueError: マッピング表が見つからない、必須列が欠落、またはパース不能な場合
     """
-    content = read_text(claude_md_path)
+    content = rw_utils.read_text(claude_md_path)
 
     # マッピングテーブルのヘッダー行を探す
     header_line: str | None = None
@@ -847,9 +620,9 @@ def load_task_prompts(task_name: str, *, skip_vault_validation: bool = False) ->
         else:
             _validate_agents_severity_vocabulary(Path(rw_config.AGENTS_DIR) / "audit.md")
 
-    parts: list[str] = [read_text(agent_path)]
+    parts: list[str] = [rw_utils.read_text(agent_path)]
     for pol_path in policy_paths:
-        parts.append(read_text(pol_path))
+        parts.append(rw_utils.read_text(pol_path))
 
     return "\n\n".join(parts)
 
@@ -1008,13 +781,13 @@ def read_wiki_content(scope: str | None) -> str:
         # scope 指定: そのファイルのみ読み込む
         if not os.path.isfile(scope):
             raise FileNotFoundError(f"指定されたwikiページが見つかりません: {scope}")
-        return read_text(scope)
+        return rw_utils.read_text(scope)
 
     # scope=None: wiki/ ディレクトリを対象とする
     if not os.path.isdir(rw_config.WIKI):
         raise FileNotFoundError(f"wiki/ ディレクトリが見つかりません: {rw_config.WIKI}")
 
-    md_files = list_md_files(rw_config.WIKI)
+    md_files = rw_utils.list_md_files(rw_config.WIKI)
     if not md_files:
         raise ValueError(f"wiki/ に .md ファイルが存在しません: {rw_config.WIKI}")
 
@@ -1022,11 +795,11 @@ def read_wiki_content(scope: str | None) -> str:
     if len(md_files) <= 20:
         parts: list[str] = []
         for path in md_files:
-            parts.append(f"<!-- file: {relpath(path)} -->\n{read_text(path)}")
+            parts.append(f"<!-- file: {rw_utils.relpath(path)} -->\n{rw_utils.read_text(path)}")
         return "\n\n".join(parts)
 
     # 大規模 wiki (>20): index.md のみを返す（cmd_* が2段階方式でオーケストレーションする）
-    return read_text(rw_config.INDEX_MD)
+    return rw_utils.read_text(rw_config.INDEX_MD)
 
 
 # audit: data loading
@@ -1051,7 +824,7 @@ def read_all_wiki_content() -> str:
     if not os.path.isdir(rw_config.WIKI):
         raise FileNotFoundError(f"wiki/ が存在しません: {rw_config.WIKI}")
 
-    md_files = list_md_files(rw_config.WIKI)
+    md_files = rw_utils.list_md_files(rw_config.WIKI)
     if not md_files:
         raise ValueError(f"wiki/ に .md ファイルが存在しません: {rw_config.WIKI}")
 
@@ -1065,50 +838,23 @@ def read_all_wiki_content() -> str:
 
     # wiki/ 配下の全 .md ファイル
     for path in md_files:
-        header = f"<!-- file: {relpath(path)} -->"
-        parts.append(f"{header}\n{read_text(path)}")
+        header = f"<!-- file: {rw_utils.relpath(path)} -->"
+        parts.append(f"{header}\n{rw_utils.read_text(path)}")
 
     # rw_config.ROOT/index.md（存在する場合のみ）
     if os.path.isfile(rw_config.INDEX_MD):
-        parts.append(f"<!-- file: index.md -->\n{read_text(rw_config.INDEX_MD)}")
+        parts.append(f"<!-- file: index.md -->\n{rw_utils.read_text(rw_config.INDEX_MD)}")
 
     # rw_config.ROOT/log.md（存在する場合のみ）
     if os.path.isfile(rw_config.CHANGE_LOG_MD):
-        parts.append(f"<!-- file: log.md -->\n{read_text(rw_config.CHANGE_LOG_MD)}")
+        parts.append(f"<!-- file: log.md -->\n{rw_utils.read_text(rw_config.CHANGE_LOG_MD)}")
 
     return "\n\n".join(parts)
 
 
-def _git_list_files(args: list[str]) -> list[str]:
-    """git コマンドを実行しファイルリストを返す。失敗時は空リスト。
-
-    テスト時にモンキーパッチ可能な薄いラッパー。
-    get_recent_wiki_changes() が内部で使用する。
-    call_claude() とは独立してモック可能にするために分離。
-
-    Args:
-        args: git サブコマンドと引数のリスト（例: ["diff", "--name-only", "--", "wiki/"]）
-    Returns:
-        コマンド出力を改行で分割したファイルパスリスト。空行は除外。
-    """
-    try:
-        result = subprocess.run(
-            ["git"] + args,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            check=False,
-        )
-    except Exception:
-        return []
-    if result.returncode != 0:
-        return []
-    return [line for line in result.stdout.splitlines() if line.strip()]
-
-
 def get_recent_wiki_changes() -> list[str]:
     """git diff で最近更新された wiki ページのファイルパスリストを返す。
-    グローバル定数 rw_config.WIKI を使用。内部で _git_list_files() を呼び出す。
+    グローバル定数 rw_config.WIKI を使用。内部で rw_utils._git_list_files() を呼び出す。
 
     検出方法:
     1. 未コミット変更: git diff --name-only -- wiki/
@@ -1128,15 +874,15 @@ def get_recent_wiki_changes() -> list[str]:
 
     # 1. 未コミット変更（ステージ済み・未ステージ・untracked）
     uncommitted: list[str] = []
-    uncommitted += _git_list_files(["diff", "--name-only", "--", wiki_rel + "/"])
-    uncommitted += _git_list_files(["diff", "--cached", "--name-only", "--", wiki_rel + "/"])
-    uncommitted += _git_list_files(["ls-files", "--others", "--exclude-standard", "--", wiki_rel + "/"])
+    uncommitted += rw_utils._git_list_files(["diff", "--name-only", "--", wiki_rel + "/"])
+    uncommitted += rw_utils._git_list_files(["diff", "--cached", "--name-only", "--", wiki_rel + "/"])
+    uncommitted += rw_utils._git_list_files(["ls-files", "--others", "--exclude-standard", "--", wiki_rel + "/"])
 
     # 2. 直近コミットの変更（HEAD~1..HEAD）
-    last_commit = _git_list_files(["diff", "--name-only", "HEAD~1..HEAD", "--", wiki_rel + "/"])
+    last_commit = rw_utils._git_list_files(["diff", "--name-only", "HEAD~1..HEAD", "--", wiki_rel + "/"])
     if not last_commit:
         # HEAD~1 が存在しない場合（初回コミット）はフォールバック
-        last_commit = _git_list_files(["diff", "--name-only", "--diff-filter=A", "HEAD", "--", wiki_rel + "/"])
+        last_commit = rw_utils._git_list_files(["diff", "--name-only", "--diff-filter=A", "HEAD", "--", wiki_rel + "/"])
 
     # 3. 和集合（重複除去）
     all_files_set: set[str] = set()
@@ -1171,12 +917,12 @@ def validate_wiki_dir() -> bool:
         print(f"[ERROR] wiki/ ディレクトリが見つかりません: {rw_config.WIKI}")
         return False
 
-    md_files = list_md_files(rw_config.WIKI)
+    md_files = rw_utils.list_md_files(rw_config.WIKI)
     if not md_files:
         print(f"[ERROR] wiki/ に .md ファイルが存在しません: {rw_config.WIKI}")
         return False
 
-    warn_if_dirty_paths(["wiki"], "audit")
+    rw_utils.warn_if_dirty_paths(["wiki"], "audit")
     return True
 
 
@@ -1195,7 +941,7 @@ def load_wiki_pages(wiki_dir: str, target_files: list[str] | None = None) -> lis
     if target_files is not None:
         files = [f for f in target_files if f.endswith(".md")]
     else:
-        files = list_md_files(wiki_dir)
+        files = rw_utils.list_md_files(wiki_dir)
 
     pages: list[WikiPage] = []
     for file_path in files:
@@ -1204,8 +950,8 @@ def load_wiki_pages(wiki_dir: str, target_files: list[str] | None = None) -> lis
         filename = os.path.basename(file_path)
 
         try:
-            raw_text = read_text(file_path)
-            frontmatter, body = parse_frontmatter(raw_text)
+            raw_text = rw_utils.read_text(file_path)
+            frontmatter, body = rw_utils.parse_frontmatter(raw_text)
             links = LINK_RE.findall(body)
             pages.append(WikiPage(
                 path=rel,
@@ -1244,8 +990,8 @@ class WikiPage(NamedTuple):
     path: str                  # wiki/ からの相対パス（例: "concepts/my-page.md"）
     filename: str              # ファイル名（例: "my-page.md"）
     raw_text: str              # 読み込んだ生テキスト（frontmatter 検査用）
-    frontmatter: dict          # parse_frontmatter() でパース済み frontmatter
-    body: str                  # parse_frontmatter() が返す本文
+    frontmatter: dict          # rw_utils.parse_frontmatter() でパース済み frontmatter
+    body: str                  # rw_utils.parse_frontmatter() が返す本文
     links: list                # body から [[link]] regex で抽出したページ名リスト
     read_error: str            # 読み込みエラーがあった場合のメッセージ（正常時は ""）
 
@@ -1351,7 +1097,7 @@ def check_frontmatter(pages: list["WikiPage"]) -> list["Finding"]:
     for page in pages:
         raw = page.raw_text
 
-        if has_frontmatter(raw):
+        if rw_utils.has_frontmatter(raw):
             # frontmatter ブロックの構造解析
             parts = raw.split("---", 2)
             if len(parts) < 3:
@@ -1641,26 +1387,6 @@ def run_weekly_checks(
     findings.extend(check_required_sections(pages, page_policy))
 
     return findings, bidir_stats
-
-
-# severity / status / exit code helpers
-
-
-def _compute_run_status(findings: list) -> str:
-  """CRITICAL または ERROR が 1 件以上あれば FAIL, それ以外は PASS。"""
-  for f in findings:
-    if f.severity in rw_config._FAIL_SEVERITIES:
-      return "FAIL"
-  return "PASS"
-
-
-def _compute_exit_code(status: str | None, had_runtime_error: bool) -> int:
-  """had_runtime_error → 1, FAIL → 2, PASS/None → 0。"""
-  if had_runtime_error:
-    return 1
-  if status == "FAIL":
-    return 2
-  return 0
 
 
 # audit: LLM engine
@@ -2178,7 +1904,7 @@ def generate_audit_report(
   error_count = sum(1 for f in findings if f.severity == "ERROR")
   warn_count = sum(1 for f in findings if f.severity == "WARN")
   info_count = sum(1 for f in findings if f.severity == "INFO")
-  status = _compute_run_status(findings)
+  status = rw_utils._compute_run_status(findings)
 
   # Findings セクションのラベル決定
   if tier in ("micro", "weekly"):
@@ -2264,7 +1990,7 @@ def generate_audit_report(
 
   content = "\n".join(lines)
   report_path = os.path.join(rw_config.LOGDIR, f"audit-{tier}-{timestamp}.md")
-  write_text(report_path, content)
+  rw_utils.write_text(report_path, content)
   return report_path
 
 
@@ -2288,7 +2014,7 @@ def print_audit_summary(tier: str, findings: list, report_path: str) -> None:
   error_count = sum(1 for f in findings if f.severity == "ERROR")
   warn_count = sum(1 for f in findings if f.severity == "WARN")
   info_count = sum(1 for f in findings if f.severity == "INFO")
-  status = _compute_run_status(findings)
+  status = rw_utils._compute_run_status(findings)
 
   print("---")
   print(
@@ -2361,7 +2087,7 @@ def cmd_audit_micro() -> int:
     pages = load_wiki_pages(rw_config.WIKI, target_files)
 
     # 5. all_pages_set 構築（全 wiki ページのファイル名セット）
-    all_md_files = list_md_files(rw_config.WIKI)
+    all_md_files = rw_utils.list_md_files(rw_config.WIKI)
     all_pages_set: set[str] = set()
     for f in all_md_files:
         rel = os.path.relpath(f, rw_config.WIKI)
@@ -2370,7 +2096,7 @@ def cmd_audit_micro() -> int:
     # 6. index_content 読み込み（不在時は None）
     index_content: str | None = None
     if os.path.isfile(rw_config.INDEX_MD):
-        index_content = read_text(rw_config.INDEX_MD)
+        index_content = rw_utils.read_text(rw_config.INDEX_MD)
 
     # 7. micro チェック実行
     findings = run_micro_checks(pages, all_pages_set, index_content)
@@ -2396,7 +2122,7 @@ def cmd_audit_micro() -> int:
     print_audit_summary("micro", findings, report_path)
 
     # 11. CRITICAL/ERROR あれば exit 2、なければ exit 0
-    return _compute_exit_code(_compute_run_status(findings), had_runtime_error=False)
+    return rw_utils._compute_exit_code(rw_utils._compute_run_status(findings), had_runtime_error=False)
 
 
 # audit: commands — weekly
@@ -2416,7 +2142,7 @@ def cmd_audit_weekly() -> int:
     pages = load_wiki_pages(rw_config.WIKI, None)
 
     # 3. all_pages_set 構築
-    all_md_files = list_md_files(rw_config.WIKI)
+    all_md_files = rw_utils.list_md_files(rw_config.WIKI)
     all_pages_set: set[str] = set()
     for f in all_md_files:
         rel = os.path.relpath(f, rw_config.WIKI)
@@ -2425,7 +2151,7 @@ def cmd_audit_weekly() -> int:
     # 4. index_content 読み込み（rw_config.INDEX_MD 不在時は None）
     index_content: str | None = None
     if os.path.isfile(rw_config.INDEX_MD):
-        index_content = read_text(rw_config.INDEX_MD)
+        index_content = rw_utils.read_text(rw_config.INDEX_MD)
 
     # 5. index_links 構築（index_content から [[link]] regex で抽出、basename のみ）
     index_links: set[str] = set()
@@ -2491,7 +2217,7 @@ def cmd_audit_weekly() -> int:
     print_audit_summary("weekly", findings, report_path)
 
     # 15. CRITICAL/ERROR あれば exit 2、なければ exit 0
-    return _compute_exit_code(_compute_run_status(findings), had_runtime_error=False)
+    return rw_utils._compute_exit_code(rw_utils._compute_run_status(findings), had_runtime_error=False)
 
 
 # audit: commands — monthly/quarterly
@@ -2574,7 +2300,7 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
 
   # 9. raw レスポンスを logs/audit-{tier}-{ts}-raw.txt に保存
   raw_path = os.path.join(rw_config.LOGDIR, f"audit-{tier}-{ts}-raw.txt")
-  write_text(raw_path, raw_response)
+  rw_utils.write_text(raw_path, raw_response)
 
   # 10. parse_audit_response(raw_response) でパース
   try:
@@ -2619,7 +2345,7 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
   print_audit_summary(tier, findings, report_path)
 
   # 15. CRITICAL/ERROR あれば exit 2、なければ exit 0
-  return _compute_exit_code(_compute_run_status(findings), had_runtime_error=False)
+  return rw_utils._compute_exit_code(rw_utils._compute_run_status(findings), had_runtime_error=False)
 
 
 def cmd_audit_monthly(args: list[str]) -> int:
@@ -2637,7 +2363,7 @@ def cmd_audit_quarterly(args: list[str]) -> int:
 # -------------------------
 
 def generate_query_id(question: str) -> str:
-    """YYYYMMDD-<slugify(question)> 形式の query_id を生成する。
+    """YYYYMMDD-<rw_utils.slugify(question)> 形式の query_id を生成する。
 
     slugify は既存関数を使用（ASCII, lowercase, hyphen, max 80 chars）。
 
@@ -2646,8 +2372,8 @@ def generate_query_id(question: str) -> str:
     """
     if not question or not question.strip():
         raise ValueError("question must not be empty")
-    date_prefix = today().replace("-", "")
-    slug = slugify(question)
+    date_prefix = rw_utils.today().replace("-", "")
+    slug = rw_utils.slugify(question)
     return f"{date_prefix}-{slug}"
 
 
@@ -2676,11 +2402,11 @@ def write_query_artifacts(
         f"date: {query['date']}\n"
     )
     question_path = os.path.join(base_dir, "question.md")
-    write_text(question_path, question_content)
+    rw_utils.write_text(question_path, question_content)
 
     # answer.md: Markdown コンテンツそのまま
     answer_path = os.path.join(base_dir, "answer.md")
-    write_text(answer_path, data["answer"]["content"])
+    rw_utils.write_text(answer_path, data["answer"]["content"])
 
     # evidence.md: evidence blocks から source: 行を含む形式で書き出す
     blocks = data["evidence"]["blocks"]
@@ -2692,13 +2418,13 @@ def write_query_artifacts(
         evidence_lines.append("")
     evidence_content = "\n".join(evidence_lines).rstrip() + "\n"
     evidence_path = os.path.join(base_dir, "evidence.md")
-    write_text(evidence_path, evidence_content)
+    rw_utils.write_text(evidence_path, evidence_content)
 
     # metadata.json: CLI 生成の query_id で上書き
     metadata = dict(data["metadata"])
     metadata["query_id"] = query_id
     metadata_path = os.path.join(base_dir, "metadata.json")
-    write_text(metadata_path, json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
+    rw_utils.write_text(metadata_path, json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
 
     return [question_path, answer_path, evidence_path, metadata_path]
 
@@ -2820,7 +2546,7 @@ def cmd_query_extract(args: list[str]) -> int:
         print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(rw_config.ROOT, 'AGENTS')}")
         return 1
 
-    warn_if_dirty_paths(["wiki"], "query extract")
+    rw_utils.warn_if_dirty_paths(["wiki"], "query extract")
 
     # 3. query_id 生成
     try:
@@ -2846,11 +2572,11 @@ def cmd_query_extract(args: list[str]) -> int:
 
     # 5. wiki サイズチェックと wiki_content 取得
     try:
-        num_files = len(list_md_files(rw_config.WIKI))
+        num_files = len(rw_utils.list_md_files(rw_config.WIKI))
         if num_files > 20 and scope is None:
             # 2段階方式: ステージ1で関連ページ特定
             try:
-                index_content = read_text(rw_config.INDEX_MD)
+                index_content = rw_utils.read_text(rw_config.INDEX_MD)
             except FileNotFoundError:
                 index_content = ""
 
@@ -2878,9 +2604,9 @@ def cmd_query_extract(args: list[str]) -> int:
                 for page_path in identified_pages:
                     full_path = os.path.join(rw_config.ROOT, page_path) if not os.path.isabs(page_path) else page_path
                     if os.path.isfile(full_path):
-                        parts.append(f"<!-- file: {page_path} -->\n{read_text(full_path)}")
+                        parts.append(f"<!-- file: {page_path} -->\n{rw_utils.read_text(full_path)}")
                     elif os.path.isfile(page_path):
-                        parts.append(f"<!-- file: {page_path} -->\n{read_text(page_path)}")
+                        parts.append(f"<!-- file: {page_path} -->\n{rw_utils.read_text(page_path)}")
                 wiki_content = "\n\n".join(parts) if parts else index_content
             else:
                 # フォールバック: index.md を使用
@@ -2935,12 +2661,12 @@ def cmd_query_extract(args: list[str]) -> int:
                 print(f"  [{chk['severity']}] {chk['id']} {chk['message']}")
         print("[INFO] アーティファクトは生成されましたが lint に失敗しました。")
         for p in file_paths:
-            print(f"  {relpath(p)}")
+            print(f"  {rw_utils.relpath(p)}")
         return 2
     else:
         print(f"[DONE] query extract 完了: {query_id}")
         for p in file_paths:
-            print(f"  {relpath(p)}")
+            print(f"  {rw_utils.relpath(p)}")
         return 0
 
 
@@ -2982,7 +2708,7 @@ def cmd_query_answer(args: list[str]) -> int:
         print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(rw_config.ROOT, 'AGENTS')}")
         return 1
 
-    warn_if_dirty_paths(["wiki"], "query answer")
+    rw_utils.warn_if_dirty_paths(["wiki"], "query answer")
 
     # 3. load_task_prompts
     try:
@@ -3135,7 +2861,7 @@ def contains_inference_language(text: str) -> bool:
 
 def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any]:
     result: dict[str, Any] = {
-        "target": relpath(query_dir),
+        "target": rw_utils.relpath(query_dir),
         "status": "PASS",
         "checks": [],
     }
@@ -3164,11 +2890,11 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
         result["status"] = "FAIL"
         return result
 
-    query_text = read_text(required_files["question.md"])
-    answer_text = read_text(required_files["answer.md"])
-    evidence_text = read_text(required_files["evidence.md"])
+    query_text = rw_utils.read_text(required_files["question.md"])
+    answer_text = rw_utils.read_text(required_files["answer.md"])
+    evidence_text = rw_utils.read_text(required_files["evidence.md"])
 
-    metadata, metadata_err = safe_read_json(required_files["metadata.json"])
+    metadata, metadata_err = rw_utils.safe_read_json(required_files["metadata.json"])
     if metadata_err:
         add("CRITICAL", "QL017", f"metadata.json is invalid JSON: {metadata_err}")
         result["status"] = "FAIL"
@@ -3257,7 +2983,7 @@ def print_query_lint_text(results: list[dict[str, Any]]) -> None:
 
 
 def cmd_lint_query(args: list[str]) -> int:
-    ensure_dirs()
+    rw_utils.ensure_dirs()
 
     target_path = None
     strict = False
@@ -3270,7 +2996,7 @@ def cmd_lint_query(args: list[str]) -> int:
             i += 1
             if i >= len(args):
                 print("missing value for --path")
-                return _compute_exit_code(None, had_runtime_error=True)
+                return rw_utils._compute_exit_code(None, had_runtime_error=True)
             target_path = args[i]
         elif a == "--strict":
             strict = True
@@ -3278,20 +3004,20 @@ def cmd_lint_query(args: list[str]) -> int:
             i += 1
             if i >= len(args):
                 print("missing value for --format")
-                return _compute_exit_code(None, had_runtime_error=True)
+                return rw_utils._compute_exit_code(None, had_runtime_error=True)
             output_format = args[i]
         else:
             if not a.startswith("--") and target_path is None:
                 target_path = a
             else:
                 print(f"unknown option: {a}")
-                return _compute_exit_code(None, had_runtime_error=True)
+                return rw_utils._compute_exit_code(None, had_runtime_error=True)
         i += 1
 
     if target_path:
         query_dirs = [target_path]
     else:
-        query_dirs = list_query_dirs(rw_config.QUERY_REVIEW)
+        query_dirs = rw_utils.list_query_dirs(rw_config.QUERY_REVIEW)
 
     if not query_dirs:
         print("No query directories found.")
@@ -3300,7 +3026,7 @@ def cmd_lint_query(args: list[str]) -> int:
     missing_paths = [p for p in query_dirs if not os.path.isdir(p)]
     if missing_paths:
         print(f"target path not found: {missing_paths[0]}")
-        return _compute_exit_code(None, had_runtime_error=True)
+        return rw_utils._compute_exit_code(None, had_runtime_error=True)
 
     results = [lint_single_query_dir(p, strict=strict) for p in query_dirs]
 
@@ -3322,13 +3048,13 @@ def cmd_lint_query(args: list[str]) -> int:
         },
         "drift_events": [],
     }
-    write_text(rw_config.QUERY_LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    rw_utils.write_text(rw_config.QUERY_LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
 
     if output_format == "json":
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
         print_query_lint_text(results)
-        print(f"Log: {relpath(rw_config.QUERY_LINT_LOG)}")
+        print(f"Log: {rw_utils.relpath(rw_config.QUERY_LINT_LOG)}")
 
     if run_status == "FAIL":
         return 2
@@ -3358,7 +3084,7 @@ def cmd_query_fix(args: list[str]) -> int:
         print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(rw_config.ROOT, 'AGENTS')}")
         return 1
 
-    warn_if_dirty_paths(["wiki"], "query fix")
+    rw_utils.warn_if_dirty_paths(["wiki"], "query fix")
 
     # 3. 事前 lint
     pre_lint = lint_single_query_dir(query_dir)
@@ -3393,7 +3119,7 @@ def cmd_query_fix(args: list[str]) -> int:
     existing_artifacts: dict[str, str] = {}
     for filename, path in artifact_paths.items():
         if os.path.exists(path):
-            existing_artifacts[filename] = read_text(path)
+            existing_artifacts[filename] = rw_utils.read_text(path)
 
     # 7. プロンプト構築
     prompt = build_query_prompt(
@@ -3424,7 +3150,7 @@ def cmd_query_fix(args: list[str]) -> int:
     for filename, content in fix_data["files"].items():
         if content is not None:
             file_path = os.path.join(query_dir, filename)
-            write_text(file_path, content)
+            rw_utils.write_text(file_path, content)
             written_files.append(filename)
 
     # 11. 修復結果と skipped 項目を報告
@@ -3507,7 +3233,7 @@ def cmd_init(args: list[str]) -> int:
       return 1
 
   # --- Vault検出 ---
-  if is_existing_vault(target_path) and not force:
+  if rw_utils.is_existing_vault(target_path) and not force:
     ans = input(
       f"[WARN] '{target_path}' は既存のVaultです。上書きしますか？ [y/N]: "
     ).strip().lower()
@@ -3578,7 +3304,7 @@ def cmd_init(args: list[str]) -> int:
   index_md = os.path.join(target_path, "index.md")
   if not os.path.exists(index_md):
     try:
-      write_text(index_md, "# Index\n")
+      rw_utils.write_text(index_md, "# Index\n")
       report["templates_copied"].append("index.md")
     except Exception as e:
       print(f"[WARN] index.md 生成失敗: {e}")
@@ -3589,7 +3315,7 @@ def cmd_init(args: list[str]) -> int:
   log_md = os.path.join(target_path, "log.md")
   if not os.path.exists(log_md):
     try:
-      write_text(log_md, "# Log\n")
+      rw_utils.write_text(log_md, "# Log\n")
       report["templates_copied"].append("log.md")
     except Exception as e:
       print(f"[WARN] log.md 生成失敗: {e}")

@@ -96,7 +96,7 @@
 
 - [ ] 2. Phase 2: `rw_utils` 抽出と utility patch 移行
 
-- [ ] 2.1 `rw_utils.py` 作成と汎用ユーティリティ関数の移動
+- [x] 2.1 `rw_utils.py` 作成と汎用ユーティリティ関数の移動
   - `scripts/rw_utils.py` を新規作成し、design.md「File Structure Plan」の rw_utils セクションで列挙された全関数を `rw_light.py` から物理移動する（`today`, `is_valid_iso_date`, `relpath`, `ensure_dirs`, `is_existing_vault`, `read_text`, `write_text`, `append_text`, `read_json`, `safe_read_json`, frontmatter 関数群（`has_frontmatter`, `parse_frontmatter`, `build_frontmatter`, `ensure_basic_frontmatter`, `first_h1`, `infer_source_from_path`, `slugify`）, `list_md_files`, `list_query_dirs`, git 関数群（`git_status_porcelain`, `git_path_is_dirty`, `warn_if_dirty_paths`, `git_commit`, `_git_list_files`）, `_compute_run_status`, `_compute_exit_code`）
   - `rw_utils.py` は `import rw_config` のみを行い、定数参照を `rw_config.X` 形式に統一する（他サブモジュールを import しない — DAG 維持）
   - **Phase 2 時点で rw_light.py 内に存在する全ての関数本体**（最終残留分: cmd_lint / cmd_ingest / cmd_synthesize_logs / cmd_approve / cmd_init / `_backup_timestamp` + Phase 4a 移動予定の cmd_audit_* / check_* / その他 audit 関数群 + Phase 4b 移動予定の cmd_query_* / cmd_lint_query / その他 query 関数群を含む全 44 関数）の上記関数呼び出しをすべて `rw_utils.X(...)` 形式の修飾参照に書き換える（修飾参照規約）。**特に注意**: cmd_init は `is_existing_vault` を bare 呼び出し、cmd_audit_* は `_compute_run_status` / `_compute_exit_code` / `git_path_is_dirty` を bare 呼び出ししている可能性があり、これらが移動後 bare のままだと NameError 発生
