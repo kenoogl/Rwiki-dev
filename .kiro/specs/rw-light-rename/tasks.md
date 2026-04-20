@@ -96,20 +96,20 @@
 
 - [ ] 6. 最終検証
 
-- [ ] 6.1 pytest による自動テスト検証
+- [x] 6.1 pytest による自動テスト検証
   - `pytest tests/ -q` を実行し 644 passed + 1 skipped 以上を確認
   - 完了条件: `pytest tests/ -q` の出力末尾が `644 passed, 1 skipped` 以上、exit code 0
   - _Requirements: 3.1_
   - _Depends: 3, 4.1, 4.2, 5_
 
-- [ ] 6.2 残存参照 grep 検証
+- [x] 6.2 残存参照 grep 検証
   - `rg -l rw_light` の結果が以下の Out of Boundary 対象ファイルのみに限定されることを確認: `.kiro/steering/roadmap.md` / `CHANGELOG.md` / `.kiro/specs/**/*.md`（ただし `.kiro/specs/rw-light-rename/` 配下の本スペック spec 本文は除外対象ではなく、更新された状態で参照が残らない前提） / `TODO_NEXT_SESSION.md` / tests 配下 docstring/コメント言及（Req 3.4 許容） / Task 1 で Out of Boundary 確定した `.claude/settings.local.json`（該当時）
   - 上記以外に `rw_light` 残存がある場合は原因を特定し、該当 task (2-5) に戻る
   - 完了条件: `rg -l rw_light` の出力が Out of Boundary リストのみ、それ以外への漏れが 0
   - _Requirements: 6.1, 6.2, 6.3_
   - _Depends: 3, 4.1, 4.2, 5_
 
-- [ ] 6.3 手動検証チェックリスト文書化
+- [x] 6.3 手動検証チェックリスト文書化
   - `.kiro/specs/rw-light-rename/manual-verification.md` を作成し、以下 5 項目をチェックボックス付きで文書化:
     - (1) `git log --follow scripts/rw_cli.py` で rename 前コミットが辿れることを確認（Req 1.2）
     - (2) `python scripts/rw_cli.py` 単独実行で既存 usage が表示（`--reinstall-symlink` 追記のみの差分）（Req 2.1, 5.4）
