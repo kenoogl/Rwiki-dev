@@ -194,7 +194,7 @@
   - _Boundary: cmd_lint_query_
   - _Depends: 2.2_
 
-- [ ] 2.11 `cmd_ingest` の precondition failure を exit 1 として維持 + WARN 解釈除去（AC 8.1 + 8.2、TDD）
+- [x] 2.11 `cmd_ingest` の precondition failure を exit 1 として維持 + WARN 解釈除去（AC 8.1 + 8.2、TDD）
   - 先に test_ingest_precondition_exit_1 を red で追加: 上流 FAIL → exit 1（exit 2 にしない）、PASS → 続行 exit 0、status 位置 WARN → FAIL と同等扱い（旧コードパス除去の regression 防止）
   - 上流 lint の FAIL 検知（`summary.fail > 0` または top-level `status == "FAIL"`）で stderr precondition msg + exit 1
   - status 位置の WARN を解釈するコードパスを除去（AC 8.2）
@@ -203,7 +203,7 @@
   - _Boundary: cmd_ingest_
   - _Depends: 2.2_
 
-- [ ] 2.12 `cmd_query_extract` / `cmd_query_fix` の exit code 整合（TDD）
+- [x] 2.12 `cmd_query_extract` / `cmd_query_fix` の exit code 整合（TDD）
   - 先に test_query_extract_exit_2_on_fail / test_query_fix_exit_2_on_fail を red で追加: 内部 lint FAIL → exit 2（artifact 保持）、runtime error → exit 1、PASS → exit 0
   - 内部 `lint_single_query_dir()` 結果が FAIL → exit 2（artifact 保持）
   - runtime error → exit 1

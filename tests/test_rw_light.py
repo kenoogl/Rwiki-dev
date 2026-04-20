@@ -6615,3 +6615,126 @@ def test_compute_exit_code():
 
   # (f) None status + no runtime error → 0 (treat None as PASS)
   assert fn(None, False) == 0
+
+
+# ---------------------------------------------------------------------------
+# Task 2.12: cmd_query_extract / cmd_query_fix の exit code 整合
+# ---------------------------------------------------------------------------
+
+
+class TestQueryExtractExit2OnFail:
+  """cmd_query_extract の 3 値 exit code 契約を検証"""
+
+  def test_lint_fail_exit_2_artifact_preserved(self, tmp_path, monkeypatch):
+    """lint FAIL → exit 2 かつ artifact は保持される"""
+    _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+
+    def mock_lint_fail(query_dir):
+      return {
+        "target": query_dir,
+        "status": "FAIL",
+        "checks": [{"id": "QL001", "severity": "ERROR", "message": "missing file"}],
+      }
+
+    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_fail)
+
+    result = rw_light.cmd_query_extract(["test question"])
+
+    assert result == 2
+    # artifact が生成・保持されていること
+    query_id = rw_light.generate_query_id("test question")
+    query_dir = review_query_dir / query_id
+    assert query_dir.is_dir(), "lint FAIL でも artifact ディレクトリが存在すること"
+
+  def test_lint_pass_exit_0(self, tmp_path, monkeypatch):
+    """lint PASS → exit 0"""
+    _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+
+    def mock_lint_pass(query_dir):
+      return {"target": query_dir, "status": "PASS", "checks": []}
+
+    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_pass)
+
+    result = rw_light.cmd_query_extract(["test question"])
+
+    assert result == 0
+
+  def test_runtime_error_exit_1(self, tmp_path, monkeypatch):
+    """runtime error（artifact 書き出し失敗）→ exit 1"""
+    _, _ = _setup_mock_vault_for_query(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+    monkeypatch.setattr(
+      rw_light, "write_query_artifacts", lambda *a, **k: (_ for _ in ()).throw(OSError("disk full"))
+    )
+
+    result = rw_light.cmd_query_extract(["test question"])
+
+    assert result == 1
+
+
+class TestQueryFixExit2OnFail:
+  """cmd_query_fix の 3 値 exit code 契約を検証"""
+
+  def test_post_fix_lint_fail_exit_2_artifact_preserved(self, tmp_path, monkeypatch):
+    """post-fix lint FAIL → exit 2 かつ artifact は保持される"""
+    _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+
+    def mock_lint_always_fail(query_dir, **kwargs):
+      return {
+        "target": query_dir,
+        "status": "FAIL",
+        "checks": [{"id": "QL006", "severity": "ERROR", "message": "answer too short"}],
+      }
+
+    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_always_fail)
+
+    result = rw_light.cmd_query_fix([query_id])
+
+    assert result == 2
+
+  def test_post_fix_lint_pass_exit_0(self, tmp_path, monkeypatch):
+    """post-fix lint PASS → exit 0"""
+    _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+
+    call_count = [0]
+
+    def mock_lint(query_dir, **kwargs):
+      call_count[0] += 1
+      if call_count[0] == 1:
+        # pre-fix lint: FAIL（修復が必要な状態）
+        return {"target": query_dir, "status": "FAIL", "checks": [{"id": "QL006", "severity": "ERROR", "message": "short"}]}
+      # post-fix lint: PASS
+      return {"target": query_dir, "status": "PASS", "checks": []}
+
+    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+
+    result = rw_light.cmd_query_fix([query_id])
+
+    assert result == 0
+
+  def test_runtime_error_exit_1(self, tmp_path, monkeypatch):
+    """Claude 呼び出し失敗（runtime error）→ exit 1"""
+    _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+
+    def mock_lint_fail(query_dir, **kwargs):
+      return {"target": query_dir, "status": "FAIL", "checks": [{"id": "QL006", "severity": "ERROR", "message": "short"}]}
+
+    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_fail)
+    monkeypatch.setattr(rw_light, "call_claude", lambda p: (_ for _ in ()).throw(RuntimeError("API error")))
+
+    result = rw_light.cmd_query_fix([query_id])
+
+    assert result == 1

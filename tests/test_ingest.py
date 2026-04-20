@@ -166,3 +166,80 @@ class TestCmdIngest:
     assert file1_src.exists(), f"file1 ({file1_src}) がロールバックされていない"
     file1_dst = vault / "raw" / "articles" / "afile1.md"
     assert not file1_dst.exists(), f"file1 の移動先 ({file1_dst}) がまだ存在する"
+
+
+# ---------------------------------------------------------------------------
+# Task 2.11: cmd_ingest precondition failure exit 1 維持 + WARN 解釈除去
+# ---------------------------------------------------------------------------
+
+
+class TestIngestPreconditionExit1:
+  """cmd_ingest の precondition failure が exit 1 を返すことを検証（AC 8.1, 8.2）"""
+
+  def test_fail_blocks_ingest_exit_1_not_2(
+    self, patch_constants, make_md_file, lint_json, monkeypatch
+  ):
+    """上流 FAIL（summary.fail > 0）→ exit 1（exit 2 にしない）"""
+    lint_json({
+      "timestamp": "2025-01-15",
+      "status": "FAIL",
+      "files": [],
+      "summary": {"pass": 0, "fail": 1, "severity_counts": {"critical": 0, "error": 1, "warn": 0, "info": 0}},
+      "drift_events": [],
+    })
+    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+
+    result = rw_light.cmd_ingest()
+
+    assert result == 1
+
+  def test_pass_status_continues_exit_0(
+    self, patch_constants, lint_json, monkeypatch
+  ):
+    """top-level status == 'PASS' → 続行して exit 0"""
+    lint_json({
+      "timestamp": "2025-01-15",
+      "status": "PASS",
+      "files": [],
+      "summary": {"pass": 0, "fail": 0, "severity_counts": {"critical": 0, "error": 0, "warn": 0, "info": 0}},
+      "drift_events": [],
+    })
+    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+
+    result = rw_light.cmd_ingest()
+
+    assert result == 0
+
+  def test_warn_status_blocks_ingest_exit_1(
+    self, patch_constants, lint_json, monkeypatch
+  ):
+    """status 位置 WARN → FAIL と同等扱いで exit 1（旧コードパス除去の regression 防止）"""
+    lint_json({
+      "timestamp": "2025-01-15",
+      "status": "WARN",
+      "files": [],
+      "summary": {"pass": 1, "fail": 0, "severity_counts": {"critical": 0, "error": 0, "warn": 1, "info": 0}},
+      "drift_events": [],
+    })
+    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+
+    result = rw_light.cmd_ingest()
+
+    assert result == 1
+
+  def test_fail_top_level_status_blocks_ingest(
+    self, patch_constants, lint_json, monkeypatch
+  ):
+    """top-level status == 'FAIL' → exit 1（summary.fail == 0 でも検知する）"""
+    lint_json({
+      "timestamp": "2025-01-15",
+      "status": "FAIL",
+      "files": [],
+      "summary": {"pass": 1, "fail": 0, "severity_counts": {"critical": 1, "error": 0, "warn": 0, "info": 0}},
+      "drift_events": [],
+    })
+    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+
+    result = rw_light.cmd_ingest()
+
+    assert result == 1

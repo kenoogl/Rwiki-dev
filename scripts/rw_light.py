@@ -418,8 +418,10 @@ def execute_ingest_moves(moves: list[tuple[str, str]]) -> None:
 def cmd_ingest() -> int:
     ensure_dirs()
     lint_result = load_lint_summary()
-    if lint_result["summary"]["fail"] > 0:
-        print("FAIL exists in lint_latest.json. abort ingest.")
+    top_status = lint_result.get("status")
+    has_fail = lint_result["summary"]["fail"] > 0 or top_status not in {None, "PASS"}
+    if has_fail:
+        print("FAIL exists in lint_latest.json. abort ingest.", file=sys.stderr)
         return 1
 
     files = list_md_files(INCOMING)
