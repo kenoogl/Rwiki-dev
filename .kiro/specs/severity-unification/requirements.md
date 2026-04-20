@@ -113,75 +113,53 @@ AGENTS と CLI が同じ 4 水準を使うため、severity の変換処理は *
   - **`map_severity()` 相当の関数シグネチャ**: 現行 `map_severity()` を identity 関数として置き換えるか、関数自体を削除して呼び出し側を直接 AGENTS 出力値に置き換えるかは設計フェーズで確定する
   - **`cmd_ingest` の lint 結果参照契約**: 現行 `cmd_ingest` は `lint_latest.json` の `summary["fail"]` を参照して abort 判定する（`scripts/rw_light.py` L406-409）。上記「`lint` JSON の `summary` キー構成」設計で (B) キー削除 / (C) 4 水準件数統合 を選択する場合、`cmd_ingest` の参照ロジックも同時に更新する必要がある。AC 8.1 は overall status ベースでの判定を規定するが、実装戦略（file-level fail カウント継続 vs overall status 参照切替）は設計フェーズで確定する
   - **`audit` Markdown レポートの finding プレフィックス形式**: 現行は `map_severity()` タプルに基づき `[ERROR] [CRITICAL 由来] ...` 等の 2 段表記になっている可能性がある。identity mapping 化により sub_severity 情報が消えるため、finding 行のプレフィックス形式（候補: (A) `[CRITICAL] ...` / `[ERROR] ...` / `[WARN] ...` / `[INFO] ...` の単一 severity 表記、(B) 旧 2 段構造を維持して 1 段目を空にする）は設計フェーズで決定する
-  - **移行実装順序（フェーズ分割によるロールバック戦略）**: 運用者から見れば破壊的変更は 1 回（`memory/project_severity_system.md` の既決事項、`roadmap` L99-111 / L113-122 一括解消）だが、実装側は以下 5 フェーズで段階化し、**各フェーズ完了時点でテスト全件 green** を不変条件とする。途中フェーズでの部分 revert が可能になり、big-bang migration のロールバック不能リスクを低減する。TDD は phase 単位で red → green を反復する（各 phase 開始時に当該フェーズのテストを新体系に書き換え → 失敗確認 → 実装更新 → green）。
+  - **移行実装順序（3 フェーズ、atomic + green-gated）**: 運用者から見れば破壊的変更は 1 回だが、実装側は以下 3 フェーズで段階化し、**各フェーズ完了時点でテスト全件 green** を不変条件とする。従来の 5 phase 案（P1 transitional / P2 identity 化 を分離）は Core-only スコープ確定（Y 選択）により、「P1 transitional → P2 identity 化」の 2 段階を 1 atomic PR に統合して速度を優先する。TDD は phase 単位で red → green を反復する。
 
-    **P1: AGENTS 語彙 rename + `map_severity()` transitional 対応**
+    **P1: AGENTS 語彙 rename + identity 化 + Vault validation + drift 最低限（1 PR、atomic）**
     - `templates/AGENTS/audit.md` rename（`HIGH`→`ERROR`、`MEDIUM`→`WARN`、`LOW`→`INFO`、`CRITICAL` 維持）
-    - `map_severity()` を旧新両語彙対応の transitional 実装に拡張（Claude が新旧どちらを返しても CLI 出力は従来のまま）
-    - CLI 出力不変、既存テスト全件 green 維持
-    - Rollback 容易性: 単純 revert
+    - `_normalize_severity_token` helper を最初から identity 関数として実装（旧語彙受信時は stderr + INFO 降格 + `drift_events[]` 追記）
+    - `map_severity()` 廃止、`sub_severity` NamedTuple フィールド削除、呼び出し側 25 箇所を identity に置換
+    - Vault vocabulary validation helper（`_validate_agents_severity_vocabulary`）+ `load_task_prompts` フック + `--skip-vault-validation` escape hatch
+    - `build_audit_prompt` に Severity Vocabulary (STRICT) prefix 挿入（Claude drift 抑止）
+    - `parse_audit_response` の 4 段構造検証（silent skip 廃止、AC 1.9 違反防止）
+    - `rw init --force` 実装（symlink 防御 + timestamp collision → `<timestamp>-<pid>` fallback）
+    - `rw audit` 出力に `CRITICAL` が新たに現れる、それ以外の語彙変更は旧→新の 1:1 rename
+    - P1 PR description に post-merge operator instruction inline 記載（`rw init --force` 実行必須）
+    - Rollback 容易性: 単純 revert（1 PR 単位）
 
-    **P2: `map_severity()` identity 化 + `sub_severity` データ廃止**
-    - `map_severity()` を identity 関数として実装（または関数自体を削除、設計で確定）
-    - `sub_severity` タプル廃止（AC 1.5）
-    - `rw audit` 出力に `CRITICAL` が新たに現れる（それ以外の語彙は不変）
-    - audit 関連テストアサーションを新体系に更新
+    **P2: status 2 値化 + exit code 3 値分離 + 隣接コマンド（1 PR、統合）**
+    - `_compute_run_status(findings)` helper TDD（CRITICAL or ERROR 1 件以上 → FAIL）
+    - `_compute_exit_code(status, had_runtime_error)` helper TDD（0/1/2 返却）
+    - `cmd_lint` status 2 値化 + `logs/lint_latest.json` の `summary.warn` 削除 + `severity_counts` 追加 + top-level `status` 追加
+    - `cmd_lint_query` status 2 値化 + `PASS_WITH_WARNINGS` 廃止 + `checks[]` 単一配列化
+    - `cmd_audit_*` status 計算 + Summary に CRITICAL 行追加 + stdout `CRITICAL X, ERROR Y, WARN Z, INFO W — status` format
+    - stdout 4 水準併記形式 + per-file 表示形式更新
+    - `cmd_lint` / `cmd_audit_*` の FAIL → `exit 2` 移行
+    - `cmd_lint_query` の旧 `exit 3`（引数エラー）/ `exit 4`（path 不在）→ `exit 1` に統合、FAIL → `exit 2`
+    - `cmd_ingest` の precondition failure → `exit 1` 維持（上流 FAIL は自身の finding 由来ではないため、AC 8.1）、status 位置の WARN 解釈除去
+    - `cmd_query_extract` / `cmd_query_fix` の内部 lint FAIL → `exit 2` 整合（artifact 保持）
+    - `templates/AGENTS/lint.md` の status / 終了コード / summary 記述更新
     - Rollback 容易性: P1 状態へ revert 可能
 
-    **P3: `rw lint` / `rw lint query` の status 値域統一**
-    - `rw lint` の status を 3 値（`PASS` / `WARN` / `FAIL`）から 2 値（`PASS` / `FAIL`）に移行
-    - `rw lint query` の `PASS_WITH_WARNINGS` を廃止し `PASS` / `FAIL` の 2 値に統合
-    - lint 関連テストアサーションを新体系に更新
-    - この時点で exit code は旧体系のまま（P4 で移行）
-    - Rollback 容易性: P2 状態へ revert 可能
-
-    **P4: exit code 分離（0/1/2）**
-    - `rw lint`・`rw audit` の旧 `exit 1`（FAIL）を `exit 2` に移行（AC 3.7）
-    - `rw query extract` / `rw query fix` の `exit 2` を新 semantics（FAIL 検出専用）に整合
-    - `rw ingest` の precondition abort は `exit 1` で維持（AC 8.1）
-    - AC 3.2 / 3.4 / 7.4 / 7.8 のテストを新体系に更新
-    - Rollback 容易性: P3 状態へ revert 可能
-
-    **P5: ドキュメント / 隣接スペック同期 / Vault validation / drift 可視化**
-    - `templates/AGENTS/lint.md`・`ingest.md`・`git_ops.md` の新体系記述（AC 1.8）
-    - `docs/*.md`・`README.md`・`CHANGELOG.md` 更新（Req 6）
-    - AC 8.6 の Vault validation 実装（`rw audit` 起動時の旧語彙残存検出）
-    - AC 1.9 の drift 可視化実装（4 水準外 severity 受信時の stderr 記録、設計で確定した fallback policy 適用）
-    - 隣接スペック `requirements.md` の文言同期（cli-audit / cli-query / test-suite、Adjacent expectations 参照）
-    - `roadmap.md` Technical Debt L99-111 / L113-122 の「→ severity-unification で実装済み」追記、L128-136 行数見積もり refresh、governance 節追記
-    - 静的スキャンテスト（AC 7.7）による旧値残存検証
-    - Rollback 容易性: コード挙動は P4 時点で既に確定、P5 は主に周辺更新なので容易
+    **P3: ドキュメント + 隣接 spec + 静的スキャン + Acceptance Smoke Test（1 PR、縮約）**
+    - `docs/developer-guide.md` SSoT 6 節（Severity Vocabulary / Exit Code Semantics / Migration Notes / Vault Redeployment / Glossary / Debugging FAIL）
+    - Reference docs 更新（`docs/user-guide.md` / `docs/audit.md` / `docs/lint.md` / `docs/ingest.md` / `docs/query.md` / `docs/query_fix.md`）
+    - `README.md` / `CHANGELOG.md` 更新（破壊的変更 5 項目列挙 + Migration Guide リンク）
+    - 隣接 spec `requirements.md` 同期（cli-audit / cli-query / test-suite、`_change log` 追記、governance ルールにより再 approval 不要）
+    - `roadmap.md` governance 更新（L99-111 / L113-122 完了マーク、L128-136 行数見積もり refresh、新 Technical Debt 5 項目、Adjacent Spec Synchronization 節新設、`observability-infra` debt エントリ追加）
+    - Reverse Dependency Inventory scan 実行 + `developer-guide.md` §Reverse Dependency Inventory 節に MD table 記録
+    - 静的スキャンテスト（`tests/test_agents_vocabulary.py` + `tests/test_source_vocabulary.py`）による旧値残存検証（AC 7.6 / 7.7）
+    - 非対象コマンド regression test（AC 7.8）
+    - Acceptance Smoke Test: `rw audit weekly --skip-vault-validation` 系を手動確認
+    - Rollback 容易性: コード挙動は P2 時点で確定、P3 は周辺更新のみ
 
     **フェーズ間の不変条件**:
     - 各 phase 完了時点で `tests/` 全件 green
-    - 各 phase は独立した commit / PR として review 可能
-    - 複数 phase を 1 つの PR にまとめる判断は実装者裁量（ただし green 境界を跨ぐ 1 PR は避ける）
-    - 実装者が phase 境界を更に細分化することは許容する（例: P3 を「rw lint の 3→2 値化」と「rw lint query の PASS_WITH_WARNINGS 廃止」に分割）。統合を跨いで統合することは不可（green 保証が崩れるため）
+    - 各 phase は独立した commit / PR として review 可能（P1 は atomic 強制、P2 / P3 も単一 PR 推奨）
+    - 複数 phase を 1 つの PR にまとめることは可（速度優先）、分割は P1 atomic 不変条件を除き実装者裁量
+    - P1 は `_normalize_severity_token` と `map_severity()` 廃止を同時に行うため、部分 merge 不可（atomic 強制）
   - **日本語ドキュメント内の severity 表記方針**: `docs/*.md`（日本語）で severity トークン（`CRITICAL`・`ERROR`・`WARN`・`INFO`）を英字のまま用いるか、和訳（例: 「重大」「エラー」「警告」「情報」）を併記するかは設計フェーズで決定する。既存ドキュメントの前例（`docs/audit.md` の既存記法）と整合する方針を優先する
-  - **未知 severity の fallback policy**: Claude が 4 水準外の severity 値を返した場合の扱い。AC 1.9 により silent fallback は禁止（drift の可視化が必須）。以下の選択基準と優先順位に従い設計フェーズで確定する。
-
-    **severity drift に対する防御構造（全 3 層）**:
-    - **事前防御 2 層**: AC 8.5（プロンプト明示指示で Claude 側の drift 発生を抑止）および AC 8.6（Vault validation で旧語彙残存の AGENTS ファイルによる drift 誘発を abort で遮断）
-    - **検知 1 層**: AC 1.9 の runtime 可視化（上記 2 層をすり抜けた drift を stderr / 構造化ログに記録し、運用者が事後認識できる状態を保証）
-
-    本 fallback policy が定めるのは「検知 1 層」の実際の動作であり、その設計判断を以下で確定する。
-
-    **選択基準の優先順位**:
-    1. **drift 検出可能性を最優先**: 事前防御 2 層をすり抜けた drift は必ず運用者が認識できる形（stderr / 構造化ログ）で記録すること。silent fallback は drift の累積検知を阻害し、severity 体系の信頼性を毀損するため採用しない
-    2. **可用性の維持**: 検出後の動作は可能な限り audit 実行自体を継続させる（警告 + 降格）ことをデフォルトとする。全面 abort は CI 統合での運用コストを増大させる
-    3. **厳格モードのオプション化**: CI や監査用途向けに strict mode（drift 検出 = `exit 1` で abort）を optional flag として提供することを検討
-
-    **候補と評価**:
-    - (A) 無警告 `INFO` fallback（現行 L1713-1715 の挙動）: **採用しない**（AC 1.9 違反）
-    - (B) strict validation → 常時 `exit 1`: CI では有用だが interactive 運用で過度に厳格。**optional strict mode として限定提供**
-    - (C) 警告ログ + `INFO` 降格: **デフォルト候補**。drift を stderr に記録しつつ audit を継続（可用性優先）
-    - (D) 警告ログ + `ERROR` 昇格: drift を重大視して `exit 2` に持ち上げる案。audit の信頼性低下をより強く運用者に訴求する trade-off。**(C) と比較検討**
-
-    **設計フェーズで確定する項目**:
-    - デフォルト挙動として (C) / (D) のどちらを採用するか（推奨: (C)、ただし drift の業務影響評価による）
-    - strict mode (B) を提供する場合のフラグ名（例: `--strict-severity`、環境変数 `RW_STRICT_SEVERITY=1` 等）
-    - drift 警告ログのフォーマット（出力先: stderr / JSON ログへの記録、メッセージ形式、検出件数の audit 結果への集計）
-    - 現行実装（`scripts/rw_light.py` L1713-1715）は (A) に相当するため本方針転換時は置き換える
+  - **未知 severity の fallback policy**: Claude が 4 水準外の severity 値を返した場合の扱いは AC 1.9 で確定済み（stderr 記録 + INFO 降格 + audit 継続 + `drift_events[]` 追記）。本スペックでは strict mode / ERROR 昇格 / cap + sentinel / 3 段 collapse / invocation end summary を含めない（drift 実例が観察された時点で `observability-infra` spec で扱う、`roadmap.md` Technical Debt 記録）。設計フェーズで確定する細目は: (i) drift stderr メッセージフォーマット — **確定**: 4 行形式 `[severity-drift] unknown token in <context>: <sanitized_T>\n  - source: <source_field>\n  - related location: <location>\n  - demoted to: INFO`、(ii) `drift_events[]` エントリ形状 — **確定**: 5 キー必須 (`original_token / sanitized_token / demoted_to / source_field / context`、本 AC 冒頭の 4 キー表記中 `source_context` を `source_field + context` の 2 キーに展開実装、tasks.md 1.2 signature と整合)、(iii) 現行実装（`scripts/rw_light.py` L1713-1715）の silent fallback を新挙動に置き換える実装箇所のみ。
   - **`rw lint` の per-file 論理モデル**: 現行は per-file status（`PASS` / `WARN` / `FAIL` 3 値）と run-level summary の 2 層構造。新体系で per-file status が取りうる値域（候補: (A) `PASS` / `FAIL` 2 値、severity は別次元で付与、(B) file-level 概念を廃止し finding レベルの severity のみで管理、(C) per-file status として `PASS` / `FAIL` 2 値を採用しつつ最重 severity を per-file メタ情報として保持）は設計フェーズで決定する。Req 2.2-2.3 は run-level status のみを規定し、per-file レベルの論理モデルは本項目で確定する
   - **CHANGELOG の記述形式**: R6.2 で列挙義務を課す破壊的変更の CHANGELOG 記述フォーマット（候補: Keep a Changelog スタイル、semver バージョン番号付与の要否、エントリの timestamp 粒度）は設計フェーズで決定する。Rwiki が外部パッケージとして配布されるか internal tool として運用されるかによって要件が変わるため、product.md / roadmap.md の方針と整合させる
   - **Requirement ↔ Design / Tasks トレーサビリティ**: 本 requirements の各 AC が design フェーズのどの設計項目・tasks フェーズのどの実装タスクに対応するかのマッピングは、design.md 作成時にトレーサビリティマトリクスとして構築する（requirements 単独ではカバレッジ検証が困難なため）
@@ -211,7 +189,7 @@ AGENTS と CLI が同じ 4 水準を使うため、severity の変換処理は *
 
 1.8. The implementation shall `templates/AGENTS/lint.md` の status 記述を新体系（status = `PASS` / `FAIL` 2 値、severity = `CRITICAL` / `ERROR` / `WARN` / `INFO` 4 水準、終了コード `0` / `1` / `2`）に更新する。`templates/AGENTS/ingest.md`・`templates/AGENTS/git_ops.md` の lint 結果参照箇所（FAIL 件数の参照等）は FAIL 概念が新体系でも維持されることから意味不変だが、更新後の `templates/AGENTS/lint.md` 記述と矛盾しないことを verify する。
 
-1.9. When `rw audit` が Claude から 4 水準（`CRITICAL` / `ERROR` / `WARN` / `INFO`）外の severity トークン（例: 旧語彙 `HIGH` / `MEDIUM` / `LOW`、`WARNING`、`CRITICAL_ERROR` 等）を受け取った場合, the CLI shall 当該 drift を運用者が検知可能な形式（最低限 stderr、追加で構造化ログへの記録可否は設計フェーズで確定）に記録する。silent な fallback（通知なしでの既定値への自動置換）は許容しない（AC 8.5 / 8.6 の防御をすり抜けた drift が累積すると既存テストを無効化し、severity 体系の信頼性を毀損するため）。drift 検出時の具体的な動作（継続 vs abort、fallback severity 値、strict mode の有無）は Design constraints「未知 severity の fallback policy」で確定する。
+1.9. When `rw audit` が Claude から 4 水準（`CRITICAL` / `ERROR` / `WARN` / `INFO`）外の severity トークン（例: 旧語彙 `HIGH` / `MEDIUM` / `LOW`、`WARNING`、`CRITICAL_ERROR` 等）を受け取った場合, the CLI shall 当該 drift を stderr に記録した上で audit 実行を継続し、該当 finding を `INFO` に降格して構造化出力（`logs/<cmd>_latest.json` の `drift_events[]` フィールド）へ追記する。silent な fallback（通知なしでの既定値への自動置換）は許容しない（AC 8.5 / 8.6 の防御をすり抜けた drift が累積すると既存テストを無効化し、severity 体系の信頼性を毀損するため）。drift 発生数の上限（cap）、重複抑制、invocation end summary、strict mode オプションは本スペックの対象外とし、drift 実例が観察された時点で別スペック `observability-infra`（`roadmap.md` Technical Debt に記録）で扱う。
 
 ### Requirement 2: 統一 status 語彙
 
@@ -333,7 +311,7 @@ AGENTS と CLI が同じ 4 水準を使うため、severity の変換処理は *
 
 7.9. The test suite shall AC 8.6 の Vault validation 挙動を検証するテストを含む: (a) `AGENTS/audit.md` に旧語彙（`HIGH` / `MEDIUM` / `LOW`）が severity トークンとして含まれる場合、`rw audit` が Claude にプロンプトを送らずに `exit 1` で abort し、stderr に再デプロイを促すメッセージを出力すること、(b) 新語彙（`CRITICAL` / `ERROR` / `WARN` / `INFO`）のみを含む正常な `AGENTS/audit.md` では validation が pass し audit 実行が継続すること、(c) false positive 回避の代表ケース（コメント内の歴史的言及や Migration Notes ブロックが設計で除外対象とされる場合）がある場合はそのケースで validation が pass すること。
 
-7.10. The test suite shall AC 1.9 の drift 可視性挙動を検証するテストを含む: Claude CLI の出力をモックして 4 水準外の severity トークン（例: `HIGH`、`WARNING` 等）を返す状況を再現し、(a) silent fallback が発生しないこと（stderr または構造化ログに drift が記録されること）、(b) 設計フェーズで確定したデフォルト挙動（例: (C) 警告 + `INFO` 降格 / (D) 警告 + `ERROR` 昇格）が発動すること、(c) strict mode が提供される場合はそのモード下で `exit 1` となること、を検証する。
+7.10. The test suite shall AC 1.9 の drift 可視性挙動を検証するテストを含む: Claude CLI の出力をモックして 4 水準外の severity トークン（例: `HIGH`、`WARNING` 等）を返す状況を再現し、(a) silent fallback が発生しないこと（stderr に drift が記録され、`logs/<cmd>_latest.json` の `drift_events[]` に 1 件以上追記されること）、(b) 該当 finding が `INFO` に降格され audit 実行が継続すること、を検証する。drift cap / sentinel / strict mode / invocation end summary は本スペックの対象外。
 
 ### Requirement 8: 既存コマンド連携への波及制御
 
