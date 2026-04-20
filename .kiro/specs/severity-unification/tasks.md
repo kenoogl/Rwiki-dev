@@ -47,7 +47,7 @@
   - _Boundary: CLI command layer + audit prompt construction_
   - _Depends: 1.2, 1.3_
 
-- [ ] 1.5 (P) `templates/AGENTS/audit.md` の severity 語彙 rename
+- [x] 1.5 (P) `templates/AGENTS/audit.md` の severity 語彙 rename
   - Pattern A（table cell `| HIGH |` → `| ERROR |` 等、3 行、L144-147）
   - Pattern B（summary key `- high:` → `- error:` 等、3 行、L48-50）
   - Pattern C（finding bracket marker `[HIGH]` → `[ERROR]` 等、3 箇所、L53-58）

@@ -45,17 +45,17 @@ CLI実行時はコマンド自体が実行宣言を兼ねる。
 ## Summary
 - pages scanned:
 - critical:
-- high:
-- medium:
-- low:
+- error:
+- warn:
+- info:
 
 ## Structural Findings
 - [CRITICAL] ...
-- [MEDIUM] ...
+- [WARN] ...
 
 ## Semantic Findings
-- [HIGH] Conflict candidate between [[a]] and [[b]]: ...
-- [MEDIUM] [TENSION] ...
+- [ERROR] Conflict candidate between [[a]] and [[b]]: ...
+- [WARN] [TENSION] ...
 
 ## Strategic Findings
 - synthesis underdeveloped in <domain> cluster
@@ -142,9 +142,9 @@ CLI実行時はコマンド自体が実行宣言を兼ねる。
 | レベル | 意味 | 例 |
 |---|---|---|
 | CRITICAL | システム整合性を破壊 | YAML破損・ソースパス欠落・indexの重複 |
-| HIGH | 知識の信頼性を低下 | 事実の矛盾・根拠なし主張・プロジェクト状態の不一致 |
-| MEDIUM | 品質低下シグナル | Orphanページ・必須セクション欠落・一方向リンク |
-| LOW | 改善提案 | タグの不整合・見出し粒度・typeフィールド欠落 |
+| ERROR | 知識の信頼性を低下 | 事実の矛盾・根拠なし主張・プロジェクト状態の不一致 |
+| WARN | 品質低下シグナル | Orphanページ・必須セクション欠落・一方向リンク |
+| INFO | 改善提案 | タグの不整合・見出し粒度・typeフィールド欠落 |
 
 ### 監査メトリクス
 
