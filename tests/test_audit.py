@@ -18,6 +18,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+import rw_audit
 import rw_config
 import rw_light
 import rw_prompt_engine
@@ -362,7 +363,7 @@ class TestTask14VaultValidationHook:
     task_prompts = "# audit task prompts\n"
     wiki_content = "# wiki\n"
 
-    prompt = rw_light.build_audit_prompt("monthly", task_prompts, wiki_content)
+    prompt = rw_audit.build_audit_prompt("monthly", task_prompts, wiki_content)
 
     assert prompt.startswith(
       "## Severity Vocabulary (STRICT)\n"
@@ -417,7 +418,7 @@ class TestTask14VaultValidationHook:
     monkeypatch.setattr(rw_prompt_engine, "_validate_agents_severity_vocabulary", lambda p: None)
 
     # _run_llm_audit を直接呼ぶ（--skip-vault-validation 相当）
-    exit_code = rw_light._run_llm_audit("monthly", ["--skip-vault-validation"])
+    exit_code = rw_audit._run_llm_audit("monthly", ["--skip-vault-validation"])
 
     captured = capsys.readouterr()
 
@@ -485,7 +486,7 @@ class TestParseAuditResponseStructuralInvariants:
     """JSON はパースできるが dict ではない場合（例：list）→ RuntimeError を raise する。"""
     list_response = _json.dumps([{"severity": "ERROR", "message": "oops"}])
     with pytest.raises(RuntimeError, match="dict"):
-      rw_light.parse_audit_response(list_response)
+      rw_audit.parse_audit_response(list_response)
 
   # ------------------------------------------------------------------
   # (b) findings key が list でない → ValueError
@@ -498,7 +499,7 @@ class TestParseAuditResponseStructuralInvariants:
       "recommended_actions": [],
     })
     with pytest.raises(ValueError):
-      rw_light.parse_audit_response(bad_response)
+      rw_audit.parse_audit_response(bad_response)
 
   # ------------------------------------------------------------------
   # (c) findings[i] が dict でない → placeholder finding + drift_events 記録
@@ -513,7 +514,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {},
       "recommended_actions": [],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
 
     # 配列長が保持されること（2 要素のまま）
     assert len(result["findings"]) == 2, (
@@ -546,7 +547,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {},
       "recommended_actions": [],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
 
     assert len(result["findings"]) == 1
     f = result["findings"][0]
@@ -571,7 +572,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {},
       "recommended_actions": [],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
 
     assert len(result["findings"]) == 1
     f = result["findings"][0]
@@ -598,7 +599,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {},
       "recommended_actions": [],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
 
     assert len(result["findings"]) == 1
     f = result["findings"][0]
@@ -624,7 +625,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {"pages_scanned": 5},
       "recommended_actions": ["fix immediately"],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
     assert len(result["findings"]) == 1
     assert result["findings"][0]["severity"] == "CRITICAL"
     assert "drift_events" not in result
@@ -641,7 +642,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {},
       "recommended_actions": [],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
     assert len(result["findings"]) == 4
     severities = [f["severity"] for f in result["findings"]]
     assert severities == ["CRITICAL", "ERROR", "WARN", "INFO"]
@@ -654,7 +655,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {"pages_scanned": 10},
       "recommended_actions": [],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
     assert result["findings"] == []
     assert "drift_events" not in result
 
@@ -674,7 +675,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {},
       "recommended_actions": [],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
     assert len(result["findings"]) == 1
     f = result["findings"][0]
     assert f["severity"] == "WARN"
@@ -690,7 +691,7 @@ class TestParseAuditResponseStructuralInvariants:
       "metrics": {},
       "recommended_actions": [],
     })
-    result = rw_light.parse_audit_response(response)
+    result = rw_audit.parse_audit_response(response)
     assert len(result["findings"]) == 1
     assert result["findings"][0]["severity"] == "WARN"
     # 有効な severity の strip+upper なので drift_events は不要

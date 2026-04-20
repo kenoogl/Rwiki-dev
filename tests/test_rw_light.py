@@ -9,6 +9,7 @@ import pytest
 # scripts/ を sys.path に追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
+import rw_audit  # noqa: E402
 import rw_config  # noqa: E402
 import rw_light  # noqa: E402
 import rw_prompt_engine  # noqa: E402
@@ -2432,7 +2433,7 @@ class TestFindingNamedTuple:
 
     def test_finding_has_five_fields(self):
         """Finding NamedTuple は 5 フィールドを持つこと（sub_severity 廃止後）"""
-        f = rw_light.Finding(
+        f = rw_audit.Finding(
             severity="ERROR",
             category="broken_link",
             page="concepts/my-page.md",
@@ -2447,7 +2448,7 @@ class TestFindingNamedTuple:
 
     def test_finding_fields_all_str(self):
         """Finding の全フィールドが str 型であること"""
-        f = rw_light.Finding(
+        f = rw_audit.Finding(
             severity="WARN",
             category="orphan_page",
             page="methods/orphan.md",
@@ -2460,21 +2461,21 @@ class TestFindingNamedTuple:
     def test_finding_is_named_tuple(self):
         """Finding が NamedTuple であること"""
         import typing
-        assert issubclass(rw_light.Finding, tuple)
-        assert hasattr(rw_light.Finding, "_fields")
-        assert set(rw_light.Finding._fields) == {
+        assert issubclass(rw_audit.Finding, tuple)
+        assert hasattr(rw_audit.Finding, "_fields")
+        assert set(rw_audit.Finding._fields) == {
             "severity", "category", "page", "message", "marker"
         }
 
     def test_finding_no_sub_severity(self):
         """Task 1.6: Finding NamedTuple に sub_severity フィールドが存在しないこと"""
-        assert "sub_severity" not in rw_light.Finding._fields, (
+        assert "sub_severity" not in rw_audit.Finding._fields, (
             "sub_severity field must be removed from Finding NamedTuple"
         )
 
     def test_finding_has_five_fields_after_removal(self):
         """Task 1.6: Finding NamedTuple は sub_severity 廃止後 5 フィールドであること"""
-        assert set(rw_light.Finding._fields) == {
+        assert set(rw_audit.Finding._fields) == {
             "severity", "category", "page", "message", "marker"
         }
 
@@ -2482,7 +2483,7 @@ class TestFindingNamedTuple:
         """Task 1.6: _format_finding_line が [SEVERITY] 単一プレフィックスを返すこと"""
         # generate_audit_report の内部関数 _format_finding_line を間接テストする
         # Finding を使った audit report 生成で prefix が単一であることを確認
-        f = rw_light.Finding(
+        f = rw_audit.Finding(
             severity="ERROR",
             category="broken_link",
             page="concepts/my-page.md",
@@ -2499,7 +2500,7 @@ class TestWikiPageNamedTuple:
 
     def test_wiki_page_has_seven_fields(self):
         """WikiPage NamedTuple は 7 フィールドを持つこと"""
-        wp = rw_light.WikiPage(
+        wp = rw_audit.WikiPage(
             path="concepts/my-page.md",
             filename="my-page.md",
             raw_text="---\ntitle: My Page\n---\n\nBody text.",
@@ -2518,7 +2519,7 @@ class TestWikiPageNamedTuple:
 
     def test_wiki_page_links_is_list(self):
         """WikiPage.links が list[str] であること"""
-        wp = rw_light.WikiPage(
+        wp = rw_audit.WikiPage(
             path="methods/sindy.md",
             filename="sindy.md",
             raw_text="",
@@ -2532,7 +2533,7 @@ class TestWikiPageNamedTuple:
 
     def test_wiki_page_frontmatter_is_dict(self):
         """WikiPage.frontmatter が dict であること"""
-        wp = rw_light.WikiPage(
+        wp = rw_audit.WikiPage(
             path="entities/tool.md",
             filename="tool.md",
             raw_text="",
@@ -2545,15 +2546,15 @@ class TestWikiPageNamedTuple:
 
     def test_wiki_page_is_named_tuple(self):
         """WikiPage が NamedTuple であること"""
-        assert issubclass(rw_light.WikiPage, tuple)
-        assert hasattr(rw_light.WikiPage, "_fields")
-        assert set(rw_light.WikiPage._fields) == {
+        assert issubclass(rw_audit.WikiPage, tuple)
+        assert hasattr(rw_audit.WikiPage, "_fields")
+        assert set(rw_audit.WikiPage._fields) == {
             "path", "filename", "raw_text", "frontmatter", "body", "links", "read_error"
         }
 
     def test_wiki_page_read_error_str(self):
         """WikiPage.read_error が str であること（エラー時のメッセージ）"""
-        wp = rw_light.WikiPage(
+        wp = rw_audit.WikiPage(
             path="wiki/broken.md",
             filename="broken.md",
             raw_text="",
@@ -2680,43 +2681,43 @@ class TestAuditSectionHeaders:
     def test_audit_static_checks_micro_header_exists(self):
         """# audit: static checks — micro ヘッダーが存在すること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_audit)
         assert "# audit: static checks \u2014 micro" in source
 
     def test_audit_static_checks_weekly_header_exists(self):
         """# audit: static checks — weekly ヘッダーが存在すること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_audit)
         assert "# audit: static checks \u2014 weekly" in source
 
     def test_audit_llm_engine_header_exists(self):
         """# audit: LLM engine ヘッダーが存在すること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_audit)
         assert "# audit: LLM engine" in source
 
     def test_audit_report_engine_header_exists(self):
         """# audit: report engine ヘッダーが存在すること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_audit)
         assert "# audit: report engine" in source
 
     def test_audit_commands_dispatch_header_exists(self):
         """# audit: commands — dispatch+micro ヘッダーが存在すること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_audit)
         assert "# audit: commands \u2014 dispatch+micro" in source
 
     def test_audit_commands_weekly_header_exists(self):
         """# audit: commands — weekly ヘッダーが存在すること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_audit)
         assert "# audit: commands \u2014 weekly" in source
 
     def test_audit_commands_monthly_quarterly_header_exists(self):
         """# audit: commands — monthly/quarterly ヘッダーが存在すること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_audit)
         assert "# audit: commands \u2014 monthly/quarterly" in source
 
     def test_audit_headers_after_read_wiki_content(self):
@@ -2774,21 +2775,21 @@ class TestValidateWikiDir:
     def test_returns_true_when_wiki_exists_with_md_files(self, tmp_path, monkeypatch):
         """wiki/ が存在し .md ファイルがある場合 True を返すこと"""
         _setup_wiki_for_audit(tmp_path, monkeypatch)
-        result = rw_light.validate_wiki_dir()
+        result = rw_audit.validate_wiki_dir()
         assert result is True
 
     def test_returns_false_when_wiki_dir_missing(self, tmp_path, monkeypatch):
         """wiki/ が存在しない場合 False を返すこと"""
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
-        result = rw_light.validate_wiki_dir()
+        result = rw_audit.validate_wiki_dir()
         assert result is False
 
     def test_prints_error_when_wiki_dir_missing(self, tmp_path, monkeypatch, capsys):
         """wiki/ が存在しない場合 [ERROR] メッセージを表示すること"""
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
-        rw_light.validate_wiki_dir()
+        rw_audit.validate_wiki_dir()
         captured = capsys.readouterr()
         assert "[ERROR]" in captured.out
 
@@ -2799,7 +2800,7 @@ class TestValidateWikiDir:
         (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
-        result = rw_light.validate_wiki_dir()
+        result = rw_audit.validate_wiki_dir()
         assert result is False
 
     def test_prints_error_when_no_md_files(self, tmp_path, monkeypatch, capsys):
@@ -2808,7 +2809,7 @@ class TestValidateWikiDir:
         wiki_dir.mkdir()
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
-        rw_light.validate_wiki_dir()
+        rw_audit.validate_wiki_dir()
         captured = capsys.readouterr()
         assert "[ERROR]" in captured.out
 
@@ -2821,7 +2822,7 @@ class TestValidateWikiDir:
             called_with.append((paths, action_name))
 
         monkeypatch.setattr(rw_utils, "warn_if_dirty_paths", mock_warn)
-        rw_light.validate_wiki_dir()
+        rw_audit.validate_wiki_dir()
         # warn_if_dirty_paths が "wiki" パスを含む引数で呼ばれること
         assert len(called_with) == 1
         assert "wiki" in called_with[0][0]
@@ -2833,7 +2834,7 @@ class TestValidateWikiDir:
         (wiki_dir / "page.md").write_text("# Page\n\nContent.", encoding="utf-8")
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
-        result = rw_light.validate_wiki_dir()
+        result = rw_audit.validate_wiki_dir()
         assert result is True
 
 
@@ -2843,15 +2844,15 @@ class TestLoadWikiPages:
     def test_returns_list_of_wiki_pages(self, tmp_path, monkeypatch):
         """正常ケース: WikiPage リストが返ること"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=2)
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(p, rw_light.WikiPage) for p in result)
+        assert all(isinstance(p, rw_audit.WikiPage) for p in result)
 
     def test_wiki_page_path_is_wiki_relative(self, tmp_path, monkeypatch):
         """WikiPage.path が wiki/ からの相対パスであること"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert len(result) == 1
         # path は wiki/ プレフィックスなし（例: "page-00.md"）
         assert not result[0].path.startswith("wiki/")
@@ -2860,26 +2861,26 @@ class TestLoadWikiPages:
     def test_wiki_page_filename_is_basename(self, tmp_path, monkeypatch):
         """WikiPage.filename がファイル名のみであること"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert result[0].filename == "page-00.md"
 
     def test_wiki_page_frontmatter_parsed(self, tmp_path, monkeypatch):
         """WikiPage.frontmatter が parse_frontmatter() でパース済みであること"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert isinstance(result[0].frontmatter, dict)
         assert result[0].frontmatter.get("title") == "Page 0"
 
     def test_wiki_page_body_contains_text(self, tmp_path, monkeypatch):
         """WikiPage.body が frontmatter 以降の本文テキストであること"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert "Body" in result[0].body
 
     def test_wiki_page_links_extracted_from_body(self, tmp_path, monkeypatch):
         """WikiPage.links が body から [[link]] regex で抽出されること"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         # page-00.md の body は "Body [[other-page]] text."
         assert "other-page" in result[0].links
 
@@ -2893,7 +2894,7 @@ class TestLoadWikiPages:
         )
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert "target-page" in result[0].links
         assert "simple-page" in result[0].links
         # "Display Text" はリンク名として含まれないこと
@@ -2909,14 +2910,14 @@ class TestLoadWikiPages:
         )
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert "body-link" in result[0].links
         assert "frontmatter-link" not in result[0].links
 
     def test_wiki_page_read_error_empty_on_success(self, tmp_path, monkeypatch):
         """正常読み込み時 WikiPage.read_error が空文字列であること"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=1)
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert result[0].read_error == ""
 
     def test_wiki_page_encoding_error_sets_read_error(self, tmp_path, monkeypatch):
@@ -2932,7 +2933,7 @@ class TestLoadWikiPages:
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
 
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert len(result) == 2
 
         broken_pages = [p for p in result if p.filename == "broken.md"]
@@ -2956,7 +2957,7 @@ class TestLoadWikiPages:
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
 
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert len(result) == 3
         normal_pages = [p for p in result if p.read_error == ""]
         assert len(normal_pages) == 2
@@ -2965,14 +2966,14 @@ class TestLoadWikiPages:
         """target_files 指定時は指定ファイルのみ読み込むこと"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=3)
         target = [str(wiki_dir / "page-00.md")]
-        result = rw_light.load_wiki_pages(str(wiki_dir), target_files=target)
+        result = rw_audit.load_wiki_pages(str(wiki_dir), target_files=target)
         assert len(result) == 1
         assert result[0].filename == "page-00.md"
 
     def test_target_files_none_reads_all_files(self, tmp_path, monkeypatch):
         """target_files=None 時は全 .md ファイルを読み込むこと"""
         wiki_dir = _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=3)
-        result = rw_light.load_wiki_pages(str(wiki_dir), target_files=None)
+        result = rw_audit.load_wiki_pages(str(wiki_dir), target_files=None)
         assert len(result) == 3
 
     def test_returns_empty_list_when_no_md_files(self, tmp_path, monkeypatch):
@@ -2982,7 +2983,7 @@ class TestLoadWikiPages:
         (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert result == []
 
     def test_subdirectory_pages_included(self, tmp_path, monkeypatch):
@@ -2996,7 +2997,7 @@ class TestLoadWikiPages:
         )
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert len(result) == 1
         # path にサブディレクトリが含まれること
         assert "concepts" in result[0].path
@@ -3010,7 +3011,7 @@ class TestLoadWikiPages:
         (wiki_dir / "raw-test.md").write_text(raw, encoding="utf-8")
         monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
-        result = rw_light.load_wiki_pages(str(wiki_dir))
+        result = rw_audit.load_wiki_pages(str(wiki_dir))
         assert result[0].raw_text == raw
 
 
@@ -3160,7 +3161,7 @@ class TestGetRecentWikiChanges:
             return []
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert any("page-a.md" in p for p in result)
 
     def test_returns_files_from_last_commit(self, tmp_path, monkeypatch):
@@ -3174,7 +3175,7 @@ class TestGetRecentWikiChanges:
             return []
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert any("page-b.md" in p for p in result)
 
     def test_deduplicates_results(self, tmp_path, monkeypatch):
@@ -3187,7 +3188,7 @@ class TestGetRecentWikiChanges:
             return [dup_path]
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert result.count(dup_path) == 1
 
     def test_excludes_deleted_files(self, tmp_path, monkeypatch):
@@ -3200,7 +3201,7 @@ class TestGetRecentWikiChanges:
             return [deleted_path]
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert deleted_path not in result
 
     def test_excludes_non_md_files(self, tmp_path, monkeypatch):
@@ -3215,7 +3216,7 @@ class TestGetRecentWikiChanges:
             return [txt_path, md_path]
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert txt_path not in result
         assert md_path in result
 
@@ -3228,7 +3229,7 @@ class TestGetRecentWikiChanges:
             return []
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert result == []
 
     def test_head1_not_found_fallback(self, tmp_path, monkeypatch):
@@ -3247,7 +3248,7 @@ class TestGetRecentWikiChanges:
             return []
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert initial_path in result
 
     def test_returns_list_of_absolute_paths(self, tmp_path, monkeypatch):
@@ -3260,7 +3261,7 @@ class TestGetRecentWikiChanges:
             return [page_path]
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert isinstance(result, list)
         assert all(isinstance(p, str) for p in result)
 
@@ -3285,7 +3286,7 @@ class TestGetRecentWikiChanges:
             return [uncommitted_path]
 
         monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
-        result = rw_light.get_recent_wiki_changes()
+        result = rw_audit.get_recent_wiki_changes()
         assert uncommitted_path in result
 
 
@@ -3488,13 +3489,13 @@ def _make_wiki_page(
     body="Body.\n",
     links=None,
     read_error="",
-) -> "rw_light.WikiPage":
+) -> "rw_audit.WikiPage":
     """テスト用 WikiPage を生成するヘルパー。"""
     if frontmatter is None:
         frontmatter = {"title": "Test"}
     if links is None:
         links = []
-    return rw_light.WikiPage(
+    return rw_audit.WikiPage(
         path=path,
         filename=filename,
         raw_text=raw_text,
@@ -3512,21 +3513,21 @@ class TestCheckBrokenLinks:
         """リンクなしのページは Finding なしであること"""
         page = _make_wiki_page(links=[])
         all_pages_set = {"page.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert result == []
 
     def test_no_findings_when_link_resolves(self):
         """リンク先が all_pages_set に存在する場合は Finding なしであること"""
         page = _make_wiki_page(links=["target-page"])
         all_pages_set = {"page.md", "target-page.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert result == []
 
     def test_finding_when_link_not_found(self):
         """リンク先が all_pages_set に存在しない場合 ERROR Finding を返すこと"""
         page = _make_wiki_page(path="page.md", links=["nonexistent"])
         all_pages_set = {"page.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert len(result) == 1
         assert result[0].severity == "ERROR"
         assert result[0].category == "broken_link"
@@ -3537,7 +3538,7 @@ class TestCheckBrokenLinks:
         """broken_link の severity が ERROR であること"""
         page = _make_wiki_page(links=["missing-page"])
         all_pages_set = {"page.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert all(f.severity == "ERROR" for f in result)
 
     def test_link_resolves_with_md_extension_appended(self):
@@ -3545,28 +3546,28 @@ class TestCheckBrokenLinks:
         # [[target]] → target.md として all_pages_set を検索
         page = _make_wiki_page(links=["target"])
         all_pages_set = {"target.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert result == []
 
     def test_link_resolves_by_filename_match_in_subdirectory(self):
         """サブディレクトリをまたいでファイル名部分マッチで解決されること"""
         page = _make_wiki_page(links=["my-concept"])
         all_pages_set = {"concepts/my-concept.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert result == []
 
     def test_multiple_broken_links_all_reported(self):
         """複数のリンク切れがすべて報告されること"""
         page = _make_wiki_page(links=["missing-a", "missing-b"])
         all_pages_set = {"page.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert len(result) == 2
 
     def test_link_with_md_extension_in_all_pages_set(self):
         """リンク名が .md 付きで all_pages_set に存在する場合も解決されること"""
         page = _make_wiki_page(links=["target.md"])
         all_pages_set = {"target.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert result == []
 
     def test_multiple_pages_checked(self):
@@ -3574,7 +3575,7 @@ class TestCheckBrokenLinks:
         page1 = _make_wiki_page(path="a.md", filename="a.md", links=["missing"])
         page2 = _make_wiki_page(path="b.md", filename="b.md", links=["also-missing"])
         all_pages_set = {"a.md", "b.md"}
-        result = rw_light.check_broken_links([page1, page2], all_pages_set)
+        result = rw_audit.check_broken_links([page1, page2], all_pages_set)
         assert len(result) == 2
         pages_in_findings = {f.page for f in result}
         assert "a.md" in pages_in_findings
@@ -3584,7 +3585,7 @@ class TestCheckBrokenLinks:
         """Finding の全フィールドが文字列であること"""
         page = _make_wiki_page(links=["nonexistent"])
         all_pages_set = {"page.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert len(result) == 1
         f = result[0]
         assert isinstance(f.severity, str)
@@ -3597,7 +3598,7 @@ class TestCheckBrokenLinks:
         """micro チェックでは marker が空文字列であること"""
         page = _make_wiki_page(links=["missing"])
         all_pages_set = {"page.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
+        result = rw_audit.check_broken_links([page], all_pages_set)
         assert result[0].marker == ""
 
     def test_does_not_mutate_page_links(self):
@@ -3605,7 +3606,7 @@ class TestCheckBrokenLinks:
         original_links = ["missing", "another-missing"]
         page = _make_wiki_page(links=list(original_links))
         all_pages_set = {"page.md"}
-        rw_light.check_broken_links([page], all_pages_set)
+        rw_audit.check_broken_links([page], all_pages_set)
         assert page.links == original_links
 
 
@@ -3623,14 +3624,14 @@ class TestCheckIndexRegistration:
         """全ページが index.md に登録済みの場合 Finding なしであること"""
         page = _make_wiki_page(path="my-page.md", filename="my-page.md")
         index_content = self._make_index_content(["my-page"])
-        result = rw_light.check_index_registration([page], index_content)
+        result = rw_audit.check_index_registration([page], index_content)
         assert result == []
 
     def test_finding_when_page_not_in_index(self):
         """index.md に未登録のページで WARN Finding を返すこと"""
         page = _make_wiki_page(path="unregistered.md", filename="unregistered.md")
         index_content = self._make_index_content([])  # 空の index
-        result = rw_light.check_index_registration([page], index_content)
+        result = rw_audit.check_index_registration([page], index_content)
         assert len(result) == 1
         assert result[0].severity == "WARN"
         assert result[0].category == "index_missing"
@@ -3640,13 +3641,13 @@ class TestCheckIndexRegistration:
         """index_missing の severity が WARN であること"""
         page = _make_wiki_page(path="not-in-index.md", filename="not-in-index.md")
         index_content = self._make_index_content([])
-        result = rw_light.check_index_registration([page], index_content)
+        result = rw_audit.check_index_registration([page], index_content)
         assert all(f.severity == "WARN" for f in result)
 
     def test_returns_warning_finding_when_index_content_is_none(self):
         """index_content が None（index.md 不在）の場合 WARNING Finding を返すこと（Req 7.7）"""
         page = _make_wiki_page()
-        result = rw_light.check_index_registration([page], None)
+        result = rw_audit.check_index_registration([page], None)
         # チェックをスキップし WARNING を返す
         assert len(result) == 1
         assert result[0].severity == "WARN"
@@ -3655,7 +3656,7 @@ class TestCheckIndexRegistration:
         """index.md 不在時はページ個別の未登録 Finding を返さないこと"""
         page1 = _make_wiki_page(path="p1.md", filename="p1.md")
         page2 = _make_wiki_page(path="p2.md", filename="p2.md")
-        result = rw_light.check_index_registration([page1, page2], None)
+        result = rw_audit.check_index_registration([page1, page2], None)
         # index.md 不在の WARNING 1件のみ（ページ別 Finding は含まない）
         assert len(result) == 1
 
@@ -3664,7 +3665,7 @@ class TestCheckIndexRegistration:
         page = _make_wiki_page(path="concepts/my-concept.md", filename="my-concept.md")
         # index.md には "my-concept" として登録
         index_content = self._make_index_content(["my-concept"])
-        result = rw_light.check_index_registration([page], index_content)
+        result = rw_audit.check_index_registration([page], index_content)
         assert result == []
 
     def test_multiple_unregistered_pages_all_reported(self):
@@ -3672,7 +3673,7 @@ class TestCheckIndexRegistration:
         page1 = _make_wiki_page(path="p1.md", filename="p1.md")
         page2 = _make_wiki_page(path="p2.md", filename="p2.md")
         index_content = self._make_index_content([])
-        result = rw_light.check_index_registration([page1, page2], index_content)
+        result = rw_audit.check_index_registration([page1, page2], index_content)
         assert len(result) == 2
 
     def test_partially_registered_reports_only_unregistered(self):
@@ -3680,14 +3681,14 @@ class TestCheckIndexRegistration:
         page1 = _make_wiki_page(path="registered.md", filename="registered.md")
         page2 = _make_wiki_page(path="unregistered.md", filename="unregistered.md")
         index_content = self._make_index_content(["registered"])
-        result = rw_light.check_index_registration([page1, page2], index_content)
+        result = rw_audit.check_index_registration([page1, page2], index_content)
         assert len(result) == 1
         assert result[0].page == "unregistered.md"
 
     def test_empty_page_list_no_findings(self):
         """ページリストが空の場合 Finding なしであること"""
         index_content = self._make_index_content(["some-page"])
-        result = rw_light.check_index_registration([], index_content)
+        result = rw_audit.check_index_registration([], index_content)
         assert result == []
 
 
@@ -3702,7 +3703,7 @@ class TestCheckFrontmatter:
             frontmatter={"title": "My Page", "source": "web"},
             body="Body.\n",
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         assert result == []
 
     def test_error_for_empty_frontmatter_block(self):
@@ -3713,7 +3714,7 @@ class TestCheckFrontmatter:
             frontmatter={},
             body="Body.\n",
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         errors = [f for f in result if f.severity == "ERROR"]
         assert len(errors) >= 1
 
@@ -3725,7 +3726,7 @@ class TestCheckFrontmatter:
             frontmatter={"title": "My Page"},
             body="Body.\n",
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         errors = [f for f in result if f.severity == "ERROR"]
         assert len(errors) >= 1
 
@@ -3737,7 +3738,7 @@ class TestCheckFrontmatter:
             frontmatter={},
             body=raw,  # parse_frontmatter は {} を返す
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         errors = [f for f in result if f.severity == "ERROR"]
         assert len(errors) >= 1
 
@@ -3749,7 +3750,7 @@ class TestCheckFrontmatter:
             frontmatter={"source": "web"},
             body="Body.\n",
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         warns = [f for f in result if f.severity == "WARN"]
         assert len(warns) >= 1
 
@@ -3761,7 +3762,7 @@ class TestCheckFrontmatter:
             frontmatter={},
             body=raw,
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         warns = [f for f in result if f.severity == "WARN"]
         assert len(warns) >= 1
 
@@ -3773,7 +3774,7 @@ class TestCheckFrontmatter:
             frontmatter={},
             body=raw,
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         errors = [f for f in result if f.severity == "ERROR"]
         assert errors == []
 
@@ -3787,14 +3788,14 @@ class TestCheckFrontmatter:
             frontmatter={"source": "web"},
             body="Body.\n",
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         assert all(f.page == "concepts/my-page.md" for f in result)
 
     def test_error_finding_category(self):
         """ERROR Finding の category が frontmatter_error であること"""
         raw = "---\n---\n\nBody.\n"
         page = _make_wiki_page(raw_text=raw, frontmatter={}, body="Body.\n")
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         errors = [f for f in result if f.severity == "ERROR"]
         assert all(f.category == "frontmatter_error" for f in errors)
 
@@ -3806,7 +3807,7 @@ class TestCheckFrontmatter:
             frontmatter={"source": "web"},
             body="Body.\n",
         )
-        result = rw_light.check_frontmatter([page])
+        result = rw_audit.check_frontmatter([page])
         warns = [f for f in result if f.severity == "WARN"]
         assert all(f.category == "frontmatter_warn" for f in warns)
 
@@ -3815,7 +3816,7 @@ class TestCheckFrontmatter:
         original_fm = {"title": "Test", "source": "web"}
         raw = "---\ntitle: Test\nsource: web\n---\n\nBody.\n"
         page = _make_wiki_page(raw_text=raw, frontmatter=dict(original_fm), body="Body.\n")
-        rw_light.check_frontmatter([page])
+        rw_audit.check_frontmatter([page])
         assert page.frontmatter == original_fm
 
 
@@ -3842,9 +3843,9 @@ class TestRunMicroChecks:
         )
         all_pages_set = {"page.md"}
         index_content = "# Index\n\n- [[page]]\n"
-        result = rw_light.run_micro_checks([page], all_pages_set, index_content)
+        result = rw_audit.run_micro_checks([page], all_pages_set, index_content)
         assert isinstance(result, list)
-        assert all(isinstance(f, rw_light.Finding) for f in result)
+        assert all(isinstance(f, rw_audit.Finding) for f in result)
 
     def test_broken_link_returns_error_finding(self, tmp_path, monkeypatch):
         """broken link があるページで ERROR Finding が返されること"""
@@ -3858,7 +3859,7 @@ class TestRunMicroChecks:
             links=["nonexistent"],
         )
         all_pages_set = {"page.md"}
-        result = rw_light.run_micro_checks([page], all_pages_set, "# Index\n")
+        result = rw_audit.run_micro_checks([page], all_pages_set, "# Index\n")
         errors = [f for f in result if f.severity == "ERROR"]
         assert any(f.category == "broken_link" for f in errors)
 
@@ -3874,14 +3875,14 @@ class TestRunMicroChecks:
             links=[],
         )
         all_pages_set = {"unregistered.md"}
-        result = rw_light.run_micro_checks([page], all_pages_set, "# Index\n")
+        result = rw_audit.run_micro_checks([page], all_pages_set, "# Index\n")
         warns = [f for f in result if f.severity == "WARN"]
         assert any(f.category == "index_missing" for f in warns)
 
     def test_read_error_page_excluded_from_checks(self, tmp_path, monkeypatch):
         """read_error が設定された WikiPage は個別チェックから除外されること"""
         self._make_wiki_setup(tmp_path, monkeypatch)
-        bad_page = rw_light.WikiPage(
+        bad_page = rw_audit.WikiPage(
             path="broken.md",
             filename="broken.md",
             raw_text="",
@@ -3891,7 +3892,7 @@ class TestRunMicroChecks:
             read_error="UnicodeDecodeError: 'utf-8' codec ...",
         )
         all_pages_set = {"broken.md"}
-        result = rw_light.run_micro_checks([bad_page], all_pages_set, "# Index\n")
+        result = rw_audit.run_micro_checks([bad_page], all_pages_set, "# Index\n")
         # read_error ページは ERROR Finding として記録される
         error_findings = [f for f in result if f.severity == "ERROR"]
         assert any(f.page == "broken.md" for f in error_findings)
@@ -3899,7 +3900,7 @@ class TestRunMicroChecks:
     def test_read_error_page_not_included_in_link_check(self, tmp_path, monkeypatch):
         """read_error のページはリンクチェック対象に含まれないこと"""
         self._make_wiki_setup(tmp_path, monkeypatch)
-        bad_page = rw_light.WikiPage(
+        bad_page = rw_audit.WikiPage(
             path="broken.md",
             filename="broken.md",
             raw_text="",
@@ -3909,7 +3910,7 @@ class TestRunMicroChecks:
             read_error="read failed",
         )
         all_pages_set = {"broken.md"}
-        result = rw_light.run_micro_checks([bad_page], all_pages_set, "# Index\n")
+        result = rw_audit.run_micro_checks([bad_page], all_pages_set, "# Index\n")
         # broken_link カテゴリの Finding は broken.md に対してないこと
         link_check_findings = [f for f in result if f.category == "broken_link" and f.page == "broken.md"]
         assert len(link_check_findings) == 0
@@ -3924,7 +3925,7 @@ class TestRunMicroChecks:
             links=[],
         )
         all_pages_set = {"page.md"}
-        result = rw_light.run_micro_checks([page], all_pages_set, None)
+        result = rw_audit.run_micro_checks([page], all_pages_set, None)
         warns = [f for f in result if f.severity == "WARN"]
         # index.md 不在の WARNING が含まれること
         assert len(warns) >= 1
@@ -3942,7 +3943,7 @@ class TestRunMicroChecks:
             links=["missing"],
         )
         all_pages_set = {"multi-issue.md"}
-        result = rw_light.run_micro_checks([page], all_pages_set, "# Index\n")
+        result = rw_audit.run_micro_checks([page], all_pages_set, "# Index\n")
         categories = {f.category for f in result}
         assert "broken_link" in categories
         assert "index_missing" in categories
@@ -3951,7 +3952,7 @@ class TestRunMicroChecks:
     def test_empty_pages_no_findings(self, tmp_path, monkeypatch):
         """ページリストが空の場合は Finding なし（index 不在の場合を除く）"""
         self._make_wiki_setup(tmp_path, monkeypatch)
-        result = rw_light.run_micro_checks([], set(), "# Index\n")
+        result = rw_audit.run_micro_checks([], set(), "# Index\n")
         assert result == []
 
 
@@ -3968,7 +3969,7 @@ class TestCheckOrphanPages:
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=["a"])
         index_links = set()
-        result = rw_light.check_orphan_pages([page_a, page_b], index_links)
+        result = rw_audit.check_orphan_pages([page_a, page_b], index_links)
         assert result == []
 
     def test_orphan_detected_when_no_inbound_links(self):
@@ -3976,7 +3977,7 @@ class TestCheckOrphanPages:
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=[])
         index_links = set()
-        result = rw_light.check_orphan_pages([page_a, page_b], index_links)
+        result = rw_audit.check_orphan_pages([page_a, page_b], index_links)
         orphan_cats = [f for f in result if f.category == "orphan_page"]
         assert len(orphan_cats) == 2
         assert all(f.severity == "WARN" for f in orphan_cats)
@@ -3985,14 +3986,14 @@ class TestCheckOrphanPages:
         """index_links に含まれるページは孤立と見なさない"""
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
         index_links = {"a.md"}  # a.md は index にリンクあり
-        result = rw_light.check_orphan_pages([page_a], index_links)
+        result = rw_audit.check_orphan_pages([page_a], index_links)
         assert result == []
 
     def test_index_md_filename_excluded(self):
         """ファイル名が index.md のページは孤立チェックから除外される"""
         page_index = _make_wiki_page(path="subdir/index.md", filename="index.md", links=[])
         index_links = set()
-        result = rw_light.check_orphan_pages([page_index], index_links)
+        result = rw_audit.check_orphan_pages([page_index], index_links)
         assert result == []
 
     def test_linked_page_not_orphan_even_if_not_in_index(self):
@@ -4000,7 +4001,7 @@ class TestCheckOrphanPages:
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=[])
         index_links = set()
-        result = rw_light.check_orphan_pages([page_a, page_b], index_links)
+        result = rw_audit.check_orphan_pages([page_a, page_b], index_links)
         # a.md はリンクを張っているが誰からもリンクされていない → orphan
         # b.md は a.md からリンクされている → 非 orphan
         orphan_pages = [f.page for f in result if f.category == "orphan_page"]
@@ -4015,7 +4016,7 @@ class TestCheckBidirectionalLinks:
         """リンクなしのページは Finding なし・stats は total_pairs=0"""
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
         all_pages_set = {"a.md"}
-        findings, stats = rw_light.check_bidirectional_links([page_a], all_pages_set)
+        findings, stats = rw_audit.check_bidirectional_links([page_a], all_pages_set)
         assert findings == []
         assert stats["total_pairs"] == 0
         assert stats["bidirectional_pairs"] == 0
@@ -4025,7 +4026,7 @@ class TestCheckBidirectionalLinks:
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=["a"])
         all_pages_set = {"a.md", "b.md"}
-        findings, stats = rw_light.check_bidirectional_links([page_a, page_b], all_pages_set)
+        findings, stats = rw_audit.check_bidirectional_links([page_a, page_b], all_pages_set)
         assert findings == []
         assert stats["total_pairs"] == 1
         assert stats["bidirectional_pairs"] == 1
@@ -4035,7 +4036,7 @@ class TestCheckBidirectionalLinks:
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=["b"])
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=[])
         all_pages_set = {"a.md", "b.md"}
-        findings, stats = rw_light.check_bidirectional_links([page_a, page_b], all_pages_set)
+        findings, stats = rw_audit.check_bidirectional_links([page_a, page_b], all_pages_set)
         assert len(findings) == 1
         assert findings[0].severity == "WARN"
         assert findings[0].category == "missing_backlink"
@@ -4047,7 +4048,7 @@ class TestCheckBidirectionalLinks:
         page_index = _make_wiki_page(path="index.md", filename="index.md", links=["other"])
         page_other = _make_wiki_page(path="other.md", filename="other.md", links=[])
         all_pages_set = {"index.md", "other.md"}
-        findings, stats = rw_light.check_bidirectional_links([page_index, page_other], all_pages_set)
+        findings, stats = rw_audit.check_bidirectional_links([page_index, page_other], all_pages_set)
         # index.md からのリンクは除外されるため total_pairs = 0
         assert stats["total_pairs"] == 0
         assert findings == []
@@ -4056,7 +4057,7 @@ class TestCheckBidirectionalLinks:
         """戻り値が (findings, dict) のタプルであること"""
         page_a = _make_wiki_page(path="a.md", filename="a.md", links=[])
         all_pages_set = {"a.md"}
-        result = rw_light.check_bidirectional_links([page_a], all_pages_set)
+        result = rw_audit.check_bidirectional_links([page_a], all_pages_set)
         assert isinstance(result, tuple)
         assert len(result) == 2
         findings, stats = result
@@ -4072,13 +4073,13 @@ class TestCheckNamingConvention:
     def test_valid_filename_no_finding(self):
         """有効な命名（小文字・ハイフン区切り）は Finding なし"""
         page = _make_wiki_page(path="my-concept.md", filename="my-concept.md")
-        result = rw_light.check_naming_convention([page])
+        result = rw_audit.check_naming_convention([page])
         assert result == []
 
     def test_uppercase_filename_is_finding(self):
         """大文字を含むファイル名は WARN Finding"""
         page = _make_wiki_page(path="MyPage.md", filename="MyPage.md")
-        result = rw_light.check_naming_convention([page])
+        result = rw_audit.check_naming_convention([page])
         assert len(result) == 1
         assert result[0].severity == "WARN"
         assert result[0].category == "naming_violation"
@@ -4086,34 +4087,34 @@ class TestCheckNamingConvention:
     def test_underscore_filename_is_finding(self):
         """アンダースコアを含むファイル名は WARN Finding"""
         page = _make_wiki_page(path="my_page.md", filename="my_page.md")
-        result = rw_light.check_naming_convention([page])
+        result = rw_audit.check_naming_convention([page])
         assert len(result) == 1
         assert result[0].severity == "WARN"
 
     def test_space_in_filename_is_finding(self):
         """スペースを含むファイル名は WARN Finding"""
         page = _make_wiki_page(path="my page.md", filename="my page.md")
-        result = rw_light.check_naming_convention([page])
+        result = rw_audit.check_naming_convention([page])
         assert len(result) == 1
         assert result[0].severity == "WARN"
 
     def test_valid_with_numbers_no_finding(self):
         """数字を含む有効なファイル名は Finding なし"""
         page = _make_wiki_page(path="page-01.md", filename="page-01.md")
-        result = rw_light.check_naming_convention([page])
+        result = rw_audit.check_naming_convention([page])
         assert result == []
 
     def test_index_md_is_valid(self):
         """index.md は有効な命名として Finding なし"""
         page = _make_wiki_page(path="index.md", filename="index.md")
-        result = rw_light.check_naming_convention([page])
+        result = rw_audit.check_naming_convention([page])
         assert result == []
 
     def test_multiple_pages_mixed(self):
         """有効・無効が混在する場合、違反のみ Finding"""
         valid = _make_wiki_page(path="valid-page.md", filename="valid-page.md")
         invalid = _make_wiki_page(path="Invalid_Page.md", filename="Invalid_Page.md")
-        result = rw_light.check_naming_convention([valid, invalid])
+        result = rw_audit.check_naming_convention([valid, invalid])
         assert len(result) == 1
         assert result[0].page == "Invalid_Page.md"
 
@@ -4124,13 +4125,13 @@ class TestCheckSourceField:
     def test_source_present_no_finding(self):
         """source フィールドが存在する場合は Finding なし"""
         page = _make_wiki_page(frontmatter={"title": "Test", "source": "https://example.com"})
-        result = rw_light.check_source_field([page])
+        result = rw_audit.check_source_field([page])
         assert result == []
 
     def test_source_missing_is_info(self):
         """source フィールドが欠落している場合は INFO Finding"""
         page = _make_wiki_page(frontmatter={"title": "Test"})
-        result = rw_light.check_source_field([page])
+        result = rw_audit.check_source_field([page])
         assert len(result) == 1
         assert result[0].severity == "INFO"
         assert result[0].category == "missing_source"
@@ -4138,7 +4139,7 @@ class TestCheckSourceField:
     def test_source_empty_string_is_info(self):
         """source フィールドが空文字列の場合は INFO Finding"""
         page = _make_wiki_page(frontmatter={"title": "Test", "source": ""})
-        result = rw_light.check_source_field([page])
+        result = rw_audit.check_source_field([page])
         assert len(result) == 1
         assert result[0].severity == "INFO"
 
@@ -4152,7 +4153,7 @@ class TestCheckSourceField:
             path="missing.md", filename="missing.md",
             frontmatter={"title": "Missing"},
         )
-        result = rw_light.check_source_field([page_ok, page_missing])
+        result = rw_audit.check_source_field([page_ok, page_missing])
         assert len(result) == 1
         assert result[0].page == "missing.md"
 
@@ -4163,13 +4164,13 @@ class TestCheckRequiredSections:
     def test_no_findings_when_page_policy_is_none(self):
         """page_policy が None の場合は no-op（Finding なし）"""
         page = _make_wiki_page()
-        result = rw_light.check_required_sections([page], None)
+        result = rw_audit.check_required_sections([page], None)
         assert result == []
 
     def test_no_findings_when_page_policy_is_empty(self):
         """page_policy が空 dict の場合は no-op（Finding なし）"""
         page = _make_wiki_page()
-        result = rw_light.check_required_sections([page], {})
+        result = rw_audit.check_required_sections([page], {})
         assert result == []
 
     def test_no_findings_with_current_page_policy(self):
@@ -4177,7 +4178,7 @@ class TestCheckRequiredSections:
         page = _make_wiki_page(body="# Title\n\nSome body text.")
         # 現行の page_policy.md には具体的なセクション定義がない
         page_policy = {"concepts": "何であるか/なぜ重要か"}
-        result = rw_light.check_required_sections([page], page_policy)
+        result = rw_audit.check_required_sections([page], page_policy)
         assert result == []
 
 
@@ -4189,7 +4190,7 @@ class TestRunWeeklyChecks:
         page = _make_wiki_page()
         all_pages_set = {"page.md"}
         index_links = set()
-        result = rw_light.run_weekly_checks([page], all_pages_set, None, index_links, None)
+        result = rw_audit.run_weekly_checks([page], all_pages_set, None, index_links, None)
         assert isinstance(result, tuple)
         assert len(result) == 2
         findings, stats = result
@@ -4201,7 +4202,7 @@ class TestRunWeeklyChecks:
         page = _make_wiki_page()
         all_pages_set = {"page.md"}
         index_links = set()
-        _, stats = rw_light.run_weekly_checks([page], all_pages_set, None, index_links, None)
+        _, stats = rw_audit.run_weekly_checks([page], all_pages_set, None, index_links, None)
         assert "total_pairs" in stats
         assert "bidirectional_pairs" in stats
 
@@ -4210,7 +4211,7 @@ class TestRunWeeklyChecks:
         page = _make_wiki_page(path="orphan.md", filename="orphan.md", links=[])
         all_pages_set = {"orphan.md"}
         index_links = set()
-        findings, _ = rw_light.run_weekly_checks([page], all_pages_set, None, index_links, None)
+        findings, _ = rw_audit.run_weekly_checks([page], all_pages_set, None, index_links, None)
         orphan_findings = [f for f in findings if f.category == "orphan_page"]
         assert len(orphan_findings) >= 1
 
@@ -4219,7 +4220,7 @@ class TestRunWeeklyChecks:
         page = _make_wiki_page(path="BadName.md", filename="BadName.md", links=[])
         all_pages_set = {"BadName.md"}
         index_links = set()
-        findings, _ = rw_light.run_weekly_checks([page], all_pages_set, None, index_links, None)
+        findings, _ = rw_audit.run_weekly_checks([page], all_pages_set, None, index_links, None)
         naming_findings = [f for f in findings if f.category == "naming_violation"]
         assert len(naming_findings) >= 1
 
@@ -4229,7 +4230,7 @@ class TestRunWeeklyChecks:
         page_b = _make_wiki_page(path="b.md", filename="b.md", links=["a"])
         all_pages_set = {"a.md", "b.md"}
         index_links = set()
-        _, stats = rw_light.run_weekly_checks(
+        _, stats = rw_audit.run_weekly_checks(
             [page_a, page_b], all_pages_set, None, index_links, None
         )
         assert stats["total_pairs"] == 1
@@ -4246,7 +4247,7 @@ class TestRunWeeklyChecks:
         )
         all_pages_set = {"BadName.md"}
         index_links = set()
-        findings, stats = rw_light.run_weekly_checks(
+        findings, stats = rw_audit.run_weekly_checks(
             [page], all_pages_set, None, index_links, None
         )
         categories = {f.category for f in findings}
@@ -4268,13 +4269,13 @@ class TestBuildAuditPrompt:
 
     def test_monthly_contains_tier2_instruction(self):
         """monthly のプロンプトに Tier 2: Semantic Audit の指示が含まれること"""
-        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert "Tier 2" in result
         assert "Semantic Audit" in result
 
     def test_monthly_excludes_tier3(self):
         """monthly のプロンプトに Tier 3: Strategic Audit の除外指示が含まれること"""
-        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         # monthly は Tier 3 を除外する
         assert "Tier 3" in result  # 除外リストとして言及される
         # Tier 3 を「実行しない」旨の指示が含まれること
@@ -4282,36 +4283,36 @@ class TestBuildAuditPrompt:
 
     def test_quarterly_contains_tier3_instruction(self):
         """quarterly のプロンプトに Tier 3: Strategic Audit の指示が含まれること"""
-        result = rw_light.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert "Tier 3" in result
         assert "Strategic Audit" in result
 
     def test_quarterly_excludes_tier2(self):
         """quarterly のプロンプトに Tier 2: Semantic Audit の除外指示が含まれること"""
-        result = rw_light.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         # quarterly は Tier 2 を除外する
         assert "Tier 2" in result  # 除外リストとして言及される
         assert "Semantic Audit" in result
 
     def test_monthly_and_quarterly_prompts_differ(self):
         """monthly と quarterly でプロンプト内容が異なること（ティア指示が切り替わる）"""
-        monthly_result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
-        quarterly_result = rw_light.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        monthly_result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        quarterly_result = rw_audit.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert monthly_result != quarterly_result
 
     def test_task_prompts_included(self):
         """task_prompts の内容がプロンプトに含まれること（AGENTS/audit.md 一元管理 Req 10.1）"""
-        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert self.TASK_PROMPTS in result
 
     def test_wiki_content_included(self):
         """wiki_content がプロンプトに含まれること"""
-        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert self.WIKI_CONTENT in result
 
     def test_json_schema_at_end(self):
         """JSON スキーマサンプルがプロンプトの末尾に配置されること（セキュリティ考慮）"""
-        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         # JSON スキーマ指示がプロンプトに含まれること
         assert "findings" in result
         assert "metrics" in result
@@ -4323,12 +4324,12 @@ class TestBuildAuditPrompt:
 
     def test_monthly_json_schema_includes_marker(self):
         """monthly の JSON スキーマサンプルに marker フィールドが含まれること"""
-        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert "marker" in result
 
     def test_quarterly_json_schema_lacks_marker(self):
         """quarterly の JSON スキーマサンプルに marker フィールドが含まれないこと"""
-        result = rw_light.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("quarterly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         # quarterly スキーマには marker フィールドがない
         # ただし monthly の除外指示で "marker" という語が出る可能性は考慮しないで
         # JSON サンプルセクション以降のみチェック
@@ -4339,13 +4340,13 @@ class TestBuildAuditPrompt:
 
     def test_markdown_override_instruction(self):
         """Markdown 形式ではなく JSON で出力する旨の指示が含まれること"""
-        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert "JSON" in result
         assert "Markdown" in result  # Markdown を使用しない旨の言及
 
     def test_execution_declaration_suppressed(self):
         """実行宣言を出力しない旨の指示が含まれること"""
-        result = rw_light.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
+        result = rw_audit.build_audit_prompt("monthly", self.TASK_PROMPTS, self.WIKI_CONTENT)
         assert "実行宣言" in result
 
 
@@ -4385,7 +4386,7 @@ class TestParseAuditResponse:
 
   def test_valid_json_returns_dict(self):
     """正常 JSON をパースして dict を返すこと"""
-    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    result = rw_audit.parse_audit_response(self._to_json(self.VALID_MONTHLY))
     assert isinstance(result, dict)
     assert "findings" in result
     assert "metrics" in result
@@ -4393,7 +4394,7 @@ class TestParseAuditResponse:
 
   def test_valid_json_findings_preserved(self):
     """正常 JSON の findings が保持されること（HIGH は drift → INFO に降格）"""
-    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    result = rw_audit.parse_audit_response(self._to_json(self.VALID_MONTHLY))
     assert len(result["findings"]) == 1
     # HIGH は旧語彙のため drift → INFO に降格（finding は保持される）
     assert result["findings"][0]["severity"] == "INFO"
@@ -4402,7 +4403,7 @@ class TestParseAuditResponse:
   def test_code_block_stripped(self):
     """```json ... ``` で囲まれた JSON もパースできること"""
     raw = "```json\n" + self._to_json(self.VALID_MONTHLY) + "\n```"
-    result = rw_light.parse_audit_response(raw)
+    result = rw_audit.parse_audit_response(raw)
     assert isinstance(result, dict)
     assert len(result["findings"]) == 1
 
@@ -4422,7 +4423,7 @@ class TestParseAuditResponse:
         "metrics": {"pages_scanned": 1, "total_findings": 1},
         "recommended_actions": [],
       }
-      result = rw_light.parse_audit_response(self._to_json(data))
+      result = rw_audit.parse_audit_response(self._to_json(data))
       assert len(result["findings"]) == 1, f"severity={sev} で finding が消えた"
       assert result["findings"][0]["severity"] == sev, f"severity={sev} が変更された"
     # 旧語彙は drift → INFO に降格（finding は保持）
@@ -4439,7 +4440,7 @@ class TestParseAuditResponse:
         "metrics": {"pages_scanned": 1, "total_findings": 1},
         "recommended_actions": [],
       }
-      result = rw_light.parse_audit_response(self._to_json(data))
+      result = rw_audit.parse_audit_response(self._to_json(data))
       assert len(result["findings"]) == 1, f"severity={sev} で finding が消えた（drift でも保持されるべき）"
       assert result["findings"][0]["severity"] == "INFO", f"severity={sev} が INFO に降格されなかった"
 
@@ -4459,7 +4460,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1, "total_findings": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     assert "\n" not in result["findings"][0]["message"]
     assert "line1 line2 line3" == result["findings"][0]["message"]
 
@@ -4477,7 +4478,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1, "total_findings": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     assert "\n" not in result["findings"][0]["message"]
     assert "\r" not in result["findings"][0]["message"]
 
@@ -4497,7 +4498,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 10, "total_findings": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     assert result["findings"][0]["page"] == ""
 
   def test_null_marker_converted_to_empty_string(self):
@@ -4515,7 +4516,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1, "total_findings": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     assert result["findings"][0]["marker"] == ""
 
   # ── 不正 severity: スキップ ──────────────────────────────────
@@ -4540,7 +4541,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 2, "total_findings": 2},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     # 両方とも drift → INFO に降格されて保持される（スキップされない）
     assert len(result["findings"]) == 2
     assert all(f["severity"] == "INFO" for f in result["findings"])
@@ -4559,7 +4560,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1, "total_findings": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     captured = capsys.readouterr()
     # drift 警告は stderr に [severity-drift] として出力される
     assert "[severity-drift]" in captured.err
@@ -4581,7 +4582,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1, "total_findings": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     # drift → INFO 降格で finding は保持される
     assert len(result["findings"]) == 1
     assert result["findings"][0]["severity"] == "INFO"
@@ -4592,7 +4593,7 @@ class TestParseAuditResponse:
     """不正 JSON は ValueError を raise すること"""
     import pytest
     with pytest.raises(ValueError):
-      rw_light.parse_audit_response("not a valid json {{{")
+      rw_audit.parse_audit_response("not a valid json {{{")
 
   def test_missing_findings_key_raises_value_error(self):
     """findings キー欠落は ValueError を raise すること"""
@@ -4602,7 +4603,7 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     with pytest.raises(ValueError):
-      rw_light.parse_audit_response(self._to_json(data))
+      rw_audit.parse_audit_response(self._to_json(data))
 
   def test_missing_metrics_key_raises_value_error(self):
     """metrics キー欠落は ValueError を raise すること"""
@@ -4612,7 +4613,7 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     with pytest.raises(ValueError):
-      rw_light.parse_audit_response(self._to_json(data))
+      rw_audit.parse_audit_response(self._to_json(data))
 
   def test_missing_recommended_actions_raises_value_error(self):
     """recommended_actions キー欠落は ValueError を raise すること"""
@@ -4622,7 +4623,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1},
     }
     with pytest.raises(ValueError):
-      rw_light.parse_audit_response(self._to_json(data))
+      rw_audit.parse_audit_response(self._to_json(data))
 
   def test_findings_not_list_raises_value_error(self):
     """findings が list でない場合は ValueError を raise すること"""
@@ -4633,7 +4634,7 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     with pytest.raises(ValueError):
-      rw_light.parse_audit_response(self._to_json(data))
+      rw_audit.parse_audit_response(self._to_json(data))
 
   def test_metrics_not_dict_raises_value_error(self):
     """metrics が dict でない場合は ValueError を raise すること"""
@@ -4644,7 +4645,7 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     with pytest.raises(ValueError):
-      rw_light.parse_audit_response(self._to_json(data))
+      rw_audit.parse_audit_response(self._to_json(data))
 
   def test_recommended_actions_not_list_raises_value_error(self):
     """recommended_actions が list でない場合は ValueError を raise すること"""
@@ -4655,7 +4656,7 @@ class TestParseAuditResponse:
       "recommended_actions": "not a list",
     }
     with pytest.raises(ValueError):
-      rw_light.parse_audit_response(self._to_json(data))
+      rw_audit.parse_audit_response(self._to_json(data))
 
   # ── finding 必須キー欠落: スキップ or ValueError ──────────────
 
@@ -4678,7 +4679,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     # Task 1.8: severity 欠落の finding は INFO 補完して保持（silent skip 廃止）
     # LOW は drift → INFO に降格されて保持。合計 2 件。
     assert len(result["findings"]) == 2
@@ -4708,7 +4709,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     # Task 1.8: page は非必須（location に統一）。HIGH/LOW ともに drift → INFO に降格して保持。合計 2 件。
     assert len(result["findings"]) == 2
     assert result["findings"][0]["severity"] == "INFO"
@@ -4733,7 +4734,7 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1},
       "recommended_actions": [],
     }
-    result = rw_light.parse_audit_response(self._to_json(data))
+    result = rw_audit.parse_audit_response(self._to_json(data))
     # Task 1.8: message 欠落の finding は空文字補完して保持（silent skip 廃止）。合計 2 件。
     assert len(result["findings"]) == 2
     assert result["findings"][0]["severity"] == "INFO"
@@ -4747,18 +4748,18 @@ class TestParseAuditResponse:
 
   def test_return_value_has_required_keys(self):
     """返却値が findings / metrics / recommended_actions を持つこと"""
-    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    result = rw_audit.parse_audit_response(self._to_json(self.VALID_MONTHLY))
     assert set(result.keys()) >= {"findings", "metrics", "recommended_actions"}
 
   def test_metrics_preserved(self):
     """metrics がそのまま返却されること"""
-    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    result = rw_audit.parse_audit_response(self._to_json(self.VALID_MONTHLY))
     assert result["metrics"]["pages_scanned"] == 42
     assert result["metrics"]["conflict_count"] == 1
 
   def test_recommended_actions_preserved(self):
     """recommended_actions がそのまま返却されること"""
-    result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
+    result = rw_audit.parse_audit_response(self._to_json(self.VALID_MONTHLY))
     assert len(result["recommended_actions"]) == 1
     assert "my-concept" in result["recommended_actions"][0]
 
@@ -4775,7 +4776,7 @@ def _make_finding(
   message="テストメッセージ",
   marker="",
 ):
-  return rw_light.Finding(
+  return rw_audit.Finding(
     severity=severity,
     category=category,
     page=page,
@@ -4806,7 +4807,7 @@ class TestGenerateAuditReport:
   def test_returns_path_object(self, tmp_path, monkeypatch):
     """ファイルパス文字列を返すこと"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     assert isinstance(result, str)
@@ -4814,7 +4815,7 @@ class TestGenerateAuditReport:
   def test_file_created_in_logs(self, tmp_path, monkeypatch):
     """logs/ にレポートファイルが生成されること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     assert Path(result).exists()
@@ -4822,7 +4823,7 @@ class TestGenerateAuditReport:
   def test_filename_format(self, tmp_path, monkeypatch):
     """ファイル名が audit-{tier}-{timestamp}.md 形式であること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-153000"
     )
     assert Path(result).name == "audit-micro-20260418-153000.md"
@@ -4830,7 +4831,7 @@ class TestGenerateAuditReport:
   def test_timestamp_auto_generated_when_none(self, tmp_path, monkeypatch):
     """timestamp=None のとき、ファイル名にタイムスタンプが含まれること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "weekly", [], {}, timestamp=None
     )
     name = Path(result).name
@@ -4840,7 +4841,7 @@ class TestGenerateAuditReport:
   def test_summary_section_exists(self, tmp_path, monkeypatch):
     """Summary セクションが含まれること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4849,7 +4850,7 @@ class TestGenerateAuditReport:
   def test_summary_contains_tier(self, tmp_path, monkeypatch):
     """Summary にティア名が含まれること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4858,7 +4859,7 @@ class TestGenerateAuditReport:
   def test_summary_error_warn_info_counts(self, tmp_path, monkeypatch):
     """Summary に ERROR/WARN/INFO カウントが含まれること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4872,7 +4873,7 @@ class TestGenerateAuditReport:
     findings = [
       _make_finding("INFO", "source_field", "entities/tool.md", "source 空"),
     ]
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", findings, {}, timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4881,7 +4882,7 @@ class TestGenerateAuditReport:
   def test_summary_fail_when_errors_exist(self, tmp_path, monkeypatch):
     """ERROR がある場合 FAIL と表示されること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4890,7 +4891,7 @@ class TestGenerateAuditReport:
   def test_findings_section_exists(self, tmp_path, monkeypatch):
     """Findings セクションが含まれること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4899,7 +4900,7 @@ class TestGenerateAuditReport:
   def test_micro_structural_findings_label(self, tmp_path, monkeypatch):
     """micro は Structural Findings ラベルであること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4908,7 +4909,7 @@ class TestGenerateAuditReport:
   def test_weekly_structural_findings_label(self, tmp_path, monkeypatch):
     """weekly は Structural Findings ラベルであること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "weekly", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4917,7 +4918,7 @@ class TestGenerateAuditReport:
   def test_monthly_semantic_findings_label(self, tmp_path, monkeypatch):
     """monthly は Semantic Findings ラベルであること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "monthly", [], {}, timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4926,7 +4927,7 @@ class TestGenerateAuditReport:
   def test_quarterly_strategic_findings_label(self, tmp_path, monkeypatch):
     """quarterly は Strategic Findings ラベルであること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "quarterly", [], {}, timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4935,7 +4936,7 @@ class TestGenerateAuditReport:
   def test_findings_grouped_by_severity(self, tmp_path, monkeypatch):
     """ERROR -> Structural, WARN -> Semantic, INFO -> Strategic にグループ化されること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4949,7 +4950,7 @@ class TestGenerateAuditReport:
   def test_metrics_section_exists(self, tmp_path, monkeypatch):
     """Metrics セクションが含まれること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4958,7 +4959,7 @@ class TestGenerateAuditReport:
   def test_metrics_dict_contents(self, tmp_path, monkeypatch):
     """metrics dict の内容が Metrics セクションに含まれること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4968,7 +4969,7 @@ class TestGenerateAuditReport:
   def test_recommended_actions_section_exists(self, tmp_path, monkeypatch):
     """Recommended Actions セクションが含まれること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4981,7 +4982,7 @@ class TestGenerateAuditReport:
       _make_finding("ERROR", "broken_link", "concepts/page-a.md", "リンク切れ"),
       _make_finding("WARN", "index_missing", "methods/page-b.md", "未登録"),
     ]
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", findings, {}, recommended_actions=None, timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -4996,7 +4997,7 @@ class TestGenerateAuditReport:
       _make_finding("ERROR", "broken_link", "concepts/page-b.md", "リンク切れB"),
       _make_finding("WARN", "index_missing", "methods/page-c.md", "未登録"),
     ]
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", findings, {}, recommended_actions=None, timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -5008,7 +5009,7 @@ class TestGenerateAuditReport:
     """monthly は passed recommended_actions をそのまま出力すること"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     actions = ["具体的なアクション1", "具体的なアクション2"]
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "monthly", [], {}, recommended_actions=actions, timestamp="20260418-120000"
     )
     content = Path(result).read_text(encoding="utf-8")
@@ -5019,7 +5020,7 @@ class TestGenerateAuditReport:
     """logs/ ディレクトリが存在しなくても自動作成されること（write_text の既存動作）"""
     new_logdir = tmp_path / "new_logs"
     monkeypatch.setattr(rw_config, "LOGDIR", str(new_logdir))
-    result = rw_light.generate_audit_report(
+    result = rw_audit.generate_audit_report(
       "micro", [], {}, timestamp="20260418-120000"
     )
     assert Path(result).exists()
@@ -5038,14 +5039,14 @@ class TestPrintAuditSummary:
 
   def test_each_finding_printed(self, capsys):
     """各 Finding が [severity] page: message 形式で表示されること"""
-    rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
+    rw_audit.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
     out = capsys.readouterr().out
     assert "[ERROR] concepts/page-a.md: リンク切れ" in out
 
   def test_page_empty_omits_page_part(self, capsys):
     """page="" のとき [severity] message 形式（ページ省略）で表示されること"""
     findings = [_make_finding("INFO", "coverage_gap", "", "カバレッジ不足")]
-    rw_light.print_audit_summary("quarterly", findings, "logs/audit-quarterly-test.md")
+    rw_audit.print_audit_summary("quarterly", findings, "logs/audit-quarterly-test.md")
     out = capsys.readouterr().out
     assert "[INFO] カバレッジ不足" in out
     # ページパスが含まれないこと（": " のコロンがある場合はページ付き形式）
@@ -5053,7 +5054,7 @@ class TestPrintAuditSummary:
 
   def test_summary_line_format(self, capsys):
     """サマリー行が audit {tier}: CRITICAL N, ERROR N, WARN N, INFO N — PASS/FAIL 形式であること"""
-    rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
+    rw_audit.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
     out = capsys.readouterr().out
     assert "CRITICAL 0" in out
     assert "ERROR 1" in out
@@ -5062,45 +5063,45 @@ class TestPrintAuditSummary:
 
   def test_fail_when_error_exists(self, capsys):
     """ERROR > 0 のとき FAIL と表示されること"""
-    rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
+    rw_audit.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
     out = capsys.readouterr().out
     assert "FAIL" in out
 
   def test_pass_when_warn_only(self, capsys):
     """WARN > 0（CRITICAL/ERROR = 0）のとき PASS と表示されること（新体系: status 2 値化）"""
     findings = [_make_finding("WARN", "index_missing", "methods/page.md", "未登録")]
-    rw_light.print_audit_summary("weekly", findings, "logs/audit-weekly-test.md")
+    rw_audit.print_audit_summary("weekly", findings, "logs/audit-weekly-test.md")
     out = capsys.readouterr().out
     assert "PASS" in out
 
   def test_pass_when_only_info(self, capsys):
     """ERROR=0 かつ WARN=0 のとき PASS と表示されること"""
     findings = [_make_finding("INFO", "source_field", "entities/tool.md", "source 空")]
-    rw_light.print_audit_summary("micro", findings, "logs/audit-micro-test.md")
+    rw_audit.print_audit_summary("micro", findings, "logs/audit-micro-test.md")
     out = capsys.readouterr().out
     assert "PASS" in out
 
   def test_pass_when_no_findings(self, capsys):
     """findings が空のとき PASS と表示されること"""
-    rw_light.print_audit_summary("micro", [], "logs/audit-micro-test.md")
+    rw_audit.print_audit_summary("micro", [], "logs/audit-micro-test.md")
     out = capsys.readouterr().out
     assert "PASS" in out
 
   def test_report_path_in_output(self, capsys):
     """レポートパスが最終行付近に表示されること"""
-    rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-20260418-120000.md")
+    rw_audit.print_audit_summary("micro", self._findings(), "logs/audit-micro-20260418-120000.md")
     out = capsys.readouterr().out
     assert "logs/audit-micro-20260418-120000.md" in out
 
   def test_warn_count_in_summary(self, capsys):
     """サマリー行に WARN カウントが含まれること"""
-    rw_light.print_audit_summary("micro", self._findings(), "logs/test.md")
+    rw_audit.print_audit_summary("micro", self._findings(), "logs/test.md")
     out = capsys.readouterr().out
     assert "WARN 2" in out
 
   def test_info_count_in_summary(self, capsys):
     """サマリー行に INFO カウントが含まれること"""
-    rw_light.print_audit_summary("micro", self._findings(), "logs/test.md")
+    rw_audit.print_audit_summary("micro", self._findings(), "logs/test.md")
     out = capsys.readouterr().out
     assert "INFO 1" in out
 
@@ -5113,18 +5114,18 @@ class TestPrintAuditSummary:
 class TestAuditSummaryCriticalVisibility:
   """audit summary に CRITICAL 行と 4 水準出力が含まれることを検証"""
 
-  def _finding(self, sev: str) -> rw_light.Finding:
-    return rw_light.Finding(severity=sev, category="test", page="p.md", message="m", marker="")
+  def _finding(self, sev: str) -> rw_audit.Finding:
+    return rw_audit.Finding(severity=sev, category="test", page="p.md", message="m", marker="")
 
   def test_summary_line_includes_critical(self, capsys):
     """stdout summary 行に CRITICAL が含まれる"""
-    rw_light.print_audit_summary("weekly", [self._finding("CRITICAL")], "logs/test.md")
+    rw_audit.print_audit_summary("weekly", [self._finding("CRITICAL")], "logs/test.md")
     out = capsys.readouterr().out
     assert "CRITICAL" in out
 
   def test_stdout_format_4_tiers(self, capsys):
     """stdout summary 行が 'audit {tier}: CRITICAL X, ERROR Y, WARN Z, INFO W — status' 形式"""
-    rw_light.print_audit_summary(
+    rw_audit.print_audit_summary(
       "micro",
       [self._finding("CRITICAL"), self._finding("ERROR"), self._finding("WARN"), self._finding("INFO")],
       "logs/test.md",
@@ -5138,13 +5139,13 @@ class TestAuditSummaryCriticalVisibility:
 
   def test_warn_only_is_pass(self, capsys):
     """WARN のみ（CRITICAL/ERROR なし）は PASS（新体系: status 2 値化）"""
-    rw_light.print_audit_summary("micro", [self._finding("WARN")], "logs/test.md")
+    rw_audit.print_audit_summary("micro", [self._finding("WARN")], "logs/test.md")
     out = capsys.readouterr().out
     assert "PASS" in out
 
   def test_zero_findings_shows_status(self, capsys):
     """findings 0 件でも status 行が表示される（AC 5.5 境界）"""
-    rw_light.print_audit_summary("micro", [], "logs/test.md")
+    rw_audit.print_audit_summary("micro", [], "logs/test.md")
     out = capsys.readouterr().out
     assert "PASS" in out
     assert "CRITICAL" in out
@@ -5153,7 +5154,7 @@ class TestAuditSummaryCriticalVisibility:
     """generate_audit_report の Summary 節に '- CRITICAL: N' 行が存在する"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     findings = [self._finding("CRITICAL"), self._finding("ERROR")]
-    report_path = rw_light.generate_audit_report(
+    report_path = rw_audit.generate_audit_report(
       "weekly", findings, {}, timestamp="20260420-120000"
     )
     content = (tmp_path / "audit-weekly-20260420-120000.md").read_text()
@@ -5163,7 +5164,7 @@ class TestAuditSummaryCriticalVisibility:
     """WARN のみ → status: PASS（旧: FAIL）"""
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     findings = [self._finding("WARN")]
-    report_path = rw_light.generate_audit_report(
+    report_path = rw_audit.generate_audit_report(
       "micro", findings, {}, timestamp="20260420-120001"
     )
     content = (tmp_path / "audit-micro-20260420-120001.md").read_text()
@@ -5178,9 +5179,9 @@ class TestGenerateAuditReportIntegration:
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
 
     findings = [
-      rw_light.Finding("ERROR", "broken_link", "concepts/page.md", "リンク切れ", ""),
-      rw_light.Finding("WARN", "index_missing", "methods/page.md", "index 未登録", ""),
-      rw_light.Finding("INFO", "source_field", "entities/tool.md", "source 空", ""),
+      rw_audit.Finding("ERROR", "broken_link", "concepts/page.md", "リンク切れ", ""),
+      rw_audit.Finding("WARN", "index_missing", "methods/page.md", "index 未登録", ""),
+      rw_audit.Finding("INFO", "source_field", "entities/tool.md", "source 空", ""),
     ]
     metrics = {
       "pages_scanned": 3,
@@ -5190,10 +5191,10 @@ class TestGenerateAuditReportIntegration:
       "total_findings": 3,
     }
 
-    report_path = rw_light.generate_audit_report(
+    report_path = rw_audit.generate_audit_report(
       "micro", findings, metrics, timestamp="20260418-153000"
     )
-    rw_light.print_audit_summary("micro", findings, report_path)
+    rw_audit.print_audit_summary("micro", findings, report_path)
 
     # レポートファイルの検証
     assert Path(report_path).exists()
@@ -5246,19 +5247,19 @@ class TestCmdAuditDispatch:
 
   def test_cmd_audit_exists(self):
     """cmd_audit 関数が定義されていること"""
-    assert hasattr(rw_light, "cmd_audit")
-    assert callable(rw_light.cmd_audit)
+    assert hasattr(rw_audit, "cmd_audit")
+    assert callable(rw_audit.cmd_audit)
 
   def test_cmd_audit_no_args_returns_1(self, tmp_path, monkeypatch, capsys):
     """サブコマンドなしで呼び出した場合 exit 1 相当（return 1）で usage を表示すること"""
     _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
-    result = rw_light.cmd_audit([])
+    result = rw_audit.cmd_audit([])
     assert result == 1
 
   def test_cmd_audit_no_args_prints_usage(self, tmp_path, monkeypatch, capsys):
     """サブコマンドなしで呼び出した場合に使用方法が表示されること"""
     _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
-    rw_light.cmd_audit([])
+    rw_audit.cmd_audit([])
     out = capsys.readouterr().out
     assert "micro" in out
     assert "weekly" in out
@@ -5268,13 +5269,13 @@ class TestCmdAuditDispatch:
   def test_cmd_audit_unknown_subcmd_returns_1(self, tmp_path, monkeypatch, capsys):
     """不明なサブコマンドの場合 return 1 すること"""
     _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
-    result = rw_light.cmd_audit(["unknown-subcmd"])
+    result = rw_audit.cmd_audit(["unknown-subcmd"])
     assert result == 1
 
   def test_cmd_audit_unknown_subcmd_prints_error(self, tmp_path, monkeypatch, capsys):
     """不明なサブコマンドの場合エラーメッセージを表示すること"""
     _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
-    rw_light.cmd_audit(["invalid"])
+    rw_audit.cmd_audit(["invalid"])
     out = capsys.readouterr().out
     assert "invalid" in out or "Unknown" in out or "usage" in out.lower() or "audit" in out
 
@@ -5284,15 +5285,15 @@ class TestCmdAuditMicro:
 
   def test_cmd_audit_micro_exists(self):
     """cmd_audit_micro 関数が定義されていること"""
-    assert hasattr(rw_light, "cmd_audit_micro")
-    assert callable(rw_light.cmd_audit_micro)
+    assert hasattr(rw_audit, "cmd_audit_micro")
+    assert callable(rw_audit.cmd_audit_micro)
 
   def test_cmd_audit_micro_returns_int(self, tmp_path, monkeypatch):
     """cmd_audit_micro が int を返すこと"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     # _git_list_files を空リスト返却にモック（変更なし扱い）
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
     assert isinstance(result, int)
 
   def test_cmd_audit_micro_no_wiki_returns_1(self, tmp_path, monkeypatch, capsys):
@@ -5301,7 +5302,7 @@ class TestCmdAuditMicro:
     monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
     monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path / "logs"))
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
     assert result == 1
 
   def test_cmd_audit_micro_no_wiki_prints_error(self, tmp_path, monkeypatch, capsys):
@@ -5310,7 +5311,7 @@ class TestCmdAuditMicro:
     monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
     monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path / "logs"))
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
     out = capsys.readouterr().out
     assert "[ERROR]" in out
 
@@ -5319,14 +5320,14 @@ class TestCmdAuditMicro:
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     # 変更なしにモック
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
     assert result == 0
 
   def test_cmd_audit_micro_no_changes_prints_info(self, tmp_path, monkeypatch, capsys):
     """対象ファイル 0 件のとき [INFO] 変更なしを表示すること（Req 1.7）"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
     out = capsys.readouterr().out
     assert "[INFO]" in out
 
@@ -5334,7 +5335,7 @@ class TestCmdAuditMicro:
     """対象ファイル 0 件のとき pages_scanned: 0 のレポートを生成すること（Req 1.7）"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
     # logs/ にレポートファイルが生成されること
     report_files = list(logs_dir.glob("audit-micro-*.md"))
     assert len(report_files) == 1
@@ -5350,7 +5351,7 @@ class TestCmdAuditMicro:
       rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
     report_files = list(logs_dir.glob("audit-micro-*.md"))
     assert len(report_files) == 1
 
@@ -5358,7 +5359,7 @@ class TestCmdAuditMicro:
     """レポートが logs/ にのみ出力され wiki/ には書き込まれないこと（Req 6.1）"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
     # wiki/ 内に新規ファイルがないこと
     wiki_files_after = list(wiki_dir.rglob("*.md"))
     assert len(wiki_files_after) == 2  # 元の 2 ファイルのみ
@@ -5372,7 +5373,7 @@ class TestCmdAuditMicro:
       rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
     # ERROR finding なし（title/source は設定済み）→ exit 0
     assert result == 0
 
@@ -5389,7 +5390,7 @@ class TestCmdAuditMicro:
       rw_utils, "_git_list_files",
       lambda args: [str(broken_page)] if "diff" in args else []
     )
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
     assert result == 2
 
   def test_cmd_audit_micro_summary_displayed(self, tmp_path, monkeypatch, capsys):
@@ -5400,7 +5401,7 @@ class TestCmdAuditMicro:
       rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
     out = capsys.readouterr().out
     assert "audit micro:" in out
 
@@ -5412,7 +5413,7 @@ class TestCmdAuditMicro:
       rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
     out = capsys.readouterr().out
     assert "audit-micro-" in out
 
@@ -5424,7 +5425,7 @@ class TestCmdAuditMicro:
       rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
     report_files = list(logs_dir.glob("audit-micro-*.md"))
     assert report_files
     content = report_files[0].read_text(encoding="utf-8")
@@ -5444,7 +5445,7 @@ class TestMainAuditDispatch:
       called.append(args)
       return 0
 
-    monkeypatch.setattr(rw_light, "cmd_audit", mock_cmd_audit)
+    monkeypatch.setattr(rw_audit, "cmd_audit", mock_cmd_audit)
     monkeypatch.setattr(sys, "argv", ["rw", "audit", "micro"])
 
     with pytest.raises(SystemExit) as exc:
@@ -5493,13 +5494,13 @@ class TestCmdAuditWeekly:
 
   def test_cmd_audit_weekly_exists(self):
     """cmd_audit_weekly 関数が定義されていること"""
-    assert hasattr(rw_light, "cmd_audit_weekly")
-    assert callable(rw_light.cmd_audit_weekly)
+    assert hasattr(rw_audit, "cmd_audit_weekly")
+    assert callable(rw_audit.cmd_audit_weekly)
 
   def test_cmd_audit_weekly_returns_int(self, tmp_path, monkeypatch):
     """cmd_audit_weekly が int を返すこと"""
     _setup_wiki_for_weekly(tmp_path, monkeypatch)
-    result = rw_light.cmd_audit_weekly()
+    result = rw_audit.cmd_audit_weekly()
     assert isinstance(result, int)
 
   def test_cmd_audit_weekly_no_wiki_returns_1(self, tmp_path, monkeypatch, capsys):
@@ -5508,7 +5509,7 @@ class TestCmdAuditWeekly:
     monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
     monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path / "logs"))
-    result = rw_light.cmd_audit_weekly()
+    result = rw_audit.cmd_audit_weekly()
     assert result == 1
 
   def test_cmd_audit_weekly_no_wiki_prints_error(self, tmp_path, monkeypatch, capsys):
@@ -5517,14 +5518,14 @@ class TestCmdAuditWeekly:
     monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
     monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
     monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path / "logs"))
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     out = capsys.readouterr().out
     assert "[ERROR]" in out
 
   def test_cmd_audit_weekly_scans_all_pages(self, tmp_path, monkeypatch):
     """全ページをスキャンすること（Req 2.1, 2.2）"""
     wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch, num_files=3)
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     report_files = list(logs_dir.glob("audit-weekly-*.md"))
     assert len(report_files) == 1
     content = report_files[0].read_text(encoding="utf-8")
@@ -5534,7 +5535,7 @@ class TestCmdAuditWeekly:
   def test_cmd_audit_weekly_generates_report(self, tmp_path, monkeypatch):
     """logs/ にレポートが生成されること（Req 2.3）"""
     wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     report_files = list(logs_dir.glob("audit-weekly-*.md"))
     assert len(report_files) == 1
 
@@ -5542,14 +5543,14 @@ class TestCmdAuditWeekly:
     """レポートが logs/ にのみ出力され wiki/ には書き込まれないこと（Req 6.1）"""
     wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
     original_wiki_files = set(wiki_dir.rglob("*.md"))
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     wiki_files_after = set(wiki_dir.rglob("*.md"))
     assert original_wiki_files == wiki_files_after
 
   def test_cmd_audit_weekly_no_error_returns_0(self, tmp_path, monkeypatch):
     """ERROR なしの場合 exit 0（Req 2.4）"""
     _setup_wiki_for_weekly(tmp_path, monkeypatch)
-    result = rw_light.cmd_audit_weekly()
+    result = rw_audit.cmd_audit_weekly()
     assert result == 0
 
   def test_cmd_audit_weekly_with_error_returns_1(self, tmp_path, monkeypatch):
@@ -5560,27 +5561,27 @@ class TestCmdAuditWeekly:
       "---\ntitle: Broken\nsource: web\n---\n\n# Broken\n\n[[nonexistent-page]] リンク。\n",
       encoding="utf-8",
     )
-    result = rw_light.cmd_audit_weekly()
+    result = rw_audit.cmd_audit_weekly()
     assert result == 2
 
   def test_cmd_audit_weekly_summary_displayed(self, tmp_path, monkeypatch, capsys):
     """完了後にサマリーが表示されること（Req 2.3）"""
     _setup_wiki_for_weekly(tmp_path, monkeypatch)
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     out = capsys.readouterr().out
     assert "audit weekly:" in out
 
   def test_cmd_audit_weekly_report_path_displayed(self, tmp_path, monkeypatch, capsys):
     """レポートパスが標準出力に表示されること（Req 5.7）"""
     _setup_wiki_for_weekly(tmp_path, monkeypatch)
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     out = capsys.readouterr().out
     assert "audit-weekly-" in out
 
   def test_cmd_audit_weekly_metrics_in_report(self, tmp_path, monkeypatch):
     """レポートに weekly 必須メトリクスが含まれること（Req 5.4）"""
     _setup_wiki_for_weekly(tmp_path, monkeypatch)
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     report_files = list((tmp_path / "logs").glob("audit-weekly-*.md"))
     assert report_files
     content = report_files[0].read_text(encoding="utf-8")
@@ -5600,7 +5601,7 @@ class TestCmdAuditWeekly:
       "---\ntitle: Broken\nsource: web\n---\n\n# Broken\n\n[[nonexistent-page]] リンク。\n",
       encoding="utf-8",
     )
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     report_files = list(logs_dir.glob("audit-weekly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
     # broken_links: 1 が metrics に含まれること
@@ -5609,7 +5610,7 @@ class TestCmdAuditWeekly:
   def test_cmd_audit_weekly_bidirectional_compliance_in_report(self, tmp_path, monkeypatch):
     """bidirectional_compliance が % 形式でレポートに含まれること"""
     _setup_wiki_for_weekly(tmp_path, monkeypatch)
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     report_files = list((tmp_path / "logs").glob("audit-weekly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
     assert "bidirectional_compliance:" in content
@@ -5618,7 +5619,7 @@ class TestCmdAuditWeekly:
   def test_cmd_audit_weekly_report_has_sections(self, tmp_path, monkeypatch):
     """レポートに必須セクションが含まれること（Req 5.2）"""
     _setup_wiki_for_weekly(tmp_path, monkeypatch)
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     report_files = list((tmp_path / "logs").glob("audit-weekly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
     assert "## Summary" in content
@@ -5636,14 +5637,14 @@ class TestCmdAuditWeekly:
       return "{}"
 
     monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
     assert claude_called == []
 
   def test_cmd_audit_weekly_read_error_pages_excluded_from_checks(self, tmp_path, monkeypatch):
     """read_error のあるページが weekly チェックから除外されること（実装メモより）"""
     wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
     # load_wiki_pages が read_error 付きページを含むよう monkeypatch
-    normal_page = rw_light.WikiPage(
+    normal_page = rw_audit.WikiPage(
       path="page-00.md",
       filename="page-00.md",
       raw_text="---\ntitle: Normal\nsource: web\n---\n# Normal\n",
@@ -5652,7 +5653,7 @@ class TestCmdAuditWeekly:
       links=[],
       read_error="",
     )
-    error_page = rw_light.WikiPage(
+    error_page = rw_audit.WikiPage(
       path="bad.md",
       filename="bad.md",
       raw_text="",
@@ -5661,8 +5662,8 @@ class TestCmdAuditWeekly:
       links=[],
       read_error="UnicodeDecodeError: bad encoding",
     )
-    monkeypatch.setattr(rw_light, "load_wiki_pages", lambda wiki_dir, target_files=None: [normal_page, error_page])
-    result = rw_light.cmd_audit_weekly()
+    monkeypatch.setattr(rw_audit, "load_wiki_pages", lambda wiki_dir, target_files=None: [normal_page, error_page])
+    result = rw_audit.cmd_audit_weekly()
     # read_error ページが ERROR finding として報告され、exit 2 であること（新体系: FAIL → exit 2）
     assert result == 2
     report_files = list(logs_dir.glob("audit-weekly-*.md"))
@@ -5755,18 +5756,18 @@ class TestRunLlmAudit:
 
   def test_run_llm_audit_exists(self):
     """_run_llm_audit 関数が定義されていること"""
-    assert hasattr(rw_light, "_run_llm_audit")
-    assert callable(rw_light._run_llm_audit)
+    assert hasattr(rw_audit, "_run_llm_audit")
+    assert callable(rw_audit._run_llm_audit)
 
   def test_cmd_audit_monthly_exists(self):
     """cmd_audit_monthly 関数が定義されていること"""
-    assert hasattr(rw_light, "cmd_audit_monthly")
-    assert callable(rw_light.cmd_audit_monthly)
+    assert hasattr(rw_audit, "cmd_audit_monthly")
+    assert callable(rw_audit.cmd_audit_monthly)
 
   def test_cmd_audit_quarterly_exists(self):
     """cmd_audit_quarterly 関数が定義されていること"""
-    assert hasattr(rw_light, "cmd_audit_quarterly")
-    assert callable(rw_light.cmd_audit_quarterly)
+    assert hasattr(rw_audit, "cmd_audit_quarterly")
+    assert callable(rw_audit.cmd_audit_quarterly)
 
   def test_monthly_returns_0_on_warn_only(self, tmp_path, monkeypatch):
     """monthly: WARN only (HIGH → ERROR) の場合 return 1 であること"""
@@ -5793,7 +5794,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: warn_response)
 
-    result = rw_light.cmd_audit_monthly([])
+    result = rw_audit.cmd_audit_monthly([])
     assert result == 0
 
   def test_monthly_returns_1_on_error(self, tmp_path, monkeypatch):
@@ -5803,7 +5804,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
-    result = rw_light.cmd_audit_monthly([])
+    result = rw_audit.cmd_audit_monthly([])
     # ERROR finding があるので exit 2（新体系: FAIL → exit 2）
     assert result == 2
 
@@ -5814,7 +5815,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
 
-    result = rw_light.cmd_audit_quarterly([])
+    result = rw_audit.cmd_audit_quarterly([])
     # WARN finding のみで ERROR なし → return 0
     assert result == 0
 
@@ -5825,7 +5826,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
     raw_files = list(logs_dir.glob("audit-monthly-*-raw.txt"))
     assert len(raw_files) == 1
     content = raw_files[0].read_text(encoding="utf-8")
@@ -5838,7 +5839,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
     report_files = list(logs_dir.glob("audit-monthly-*.md"))
     assert len(report_files) == 1
 
@@ -5849,7 +5850,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
     report_files = list(logs_dir.glob("audit-monthly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
     # ERROR finding がレポートに含まれること
@@ -5862,7 +5863,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
     report_files = list(logs_dir.glob("audit-monthly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
     # category フィールド（contradicting_definition）がレポートに含まれること
@@ -5881,7 +5882,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
-    rw_light.cmd_audit_monthly(["--timeout", "600"])
+    rw_audit.cmd_audit_monthly(["--timeout", "600"])
     assert called_with == [600]
 
   def test_default_timeout_applied(self, tmp_path, monkeypatch):
@@ -5897,7 +5898,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
     assert called_with == [300]
 
   def test_missing_claude_md_returns_1(self, tmp_path, monkeypatch, capsys):
@@ -5918,7 +5919,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_config, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
     monkeypatch.setattr(rw_config, "AGENTS_DIR", str(agents_dir))
 
-    result = rw_light.cmd_audit_monthly([])
+    result = rw_audit.cmd_audit_monthly([])
     assert result == 1
     out = capsys.readouterr().out
     assert "[ERROR]" in out
@@ -5940,7 +5941,7 @@ class TestRunLlmAudit:
     # AGENTS/ を作成しない
     monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_path / "AGENTS"))
 
-    result = rw_light.cmd_audit_monthly([])
+    result = rw_audit.cmd_audit_monthly([])
     assert result == 1
     out = capsys.readouterr().out
     assert "[ERROR]" in out
@@ -5953,7 +5954,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: (_ for _ in ()).throw(RuntimeError("Claude 失敗"))
     )
 
-    result = rw_light.cmd_audit_monthly([])
+    result = rw_audit.cmd_audit_monthly([])
     assert result == 1
     out = capsys.readouterr().out
     assert "[ERROR]" in out
@@ -5965,7 +5966,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: "not valid json {{{")
 
-    result = rw_light.cmd_audit_monthly([])
+    result = rw_audit.cmd_audit_monthly([])
     assert result == 1
     out = capsys.readouterr().out
     assert "[ERROR]" in out
@@ -5979,7 +5980,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
     out = capsys.readouterr().out
     assert "[INFO]" in out
     assert "monthly" in out
@@ -5989,7 +5990,7 @@ class TestRunLlmAudit:
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
     tiers_used = []
 
-    orig_build = rw_light.build_audit_prompt
+    orig_build = rw_audit.build_audit_prompt
 
     def capture_build(tier, task_prompts, wiki_content):
       tiers_used.append(tier)
@@ -5997,10 +5998,10 @@ class TestRunLlmAudit:
 
     monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "build_audit_prompt", capture_build)
+    monkeypatch.setattr(rw_audit, "build_audit_prompt", capture_build)
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
 
-    rw_light.cmd_audit_quarterly([])
+    rw_audit.cmd_audit_quarterly([])
     assert tiers_used == ["quarterly"]
 
   def test_load_task_prompts_called_with_audit(self, tmp_path, monkeypatch):
@@ -6012,7 +6013,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
     assert "audit" in prompts_called
 
   def test_quarterly_report_generated(self, tmp_path, monkeypatch):
@@ -6022,7 +6023,7 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
 
-    rw_light.cmd_audit_quarterly([])
+    rw_audit.cmd_audit_quarterly([])
     report_files = list(logs_dir.glob("audit-quarterly-*.md"))
     assert len(report_files) == 1
 
@@ -6140,7 +6141,7 @@ class TestE2EAuditAllTiers:
       lambda args: [str(wiki_dir / "page-alpha.md")] if "diff" in args else [],
     )
 
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
 
     assert isinstance(result, int)
     report_files = list(logs_dir.glob("audit-micro-*.md"))
@@ -6154,7 +6155,7 @@ class TestE2EAuditAllTiers:
       lambda args: [str(wiki_dir / "page-alpha.md")] if "diff" in args else [],
     )
 
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
 
     # logs/ にレポートあること
     assert len(list(logs_dir.glob("audit-micro-*.md"))) == 1
@@ -6167,7 +6168,7 @@ class TestE2EAuditAllTiers:
     """rw audit weekly が全ページをスキャンし統合レポートを生成する（Req 2.3）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
 
-    result = rw_light.cmd_audit_weekly()
+    result = rw_audit.cmd_audit_weekly()
 
     assert isinstance(result, int)
     report_files = list(logs_dir.glob("audit-weekly-*.md"))
@@ -6177,7 +6178,7 @@ class TestE2EAuditAllTiers:
     """weekly レポートが全ページをスキャンしたメトリクスを含む（Req 2.1）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
 
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
 
     report_files = list(logs_dir.glob("audit-weekly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
@@ -6188,7 +6189,7 @@ class TestE2EAuditAllTiers:
     """weekly のレポートが logs/ にのみ出力される（Req 5.6）"""
     _, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
 
-    rw_light.cmd_audit_weekly()
+    rw_audit.cmd_audit_weekly()
 
     assert len(list(logs_dir.glob("audit-weekly-*.md"))) == 1
     assert len(list(review_dir.rglob("*.md"))) == 0
@@ -6204,7 +6205,7 @@ class TestE2EAuditAllTiers:
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
 
-    result = rw_light.cmd_audit_monthly([])
+    result = rw_audit.cmd_audit_monthly([])
 
     assert isinstance(result, int)
     report_files = list(logs_dir.glob("audit-monthly-*.md"))
@@ -6219,7 +6220,7 @@ class TestE2EAuditAllTiers:
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
 
     raw_files = list(logs_dir.glob("audit-monthly-*-raw.txt"))
     assert len(raw_files) == 1, "monthly の raw レスポンスファイルが logs/ に保存されること"
@@ -6233,7 +6234,7 @@ class TestE2EAuditAllTiers:
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
 
-    rw_light.cmd_audit_monthly([])
+    rw_audit.cmd_audit_monthly([])
 
     assert len(list(logs_dir.glob("audit-monthly-*.md"))) == 1
     assert len(list(review_dir.rglob("*.md"))) == 0
@@ -6249,7 +6250,7 @@ class TestE2EAuditAllTiers:
       lambda prompt, timeout=None: _make_valid_quarterly_response(),
     )
 
-    result = rw_light.cmd_audit_quarterly([])
+    result = rw_audit.cmd_audit_quarterly([])
 
     assert isinstance(result, int)
     report_files = list(logs_dir.glob("audit-quarterly-*.md"))
@@ -6264,7 +6265,7 @@ class TestE2EAuditAllTiers:
       lambda prompt, timeout=None: _make_valid_quarterly_response(),
     )
 
-    rw_light.cmd_audit_quarterly([])
+    rw_audit.cmd_audit_quarterly([])
 
     raw_files = list(logs_dir.glob("audit-quarterly-*-raw.txt"))
     assert len(raw_files) == 1, "quarterly の raw レスポンスファイルが logs/ に保存されること"
@@ -6278,7 +6279,7 @@ class TestE2EAuditAllTiers:
       lambda prompt, timeout=None: _make_valid_quarterly_response(),
     )
 
-    rw_light.cmd_audit_quarterly([])
+    rw_audit.cmd_audit_quarterly([])
 
     assert len(list(logs_dir.glob("audit-quarterly-*.md"))) == 1
     assert len(list(review_dir.rglob("*.md"))) == 0
@@ -6300,10 +6301,10 @@ class TestE2EAuditAllTiers:
     before = _collect_file_snapshots(wiki_dir)
 
     # 全ティア実行
-    rw_light.cmd_audit_micro()
-    rw_light.cmd_audit_weekly()
-    rw_light.cmd_audit_monthly([])
-    rw_light.cmd_audit_quarterly([])
+    rw_audit.cmd_audit_micro()
+    rw_audit.cmd_audit_weekly()
+    rw_audit.cmd_audit_monthly([])
+    rw_audit.cmd_audit_quarterly([])
 
     # 実行後スナップショット
     after = _collect_file_snapshots(wiki_dir)
@@ -6322,10 +6323,10 @@ class TestE2EAuditAllTiers:
 
     before = _collect_file_snapshots(raw_dir)
 
-    rw_light.cmd_audit_micro()
-    rw_light.cmd_audit_weekly()
-    rw_light.cmd_audit_monthly([])
-    rw_light.cmd_audit_quarterly([])
+    rw_audit.cmd_audit_micro()
+    rw_audit.cmd_audit_weekly()
+    rw_audit.cmd_audit_monthly([])
+    rw_audit.cmd_audit_quarterly([])
 
     after = _collect_file_snapshots(raw_dir)
 
@@ -6343,10 +6344,10 @@ class TestE2EAuditAllTiers:
 
     before = _collect_file_snapshots(review_dir)
 
-    rw_light.cmd_audit_micro()
-    rw_light.cmd_audit_weekly()
-    rw_light.cmd_audit_monthly([])
-    rw_light.cmd_audit_quarterly([])
+    rw_audit.cmd_audit_micro()
+    rw_audit.cmd_audit_weekly()
+    rw_audit.cmd_audit_monthly([])
+    rw_audit.cmd_audit_quarterly([])
 
     after = _collect_file_snapshots(review_dir)
 
@@ -6366,10 +6367,10 @@ class TestE2EAuditAllTiers:
     monkeypatch.setattr(rw_config, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
     monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_path / "AGENTS"))
 
-    assert rw_light.cmd_audit_micro() == 1
-    assert rw_light.cmd_audit_weekly() == 1
-    assert rw_light.cmd_audit_monthly([]) == 1
-    assert rw_light.cmd_audit_quarterly([]) == 1
+    assert rw_audit.cmd_audit_micro() == 1
+    assert rw_audit.cmd_audit_weekly() == 1
+    assert rw_audit.cmd_audit_monthly([]) == 1
+    assert rw_audit.cmd_audit_quarterly([]) == 1
 
   def test_error_agents_missing_monthly_exits_1(self, tmp_path, monkeypatch, capsys):
     """AGENTS/ 不在の場合、monthly が exit 1 を返す（Req 7.5）"""
@@ -6379,7 +6380,7 @@ class TestE2EAuditAllTiers:
     _shutil.rmtree(str(tmp_path / "AGENTS"))
     monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_path / "AGENTS"))
 
-    result = rw_light.cmd_audit_monthly([])
+    result = rw_audit.cmd_audit_monthly([])
     assert result == 1
 
     out = capsys.readouterr().out
@@ -6392,7 +6393,7 @@ class TestE2EAuditAllTiers:
     _shutil.rmtree(str(tmp_path / "AGENTS"))
     monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_path / "AGENTS"))
 
-    result = rw_light.cmd_audit_quarterly([])
+    result = rw_audit.cmd_audit_quarterly([])
     assert result == 1
 
   def test_micro_no_changes_exits_0(self, tmp_path, monkeypatch):
@@ -6401,7 +6402,7 @@ class TestE2EAuditAllTiers:
     # 変更ファイルなしをモック
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
 
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
 
     assert result == 0
 
@@ -6410,7 +6411,7 @@ class TestE2EAuditAllTiers:
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
 
-    rw_light.cmd_audit_micro()
+    rw_audit.cmd_audit_micro()
 
     report_files = list(logs_dir.glob("audit-micro-*.md"))
     assert len(report_files) == 1
@@ -6428,7 +6429,7 @@ def test_normalize_severity_token():
   # (a) 新 4 水準 identity: CRITICAL/ERROR/WARN/INFO → 同一返却、drift_sink 空のまま
   for sev in ("CRITICAL", "ERROR", "WARN", "INFO"):
     sink = []
-    result = rw_light._normalize_severity_token(sev, drift_sink=sink)
+    result = rw_audit._normalize_severity_token(sev, drift_sink=sink)
     assert result == sev, f"{sev!r} は identity で返るべき"
     assert len(sink) == 0, f"{sev!r} で drift_sink に余計なエントリが入った"
 
@@ -6438,7 +6439,7 @@ def test_normalize_severity_token():
     stderr_cap = io.StringIO()
     sys.stderr = stderr_cap
     try:
-      result = rw_light._normalize_severity_token(
+      result = rw_audit._normalize_severity_token(
         old,
         source_context={"context": "test", "source_field": "x", "location": "f:1"},
         drift_sink=sink,
@@ -6456,20 +6457,20 @@ def test_normalize_severity_token():
 
   # (c) 未知 severity（WARNING 等）→ INFO + drift
   sink = []
-  result = rw_light._normalize_severity_token("WARNING", drift_sink=sink)
+  result = rw_audit._normalize_severity_token("WARNING", drift_sink=sink)
   assert result == "INFO", "未知トークン WARNING は INFO に降格されるべき"
   assert len(sink) == 1, "未知トークンで drift_sink に 1 エントリ追加されるべき"
 
   # (d) 空文字 / None / 非 str → drift + INFO
   for bad in ("", None, 123):
     sink = []
-    result = rw_light._normalize_severity_token(bad, drift_sink=sink)
+    result = rw_audit._normalize_severity_token(bad, drift_sink=sink)
     assert result == "INFO", f"{bad!r} は INFO に降格されるべき"
     assert len(sink) == 1, f"{bad!r} で drift_sink に 1 エントリ追加されるべき"
 
   # (e) drift_sink エントリの shape 検証（5 キー必須）
   sink = []
-  rw_light._normalize_severity_token(
+  rw_audit._normalize_severity_token(
     "HIGH",
     source_context={"context": "c", "source_field": "f", "location": "l"},
     drift_sink=sink,
@@ -6509,7 +6510,7 @@ class TestAuditExit2OnFail:
       rw_utils, "_git_list_files",
       lambda args: [str(broken_page)] if "diff" in args else []
     )
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
     assert result == 2
 
   def test_cmd_audit_micro_exit_0_on_pass(self, tmp_path, monkeypatch):
@@ -6531,7 +6532,7 @@ class TestAuditExit2OnFail:
       rw_utils, "_git_list_files",
       lambda args: [str(page)] if "diff" in args else []
     )
-    result = rw_light.cmd_audit_micro()
+    result = rw_audit.cmd_audit_micro()
     assert result == 0
 
 
@@ -6550,8 +6551,8 @@ def test_map_severity_deleted():
 # ---------------------------------------------------------------------------
 
 
-def _severity_finding(severity: str) -> rw_light.Finding:
-  return rw_light.Finding(
+def _severity_finding(severity: str) -> rw_audit.Finding:
+  return rw_audit.Finding(
     severity=severity,
     category="test",
     page="test/page.md",

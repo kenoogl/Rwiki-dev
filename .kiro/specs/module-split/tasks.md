@@ -151,7 +151,7 @@
   - 完了状態: `scripts/rw_audit.py` が存在し、`wc -l scripts/rw_audit.py` の出力が 1,500 行以内、かつ `python scripts/rw_light.py audit micro` 等の CLI 起動が import エラーなく動作する。テスト patch 更新と直接アクセス書き換えは 4.2 で実施
   - _Requirements: 1.1, 1.2, 2.1, 2.2_
 
-- [ ] 4.2 audit 系 patch 先を `rw_audit` に置換 + 直接アクセス書き換え + pytest green 復帰
+- [x] 4.2 audit 系 patch 先を `rw_audit` に置換 + 直接アクセス書き換え + pytest green 復帰
   - `tests/test_audit.py` の audit コマンド / チェック関数 / severity 関連関数パッチ参照（~57 箇所、severity 関連 17 件含む）を `rw_audit` に更新する。`_normalize_severity_token` / `_record_drift` は `rw_audit` へ、`_validate_agents_severity_vocabulary` は `rw_prompt_engine`（Phase 3 で更新済み）を区別する
   - `tests/test_rw_light.py` の audit 系パッチ参照（`cmd_audit_*`, `check_*`, `_run_llm_audit`, `parse_audit_response`, `build_audit_prompt`, `generate_audit_report`, `_normalize_severity_token`, `_record_drift`, `run_micro_checks`, `run_weekly_checks`, `load_wiki_pages`, `get_recent_wiki_changes`, `validate_wiki_dir`, `_resolve_link` 等）を `rw_audit` に更新する
   - severity 関連内部関数（`_normalize_severity_token`, `_record_drift`）の patch 先が `rw_audit`、`_validate_agents_severity_vocabulary` の patch 先が `rw_prompt_engine`（Phase 3 で更新済み）に区別されていることを最終確認する。これは Req 1.1 が指定する audit 責務帰属に基づくシンボル配置の整合性検証
