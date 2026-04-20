@@ -147,7 +147,7 @@
   - _Boundary: cmd_lint (stdout)_
   - _Depends: 2.1_
 
-- [ ] 2.6 `cmd_lint_query` の status 計算差替え + checks[] 単一化 + `query_lint_latest.json` schema 更新（機械 JSON 変更、TDD）
+- [x] 2.6 `cmd_lint_query` の status 計算差替え + checks[] 単一化 + `query_lint_latest.json` schema 更新（機械 JSON 変更、TDD）
   - 先に test_lint_query_json_new_schema を red で追加: `PASS_WITH_WARNINGS` 非出力 / `checks[]` 単一配列（errors/warnings/infos 3 配列なし）/ `severity_counts` 4 キー / `drift_events` フィールド存在を検証（`schema_version` 追加なし）
   - `lint_single_query_dir` の add 関数を 4 severity 対応に拡張、`checks[]` 1 配列に集約（errors[] / warnings[] / infos[] 廃止）
   - `PASS_WITH_WARNINGS` を廃止、PASS / FAIL の 2 値に統合、top-level status から `PASS_WITH_WARNINGS` を削除

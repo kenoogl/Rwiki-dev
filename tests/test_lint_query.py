@@ -71,7 +71,7 @@ class TestCmdLintQuery:
     assert result == 0
 
   def test_exit_code_warn(self, patch_constants, query_artifacts):
-    """Req 8.5: WARN のみ発生する場合 exit 1 を返す (QL005: created_at なし)。"""
+    """WARN のみ発生する場合 exit 0 を返す（PASS_WITH_WARNINGS 廃止、PASS/FAIL 2 値化）"""
     query_dir = query_artifacts("q001")
     self._make_valid_files(query_dir)
     # created_at を削除して QL005 WARN を引き起こす
@@ -86,7 +86,7 @@ class TestCmdLintQuery:
       encoding="utf-8",
     )
     result = rw_light.cmd_lint_query(["--path", str(query_dir)])
-    assert result == 1
+    assert result == 0
 
   def test_exit_code_error(self, patch_constants, query_artifacts):
     """Req 8.6: ERROR がある場合 exit 2 を返す (QL001: 必須ファイル欠落)。"""
@@ -105,3 +105,95 @@ class TestCmdLintQuery:
     """Req 8.8: 不正な引数を渡した場合 exit 3 を返す。"""
     result = rw_light.cmd_lint_query(["--path"])
     assert result == 3
+
+
+# ---------------------------------------------------------------------------
+# Task 2.6: query_lint_latest.json 新 schema
+# ---------------------------------------------------------------------------
+
+
+class TestLintQueryJsonNewSchema:
+  """query_lint_latest.json が新 schema に適合することを検証"""
+
+  def test_no_pass_with_warnings(self, patch_constants, query_artifacts):
+    """results[].status に PASS_WITH_WARNINGS が出現しない"""
+    query_dir = query_artifacts("q001")
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    data = json.loads(
+      (patch_constants / "logs" / "query_lint_latest.json").read_text()
+    )
+    for r in data["results"]:
+      assert r["status"] != "PASS_WITH_WARNINGS"
+
+  def test_checks_single_array_no_errors_warnings_infos(
+    self, patch_constants, query_artifacts
+  ):
+    """results[].errors / .warnings / .infos 配列が存在しない"""
+    query_dir = query_artifacts("q001")
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    data = json.loads(
+      (patch_constants / "logs" / "query_lint_latest.json").read_text()
+    )
+    for r in data["results"]:
+      assert "errors" not in r
+      assert "warnings" not in r
+      assert "infos" not in r
+      assert "checks" in r
+      assert isinstance(r["checks"], list)
+
+  def test_summary_severity_counts_four_keys(
+    self, patch_constants, query_artifacts
+  ):
+    """summary.severity_counts に critical/error/warn/info の 4 キーが存在する"""
+    query_dir = query_artifacts("q001")
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    data = json.loads(
+      (patch_constants / "logs" / "query_lint_latest.json").read_text()
+    )
+    sc = data["summary"]["severity_counts"]
+    assert "critical" in sc
+    assert "error" in sc
+    assert "warn" in sc
+    assert "info" in sc
+
+  def test_drift_events_field_exists(self, patch_constants, query_artifacts):
+    """drift_events フィールドが存在する（空 list 可）"""
+    query_dir = query_artifacts("q001")
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    data = json.loads(
+      (patch_constants / "logs" / "query_lint_latest.json").read_text()
+    )
+    assert "drift_events" in data
+    assert isinstance(data["drift_events"], list)
+
+  def test_no_schema_version(self, patch_constants, query_artifacts):
+    """schema_version フィールドは追加しない（Y Cut）"""
+    query_dir = query_artifacts("q001")
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    data = json.loads(
+      (patch_constants / "logs" / "query_lint_latest.json").read_text()
+    )
+    assert "schema_version" not in data
+
+  def test_warn_only_returns_pass_status(
+    self, patch_constants, query_artifacts
+  ):
+    """WARN のみの場合 results[].status == 'PASS'（PASS_WITH_WARNINGS を廃止）"""
+    query_dir = query_artifacts("q001")
+    # created_at を削除して QL005 WARN を引き起こす
+    meta = {
+      "query_id": "q001",
+      "query_type": "fact",
+      "scope": "test-scope",
+      "sources": ["https://example.com"],
+    }
+    (query_dir / "metadata.json").write_text(
+      json.dumps(meta, ensure_ascii=False),
+      encoding="utf-8",
+    )
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    data = json.loads(
+      (patch_constants / "logs" / "query_lint_latest.json").read_text()
+    )
+    for r in data["results"]:
+      assert r["status"] in {"PASS", "FAIL"}

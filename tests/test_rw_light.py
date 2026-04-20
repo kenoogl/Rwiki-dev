@@ -2219,8 +2219,8 @@ class TestE2EWorkflow:
         assert lint_result["status"] == "FAIL", (
             f"lint should FAIL after corrupting answer.md, got: {lint_result['status']}"
         )
-        assert any("QL006" in e for e in lint_result["errors"]), (
-            f"QL006 error expected, got: {lint_result['errors']}"
+        assert any("QL006" in c["id"] for c in lint_result["checks"] if c["severity"] in {"ERROR", "CRITICAL"}), (
+            f"QL006 error expected, got: {lint_result['checks']}"
         )
 
         # Step 4: fix（call_claude を fix レスポンスにすり替え）
@@ -2230,8 +2230,8 @@ class TestE2EWorkflow:
 
         # Step 5: lint 再検証 → PASS
         post_lint = rw_light.lint_single_query_dir(str(qdir))
-        assert post_lint["status"] in ("PASS", "PASS_WITH_WARNINGS"), (
-            f"lint should PASS after fix, got: {post_lint['status']}, errors: {post_lint['errors']}"
+        assert post_lint["status"] == "PASS", (
+            f"lint should PASS after fix, got: {post_lint['status']}, checks: {post_lint['checks']}"
         )
 
     # ------------------------------------------------------------------

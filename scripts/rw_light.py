@@ -3001,8 +3001,9 @@ def cmd_query_extract(args: list[str]) -> int:
     # 11. 結果に基づいて終了コードを返す
     if lint_result["status"] == "FAIL":
         print(f"[WARN] lint 検証失敗: {lint_result['target']}")
-        for err in lint_result["errors"]:
-            print(f"  [ERROR] {err}")
+        for chk in lint_result["checks"]:
+            if chk["severity"] in _FAIL_SEVERITIES:
+                print(f"  [{chk['severity']}] {chk['id']} {chk['message']}")
         print("[INFO] アーティファクトは生成されましたが lint に失敗しました。")
         for p in file_paths:
             print(f"  {relpath(p)}")
@@ -3207,9 +3208,6 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
     result: dict[str, Any] = {
         "target": relpath(query_dir),
         "status": "PASS",
-        "errors": [],
-        "warnings": [],
-        "infos": [],
         "checks": [],
     }
 
@@ -3219,12 +3217,6 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
             "severity": level,
             "message": message,
         })
-        if level == "ERROR":
-            result["errors"].append(f"{code} {message}")
-        elif level == "WARN":
-            result["warnings"].append(f"{code} {message}")
-        else:
-            result["infos"].append(f"{code} {message}")
 
     required_files = {
         "question.md": os.path.join(query_dir, "question.md"),
@@ -3249,7 +3241,7 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
 
     metadata, metadata_err = safe_read_json(required_files["metadata.json"])
     if metadata_err:
-        add("ERROR", "QL017", f"metadata.json is invalid JSON: {metadata_err}")
+        add("CRITICAL", "QL017", f"metadata.json is invalid JSON: {metadata_err}")
         result["status"] = "FAIL"
         return result
 
@@ -3304,20 +3296,13 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
         if answer_len > 1500 and evidence_blocks < 2:
             add("WARN", "QL010", "long answer with too few evidence blocks")
 
-    if result["errors"]:
-        result["status"] = "FAIL"
-    elif result["warnings"]:
-        result["status"] = "PASS_WITH_WARNINGS"
-    else:
-        result["status"] = "PASS"
+    has_fail = any(c["severity"] in _FAIL_SEVERITIES for c in result["checks"])
+    result["status"] = "FAIL" if has_fail else "PASS"
 
     return result
 
 
 def print_query_lint_text(results: list[dict[str, Any]]) -> None:
-    total_errors = 0
-    total_warnings = 0
-
     for res in results:
         print(f"Lint Result: {res['status']}")
         print(f"Target: {res['target']}")
@@ -3330,10 +3315,6 @@ def print_query_lint_text(results: list[dict[str, Any]]) -> None:
             print("No issues found.")
 
         print()
-        total_errors += len(res["errors"])
-        total_warnings += len(res["warnings"])
-
-    print(f"Summary: {len(results)} target(s), {total_errors} error(s), {total_warnings} warning(s)")
 
 
 def cmd_lint_query(args: list[str]) -> int:
@@ -3384,14 +3365,23 @@ def cmd_lint_query(args: list[str]) -> int:
 
     results = [lint_single_query_dir(p, strict=strict) for p in query_dirs]
 
+    sc: dict[str, int] = {"critical": 0, "error": 0, "warn": 0, "info": 0}
+    for r in results:
+        for chk in r["checks"]:
+            key = chk["severity"].lower()
+            if key in sc:
+                sc[key] += 1
+    run_status = "FAIL" if any(r["status"] == "FAIL" for r in results) else "PASS"
+
     payload = {
         "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "status": run_status,
         "results": results,
         "summary": {
             "targets": len(results),
-            "errors": sum(len(r["errors"]) for r in results),
-            "warnings": sum(len(r["warnings"]) for r in results),
+            "severity_counts": sc,
         },
+        "drift_events": [],
     }
     write_text(QUERY_LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
 
@@ -3401,13 +3391,8 @@ def cmd_lint_query(args: list[str]) -> int:
         print_query_lint_text(results)
         print(f"Log: {relpath(QUERY_LINT_LOG)}")
 
-    has_error = any(r["status"] == "FAIL" for r in results)
-    has_warn = any(r["status"] == "PASS_WITH_WARNINGS" for r in results)
-
-    if has_error:
+    if run_status == "FAIL":
         return 2
-    if has_warn:
-        return 1
     return 0
 
 
@@ -3438,7 +3423,7 @@ def cmd_query_fix(args: list[str]) -> int:
 
     # 3. 事前 lint
     pre_lint = lint_single_query_dir(query_dir)
-    if not pre_lint["errors"]:
+    if pre_lint["status"] != "FAIL":
         print(f"[INFO] 修復不要: {query_id} は lint 検証をパスしています")
         return 0
 
@@ -3519,13 +3504,12 @@ def cmd_query_fix(args: list[str]) -> int:
 
     # 13. post-fix lint 結果を表示
     print(f"\n[POST-FIX LINT] status: {post_lint['status']}")
-    for err in post_lint.get("errors", []):
-        print(f"  [ERROR] {err}")
-    for warn in post_lint.get("warnings", []):
-        print(f"  [WARN] {warn}")
+    for chk in post_lint.get("checks", []):
+        if chk["severity"] in _FAIL_SEVERITIES:
+            print(f"  [{chk['severity']}] {chk['id']} {chk['message']}")
 
     # 14. 終了コード決定
-    if post_lint["errors"]:
+    if post_lint["status"] == "FAIL":
         return 2
     return 0
 
