@@ -184,7 +184,7 @@
 
 - [ ] 6. Phase 5: `rw_light` 最終スリム化と全体検証
 
-- [ ] 6.1 `rw_light.py` の最終スリム化と残留参照・re-export 不在検査
+- [x] 6.1 `rw_light.py` の最終スリム化と残留参照・re-export 不在検査
   - `rw_light.py` の残存内容を確認し、design.md「Modified Files」セクションが指定する保持関数のみが残っていることを確認する（`cmd_lint`, `cmd_ingest` + `plan_ingest_moves` + `execute_ingest_moves` + `load_lint_summary`, `cmd_synthesize_logs` + `parse_topics` + `render_candidate_note` + `candidate_note_path`, `cmd_approve` + `candidate_files` + `approved_candidate_files` + `synthesis_target_path` + `merge_synthesis` + `promote_candidate` + `mark_candidate_promoted` + `update_index_synthesis` + `append_approval_log`, `cmd_init` + `_backup_timestamp`, `print_usage`, `main`, `if __name__ == "__main__"` ブロック）
   - サブモジュール import 文（`import rw_config`, `import rw_utils`, `import rw_prompt_engine`, `import rw_audit`, `import rw_query`）のみが存在し、**`from rw_<module> import ...` 形式の re-export 文が一切存在しない**ことを `grep -nE "^from rw_(config|utils|prompt_engine|audit|query) import" scripts/rw_light.py` ヒット 0 件で最終確認する（Req 1.3）
   - **残留関数本体（cmd_lint / cmd_ingest / cmd_synthesize_logs / cmd_approve / cmd_init / `_backup_timestamp`）内の参照を grep で検査し、移動済みシンボル（`UPPER_CASE` 定数、utility 関数、prompt engine 関数、audit 関数、query 関数）が bare 形式で残っていないことを確認する**（残っていれば `rw_<module>.X` 修飾参照に修正）

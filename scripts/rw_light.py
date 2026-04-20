@@ -5,7 +5,6 @@ import re
 import shutil
 import subprocess
 import sys
-import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any
