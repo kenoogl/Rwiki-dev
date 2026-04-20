@@ -7,6 +7,7 @@ import pytest
 
 import rw_config
 import rw_light
+import rw_query
 
 
 class TestCmdLintQuery:
@@ -41,7 +42,7 @@ class TestCmdLintQuery:
   def test_valid_query_structure(self, patch_constants, query_artifacts, capsys):
     """Req 8.1: 4 ファイルが揃っているとき stdout に 'Lint Result' が含まれる。"""
     query_dir = query_artifacts("q001")
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     out = capsys.readouterr().out
     assert "Lint Result" in out
 
@@ -49,14 +50,14 @@ class TestCmdLintQuery:
     """Req 8.2: 必須ファイルが欠落しているとき stdout に 'QL001' が含まれる。"""
     query_dir = query_artifacts("q001")
     (query_dir / "question.md").unlink()
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     out = capsys.readouterr().out
     assert "QL001" in out
 
   def test_log_output(self, patch_constants, query_artifacts):
     """Req 8.3: 実行後 query_lint_latest.json に timestamp, results, summary の 3 キーが存在する。"""
     query_dir = query_artifacts("q001")
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     log_path = Path(rw_config.QUERY_LINT_LOG)
     assert log_path.exists()
     data = json.loads(log_path.read_text(encoding="utf-8"))
@@ -68,7 +69,7 @@ class TestCmdLintQuery:
     """Req 8.4: ERROR がない場合 exit 0 を返す。"""
     query_dir = query_artifacts("q001")
     self._make_valid_files(query_dir)
-    result = rw_light.cmd_lint_query(["--path", str(query_dir)])
+    result = rw_query.cmd_lint_query(["--path", str(query_dir)])
     assert result == 0
 
   def test_exit_code_warn(self, patch_constants, query_artifacts):
@@ -86,25 +87,25 @@ class TestCmdLintQuery:
       json.dumps(metadata, ensure_ascii=False, indent=2),
       encoding="utf-8",
     )
-    result = rw_light.cmd_lint_query(["--path", str(query_dir)])
+    result = rw_query.cmd_lint_query(["--path", str(query_dir)])
     assert result == 0
 
   def test_exit_code_error(self, patch_constants, query_artifacts):
     """Req 8.6: ERROR がある場合 exit 2 を返す (QL001: 必須ファイル欠落)。"""
     query_dir = query_artifacts("q001")
     (query_dir / "question.md").unlink()
-    result = rw_light.cmd_lint_query(["--path", str(query_dir)])
+    result = rw_query.cmd_lint_query(["--path", str(query_dir)])
     assert result == 2
 
   def test_exit_code_path_not_found(self, patch_constants, tmp_path):
     """存在しないパスを指定した場合 exit 1（旧: exit 4）を返す。"""
     nonexistent = tmp_path / "does_not_exist" / "q999"
-    result = rw_light.cmd_lint_query(["--path", str(nonexistent)])
+    result = rw_query.cmd_lint_query(["--path", str(nonexistent)])
     assert result == 1
 
   def test_exit_code_arg_error(self, patch_constants):
     """不正な引数を渡した場合 exit 1（旧: exit 3）を返す。"""
-    result = rw_light.cmd_lint_query(["--path"])
+    result = rw_query.cmd_lint_query(["--path"])
     assert result == 1
 
 
@@ -119,7 +120,7 @@ class TestLintQueryJsonNewSchema:
   def test_no_pass_with_warnings(self, patch_constants, query_artifacts):
     """results[].status に PASS_WITH_WARNINGS が出現しない"""
     query_dir = query_artifacts("q001")
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     data = json.loads(
       (patch_constants / "logs" / "query_lint_latest.json").read_text()
     )
@@ -131,7 +132,7 @@ class TestLintQueryJsonNewSchema:
   ):
     """results[].errors / .warnings / .infos 配列が存在しない"""
     query_dir = query_artifacts("q001")
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     data = json.loads(
       (patch_constants / "logs" / "query_lint_latest.json").read_text()
     )
@@ -147,7 +148,7 @@ class TestLintQueryJsonNewSchema:
   ):
     """summary.severity_counts に critical/error/warn/info の 4 キーが存在する"""
     query_dir = query_artifacts("q001")
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     data = json.loads(
       (patch_constants / "logs" / "query_lint_latest.json").read_text()
     )
@@ -160,7 +161,7 @@ class TestLintQueryJsonNewSchema:
   def test_drift_events_field_exists(self, patch_constants, query_artifacts):
     """drift_events フィールドが存在する（空 list 可）"""
     query_dir = query_artifacts("q001")
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     data = json.loads(
       (patch_constants / "logs" / "query_lint_latest.json").read_text()
     )
@@ -170,7 +171,7 @@ class TestLintQueryJsonNewSchema:
   def test_no_schema_version(self, patch_constants, query_artifacts):
     """schema_version フィールドは追加しない（Y Cut）"""
     query_dir = query_artifacts("q001")
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     data = json.loads(
       (patch_constants / "logs" / "query_lint_latest.json").read_text()
     )
@@ -187,20 +188,20 @@ class TestLintQueryExitCodeConsolidation:
 
   def test_arg_error_exit_1(self, patch_constants):
     """引数エラー（--path 値なし）→ exit 1（旧: exit 3）"""
-    result = rw_light.cmd_lint_query(["--path"])
+    result = rw_query.cmd_lint_query(["--path"])
     assert result == 1
 
   def test_path_not_found_exit_1(self, patch_constants, tmp_path):
     """存在しないパス → exit 1（旧: exit 4）"""
     nonexistent = tmp_path / "does_not_exist" / "q999"
-    result = rw_light.cmd_lint_query(["--path", str(nonexistent)])
+    result = rw_query.cmd_lint_query(["--path", str(nonexistent)])
     assert result == 1
 
   def test_fail_exit_2(self, patch_constants, query_artifacts):
     """FAIL（ERROR あり）→ exit 2"""
     query_dir = query_artifacts("q001")
     (query_dir / "question.md").unlink()
-    result = rw_light.cmd_lint_query(["--path", str(query_dir)])
+    result = rw_query.cmd_lint_query(["--path", str(query_dir)])
     assert result == 2
 
   def test_pass_exit_0(self, patch_constants, query_artifacts):
@@ -224,7 +225,7 @@ class TestLintQueryExitCodeConsolidation:
       "sources": ["https://example.com"],
     }
     (query_dir / "metadata.json").write_text(_json.dumps(meta), encoding="utf-8")
-    result = rw_light.cmd_lint_query(["--path", str(query_dir)])
+    result = rw_query.cmd_lint_query(["--path", str(query_dir)])
     assert result == 0
 
   def test_warn_only_returns_pass_status(
@@ -243,7 +244,7 @@ class TestLintQueryExitCodeConsolidation:
       json.dumps(meta, ensure_ascii=False),
       encoding="utf-8",
     )
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     data = json.loads(
       (patch_constants / "logs" / "query_lint_latest.json").read_text()
     )
@@ -283,7 +284,7 @@ class TestLintQueryStdout4Tier:
     """stdout summary 行に CRITICAL/ERROR/WARN/INFO + status が含まれる"""
     query_dir = query_artifacts("q001")
     self._make_valid_files(query_dir)
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     captured = capsys.readouterr()
     assert "CRITICAL" in captured.out
     assert "ERROR" in captured.out
@@ -297,7 +298,7 @@ class TestLintQueryStdout4Tier:
     """問題 0 件でも status（PASS）が表示される（AC 5.5 境界）"""
     query_dir = query_artifacts("q001")
     self._make_valid_files(query_dir)
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     captured = capsys.readouterr()
     assert "PASS" in captured.out
 
@@ -307,7 +308,7 @@ class TestLintQueryStdout4Tier:
     """ERROR がある場合は stdout に FAIL が表示される"""
     query_dir = query_artifacts("q001")
     (query_dir / "question.md").unlink()
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     captured = capsys.readouterr()
     assert "FAIL" in captured.out
 
@@ -317,6 +318,6 @@ class TestLintQueryStdout4Tier:
     """WARN が status 位置に出現しない"""
     query_dir = query_artifacts("q001")
     self._make_valid_files(query_dir)
-    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    rw_query.cmd_lint_query(["--path", str(query_dir)])
     captured = capsys.readouterr()
     assert "— WARN" not in captured.out

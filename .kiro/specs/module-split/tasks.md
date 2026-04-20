@@ -172,7 +172,7 @@
   - 完了状態: `scripts/rw_query.py` が存在し、`python scripts/rw_light.py query extract <dummy_args>` 相当の CLI 起動が import エラーなく動作する（実行は引数不足で異常終了してよい — import 解決のみが検証対象）。テスト patch 更新と直接アクセス書き換えは 5.2 で実施
   - _Requirements: 1.1, 2.1, 2.2_
 
-- [ ] 5.2 query 系 patch 先を `rw_query` に置換 + 直接アクセス書き換え + pytest green 復帰
+- [x] 5.2 query 系 patch 先を `rw_query` に置換 + 直接アクセス書き換え + pytest green 復帰
   - `tests/test_rw_light.py` の `lint_single_query_dir` および `cmd_query_extract` / `cmd_query_answer` / `cmd_query_fix` の patch 参照を `rw_query` に更新する。さらに query lint 検査関数（`count_evidence_blocks`, `has_evidence_source`, `extract_query_type` 等）の patch 参照があれば `rw_query` に更新する
   - `tests/test_lint_query.py` で `rw_light` 経由の patch 参照があれば `rw_query` に更新する（`conftest.py` 経由のみで関与する場合は更新不要）
   - **直接アクセス書き換え**: `grep -nE "rw_light\.(generate_query_id|write_query_artifacts|parse_extract_response|parse_fix_response|_strip_code_block|count_evidence_blocks|contains_markdown_structure|has_query_text|extract_query_type|extract_scope|has_evidence_source|contains_inference_language|lint_single_query_dir|print_query_lint_text|cmd_query_extract|cmd_query_answer|cmd_query_fix|cmd_lint_query)\b" tests/` で全件列挙し、`rw_query.<symbol>` に sed で置換する（test_lint_query.py 22 件、test_rw_light.py 該当分）

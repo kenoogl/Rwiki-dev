@@ -13,6 +13,7 @@ import rw_audit  # noqa: E402
 import rw_config  # noqa: E402
 import rw_light  # noqa: E402
 import rw_prompt_engine  # noqa: E402
+import rw_query  # noqa: E402
 import rw_utils  # noqa: E402
 
 # テスト用 CLAUDE.md が存在する templates/CLAUDE.md のパス
@@ -671,13 +672,13 @@ class TestGenerateQueryId:
     def test_ascii_question_generates_slug(self, monkeypatch):
         """ASCII 質問文からスラッグが生成されること"""
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        result = rw_light.generate_query_id("What is machine learning?")
+        result = rw_query.generate_query_id("What is machine learning?")
         assert result == "20260417-what-is-machine-learning"
 
     def test_non_ascii_question_slugified(self, monkeypatch):
         """非ASCII 質問文が slugify されること（ASCII 変換後にスラッグ生成）"""
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        result = rw_light.generate_query_id("機械学習とは何か？")
+        result = rw_query.generate_query_id("機械学習とは何か？")
         # 非ASCII は除去されて "untitled" または空になるケース
         assert result.startswith("20260417-")
         # 少なくとも日付プレフィックスを含むこと
@@ -687,18 +688,18 @@ class TestGenerateQueryId:
         """空の質問文で ValueError が raise されること"""
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         with pytest.raises(ValueError, match=".*"):
-            rw_light.generate_query_id("")
+            rw_query.generate_query_id("")
 
     def test_whitespace_only_raises_value_error(self, monkeypatch):
         """空白のみの質問文で ValueError が raise されること"""
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         with pytest.raises(ValueError, match=".*"):
-            rw_light.generate_query_id("   ")
+            rw_query.generate_query_id("   ")
 
     def test_date_prefix_is_8_digits(self, monkeypatch):
         """日付プレフィックスが YYYYMMDD 形式 (8桁) であること"""
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        result = rw_light.generate_query_id("test question")
+        result = rw_query.generate_query_id("test question")
         prefix = result.split("-")[0]
         assert len(prefix) == 8
         assert prefix.isdigit()
@@ -708,7 +709,7 @@ class TestGenerateQueryId:
         """非常に長い質問文でスラッグ部分が 80 文字以下になること"""
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         long_question = "a " * 100  # 200文字の質問
-        result = rw_light.generate_query_id(long_question)
+        result = rw_query.generate_query_id(long_question)
         # プレフィックス "20260417-" を除いたスラッグ部分
         slug_part = result[9:]  # "20260417-" は9文字
         assert len(slug_part) <= 80, f"Slug part too long: {len(slug_part)} chars"
@@ -716,7 +717,7 @@ class TestGenerateQueryId:
     def test_format_is_yyyymmdd_hyphen_slug(self, monkeypatch):
         """YYYYMMDD-{slug} 形式であること"""
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-01-15")
-        result = rw_light.generate_query_id("hello world")
+        result = rw_query.generate_query_id("hello world")
         assert result == "20260115-hello-world"
 
 
@@ -765,14 +766,14 @@ class TestWriteQueryArtifacts:
     def test_creates_query_id_directory(self, tmp_path, monkeypatch):
         """review/query/<query_id>/ ディレクトリが作成されること"""
         review_query_dir = self._setup(tmp_path, monkeypatch)
-        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        rw_query.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
         expected_dir = review_query_dir / self.QUERY_ID
         assert expected_dir.is_dir(), f"Expected directory: {expected_dir}"
 
     def test_creates_4_files(self, tmp_path, monkeypatch):
         """4ファイル (question.md, answer.md, evidence.md, metadata.json) が作成されること"""
         review_query_dir = self._setup(tmp_path, monkeypatch)
-        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        rw_query.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
         target_dir = review_query_dir / self.QUERY_ID
         for filename in ["question.md", "answer.md", "evidence.md", "metadata.json"]:
             assert (target_dir / filename).exists(), f"Missing file: {filename}"
@@ -780,14 +781,14 @@ class TestWriteQueryArtifacts:
     def test_returns_list_of_4_paths(self, tmp_path, monkeypatch):
         """ファイルパスのリスト（4要素）が返ること"""
         self._setup(tmp_path, monkeypatch)
-        result = rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        result = rw_query.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
         assert isinstance(result, list)
         assert len(result) == 4
 
     def test_metadata_json_query_id_overridden(self, tmp_path, monkeypatch):
         """metadata.json の query_id が CLI 生成の query_id で上書きされること"""
         review_query_dir = self._setup(tmp_path, monkeypatch)
-        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        rw_query.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
         metadata_path = review_query_dir / self.QUERY_ID / "metadata.json"
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         assert metadata["query_id"] == self.QUERY_ID
@@ -796,7 +797,7 @@ class TestWriteQueryArtifacts:
     def test_question_md_key_value_format(self, tmp_path, monkeypatch):
         """question.md がキーバリュー形式で書き出されること"""
         review_query_dir = self._setup(tmp_path, monkeypatch)
-        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        rw_query.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
         question_path = review_query_dir / self.QUERY_ID / "question.md"
         content = question_path.read_text(encoding="utf-8")
         assert "query: What is ML?" in content
@@ -807,7 +808,7 @@ class TestWriteQueryArtifacts:
     def test_answer_md_contains_answer_content(self, tmp_path, monkeypatch):
         """answer.md に answer content が含まれること"""
         review_query_dir = self._setup(tmp_path, monkeypatch)
-        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        rw_query.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
         answer_path = review_query_dir / self.QUERY_ID / "answer.md"
         content = answer_path.read_text(encoding="utf-8")
         assert "ML stands for Machine Learning" in content
@@ -815,7 +816,7 @@ class TestWriteQueryArtifacts:
     def test_evidence_md_contains_source_lines(self, tmp_path, monkeypatch):
         """evidence.md にエビデンスブロックの source: 行が含まれること"""
         review_query_dir = self._setup(tmp_path, monkeypatch)
-        rw_light.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
+        rw_query.write_query_artifacts(self.QUERY_ID, self.SAMPLE_DATA)
         evidence_path = review_query_dir / self.QUERY_ID / "evidence.md"
         content = evidence_path.read_text(encoding="utf-8")
         assert "source: wiki/ml.md" in content
@@ -852,14 +853,14 @@ class TestParseExtractResponse:
 
     def test_valid_json_returns_dict_with_required_keys(self):
         """正常な JSON → query/answer/evidence/metadata を含む dict が返ること"""
-        result = rw_light.parse_extract_response(self.VALID_JSON)
+        result = rw_query.parse_extract_response(self.VALID_JSON)
         assert isinstance(result, dict)
         for key in ("query", "answer", "evidence", "metadata"):
             assert key in result, f"Missing key: {key}"
 
     def test_valid_json_values_are_correct(self):
         """正常な JSON → 各フィールドの値が正しくパースされること"""
-        result = rw_light.parse_extract_response(self.VALID_JSON)
+        result = rw_query.parse_extract_response(self.VALID_JSON)
         assert result["query"]["text"] == "What is ML?"
         assert result["answer"]["content"] == "## Answer\n\nML is machine learning."
         assert result["evidence"]["blocks"][0]["source"] == "wiki/ml.md"
@@ -868,13 +869,13 @@ class TestParseExtractResponse:
     def test_invalid_json_raises_value_error(self):
         """不正な JSON → ValueError が raise されること"""
         with pytest.raises(ValueError):
-            rw_light.parse_extract_response("not json at all {{{")
+            rw_query.parse_extract_response("not json at all {{{")
 
     def test_invalid_json_prints_to_stderr(self, capsys):
         """不正な JSON → stderr にレスポンス先頭500文字が出力されること"""
         long_invalid = "X" * 600 + "{{{"
         with pytest.raises(ValueError):
-            rw_light.parse_extract_response(long_invalid)
+            rw_query.parse_extract_response(long_invalid)
         captured = capsys.readouterr()
         assert "X" * 500 in captured.err
         assert "X" * 501 not in captured.err
@@ -884,28 +885,28 @@ class TestParseExtractResponse:
         data = json.loads(self.VALID_JSON)
         del data["answer"]
         with pytest.raises(ValueError, match=".*answer.*"):
-            rw_light.parse_extract_response(json.dumps(data))
+            rw_query.parse_extract_response(json.dumps(data))
 
     def test_missing_query_key_raises_value_error(self):
         """必須フィールド 'query' が欠落 → ValueError が raise されること"""
         data = json.loads(self.VALID_JSON)
         del data["query"]
         with pytest.raises(ValueError):
-            rw_light.parse_extract_response(json.dumps(data))
+            rw_query.parse_extract_response(json.dumps(data))
 
     def test_missing_evidence_key_raises_value_error(self):
         """必須フィールド 'evidence' が欠落 → ValueError が raise されること"""
         data = json.loads(self.VALID_JSON)
         del data["evidence"]
         with pytest.raises(ValueError):
-            rw_light.parse_extract_response(json.dumps(data))
+            rw_query.parse_extract_response(json.dumps(data))
 
     def test_missing_metadata_key_raises_value_error(self):
         """必須フィールド 'metadata' が欠落 → ValueError が raise されること"""
         data = json.loads(self.VALID_JSON)
         del data["metadata"]
         with pytest.raises(ValueError):
-            rw_light.parse_extract_response(json.dumps(data))
+            rw_query.parse_extract_response(json.dumps(data))
 
     def test_missing_field_prints_to_stderr(self, capsys):
         """必須フィールド欠落時 → stderr にレスポンス先頭500文字が出力されること"""
@@ -913,14 +914,14 @@ class TestParseExtractResponse:
         del data["answer"]
         response = json.dumps(data)
         with pytest.raises(ValueError):
-            rw_light.parse_extract_response(response)
+            rw_query.parse_extract_response(response)
         captured = capsys.readouterr()
         assert len(captured.err) > 0
 
     def test_json_wrapped_in_code_block_parsed_correctly(self):
         """```json ... ``` で囲まれた JSON → 正常にパースされること"""
         wrapped = f"```json\n{self.VALID_JSON}\n```"
-        result = rw_light.parse_extract_response(wrapped)
+        result = rw_query.parse_extract_response(wrapped)
         assert isinstance(result, dict)
         for key in ("query", "answer", "evidence", "metadata"):
             assert key in result
@@ -928,7 +929,7 @@ class TestParseExtractResponse:
     def test_json_wrapped_in_plain_code_block_parsed_correctly(self):
         """``` ... ``` （言語指定なし）で囲まれた JSON → 正常にパースされること"""
         wrapped = f"```\n{self.VALID_JSON}\n```"
-        result = rw_light.parse_extract_response(wrapped)
+        result = rw_query.parse_extract_response(wrapped)
         assert isinstance(result, dict)
         assert "query" in result
 
@@ -957,14 +958,14 @@ class TestParseFixResponse:
 
     def test_valid_json_returns_dict_with_required_keys(self):
         """正常な JSON → fixes/files/skipped を含む dict が返ること"""
-        result = rw_light.parse_fix_response(self.VALID_JSON)
+        result = rw_query.parse_fix_response(self.VALID_JSON)
         assert isinstance(result, dict)
         for key in ("fixes", "files", "skipped"):
             assert key in result, f"Missing key: {key}"
 
     def test_valid_json_values_are_correct(self):
         """正常な JSON → 各フィールドの値が正しくパースされること"""
-        result = rw_light.parse_fix_response(self.VALID_JSON)
+        result = rw_query.parse_fix_response(self.VALID_JSON)
         assert len(result["fixes"]) == 1
         assert result["fixes"][0]["file"] == "answer.md"
         assert result["files"]["question.md"] == "query: What is ML?\n"
@@ -973,13 +974,13 @@ class TestParseFixResponse:
     def test_invalid_json_raises_value_error(self):
         """不正な JSON → ValueError が raise されること"""
         with pytest.raises(ValueError):
-            rw_light.parse_fix_response("{invalid json}")
+            rw_query.parse_fix_response("{invalid json}")
 
     def test_invalid_json_prints_to_stderr(self, capsys):
         """不正な JSON → stderr にレスポンス先頭500文字が出力されること"""
         long_invalid = "Y" * 600 + "{invalid"
         with pytest.raises(ValueError):
-            rw_light.parse_fix_response(long_invalid)
+            rw_query.parse_fix_response(long_invalid)
         captured = capsys.readouterr()
         assert "Y" * 500 in captured.err
         assert "Y" * 501 not in captured.err
@@ -989,18 +990,18 @@ class TestParseFixResponse:
         data = json.loads(self.VALID_JSON)
         del data["fixes"]
         with pytest.raises(ValueError, match=".*fixes.*"):
-            rw_light.parse_fix_response(json.dumps(data))
+            rw_query.parse_fix_response(json.dumps(data))
 
     def test_missing_files_key_raises_value_error(self):
         """必須フィールド 'files' が欠落 → ValueError が raise されること"""
         data = json.loads(self.VALID_JSON)
         del data["files"]
         with pytest.raises(ValueError):
-            rw_light.parse_fix_response(json.dumps(data))
+            rw_query.parse_fix_response(json.dumps(data))
 
     def test_null_values_in_files_handled_correctly(self):
         """files 内の null 値 → Python None として正常にパースされること"""
-        result = rw_light.parse_fix_response(self.VALID_JSON)
+        result = rw_query.parse_fix_response(self.VALID_JSON)
         assert result["files"]["evidence.md"] is None
         assert result["files"]["metadata.json"] is None
 
@@ -1010,14 +1011,14 @@ class TestParseFixResponse:
         del data["fixes"]
         response = json.dumps(data)
         with pytest.raises(ValueError):
-            rw_light.parse_fix_response(response)
+            rw_query.parse_fix_response(response)
         captured = capsys.readouterr()
         assert len(captured.err) > 0
 
     def test_json_wrapped_in_code_block_parsed_correctly(self):
         """```json ... ``` で囲まれた JSON → 正常にパースされること"""
         wrapped = f"```json\n{self.VALID_JSON}\n```"
-        result = rw_light.parse_fix_response(wrapped)
+        result = rw_query.parse_fix_response(wrapped)
         assert isinstance(result, dict)
         assert "fixes" in result
         assert "files" in result
@@ -1087,19 +1088,19 @@ class TestCmdQueryExtract:
     def test_empty_question_returns_1(self, tmp_path, monkeypatch):
         """空の質問文 → return 1"""
         _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        result = rw_light.cmd_query_extract([])
+        result = rw_query.cmd_query_extract([])
         assert result == 1
 
     def test_empty_string_question_returns_1(self, tmp_path, monkeypatch):
         """空文字列の質問文 → return 1"""
         _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        result = rw_light.cmd_query_extract([""])
+        result = rw_query.cmd_query_extract([""])
         assert result == 1
 
     def test_whitespace_only_question_returns_1(self, tmp_path, monkeypatch):
         """空白のみの質問文 → return 1"""
         _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        result = rw_light.cmd_query_extract(["   "])
+        result = rw_query.cmd_query_extract(["   "])
         assert result == 1
 
     def test_wiki_missing_returns_1(self, tmp_path, monkeypatch):
@@ -1110,7 +1111,7 @@ class TestCmdQueryExtract:
         shutil.rmtree(str(tmp_path / "wiki"))
         monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
-        result = rw_light.cmd_query_extract(["test question"])
+        result = rw_query.cmd_query_extract(["test question"])
         assert result == 1
 
     def test_claude_md_missing_returns_1(self, tmp_path, monkeypatch):
@@ -1118,7 +1119,7 @@ class TestCmdQueryExtract:
         _setup_mock_vault_for_query(tmp_path, monkeypatch)
         # CLAUDE.md を削除
         (tmp_path / "CLAUDE.md").unlink()
-        result = rw_light.cmd_query_extract(["test question"])
+        result = rw_query.cmd_query_extract(["test question"])
         assert result == 1
 
     def test_duplicate_query_id_returns_1(self, tmp_path, monkeypatch):
@@ -1129,10 +1130,10 @@ class TestCmdQueryExtract:
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         # 事前に同一 query_id ディレクトリを作成
-        query_id = rw_light.generate_query_id("test question")
+        query_id = rw_query.generate_query_id("test question")
         (review_query_dir / query_id).mkdir(parents=True)
 
-        result = rw_light.cmd_query_extract(["test question"])
+        result = rw_query.cmd_query_extract(["test question"])
         assert result == 1
 
     def test_success_creates_4_files(self, tmp_path, monkeypatch):
@@ -1142,13 +1143,13 @@ class TestCmdQueryExtract:
         monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
-        result = rw_light.cmd_query_extract(["test question"])
+        result = rw_query.cmd_query_extract(["test question"])
 
         # 終了コードは 0 または 2（lint 結果による）
         assert result in (0, 2)
 
         # query_id ディレクトリが作成されていること
-        query_id = rw_light.generate_query_id("test question")
+        query_id = rw_query.generate_query_id("test question")
         query_dir = review_query_dir / query_id
         assert query_dir.is_dir(), f"query_dir not found: {query_dir}"
 
@@ -1170,7 +1171,7 @@ class TestCmdQueryExtract:
 
         monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
-        result = rw_light.cmd_query_extract(["test question", "--scope", scope_path])
+        result = rw_query.cmd_query_extract(["test question", "--scope", scope_path])
         assert result in (0, 2)
 
     def test_success_with_type_arg(self, tmp_path, monkeypatch):
@@ -1180,7 +1181,7 @@ class TestCmdQueryExtract:
         monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
-        result = rw_light.cmd_query_extract(["test question", "--type", "fact"])
+        result = rw_query.cmd_query_extract(["test question", "--type", "fact"])
         assert result in (0, 2)
 
     def test_large_wiki_triggers_2stage(self, tmp_path, monkeypatch):
@@ -1210,7 +1211,7 @@ class TestCmdQueryExtract:
 
         monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
-        result = rw_light.cmd_query_extract(["test question"])
+        result = rw_query.cmd_query_extract(["test question"])
         assert result in (0, 2)
         # 2回 call_claude が呼ばれていること（2段階方式）
         assert len(call_count) == 2, f"Expected 2 calls, got {len(call_count)}"
@@ -1233,9 +1234,9 @@ class TestCmdQueryExtract:
                 "checks": [{"id": "QL001", "severity": "ERROR", "message": "missing file"}],
             }
 
-        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+        monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
 
-        result = rw_light.cmd_query_extract(["test question"])
+        result = rw_query.cmd_query_extract(["test question"])
         assert result == 2
 
     def test_lint_pass_returns_0(self, tmp_path, monkeypatch):
@@ -1256,9 +1257,9 @@ class TestCmdQueryExtract:
                 "checks": [],
             }
 
-        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+        monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
 
-        result = rw_light.cmd_query_extract(["test question"])
+        result = rw_query.cmd_query_extract(["test question"])
         assert result == 0
 
 
@@ -1316,13 +1317,13 @@ class TestCmdQueryAnswer:
     def test_empty_question_returns_1(self, tmp_path, monkeypatch):
         """空の質問文 → return 1"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        result = rw_light.cmd_query_answer([])
+        result = rw_query.cmd_query_answer([])
         assert result == 1
 
     def test_whitespace_only_question_returns_1(self, tmp_path, monkeypatch):
         """空白のみの質問文 → return 1"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        result = rw_light.cmd_query_answer(["   "])
+        result = rw_query.cmd_query_answer(["   "])
         assert result == 1
 
     def test_wiki_missing_returns_1(self, tmp_path, monkeypatch):
@@ -1330,14 +1331,14 @@ class TestCmdQueryAnswer:
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
         import shutil
         shutil.rmtree(str(tmp_path / "wiki"))
-        result = rw_light.cmd_query_answer(["test question"])
+        result = rw_query.cmd_query_answer(["test question"])
         assert result == 1
 
     def test_claude_md_missing_returns_1(self, tmp_path, monkeypatch):
         """CLAUDE.md が存在しない → return 1"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
         (tmp_path / "CLAUDE.md").unlink()
-        result = rw_light.cmd_query_answer(["test question"])
+        result = rw_query.cmd_query_answer(["test question"])
         assert result == 1
 
     def test_success_returns_0(self, tmp_path, monkeypatch):
@@ -1346,7 +1347,7 @@ class TestCmdQueryAnswer:
         monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
-        result = rw_light.cmd_query_answer(["test question"])
+        result = rw_query.cmd_query_answer(["test question"])
         assert result == 0
 
     def test_success_no_file_created_in_query_review(self, tmp_path, monkeypatch):
@@ -1355,7 +1356,7 @@ class TestCmdQueryAnswer:
         monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
-        rw_light.cmd_query_answer(["test question"])
+        rw_query.cmd_query_answer(["test question"])
 
         # review/query/ 配下にファイルやディレクトリが生成されていないこと
         entries = list(review_query_dir.iterdir())
@@ -1367,7 +1368,7 @@ class TestCmdQueryAnswer:
         monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
-        rw_light.cmd_query_answer(["test question"])
+        rw_query.cmd_query_answer(["test question"])
 
         captured = capsys.readouterr()
         assert "This is the answer." in captured.out
@@ -1379,7 +1380,7 @@ class TestCmdQueryAnswer:
         monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
-        rw_light.cmd_query_answer(["test question"])
+        rw_query.cmd_query_answer(["test question"])
 
         captured = capsys.readouterr()
         assert "wiki/concepts/test.md" in captured.out
@@ -1392,7 +1393,7 @@ class TestCmdQueryAnswer:
         no_ref_response = "This is an answer without referenced section."
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: no_ref_response)
 
-        result = rw_light.cmd_query_answer(["test question"])
+        result = rw_query.cmd_query_answer(["test question"])
 
         assert result == 0
         captured = capsys.readouterr()
@@ -1415,7 +1416,7 @@ class TestCmdQueryAnswer:
 
         monkeypatch.setattr(rw_prompt_engine, "read_wiki_content", mock_read_wiki)
 
-        result = rw_light.cmd_query_answer(["test question", "--scope", scope_path])
+        result = rw_query.cmd_query_answer(["test question", "--scope", scope_path])
 
         assert result == 0
         assert received_scopes == [scope_path]
@@ -1516,14 +1517,14 @@ class TestCmdQueryFix:
     def test_missing_query_id_dir_returns_1(self, tmp_path, monkeypatch):
         """query_id ディレクトリが存在しない → return 1 (Req 6.3)"""
         _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        result = rw_light.cmd_query_fix(["nonexistent-query-id"])
+        result = rw_query.cmd_query_fix(["nonexistent-query-id"])
         assert result == 1
 
     def test_claude_md_missing_returns_1(self, tmp_path, monkeypatch):
         """CLAUDE.md が存在しない → return 1"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
         (tmp_path / "CLAUDE.md").unlink()
-        result = rw_light.cmd_query_fix([query_id])
+        result = rw_query.cmd_query_fix([query_id])
         assert result == 1
 
     def test_no_lint_errors_returns_0_with_message(self, tmp_path, monkeypatch, capsys):
@@ -1540,8 +1541,8 @@ class TestCmdQueryFix:
                 "checks": [],
             }
 
-        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
-        result = rw_light.cmd_query_fix([query_id])
+        monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
+        result = rw_query.cmd_query_fix([query_id])
         assert result == 0
         captured = capsys.readouterr()
         assert "修復不要" in captured.out
@@ -1577,8 +1578,8 @@ class TestCmdQueryFix:
                     "checks": [],
                 }
 
-        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
-        result = rw_light.cmd_query_fix([query_id])
+        monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
+        result = rw_query.cmd_query_fix([query_id])
         assert result == 0
 
     def test_non_none_files_written_none_skipped(self, tmp_path, monkeypatch):
@@ -1599,8 +1600,8 @@ class TestCmdQueryFix:
                 "checks": [{"id": "QL006", "severity": "ERROR", "message": "answer.md is empty or too short"}],
             }
 
-        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
-        rw_light.cmd_query_fix([query_id])
+        monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
+        rw_query.cmd_query_fix([query_id])
 
         # answer.md (non-None) は更新されていること
         new_answer = (query_dir / "answer.md").read_text(encoding="utf-8")
@@ -1637,8 +1638,8 @@ class TestCmdQueryFix:
                 "checks": [],
             }
 
-        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
-        rw_light.cmd_query_fix([query_id])
+        monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
+        rw_query.cmd_query_fix([query_id])
 
         captured = capsys.readouterr()
         assert "QL009" in captured.out or "Cannot auto-fix" in captured.out
@@ -1660,8 +1661,8 @@ class TestCmdQueryFix:
                 "checks": [],
             }
 
-        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
-        result = rw_light.cmd_query_fix([query_id])
+        monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
+        result = rw_query.cmd_query_fix([query_id])
         assert result == 2
 
     def test_no_files_written_to_wiki(self, tmp_path, monkeypatch):
@@ -1684,8 +1685,8 @@ class TestCmdQueryFix:
                 "checks": [],
             }
 
-        monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
-        rw_light.cmd_query_fix([query_id])
+        monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
+        rw_query.cmd_query_fix([query_id])
 
         # wiki/ に新しいファイルが作成されていないこと
         final_wiki_files = set(str(p) for p in wiki_dir.rglob("*") if p.is_file())
@@ -1883,7 +1884,7 @@ class TestMainDispatcher:
             return 0
 
         monkeypatch.setattr(sys, "argv", ["rw", "query", "extract", "q"])
-        monkeypatch.setattr(rw_light, "cmd_query_extract", mock_cmd_query_extract)
+        monkeypatch.setattr(rw_query, "cmd_query_extract", mock_cmd_query_extract)
 
         with pytest.raises(SystemExit) as exc_info:
             rw_light.main()
@@ -1900,7 +1901,7 @@ class TestMainDispatcher:
             return 0
 
         monkeypatch.setattr(sys, "argv", ["rw", "query", "answer", "q"])
-        monkeypatch.setattr(rw_light, "cmd_query_answer", mock_cmd_query_answer)
+        monkeypatch.setattr(rw_query, "cmd_query_answer", mock_cmd_query_answer)
 
         with pytest.raises(SystemExit) as exc_info:
             rw_light.main()
@@ -1917,7 +1918,7 @@ class TestMainDispatcher:
             return 0
 
         monkeypatch.setattr(sys, "argv", ["rw", "query", "fix", "qid"])
-        monkeypatch.setattr(rw_light, "cmd_query_fix", mock_cmd_query_fix)
+        monkeypatch.setattr(rw_query, "cmd_query_fix", mock_cmd_query_fix)
 
         with pytest.raises(SystemExit) as exc_info:
             rw_light.main()
@@ -1969,7 +1970,7 @@ class TestMainDispatcher:
             raise ValueError("test error")
 
         monkeypatch.setattr(sys, "argv", ["rw", "query", "extract", "q"])
-        monkeypatch.setattr(rw_light, "cmd_query_extract", mock_cmd_query_extract)
+        monkeypatch.setattr(rw_query, "cmd_query_extract", mock_cmd_query_extract)
 
         with pytest.raises(SystemExit) as exc_info:
             rw_light.main()
@@ -2166,11 +2167,11 @@ class TestE2EWorkflow:
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
-        result = rw_light.cmd_query_extract(["What is ML?"])
+        result = rw_query.cmd_query_extract(["What is ML?"])
 
         assert result in (0, 2), f"Expected 0 or 2, got {result}"
 
-        query_id = rw_light.generate_query_id("What is ML?")
+        query_id = rw_query.generate_query_id("What is ML?")
         qdir = query_dir / query_id
         assert qdir.is_dir(), f"query directory not found: {qdir}"
 
@@ -2187,12 +2188,12 @@ class TestE2EWorkflow:
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
-        extract_result = rw_light.cmd_query_extract(["What is ML?"])
+        extract_result = rw_query.cmd_query_extract(["What is ML?"])
         assert extract_result in (0, 2), f"extract failed: {extract_result}"
 
-        query_id = rw_light.generate_query_id("What is ML?")
+        query_id = rw_query.generate_query_id("What is ML?")
         qdir = str(query_dir / query_id)
-        lint_result = rw_light.lint_single_query_dir(qdir)
+        lint_result = rw_query.lint_single_query_dir(qdir)
 
         assert lint_result["status"] == "PASS", (
             f"lint should PASS after extract, got: {lint_result['status']}, checks: {lint_result.get('checks', [])}"
@@ -2209,17 +2210,17 @@ class TestE2EWorkflow:
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         # Step 1: extract
-        extract_result = rw_light.cmd_query_extract(["What is ML?"])
+        extract_result = rw_query.cmd_query_extract(["What is ML?"])
         assert extract_result in (0, 2), f"extract failed: {extract_result}"
 
-        query_id = rw_light.generate_query_id("What is ML?")
+        query_id = rw_query.generate_query_id("What is ML?")
         qdir = query_dir / query_id
 
         # Step 2: answer.md を意図的に短縮して QL006 を引き起こす
         (qdir / "answer.md").write_text("short", encoding="utf-8")
 
         # Step 3: lint → FAIL
-        lint_result = rw_light.lint_single_query_dir(str(qdir))
+        lint_result = rw_query.lint_single_query_dir(str(qdir))
         assert lint_result["status"] == "FAIL", (
             f"lint should FAIL after corrupting answer.md, got: {lint_result['status']}"
         )
@@ -2229,11 +2230,11 @@ class TestE2EWorkflow:
 
         # Step 4: fix（call_claude を fix レスポンスにすり替え）
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_fix_response(query_id))
-        fix_result = rw_light.cmd_query_fix([query_id])
+        fix_result = rw_query.cmd_query_fix([query_id])
         assert fix_result in (0, 2), f"fix command returned unexpected code: {fix_result}"
 
         # Step 5: lint 再検証 → PASS
-        post_lint = rw_light.lint_single_query_dir(str(qdir))
+        post_lint = rw_query.lint_single_query_dir(str(qdir))
         assert post_lint["status"] == "PASS", (
             f"lint should PASS after fix, got: {post_lint['status']}, checks: {post_lint['checks']}"
         )
@@ -2255,7 +2256,7 @@ class TestE2EWorkflow:
             return _make_extract_response("What is ML? first")
 
         monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_claude_1)
-        result1 = rw_light.cmd_query_extract(["What is ML? first"])
+        result1 = rw_query.cmd_query_extract(["What is ML? first"])
         assert result1 in (0, 2), f"first extract failed: {result1}"
         assert len(captured_prompts_1) >= 1
 
@@ -2271,7 +2272,7 @@ class TestE2EWorkflow:
             return _make_extract_response("What is ML? second")
 
         monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_claude_2)
-        result2 = rw_light.cmd_query_extract(["What is ML? second"])
+        result2 = rw_query.cmd_query_extract(["What is ML? second"])
         assert result2 in (0, 2), f"second extract failed: {result2}"
         assert len(captured_prompts_2) >= 1
 
@@ -2313,7 +2314,7 @@ class TestE2EWorkflow:
             return _make_extract_response("What is ML? scoped")
 
         monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_claude)
-        result = rw_light.cmd_query_extract(["What is ML? scoped", "--scope", scope_path])
+        result = rw_query.cmd_query_extract(["What is ML? scoped", "--scope", scope_path])
         assert result in (0, 2), f"scope extract failed: {result}"
 
         # read_wiki_content が scope 付きで呼ばれたこと
@@ -2337,7 +2338,7 @@ class TestE2EWorkflow:
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: "ML is a field of AI.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
 
-        result = rw_light.cmd_query_answer(["What is ML?"])
+        result = rw_query.cmd_query_answer(["What is ML?"])
         assert result == 0, f"answer command failed: {result}"
 
         # review/query/ 内にディレクトリが作成されていないこと
@@ -2365,7 +2366,7 @@ class TestE2EWorkflow:
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: "Answer about ML.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
 
         scope_path = str(wiki_dir / "concepts" / "machine_learning.md")
-        result = rw_light.cmd_query_answer(["What is ML?", "--scope", scope_path])
+        result = rw_query.cmd_query_answer(["What is ML?", "--scope", scope_path])
         assert result == 0, f"answer with scope failed: {result}"
 
         assert len(captured_scope) >= 1
@@ -2383,7 +2384,7 @@ class TestE2EWorkflow:
         import shutil
         shutil.rmtree(str(wiki_dir))
 
-        result = rw_light.cmd_query_extract(["What is ML?"])
+        result = rw_query.cmd_query_extract(["What is ML?"])
         assert result == 1, f"Expected 1 for missing wiki/, got {result}"
 
     def test_error_agents_missing(self, tmp_path, monkeypatch):
@@ -2392,7 +2393,7 @@ class TestE2EWorkflow:
         import shutil
         shutil.rmtree(str(agents_dir))
 
-        result = rw_light.cmd_query_extract(["What is ML?"])
+        result = rw_query.cmd_query_extract(["What is ML?"])
         assert result == 1, f"Expected 1 for missing AGENTS/, got {result}"
 
     def test_error_claude_md_parse_fail(self, tmp_path, monkeypatch):
@@ -2404,14 +2405,14 @@ class TestE2EWorkflow:
         )
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
-        result = rw_light.cmd_query_extract(["What is ML?"])
+        result = rw_query.cmd_query_extract(["What is ML?"])
         assert result == 1, f"Expected 1 for invalid CLAUDE.md, got {result}"
 
     def test_error_empty_question(self, tmp_path, monkeypatch):
         """空の質問文 → cmd_query_extract が 1 を返すこと"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
 
-        result = rw_light.cmd_query_extract([""])
+        result = rw_query.cmd_query_extract([""])
         assert result == 1, f"Expected 1 for empty question, got {result}"
 
     def test_error_scope_page_missing(self, tmp_path, monkeypatch):
@@ -2420,7 +2421,7 @@ class TestE2EWorkflow:
         monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         nonexistent_scope = str(wiki_dir / "concepts" / "nonexistent_page.md")
-        result = rw_light.cmd_query_extract(["What is ML?", "--scope", nonexistent_scope])
+        result = rw_query.cmd_query_extract(["What is ML?", "--scope", nonexistent_scope])
         assert result == 1, f"Expected 1 for missing scope page, got {result}"
 
 
@@ -6634,13 +6635,13 @@ class TestQueryExtractExit2OnFail:
         "checks": [{"id": "QL001", "severity": "ERROR", "message": "missing file"}],
       }
 
-    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_fail)
+    monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint_fail)
 
-    result = rw_light.cmd_query_extract(["test question"])
+    result = rw_query.cmd_query_extract(["test question"])
 
     assert result == 2
     # artifact が生成・保持されていること
-    query_id = rw_light.generate_query_id("test question")
+    query_id = rw_query.generate_query_id("test question")
     query_dir = review_query_dir / query_id
     assert query_dir.is_dir(), "lint FAIL でも artifact ディレクトリが存在すること"
 
@@ -6654,9 +6655,9 @@ class TestQueryExtractExit2OnFail:
     def mock_lint_pass(query_dir):
       return {"target": query_dir, "status": "PASS", "checks": []}
 
-    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_pass)
+    monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint_pass)
 
-    result = rw_light.cmd_query_extract(["test question"])
+    result = rw_query.cmd_query_extract(["test question"])
 
     assert result == 0
 
@@ -6667,10 +6668,10 @@ class TestQueryExtractExit2OnFail:
     monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
     monkeypatch.setattr(
-      rw_light, "write_query_artifacts", lambda *a, **k: (_ for _ in ()).throw(OSError("disk full"))
+      rw_query, "write_query_artifacts", lambda *a, **k: (_ for _ in ()).throw(OSError("disk full"))
     )
 
-    result = rw_light.cmd_query_extract(["test question"])
+    result = rw_query.cmd_query_extract(["test question"])
 
     assert result == 1
 
@@ -6691,9 +6692,9 @@ class TestQueryFixExit2OnFail:
         "checks": [{"id": "QL006", "severity": "ERROR", "message": "answer too short"}],
       }
 
-    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_always_fail)
+    monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint_always_fail)
 
-    result = rw_light.cmd_query_fix([query_id])
+    result = rw_query.cmd_query_fix([query_id])
 
     assert result == 2
 
@@ -6713,9 +6714,9 @@ class TestQueryFixExit2OnFail:
       # post-fix lint: PASS
       return {"target": query_dir, "status": "PASS", "checks": []}
 
-    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+    monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
 
-    result = rw_light.cmd_query_fix([query_id])
+    result = rw_query.cmd_query_fix([query_id])
 
     assert result == 0
 
@@ -6727,10 +6728,10 @@ class TestQueryFixExit2OnFail:
     def mock_lint_fail(query_dir, **kwargs):
       return {"target": query_dir, "status": "FAIL", "checks": [{"id": "QL006", "severity": "ERROR", "message": "short"}]}
 
-    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_fail)
+    monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint_fail)
     monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: (_ for _ in ()).throw(RuntimeError("API error")))
 
-    result = rw_light.cmd_query_fix([query_id])
+    result = rw_query.cmd_query_fix([query_id])
 
     assert result == 1
 
@@ -6757,7 +6758,7 @@ class TestQueryCallClaudeTimeout:
 
     monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
-    rw_light.cmd_query_extract(["test question"])
+    rw_query.cmd_query_extract(["test question"])
 
     assert captured_timeout, "call_claude が呼ばれなかった"
     assert all(t == 120 for t in captured_timeout), (
@@ -6777,7 +6778,7 @@ class TestQueryCallClaudeTimeout:
 
     monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
-    rw_light.cmd_query_answer(["test question"])
+    rw_query.cmd_query_answer(["test question"])
 
     assert captured_timeout, "call_claude が呼ばれなかった"
     assert all(t == 120 for t in captured_timeout), (
@@ -6812,9 +6813,9 @@ class TestQueryCallClaudeTimeout:
         "warnings": [], "infos": [], "checks": [],
       }
 
-    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+    monkeypatch.setattr(rw_query, "lint_single_query_dir", mock_lint)
 
-    rw_light.cmd_query_fix([query_id])
+    rw_query.cmd_query_fix([query_id])
 
     assert captured_timeout, "call_claude が呼ばれなかった"
     assert all(t == 120 for t in captured_timeout), (
