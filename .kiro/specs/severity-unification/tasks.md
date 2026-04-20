@@ -26,7 +26,7 @@
   - _Requirements: 1.1, 1.5, 1.9_
   - _Boundary: severity helpers_
 
-- [ ] 1.3 `_validate_agents_severity_vocabulary` helper の TDD 実装
+- [x] 1.3 `_validate_agents_severity_vocabulary` helper の TDD 実装
   - 先に `tests/test_audit.py` に test_vault_vocabulary_validation を red で追加: (a) 新語彙のみ AGENTS（PASS）/ (b) Pattern A（table cell `| HIGH |` 等）検出 → 複数行 error message / (c) Pattern B（summary key `- high:` 等、行頭限定）検出 / (d) Pattern C（finding bracket `[HIGH]` 等）検出 / (e) Pattern A/B/C 混在時 → 全パターン列挙した error message / (f) Migration Notes ブロック（`<!-- severity-vocab: legacy-reference --> 〜 <!-- /severity-vocab -->`）内の旧語彙は除外 / (g) 1 MB 超えファイルは `SystemExit(1)` + error message / (h) symlink 先が vault-root 外の場合 `SystemExit(1)` + `[vault-validation] path escape detected` stderr
   - `scripts/rw_light.py` に `_validate_agents_severity_vocabulary(agents_file: Path) -> None` を実装（Pattern A/B/C の 3 regex + 1 MB file size 上限 + Migration Notes ブロック除外 + no-caching 不変量 + symlink path escape 防御）
   - error message 形式: `[agents-vocab-error] deprecated severity vocabulary detected in <path>:\n  line <N>: <pattern_id> → <snippet>\n  ... (detected <count> violation(s))\n  Run 'rw init --force <vault>' to redeploy.`（複数行、line / pattern_id / snippet を含む）

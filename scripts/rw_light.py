@@ -1795,6 +1795,126 @@ def _record_drift(
     })
 
 
+def _validate_agents_severity_vocabulary(agents_file: Path) -> None:
+  """AGENTS/audit.md の severity 語彙を検証する。
+
+  旧語彙（HIGH/MEDIUM/LOW）が severity トークンとして出現した場合は
+  stderr に error message を出力して SystemExit(1) を送出する。
+  新語彙のみの場合は None を返す（正常終了）。
+
+  Pattern 定義:
+    Pattern A: テーブルセル・散文・大文字 `\\b(HIGH|MEDIUM|LOW)\\b`
+    Pattern B: サマリーフィールドキー（行頭限定） `^\\s*-\\s+(high|medium|low)\\s*:`
+    Pattern C: ファインディングブラケット `\\[(HIGH|MEDIUM|LOW)\\]`
+
+  Migration Notes 除外: `<!-- severity-vocab: legacy-reference -->` ～
+    `<!-- /severity-vocab -->` 内の旧語彙は検出対象外。
+
+  Args:
+      agents_file: AGENTS/audit.md への Path（通常 vault_root/AGENTS/audit.md）
+
+  Raises:
+      SystemExit(1): 旧語彙検出・ファイルサイズ超過・symlink パスエスケープ時
+  """
+  import re as _re
+
+  # ---- symlink パスエスケープ防御 ----
+  # vault root = agents_file.parent.parent (AGENTS/ → vault root)
+  vault_dir = agents_file.parent.parent.resolve()
+  try:
+    real_path = agents_file.resolve()
+    real_path.relative_to(vault_dir)
+  except ValueError:
+    sys.stderr.write("[vault-validation] path escape detected\n")
+    raise SystemExit(1)
+
+  # ---- ファイルサイズ上限（1 MB） ----
+  _MAX_FILE_SIZE = 1024 * 1024  # 1 MB
+  file_size = agents_file.stat().st_size
+  if file_size > _MAX_FILE_SIZE:
+    sys.stderr.write(
+      f"[agents-vocab-error] file too large: {agents_file} ({file_size} bytes > 1 MB limit)\n"
+    )
+    raise SystemExit(1)
+
+  # ---- ファイル読み込み ----
+  content = agents_file.read_text(encoding="utf-8")
+
+  # ---- Migration Notes ブロック除外 ----
+  # <!-- severity-vocab: legacy-reference --> ～ <!-- /severity-vocab --> を空行に置換
+  # re.DOTALL で複数行ブロックを一括除外
+  _MIGRATION_BLOCK_RE = _re.compile(
+    r"<!--\s*severity-vocab:\s*legacy-reference\s*-->.*?<!--\s*/severity-vocab\s*-->",
+    _re.DOTALL,
+  )
+  # 行数がずれないよう改行を保持して空白に置換
+  def _blank_preserving_lines(m: _re.Match) -> str:
+    matched = m.group(0)
+    newline_count = matched.count("\n")
+    return "\n" * newline_count
+
+  sanitized_content = _MIGRATION_BLOCK_RE.sub(_blank_preserving_lines, content)
+
+  # ---- 3 Pattern 定義 ----
+  # Pattern A: \b(HIGH|MEDIUM|LOW)\b  (テーブルセル・散文・大文字)
+  _PAT_A = _re.compile(r"\b(HIGH|MEDIUM|LOW)\b")
+  # Pattern B: ^\s*-\s+(high|medium|low)\s*:  (サマリーキー、行頭限定、小文字)
+  _PAT_B = _re.compile(r"^\s*-\s+(high|medium|low)\s*:", _re.MULTILINE)
+  # Pattern C: \[(HIGH|MEDIUM|LOW)\]  (ファインディングブラケット)
+  _PAT_C = _re.compile(r"\[(HIGH|MEDIUM|LOW)\]")
+
+  # ---- 違反を収集 ----
+  # 各違反: (line_num: int, col: int, pattern_id: str, snippet: str)
+  violations: list[tuple[int, int, str, str]] = []
+
+  lines = sanitized_content.splitlines()
+  for line_idx, line in enumerate(lines):
+    line_num = line_idx + 1  # 1-origin
+
+    for m in _PAT_A.finditer(line):
+      # Pattern C と重複しないようにする（同一 match は Pattern C が優先）
+      # ブラケット付き `[HIGH]` は Pattern C が検出するが、Pattern A も同一行でマッチしうる。
+      # ここでは両方を記録し、sort stability で (line, col, pattern_id) 順に整列する。
+      col = m.start()
+      snippet = line.strip()[:60]
+      violations.append((line_num, col, "pattern_A", snippet))
+
+    for m in _PAT_B.finditer(line):
+      col = m.start()
+      snippet = line.strip()[:60]
+      violations.append((line_num, col, "pattern_B", snippet))
+
+    for m in _PAT_C.finditer(line):
+      col = m.start()
+      snippet = line.strip()[:60]
+      violations.append((line_num, col, "pattern_C", snippet))
+
+  if not violations:
+    return None
+
+  # ---- Sort: (line_num, col, pattern_id) の 3 段キーで deterministic ----
+  violations.sort(key=lambda v: (v[0], v[1], v[2]))
+
+  # ---- error message 出力 ----
+  # 形式:
+  #   [agents-vocab-error] deprecated severity vocabulary detected in <path>:
+  #     line <N>: <pattern_id> → <snippet>
+  #     ...
+  #     (detected <count> violation(s))
+  #     Run 'rw init --force <vault>' to redeploy.
+  count = len(violations)
+  lines_out = [
+    f"[agents-vocab-error] deprecated severity vocabulary detected in {agents_file}:",
+  ]
+  for line_num, _col, pattern_id, snippet in violations:
+    lines_out.append(f"  line {line_num}: {pattern_id} → {snippet}")
+  lines_out.append(f"  (detected {count} violation(s))")
+  lines_out.append(f"  Run 'rw init --force {agents_file.parent.parent}' to redeploy.")
+
+  sys.stderr.write("\n".join(lines_out) + "\n")
+  raise SystemExit(1)
+
+
 def build_audit_prompt(tier: str, task_prompts: str, wiki_content: str) -> str:
   """audit 用プロンプトを構築する。
 
