@@ -106,7 +106,7 @@ Priority:
 
 The task model defines logical execution categories.
 
-Not all tasks are implemented in CLI (`scripts/rw_light.py`).
+Not all tasks are implemented in CLI (`scripts/rw_cli.py`).
 Some tasks are handled via prompt-level orchestration.
 
 ---

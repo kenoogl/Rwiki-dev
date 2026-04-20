@@ -30,11 +30,11 @@ git clone <repo-url> ~/Rwiki-dev
 cd ~/Rwiki-dev
 
 # 2. 新しい Vault を作成する（パスを指定）
-python scripts/rw_light.py init ~/my-vault
+python scripts/rw_cli.py init ~/my-vault
 
 # または、カレントディレクトリを Vault として初期化
 mkdir ~/my-vault && cd ~/my-vault
-python /path/to/Rwiki-dev/scripts/rw_light.py init
+python /path/to/Rwiki-dev/scripts/rw_cli.py init
 ```
 
 `rw init` は以下を自動生成します。
@@ -47,7 +47,7 @@ python /path/to/Rwiki-dev/scripts/rw_light.py init
 | `.gitignore` | `raw/incoming/` および `.obsidian/workspace*` を除外 |
 | `index.md` | インデックスファイルの初期版 |
 | `log.md` | 操作ログファイルの初期版 |
-| `scripts/rw` | `rw_light.py` へのシンボリックリンク |
+| `scripts/rw` | `rw_cli.py` へのシンボリックリンク |
 | Git リポジトリ | `git init` による Vault の初期化 |
 
 セットアップ完了後、Vault ディレクトリ内で `./scripts/rw <command>` を使って各コマンドを実行できます。
@@ -92,14 +92,14 @@ rw [lint|ingest|synthesize-logs|approve|init|query|audit]
 ```
 Rwiki-dev/                     # 開発リポジトリルート
 ├── scripts/
-│   └── rw_light.py            # メイン CLI スクリプト（全コマンドの実体）
+│   └── rw_cli.py              # メイン CLI スクリプト（全コマンドの実体）
 ├── templates/
 │   ├── CLAUDE.md              # Wiki 運用カーネル（init 時に Vault へコピー）
 │   ├── .gitignore             # Vault 用 .gitignore テンプレート
 │   └── AGENTS/                # AI タスク別プロンプトテンプレート（init 時にコピー）
 ├── tests/
 │   ├── conftest.py            # 共通フィクスチャ（vault_path, patch_constants 等）
-│   ├── test_rw_light.py       # query/audit/Prompt Engine テスト（450+件）
+│   ├── test_rw_cli.py         # query/audit/Prompt Engine テスト（450+件）
 │   ├── test_utils.py          # ユーティリティ関数テスト
 │   ├── test_git_ops.py        # Git 操作関数テスト
 │   ├── test_lint.py           # cmd_lint テスト
@@ -124,7 +124,7 @@ Rwiki-dev/                     # 開発リポジトリルート
 pytest tests/
 
 # 新規テストのみ（既存の大規模テストを除く）
-pytest tests/ --ignore=tests/test_rw_light.py
+pytest tests/ --ignore=tests/test_rw_cli.py
 
 # 個別ファイル
 pytest tests/test_utils.py -v

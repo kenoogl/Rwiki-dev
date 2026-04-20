@@ -75,7 +75,7 @@
   - _Boundary: docs/_
   - _Depends: 2.5_
 
-- [ ] 4.2 (P) ルート `CLAUDE.md` / `README.md` / `templates/CLAUDE.md` の更新
+- [x] 4.2 (P) ルート `CLAUDE.md` / `README.md` / `templates/CLAUDE.md` の更新
   - `README.md` の L33/L37/L50/L95/L102/L127 を中心に `rw_light` 参照を `rw_cli` に更新
   - `templates/CLAUDE.md` L109 の `scripts/rw_light.py` 言及を `scripts/rw_cli.py` に更新
   - ルート `CLAUDE.md` 内の `rw_light` 参照を grep で確定し、検出された現役記述を更新（project 命令なので存在しない可能性高、ない場合は変更なしで完了）
