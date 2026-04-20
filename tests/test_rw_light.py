@@ -2190,8 +2190,8 @@ class TestE2EWorkflow:
         qdir = str(query_dir / query_id)
         lint_result = rw_light.lint_single_query_dir(qdir)
 
-        assert lint_result["status"] in ("PASS", "PASS_WITH_WARNINGS"), (
-            f"lint should PASS after extract, got: {lint_result['status']}, errors: {lint_result['errors']}"
+        assert lint_result["status"] == "PASS", (
+            f"lint should PASS after extract, got: {lint_result['status']}, checks: {lint_result.get('checks', [])}"
         )
 
     # ------------------------------------------------------------------

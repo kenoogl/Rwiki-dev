@@ -212,7 +212,7 @@
   - _Boundary: cmd_query_extract + cmd_query_fix_
   - _Depends: 2.2_
 
-- [ ] 2.13 P2 完了ゲート: status 2 値 + exit code 3 値の統合 test 全件 green + Reverse Dependency Inventory scan 実施
+- [x] 2.13 P2 完了ゲート: status 2 値 + exit code 3 値の統合 test 全件 green + Reverse Dependency Inventory scan 実施
   - `pytest tests/test_lint.py tests/test_lint_query.py tests/test_audit.py tests/test_ingest.py tests/test_rw_light.py` 全件 green、4 水準 stdout format が 3 コマンド横断で一貫、exit code の意味が 10 CLI コマンド全てで設計書と一致（`rw init` / `rw synthesize-logs` / `rw approve` / `rw query answer` は exit 0/1 のみ、他 6 コマンドは exit 0/1/2 の 3 値）
   - **Reverse Dependency Inventory scan 実施**（Task 3.5 連携、exit 2 破壊的影響の pre-commit 検出）: design.md §Reverse Dependency Inventory の 7 grep コマンドを P2 PR commit 前に local 実行し、結果（hits 件数）を P2 PR description に `[reverse-dep scan: clean]` または `[reverse-dep scan: N hits, addressed in <commit-SHA>]` マーカー形式で記載。hits > 0 の場合は該当箇所（shell / CI / hooks / skills 等）の exit code 分岐 migration を同一 PR 内の先行 commit または別 PR 先行マージで対応。scan の snapshot 記録は P3 Task 3.5 で developer-guide.md に反映
   - 観察可能完了条件: 5 test file 全件 green、exit code 3 値契約が 10 コマンド横断で統一、`PASS_WITH_WARNINGS` および status 位置 WARN が構造化出力 / stdout から消失、**P2 PR description に `[reverse-dep scan: clean|N hits]` マーカーが inline 記載済**
