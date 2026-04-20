@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 import rw_config
-import rw_light
+import rw_cli
 import rw_query
 
 

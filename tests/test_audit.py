@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import rw_audit
 import rw_config
-import rw_light
+import rw_cli
 import rw_prompt_engine
 import rw_utils
 

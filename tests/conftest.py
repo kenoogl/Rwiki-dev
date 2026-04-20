@@ -11,7 +11,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import rw_config
-import rw_light
+import rw_cli
 import rw_utils
 
 
@@ -144,7 +144,7 @@ def mock_templates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
   scripts_dir = tmp_path / "scripts"
   scripts_dir.mkdir(parents=True, exist_ok=True)
-  (scripts_dir / "rw_light.py").write_text("# dummy\n", encoding="utf-8")
+  (scripts_dir / "rw_cli.py").write_text("# dummy\n", encoding="utf-8")
 
   monkeypatch.setattr(rw_config, "DEV_ROOT", str(tmp_path))
 

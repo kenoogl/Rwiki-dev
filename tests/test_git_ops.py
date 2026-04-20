@@ -1,6 +1,6 @@
 import subprocess
 import pytest
-import rw_light
+import rw_cli
 import rw_utils
 
 

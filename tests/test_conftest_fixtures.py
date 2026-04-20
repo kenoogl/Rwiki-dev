@@ -99,7 +99,7 @@ def test_claude_mock_response_injects_json(claude_mock_response, monkeypatch):
   import sys
 
   sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-  import rw_light  # noqa: F401
+  import rw_cli  # noqa: F401
   import rw_prompt_engine
 
   mock_data = {"findings": [{"severity": "ERROR", "message": "test"}]}
@@ -114,7 +114,7 @@ def test_claude_mock_response_custom_stdout(claude_mock_response):
   import sys
 
   sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-  import rw_light  # noqa: F401
+  import rw_cli  # noqa: F401
   import rw_prompt_engine
 
   claude_mock_response("hello world")

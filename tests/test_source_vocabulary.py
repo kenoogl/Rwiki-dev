@@ -7,7 +7,7 @@ import pytest
 REPO_ROOT = Path(__file__).parent.parent
 
 # スキャン対象
-SCAN_SOURCE = [REPO_ROOT / "scripts" / "rw_light.py"]
+SCAN_SOURCE = [REPO_ROOT / "scripts" / "rw_cli.py"]
 SCAN_TESTS = [
   p for p in (REPO_ROOT / "tests").glob("test_*.py")
   if p.name not in {"test_source_vocabulary.py", "test_agents_vocabulary.py"}

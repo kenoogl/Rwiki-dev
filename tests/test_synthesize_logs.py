@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import pytest
 
-import rw_light
+import rw_cli
 import rw_prompt_engine
 import rw_utils
 
@@ -35,7 +35,7 @@ class TestCmdSynthesizeLogs:
       "Some log content here.",
     )
 
-    rw_light.cmd_synthesize_logs()
+    rw_cli.cmd_synthesize_logs()
 
     candidates = list((vault / "review" / "synthesis_candidates").glob("*.md"))
     assert len(candidates) == 1, f"Expected 1 candidate, got {len(candidates)}"
@@ -45,7 +45,7 @@ class TestCmdSynthesizeLogs:
     monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
-    result = rw_light.cmd_synthesize_logs()
+    result = rw_cli.cmd_synthesize_logs()
 
     assert result == 0
     candidates = list((vault / "review" / "synthesis_candidates").glob("*.md"))
@@ -65,7 +65,7 @@ class TestCmdSynthesizeLogs:
       "Some log content here.",
     )
 
-    rw_light.cmd_synthesize_logs()
+    rw_cli.cmd_synthesize_logs()
 
     log_md = vault / "log.md"
     assert log_md.exists(), "log.md が生成されていない"
@@ -86,7 +86,7 @@ class TestCmdSynthesizeLogs:
       "Some log content here.",
     )
 
-    rw_light.cmd_synthesize_logs()
+    rw_cli.cmd_synthesize_logs()
 
     candidates = list((vault / "review" / "synthesis_candidates").glob("*.md"))
     assert len(candidates) == 1
@@ -128,7 +128,7 @@ class TestCmdSynthesizeLogs:
 
     monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", mock_raise_then_ok)
 
-    rw_light.cmd_synthesize_logs()
+    rw_cli.cmd_synthesize_logs()
     captured = capsys.readouterr()
 
     assert "[FAIL]" in captured.out
@@ -150,7 +150,7 @@ class TestCmdSynthesizeLogs:
 
     monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", mock_invalid_then_ok)
 
-    rw_light.cmd_synthesize_logs()
+    rw_cli.cmd_synthesize_logs()
     captured2 = capsys.readouterr()
 
     assert "[FAIL]" in captured2.out
@@ -174,7 +174,7 @@ class TestCmdSynthesizeLogs:
       "Some log content.",
     )
 
-    result = rw_light.cmd_synthesize_logs()
+    result = rw_cli.cmd_synthesize_logs()
     assert result == 0
 
   def test_skip_existing_candidate(
@@ -196,7 +196,7 @@ class TestCmdSynthesizeLogs:
     original_content = "# existing content\nDo not overwrite."
     existing_path.write_text(original_content, encoding="utf-8")
 
-    rw_light.cmd_synthesize_logs()
+    rw_cli.cmd_synthesize_logs()
     captured = capsys.readouterr()
 
     assert "[SKIP]" in captured.out
@@ -207,7 +207,7 @@ class TestCmdSynthesizeLogs:
     """Req 6.8: git_path_is_dirty が True のとき [WARN] が出力される"""
     monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: True)
 
-    rw_light.cmd_synthesize_logs()
+    rw_cli.cmd_synthesize_logs()
     captured = capsys.readouterr()
 
     assert "[WARN]" in captured.out
@@ -237,7 +237,7 @@ class TestCmdSynthesizeLogs:
       "Some log content.",
     )
 
-    rw_light.cmd_synthesize_logs()
+    rw_cli.cmd_synthesize_logs()
 
     candidates = list((vault / "review" / "synthesis_candidates").glob("*.md"))
     assert len(candidates) == 1, (

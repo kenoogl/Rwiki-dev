@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
 import rw_audit  # noqa: E402
 import rw_config  # noqa: E402
-import rw_light  # noqa: E402
+import rw_cli  # noqa: E402
 import rw_prompt_engine  # noqa: E402
 import rw_query  # noqa: E402
 import rw_utils  # noqa: E402
@@ -1845,25 +1845,25 @@ class TestPrintUsage:
 
     def test_print_usage_contains_query_subcommand(self, capsys):
         """print_usage() の出力に 'query' が含まれること"""
-        rw_light.print_usage()
+        rw_cli.print_usage()
         captured = capsys.readouterr()
         assert "query" in captured.out
 
     def test_print_usage_contains_extract(self, capsys):
         """print_usage() の出力に 'extract' が含まれること"""
-        rw_light.print_usage()
+        rw_cli.print_usage()
         captured = capsys.readouterr()
         assert "extract" in captured.out
 
     def test_print_usage_contains_answer(self, capsys):
         """print_usage() の出力に 'answer' が含まれること"""
-        rw_light.print_usage()
+        rw_cli.print_usage()
         captured = capsys.readouterr()
         assert "answer" in captured.out
 
     def test_print_usage_contains_fix(self, capsys):
         """print_usage() の出力に 'fix' が含まれること"""
-        rw_light.print_usage()
+        rw_cli.print_usage()
         captured = capsys.readouterr()
         assert "fix" in captured.out
 
@@ -1887,7 +1887,7 @@ class TestMainDispatcher:
         monkeypatch.setattr(rw_query, "cmd_query_extract", mock_cmd_query_extract)
 
         with pytest.raises(SystemExit) as exc_info:
-            rw_light.main()
+            rw_cli.main()
 
         assert exc_info.value.code == 0
         assert called_with == [["q"]]
@@ -1904,7 +1904,7 @@ class TestMainDispatcher:
         monkeypatch.setattr(rw_query, "cmd_query_answer", mock_cmd_query_answer)
 
         with pytest.raises(SystemExit) as exc_info:
-            rw_light.main()
+            rw_cli.main()
 
         assert exc_info.value.code == 0
         assert called_with == [["q"]]
@@ -1921,7 +1921,7 @@ class TestMainDispatcher:
         monkeypatch.setattr(rw_query, "cmd_query_fix", mock_cmd_query_fix)
 
         with pytest.raises(SystemExit) as exc_info:
-            rw_light.main()
+            rw_cli.main()
 
         assert exc_info.value.code == 0
         assert called_with == [["qid"]]
@@ -1931,7 +1931,7 @@ class TestMainDispatcher:
         monkeypatch.setattr(sys, "argv", ["rw", "query"])
 
         with pytest.raises(SystemExit) as exc_info:
-            rw_light.main()
+            rw_cli.main()
 
         assert exc_info.value.code == 1
 
@@ -1940,7 +1940,7 @@ class TestMainDispatcher:
         monkeypatch.setattr(sys, "argv", ["rw", "query"])
 
         with pytest.raises(SystemExit):
-            rw_light.main()
+            rw_cli.main()
 
         captured = capsys.readouterr()
         assert "query" in captured.out
@@ -1950,7 +1950,7 @@ class TestMainDispatcher:
         monkeypatch.setattr(sys, "argv", ["rw", "query", "unknown"])
 
         with pytest.raises(SystemExit) as exc_info:
-            rw_light.main()
+            rw_cli.main()
 
         assert exc_info.value.code == 1
 
@@ -1959,7 +1959,7 @@ class TestMainDispatcher:
         monkeypatch.setattr(sys, "argv", ["rw"])
 
         with pytest.raises(SystemExit) as exc_info:
-            rw_light.main()
+            rw_cli.main()
 
         assert exc_info.value.code == 1
 
@@ -1973,7 +1973,7 @@ class TestMainDispatcher:
         monkeypatch.setattr(rw_query, "cmd_query_extract", mock_cmd_query_extract)
 
         with pytest.raises(SystemExit) as exc_info:
-            rw_light.main()
+            rw_cli.main()
 
         assert exc_info.value.code == 1
         captured = capsys.readouterr()
@@ -2737,7 +2737,7 @@ class TestAuditSectionHeaders:
     def test_audit_headers_before_output_utilities(self):
         """audit ヘッダーが Output utilities セクションの前にあること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_cli)
         idx_output = source.find("# Output utilities")
         idx_audit_data = source.find("# audit: data loading")
         assert idx_output != -1, "Output utilities が見つからない"
@@ -5450,7 +5450,7 @@ class TestMainAuditDispatch:
     monkeypatch.setattr(sys, "argv", ["rw", "audit", "micro"])
 
     with pytest.raises(SystemExit) as exc:
-      rw_light.main()
+      rw_cli.main()
     assert exc.value.code == 0
     assert called  # cmd_audit が呼ばれたこと
 
@@ -5460,7 +5460,7 @@ class TestPrintUsageAudit:
 
   def test_print_usage_contains_audit(self, capsys):
     """print_usage() の出力に 'audit' が含まれること"""
-    rw_light.print_usage()
+    rw_cli.print_usage()
     out = capsys.readouterr().out
     assert "audit" in out
 
@@ -6544,7 +6544,7 @@ class TestAuditExit2OnFail:
 
 def test_map_severity_deleted():
   """map_severity should no longer exist after task 1.7"""
-  assert not hasattr(rw_light, "map_severity"), "map_severity should be deleted in task 1.7"
+  assert not hasattr(rw_cli, "map_severity"), "map_severity should be deleted in task 1.7"
 
 
 # ---------------------------------------------------------------------------

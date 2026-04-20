@@ -13,7 +13,7 @@
 
 - [ ] 2. バッチ A: rename と cmd_init 拡張（原子的 1 コミット推奨、中間 pytest green 非要求）
 
-- [ ] 2.1 ファイル rename（git mv で履歴連続性保持）
+- [x] 2.1 ファイル rename（git mv で履歴連続性保持）
   - `git mv scripts/rw_light.py scripts/rw_cli.py` を実行
   - `git mv tests/test_rw_light.py tests/test_rw_cli.py` を実行
   - `git log --follow scripts/rw_cli.py` で rename 前コミット履歴が辿れることを確認
@@ -21,7 +21,7 @@
   - 完了条件: `scripts/rw_cli.py` と `tests/test_rw_cli.py` が git 追跡下で存在、`scripts/rw_light.py` と `tests/test_rw_light.py` が不在
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 2.2 rw_cli.py 内部コード更新と cmd_init 拡張
+- [x] 2.2 rw_cli.py 内部コード更新と cmd_init 拡張
   - `rw_cli.py` 内自己言及 3 箇所を更新（symlink source path リテラル / コメント / warn メッセージ）
   - 既存 symlink 作成ロジックを `_install_rw_symlink(target_path, dev_root) -> dict[str, str]` private helper として抽出、chmod + 既存 symlink 削除 + `os.symlink` + report dict 返却を同関数に集約
   - `cmd_init` の argparse に `--reinstall-symlink` フラグを追加（既存 `--force` と同列、`add_help=False` 維持）
@@ -33,7 +33,7 @@
   - 完了条件: `rg "rw_light" scripts/rw_cli.py` が 0 件、`_install_rw_symlink` 関数定義が `rg "def _install_rw_symlink" scripts/rw_cli.py` で検出される、`rg "reinstall-symlink" scripts/rw_cli.py` で argparse add_argument と print_usage 内の記載が検出される
   - _Requirements: 1.1, 2.1, 2.2, 2.3, 4.1, 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 2.3 tests 配下の参照一括置換と conftest 更新
+- [x] 2.3 tests 配下の参照一括置換と conftest 更新
   - `tests/` 配下全 13 ファイルの `rw_light` 参照 141 箇所のうち **code-line 参照**（import 文 / monkeypatch object 形 / monkeypatch 文字列形 / `rw_light.<symbol>` 直接アクセス / `rw_light.shutil.move` 等）を `rw_cli` に機械置換
   - `tests/conftest.py::mock_templates` fixture が生成する dummy ファイル名を `scripts/rw_light.py` から `scripts/rw_cli.py` に変更
   - `tests/test_ingest.py` と `tests/conftest.py` の `rw_light.shutil.move` を `rw_cli.shutil.move` に更新
@@ -42,7 +42,7 @@
   - 完了条件: `tests/` 配下の code-line 参照（import 文・`monkeypatch.setattr` 呼び出し・`rw_light.` 属性アクセス・`shutil.move` 系）で `rw_light` が 0 件（`grep -rE "^\s*(import rw_light|from rw_light|from scripts\.rw_light)" tests/` が 0 件、`grep -rE "monkeypatch\.setattr\s*\(\s*(rw_light|\"rw_light\.)" tests/` が 0 件、`grep -rE "rw_light\.[a-zA-Z_]" tests/ --include="*.py"` が docstring/コメント外で 0 件）
   - _Requirements: 3.2, 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 2.4 `--reinstall-symlink` 専用テスト 3 件を追加
+- [x] 2.4 `--reinstall-symlink` 専用テスト 3 件を追加
   - `tests/test_init.py` に以下 3 テストを新規追加（既存 fixture `mock_templates`, `patch_constants` 等を流用、既存テストの論理変更なし）:
     - `test_cmd_init_reinstall_symlink_on_existing_vault`: 既存 Vault（`CLAUDE.md` が存在する状態）に対して `cmd_init(["<target>", "--reinstall-symlink"])` 実行、戻り値 0、`report["dirs_created"] == 0`、`report["templates_copied"] == []`、`report["git_init"]` と `report["gitignore"]` が `"skipped (--reinstall-symlink)"` を含む、`report["symlink"]` が `created:` で始まり `rw_cli.py` を指向、実 FS 上の symlink が `rw_cli.py` を指す
     - `test_cmd_init_reinstall_symlink_rejects_non_vault`: `CLAUDE.md` も `index.md` も存在しないディレクトリで `cmd_init(["<target>", "--reinstall-symlink"])` 実行、戻り値 1、capsys で stderr 出力に「既存の Vault ではありません」相当のメッセージが含まれることを確認
@@ -50,7 +50,7 @@
   - 完了条件: `pytest tests/test_init.py::test_cmd_init_reinstall_symlink_on_existing_vault tests/test_init.py::test_cmd_init_reinstall_symlink_rejects_non_vault tests/test_init.py::test_cmd_init_reinstall_symlink_with_force_warns -v` の 3 テストが pass
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 2.5 バッチ A 最終検証（pytest green 確認）
+- [x] 2.5 バッチ A 最終検証（pytest green 確認）
   - `pytest tests/ -q` を実行し 644 passed + 1 skipped 以上を確認（既存 641 passed + 新規 3 passed + 1 skipped）
   - 件数不足 / 失敗検出時は 2.1-2.4 のいずれかに根本原因があるため、原因を特定して当該 task に戻る（バッチ A 全体を rollback する場合は `git reset --hard <before-2.1>`）
   - 完了条件: `pytest tests/ -q` の出力末尾が `644 passed, 1 skipped` 以上、かつ exit code 0

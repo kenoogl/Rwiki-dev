@@ -2,7 +2,7 @@
 from pathlib import Path
 import pytest
 
-import rw_light
+import rw_cli
 import rw_utils
 
 
@@ -32,7 +32,7 @@ class TestCmdApprove:
       "# Test Synthesis\nContent here.",
     )
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     wiki_files = list((vault / "wiki" / "synthesis").glob("*.md"))
     assert len(wiki_files) == 1, f"Expected 1 wiki file, got {len(wiki_files)}"
@@ -54,7 +54,7 @@ class TestCmdApprove:
       "# Test Synthesis\nContent here.",
     )
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     wiki_files = list((vault / "wiki" / "synthesis").glob("*.md"))
     assert len(wiki_files) == 0, f"Expected 0 wiki files, got {len(wiki_files)}"
@@ -74,7 +74,7 @@ class TestCmdApprove:
       "# Test Synthesis\nContent here.",
     )
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     wiki_files = list((vault / "wiki" / "synthesis").glob("*.md"))
     assert len(wiki_files) == 0, f"Expected 0 wiki files, got {len(wiki_files)}"
@@ -94,7 +94,7 @@ class TestCmdApprove:
       "# Test Synthesis\nContent here.",
     )
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     wiki_files = list((vault / "wiki" / "synthesis").glob("*.md"))
     assert len(wiki_files) == 0, f"Expected 0 wiki files, got {len(wiki_files)}"
@@ -114,7 +114,7 @@ class TestCmdApprove:
       "# Test Synthesis\nContent here.",
     )
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     wiki_files = list((vault / "wiki" / "synthesis").glob("*.md"))
     assert len(wiki_files) == 0, f"Expected 0 wiki files, got {len(wiki_files)}"
@@ -129,7 +129,7 @@ class TestCmdApprove:
     candidate_path = vault / "review" / "synthesis_candidates" / "test-synthesis.md"
     make_md_file(candidate_path, APPROVED_META, "# Test Synthesis\nContent here.")
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     content = candidate_path.read_text(encoding="utf-8")
     assert 'promoted: "true"' in content, "promoted フィールドが true になっていない"
@@ -157,7 +157,7 @@ class TestCmdApprove:
       encoding="utf-8",
     )
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     content = wiki_file.read_text(encoding="utf-8")
     # セパレータ付き追記の確認
@@ -180,7 +180,7 @@ class TestCmdApprove:
       "# Test Synthesis\nContent here.",
     )
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     index_md = vault / "index.md"
     assert index_md.exists(), "index.md が生成されていない"
@@ -200,7 +200,7 @@ class TestCmdApprove:
       "# Test Synthesis\nContent here.",
     )
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     log_md = vault / "log.md"
     assert log_md.exists(), "log.md が生成されていない"
@@ -217,7 +217,7 @@ class TestCmdApprove:
     vault = patch_constants
 
     # 候補なしの場合
-    result_empty = rw_light.cmd_approve()
+    result_empty = rw_cli.cmd_approve()
     assert result_empty == 0, f"候補なし時の戻り値が {result_empty}"
 
     # 候補ありの場合
@@ -226,7 +226,7 @@ class TestCmdApprove:
       APPROVED_META,
       "# Test Synthesis\nContent here.",
     )
-    result_with = rw_light.cmd_approve()
+    result_with = rw_cli.cmd_approve()
     assert result_with == 0, f"候補あり時の戻り値が {result_with}"
 
   def test_dirty_warning(
@@ -237,7 +237,7 @@ class TestCmdApprove:
 
     patch_constants
 
-    rw_light.cmd_approve()
+    rw_cli.cmd_approve()
 
     captured = capsys.readouterr()
     assert "[WARN]" in captured.out, f"[WARN] が stdout に出力されていない: {captured.out!r}"

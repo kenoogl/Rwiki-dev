@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-import rw_light
+import rw_cli
 import rw_utils
 
 
@@ -27,7 +27,7 @@ class TestCmdLint:
     body = "x" * 120  # 100 文字超
     make_md_file(articles_dir / "good.md", {}, body)
 
-    rc = rw_light.cmd_lint()
+    rc = rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     assert rc == 0
@@ -48,7 +48,7 @@ class TestCmdLint:
     empty_file = articles_dir / "empty.md"
     empty_file.write_text("", encoding="utf-8")
 
-    rc = rw_light.cmd_lint()
+    rc = rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     assert rc == 2
@@ -70,7 +70,7 @@ class TestCmdLint:
     short_file = articles_dir / "x.md"
     short_file.write_text("hi\n", encoding="utf-8")
 
-    rc = rw_light.cmd_lint()
+    rc = rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     assert rc == 0
@@ -86,7 +86,7 @@ class TestCmdLint:
     capsys,
   ) -> None:
     """incoming/ にファイルがない場合は exit 0 でサマリー全 0。"""
-    rc = rw_light.cmd_lint()
+    rc = rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     assert rc == 0
@@ -106,7 +106,7 @@ class TestCmdLint:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "article.md", {}, "a" * 120)
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     log_path = patch_constants / "logs" / "lint_latest.json"
     assert log_path.exists(), "lint_latest.json が生成されていない"
@@ -128,7 +128,7 @@ class TestCmdLint:
     articles_dir.mkdir(parents=True, exist_ok=True)
     (articles_dir / "empty.md").write_text("", encoding="utf-8")
 
-    rc = rw_light.cmd_lint()
+    rc = rw_cli.cmd_lint()
 
     assert rc == 2
 
@@ -149,7 +149,7 @@ class TestCmdLint:
     # WARN ファイル（短い本文）
     (articles_dir / "w.md").write_text("hi\n", encoding="utf-8")
 
-    rc = rw_light.cmd_lint()
+    rc = rw_cli.cmd_lint()
 
     assert rc == 0
 
@@ -168,7 +168,7 @@ class TestCmdLint:
     # フロントマターなし・十分な本文
     md_file.write_text("b" * 120, encoding="utf-8")
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     written = md_file.read_text(encoding="utf-8")
     meta, _ = rw_utils.parse_frontmatter(written)
@@ -194,7 +194,7 @@ class TestLintExit2OnFail:
     articles_dir.mkdir(parents=True, exist_ok=True)
     (articles_dir / "empty.md").write_text("", encoding="utf-8")
 
-    rc = rw_light.cmd_lint()
+    rc = rw_cli.cmd_lint()
 
     assert rc == 2
 
@@ -204,7 +204,7 @@ class TestLintExit2OnFail:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "good.md", {}, "a" * 120)
 
-    rc = rw_light.cmd_lint()
+    rc = rw_cli.cmd_lint()
 
     assert rc == 0
 
@@ -229,7 +229,7 @@ class TestLintStdout4Tier:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "good.md", {}, "a" * 120)
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     assert "CRITICAL" in captured.out
@@ -250,7 +250,7 @@ class TestLintStdout4Tier:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "good.md", {}, "a" * 120)
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     assert "PASS" in captured.out
@@ -262,7 +262,7 @@ class TestLintStdout4Tier:
     capsys,
   ) -> None:
     """対象 0 件でも status（PASS）が表示される（AC 5.5 境界）"""
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     assert "PASS" in captured.out
@@ -278,7 +278,7 @@ class TestLintStdout4Tier:
     articles_dir.mkdir(parents=True, exist_ok=True)
     (articles_dir / "empty.md").write_text("", encoding="utf-8")
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     assert "FAIL" in captured.out
@@ -294,7 +294,7 @@ class TestLintStdout4Tier:
     articles_dir.mkdir(parents=True, exist_ok=True)
     (articles_dir / "short.md").write_text("hi\n", encoding="utf-8")
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     captured = capsys.readouterr()
     # stdout summary 行の status は PASS のはず
@@ -321,7 +321,7 @@ class TestLintJsonNewSchema:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "good.md", {}, "a" * 120)
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
     assert data["status"] == "PASS"
@@ -336,7 +336,7 @@ class TestLintJsonNewSchema:
     articles_dir.mkdir(parents=True, exist_ok=True)
     (articles_dir / "empty.md").write_text("", encoding="utf-8")
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
     assert data["status"] == "FAIL"
@@ -354,7 +354,7 @@ class TestLintJsonNewSchema:
     (articles_dir / "short.md").write_text("hi\n", encoding="utf-8")  # WARN check
     (articles_dir / "empty.md").write_text("", encoding="utf-8")       # ERROR
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
     for f in data["files"]:
@@ -371,7 +371,7 @@ class TestLintJsonNewSchema:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "good.md", {}, "a" * 120)
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
     sc = data["summary"]["severity_counts"]
@@ -391,7 +391,7 @@ class TestLintJsonNewSchema:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "good.md", {}, "a" * 120)
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
     assert "warn" not in data["summary"]
@@ -407,7 +407,7 @@ class TestLintJsonNewSchema:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "good.md", {}, "a" * 120)
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
     assert "drift_events" in data
@@ -425,7 +425,7 @@ class TestLintJsonNewSchema:
     (articles_dir / "short.md").write_text("hi\n", encoding="utf-8")   # WARN
     (articles_dir / "empty.md").write_text("", encoding="utf-8")        # ERROR
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
     sc = data["summary"]["severity_counts"]
@@ -445,7 +445,7 @@ class TestLintJsonNewSchema:
     articles_dir.mkdir(parents=True, exist_ok=True)
     make_md_file(articles_dir / "good.md", {}, "a" * 120)
 
-    rw_light.cmd_lint()
+    rw_cli.cmd_lint()
 
     data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
     assert "schema_version" not in data

@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import rw_light
+import rw_cli
 import rw_utils
 
 
@@ -25,7 +25,7 @@ class TestCmdIngest:
 
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    rw_light.cmd_ingest()
+    rw_cli.cmd_ingest()
 
     dst = vault / "raw" / "articles" / "test.md"
     assert dst.exists(), f"移動先 {dst} にファイルが存在しない"
@@ -40,7 +40,7 @@ class TestCmdIngest:
     })
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    result = rw_light.cmd_ingest()
+    result = rw_cli.cmd_ingest()
 
     assert result == 0
 
@@ -62,7 +62,7 @@ class TestCmdIngest:
 
     monkeypatch.setattr(rw_utils, "git_commit", mock_git_commit)
 
-    rw_light.cmd_ingest()
+    rw_cli.cmd_ingest()
 
     assert len(calls) == 1, "git_commit が呼ばれていない"
 
@@ -79,7 +79,7 @@ class TestCmdIngest:
 
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    result = rw_light.cmd_ingest()
+    result = rw_cli.cmd_ingest()
 
     assert result == 1
     assert src.exists(), "FAIL があるのにファイルが移動された"
@@ -100,7 +100,7 @@ class TestCmdIngest:
 
     monkeypatch.setattr(rw_utils, "git_commit", failing_git_commit)
 
-    result = rw_light.cmd_ingest()
+    result = rw_cli.cmd_ingest()
 
     assert result == 1
 
@@ -110,7 +110,7 @@ class TestCmdIngest:
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     with pytest.raises(FileNotFoundError):
-      rw_light.cmd_ingest()
+      rw_cli.cmd_ingest()
 
   def test_duplicate_destination(self, patch_constants, make_md_file, lint_json, monkeypatch):
     """Req 5.7: 移動先に同名ファイルが既存の場合 RuntimeError が発生する"""
@@ -131,7 +131,7 @@ class TestCmdIngest:
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     with pytest.raises(RuntimeError):
-      rw_light.cmd_ingest()
+      rw_cli.cmd_ingest()
 
   def test_rollback_on_error(self, patch_constants, make_md_file, lint_json, monkeypatch):
     """Req 5.8: 移動実行中エラー発生時に既に移動したファイルがロールバックされる"""
@@ -148,7 +148,7 @@ class TestCmdIngest:
     make_md_file(file2_src, {"title": "File2", "source": "web"}, "# File2\nBody.")
 
     # shutil.move を 2 番目の呼び出しでエラーを起こすようにモック
-    original_move = rw_light.shutil.move
+    original_move = rw_cli.shutil.move
     call_count = [0]
 
     def failing_move(src, dst):
@@ -157,12 +157,12 @@ class TestCmdIngest:
         raise OSError("test error")
       original_move(src, dst)
 
-    monkeypatch.setattr(rw_light.shutil, "move", failing_move)
+    monkeypatch.setattr(rw_cli.shutil, "move", failing_move)
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     # execute_ingest_moves が例外を再 raise する
     with pytest.raises(Exception):
-      rw_light.cmd_ingest()
+      rw_cli.cmd_ingest()
 
     # file1 がロールバックされ元の位置に戻っているべき
     assert file1_src.exists(), f"file1 ({file1_src}) がロールバックされていない"
@@ -191,7 +191,7 @@ class TestIngestPreconditionExit1:
     })
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    result = rw_light.cmd_ingest()
+    result = rw_cli.cmd_ingest()
 
     assert result == 1
 
@@ -208,7 +208,7 @@ class TestIngestPreconditionExit1:
     })
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    result = rw_light.cmd_ingest()
+    result = rw_cli.cmd_ingest()
 
     assert result == 0
 
@@ -225,7 +225,7 @@ class TestIngestPreconditionExit1:
     })
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    result = rw_light.cmd_ingest()
+    result = rw_cli.cmd_ingest()
 
     assert result == 1
 
@@ -242,7 +242,7 @@ class TestIngestPreconditionExit1:
     })
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    result = rw_light.cmd_ingest()
+    result = rw_cli.cmd_ingest()
 
     assert result == 1
 
@@ -266,7 +266,7 @@ class TestIngestExitCodeContract:
     })
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    result = rw_light.cmd_ingest()
+    result = rw_cli.cmd_ingest()
 
     assert result == 1
     assert result != 2, "cmd_ingest は exit 2 を返してはならない（2 値契約: 0/1 のみ）"
@@ -282,7 +282,7 @@ class TestIngestExitCodeContract:
     })
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    rw_light.cmd_ingest()
+    rw_cli.cmd_ingest()
     captured = capsys.readouterr()
 
     import re
@@ -302,7 +302,7 @@ class TestIngestExitCodeContract:
     })
     monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
-    rw_light.cmd_ingest()
+    rw_cli.cmd_ingest()
     captured = capsys.readouterr()
 
     assert "— PASS" not in captured.out

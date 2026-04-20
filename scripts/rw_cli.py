@@ -404,6 +404,47 @@ def cmd_approve() -> int:
 # -------------------------
 # cmd_init
 # -------------------------
+def _install_rw_symlink(target_path: str, dev_root: str) -> dict[str, str]:
+  """rw symlink を作成（または張り替え）する。
+
+  target_path/scripts/rw が既存 symlink の場合は削除して再作成する。
+  rw_cli.py に実行権限を付与する（既に実行可能なら skip）。
+
+  Returns:
+      dict with "symlink" key containing result message
+      ("created: <link> -> <src>" or "failed: <error>")
+
+  Raises:
+      None — chmod 失敗はログ出力のみ、symlink 作成失敗は report 経由で報告
+      （既存 cmd_init の挙動を保全）
+  """
+  rw_src = os.path.join(dev_root, "scripts", "rw_cli.py")
+  rw_link = os.path.join(target_path, "scripts", "rw")
+
+  # rw_cli.py に実行権限を付与
+  try:
+    current_mode = os.stat(rw_src).st_mode
+    if not (current_mode & 0o111):
+      os.chmod(rw_src, current_mode | 0o755)
+  except Exception as e:
+    print(f"[WARN] rw_cli.py の実行権限付与失敗: {e}")
+
+  # 既存リンクは削除して再作成
+  if os.path.islink(rw_link):
+    try:
+      os.remove(rw_link)
+    except Exception as e:
+      print(f"[WARN] 既存シンボリックリンク削除失敗: {e}")
+
+  try:
+    os.symlink(rw_src, rw_link)
+    return {"symlink": f"created: {rw_link} -> {rw_src}"}
+  except Exception as e:
+    print(f"[WARN] シンボリックリンク作成失敗: {e}")
+    print(f"[INFO] 手動で作成するには: ln -s {rw_src} {rw_link}")
+    return {"symlink": f"failed: {e}"}
+
+
 def _backup_timestamp() -> str:
   """バックアップディレクトリ名に使用するタイムスタンプ文字列を返す（YYYYMMDD-HHMMSS 形式）。
   テスト時に monkeypatch で差し替え可能にするためモジュールレベル関数として分離。"""
@@ -423,10 +464,50 @@ def cmd_init(args: list[str]) -> int:
   parser = _argparse.ArgumentParser(prog="rw init", add_help=False)
   parser.add_argument("--force", action="store_true", default=False,
                       help="既存 AGENTS/ を .backup/<timestamp>/ に退避して新テンプレートで上書きする")
+  parser.add_argument("--reinstall-symlink", action="store_true", default=False,
+                      help="既存 Vault の rw symlink のみ張り替える（他処理 skip）")
   parser.add_argument("target", nargs="?", default=None)
   parsed, _unknown = parser.parse_known_args(args)
   force = parsed.force
+  reinstall_symlink = parsed.reinstall_symlink
   target_path = parsed.target if parsed.target else os.getcwd()
+
+  # --- --reinstall-symlink 早期 return 分岐 ---
+  if reinstall_symlink:
+    if force:
+      print("[WARN] --reinstall-symlink と --force が併用されました。--reinstall-symlink を優先します。",
+            file=sys.stderr)
+    if not rw_utils.is_existing_vault(target_path):
+      print(
+        f"[ERROR] '{target_path}' は既存の Vault ではありません"
+        f"（CLAUDE.md または index.md が不在）。"
+        f"--reinstall-symlink は既存 Vault にのみ適用可能です。",
+        file=sys.stderr,
+      )
+      return 1
+    symlink_result = _install_rw_symlink(target_path, rw_config.DEV_ROOT)
+    report: dict[str, Any] = {
+      "target": target_path,
+      "dirs_created": 0,
+      "templates_copied": [],
+      "skipped": [],
+      "git_init": "skipped (--reinstall-symlink)",
+      "gitignore": "skipped (--reinstall-symlink)",
+      "symlink": symlink_result["symlink"],
+    }
+    print("\n=== rw init 完了レポート ===")
+    print(f"対象: {report['target']}")
+    print(f"ディレクトリ生成: {report['dirs_created']} 個")
+    print(f"テンプレートコピー: {', '.join(report['templates_copied']) or 'なし'}")
+    print(f"Git初期化: {report.get('git_init', 'N/A')}")
+    print(f".gitignore: {report.get('gitignore', 'N/A')}")
+    print(f"シンボリックリンク: {report.get('symlink', 'N/A')}")
+    if report["skipped"]:
+      print("スキップ項目:")
+      for s in report["skipped"]:
+        print(f"  - {s['item']}: {s['reason']}")
+    print("===========================")
+    return 0
 
   # --- report dict 初期化 ---
   report: dict[str, Any] = {
@@ -577,31 +658,8 @@ def cmd_init(args: list[str]) -> int:
     report["skipped"].append({"item": ".gitignore", "reason": "既存ファイルを保護"})
 
   # --- シンボリックリンク作成 ---
-  rw_src = os.path.join(rw_config.DEV_ROOT, "scripts", "rw_light.py")
-  rw_link = os.path.join(target_path, "scripts", "rw")
-
-  # rw_light.py に実行権限を付与
-  try:
-    current_mode = os.stat(rw_src).st_mode
-    if not (current_mode & 0o111):
-      os.chmod(rw_src, current_mode | 0o755)
-  except Exception as e:
-    print(f"[WARN] rw_light.py の実行権限付与失敗: {e}")
-
-  # 既存リンクは削除して再作成
-  if os.path.islink(rw_link):
-    try:
-      os.remove(rw_link)
-    except Exception as e:
-      print(f"[WARN] 既存シンボリックリンク削除失敗: {e}")
-
-  try:
-    os.symlink(rw_src, rw_link)
-    report["symlink"] = f"created: {rw_link} -> {rw_src}"
-  except Exception as e:
-    print(f"[WARN] シンボリックリンク作成失敗: {e}")
-    print(f"[INFO] 手動で作成するには: ln -s {rw_src} {rw_link}")
-    report["symlink"] = f"failed: {e}"
+  symlink_result = _install_rw_symlink(target_path, rw_config.DEV_ROOT)
+  report["symlink"] = symlink_result["symlink"]
 
   # --- 完了レポート出力 ---
   print("\n=== rw init 完了レポート ===")
@@ -627,7 +685,8 @@ def print_usage() -> None:
     print("Usage: rw [lint|ingest|synthesize-logs|approve|init|query|audit]")
     print("       rw lint")
     print("       rw lint query [--path review/query/<query_id>] [--strict] [--format text|json]")
-    print("       rw init [<path>]")
+    print("       rw init [<path>] [--force] [--reinstall-symlink]")
+    print("           --reinstall-symlink  既存 Vault の rw symlink のみ張り替える（他処理 skip）")
     print("       rw query <subcommand>")
     print('           extract "<question>" [--scope <page>] [--type <query_type>]')
     print('           answer  "<question>" [--scope <page>]')
