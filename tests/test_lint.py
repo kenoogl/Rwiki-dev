@@ -89,7 +89,8 @@ class TestCmdLint:
 
     captured = capsys.readouterr()
     assert rc == 0
-    assert "{'pass': 0, 'warn': 0, 'fail': 0}" in captured.out
+    assert "pass" in captured.out
+    assert "fail" in captured.out
 
   # ------------------------------------------------------------------
   # Req 4.5  JSON ログ
@@ -177,3 +178,152 @@ class TestCmdLint:
     assert meta["source"] == rw_light.infer_source_from_path(str(md_file))
     assert "added" in meta
     assert meta["added"] == fixed_today
+
+
+# ---------------------------------------------------------------------------
+# Task 2.4: lint_latest.json 新 schema
+# ---------------------------------------------------------------------------
+
+
+class TestLintJsonNewSchema:
+  """lint_latest.json が新 schema に適合することを検証"""
+
+  def test_top_level_status_pass(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+  ) -> None:
+    """PASS ファイルのみ → top-level status == 'PASS'"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+
+    rw_light.cmd_lint()
+
+    data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
+    assert data["status"] == "PASS"
+
+  def test_top_level_status_fail(
+    self,
+    patch_constants: Path,
+    fixed_today: str,
+  ) -> None:
+    """空ファイル（ERROR）→ top-level status == 'FAIL'"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    (articles_dir / "empty.md").write_text("", encoding="utf-8")
+
+    rw_light.cmd_lint()
+
+    data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
+    assert data["status"] == "FAIL"
+
+  def test_file_status_two_values_only(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+  ) -> None:
+    """files[].status は PASS または FAIL のみ（WARN は出現しない）"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+    (articles_dir / "short.md").write_text("hi\n", encoding="utf-8")  # WARN check
+    (articles_dir / "empty.md").write_text("", encoding="utf-8")       # ERROR
+
+    rw_light.cmd_lint()
+
+    data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
+    for f in data["files"]:
+      assert f["status"] in {"PASS", "FAIL"}, f"files status must be PASS/FAIL, got {f['status']}"
+
+  def test_summary_severity_counts_four_keys(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+  ) -> None:
+    """summary.severity_counts に critical/error/warn/info の 4 キーが存在する"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+
+    rw_light.cmd_lint()
+
+    data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
+    sc = data["summary"]["severity_counts"]
+    assert "critical" in sc
+    assert "error" in sc
+    assert "warn" in sc
+    assert "info" in sc
+
+  def test_summary_no_warn_key(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+  ) -> None:
+    """summary に 'warn' キーは存在しない（severity_counts に移行済み）"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+
+    rw_light.cmd_lint()
+
+    data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
+    assert "warn" not in data["summary"]
+
+  def test_drift_events_field_exists(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+  ) -> None:
+    """drift_events フィールドが存在する（空 list 可）"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+
+    rw_light.cmd_lint()
+
+    data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
+    assert "drift_events" in data
+    assert isinstance(data["drift_events"], list)
+
+  def test_severity_counts_values(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+  ) -> None:
+    """WARN ファイル 1 件 + ERROR ファイル 1 件 → severity_counts が正確"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    (articles_dir / "short.md").write_text("hi\n", encoding="utf-8")   # WARN
+    (articles_dir / "empty.md").write_text("", encoding="utf-8")        # ERROR
+
+    rw_light.cmd_lint()
+
+    data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
+    sc = data["summary"]["severity_counts"]
+    assert sc["error"] == 1
+    assert sc["warn"] == 1
+    assert sc["critical"] == 0
+    assert sc["info"] == 0
+
+  def test_no_schema_version(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+  ) -> None:
+    """schema_version フィールドは追加しない（Y Cut）"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+
+    rw_light.cmd_lint()
+
+    data = json.loads((patch_constants / "logs" / "lint_latest.json").read_text())
+    assert "schema_version" not in data

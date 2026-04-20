@@ -319,22 +319,24 @@ def cmd_lint() -> int:
     files = list_md_files(INCOMING)
 
     results = []
-    summary = {"pass": 0, "warn": 0, "fail": 0}
+    severity_counts: dict[str, int] = {"critical": 0, "error": 0, "warn": 0, "info": 0}
+    pass_count = 0
+    fail_count = 0
 
     for path in files:
-        entry = {
+        entry: dict = {
             "path": relpath(path),
             "status": "PASS",
-            "warnings": [],
-            "errors": [],
+            "checks": [],
             "fixes": [],
         }
 
         raw = read_text(path)
         if len(raw.strip()) == 0:
+            entry["checks"].append({"severity": "ERROR", "message": "empty file"})
             entry["status"] = "FAIL"
-            entry["errors"].append("empty file")
-            summary["fail"] += 1
+            severity_counts["error"] += 1
+            fail_count += 1
             results.append(entry)
             print(f"[FAIL] {entry['path']} empty file")
             continue
@@ -343,27 +345,35 @@ def cmd_lint() -> int:
         entry["fixes"].extend(fixes)
 
         if len(new_text.strip()) < 80:
-            entry["status"] = "WARN"
-            entry["warnings"].append("too short")
-            summary["warn"] += 1
+            entry["checks"].append({"severity": "WARN", "message": "too short"})
+            severity_counts["warn"] += 1
             print(f"[WARN] {entry['path']} too short")
         else:
-            summary["pass"] += 1
             print(f"[PASS] {entry['path']}")
 
+        pass_count += 1
         results.append(entry)
+
+    summary = {
+        "pass": pass_count,
+        "fail": fail_count,
+        "severity_counts": severity_counts,
+    }
+    run_status = "FAIL" if fail_count > 0 else "PASS"
 
     payload = {
         "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "status": run_status,
         "files": results,
         "summary": summary,
+        "drift_events": [],
     }
 
     write_text(LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
     print(f"\nSummary: {summary}")
     print(f"Log: {relpath(LINT_LOG)}")
 
-    return 1 if summary["fail"] > 0 else 0
+    return 1 if fail_count > 0 else 0
 
 
 # -------------------------

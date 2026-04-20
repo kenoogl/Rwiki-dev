@@ -129,7 +129,7 @@
   - _Requirements: 1.8_
   - _Boundary: AGENTS templates_
 
-- [ ] 2.4 `cmd_lint` の status 計算差替え + `lint_latest.json` schema 更新（機械 JSON 変更、TDD）
+- [x] 2.4 `cmd_lint` の status 計算差替え + `lint_latest.json` schema 更新（機械 JSON 変更、TDD）
   - 先に test_lint_json_new_schema を red で追加: top-level `status ∈ {"PASS","FAIL"}` / `files[].status ∈ {"PASS","FAIL"}` / `summary.severity_counts` の 4 キー（critical/error/warn/info）存在 / `summary.warn` 非存在 / `drift_events` フィールド存在（空 list 可）を検証（`schema_version` フィールドは **追加しない**、Y Cut）
   - 実装: per-file status を 2 値（PASS / FAIL）に、`summary.warn` を削除、`summary.severity_counts` 追加、top-level `status` を追加、`files[].status` から WARN を削除、`drift_events[]` フィールド追加
   - `_compute_run_status` を使用（2.1 に依存）
