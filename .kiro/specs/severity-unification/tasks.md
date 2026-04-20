@@ -107,14 +107,14 @@
 
 ## 2. P2: status 2 値化 + exit code 3 値分離 + 隣接コマンド更新（統合、1 PR 推奨）
 
-- [ ] 2.1 `_compute_run_status(findings)` helper の TDD 実装
+- [x] 2.1 `_compute_run_status(findings)` helper の TDD 実装
   - 先に `tests/test_rw_light.py` に test_compute_run_status を red で追加: (a) 空 findings → `"PASS"` / (b) INFO のみ → `"PASS"` / (c) WARN のみ → `"PASS"` / (d) ERROR 1 件 → `"FAIL"` / (e) CRITICAL 1 件 → `"FAIL"` / (f) CRITICAL + ERROR 混在 → `"FAIL"` の 6 fixture
   - 実装: CRITICAL または ERROR が 1 件以上 → `"FAIL"`、それ以外 → `"PASS"`
   - 観察可能完了条件: 6 fixture が期待通りの status を返す、`pytest tests/test_rw_light.py::test_compute_run_status` green
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.8, 2.9_
   - _Boundary: severity helpers_
 
-- [ ] 2.2 `_compute_exit_code(status, had_runtime_error)` helper の TDD 実装
+- [x] 2.2 `_compute_exit_code(status, had_runtime_error)` helper の TDD 実装
   - 先に test_compute_exit_code を red で追加: (a) status="PASS" + had_runtime_error=False → 0 / (b) had_runtime_error=True（status 不問）→ 1 / (c) status="FAIL" + had_runtime_error=False → 2 の 6 fixture（status ∈ {"PASS", "FAIL", None} × runtime ∈ {True, False}）
   - 実装: `had_runtime_error` が True なら 1 を返す（status 引数に優先、Composition invariant H-2）、FAIL なら 2、PASS なら 0
   - 観察可能完了条件: 6 fixture が期待通りの exit code を返す、helper 単体 test green

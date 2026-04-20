@@ -1699,10 +1699,31 @@ def run_weekly_checks(
     return findings, bidir_stats
 
 
-# audit: LLM engine
+# severity / status / exit code helpers
 
 
 _VALID_SEVERITIES = {"CRITICAL", "ERROR", "WARN", "INFO"}
+_FAIL_SEVERITIES = {"CRITICAL", "ERROR"}
+
+
+def _compute_run_status(findings: list) -> str:
+  """CRITICAL または ERROR が 1 件以上あれば FAIL, それ以外は PASS。"""
+  for f in findings:
+    if f.severity in _FAIL_SEVERITIES:
+      return "FAIL"
+  return "PASS"
+
+
+def _compute_exit_code(status: str | None, had_runtime_error: bool) -> int:
+  """had_runtime_error → 1, FAIL → 2, PASS/None → 0。"""
+  if had_runtime_error:
+    return 1
+  if status == "FAIL":
+    return 2
+  return 0
+
+
+# audit: LLM engine
 
 
 def _normalize_severity_token(

@@ -6425,3 +6425,69 @@ def test_normalize_severity_token():
 def test_map_severity_deleted():
   """map_severity should no longer exist after task 1.7"""
   assert not hasattr(rw_light, "map_severity"), "map_severity should be deleted in task 1.7"
+
+
+# ---------------------------------------------------------------------------
+# Task 2.1: _compute_run_status(findings) helper
+# ---------------------------------------------------------------------------
+
+
+def _severity_finding(severity: str) -> rw_light.Finding:
+  return rw_light.Finding(
+    severity=severity,
+    category="test",
+    page="test/page.md",
+    message="test message",
+    marker="",
+  )
+
+
+def test_compute_run_status():
+  """_compute_run_status: CRITICAL or ERROR → FAIL, otherwise → PASS"""
+  fn = rw_light._compute_run_status
+
+  # (a) 空 findings → PASS
+  assert fn([]) == "PASS"
+
+  # (b) INFO のみ → PASS
+  assert fn([_severity_finding("INFO")]) == "PASS"
+
+  # (c) WARN のみ → PASS
+  assert fn([_severity_finding("WARN")]) == "PASS"
+
+  # (d) ERROR 1 件 → FAIL
+  assert fn([_severity_finding("ERROR")]) == "FAIL"
+
+  # (e) CRITICAL 1 件 → FAIL
+  assert fn([_severity_finding("CRITICAL")]) == "FAIL"
+
+  # (f) CRITICAL + ERROR 混在 → FAIL
+  assert fn([_severity_finding("CRITICAL"), _severity_finding("ERROR")]) == "FAIL"
+
+
+# ---------------------------------------------------------------------------
+# Task 2.2: _compute_exit_code(status, had_runtime_error) helper
+# ---------------------------------------------------------------------------
+
+
+def test_compute_exit_code():
+  """_compute_exit_code: had_runtime_error=True → 1, FAIL → 2, PASS → 0"""
+  fn = rw_light._compute_exit_code
+
+  # (a) PASS + no runtime error → 0
+  assert fn("PASS", False) == 0
+
+  # (b) had_runtime_error=True, status PASS → 1 (runtime overrides)
+  assert fn("PASS", True) == 1
+
+  # (c) had_runtime_error=True, status FAIL → 1 (runtime overrides)
+  assert fn("FAIL", True) == 1
+
+  # (d) FAIL + no runtime error → 2
+  assert fn("FAIL", False) == 2
+
+  # (e) None status + runtime error → 1
+  assert fn(None, True) == 1
+
+  # (f) None status + no runtime error → 0 (treat None as PASS)
+  assert fn(None, False) == 0
