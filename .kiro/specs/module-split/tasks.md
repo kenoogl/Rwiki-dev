@@ -142,7 +142,7 @@
 
 - [ ] 4. Phase 4a: `rw_audit` 抽出と audit dispatch 切り替え
 
-- [ ] 4.1 `rw_audit.py` 作成と audit コマンド / チェック関数群の移動
+- [x] 4.1 `rw_audit.py` 作成と audit コマンド / チェック関数群の移動
   - `scripts/rw_audit.py` を新規作成し、design.md「File Structure Plan」の rw_audit セクションで列挙された全シンボルを `rw_light.py` から物理移動する（`Finding` / `WikiPage` NamedTuple、`check_broken_links`, `check_index_registration`, `check_frontmatter`, `check_orphan_pages`, `check_bidirectional_links`, `check_naming_convention`, `check_source_field`, `check_required_sections`, `_resolve_link`, `validate_wiki_dir`, `load_wiki_pages`, `get_recent_wiki_changes`, `_normalize_severity_token`, `_record_drift`, `run_micro_checks`, `run_weekly_checks`, `build_audit_prompt`, `parse_audit_response`, `generate_audit_report`, `print_audit_summary`, `_run_llm_audit`, `cmd_audit`, `cmd_audit_micro`, `cmd_audit_weekly`, `cmd_audit_monthly`, `cmd_audit_quarterly`）
   - `rw_audit.py` は `import rw_config`, `import rw_utils`, `import rw_prompt_engine` のみを行い、すべての参照を修飾形式に統一する（`rw_query`, `rw_light` を import しない — DAG 維持）
   - `rw_light.main()` ディスパッチ層の audit 系呼び出しを `rw_audit.cmd_audit(sys.argv[2:])` 等の修飾参照に書き換える
@@ -213,3 +213,5 @@
 ## Implementation Notes
 
 - Phase 3.1 で rw_prompt_engine に移動した read_wiki_content / read_all_wiki_content の "# audit: data loading" 位置検証テスト `test_audit_headers_before_output_utilities` は output utilities が rw_light に残るため cross-module 順序検証として意味を失う。Phase 6.1 の rw_light 最終スリム化完了後に re-author を検討する。
+- Phase 4.1 時点で `_strip_code_block` を rw_audit と rw_query の両方が必要とするが DAG 上 Layer 3 相互 import 不可のため、rw_audit.py に 11 行のローカル duplicate を置く実装判断をした。Phase 5.1 (rw_query 抽出) では同関数を rw_query に再配置し、duplicate 状態を容認する（Req 2.2 DAG 維持のための pragmatic trade-off）。将来的な重複解消は rw_prompt_engine または rw_utils への移動として follow-up スペックで検討可能。
+- Phase 4.2 での必須修正: `tests/test_rw_light.py:5116` の型アノテーション `def _finding(self, sev: str) -> rw_light.Finding:` は Python 3.10 で関数定義時に評価されるため、Phase 4.1 直後は `pytest tests/ --collect-only` で AttributeError 発生。Phase 4.2 で `rw_audit.Finding` に更新することで解消。
