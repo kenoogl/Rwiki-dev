@@ -1,122 +1,60 @@
 # TODO_NEXT_SESSION.md
 
-_更新: 2026-04-20 — module-split 実装完了、docs 同期 Follow-up 待ち_
+_更新: 2026-04-20 — rw-light-rename スペック requirements-generated 状態、承認 + design 着手待ち_
 
 ---
 
 ## 現在の状態サマリー
 
 **プロジェクト**: Rwiki — AI 支援ナレッジベース構築システム
-**ブランチ**: `main`（プッシュ済み、`origin/main` と同期、最新コミット `9af67ed`）
-**全テスト**: 641 passed + 1 skipped = 642 collected（module-split Phase 6.2 で確認）
-**完了スペック**: `module-split`（**全 13 タスク実装完了、pushed**）
-**次のアクション**: Follow-up Obligations（docs 同期 + steering 更新）を別セッションで実施
+**ブランチ**: `main`（プッシュ済み、`origin/main` と同期、最新コミット `23bad66`）
+**全テスト**: 641 passed + 1 skipped = 642 collected（module-split 完了時点から維持）
+**実施中スペック**: `rw-light-rename`（**requirements-generated、承認 + design 着手待ち**）
+**次のアクション**: requirements.md をレビュー → 承認 → `/kiro-spec-design rw-light-rename` で design フェーズへ
 
 ---
 
-## 完了したスペック: module-split
+## 進行中スペック: rw-light-rename
 
-### 成果
-`scripts/rw_light.py`（3,827 行）を 6 モジュールに分割する純粋リファクタリング完了。CLI 外部動作・テスト結果・公開 API はすべて不変を維持。
+### 目的
+module-split 完了後に意味を失った `scripts/rw_light.py` の名前を責務に合う `scripts/rw_cli.py` へ rename する純粋な命名整合リファクタリング。`light` 接頭辞は pre-split 時代の「軽量単一ファイル CLI」を示すが、現在の実態は CLI エントリポイント + argparse dispatcher + 残留コマンド (`cmd_lint` / `cmd_ingest` / `cmd_synthesize_logs` / `cmd_approve` / `cmd_init`) のホスト。他 5 モジュール (`rw_config` / `rw_utils` / `rw_prompt_engine` / `rw_audit` / `rw_query`) と同じ `rw_<責務>.py` 命名パターンに合わせる。
 
-### 最終モジュール構成
+### スコープ（Req 1 で確定）
+1. `git mv scripts/rw_light.py scripts/rw_cli.py`（history 連続性保持）
+2. `cmd_init` の symlink 作成ターゲット更新（新規 Vault に `rw → rw_cli.py`）
+3. テスト側 ~500 件の `import rw_light` / `monkeypatch.setattr(rw_light, ...)` / `rw_light.<residual>` 直接アクセスを `rw_cli` 参照に機械置換
+4. `docs/user-guide.md` / `docs/developer-guide.md` / `CLAUDE.md` / `templates/` 配下テンプレート / `.kiro/steering/structure.md` + `tech.md` の参照更新
+5. 既存 Vault マイグレーションヘルパ: `rw init --reinstall-symlink` サブフラグ追加（既存 symlink 検出 → 削除 → 再作成、通常初期化処理はスキップ）
+6. `rw_light.py` は bridge / proxy として残さず完全削除（Req 1.3 re-export ゼロ方針を継承）
 
-| モジュール | 行数 | 責務 |
-|-----------|------|------|
-| `scripts/rw_config.py` | 87 | 全グローバル定数（パス + ドメイン） |
-| `scripts/rw_utils.py` | 294 | ドメイン非依存ユーティリティ（I/O, git, frontmatter 等） |
-| `scripts/rw_prompt_engine.py` | 607 | Claude 呼び出し + プロンプト構築 |
-| `scripts/rw_audit.py` | 1,419 | audit コマンド + チェック関数群（上限 1,500 に 81 行余裕） |
-| `scripts/rw_query.py` | 842 | query コマンド + query lint |
-| `scripts/rw_light.py` | 699 | 残留コマンド（cmd_lint / cmd_ingest / cmd_synthesize_logs / cmd_approve / cmd_init）+ main() + dispatch |
-| **合計** | **3,948** | 全モジュール ≤ 1,500 行（Req 1.2 充足） |
+### 成果物（requirements-generated 状態）
 
-### 達成した要件（6 要件 / 18 AC）
+| ファイル | 状態 |
+|---------|------|
+| `.kiro/specs/rw-light-rename/spec.json` | `phase: requirements-generated`, `approvals.requirements.generated: true`, `approved: false` |
+| `.kiro/specs/rw-light-rename/requirements.md` | 6 要件 / 21 AC ドラフト、A/B/E レビュー対処済み |
 
-- **Req 1.1** 6 モジュール責務分割 — 全モジュール存在確認
-- **Req 1.2** 各モジュール ≤ 1,500 行 — rw_audit が最大 1,419、余裕 81 行
-- **Req 1.3** re-export ゼロ — `from rw_<module> import` 0 件、`hasattr(rw_light, 'call_claude')` → False
-- **Req 2.1 / 2.2** DAG 維持 — 全モジュール一括 import / 個別 import 成功、circular なし
-- **Req 3.1 / 3.2** rw_config 一元管理 + パッチ互換性 — 全 24 定数が rw_config に集約
-- **Req 4.1 / 4.2 / 4.3 / 4.4 / 4.5 / 4.6** 関数パッチ先の正確性 — `cmd_query_fix` 内で `rw_query.lint_single_query_dir(...)` 自モジュール修飾呼び出し採用
-- **Req 5.1** 全テスト継続 green — 641 passed + 1 skipped = 642 collected
-- **Req 5.2** サブモジュール発見 — `sys.path[0]` 自動解決で PYTHONPATH 不要
-- **Req 6.1 / 6.2** CLI エントリポイント互換性 — `python scripts/rw_light.py` で usage 表示
-- **Req 6.3** symlink 経由起動 — 一時 Vault で `python <vault>/scripts/rw` からの起動確認済
+### 要件サマリ（6 要件）
 
-### 13 コミット履歴
+| Req | タイトル | AC 数 |
+|-----|----------|-------|
+| 1 | ファイル名と参照先の整合（rw_cli.py 存在、rw_light.py 不在、git 履歴連続性、bridge ファイル不在） | 3 |
+| 2 | CLI 外部動作の不変性（usage 不変、サブコマンド挙動不変、main() エクスポート不変） | 3 |
+| 3 | テスト整合性と継続グリーン（641 + 1 skipped 維持、import 0、patch 対象 rw_cli、直接アクセス書き換え、rw_light.shutil.move 置換、mock_templates ダミーファイル更新） | 6 |
+| 4 | 新規 Vault 初期化時の symlink ターゲット整合（`rw → rw_cli.py` 作成、symlink 経由起動で usage 表示） | 2 |
+| 5 | 既存 Vault マイグレーションヘルパ（`rw init --reinstall-symlink` による symlink 検出・再作成、通常初期化スキップ、非 Vault エラー exit 1、--help 記載） | 4 |
+| 6 | ドキュメント・steering 参照整合（docs/templates/CLAUDE.md/steering の rw_cli 更新、歴史性保持、module-split Req 6.1 言及の扱いは design 判断） | 3 |
 
-```
-9af67ed chore(module-split): Phase 6.3 — Vault symlink 経由起動の手動 smoke 検証完了
-d4eb913 chore(module-split): Phase 6.2 — 全テスト green + CLI + circular import 最終検証完了
-e757e7e refactor(module-split): Phase 6.1 — rw_light.py 最終スリム化（未使用 import 削除）
-1ac32f8 refactor(module-split): Phase 5.2 — query 系 patch 先を rw_query に置換 + 直接アクセス書き換え
-9019db2 refactor(module-split): Phase 5.1 — rw_query.py 抽出と query コマンド / lint 関数群の移動
-4a34456 refactor(module-split): Phase 4.2 — audit 系 patch 先を rw_audit に置換 + 直接アクセス書き換え
-1ab8c18 refactor(module-split): Phase 4.1 — rw_audit.py 抽出と audit 系関数群の移動
-1f6d583 refactor(module-split): Phase 3.2 — prompt engine patch 先を rw_prompt_engine に置換 + 直接アクセス書き換え
-b97bbac refactor(module-split): Phase 3.1 — rw_prompt_engine.py 抽出（re-export なし）
-22a3f85 refactor(module-split): Phase 2.2 — utility patch 先を rw_utils に置換 + 直接アクセス書き換え
-f399277 refactor(module-split): Phase 2.1 — rw_utils.py 抽出と汎用ユーティリティ移動
-d23005a refactor(module-split): Phase 1.2 — 定数 patch 先を rw_config に置換 + 直接アクセス書き換え
-4421c14 refactor(module-split): Phase 1.1 — rw_config.py 抽出と全グローバル定数移動
-```
+### レビュー対処（完了）
 
-### 実装中の重要な判断
+- **A (Req 5.2 語順)**: 日本語語順破綻「shall skip X を行い」→ "shall skip X and execute Y" に英語 EARS で明確化
+- **B (Req 5.3 exit code)**: severity-unification 契約との矛盾 exit 2 → exit 1 (runtime error) に修正
+- **E (`templates/` 参照整合)**: In scope に `templates/` 配下と `mock_templates` fixture ダミーファイルを追加、Req 3.6 を新規追加、Req 6.1 に `templates/` を追加
 
-1. **`_strip_code_block` duplicate**: rw_audit と rw_query の両方が必要だが DAG 上 Layer 3 相互 import 不可のため、rw_audit.py L768 と rw_query.py L93 に 11 行の duplicate を配置。follow-up で rw_prompt_engine/rw_utils への統合移動を検討可能（tasks.md Implementation Notes 記録済み）。
-2. **TestAuditSectionHeaders test 3 skip**: Phase 3.1 で `read_wiki_content` / `read_all_wiki_content` が rw_prompt_engine に移動したことで `test_audit_headers_before_output_utilities` の cross-module 順序検証が意味を失った。`@pytest.mark.skip` でマーク、Phase 6.1 の rw_light 最終スリム化後の再 author 案として tasks.md Implementation Notes に記録。
-3. **rw_query の self-import**: `cmd_query_fix` 内部の `rw_query.lint_single_query_dir(...)` 自モジュール修飾呼び出しを有効化するため、rw_query.py L22 に `import rw_query` を追加（Req 4.3 の monkeypatch 作用を保証）。
-4. **セクションヘッダーコメント復活**: Phase 3.1 で rw_prompt_engine に移動した `read_wiki_content` 群に `# audit: data loading` ヘッダーコメントを復活（L437）。TestAuditSectionHeaders の minimal module retargeting を可能にするための構造マーカー保持。
+### レビュー保留事項（2 件、design / tasks フェーズで再評価可能）
 
----
-
-## 次の作業: Follow-up Obligations（別セッションで実施）
-
-module-split スペック本体は完了したが、プロジェクト全体の整合性維持のため以下の作業が未了:
-
-### 1. docs/developer-guide.md 呼び出し経路表の更新（L188-190）
-
-**対象**: `docs/developer-guide.md` L188-190
-
-**変更内容**:
-- `rw_light.call_claude` → `rw_prompt_engine.call_claude`
-- `rw_light.call_claude_for_log_synthesis` → `rw_prompt_engine.call_claude_for_log_synthesis`
-
-**理由**: Option B 確定（AC 1.3 廃止）により rw_light からの call_claude 参照が不可能になったため、ドキュメントを現状に合わせる必要がある。
-
-### 2. tests/conftest.py の docstring 例示更新
-
-module-split 中に Option X により保留した docstring/コメント内の API 例示を新モジュール参照に更新:
-
-- **L18 付近**（VAULT_DIRS 言及）: `rw_light.VAULT_DIRS` → `rw_config.VAULT_DIRS`
-- **L55-57 付近**（today 言及）: `rw_light.today` → `rw_utils.today`
-- **L231-233 付近**（call_claude 例示）: `rw_light.call_claude("prompt")` → `rw_prompt_engine.call_claude("prompt")`
-- その他 L78/L96/L120/L126 等の説明的 docstring も必要に応じて同期
-
-**注意**: test_rw_light.py L213（docstring）/ L257（comment）にも `rw_light.ROOT` 言及あり — こちらも同時更新推奨。
-
-### 3. .kiro/steering/structure.md の更新
-
-**コマンド**: `/kiro-steering` を実行
-
-**変更内容**: 「モノリシック CLI」「単一ファイル集約」などの記述を 6 モジュール構成に更新。具体的には:
-- 現: `scripts/rw_light.py` 単一ファイル
-- 新: 6 モジュール構成（rw_config / rw_utils / rw_prompt_engine / rw_audit / rw_query / rw_light）とその責務分離パターン
-- DAG 依存関係（Layer 0 → Layer 1 → Layer 2 → Layer 3 → Layer 4）の記述追加
-
-### 4. （オプション）TestAuditSectionHeaders test 3 の再 author
-
-**対象**: `tests/test_rw_light.py` の `test_audit_headers_before_output_utilities`
-
-**状態**: 現在 `@pytest.mark.skip` でマーク
-
-**判断材料**:
-- rw_light の最終構造（Phase 6.1 完了時点）を前提として、「output utilities に相当する構造マーカー」が rw_light 内に残っているか検証
-- 残っていれば、`inspect.getsource(rw_audit)` で「audit 構造マーカー」を、`inspect.getsource(rw_light)` で「output utilities マーカー」を検索する cross-module 順序検証に再著述
-- 残っていなければ、テストを削除するか、別テスト（「分割後の各モジュールに期待される構造マーカーの存在検証」など）に書き換え
-
-**優先度**: 低（pytest は現状 641 passed + 1 skipped = 642 collected で Req 5.1 充足）
+- **C (Req 2.3)**: `main()` 位置指定が過剰仕様の可能性。外部 API 契約として削除可能だが残しても害なし
+- **D (Req 3.3)**: residual symbol 列挙に `print_usage` / `main` が漏れているが、monkeypatch される可能性は低く影響軽微
 
 ---
 
@@ -127,25 +65,51 @@ cd /Users/Daily/Development/Rwiki-dev
 
 # 状態確認
 git log --oneline -5
-git status  # clean, origin/main と同期
-
-# Follow-up 作業開始
-# (A) docs/developer-guide.md を編集
-# (B) tests/conftest.py の docstring を更新
-# (C) /kiro-steering で steering を更新
+cat .kiro/specs/rw-light-rename/spec.json  # phase: requirements-generated
+cat .kiro/specs/rw-light-rename/requirements.md  # 要件レビュー
 ```
 
-### Follow-up 開始テンプレート
+### 次のアクション（優先順）
 
+**Step 1: Requirements 承認**
+
+ユーザが requirements.md を確認し、追加修正なければ承認。`spec.json` の `approvals.requirements.approved` を手動で `true` にするか、次の `-y` オプションで自動承認。
+
+**Step 2: Design フェーズへ**
+
+Brownfield (既存コードベース) のため、optional でギャップ分析を先行:
+
+```bash
+/kiro-validate-gap rw-light-rename  # 既存 cmd_init との統合ポイント分析
 ```
-docs/developer-guide.md L188-190 の呼び出し経路表と tests/conftest.py の docstring 例示を
-module-split 完了後の新モジュール参照に更新してください。
-続いて /kiro-steering で structure.md を 6 モジュール構成に更新してください。
+
+その後 design:
+
+```bash
+/kiro-spec-design rw-light-rename     # 承認確認あり
+# または
+/kiro-spec-design rw-light-rename -y  # requirements 承認も自動化
+```
+
+### Design フェーズで判断するポイント
+
+1. **Req 6.3**: `.kiro/specs/module-split/requirements.md` Req 6.1 の `scripts/rw_light.py` 言及の扱い（原文編集 / 補注追加 / 不変）
+2. **保留 C**: Req 2.3 `main()` 位置指定 AC を削除するか
+3. **保留 D**: Req 3.3 の residual symbol 列挙に `print_usage` / `main` を明示追加するか、包括表現化するか
+4. **`--reinstall-symlink` の実装アプローチ**: argparse のサブフラグ実装詳細、既存 `rw init <path>` 引数との共存方法
+5. **Phase 分割戦略**: module-split 同様に「コード rename → テスト patch 更新 → docs/steering 更新」の Phase 分割にするか、単一 Phase で完結させるか（module-split より変更規模が小さいので後者も現実的）
+
+### 実装フェーズ（Design / Tasks 承認後）
+
+```bash
+/kiro-spec-tasks rw-light-rename      # tasks 生成
+/kiro-impl rw-light-rename            # 自動実装（autonomous mode）
+/kiro-validate-impl rw-light-rename   # 最終検証
 ```
 
 ---
 
-## 完了済みスペック一覧
+## 完了済みスペック
 
 | スペック | 状態 |
 |---------|------|
@@ -155,27 +119,30 @@ module-split 完了後の新モジュール参照に更新してください。
 | cli-audit | ✅ |
 | test-suite | ✅ |
 | severity-unification | ✅ 全 P1/P2/P3 完了 |
-| **module-split** | ✅ **全 13 タスク実装完了、pushed** |
+| module-split | ✅ 全 13 タスク実装完了、Follow-up 3 件 (docs/conftest docstring/steering) 完了 |
 
 ---
 
-## 参考: 実装時の重要知見（次セッションで役立つ可能性）
+## 参考: 前セッションからの経緯
 
-### 1. モジュール修飾参照規約の必要性（Req 3.2 / 4.x 保証）
+### module-split Follow-up 完了
 
-テストが `monkeypatch.setattr(rw_<module>, "<symbol>", mock)` で patch する場合、実装コード側での呼び出しは **必ず `rw_<module>.<symbol>(...)` 修飾形式**にする必要がある。`from rw_<module> import <symbol>` + `<symbol>(...)` 形式は patch が作用しないため禁止。
+本セッションで module-split スペックの Follow-up Obligations を全て完了:
+- **Item 1**: `docs/developer-guide.md` L188-190 の LLM モック対象を `rw_prompt_engine.*` に更新（commit `259b6b2`）
+- **Item 2**: `tests/conftest.py` 7 箇所 + `tests/test_rw_light.py` 2 箇所の docstring/コメント言及を新モジュール参照に同期（commit `5a5df6c`）
+- **Item 3**: `.kiro/steering/structure.md` + `tech.md` を 6 モジュール構成に同期（commit `23bad66`）
 
-### 2. Option X の適用範囲（docstring 保持）
+### rw-light-rename の起票背景
 
-実装中は「テストロジック不変」原則により test 側の docstring/comment 内の `rw_light.<old>` 言及を保持した。これは pytest 動作に影響しないため。一方、ソース側（scripts/）の docstring/comment は strict 完了検証 grep 要件のため修飾形式に書き換えた。docs 同期 Follow-up で最終整合を取る。
+Item 3 完了直後、ユーザが `rw_light.py` のファイル名と実体の意味的乖離を指摘。検討の結果、Option B (破壊的変更 + `rw init --reinstall-symlink` サブフラグ) で別スペックを起票する方針で合意。既存 Vault 実体がないため破壊的変更を許容。feature name = `rw-light-rename`、new file name = `rw_cli.py` で確定。
 
-### 3. `_strip_code_block` の duplicate 方針
+### 決定事項
 
-DAG 維持のため audit と query の両方に 11 行 duplicate を配置。将来的に `rw_prompt_engine` または `rw_utils` への統合移動を検討可能だが、module-split スペック内では boundary 外のため見送り。
-
-### 4. macOS BSD sed の word boundary 非対応
-
-`\b` が BSD sed で使えないため、機械置換には Python ワンライナーもしくは Edit tool を使用した。次回同様の置換タスクでは `gsed` インストールを検討可能。
+1. **Feature name**: `rw-light-rename`（後世に「`rw_light.py` の名前を変えた変更」と辿れる）
+2. **新ファイル名**: `rw_cli.py`（他 5 モジュールとの `rw_` 接頭辞一貫性、責務明示）
+3. **既存 Vault 互換性**: Option B（`rw init --reinstall-symlink` 提供、破壊的変更を許容）
+4. **Re-export policy**: Req 1.3 (re-export ゼロ) 維持 — bridge ファイルは残さない
+5. **pytest ゲート**: 641 passed + 1 skipped = 642 collected を維持（module-split 完了時と同値）
 
 ---
 
