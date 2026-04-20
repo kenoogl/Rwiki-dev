@@ -260,3 +260,181 @@ class TestVaultVocabularyValidation:
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     assert "[vault-validation] path escape detected" in captured.err
+
+
+# ---------------------------------------------------------------------------
+# Task 1.4: Vault validation フック + escape hatch + severity prefix + e2e drift
+# ---------------------------------------------------------------------------
+
+def _setup_minimal_vault(vault_path: Path) -> None:
+  """load_task_prompts("audit") が通るための最小 Vault 構造を作成する。
+
+  CLAUDE.md に audit のみのマッピング行を持たせ、
+  AGENTS/audit.md + ダミー policy ファイルを用意する。
+  """
+  # AGENTS/ ディレクトリ確認（tmp_vault は既に持っているが念のため）
+  agents_dir = vault_path / "AGENTS"
+  agents_dir.mkdir(parents=True, exist_ok=True)
+
+  # AGENTS/page_policy.md が無ければダミー作成
+  (agents_dir / "page_policy.md").write_text("# page_policy\n", encoding="utf-8")
+
+  # CLAUDE.md: audit のみのマッピング表
+  claude_md = vault_path / "CLAUDE.md"
+  claude_md.write_text(
+    "# CLAUDE.md\n\n"
+    "| Task | Agent | Policy | Execution Mode |\n"
+    "|------|-------|--------|----------------|\n"
+    "| audit | AGENTS/audit.md | AGENTS/page_policy.md | CLI (Hybrid) |\n",
+    encoding="utf-8",
+  )
+
+  # logs/ ディレクトリ（generate_audit_report が必要）
+  (vault_path / "logs").mkdir(parents=True, exist_ok=True)
+
+  # wiki/ ディレクトリ + 最小 .md ファイル（validate_wiki_dir + read_all_wiki_content が必要）
+  wiki_dir = vault_path / "wiki"
+  wiki_dir.mkdir(parents=True, exist_ok=True)
+  (wiki_dir / "test-page.md").write_text("# Test Page\n", encoding="utf-8")
+
+
+class TestTask14VaultValidationHook:
+  """Task 1.4: load_task_prompts の audit フック + skip + build_audit_prompt prefix + e2e drift。"""
+
+  # ------------------------------------------------------------------
+  # test_vault_validation_hook
+  # ------------------------------------------------------------------
+  def test_vault_validation_hook(
+    self, tmp_vault: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+    """load_task_prompts(task_name='audit') が _validate_agents_severity_vocabulary を呼ぶこと。"""
+    _setup_minimal_vault(tmp_vault)
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_vault))
+    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_vault / "AGENTS"))
+
+    calls: list[Path] = []
+
+    def mock_validate(p: Path) -> None:
+      calls.append(p)
+
+    monkeypatch.setattr(rw_light, "_validate_agents_severity_vocabulary", mock_validate)
+
+    # load_task_prompts("audit") を呼ぶと _validate_agents_severity_vocabulary が 1 回呼ばれる
+    rw_light.load_task_prompts("audit")
+
+    assert len(calls) == 1, f"_validate_agents_severity_vocabulary が呼ばれなかった: calls={calls}"
+    assert calls[0] == tmp_vault / "AGENTS" / "audit.md"
+
+  # ------------------------------------------------------------------
+  # test_skip_vault_validation_flag
+  # ------------------------------------------------------------------
+  def test_skip_vault_validation_flag(
+    self,
+    deprecated_agents_vault: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture,
+  ) -> None:
+    """skip_vault_validation=True の場合、旧語彙があっても SystemExit せず警告を出すこと。"""
+    _setup_minimal_vault(deprecated_agents_vault)
+    # deprecated_agents_vault の AGENTS/audit.md は旧語彙を含む（上書きせずそのまま使う）
+    # _setup_minimal_vault は audit.md を上書きしないため、旧語彙のまま残る
+    monkeypatch.setattr(rw_light, "ROOT", str(deprecated_agents_vault))
+    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(deprecated_agents_vault / "AGENTS"))
+
+    # skip_vault_validation=True で呼ぶと SystemExit しない
+    result = rw_light.load_task_prompts("audit", skip_vault_validation=True)
+    assert isinstance(result, str)
+
+    # stderr に [vault-validation] SKIPPED 警告が出ること
+    captured = capsys.readouterr()
+    assert "[vault-validation] SKIPPED" in captured.err
+
+  # ------------------------------------------------------------------
+  # test_build_audit_prompt_severity_prefix
+  # ------------------------------------------------------------------
+  def test_build_audit_prompt_severity_prefix(
+    self, tmp_vault: Path, monkeypatch: pytest.MonkeyPatch
+  ) -> None:
+    """build_audit_prompt() がプロンプトの先頭に Severity Vocabulary (STRICT) ブロックを挿入すること。"""
+    task_prompts = "# audit task prompts\n"
+    wiki_content = "# wiki\n"
+
+    prompt = rw_light.build_audit_prompt("monthly", task_prompts, wiki_content)
+
+    assert prompt.startswith(
+      "## Severity Vocabulary (STRICT)\n"
+    ), f"プロンプトが Severity Vocabulary ブロックで始まっていない: {prompt[:100]!r}"
+    assert "CRITICAL" in prompt
+    assert "ERROR" in prompt
+    assert "WARN" in prompt
+    assert "INFO" in prompt
+    assert "HIGH" in prompt  # "Do NOT use deprecated tokens: HIGH, ..." の記述
+    assert "deprecated" in prompt.lower()
+
+  # ------------------------------------------------------------------
+  # test_claude_mock_drift_visibility_e2e (AC 7.10)
+  # ------------------------------------------------------------------
+  def test_claude_mock_drift_visibility_e2e(
+    self,
+    tmp_vault: Path,
+    claude_mock_response: "Callable[[str], None]",
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture,
+  ) -> None:
+    """Claude が HIGH severity を返したとき drift が可視化されること（AC 7.10）。
+
+    検証項目:
+    (i)  stderr に少なくとも 1 行の [severity-drift] 警告行があること
+    (ii) audit output が drift_events[] セクションを含む、または finding が INFO に降格されること
+    (iii) 終了コードが 0 または 2 であること（audit は drift で中断しない）
+    (iv) drift finding は破棄されず保持されること
+    """
+    _setup_minimal_vault(tmp_vault)
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_vault))
+    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_vault / "AGENTS"))
+    monkeypatch.setattr(rw_light, "WIKI", str(tmp_vault / "wiki"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_vault / "logs"))
+    monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_vault / "CLAUDE.md"))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_vault / "index.md"))
+    monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_vault / "log.md"))
+    # git dirty チェックをスキップ（テスト環境では git 操作が不要）
+    monkeypatch.setattr(rw_light, "warn_if_dirty_paths", lambda paths, cmd: None)
+
+    # Claude CLI が HIGH severity を含む findings を返す
+    claude_response = (
+      '{"findings": ['
+      '{"severity": "HIGH", "category": "contradicting_definition",'
+      ' "page": "test.md", "message": "drift test finding", "marker": "CONFLICT"}'
+      '], "metrics": {"pages_scanned": 1, "total_findings": 1},'
+      ' "recommended_actions": ["fix it"]}'
+    )
+    claude_mock_response(claude_response)
+
+    # _validate_agents_severity_vocabulary をスキップ（vault validation は別テストで検証済み）
+    monkeypatch.setattr(rw_light, "_validate_agents_severity_vocabulary", lambda p: None)
+
+    # _run_llm_audit を直接呼ぶ（--skip-vault-validation 相当）
+    exit_code = rw_light._run_llm_audit("monthly", ["--skip-vault-validation"])
+
+    captured = capsys.readouterr()
+
+    # (i) stderr に [severity-drift] 警告が少なくとも 1 行あること
+    assert "[severity-drift]" in captured.err, (
+      f"stderr に [severity-drift] が見つからない:\n{captured.err}"
+    )
+
+    # (ii) drift_events または INFO 降格の証拠
+    # finding が INFO に降格されているか、stdout に drift 関連の出力があること
+    # stdout を確認: print_audit_summary が呼ばれる
+    combined_output = captured.out + captured.err
+    # HIGH は INFO に降格されるため、severity=INFO の finding が保持されること
+    assert "HIGH" in combined_output or "drift" in combined_output.lower(), (
+      f"drift の痕跡が出力に見つからない:\nstdout={captured.out}\nstderr={captured.err}"
+    )
+
+    # (iii) 終了コードが 0 または 2 であること（audit は drift で中断しない）
+    assert exit_code in (0, 2), f"終了コードが 0 または 2 でない: {exit_code}"
+
+    # (iv) finding が保持されること（ログファイルに drift finding が書き込まれる）
+    log_files = list((tmp_vault / "logs").glob("audit-monthly-*.md"))
+    assert log_files, "audit レポートファイルが生成されていない"

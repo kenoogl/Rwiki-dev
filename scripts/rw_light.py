@@ -843,7 +843,7 @@ def parse_agent_mapping(claude_md_path: str) -> dict[str, dict[str, Any]]:
     return mapping
 
 
-def load_task_prompts(task_name: str) -> str:
+def load_task_prompts(task_name: str, *, skip_vault_validation: bool = False) -> str:
     """タスクに必要なエージェント+ポリシーを CLAUDE.md マッピングに基づいて読み込み、結合して返す。
 
     手順:
@@ -851,6 +851,16 @@ def load_task_prompts(task_name: str) -> str:
     2. task_name に対応するエージェントファイルを読み込む
     3. 対応するポリシーを全て読み込む
     4. エージェント + ポリシーを結合して返す
+
+    audit タスクの場合は _validate_agents_severity_vocabulary() を呼び出して
+    AGENTS/audit.md の severity 語彙を検証する。
+    skip_vault_validation=True の場合はこの検証をスキップし、
+    "[vault-validation] SKIPPED ..." 警告を stderr に出力する。
+
+    Args:
+        task_name: タスク名（"audit", "query_extract" 等）
+        skip_vault_validation: True の場合、audit の vault 語彙検証をスキップする。
+            RW_SKIP_VAULT_VALIDATION=1 環境変数でも同等の効果。
 
     Raises:
         ValueError: task_name がマッピング表に存在しない場合
@@ -878,6 +888,18 @@ def load_task_prompts(task_name: str) -> str:
             raise FileNotFoundError(
                 f"ポリシーファイルが見つかりません: {pol_path}"
             )
+
+    # audit タスクの場合は severity 語彙を検証する（Req 6.5, 7.9）
+    if task_name == "audit":
+        _env_skip = os.environ.get("RW_SKIP_VAULT_VALIDATION") == "1"
+        if skip_vault_validation or _env_skip:
+            sys.stderr.write(
+                "[vault-validation] SKIPPED (--skip-vault-validation or"
+                " RW_SKIP_VAULT_VALIDATION=1 set)."
+                " Drift 3-layer defense weakened.\n"
+            )
+        else:
+            _validate_agents_severity_vocabulary(Path(AGENTS_DIR) / "audit.md")
 
     parts: list[str] = [read_text(agent_path)]
     for pol_path in policy_paths:
@@ -1694,11 +1716,16 @@ def run_weekly_checks(
 
 
 def map_severity(claude_severity: str) -> tuple[str, str]:
-  """AGENTS/audit.md の4段階 severity を CLI 3水準にマッピングする。
+  """AGENTS/audit.md の severity を CLI 3水準にマッピングする。
+
+  新語彙（CRITICAL/ERROR/WARN/INFO）と旧語彙（HIGH/MEDIUM/LOW）の両方をサポートする。
+  旧語彙は後方互換のためマッピングを保持するが、parse_audit_response で
+  _normalize_severity_token により INFO に降格されるため、通常は新語彙が渡される。
 
   Args:
-      claude_severity: Claude が返す severity 文字列
-          ("CRITICAL" | "HIGH" | "MEDIUM" | "LOW")
+      claude_severity: severity 文字列
+          新語彙: "CRITICAL" | "ERROR" | "WARN" | "INFO"
+          旧語彙（後方互換）: "HIGH" | "MEDIUM" | "LOW"
   Returns:
       (cli_severity, sub_severity) のタプル。
       sub_severity は空文字列で「なし」を表現。
@@ -1706,6 +1733,12 @@ def map_severity(claude_severity: str) -> tuple[str, str]:
   """
   if claude_severity == "CRITICAL":
     return ("ERROR", "CRITICAL")
+  elif claude_severity == "ERROR":
+    return ("ERROR", "")
+  elif claude_severity == "WARN":
+    return ("WARN", "")
+  elif claude_severity == "INFO":
+    return ("INFO", "")
   elif claude_severity == "HIGH":
     return ("ERROR", "HIGH")
   elif claude_severity == "MEDIUM":
@@ -1933,6 +1966,15 @@ def build_audit_prompt(tier: str, task_prompts: str, wiki_content: str) -> str:
   """
   parts: list[str] = []
 
+  # 0. Severity Vocabulary (STRICT) prefix — Req 8.5, 8.6
+  severity_vocab_prefix = (
+    "## Severity Vocabulary (STRICT)\n\n"
+    "Use ONLY these severity tokens: CRITICAL, ERROR, WARN, INFO.\n"
+    "Do NOT use deprecated tokens: HIGH, MEDIUM, LOW.\n"
+    "Any deviation will be flagged as drift in post-processing.\n\n"
+  )
+  parts.append(severity_vocab_prefix)
+
   # 1. タスクプロンプト（AGENTS/audit.md + ポリシー）— Req 10.1
   parts.append(task_prompts)
 
@@ -2044,12 +2086,13 @@ def parse_audit_response(response: str) -> dict:
   スキーマ検証（プロンプトインジェクション・モデル幻覚への防御）:
   1. トップレベル必須キー: "findings"（list）, "metrics"（dict）, "recommended_actions"（list）
   2. 各 finding の必須キー: "severity"（str）, "page"（str or None）, "message"（str）
-  3. severity の値が CRITICAL / HIGH / MEDIUM / LOW のいずれかであること
+  3. severity の値が CRITICAL / ERROR / WARN / INFO（新 4 水準）のいずれかであること。
+     旧語彙（HIGH/MEDIUM/LOW 等）は _normalize_severity_token() で drift として記録し、
+     INFO に降格して finding を保持する（破棄しない）。
   4. finding.message に改行が含まれる場合は空白に置換する
   5. finding.marker / finding.page が JSON null の場合は空文字列 "" に変換する
 
-  検証失敗時: severity が不正値の場合は当該 finding をスキップし [WARN] を標準出力に表示。
-  finding の必須キー欠落も finding をスキップして [WARN] を標準出力に表示。
+  検証失敗時: finding 必須キー欠落の場合は当該 finding をスキップして [WARN] を標準出力に表示。
   トップレベルキー欠落・型不一致の場合は ValueError を raise。
 
   パース失敗時は ValueError を raise。
@@ -2058,12 +2101,13 @@ def parse_audit_response(response: str) -> dict:
       response: Claude CLI のレスポンス文字列（JSON または ```json...``` 形式）
 
   Returns:
-      {"findings": [...], "metrics": {...}, "recommended_actions": [...]} の dict
+      {"findings": [...], "metrics": {...}, "recommended_actions": [...],
+       "drift_events": [...]} の dict
+      drift_events は severity drift があった場合のみ含まれる（Req 1.9, 7.10）
 
   Raises:
       ValueError: 不正な JSON またはトップレベルスキーマ違反の場合
   """
-  _VALID_SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
   _FINDING_REQUIRED_KEYS = ("severity", "page", "message")
 
   # コードブロック除去 + JSON パース
@@ -2087,6 +2131,9 @@ def parse_audit_response(response: str) -> dict:
       "audit レスポンスに必須フィールドが欠落または型不一致です: recommended_actions（list が必要）"
     )
 
+  # drift イベント収集バッファ（Req 1.9, 7.10）
+  drift_sink: list[dict] = []
+
   # ステップ 2-5: finding ごとの検証と変換
   valid_findings: list[dict] = []
   for finding in data["findings"]:
@@ -2098,17 +2145,22 @@ def parse_audit_response(response: str) -> dict:
       )
       continue
 
-    # ステップ 3: severity 値検証
-    severity = finding.get("severity")
-    if severity not in _VALID_SEVERITIES:
-      print(
-        f"[WARN] audit finding の severity が不正値のためスキップします: {severity!r}"
-        f"（有効値: {', '.join(sorted(_VALID_SEVERITIES))}）"
-      )
-      continue
-
     # コピーして変換処理（元の dict を破壊しない）
     f = dict(finding)
+
+    # ステップ 3: severity 正規化（drift トークンは INFO に降格して保持）
+    severity_raw = f.get("severity")
+    page_ctx = f.get("page") or ""
+    severity = _normalize_severity_token(
+      severity_raw,
+      source_context={
+        "context": f"audit finding (page={page_ctx})",
+        "source_field": "severity",
+        "location": page_ctx,
+      },
+      drift_sink=drift_sink,
+    )
+    f["severity"] = severity
 
     # ステップ 4: message の改行→空白置換
     if "message" in f and f["message"]:
@@ -2122,11 +2174,14 @@ def parse_audit_response(response: str) -> dict:
 
     valid_findings.append(f)
 
-  return {
+  result: dict = {
     "findings": valid_findings,
     "metrics": data["metrics"],
     "recommended_actions": data["recommended_actions"],
   }
+  if drift_sink:
+    result["drift_events"] = drift_sink
+  return result
 
 
 # audit: report engine
@@ -2484,12 +2539,16 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
 
   Args:
       tier: "monthly" | "quarterly"
-      args: オプション引数。`--timeout <秒>` でタイムアウトをオーバーライド（デフォルト 300）
+      args: オプション引数。
+          `--timeout <秒>` でタイムアウトをオーバーライド（デフォルト 300）
+          `--skip-vault-validation` で vault 語彙検証をスキップする。
+          RW_SKIP_VAULT_VALIDATION=1 環境変数でも同等の効果。
   Returns:
-      終了コード（0: ERROR なし, 1: ERROR あり）
+      終了コード（0: PASS, 1: FAIL, 2: PASS with drift）
   """
-  # 1. args から --timeout パース（デフォルト 300）
+  # 1. args から --timeout と --skip-vault-validation をパース
   timeout = 300
+  skip_vault_validation = os.environ.get("RW_SKIP_VAULT_VALIDATION") == "1"
   i = 0
   while i < len(args):
     if args[i] == "--timeout" and i + 1 < len(args):
@@ -2499,6 +2558,9 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
         print(f"[ERROR] --timeout の値が不正です: {args[i + 1]}")
         return 1
       i += 2
+    elif args[i] == "--skip-vault-validation":
+      skip_vault_validation = True
+      i += 1
     else:
       i += 1
 
@@ -2515,8 +2577,9 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
     return 1
 
   # 4. load_task_prompts("audit") で AGENTS/audit.md + ポリシーファイルを読み込む
+  # skip_vault_validation を渡す（Req 6.5, 7.9）
   try:
-    task_prompts = load_task_prompts("audit")
+    task_prompts = load_task_prompts("audit", skip_vault_validation=skip_vault_validation)
   except (ValueError, FileNotFoundError) as e:
     print(f"[ERROR] load_task_prompts 失敗: {e}")
     return 1

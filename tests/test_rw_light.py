@@ -1104,7 +1104,7 @@ class TestCmdQueryExtract:
         # wiki/ を削除
         import shutil
         shutil.rmtree(str(tmp_path / "wiki"))
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
         result = rw_light.cmd_query_extract(["test question"])
         assert result == 1
@@ -1121,7 +1121,7 @@ class TestCmdQueryExtract:
         """同一 query_id ディレクトリが既存 → return 1"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
 
         # 事前に同一 query_id ディレクトリを作成
@@ -1135,7 +1135,7 @@ class TestCmdQueryExtract:
         """成功パス: 4ファイルが review/query/<query_id>/ に作成されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
 
         result = rw_light.cmd_query_extract(["test question"])
@@ -1156,7 +1156,7 @@ class TestCmdQueryExtract:
         """--scope 引数が正しく解析されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
 
         scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
         called_scopes = []
@@ -1173,7 +1173,7 @@ class TestCmdQueryExtract:
         """--type 引数が正しく解析されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
 
         result = rw_light.cmd_query_extract(["test question", "--type", "fact"])
@@ -1183,7 +1183,7 @@ class TestCmdQueryExtract:
         """ファイル数>20 かつ scope=None の場合: 2段階方式が呼び出されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
 
         # wiki/ に 21 ファイル追加
         wiki_dir = tmp_path / "wiki"
@@ -1215,7 +1215,7 @@ class TestCmdQueryExtract:
         """lint status=FAIL の場合: return 2"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
 
         # lint_single_query_dir を FAIL を返すモックに差し替え
@@ -1238,7 +1238,7 @@ class TestCmdQueryExtract:
         """lint status=PASS の場合: return 0"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
 
         # lint_single_query_dir を PASS を返すモックに差し替え
@@ -1339,7 +1339,7 @@ class TestCmdQueryAnswer:
     def test_success_returns_0(self, tmp_path, monkeypatch):
         """成功パス: return 0 かつ review/query/ にファイルが生成されないこと"""
         _, review_query_dir = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
 
         result = rw_light.cmd_query_answer(["test question"])
@@ -1348,7 +1348,7 @@ class TestCmdQueryAnswer:
     def test_success_no_file_created_in_query_review(self, tmp_path, monkeypatch):
         """成功パス: review/query/ にファイルが生成されないこと（Req 2.3）"""
         _, review_query_dir = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
@@ -1360,7 +1360,7 @@ class TestCmdQueryAnswer:
     def test_success_stdout_contains_answer_text(self, tmp_path, monkeypatch, capsys):
         """成功パス: stdout に回答テキストが含まれること"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
@@ -1372,7 +1372,7 @@ class TestCmdQueryAnswer:
     def test_success_stdout_contains_referenced_pages(self, tmp_path, monkeypatch, capsys):
         """成功パス: stdout に参照ページ（Referenced: セクション）が含まれること"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
@@ -1384,7 +1384,7 @@ class TestCmdQueryAnswer:
     def test_response_without_referenced_section_still_returns_0(self, tmp_path, monkeypatch, capsys):
         """---\\nReferenced: セパレータなし → 全体を回答として出力し return 0"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         no_ref_response = "This is an answer without referenced section."
         monkeypatch.setattr(rw_light, "call_claude", lambda p: no_ref_response)
 
@@ -1397,7 +1397,7 @@ class TestCmdQueryAnswer:
     def test_scope_option_passes_to_read_wiki_content(self, tmp_path, monkeypatch):
         """--scope オプションが read_wiki_content に渡されること"""
         _, _ = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
 
         scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
@@ -1545,7 +1545,7 @@ class TestCmdQueryFix:
     def test_success_fix_returns_0(self, tmp_path, monkeypatch):
         """lint FAIL → fix → post-fix PASS → return 0"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
 
         lint_call_count = [0]
@@ -1580,7 +1580,7 @@ class TestCmdQueryFix:
     def test_non_none_files_written_none_skipped(self, tmp_path, monkeypatch):
         """non-None ファイルは書き出され、None ファイルはスキップされること (Req 5.2)"""
         _, _, query_id, query_dir = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
 
         original_answer_content = (query_dir / "question.md").read_text(encoding="utf-8")
@@ -1609,7 +1609,7 @@ class TestCmdQueryFix:
     def test_skipped_items_reported(self, tmp_path, monkeypatch, capsys):
         """skipped 項目が報告されること"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
 
         fix_response_with_skipped = json.dumps({
             "fixes": [{"file": "answer.md", "ql_code": "QL006", "action": "expanded content"}],
@@ -1642,7 +1642,7 @@ class TestCmdQueryFix:
     def test_post_fix_lint_fail_returns_2(self, tmp_path, monkeypatch):
         """post-fix lint FAIL → return 2 (Req 3.8, 3.9)"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
 
         def mock_lint(_query_dir, **kwargs):
@@ -1663,7 +1663,7 @@ class TestCmdQueryFix:
     def test_no_files_written_to_wiki(self, tmp_path, monkeypatch):
         """wiki/ ディレクトリには何も書き出されないこと (Req 5.2)"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task: "mock prompts")
+        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
 
         wiki_dir = tmp_path / "wiki"
@@ -4400,10 +4400,11 @@ class TestParseAuditResponse:
     assert "recommended_actions" in result
 
   def test_valid_json_findings_preserved(self):
-    """正常 JSON の findings が保持されること"""
+    """正常 JSON の findings が保持されること（HIGH は drift → INFO に降格）"""
     result = rw_light.parse_audit_response(self._to_json(self.VALID_MONTHLY))
     assert len(result["findings"]) == 1
-    assert result["findings"][0]["severity"] == "HIGH"
+    # HIGH は旧語彙のため drift → INFO に降格（finding は保持される）
+    assert result["findings"][0]["severity"] == "INFO"
     assert result["findings"][0]["page"] == "concepts/my-concept.md"
 
   def test_code_block_stripped(self):
@@ -4414,8 +4415,9 @@ class TestParseAuditResponse:
     assert len(result["findings"]) == 1
 
   def test_all_severity_values_accepted(self):
-    """CRITICAL / HIGH / MEDIUM / LOW の全 severity が受け入れられること"""
-    for sev in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+    """全 severity トークンで finding が保持されること（旧語彙は drift → INFO 降格）"""
+    # 新語彙はそのまま保持
+    for sev in ("CRITICAL", "ERROR", "WARN", "INFO"):
       data = {
         "findings": [
           {
@@ -4430,6 +4432,24 @@ class TestParseAuditResponse:
       }
       result = rw_light.parse_audit_response(self._to_json(data))
       assert len(result["findings"]) == 1, f"severity={sev} で finding が消えた"
+      assert result["findings"][0]["severity"] == sev, f"severity={sev} が変更された"
+    # 旧語彙は drift → INFO に降格（finding は保持）
+    for sev in ("HIGH", "MEDIUM", "LOW"):
+      data = {
+        "findings": [
+          {
+            "severity": sev,
+            "category": "test",
+            "page": "test.md",
+            "message": "test message",
+          }
+        ],
+        "metrics": {"pages_scanned": 1, "total_findings": 1},
+        "recommended_actions": [],
+      }
+      result = rw_light.parse_audit_response(self._to_json(data))
+      assert len(result["findings"]) == 1, f"severity={sev} で finding が消えた（drift でも保持されるべき）"
+      assert result["findings"][0]["severity"] == "INFO", f"severity={sev} が INFO に降格されなかった"
 
   # ── 改行含み message ─────────────────────────────────────────
 
@@ -4509,7 +4529,7 @@ class TestParseAuditResponse:
   # ── 不正 severity: スキップ ──────────────────────────────────
 
   def test_invalid_severity_finding_skipped(self):
-    """不正 severity の finding はスキップされること"""
+    """不正 severity の finding は drift → INFO 降格で保持されること（スキップしない）"""
     data = {
       "findings": [
         {
@@ -4529,12 +4549,12 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     result = rw_light.parse_audit_response(self._to_json(data))
-    # 不正 severity はスキップされ、有効な finding のみが残る
-    assert len(result["findings"]) == 1
-    assert result["findings"][0]["severity"] == "HIGH"
+    # 両方とも drift → INFO に降格されて保持される（スキップされない）
+    assert len(result["findings"]) == 2
+    assert all(f["severity"] == "INFO" for f in result["findings"])
 
   def test_invalid_severity_prints_warn(self, capsys):
-    """不正 severity の finding をスキップする際に [WARN] を表示すること"""
+    """不正 severity の finding は drift 警告を stderr に出力すること"""
     data = {
       "findings": [
         {
@@ -4547,12 +4567,16 @@ class TestParseAuditResponse:
       "metrics": {"pages_scanned": 1, "total_findings": 1},
       "recommended_actions": [],
     }
-    rw_light.parse_audit_response(self._to_json(data))
+    result = rw_light.parse_audit_response(self._to_json(data))
     captured = capsys.readouterr()
-    assert "[WARN]" in captured.out
+    # drift 警告は stderr に [severity-drift] として出力される
+    assert "[severity-drift]" in captured.err
+    # finding は破棄されず INFO に降格されて保持される
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "INFO"
 
   def test_all_invalid_severity_returns_empty_findings(self):
-    """全ての finding が不正 severity の場合は空リストが返ること"""
+    """不正 severity の finding は drift → INFO 降格で保持されること（空リストにならない）"""
     data = {
       "findings": [
         {
@@ -4566,7 +4590,9 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     result = rw_light.parse_audit_response(self._to_json(data))
-    assert result["findings"] == []
+    # drift → INFO 降格で finding は保持される
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "INFO"
 
   # ── 不正スキーマ: ValueError ────────────────────────────────
 
@@ -4642,7 +4668,7 @@ class TestParseAuditResponse:
   # ── finding 必須キー欠落: スキップ or ValueError ──────────────
 
   def test_finding_missing_severity_skipped(self):
-    """finding に severity キーが欠落している場合はスキップされること"""
+    """finding に severity キーが欠落している場合はスキップされること（severity なしは必須キー欠落）"""
     data = {
       "findings": [
         {
@@ -4661,11 +4687,12 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     result = rw_light.parse_audit_response(self._to_json(data))
+    # severity キー欠落の finding はスキップ、LOW は drift → INFO に降格されて保持
     assert len(result["findings"]) == 1
-    assert result["findings"][0]["severity"] == "LOW"
+    assert result["findings"][0]["severity"] == "INFO"
 
   def test_finding_missing_page_skipped(self):
-    """finding に page キーが欠落している場合はスキップされること"""
+    """finding に page キーが欠落している場合はスキップされること（page は必須キー）"""
     data = {
       "findings": [
         {
@@ -4684,11 +4711,12 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     result = rw_light.parse_audit_response(self._to_json(data))
+    # page キー欠落の finding はスキップ、LOW は drift → INFO に降格されて保持
     assert len(result["findings"]) == 1
-    assert result["findings"][0]["severity"] == "LOW"
+    assert result["findings"][0]["severity"] == "INFO"
 
   def test_finding_missing_message_skipped(self):
-    """finding に message キーが欠落している場合はスキップされること"""
+    """finding に message キーが欠落している場合はスキップされること（message は必須キー）"""
     data = {
       "findings": [
         {
@@ -4707,8 +4735,9 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     result = rw_light.parse_audit_response(self._to_json(data))
+    # message キー欠落の finding はスキップ、LOW は drift → INFO に降格されて保持
     assert len(result["findings"]) == 1
-    assert result["findings"][0]["severity"] == "LOW"
+    assert result["findings"][0]["severity"] == "INFO"
 
   # ── 返却値の構造確認 ────────────────────────────────────────
 
@@ -5605,11 +5634,11 @@ def _setup_vault_for_llm_audit(tmp_path, monkeypatch):
 
 
 def _make_valid_monthly_response():
-  """有効な monthly JSON レスポンスを返す。"""
+  """有効な monthly JSON レスポンスを返す（新語彙 ERROR を使用）。"""
   return json.dumps({
     "findings": [
       {
-        "severity": "HIGH",
+        "severity": "ERROR",
         "category": "contradicting_definition",
         "page": "page-00.md",
         "message": "page-a.md と page-b.md で定義が矛盾している",
@@ -5629,11 +5658,11 @@ def _make_valid_monthly_response():
 
 
 def _make_valid_quarterly_response():
-  """有効な quarterly JSON レスポンスを返す。"""
+  """有効な quarterly JSON レスポンスを返す（新語彙 WARN を使用）。"""
   return json.dumps({
     "findings": [
       {
-        "severity": "MEDIUM",
+        "severity": "WARN",
         "category": "coverage_gap",
         "page": "",
         "message": "synthesis ページが不足している",
@@ -5687,7 +5716,7 @@ class TestRunLlmAudit:
       "recommended_actions": ["記述を明確にする"],
     })
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: warn_response)
 
@@ -5697,29 +5726,29 @@ class TestRunLlmAudit:
   def test_monthly_returns_1_on_error(self, tmp_path, monkeypatch):
     """monthly: ERROR finding がある場合 return 1 であること（Req 3.7）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     result = rw_light.cmd_audit_monthly([])
-    # HIGH → ERROR へマッピングされるので return 1
+    # ERROR finding があるので return 1
     assert result == 1
 
   def test_quarterly_returns_0_on_no_error(self, tmp_path, monkeypatch):
-    """quarterly: ERROR なし（MEDIUM のみ）の場合 return 0 であること（Req 4.4）"""
+    """quarterly: ERROR なし（WARN のみ）の場合 return 0 であること（Req 4.4）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
 
     result = rw_light.cmd_audit_quarterly([])
-    # MEDIUM → WARN にマッピングされるので ERROR なし → return 0
+    # WARN finding のみで ERROR なし → return 0
     assert result == 0
 
   def test_raw_response_saved(self, tmp_path, monkeypatch):
     """Claude 生レスポンスが logs/audit-{tier}-{ts}-raw.txt に保存されること"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
@@ -5732,7 +5761,7 @@ class TestRunLlmAudit:
   def test_report_generated(self, tmp_path, monkeypatch):
     """レポートファイルが logs/audit-monthly-*.md として生成されること（Req 3.4）"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
@@ -5741,22 +5770,22 @@ class TestRunLlmAudit:
     assert len(report_files) == 1
 
   def test_severity_mapping_applied(self, tmp_path, monkeypatch):
-    """severity マッピング（HIGH → ERROR）が適用されてレポートに記載されること（Req 5.3）"""
+    """severity ERROR finding がレポートに記載されること（Req 5.3）"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     rw_light.cmd_audit_monthly([])
     report_files = list(logs_dir.glob("audit-monthly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
-    # HIGH → ERROR:HIGH にマッピングされること
+    # ERROR finding がレポートに含まれること
     assert "ERROR" in content
 
   def test_category_from_claude_response(self, tmp_path, monkeypatch):
     """Finding の category フィールドが Claude レスポンスの category から取得されること"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
@@ -5775,7 +5804,7 @@ class TestRunLlmAudit:
       called_with.append(timeout)
       return _make_valid_monthly_response()
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
 
@@ -5791,7 +5820,7 @@ class TestRunLlmAudit:
       called_with.append(timeout)
       return _make_valid_monthly_response()
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
 
@@ -5846,7 +5875,7 @@ class TestRunLlmAudit:
   def test_claude_failure_returns_1(self, tmp_path, monkeypatch, capsys):
     """Claude CLI 呼び出し失敗時 return 1 かつ [ERROR] 表示（Req 7.2）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude", lambda prompt, timeout=None: (_ for _ in ()).throw(RuntimeError("Claude 失敗"))
@@ -5860,7 +5889,7 @@ class TestRunLlmAudit:
   def test_parse_failure_returns_1_with_raw_path(self, tmp_path, monkeypatch, capsys):
     """パース失敗時 return 1 + raw ファイルパスが [INFO] 表示されること（Req 7.3）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: "not valid json {{{")
 
@@ -5874,7 +5903,7 @@ class TestRunLlmAudit:
   def test_processing_message_printed(self, tmp_path, monkeypatch, capsys):
     """処理中メッセージが標準出力に表示されること（Req 3.1, 4.1）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
@@ -5894,7 +5923,7 @@ class TestRunLlmAudit:
       tiers_used.append(tier)
       return orig_build(tier, task_prompts, wiki_content)
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "build_audit_prompt", capture_build)
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
@@ -5907,7 +5936,7 @@ class TestRunLlmAudit:
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
     prompts_called = []
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: (prompts_called.append(name), "task prompts")[1])
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: (prompts_called.append(name), "task prompts")[1])
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
@@ -5917,7 +5946,7 @@ class TestRunLlmAudit:
   def test_quarterly_report_generated(self, tmp_path, monkeypatch):
     """quarterly のレポートが logs/audit-quarterly-*.md として生成されること（Req 4.3）"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "task prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
 
@@ -6097,7 +6126,7 @@ class TestE2EAuditAllTiers:
   def test_monthly_generates_report_with_mock_claude(self, tmp_path, monkeypatch):
     """monthly が Claude CLI モック環境で JSON レスポンスをパースしレポートを生成する（Req 3.4）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",
@@ -6113,7 +6142,7 @@ class TestE2EAuditAllTiers:
   def test_monthly_raw_response_saved(self, tmp_path, monkeypatch):
     """monthly の raw レスポンスファイルが logs/ に保存される（Req 5.6 design）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",
@@ -6128,7 +6157,7 @@ class TestE2EAuditAllTiers:
   def test_monthly_report_in_logs_only(self, tmp_path, monkeypatch):
     """monthly のレポートが logs/ にのみ出力される（Req 5.6, 6.1-6.3）"""
     _, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",
@@ -6145,7 +6174,7 @@ class TestE2EAuditAllTiers:
   def test_quarterly_generates_report_with_mock_claude(self, tmp_path, monkeypatch):
     """quarterly が Claude CLI モック環境で quarterly レポートを生成する（Req 4.3）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",
@@ -6161,7 +6190,7 @@ class TestE2EAuditAllTiers:
   def test_quarterly_raw_response_saved(self, tmp_path, monkeypatch):
     """quarterly の raw レスポンスファイルが logs/ に保存される（Req 5.6 design）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",
@@ -6176,7 +6205,7 @@ class TestE2EAuditAllTiers:
   def test_quarterly_report_in_logs_only(self, tmp_path, monkeypatch):
     """quarterly のレポートが logs/ にのみ出力される（Req 5.6, 6.1-6.3）"""
     _, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",
@@ -6193,7 +6222,7 @@ class TestE2EAuditAllTiers:
   def test_readonly_wiki_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
     """全ティア実行後に wiki/ のファイルが変更されていない（Req 6.1）"""
     wiki_dir, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",
@@ -6219,7 +6248,7 @@ class TestE2EAuditAllTiers:
   def test_readonly_raw_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
     """全ティア実行後に raw/ のファイルが変更されていない（Req 6.2）"""
     _, _, raw_dir, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",
@@ -6241,7 +6270,7 @@ class TestE2EAuditAllTiers:
   def test_readonly_review_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
     """全ティア実行後に review/ のファイルが変更されていない（Req 6.3）"""
     _, _, _, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name: "audit prompts")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
     monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(
       rw_light, "call_claude",

@@ -35,7 +35,7 @@
   - _Requirements: 7.9, 8.6_
   - _Boundary: severity helpers_
 
-- [ ] 1.4 Vault validation の `load_task_prompts` フック + `--skip-vault-validation` escape hatch + `build_audit_prompt` severity prefix 挿入 + Claude mock drift 可視性 e2e テスト（TDD、AC 7.10 対応）
+- [x] 1.4 Vault validation の `load_task_prompts` フック + `--skip-vault-validation` escape hatch + `build_audit_prompt` severity prefix 挿入 + Claude mock drift 可視性 e2e テスト（TDD、AC 7.10 対応）
   - 先に `tests/test_audit.py` に test_vault_validation_hook / test_skip_vault_validation_flag / test_build_audit_prompt_severity_prefix / **test_claude_mock_drift_visibility_e2e** の 4 test を red で追加
   - `load_task_prompts()` L846-886 に `task_name == "audit"` 分岐で `_validate_agents_severity_vocabulary` を呼び出すフックを追加、`skip_vault_validation: bool = False` kwarg 受け入れ、audit subcommand の argparse から kwarg を伝播
   - audit subcommand の argparse に `--skip-vault-validation` flag を追加（環境変数 `RW_SKIP_VAULT_VALIDATION=1` との OR 結合）。strict mode 系 flag（`--strict-severity`）および dry-run mode flag（`--validate-vault-only`）は Y Cut で除外
@@ -334,3 +334,6 @@
   - 観察可能完了条件: Acceptance Smoke Test 7 ケースすべてが期待 exit code で完走、`pytest tests/` 全件 green、developer-guide.md §Acceptance Smoke Test に 7 ケース全てが runbook 形式で記載済（Task 3.1 で反映）、`spec.json` の `phase: "implementation-complete"` への移行準備完了
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10_
   - _Depends: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10_
+
+## Implementation Notes
+- **Task 1.4 先行実装**: `parse_audit_response()` の severity 正規化（`_normalize_severity_token` 呼出、旧語彙→INFO 降格、finding 保持、`drift_events[]` 追記）を task 1.4 で先行実装済み。task 1.8 は「4 段構造検証（非 dict 応答 → RuntimeError、findings 非 list、finding 非 dict → placeholder + drift_events）」および「missing key 補完」に集中すること。silent skip 廃止・severity coerce は既に完了。
