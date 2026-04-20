@@ -95,7 +95,7 @@
   - _Requirements: 6.5_
   - _Boundary: cmd_init_
 
-- [ ] 1.10 P1 atomic 完了ゲート: 統合 test 全件 green + pre-flight Vault 再デプロイ確認 + post-merge operator instruction 記載
+- [x] 1.10 P1 atomic 完了ゲート: 統合 test 全件 green + pre-flight Vault 再デプロイ確認 + post-merge operator instruction 記載
   - P1 の 9 sub-tasks（1.1-1.9）を 1 PR で完結、部分 merge 禁止（identity 化と Vault validation を分離すると旧 Vault + 新 runtime の silent drift が発生するため atomic 強制）
   - `tests/test_audit.py` / `tests/test_rw_light.py` が全件 green、`rw audit <tier>` の出力 severity 語彙が identity 化で新 4 水準を返す、Vault validation が deprecated Vault で `SystemExit(1)` abort、`rw init --force` が symlink 防御 + timestamp collision fallback で 5 fixture pass
   - **pre-flight 必須**: P1 PR 作成前に `rw init --force <vault-path>` を実行し、Vault AGENTS が新 template と同期していることを `rw audit weekly --skip-vault-validation` で確認（escape hatch で validation を bypass しつつ Claude 応答が新語彙で返ることを手動確認）。未実行の場合、本 P1 PR を merge すると既存 Vault の旧語彙で audit が `SystemExit(1)` abort する
