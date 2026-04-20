@@ -194,7 +194,7 @@
   - 完了状態: `scripts/rw_light.py` の行数が ~700 行程度に縮小、かつ全 6 モジュールが 1,500 行以内、残留関数本体に bare 移動済みシンボル参照が残っていない、テストにコード行として `rw_light.<移動済みシンボル>` の直接アクセス grep ヒット 0 件、rw_light.py 内に re-export 文ゼロ
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 6.1_
 
-- [ ] 6.2 全テスト green、CLI usage 表示、circular import 不在の最終検証
+- [x] 6.2 全テスト green、CLI usage 表示、circular import 不在の最終検証
   - `pytest tests/` を実行し、642 件以上が pass、failure 0、skip / xfail が分割前と同等以下であることを確認する（Req 5.1）
   - `python scripts/rw_light.py` を引数なしで実行し、分割前と同一の usage テキストが表示されることを確認する（Req 6.2）
   - `python scripts/rw_light.py audit micro --help` 等の代表的なサブコマンド起動でも import エラーが発生しないことを確認する
