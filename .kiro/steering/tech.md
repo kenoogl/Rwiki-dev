@@ -52,8 +52,9 @@
 - **フロントマター駆動**: メタデータ（date, source, tags, type, status）を Markdown フロントマターで管理
 - **JSON ログ**: lint/query 結果を構造化 JSON で出力（`logs/` ディレクトリ）
 - **AGENTS/ プロンプトシステム**: AI タスク別にモジュール化されたプロンプトテンプレート
+- **Prompt Engine（単一ソース原則）**: Claude CLI を呼ぶ新規コマンドは `AGENTS/{task}.md` + 関連ポリシーを動的ロードしてプロンプトを構築する（`rw_light.py` の `Prompt Engine` セクション）。CLI 側にプロンプトをハードコードせず、AGENTS/ を唯一のソースとする。既存 `synthesize-logs` の二重管理は段階的に解消予定
 
 ---
 _created_at: 2026-04-18_
-_updated_at: 2026-04-19_
-_change: test-suite 完了によるテスト構成（単一→マルチファイル）を反映_
+_updated_at: 2026-04-20_
+_change: Prompt Engine（AGENTS/ 動的ロードによる単一ソース原則）を Key Technical Decisions に追加_
