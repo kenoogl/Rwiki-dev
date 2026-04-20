@@ -10,77 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, NamedTuple
 
-ROOT = os.getcwd()
-
-RAW = os.path.join(ROOT, "raw")
-INCOMING = os.path.join(RAW, "incoming")
-LLM_LOGS = os.path.join(RAW, "llm_logs")
-
-REVIEW = os.path.join(ROOT, "review")
-SYNTH_CANDIDATES = os.path.join(REVIEW, "synthesis_candidates")
-QUERY_REVIEW = os.path.join(REVIEW, "query")
-
-WIKI = os.path.join(ROOT, "wiki")
-WIKI_SYNTH = os.path.join(WIKI, "synthesis")
-
-LOGDIR = os.path.join(ROOT, "logs")
-LINT_LOG = os.path.join(LOGDIR, "lint_latest.json")
-QUERY_LINT_LOG = os.path.join(LOGDIR, "query_lint_latest.json")
-
-INDEX_MD = os.path.join(ROOT, "index.md")
-CHANGE_LOG_MD = os.path.join(ROOT, "log.md")
-CLAUDE_MD = os.path.join(ROOT, "CLAUDE.md")
-AGENTS_DIR = os.path.join(ROOT, "AGENTS")
-
-ALLOWED_QUERY_TYPES = {"fact", "structure", "comparison", "why", "hypothesis"}
-
-INFERENCE_PATTERNS = [
-    r"考えられる",
-    r"示唆される",
-    r"推測される",
-    r"おそらく",
-    r"可能性がある",
-    r"と思われる",
-    r"\blikely\b",
-    r"\bsuggests?\b",
-    r"\bmay\b",
-    r"\bcould\b",
-]
-
-EVIDENCE_SOURCE_PATTERNS = [
-    r"^source\s*:",
-    r"^file\s*:",
-    r"^page\s*:",
-    r"^path\s*:",
-    r"\[\[.+\]\]",
-]
-
-VAULT_DIRS = [
-    "raw/incoming/articles",
-    "raw/incoming/papers/zotero",
-    "raw/incoming/papers/local",
-    "raw/incoming/meeting-notes",
-    "raw/incoming/code-snippets",
-    "raw/articles",
-    "raw/papers/zotero",
-    "raw/papers/local",
-    "raw/meeting-notes",
-    "raw/code-snippets",
-    "raw/llm_logs",
-    "review/synthesis_candidates",
-    "review/query",
-    "wiki/concepts",
-    "wiki/methods",
-    "wiki/projects",
-    "wiki/entities/people",
-    "wiki/entities/tools",
-    "wiki/synthesis",
-    "logs",
-    "scripts",
-    "AGENTS",
-]
-
-DEV_ROOT = str(Path(__file__).resolve().parent.parent)
+import rw_config
 
 
 # -------------------------
@@ -93,7 +23,7 @@ def is_existing_vault(path: str) -> bool:
 
 
 def ensure_dirs() -> None:
-    for d in [LOGDIR, SYNTH_CANDIDATES, WIKI_SYNTH, QUERY_REVIEW]:
+    for d in [rw_config.LOGDIR, rw_config.SYNTH_CANDIDATES, rw_config.WIKI_SYNTH, rw_config.QUERY_REVIEW]:
         os.makedirs(d, exist_ok=True)
 
 
@@ -119,7 +49,7 @@ def append_text(path: str, text: str) -> None:
 
 
 def relpath(path: str) -> str:
-    return os.path.relpath(path, ROOT)
+    return os.path.relpath(path, rw_config.ROOT)
 
 
 def today() -> str:
@@ -316,7 +246,7 @@ def git_commit(paths: list[str], message: str) -> None:
 # -------------------------
 def cmd_lint() -> int:
     ensure_dirs()
-    files = list_md_files(INCOMING)
+    files = list_md_files(rw_config.INCOMING)
 
     results = []
     severity_counts: dict[str, int] = {"critical": 0, "error": 0, "warn": 0, "info": 0}
@@ -369,13 +299,13 @@ def cmd_lint() -> int:
         "drift_events": [],
     }
 
-    write_text(LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    write_text(rw_config.LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
     sc = severity_counts
     print(
       f"\nlint: CRITICAL {sc['critical']}, ERROR {sc['error']},"
       f" WARN {sc['warn']}, INFO {sc['info']} — {run_status}"
     )
-    print(f"Log: {relpath(LINT_LOG)}")
+    print(f"Log: {relpath(rw_config.LINT_LOG)}")
 
     return _compute_exit_code(run_status, had_runtime_error=False)
 
@@ -384,16 +314,16 @@ def cmd_lint() -> int:
 # ingest
 # -------------------------
 def load_lint_summary() -> dict[str, Any]:
-    if not os.path.exists(LINT_LOG):
+    if not os.path.exists(rw_config.LINT_LOG):
         raise FileNotFoundError("lint log not found. run `rw lint` first.")
-    return json.loads(read_text(LINT_LOG))
+    return json.loads(read_text(rw_config.LINT_LOG))
 
 
 def plan_ingest_moves(files: list[str]) -> list[tuple[str, str]]:
     moves: list[tuple[str, str]] = []
     for path in files:
-        relative = os.path.relpath(path, INCOMING)
-        target = os.path.join(RAW, relative)
+        relative = os.path.relpath(path, rw_config.INCOMING)
+        target = os.path.join(rw_config.RAW, relative)
         if os.path.exists(target):
             raise RuntimeError(f"conflict: {target} already exists")
         moves.append((path, target))
@@ -424,7 +354,7 @@ def cmd_ingest() -> int:
         print("FAIL exists in lint_latest.json. abort ingest.", file=sys.stderr)
         return 1
 
-    files = list_md_files(INCOMING)
+    files = list_md_files(rw_config.INCOMING)
     if not files:
         print("No files found in raw/incoming/")
         return 0
@@ -546,14 +476,14 @@ def render_candidate_note(topic: dict[str, Any], source_rel: str) -> str:
 
 
 def candidate_note_path(title: str) -> str:
-    return os.path.join(SYNTH_CANDIDATES, f"{slugify(title)}.md")
+    return os.path.join(rw_config.SYNTH_CANDIDATES, f"{slugify(title)}.md")
 
 
 def cmd_synthesize_logs() -> int:
     ensure_dirs()
     warn_if_dirty_paths(["raw/llm_logs"], "synthesize-logs")
 
-    log_files = list_md_files(LLM_LOGS)
+    log_files = list_md_files(rw_config.LLM_LOGS)
     if not log_files:
         print("No llm logs found in raw/llm_logs/")
         return 0
@@ -580,12 +510,12 @@ def cmd_synthesize_logs() -> int:
             print(f"[CANDIDATE] {relpath(path)}")
 
     if generated:
-        if not os.path.exists(CHANGE_LOG_MD):
-            write_text(CHANGE_LOG_MD, "# Log\n")
+        if not os.path.exists(rw_config.CHANGE_LOG_MD):
+            write_text(rw_config.CHANGE_LOG_MD, "# Log\n")
         body = f"\n## {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
         for g in generated:
             body += f"- synthesis candidate generated: {g}\n"
-        append_text(CHANGE_LOG_MD, body)
+        append_text(rw_config.CHANGE_LOG_MD, body)
 
     print(f"[DONE] generated {len(generated)} candidate notes")
     return 0
@@ -595,7 +525,7 @@ def cmd_synthesize_logs() -> int:
 # approve
 # -------------------------
 def candidate_files() -> list[str]:
-    return list_md_files(SYNTH_CANDIDATES)
+    return list_md_files(rw_config.SYNTH_CANDIDATES)
 
 
 def approved_candidate_files() -> list[str]:
@@ -616,7 +546,7 @@ def approved_candidate_files() -> list[str]:
 
 
 def synthesis_target_path(title: str) -> str:
-    return os.path.join(WIKI_SYNTH, f"{slugify(title)}.md")
+    return os.path.join(rw_config.WIKI_SYNTH, f"{slugify(title)}.md")
 
 
 def merge_synthesis(existing_path: str, new_meta: dict[str, str], new_body: str) -> None:
@@ -687,20 +617,20 @@ def mark_candidate_promoted(path: str, target: str) -> None:
 
 
 def update_index_synthesis() -> None:
-    parent = os.path.dirname(INDEX_MD)
+    parent = os.path.dirname(rw_config.INDEX_MD)
     if parent:
         os.makedirs(parent, exist_ok=True)
-    if not os.path.exists(INDEX_MD):
-        write_text(INDEX_MD, "# Index\n")
+    if not os.path.exists(rw_config.INDEX_MD):
+        write_text(rw_config.INDEX_MD, "# Index\n")
 
-    files = list_md_files(WIKI_SYNTH)
+    files = list_md_files(rw_config.WIKI_SYNTH)
     lines = ["## synthesis\n"]
     for path in sorted(files):
         name = Path(path).stem
         lines.append(f"- [[{name}]]\n")
     new_section = "".join(lines)
 
-    current = read_text(INDEX_MD)
+    current = read_text(rw_config.INDEX_MD)
     if "## synthesis" in current:
         current = re.sub(r"## synthesis[\s\S]*?(?=\n## |\Z)", new_section.rstrip() + "\n", current)
     else:
@@ -708,18 +638,18 @@ def update_index_synthesis() -> None:
             current += "\n"
         current += "\n" + new_section
 
-    write_text(INDEX_MD, current)
+    write_text(rw_config.INDEX_MD, current)
 
 
 def append_approval_log(entries: list[str]) -> None:
-    if not os.path.exists(CHANGE_LOG_MD):
-        write_text(CHANGE_LOG_MD, "# Log\n")
+    if not os.path.exists(rw_config.CHANGE_LOG_MD):
+        write_text(rw_config.CHANGE_LOG_MD, "# Log\n")
 
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     body = f"\n## {stamp}\n"
     for entry in entries:
         body += f"- {entry}\n"
-    append_text(CHANGE_LOG_MD, body)
+    append_text(rw_config.CHANGE_LOG_MD, body)
 
 
 def cmd_approve() -> int:
@@ -882,7 +812,7 @@ def load_task_prompts(task_name: str, *, skip_vault_validation: bool = False) ->
         ValueError: task_name がマッピング表に存在しない場合
         FileNotFoundError: エージェントまたはポリシーファイルが存在しない場合
     """
-    claude_md_path = os.path.join(ROOT, "CLAUDE.md")
+    claude_md_path = os.path.join(rw_config.ROOT, "CLAUDE.md")
     mapping = parse_agent_mapping(claude_md_path)
 
     if task_name not in mapping:
@@ -891,8 +821,8 @@ def load_task_prompts(task_name: str, *, skip_vault_validation: bool = False) ->
         )
 
     entry = mapping[task_name]
-    agent_path = os.path.join(ROOT, entry["agent"])
-    policy_paths = [os.path.join(ROOT, p) for p in entry["policies"]]
+    agent_path = os.path.join(rw_config.ROOT, entry["agent"])
+    policy_paths = [os.path.join(rw_config.ROOT, p) for p in entry["policies"]]
 
     if not os.path.isfile(agent_path):
         raise FileNotFoundError(
@@ -915,7 +845,7 @@ def load_task_prompts(task_name: str, *, skip_vault_validation: bool = False) ->
                 " Drift 3-layer defense weakened.\n"
             )
         else:
-            _validate_agents_severity_vocabulary(Path(AGENTS_DIR) / "audit.md")
+            _validate_agents_severity_vocabulary(Path(rw_config.AGENTS_DIR) / "audit.md")
 
     parts: list[str] = [read_text(agent_path)]
     for pol_path in policy_paths:
@@ -1081,12 +1011,12 @@ def read_wiki_content(scope: str | None) -> str:
         return read_text(scope)
 
     # scope=None: wiki/ ディレクトリを対象とする
-    if not os.path.isdir(WIKI):
-        raise FileNotFoundError(f"wiki/ ディレクトリが見つかりません: {WIKI}")
+    if not os.path.isdir(rw_config.WIKI):
+        raise FileNotFoundError(f"wiki/ ディレクトリが見つかりません: {rw_config.WIKI}")
 
-    md_files = list_md_files(WIKI)
+    md_files = list_md_files(rw_config.WIKI)
     if not md_files:
-        raise ValueError(f"wiki/ に .md ファイルが存在しません: {WIKI}")
+        raise ValueError(f"wiki/ に .md ファイルが存在しません: {rw_config.WIKI}")
 
     # 小規模 wiki (≤20): 全ファイルを結合して返す
     if len(md_files) <= 20:
@@ -1096,22 +1026,20 @@ def read_wiki_content(scope: str | None) -> str:
         return "\n\n".join(parts)
 
     # 大規模 wiki (>20): index.md のみを返す（cmd_* が2段階方式でオーケストレーションする）
-    return read_text(INDEX_MD)
+    return read_text(rw_config.INDEX_MD)
 
 
 # audit: data loading
 
-LARGE_WIKI_THRESHOLD = 150
-
 
 def read_all_wiki_content() -> str:
-    """wiki/ 内の全 .md ファイル + ROOT/index.md + ROOT/log.md を結合して返す。
-    グローバル定数 WIKI, INDEX_MD, CHANGE_LOG_MD を使用。
+    """wiki/ 内の全 .md ファイル + rw_config.ROOT/index.md + rw_config.ROOT/log.md を結合して返す。
+    グローバル定数 rw_config.WIKI, rw_config.INDEX_MD, rw_config.CHANGE_LOG_MD を使用。
 
     各ファイルは `<!-- file: wiki/page-name.md -->` ヘッダー付きで結合する。
-    ROOT 直下のファイルは `<!-- file: index.md -->`, `<!-- file: log.md -->` として結合する。
+    rw_config.ROOT 直下のファイルは `<!-- file: index.md -->`, `<!-- file: log.md -->` として結合する。
 
-    ページ数が LARGE_WIKI_THRESHOLD（150）を超える場合は、標準出力に警告を表示する。
+    ページ数が rw_config.LARGE_WIKI_THRESHOLD（150）を超える場合は、標準出力に警告を表示する。
     ただし処理は続行する。
 
     index.md / log.md が存在しない場合はスキップする（エラーにしない）。
@@ -1120,16 +1048,16 @@ def read_all_wiki_content() -> str:
         FileNotFoundError: wiki/ が存在しない場合
         ValueError: wiki/ に .md ファイルが存在しない場合
     """
-    if not os.path.isdir(WIKI):
-        raise FileNotFoundError(f"wiki/ が存在しません: {WIKI}")
+    if not os.path.isdir(rw_config.WIKI):
+        raise FileNotFoundError(f"wiki/ が存在しません: {rw_config.WIKI}")
 
-    md_files = list_md_files(WIKI)
+    md_files = list_md_files(rw_config.WIKI)
     if not md_files:
-        raise ValueError(f"wiki/ に .md ファイルが存在しません: {WIKI}")
+        raise ValueError(f"wiki/ に .md ファイルが存在しません: {rw_config.WIKI}")
 
-    if len(md_files) > LARGE_WIKI_THRESHOLD:
+    if len(md_files) > rw_config.LARGE_WIKI_THRESHOLD:
         print(
-            f"[WARN] wiki ページ数が {len(md_files)} 件（閾値 {LARGE_WIKI_THRESHOLD} 超）です。"
+            f"[WARN] wiki ページ数が {len(md_files)} 件（閾値 {rw_config.LARGE_WIKI_THRESHOLD} 超）です。"
             " Claude のコンテキストウィンドウ上限に近づいている可能性があります。"
         )
 
@@ -1140,13 +1068,13 @@ def read_all_wiki_content() -> str:
         header = f"<!-- file: {relpath(path)} -->"
         parts.append(f"{header}\n{read_text(path)}")
 
-    # ROOT/index.md（存在する場合のみ）
-    if os.path.isfile(INDEX_MD):
-        parts.append(f"<!-- file: index.md -->\n{read_text(INDEX_MD)}")
+    # rw_config.ROOT/index.md（存在する場合のみ）
+    if os.path.isfile(rw_config.INDEX_MD):
+        parts.append(f"<!-- file: index.md -->\n{read_text(rw_config.INDEX_MD)}")
 
-    # ROOT/log.md（存在する場合のみ）
-    if os.path.isfile(CHANGE_LOG_MD):
-        parts.append(f"<!-- file: log.md -->\n{read_text(CHANGE_LOG_MD)}")
+    # rw_config.ROOT/log.md（存在する場合のみ）
+    if os.path.isfile(rw_config.CHANGE_LOG_MD):
+        parts.append(f"<!-- file: log.md -->\n{read_text(rw_config.CHANGE_LOG_MD)}")
 
     return "\n\n".join(parts)
 
@@ -1180,7 +1108,7 @@ def _git_list_files(args: list[str]) -> list[str]:
 
 def get_recent_wiki_changes() -> list[str]:
     """git diff で最近更新された wiki ページのファイルパスリストを返す。
-    グローバル定数 WIKI を使用。内部で _git_list_files() を呼び出す。
+    グローバル定数 rw_config.WIKI を使用。内部で _git_list_files() を呼び出す。
 
     検出方法:
     1. 未コミット変更: git diff --name-only -- wiki/
@@ -1196,7 +1124,7 @@ def get_recent_wiki_changes() -> list[str]:
         wiki/ 配下の .md ファイルパスリスト。
         git リポジトリでない場合は空リストを返す。
     """
-    wiki_rel = os.path.relpath(WIKI, os.getcwd()) if os.path.isabs(WIKI) else WIKI
+    wiki_rel = os.path.relpath(rw_config.WIKI, os.getcwd()) if os.path.isabs(rw_config.WIKI) else rw_config.WIKI
 
     # 1. 未コミット変更（ステージ済み・未ステージ・untracked）
     uncommitted: list[str] = []
@@ -1229,7 +1157,7 @@ def get_recent_wiki_changes() -> list[str]:
 
 
 def validate_wiki_dir() -> bool:
-    """wiki/ ディレクトリの事前検証を行う。グローバル定数 WIKI を使用。
+    """wiki/ ディレクトリの事前検証を行う。グローバル定数 rw_config.WIKI を使用。
 
     検証項目:
     - wiki/ ディレクトリの存在（Req 7.1）— 不在時はエラーメッセージ表示
@@ -1239,13 +1167,13 @@ def validate_wiki_dir() -> bool:
     Returns:
         True: 検証パス（続行可能）, False: 検証失敗（呼び出し元が exit 1）
     """
-    if not os.path.isdir(WIKI):
-        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {WIKI}")
+    if not os.path.isdir(rw_config.WIKI):
+        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {rw_config.WIKI}")
         return False
 
-    md_files = list_md_files(WIKI)
+    md_files = list_md_files(rw_config.WIKI)
     if not md_files:
-        print(f"[ERROR] wiki/ に .md ファイルが存在しません: {WIKI}")
+        print(f"[ERROR] wiki/ に .md ファイルが存在しません: {rw_config.WIKI}")
         return False
 
     warn_if_dirty_paths(["wiki"], "audit")
@@ -1256,7 +1184,7 @@ def load_wiki_pages(wiki_dir: str, target_files: list[str] | None = None) -> lis
     """wiki/ 内の .md ファイルを読み込んで WikiPage リストを返す。
 
     Args:
-        wiki_dir: wiki ディレクトリパス（グローバル定数 WIKI）
+        wiki_dir: wiki ディレクトリパス（グローバル定数 rw_config.WIKI）
         target_files: 指定時はそのファイルのみ読み込む（micro 用）。
                       None の場合は全 .md ファイルを読み込む（weekly 用）。
     Returns:
@@ -1718,14 +1646,10 @@ def run_weekly_checks(
 # severity / status / exit code helpers
 
 
-_VALID_SEVERITIES = {"CRITICAL", "ERROR", "WARN", "INFO"}
-_FAIL_SEVERITIES = {"CRITICAL", "ERROR"}
-
-
 def _compute_run_status(findings: list) -> str:
   """CRITICAL または ERROR が 1 件以上あれば FAIL, それ以外は PASS。"""
   for f in findings:
-    if f.severity in _FAIL_SEVERITIES:
+    if f.severity in rw_config._FAIL_SEVERITIES:
       return "FAIL"
   return "PASS"
 
@@ -1779,7 +1703,7 @@ def _normalize_severity_token(
   normalized = token.strip().upper()
 
   # 有効な 4 水準ならそのまま返す
-  if normalized in _VALID_SEVERITIES:
+  if normalized in rw_config._VALID_SEVERITIES:
     return normalized
 
   # drift 処理: sanitize して記録・降格
@@ -2339,7 +2263,7 @@ def generate_audit_report(
   lines.append("")
 
   content = "\n".join(lines)
-  report_path = os.path.join(LOGDIR, f"audit-{tier}-{timestamp}.md")
+  report_path = os.path.join(rw_config.LOGDIR, f"audit-{tier}-{timestamp}.md")
   write_text(report_path, content)
   return report_path
 
@@ -2407,7 +2331,7 @@ def cmd_audit(args: list[str]) -> int:
 
 
 def cmd_audit_micro() -> int:
-    """micro 監査を実行する。グローバル定数 ROOT, WIKI, INDEX_MD を使用。
+    """micro 監査を実行する。グローバル定数 rw_config.ROOT, rw_config.WIKI, rw_config.INDEX_MD を使用。
 
     Returns:
         終了コード（0: ERROR なし, 1: ERROR あり）
@@ -2434,19 +2358,19 @@ def cmd_audit_micro() -> int:
         return 0
 
     # 4. WikiPage リスト生成
-    pages = load_wiki_pages(WIKI, target_files)
+    pages = load_wiki_pages(rw_config.WIKI, target_files)
 
     # 5. all_pages_set 構築（全 wiki ページのファイル名セット）
-    all_md_files = list_md_files(WIKI)
+    all_md_files = list_md_files(rw_config.WIKI)
     all_pages_set: set[str] = set()
     for f in all_md_files:
-        rel = os.path.relpath(f, WIKI)
+        rel = os.path.relpath(f, rw_config.WIKI)
         all_pages_set.add(rel)
 
     # 6. index_content 読み込み（不在時は None）
     index_content: str | None = None
-    if os.path.isfile(INDEX_MD):
-        index_content = read_text(INDEX_MD)
+    if os.path.isfile(rw_config.INDEX_MD):
+        index_content = read_text(rw_config.INDEX_MD)
 
     # 7. micro チェック実行
     findings = run_micro_checks(pages, all_pages_set, index_content)
@@ -2479,7 +2403,7 @@ def cmd_audit_micro() -> int:
 
 
 def cmd_audit_weekly() -> int:
-    """weekly 監査を実行する。グローバル定数 ROOT, WIKI, INDEX_MD を使用。
+    """weekly 監査を実行する。グローバル定数 rw_config.ROOT, rw_config.WIKI, rw_config.INDEX_MD を使用。
 
     Returns:
         終了コード（0: ERROR なし, 1: ERROR あり）
@@ -2489,19 +2413,19 @@ def cmd_audit_weekly() -> int:
         return 1
 
     # 2. 全ページ読み込み
-    pages = load_wiki_pages(WIKI, None)
+    pages = load_wiki_pages(rw_config.WIKI, None)
 
     # 3. all_pages_set 構築
-    all_md_files = list_md_files(WIKI)
+    all_md_files = list_md_files(rw_config.WIKI)
     all_pages_set: set[str] = set()
     for f in all_md_files:
-        rel = os.path.relpath(f, WIKI)
+        rel = os.path.relpath(f, rw_config.WIKI)
         all_pages_set.add(rel)
 
-    # 4. index_content 読み込み（INDEX_MD 不在時は None）
+    # 4. index_content 読み込み（rw_config.INDEX_MD 不在時は None）
     index_content: str | None = None
-    if os.path.isfile(INDEX_MD):
-        index_content = read_text(INDEX_MD)
+    if os.path.isfile(rw_config.INDEX_MD):
+        index_content = read_text(rw_config.INDEX_MD)
 
     # 5. index_links 構築（index_content から [[link]] regex で抽出、basename のみ）
     index_links: set[str] = set()
@@ -2575,7 +2499,7 @@ def cmd_audit_weekly() -> int:
 
 def _run_llm_audit(tier: str, args: list[str]) -> int:
   """monthly/quarterly 共通の LLM 監査フローを実行する。
-  グローバル定数 ROOT, WIKI, INDEX_MD, CLAUDE_MD, AGENTS_DIR, LOGDIR を使用。
+  グローバル定数 rw_config.ROOT, rw_config.WIKI, rw_config.INDEX_MD, rw_config.CLAUDE_MD, rw_config.AGENTS_DIR, rw_config.LOGDIR を使用。
 
   Args:
       tier: "monthly" | "quarterly"
@@ -2610,11 +2534,11 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
     return 1
 
   # 3. CLAUDE.md と AGENTS/ の存在確認（Req 7.5）
-  if not os.path.isfile(CLAUDE_MD):
-    print(f"[ERROR] CLAUDE.md が見つかりません: {CLAUDE_MD}")
+  if not os.path.isfile(rw_config.CLAUDE_MD):
+    print(f"[ERROR] CLAUDE.md が見つかりません: {rw_config.CLAUDE_MD}")
     return 1
-  if not os.path.isdir(AGENTS_DIR):
-    print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {AGENTS_DIR}")
+  if not os.path.isdir(rw_config.AGENTS_DIR):
+    print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {rw_config.AGENTS_DIR}")
     return 1
 
   # 4. load_task_prompts("audit") で AGENTS/audit.md + ポリシーファイルを読み込む
@@ -2649,7 +2573,7 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
     return 1
 
   # 9. raw レスポンスを logs/audit-{tier}-{ts}-raw.txt に保存
-  raw_path = os.path.join(LOGDIR, f"audit-{tier}-{ts}-raw.txt")
+  raw_path = os.path.join(rw_config.LOGDIR, f"audit-{tier}-{ts}-raw.txt")
   write_text(raw_path, raw_response)
 
   # 10. parse_audit_response(raw_response) でパース
@@ -2740,7 +2664,7 @@ def write_query_artifacts(
     Returns:
         生成したファイルパスのリスト
     """
-    base_dir = os.path.join(QUERY_REVIEW, query_id)
+    base_dir = os.path.join(rw_config.QUERY_REVIEW, query_id)
     os.makedirs(base_dir, exist_ok=True)
 
     # question.md: キーバリュー形式
@@ -2882,18 +2806,18 @@ def cmd_query_extract(args: list[str]) -> int:
 
     # 2. 前提条件チェック
     # wiki/ 存在チェック
-    if not os.path.isdir(WIKI):
-        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {WIKI}")
+    if not os.path.isdir(rw_config.WIKI):
+        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {rw_config.WIKI}")
         return 1
 
     # CLAUDE.md 存在チェック
-    if not os.path.exists(os.path.join(ROOT, "CLAUDE.md")):
-        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(ROOT, 'CLAUDE.md')}")
+    if not os.path.exists(os.path.join(rw_config.ROOT, "CLAUDE.md")):
+        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(rw_config.ROOT, 'CLAUDE.md')}")
         return 1
 
     # AGENTS/ 存在チェック
-    if not os.path.isdir(os.path.join(ROOT, "AGENTS")):
-        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(ROOT, 'AGENTS')}")
+    if not os.path.isdir(os.path.join(rw_config.ROOT, "AGENTS")):
+        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(rw_config.ROOT, 'AGENTS')}")
         return 1
 
     warn_if_dirty_paths(["wiki"], "query extract")
@@ -2905,7 +2829,7 @@ def cmd_query_extract(args: list[str]) -> int:
         print(f"[ERROR] {e}")
         return 1
 
-    query_dir = os.path.join(QUERY_REVIEW, query_id)
+    query_dir = os.path.join(rw_config.QUERY_REVIEW, query_id)
     if os.path.isdir(query_dir):
         print(
             f"[ERROR] query_id '{query_id}' のディレクトリが既に存在します: {query_dir}\n"
@@ -2922,11 +2846,11 @@ def cmd_query_extract(args: list[str]) -> int:
 
     # 5. wiki サイズチェックと wiki_content 取得
     try:
-        num_files = len(list_md_files(WIKI))
+        num_files = len(list_md_files(rw_config.WIKI))
         if num_files > 20 and scope is None:
             # 2段階方式: ステージ1で関連ページ特定
             try:
-                index_content = read_text(INDEX_MD)
+                index_content = read_text(rw_config.INDEX_MD)
             except FileNotFoundError:
                 index_content = ""
 
@@ -2952,7 +2876,7 @@ def cmd_query_extract(args: list[str]) -> int:
                 # 特定されたページを読み込む
                 parts: list[str] = []
                 for page_path in identified_pages:
-                    full_path = os.path.join(ROOT, page_path) if not os.path.isabs(page_path) else page_path
+                    full_path = os.path.join(rw_config.ROOT, page_path) if not os.path.isabs(page_path) else page_path
                     if os.path.isfile(full_path):
                         parts.append(f"<!-- file: {page_path} -->\n{read_text(full_path)}")
                     elif os.path.isfile(page_path):
@@ -3007,7 +2931,7 @@ def cmd_query_extract(args: list[str]) -> int:
     if lint_result["status"] == "FAIL":
         print(f"[WARN] lint 検証失敗: {lint_result['target']}")
         for chk in lint_result["checks"]:
-            if chk["severity"] in _FAIL_SEVERITIES:
+            if chk["severity"] in rw_config._FAIL_SEVERITIES:
                 print(f"  [{chk['severity']}] {chk['id']} {chk['message']}")
         print("[INFO] アーティファクトは生成されましたが lint に失敗しました。")
         for p in file_paths:
@@ -3044,18 +2968,18 @@ def cmd_query_answer(args: list[str]) -> int:
 
     # 2. 前提条件チェック
     # wiki/ 存在チェック
-    if not os.path.isdir(WIKI):
-        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {WIKI}")
+    if not os.path.isdir(rw_config.WIKI):
+        print(f"[ERROR] wiki/ ディレクトリが見つかりません: {rw_config.WIKI}")
         return 1
 
     # CLAUDE.md 存在チェック
-    if not os.path.exists(os.path.join(ROOT, "CLAUDE.md")):
-        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(ROOT, 'CLAUDE.md')}")
+    if not os.path.exists(os.path.join(rw_config.ROOT, "CLAUDE.md")):
+        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(rw_config.ROOT, 'CLAUDE.md')}")
         return 1
 
     # AGENTS/ 存在チェック
-    if not os.path.isdir(os.path.join(ROOT, "AGENTS")):
-        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(ROOT, 'AGENTS')}")
+    if not os.path.isdir(os.path.join(rw_config.ROOT, "AGENTS")):
+        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(rw_config.ROOT, 'AGENTS')}")
         return 1
 
     warn_if_dirty_paths(["wiki"], "query answer")
@@ -3196,14 +3120,14 @@ def extract_scope(query_text: str, metadata: dict[str, Any]) -> str | list[Any] 
 def has_evidence_source(text: str) -> bool:
     for line in text.splitlines():
         s = line.strip()
-        for pat in EVIDENCE_SOURCE_PATTERNS:
+        for pat in rw_config.EVIDENCE_SOURCE_PATTERNS:
             if re.search(pat, s, re.IGNORECASE):
                 return True
     return False
 
 
 def contains_inference_language(text: str) -> bool:
-    for pat in INFERENCE_PATTERNS:
+    for pat in rw_config.INFERENCE_PATTERNS:
         if re.search(pat, text, re.IGNORECASE):
             return True
     return False
@@ -3286,7 +3210,7 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
 
     if not query_type:
         add("WARN", "QL003", "query_type not found")
-    elif query_type not in ALLOWED_QUERY_TYPES:
+    elif query_type not in rw_config.ALLOWED_QUERY_TYPES:
         add("ERROR", "QL003", f"invalid query_type: {query_type}")
 
     if "created_at" not in metadata or not metadata.get("created_at"):
@@ -3301,7 +3225,7 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
         if answer_len > 1500 and evidence_blocks < 2:
             add("WARN", "QL010", "long answer with too few evidence blocks")
 
-    has_fail = any(c["severity"] in _FAIL_SEVERITIES for c in result["checks"])
+    has_fail = any(c["severity"] in rw_config._FAIL_SEVERITIES for c in result["checks"])
     result["status"] = "FAIL" if has_fail else "PASS"
 
     return result
@@ -3367,7 +3291,7 @@ def cmd_lint_query(args: list[str]) -> int:
     if target_path:
         query_dirs = [target_path]
     else:
-        query_dirs = list_query_dirs(QUERY_REVIEW)
+        query_dirs = list_query_dirs(rw_config.QUERY_REVIEW)
 
     if not query_dirs:
         print("No query directories found.")
@@ -3398,13 +3322,13 @@ def cmd_lint_query(args: list[str]) -> int:
         },
         "drift_events": [],
     }
-    write_text(QUERY_LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    write_text(rw_config.QUERY_LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
 
     if output_format == "json":
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
         print_query_lint_text(results)
-        print(f"Log: {relpath(QUERY_LINT_LOG)}")
+        print(f"Log: {relpath(rw_config.QUERY_LINT_LOG)}")
 
     if run_status == "FAIL":
         return 2
@@ -3421,17 +3345,17 @@ def cmd_query_fix(args: list[str]) -> int:
     query_id = args[0]
 
     # 2. 前提条件チェック
-    query_dir = os.path.join(QUERY_REVIEW, query_id)
+    query_dir = os.path.join(rw_config.QUERY_REVIEW, query_id)
     if not os.path.isdir(query_dir):
         print(f"[ERROR] query_id ディレクトリが見つかりません: {query_dir}")
         return 1
 
-    if not os.path.exists(os.path.join(ROOT, "CLAUDE.md")):
-        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(ROOT, 'CLAUDE.md')}")
+    if not os.path.exists(os.path.join(rw_config.ROOT, "CLAUDE.md")):
+        print(f"[ERROR] CLAUDE.md が見つかりません: {os.path.join(rw_config.ROOT, 'CLAUDE.md')}")
         return 1
 
-    if not os.path.isdir(os.path.join(ROOT, "AGENTS")):
-        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(ROOT, 'AGENTS')}")
+    if not os.path.isdir(os.path.join(rw_config.ROOT, "AGENTS")):
+        print(f"[ERROR] AGENTS/ ディレクトリが見つかりません: {os.path.join(rw_config.ROOT, 'AGENTS')}")
         return 1
 
     warn_if_dirty_paths(["wiki"], "query fix")
@@ -3520,7 +3444,7 @@ def cmd_query_fix(args: list[str]) -> int:
     # 13. post-fix lint 結果を表示
     print(f"\n[POST-FIX LINT] status: {post_lint['status']}")
     for chk in post_lint.get("checks", []):
-        if chk["severity"] in _FAIL_SEVERITIES:
+        if chk["severity"] in rw_config._FAIL_SEVERITIES:
             print(f"  [{chk['severity']}] {chk['id']} {chk['message']}")
 
     # 14. 終了コード決定
@@ -3565,8 +3489,8 @@ def cmd_init(args: list[str]) -> int:
   }
 
   # --- テンプレートチェック ---
-  tmpl_claude = os.path.join(DEV_ROOT, "templates", "CLAUDE.md")
-  tmpl_gitignore = os.path.join(DEV_ROOT, "templates", ".gitignore")
+  tmpl_claude = os.path.join(rw_config.DEV_ROOT, "templates", "CLAUDE.md")
+  tmpl_gitignore = os.path.join(rw_config.DEV_ROOT, "templates", ".gitignore")
   if not os.path.exists(tmpl_claude):
     print(f"[ERROR] templates/CLAUDE.md not found: {tmpl_claude}")
     return 1
@@ -3593,7 +3517,7 @@ def cmd_init(args: list[str]) -> int:
 
   # --- ディレクトリ生成 ---
   dirs_created = 0
-  for d in VAULT_DIRS:
+  for d in rw_config.VAULT_DIRS:
     dir_path = os.path.join(target_path, d)
     try:
       os.makedirs(dir_path, exist_ok=True)
@@ -3614,7 +3538,7 @@ def cmd_init(args: list[str]) -> int:
     report["skipped"].append({"item": "CLAUDE.md", "reason": str(e)})
 
   # --- AGENTS/ コピー ---
-  tmpl_agents = os.path.join(DEV_ROOT, "templates", "AGENTS")
+  tmpl_agents = os.path.join(rw_config.DEV_ROOT, "templates", "AGENTS")
   dest_agents = os.path.join(target_path, "AGENTS")
   if os.path.isdir(tmpl_agents):
     try:
@@ -3705,7 +3629,7 @@ def cmd_init(args: list[str]) -> int:
     report["skipped"].append({"item": ".gitignore", "reason": "既存ファイルを保護"})
 
   # --- シンボリックリンク作成 ---
-  rw_src = os.path.join(DEV_ROOT, "scripts", "rw_light.py")
+  rw_src = os.path.join(rw_config.DEV_ROOT, "scripts", "rw_light.py")
   rw_link = os.path.join(target_path, "scripts", "rw")
 
   # rw_light.py に実行権限を付与
