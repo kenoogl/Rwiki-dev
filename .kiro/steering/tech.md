@@ -8,7 +8,7 @@
 
 - **Language**: Python 3.10+（型ヒント完全対応）
 - **Dependencies**: 標準ライブラリのみ（json, os, re, shutil, subprocess, pathlib, datetime, typing）
-- **CLI**: カスタム argparse ベース（`scripts/rw_light.py`）
+- **CLI**: カスタム argparse ベース（エントリポイント: `scripts/rw_light.py`、責務別 6 モジュール構成）
 - **Data Format**: Markdown + YAML フロントマター
 - **Version Control**: Git 統合（変更追跡・コミット自動化）
 - **LLM Integration**: Claude API（subprocess 経由の `claude` CLI 呼び出し）
@@ -48,7 +48,7 @@
 
 ## Key Technical Decisions
 
-- **モノリシック CLI**: 全コマンドを単一ファイル（`rw_light.py`）に集約 — ポータビリティ重視
+- **責務別モジュール分割 CLI**: CLI ツールを 6 モジュール（`rw_config` / `rw_utils` / `rw_prompt_engine` / `rw_audit` / `rw_query` / `rw_light`）に分割し Layer 0–4 の DAG を維持 — 各モジュール ≤ 1,500 行、モジュール修飾参照規約（`rw_<module>.<symbol>`）を徹底、後方互換 re-export は一切提供しない。`scripts/` 直下に全モジュールを配置し `sys.path[0]` 自動解決で Vault symlink 経由起動を保証（PYTHONPATH 不要）
 - **フロントマター駆動**: メタデータ（date, source, tags, type, status）を Markdown フロントマターで管理
 - **JSON ログ**: lint/query 結果を構造化 JSON で出力（`logs/` ディレクトリ）
 - **AGENTS/ プロンプトシステム**: AI タスク別にモジュール化されたプロンプトテンプレート
@@ -63,4 +63,4 @@
 ---
 _created_at: 2026-04-18_
 _updated_at: 2026-04-20_
-_change: Severity/Status/Exit Code 統一契約（severity-unification 完了）を Key Technical Decisions に追加_
+_change: module-split 完了による CLI 6 モジュール構成（Layer 0–4 の DAG、モジュール修飾参照規約、re-export 排除）を Key Technical Decisions に反映_
