@@ -370,7 +370,11 @@ def cmd_lint() -> int:
     }
 
     write_text(LINT_LOG, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
-    print(f"\nSummary: {summary}")
+    sc = severity_counts
+    print(
+      f"\nlint: CRITICAL {sc['critical']}, ERROR {sc['error']},"
+      f" WARN {sc['warn']}, INFO {sc['info']} — {run_status}"
+    )
     print(f"Log: {relpath(LINT_LOG)}")
 
     return 1 if fail_count > 0 else 0

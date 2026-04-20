@@ -139,7 +139,7 @@
   - _Boundary: cmd_lint (JSON output)_
   - _Depends: 2.1_
 
-- [ ] 2.5 `cmd_lint` の stdout / per-file 表示更新（human-visible 変更、TDD）
+- [x] 2.5 `cmd_lint` の stdout / per-file 表示更新（human-visible 変更、TDD）
   - 先に test_lint_stdout_4_tier を red で追加: per-file 行 `[PASS] path (warn: 2, info: 1)` 形式（0 件水準省略）/ stdout summary 行に 4 水準件数と status を併記 / WARN が status 位置に出現しないこと / **対象 0 件時（lint 対象ファイル 0 件）も status（PASS）は表示される**（AC 5.5 境界）/ **問題 0 件時（全 PASS）も status は表示される**（AC 5.5 境界、severity 別件数行のみ省略可）を検証
   - 実装: per-file display format 変更、stdout summary 行拡張（`lint: CRITICAL X, ERROR Y, WARN Z, INFO W — status` 形式）、0 件ケースの status 行常時表示
   - 観察可能完了条件: test_lint_stdout_4_tier green、`rw lint` 実行時の stdout が 4 水準併記形式 + 最終 status を表示、対象 0 件および問題 0 件の 2 境界で status 行が省略されないこと

@@ -89,8 +89,7 @@ class TestCmdLint:
 
     captured = capsys.readouterr()
     assert rc == 0
-    assert "pass" in captured.out
-    assert "fail" in captured.out
+    assert "PASS" in captured.out
 
   # ------------------------------------------------------------------
   # Req 4.5  JSON ログ
@@ -178,6 +177,99 @@ class TestCmdLint:
     assert meta["source"] == rw_light.infer_source_from_path(str(md_file))
     assert "added" in meta
     assert meta["added"] == fixed_today
+
+
+# ---------------------------------------------------------------------------
+# Task 2.5: cmd_lint stdout 4 水準表示
+# ---------------------------------------------------------------------------
+
+
+class TestLintStdout4Tier:
+  """cmd_lint stdout が 4 水準併記 + status を表示することを検証"""
+
+  def test_summary_line_has_4_tiers(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+    capsys,
+  ) -> None:
+    """stdout summary 行に CRITICAL/ERROR/WARN/INFO の 4 水準件数と status が含まれる"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+
+    rw_light.cmd_lint()
+
+    captured = capsys.readouterr()
+    assert "CRITICAL" in captured.out
+    assert "ERROR" in captured.out
+    assert "WARN" in captured.out
+    assert "INFO" in captured.out
+    assert "PASS" in captured.out
+
+  def test_status_shown_when_all_pass(
+    self,
+    patch_constants: Path,
+    make_md_file,
+    fixed_today: str,
+    capsys,
+  ) -> None:
+    """問題 0 件（全 PASS）でも status 行が表示される（AC 5.5 境界）"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+
+    rw_light.cmd_lint()
+
+    captured = capsys.readouterr()
+    assert "PASS" in captured.out
+
+  def test_status_shown_when_no_files(
+    self,
+    patch_constants: Path,
+    fixed_today: str,
+    capsys,
+  ) -> None:
+    """対象 0 件でも status（PASS）が表示される（AC 5.5 境界）"""
+    rw_light.cmd_lint()
+
+    captured = capsys.readouterr()
+    assert "PASS" in captured.out
+
+  def test_status_fail_shown_in_stdout(
+    self,
+    patch_constants: Path,
+    fixed_today: str,
+    capsys,
+  ) -> None:
+    """ERROR ファイルがある場合は stdout に FAIL が表示される"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    (articles_dir / "empty.md").write_text("", encoding="utf-8")
+
+    rw_light.cmd_lint()
+
+    captured = capsys.readouterr()
+    assert "FAIL" in captured.out
+
+  def test_warn_status_not_in_summary_line(
+    self,
+    patch_constants: Path,
+    fixed_today: str,
+    capsys,
+  ) -> None:
+    """WARN が status 位置に出現しない（WARN は severity 水準として件数表示のみ）"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    (articles_dir / "short.md").write_text("hi\n", encoding="utf-8")
+
+    rw_light.cmd_lint()
+
+    captured = capsys.readouterr()
+    # stdout summary 行の status は PASS のはず
+    # "lint: ... — WARN" という形式は出ないこと
+    assert "— WARN" not in captured.out
 
 
 # ---------------------------------------------------------------------------
