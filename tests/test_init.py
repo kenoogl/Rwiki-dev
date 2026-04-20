@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 import pytest
 
@@ -237,4 +238,125 @@ class TestCmdInit:
     captured = capsys.readouterr()
     assert "[ERROR]" in captured.out, (
       f"stdout に '[ERROR]' が含まれない: {captured.out!r}"
+    )
+
+
+class TestRwInitForce:
+  """rw init --force フラグのテスト (Req 6.5)。"""
+
+  @pytest.fixture(autouse=True)
+  def mock_subprocess(self, monkeypatch):
+    """全テストで subprocess.run を no-op モックに差し替える。"""
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+      calls.append(cmd)
+      return subprocess.CompletedProcess(args=cmd, returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    self._subprocess_calls = calls
+
+  def test_force_overwrites_agents(self, tmp_path, mock_templates, monkeypatch, capsys):
+    """(a) 既存 AGENTS/ がある Vault で --force を指定すると、旧 AGENTS を新 template で上書きする。
+    input() は呼ばれず（--force は非インタラクティブ）、旧ファイルは .backup/ に退避される。"""
+    vault = tmp_path / "vault"
+    # 初回 init で AGENTS/ を作成
+    rw_light.cmd_init([str(vault)])
+    # 既存 AGENTS/ に古いファイルを追加して変更
+    old_marker = vault / "AGENTS" / "old_marker.md"
+    old_marker.write_text("# Old content\n", encoding="utf-8")
+    assert old_marker.exists(), "前提: old_marker.md が存在するべき"
+
+    # input() が呼ばれたら失敗させる（--force は非インタラクティブであるべき）
+    def should_not_be_called(prompt=""):
+      raise AssertionError(f"--force 時に input() が呼ばれた: {prompt!r}")
+    monkeypatch.setattr("builtins.input", should_not_be_called)
+
+    # --force で再実行 → 新テンプレートで上書き
+    result = rw_light.cmd_init(["--force", str(vault)])
+    assert result == 0, f"--force で exit 0 であるべき: {result}"
+
+    # 新テンプレートのファイルが存在することを確認
+    dest_agents = vault / "AGENTS"
+    src_files = set(f.name for f in (mock_templates / "AGENTS").iterdir())
+    dst_files = set(f.name for f in dest_agents.iterdir())
+    # テンプレートの全ファイルが存在する
+    assert src_files <= dst_files, f"新テンプレートのファイルが存在しない: {src_files - dst_files}"
+
+    # 旧ファイル (old_marker.md) は .backup/ 以下に退避されている
+    backup_root = vault / ".backup"
+    assert backup_root.is_dir(), ".backup/ が存在しない"
+    all_backup_files = list(backup_root.rglob("old_marker.md"))
+    assert len(all_backup_files) >= 1, "old_marker.md が .backup/ に退避されていない"
+
+  def test_no_force_existing_agents_skips(self, tmp_path, mock_templates, monkeypatch):
+    """(b) --force なしで既存 AGENTS/ がある場合は旧動作（input() 確認）を維持する。"""
+    vault = tmp_path / "vault"
+    # 初回 init
+    rw_light.cmd_init([str(vault)])
+    # input を "n" でモック → 上書き拒否
+    monkeypatch.setattr("builtins.input", lambda prompt="": "n")
+    result = rw_light.cmd_init([str(vault)])
+    assert result == 0, "再初期化拒否時は exit 0 であるべき"
+
+  def test_force_stderr_overwrite_notice(self, tmp_path, mock_templates, capsys):
+    """(c) --force 指定時の stderr に上書き通知が出力される。"""
+    vault = tmp_path / "vault"
+    # 初回 init で AGENTS/ を作成
+    rw_light.cmd_init([str(vault)])
+
+    # --force で再実行
+    rw_light.cmd_init(["--force", str(vault)])
+    captured = capsys.readouterr()
+    assert "overwrite" in captured.err.lower() or "上書き" in captured.err, (
+      f"stderr に上書き通知が含まれない: {captured.err!r}"
+    )
+
+  def test_force_backup_symlink_abort(self, tmp_path, mock_templates, capsys):
+    """(d) .backup/ が既存 symlink の場合 SystemExit(1) + stderr に '[rw-init] .backup/ must be a regular directory'。"""
+    vault = tmp_path / "vault"
+    # 初回 init で AGENTS/ を作成
+    rw_light.cmd_init([str(vault)])
+
+    # .backup/ を symlink として作成
+    backup_dir = vault / ".backup"
+    fake_target = tmp_path / "fake_target"
+    fake_target.mkdir()
+    backup_dir.symlink_to(fake_target)
+    assert backup_dir.is_symlink(), "前提: .backup/ が symlink であるべき"
+
+    # --force で再実行 → SystemExit(1) かつ stderr にメッセージ
+    with pytest.raises(SystemExit) as exc_info:
+      rw_light.cmd_init(["--force", str(vault)])
+    assert exc_info.value.code == 1, f"SystemExit(1) であるべき: {exc_info.value.code}"
+    captured = capsys.readouterr()
+    assert "[rw-init] .backup/ must be a regular directory" in captured.err, (
+      f"stderr に期待メッセージが含まれない: {captured.err!r}"
+    )
+
+  def test_force_timestamp_collision_fallback(self, tmp_path, mock_templates, monkeypatch):
+    """(e) <timestamp> directory が既に存在する場合、<timestamp>-<pid> fallback 名で作成して成功する。"""
+    vault = tmp_path / "vault"
+    # 初回 init で AGENTS/ を作成
+    rw_light.cmd_init([str(vault)])
+
+    # timestamp を固定してコリジョンを発生させる
+    fixed_ts = "20260420-120000"
+    monkeypatch.setattr(
+      rw_light, "_backup_timestamp", lambda: fixed_ts
+    )
+    # .backup/<timestamp>/ を事前作成（コリジョン）
+    backup_dir = vault / ".backup" / fixed_ts
+    backup_dir.mkdir(parents=True, exist_ok=True)
+
+    # --force で実行 → <timestamp>-<pid> fallback で成功
+    result = rw_light.cmd_init(["--force", str(vault)])
+    assert result == 0, f"timestamp collision fallback で exit 0 であるべき: {result}"
+
+    # .backup/ 配下に <timestamp>-<pid> 形式のディレクトリが存在する
+    backup_root = vault / ".backup"
+    backups = list(backup_root.iterdir())
+    fallback_dirs = [d for d in backups if d.name.startswith(fixed_ts + "-")]
+    assert len(fallback_dirs) >= 1, (
+      f"<timestamp>-<pid> fallback ディレクトリが存在しない: {[d.name for d in backups]}"
     )

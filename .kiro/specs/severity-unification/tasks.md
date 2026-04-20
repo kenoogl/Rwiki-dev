@@ -87,7 +87,7 @@
   - _Boundary: audit parsing layer_
   - _Depends: 1.7_
 
-- [ ] 1.9 `rw init --force` フラグ実装（symlink 防御 + timestamp collision fallback、TDD）
+- [x] 1.9 `rw init --force` フラグ実装（symlink 防御 + timestamp collision fallback、TDD）
   - 先に `tests/test_rw_light.py` に test_rw_init_force_overwrites_agents を red で追加: (a) 既存 `AGENTS/audit.md` が存在する Vault で `rw init --force <vault>` が旧 AGENTS を新 template で上書きする / (b) `--force` 無しで既存 AGENTS がある場合は旧動作（skip or error）を維持 / (c) `--force` 指定時の stderr に上書き通知出力 / (d) `.backup/` が既存 symlink の場合 `SystemExit(1)` + `[rw-init] .backup/ must be a regular directory` stderr（symlink 先への意図しない書込防御）/ (e) `<timestamp>` directory が既に存在する場合（同一秒内の 2 回目 `--force`）、`<timestamp>-<pid>` フォールバック名で作成して成功
   - `cmd_init` に `--force` argparse flag を追加、既存 AGENTS ディレクトリのバックアップ（`.backup/<timestamp>` 配下に退避、`.backup/` が既存 symlink なら abort、`<timestamp>` 衝突時は `<timestamp>-<pid>` fallback）後に `templates/AGENTS/` 全ファイルを再コピーする経路を実装
   - `.gitignore` に `logs/` または `logs/*_latest.json` の exclusion 行が存在することを本タスクの PR で先行確認（`drift_events[].original_token` が raw Claude 応答を最大 40 bytes 保持するため secret leak 防御として重要）。未除外の場合、同一 PR で `.gitignore` に `logs/` を追加

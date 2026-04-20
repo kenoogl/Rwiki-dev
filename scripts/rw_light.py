@@ -3498,6 +3498,13 @@ def cmd_query_fix(args: list[str]) -> int:
 # -------------------------
 # cmd_init
 # -------------------------
+def _backup_timestamp() -> str:
+  """バックアップディレクトリ名に使用するタイムスタンプ文字列を返す（YYYYMMDD-HHMMSS 形式）。
+  テスト時に monkeypatch で差し替え可能にするためモジュールレベル関数として分離。"""
+  import datetime
+  return datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
 def cmd_init(args: list[str]) -> int:
   """
   Vaultセットアップを実行する。
@@ -3506,7 +3513,14 @@ def cmd_init(args: list[str]) -> int:
   returns: 終了コード（0: 成功, 1: エラー）
   """
   # --- 引数解析 ---
-  target_path = args[0] if args else os.getcwd()
+  import argparse as _argparse
+  parser = _argparse.ArgumentParser(prog="rw init", add_help=False)
+  parser.add_argument("--force", action="store_true", default=False,
+                      help="既存 AGENTS/ を .backup/<timestamp>/ に退避して新テンプレートで上書きする")
+  parser.add_argument("target", nargs="?", default=None)
+  parsed, _unknown = parser.parse_known_args(args)
+  force = parsed.force
+  target_path = parsed.target if parsed.target else os.getcwd()
 
   # --- report dict 初期化 ---
   report: dict[str, Any] = {
@@ -3535,7 +3549,7 @@ def cmd_init(args: list[str]) -> int:
       return 1
 
   # --- Vault検出 ---
-  if is_existing_vault(target_path):
+  if is_existing_vault(target_path) and not force:
     ans = input(
       f"[WARN] '{target_path}' は既存のVaultです。上書きしますか？ [y/N]: "
     ).strip().lower()
@@ -3565,18 +3579,37 @@ def cmd_init(args: list[str]) -> int:
     print(f"[WARN] CLAUDE.md コピー失敗: {e}")
     report["skipped"].append({"item": "CLAUDE.md", "reason": str(e)})
 
-  # --- AGENTS/ コピー（re-init 時はバックアップ後上書き） ---
+  # --- AGENTS/ コピー ---
   tmpl_agents = os.path.join(DEV_ROOT, "templates", "AGENTS")
   dest_agents = os.path.join(target_path, "AGENTS")
   if os.path.isdir(tmpl_agents):
     try:
       if os.path.isdir(dest_agents):
-        bak_agents = dest_agents + ".bak"
-        if os.path.isdir(bak_agents):
-          shutil.rmtree(bak_agents)
-        os.rename(dest_agents, bak_agents)
+        if force:
+          # --force: .backup/<timestamp>/ に退避（symlink 防御 + timestamp collision fallback）
+          backup_root = os.path.join(target_path, ".backup")
+          # .backup/ が symlink なら abort
+          if os.path.islink(backup_root):
+            print("[rw-init] .backup/ must be a regular directory", file=sys.stderr)
+            sys.exit(1)
+          ts = _backup_timestamp()
+          backup_agents_dir = os.path.join(backup_root, ts)
+          if os.path.exists(backup_agents_dir):
+            # timestamp collision: <timestamp>-<pid> fallback
+            backup_agents_dir = os.path.join(backup_root, f"{ts}-{os.getpid()}")
+          os.makedirs(backup_agents_dir, exist_ok=True)
+          shutil.move(dest_agents, os.path.join(backup_agents_dir, "AGENTS"))
+          print(f"[rw-init] 上書き: 旧 AGENTS/ を {backup_agents_dir}/AGENTS に退避しました。", file=sys.stderr)
+        else:
+          # 通常 re-init: AGENTS.bak に退避
+          bak_agents = dest_agents + ".bak"
+          if os.path.isdir(bak_agents):
+            shutil.rmtree(bak_agents)
+          os.rename(dest_agents, bak_agents)
       shutil.copytree(tmpl_agents, dest_agents, dirs_exist_ok=True)
       report["templates_copied"].append("AGENTS/")
+    except SystemExit:
+      raise
     except Exception as e:
       print(f"[WARN] AGENTS/ コピー失敗: {e}")
       report["skipped"].append({"item": "AGENTS/", "reason": str(e)})
