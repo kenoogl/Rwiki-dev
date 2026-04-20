@@ -185,9 +185,9 @@ def test_git_commit(self, patch_constants, monkeypatch):
 
 | コマンド | モック対象関数 |
 |----------|---------------|
-| `rw query` | `rw_light.call_claude` |
-| `rw audit monthly/quarterly` | `rw_light.call_claude` |
-| `rw synthesize-logs` | `rw_light.call_claude_for_log_synthesis` |
+| `rw query` | `rw_prompt_engine.call_claude` |
+| `rw audit monthly/quarterly` | `rw_prompt_engine.call_claude` |
+| `rw synthesize-logs` | `rw_prompt_engine.call_claude_for_log_synthesis` |
 
 モック例:
 
@@ -199,7 +199,7 @@ def test_synthesize_logs_calls_llm(self, patch_constants, monkeypatch):
     calls.append(prompt)
     return "# Synthesis\nTest output."
 
-  monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", fake_llm)
+  monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", fake_llm)
   rw_light.cmd_synthesize_logs([])
   assert len(calls) == 1
 ```
