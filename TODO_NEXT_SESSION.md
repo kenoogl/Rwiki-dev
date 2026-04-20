@@ -1,90 +1,112 @@
 # TODO_NEXT_SESSION.md
 
-_作成: 2026-04-19 — セッション継続用ハンドオフ_
+_更新: 2026-04-20 — severity-unification P1 完了後のハンドオフ_
 
 ---
 
 ## 現在の状態サマリー
 
 **プロジェクト**: Rwiki — AI 支援ナレッジベース構築システム  
-**ブランチ**: `main`（リモートと同期済み）  
-**全テスト**: 538 passed ✅
-
-### 完了済みスペック（全件）
-
-| スペック | 内容 | 状態 |
-|---------|------|------|
-| project-foundation | `rw init` コマンド・Vault 初期化・CLAUDE.md カーネル | ✅ 完了 |
-| agents-system | AGENTS/ サブプロンプト体系（9 タスク） | ✅ 完了 |
-| cli-query | query_answer / query_extract / query_fix コマンド | ✅ 完了 |
-| cli-audit | audit（micro/weekly/monthly/quarterly）コマンド | ✅ 完了 |
-| test-suite | 全コマンドのテスト体系（538 テスト） | ✅ 完了 |
-
-### 主要成果物
-
-- `scripts/rw_light.py` — 3,490 行のモノリシック CLI（全コマンド実装済み）
-- `tests/` — 10 ファイル（conftest.py + 9 テストファイル）
-- `templates/AGENTS/` — 9 タスク用プロンプト + README
-- `docs/` — user-guide.md, developer-guide.md, audit.md 等
-- `README.md` — 全コマンドリファレンス更新済み
-- `CHANGELOG.md` — Keep a Changelog フォーマット
+**ブランチ**: `main`（未プッシュの P1 コミット 10 件あり）  
+**全テスト**: 579 passed ✅  
+**実施中スペック**: `severity-unification`
 
 ---
 
-## 次のセッションで検討すべき事項
+## 進行中スペック: severity-unification
 
-### Technical Debt（roadmap.md に記録済み）
+### P1 完了（全 10 タスク ✓）
 
-1. **Severity 体系の既存コマンド統一**  
-   - cli-audit は ERROR/WARN/INFO 3 水準、既存 `rw lint` は PASS/WARN/FAIL  
-   - 統一は将来の別スペックで対応予定
+| タスク | 内容 | コミット |
+|-------|------|---------|
+| 1.1 | conftest fixtures + pytest markers | `87c58d9` |
+| 1.2 | `_normalize_severity_token` helper TDD | `c94235d` |
+| 1.3 | `_validate_agents_severity_vocabulary` TDD | `eee4bb4` |
+| 1.4 | Vault validation hook + escape hatch + prompt prefix | `3004fd9` |
+| 1.5 | `AGENTS/audit.md` severity rename (HIGH→ERROR 等) | `eed77b4` |
+| 1.6 | Finding sub_severity フィールド廃止 | `7c89fce` |
+| 1.7 | `map_severity()` 全廃 + `_normalize_severity_token` 置換 | `102da99` |
+| 1.8 | `parse_audit_response` 4 段構造検証 + silent skip 廃止 | `fd02555` |
+| 1.9 | `rw init --force` 実装（backup + symlink防御 + collision fallback） | `a412ad3` |
+| 1.10 | P1 atomic 完了ゲート確認 | `723bf5b` |
 
-2. **exit 1 セマンティクス分離**  
-   - 現状: exit 1 = ランタイムエラー & FAIL 検出の両方  
-   - CI 統合が必要になったタイミングで exit 1（エラー）/ exit 2（FAIL）に分離
+### P2 開始待ち（status 2 値化 + exit code 3 値分離）
 
-3. **rw_light.py のモジュール分割**  
-   - 3,490 行（保守限界目安 3,000 行を超過）  
-   - 新規スペック追加時に検討。自然な分割境界:  
-     - `rw_utils.py` / `rw_prompt_engine.py` / `rw_audit.py` / `rw_query.py`
+次のセッションでは **P2 から `/kiro-impl severity-unification` を再実行**。
 
-4. **call_claude() タイムアウト**  
-   - cli-audit で `timeout` パラメータ追加済み（audit=300秒）  
-   - 他コマンドへの適用は任意
+P2 の全タスク（未着手）:
+- `[ ] 2.1` `_compute_run_status(findings)` helper TDD（依存: なし）
+- `[ ] 2.2` `_compute_exit_code(status, had_runtime_error)` helper TDD（依存: なし）
+- `[ ] 2.3 (P)` `templates/AGENTS/lint.md` status/exit code 記述更新（依存: なし）
+- `[ ] 2.4` `cmd_lint` JSON schema 更新（依存: 2.1）
+- `[ ] 2.5` `cmd_lint` stdout 表示更新（依存: 2.1）
+- `[ ] 2.6` `cmd_lint_query` JSON schema 更新（依存: 2.1）
+- `[ ] 2.7` `cmd_lint_query` stdout 更新（依存: 2.1）
+- `[ ] 2.8` `cmd_audit_*` status 計算 + CRITICAL 可視化（依存: 2.1）
+- `[ ] 2.9` `cmd_lint` / `cmd_audit_*` の FAIL → exit 2 移行（依存: 2.2）
+- `[ ] 2.10` `cmd_lint_query` 旧 exit 3/4 → exit 1 統合（依存: 2.2）
+- `[ ] 2.11` `cmd_ingest` precondition failure exit 1 維持 + WARN 除去（依存: 2.2）
+- `[ ] 2.12` `cmd_query_extract` / `cmd_query_fix` exit code 整合（依存: 2.2）
+- `[ ] 2.13` P2 完了ゲート（依存: 2.4〜2.12）
 
-### 次期スペック候補（Roadmap 外・未着手）
-
-- CI/CD 統合（GitHub Actions 等）
-- マルチユーザー対応
-- Obsidian Vault 設定との統合
-- qmd / Zotero 連携
+### P3 残タスク（P2 後）
+11 タスク（3.1〜3.11）— ドキュメント・隣接 spec 同期・静的スキャン・smoke test
 
 ---
 
 ## セッション再開手順
 
 ```bash
-# 1. プロジェクトに移動
 cd /Users/Daily/Development/Rwiki-dev
 
-# 2. 現在の状態確認
+# 状態確認
 git log --oneline -5
-python -m pytest tests/ -q
+python -m pytest tests/ -m "not slow" -q
 
-# 3. ステアリング確認（AI コンテキスト用）
-# /kiro-steering  ← Sync モードで最新状態を確認
-
-# 4. スペック状況確認
-# /kiro-spec-status <feature-name>
+# P2 実装開始（autonomous mode）
+# /kiro-impl severity-unification
 ```
 
----
-
-## このセッションで実施した作業
-
-- `/kiro-steering` — Sync モード実行
-  - `structure.md`: テスト構成（単一→マルチファイル）+ `developer-guide.md` 追記
-  - `tech.md`: テストファイル記述を `test_*.py` マルチファイル構成に更新
+> **注意**: `/kiro-impl` は tasks.md の未完了タスクを自動検出して P2 から開始する。
 
 ---
+
+## 未コミット変更
+
+- `.kiro/steering/tech.md` — Prompt Engine 方針の記述追加（steering sync 由来、実装と無関係）
+  → 次セッション冒頭で `git add .kiro/steering/tech.md && git commit -m "chore(steering): Prompt Engine 単一ソース原則を tech.md に追記"` で処理
+
+---
+
+## P1 で新設・変更した主要関数（P2 実装者向け参照）
+
+| 関数 | 場所 | 目的 |
+|-----|------|-----|
+| `_VALID_SEVERITIES` | rw_light.py:1718 | `{"CRITICAL","ERROR","WARN","INFO"}` 定数 |
+| `_normalize_severity_token()` | rw_light.py:1721 | severity token 正規化 + drift 記録 |
+| `_validate_agents_severity_vocabulary()` | rw_light.py:1798 | Vault AGENTS/audit.md の旧語彙検出 |
+| `parse_audit_response()` | rw_light.py:2034 | 4 段構造検証 + severity coerce |
+| `build_audit_prompt()` | (updated) | Severity Vocabulary (STRICT) prefix 付き |
+| `load_task_prompts()` | (updated) | `skip_vault_validation` kwarg 追加 |
+| `cmd_init --force` | (updated) | AGENTS/ 再デプロイ + .backup/ 退避 |
+
+P2 で追加予定:
+- `_compute_run_status(findings) -> str`
+- `_compute_exit_code(status, had_runtime_error) -> int`
+
+---
+
+## 既存スペック（完了済み）
+
+| スペック | 状態 |
+|---------|------|
+| project-foundation | ✅ |
+| agents-system | ✅ |
+| cli-query | ✅ |
+| cli-audit | ✅ |
+| test-suite | ✅ |
+| severity-unification | 🔄 P1 完了、P2 待ち |
+
+---
+
 _このファイルはセッション開始時に削除またはアーカイブして構いません_

@@ -1,7 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Skill(kiro-review)"
+      "Skill(kiro-review)",
+      "Bash(python -m pytest tests/ -m \"not slow\" -q --tb=no)",
+      "Bash(python -m pytest tests/ -m \"not slow\" -q --tb=short)",
+      "Bash(python -m pytest tests/test_lint.py::TestLintJsonNewSchema -v --tb=short)",
+      "Bash(python -m pytest tests/test_lint.py::TestLintStdout4Tier -v --tb=short)",
+      "Bash(python -m pytest tests/test_lint_query.py::TestLintQueryJsonNewSchema -v --tb=short)",
+      "Bash(python -m pytest tests/test_lint_query.py -v --tb=short)",
+      "Bash(python -m pytest tests/test_rw_light.py::TestE2EWorkflow::test_extract_lint_fail_fix_workflow -v --tb=long)",
+      "Bash(python -m pytest tests/test_rw_light.py::TestE2EWorkflow::test_extract_lint_fail_fix_workflow -v --tb=short)",
+      "Bash(python -m pytest tests/test_lint_query.py::TestLintQueryStdout4Tier -v --tb=short)",
+      "Bash(python -m pytest tests/test_lint_query.py::TestLintQueryStdout4Tier tests/test_lint_query.py -v --tb=short)",
+      "Bash(python -m pytest tests/test_rw_light.py::TestAuditSummaryCriticalVisibility -v --tb=short)",
+      "Bash(python -m pytest tests/test_lint.py::TestLintExit2OnFail -v --tb=short)",
+      "Bash(python -m pytest tests/test_rw_light.py::TestAuditExit2OnFail tests/test_lint.py::TestLintExit2OnFail -v --tb=short)",
+      "Bash(python -m pytest tests/test_lint_query.py::TestLintQueryExitCodeConsolidation -v --tb=short)",
+      "Bash(python -m pytest tests/test_ingest.py::TestIngestPreconditionExit1 -x -q)",
+      "Bash(python -m pytest tests/test_ingest.py::TestIngestPreconditionExit1 -q)",
+      "Bash(python -m pytest tests/test_ingest.py -q)",
+      "Bash(python -m pytest tests/ -q)",
+      "Bash(python -m pytest tests/test_rw_light.py::TestQueryExtractExit2OnFail tests/test_rw_light.py::TestQueryFixExit2OnFail -x -q)",
+      "Bash(git commit -m ' *)",
+      "Bash(python -m pytest tests/test_lint.py tests/test_lint_query.py tests/test_audit.py tests/test_ingest.py tests/test_rw_light.py -q)"
     ]
   }
 }
