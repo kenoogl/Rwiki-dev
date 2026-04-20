@@ -203,7 +203,7 @@
   - 完了状態: `pytest tests/ -v | tail -5` で 642 件以上 pass、`python scripts/rw_light.py` で usage 表示、6 モジュール一括 import / 個別 import がすべて成功（circular import なし）
   - _Requirements: 5.1, 5.2, 6.1, 6.2_
 
-- [ ] 6.3 Vault symlink 経由起動の手動 smoke 検証
+- [x] 6.3 Vault symlink 経由起動の手動 smoke 検証
   - 一時ディレクトリ（例: `/tmp/rwiki-smoke-vault-<timestamp>`）を新規作成し、`python scripts/rw_light.py init /tmp/rwiki-smoke-vault-<timestamp>` で Vault 初期化を行う（既存の `cmd_init` ロジックで `rw` symlink が配置される）
   - 配置された symlink から `python /tmp/rwiki-smoke-vault-<timestamp>/rw` を引数なしで起動し、usage テキストが表示されること（= `import rw_config` 等のサブモジュール import が `sys.path` 自動解決で成功）を確認する（Req 6.3）
   - 検証結果（実行コマンド + 出力 + 成功/失敗判定）を本タスクの完了報告に記録する
