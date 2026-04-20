@@ -164,7 +164,7 @@
 
 - [ ] 5. Phase 4b: `rw_query` 抽出と query dispatch 切り替え
 
-- [ ] 5.1 `rw_query.py` 作成と query コマンド / query lint 関数群の移動
+- [x] 5.1 `rw_query.py` 作成と query コマンド / query lint 関数群の移動
   - `scripts/rw_query.py` を新規作成し、design.md「File Structure Plan」の rw_query セクションで列挙された全関数を `rw_light.py` から物理移動する（`generate_query_id`, `write_query_artifacts`, `parse_extract_response`, `parse_fix_response`, `_strip_code_block`, `count_evidence_blocks`, `contains_markdown_structure`, `has_query_text`, `extract_query_type`, `extract_scope`, `has_evidence_source`, `contains_inference_language`, `lint_single_query_dir`, `print_query_lint_text`, `cmd_query_extract`, `cmd_query_answer`, `cmd_query_fix`, `cmd_lint_query`）
   - `rw_query.py` は `import rw_config`, `import rw_utils`, `import rw_prompt_engine` のみを行い、すべての参照を修飾形式に統一する（`rw_audit`, `rw_light` を import しない — DAG 維持）
   - `cmd_query_fix` 内では `rw_query.lint_single_query_dir(...)` と自モジュール内でも修飾参照する（Req 4.3 の monkeypatch を有効化するため）
