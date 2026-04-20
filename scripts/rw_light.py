@@ -1288,11 +1288,10 @@ def load_wiki_pages(wiki_dir: str, target_files: list[str] | None = None) -> lis
 
 class Finding(NamedTuple):
     """監査で検出された個別の問題。"""
-    severity: str      # "ERROR" | "WARN" | "INFO"
+    severity: str      # "CRITICAL" | "ERROR" | "WARN" | "INFO"
     category: str      # チェックカテゴリ（例: "broken_link", "orphan_page"）
     page: str          # 対象ページパス（wiki/ からの相対パス）
     message: str       # 問題の説明
-    sub_severity: str  # monthly/quarterly の元の優先度（"CRITICAL" | "HIGH" | ""）
     marker: str        # monthly のマーカー（"CONFLICT" | "TENSION" | "AMBIGUOUS" | ""）
 
 
@@ -1347,7 +1346,6 @@ def check_broken_links(pages: list["WikiPage"], all_pages_set: set[str]) -> list
                     category="broken_link",
                     page=page.path,
                     message=f"[[{link_name}]] のリンク先が存在しない",
-                    sub_severity="",
                     marker="",
                 ))
     return findings
@@ -1365,7 +1363,6 @@ def check_index_registration(pages: list["WikiPage"], index_content: "str | None
             category="index_missing",
             page="",
             message="index.md が存在しないため index 登録チェックをスキップします",
-            sub_severity="",
             marker="",
         )]
 
@@ -1389,7 +1386,6 @@ def check_index_registration(pages: list["WikiPage"], index_content: "str | None
                 category="index_missing",
                 page=page.path,
                 message=f"index.md に未登録",
-                sub_severity="",
                 marker="",
             ))
     return findings
@@ -1421,7 +1417,6 @@ def check_frontmatter(pages: list["WikiPage"]) -> list["Finding"]:
                     category="frontmatter_error",
                     page=page.path,
                     message="frontmatter の閉じ `---` がない（未閉じ frontmatter）",
-                    sub_severity="",
                     marker="",
                 ))
             else:
@@ -1433,7 +1428,6 @@ def check_frontmatter(pages: list["WikiPage"]) -> list["Finding"]:
                         category="frontmatter_error",
                         page=page.path,
                         message="frontmatter ブロックが空",
-                        sub_severity="",
                         marker="",
                     ))
                 else:
@@ -1446,7 +1440,6 @@ def check_frontmatter(pages: list["WikiPage"]) -> list["Finding"]:
                                 category="frontmatter_error",
                                 page=page.path,
                                 message=f"frontmatter に不正な行がある: `{line}`",
-                                sub_severity="",
                                 marker="",
                             ))
                             break
@@ -1458,7 +1451,6 @@ def check_frontmatter(pages: list["WikiPage"]) -> list["Finding"]:
                 category="frontmatter_warn",
                 page=page.path,
                 message="title フィールドが欠落",
-                sub_severity="",
                 marker="",
             ))
 
@@ -1486,7 +1478,6 @@ def run_micro_checks(
                 category="read_error",
                 page=page.path,
                 message=f"ファイル読み込みエラー: {page.read_error}",
-                sub_severity="",
                 marker="",
             ))
         else:
@@ -1547,7 +1538,6 @@ def check_orphan_pages(
                 category="orphan_page",
                 page=page.path,
                 message="他のページからリンクされていない",
-                sub_severity="",
                 marker="",
             ))
     return findings
@@ -1626,7 +1616,6 @@ def check_bidirectional_links(
                     category="missing_backlink",
                     page=page.path,
                     message=f"[[{link_name.replace('.md', '')}]] への逆リンクが欠落",
-                    sub_severity="",
                     marker="",
                 ))
 
@@ -1648,7 +1637,6 @@ def check_naming_convention(pages: list["WikiPage"]) -> list["Finding"]:
                 category="naming_violation",
                 page=page.path,
                 message=f"命名規則違反: `{page.filename}` は小文字・ハイフン区切り・ASCII のみを使用してください",
-                sub_severity="",
                 marker="",
             ))
     return findings
@@ -1665,7 +1653,6 @@ def check_source_field(pages: list["WikiPage"]) -> list["Finding"]:
                 category="missing_source",
                 page=page.path,
                 message="source フィールドが空または欠落",
-                sub_severity="",
                 marker="",
             ))
     return findings
@@ -1715,8 +1702,8 @@ def run_weekly_checks(
 # audit: LLM engine
 
 
-def map_severity(claude_severity: str) -> tuple[str, str]:
-  """AGENTS/audit.md の severity を CLI 3水準にマッピングする。
+def map_severity(claude_severity: str) -> str:
+  """AGENTS/audit.md の severity を CLI 4水準にマッピングする。
 
   新語彙（CRITICAL/ERROR/WARN/INFO）と旧語彙（HIGH/MEDIUM/LOW）の両方をサポートする。
   旧語彙は後方互換のためマッピングを保持するが、parse_audit_response で
@@ -1727,25 +1714,23 @@ def map_severity(claude_severity: str) -> tuple[str, str]:
           新語彙: "CRITICAL" | "ERROR" | "WARN" | "INFO"
           旧語彙（後方互換）: "HIGH" | "MEDIUM" | "LOW"
   Returns:
-      (cli_severity, sub_severity) のタプル。
-      sub_severity は空文字列で「なし」を表現。
-      例: ("ERROR", "CRITICAL"), ("ERROR", "HIGH"), ("WARN", ""), ("INFO", "")
+      cli_severity 文字列。"CRITICAL" | "ERROR" | "WARN" | "INFO"
   """
   if claude_severity == "CRITICAL":
-    return ("ERROR", "CRITICAL")
+    return "CRITICAL"
   elif claude_severity == "ERROR":
-    return ("ERROR", "")
+    return "ERROR"
   elif claude_severity == "WARN":
-    return ("WARN", "")
+    return "WARN"
   elif claude_severity == "INFO":
-    return ("INFO", "")
+    return "INFO"
   elif claude_severity == "HIGH":
-    return ("ERROR", "HIGH")
+    return "ERROR"
   elif claude_severity == "MEDIUM":
-    return ("WARN", "")
+    return "WARN"
   else:
     # LOW およびその他
-    return ("INFO", "")
+    return "INFO"
 
 
 _VALID_SEVERITIES = {"CRITICAL", "ERROR", "WARN", "INFO"}
@@ -2241,10 +2226,7 @@ def generate_audit_report(
 
   # Finding の行フォーマット
   def _format_finding_line(f) -> str:
-    if f.sub_severity:
-      sev_tag = f"[{f.severity}:{f.sub_severity}]"
-    else:
-      sev_tag = f"[{f.severity}]"
+    sev_tag = f"[{f.severity}]"
     marker_suffix = f" [{f.marker}]" if f.marker else ""
     category_suffix = f" ({f.category})" if f.category else ""
     if f.page:
@@ -2624,7 +2606,7 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
   raw_findings = data.get("findings", [])
   findings: list[Finding] = []
   for f in raw_findings:
-    cli_severity, sub_severity = map_severity(f["severity"])
+    cli_severity = map_severity(f["severity"])
     category = f.get("category", "")
     page = f.get("page") or ""
     message = f.get("message", "")
@@ -2634,7 +2616,6 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
       category=category,
       page=page,
       message=message,
-      sub_severity=sub_severity,
       marker=marker,
     ))
 

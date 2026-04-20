@@ -56,7 +56,7 @@
   - _Requirements: 1.2, 1.7_
   - _Boundary: AGENTS templates_
 
-- [ ] 1.6 `Finding` NamedTuple から sub_severity 廃止（機械的一括削除）
+- [x] 1.6 `Finding` NamedTuple から sub_severity 廃止（機械的一括削除）
   - NamedTuple L1267-1274 から `sub_severity: str` 行を削除
   - Finding コンストラクタ 25 箇所の `sub_severity=...` kwarg を全削除（L1328, L1346, L1370, L1402, L1414, L1427, L1439, L1467, L1528, L1607, L1629, L1646, L2374 等）
   - `_format_finding_line` L1988-1998 の `f.sub_severity` 参照削除、sev_tag を `[{severity}]` 単一化（2 段表記 `[ERROR] [CRITICAL 由来]` を廃止）

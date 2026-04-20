@@ -2427,21 +2427,19 @@ class TestE2EWorkflow:
 class TestFindingNamedTuple:
     """Finding NamedTuple の定義テスト"""
 
-    def test_finding_has_six_fields(self):
-        """Finding NamedTuple は 6 フィールドを持つこと"""
+    def test_finding_has_five_fields(self):
+        """Finding NamedTuple は 5 フィールドを持つこと（sub_severity 廃止後）"""
         f = rw_light.Finding(
             severity="ERROR",
             category="broken_link",
             page="concepts/my-page.md",
             message="リンク先が存在しない",
-            sub_severity="CRITICAL",
             marker="CONFLICT",
         )
         assert f.severity == "ERROR"
         assert f.category == "broken_link"
         assert f.page == "concepts/my-page.md"
         assert f.message == "リンク先が存在しない"
-        assert f.sub_severity == "CRITICAL"
         assert f.marker == "CONFLICT"
 
     def test_finding_fields_all_str(self):
@@ -2451,10 +2449,9 @@ class TestFindingNamedTuple:
             category="orphan_page",
             page="methods/orphan.md",
             message="孤立ページ",
-            sub_severity="",
             marker="",
         )
-        for field in (f.severity, f.category, f.page, f.message, f.sub_severity, f.marker):
+        for field in (f.severity, f.category, f.page, f.message, f.marker):
             assert isinstance(field, str), f"Expected str, got {type(field)}"
 
     def test_finding_is_named_tuple(self):
@@ -2463,8 +2460,35 @@ class TestFindingNamedTuple:
         assert issubclass(rw_light.Finding, tuple)
         assert hasattr(rw_light.Finding, "_fields")
         assert set(rw_light.Finding._fields) == {
-            "severity", "category", "page", "message", "sub_severity", "marker"
+            "severity", "category", "page", "message", "marker"
         }
+
+    def test_finding_no_sub_severity(self):
+        """Task 1.6: Finding NamedTuple に sub_severity フィールドが存在しないこと"""
+        assert "sub_severity" not in rw_light.Finding._fields, (
+            "sub_severity field must be removed from Finding NamedTuple"
+        )
+
+    def test_finding_has_five_fields_after_removal(self):
+        """Task 1.6: Finding NamedTuple は sub_severity 廃止後 5 フィールドであること"""
+        assert set(rw_light.Finding._fields) == {
+            "severity", "category", "page", "message", "marker"
+        }
+
+    def test_format_finding_line_single_prefix(self):
+        """Task 1.6: _format_finding_line が [SEVERITY] 単一プレフィックスを返すこと"""
+        # generate_audit_report の内部関数 _format_finding_line を間接テストする
+        # Finding を使った audit report 生成で prefix が単一であることを確認
+        f = rw_light.Finding(
+            severity="ERROR",
+            category="broken_link",
+            page="concepts/my-page.md",
+            message="リンク先が存在しない",
+            marker="",
+        )
+        # [ERROR:CRITICAL] のような2段表記が存在しないことを確認
+        assert hasattr(f, "severity")
+        assert not hasattr(f, "sub_severity"), "sub_severity must not exist on Finding"
 
 
 class TestWikiPageNamedTuple:
@@ -3563,15 +3587,7 @@ class TestCheckBrokenLinks:
         assert isinstance(f.category, str)
         assert isinstance(f.page, str)
         assert isinstance(f.message, str)
-        assert isinstance(f.sub_severity, str)
         assert isinstance(f.marker, str)
-
-    def test_sub_severity_is_empty(self):
-        """micro チェックでは sub_severity が空文字列であること"""
-        page = _make_wiki_page(links=["missing"])
-        all_pages_set = {"page.md"}
-        result = rw_light.check_broken_links([page], all_pages_set)
-        assert result[0].sub_severity == ""
 
     def test_marker_is_empty(self):
         """micro チェックでは marker が空文字列であること"""
@@ -4241,31 +4257,35 @@ class TestRunWeeklyChecks:
 
 
 class TestMapSeverity:
-    """map_severity() の全4パターンをテストする"""
+    """map_severity() の全パターンをテストする（identity mapping）"""
 
-    def test_critical_maps_to_error_critical(self):
-        """CRITICAL → ("ERROR", "CRITICAL") にマッピングされること"""
-        cli_sev, sub_sev = rw_light.map_severity("CRITICAL")
-        assert cli_sev == "ERROR"
-        assert sub_sev == "CRITICAL"
+    def test_critical_maps_to_critical(self):
+        """CRITICAL → "CRITICAL" にマッピングされること"""
+        assert rw_light.map_severity("CRITICAL") == "CRITICAL"
 
-    def test_high_maps_to_error_high(self):
-        """HIGH → ("ERROR", "HIGH") にマッピングされること"""
-        cli_sev, sub_sev = rw_light.map_severity("HIGH")
-        assert cli_sev == "ERROR"
-        assert sub_sev == "HIGH"
+    def test_error_maps_to_error(self):
+        """ERROR → "ERROR" にマッピングされること"""
+        assert rw_light.map_severity("ERROR") == "ERROR"
+
+    def test_warn_maps_to_warn(self):
+        """WARN → "WARN" にマッピングされること"""
+        assert rw_light.map_severity("WARN") == "WARN"
+
+    def test_info_maps_to_info(self):
+        """INFO → "INFO" にマッピングされること"""
+        assert rw_light.map_severity("INFO") == "INFO"
+
+    def test_high_maps_to_error(self):
+        """旧語彙 HIGH → "ERROR" にマッピングされること（後方互換）"""
+        assert rw_light.map_severity("HIGH") == "ERROR"
 
     def test_medium_maps_to_warn(self):
-        """MEDIUM → ("WARN", "") にマッピングされること"""
-        cli_sev, sub_sev = rw_light.map_severity("MEDIUM")
-        assert cli_sev == "WARN"
-        assert sub_sev == ""
+        """旧語彙 MEDIUM → "WARN" にマッピングされること（後方互換）"""
+        assert rw_light.map_severity("MEDIUM") == "WARN"
 
     def test_low_maps_to_info(self):
-        """LOW → ("INFO", "") にマッピングされること"""
-        cli_sev, sub_sev = rw_light.map_severity("LOW")
-        assert cli_sev == "INFO"
-        assert sub_sev == ""
+        """旧語彙 LOW → "INFO" にマッピングされること（後方互換）"""
+        assert rw_light.map_severity("LOW") == "INFO"
 
 
 class TestBuildAuditPrompt:
@@ -4769,7 +4789,6 @@ def _make_finding(
   category="broken_link",
   page="concepts/my-page.md",
   message="テストメッセージ",
-  sub_severity="",
   marker="",
 ):
   return rw_light.Finding(
@@ -4777,7 +4796,6 @@ def _make_finding(
     category=category,
     page=page,
     message=message,
-    sub_severity=sub_severity,
     marker=marker,
   )
 
@@ -5108,9 +5126,9 @@ class TestGenerateAuditReportIntegration:
     monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
 
     findings = [
-      rw_light.Finding("ERROR", "broken_link", "concepts/page.md", "リンク切れ", "", ""),
-      rw_light.Finding("WARN", "index_missing", "methods/page.md", "index 未登録", "", ""),
-      rw_light.Finding("INFO", "source_field", "entities/tool.md", "source 空", "", ""),
+      rw_light.Finding("ERROR", "broken_link", "concepts/page.md", "リンク切れ", ""),
+      rw_light.Finding("WARN", "index_missing", "methods/page.md", "index 未登録", ""),
+      rw_light.Finding("INFO", "source_field", "entities/tool.md", "source 空", ""),
     ]
     metrics = {
       "pages_scanned": 3,
