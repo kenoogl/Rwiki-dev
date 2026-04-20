@@ -8,7 +8,7 @@
 
 - **Language**: Python 3.10+（型ヒント完全対応）
 - **Dependencies**: 標準ライブラリのみ（json, os, re, shutil, subprocess, pathlib, datetime, typing）
-- **CLI**: カスタム argparse ベース（エントリポイント: `scripts/rw_light.py`、責務別 6 モジュール構成）
+- **CLI**: カスタム argparse ベース（エントリポイント: `scripts/rw_cli.py`、責務別 6 モジュール構成）
 - **Data Format**: Markdown + YAML フロントマター
 - **Version Control**: Git 統合（変更追跡・コミット自動化）
 - **LLM Integration**: Claude API（subprocess 経由の `claude` CLI 呼び出し）
@@ -42,17 +42,17 @@
 ### Common Commands
 ```bash
 # Test: pytest tests/
-# CLI:  python scripts/rw_light.py <command> [options]
-# Init: python scripts/rw_light.py init <vault-path>
+# CLI:  python scripts/rw_cli.py <command> [options]
+# Init: python scripts/rw_cli.py init <vault-path>
 ```
 
 ## Key Technical Decisions
 
-- **責務別モジュール分割 CLI**: CLI ツールを 6 モジュール（`rw_config` / `rw_utils` / `rw_prompt_engine` / `rw_audit` / `rw_query` / `rw_light`）に分割し Layer 0–4 の DAG を維持 — 各モジュール ≤ 1,500 行、モジュール修飾参照規約（`rw_<module>.<symbol>`）を徹底、後方互換 re-export は一切提供しない。`scripts/` 直下に全モジュールを配置し `sys.path[0]` 自動解決で Vault symlink 経由起動を保証（PYTHONPATH 不要）
+- **責務別モジュール分割 CLI**: CLI ツールを 6 モジュール（`rw_config` / `rw_utils` / `rw_prompt_engine` / `rw_audit` / `rw_query` / `rw_cli`）に分割し Layer 0–4 の DAG を維持 — 各モジュール ≤ 1,500 行、モジュール修飾参照規約（`rw_<module>.<symbol>`）を徹底、後方互換 re-export は一切提供しない。`scripts/` 直下に全モジュールを配置し `sys.path[0]` 自動解決で Vault symlink 経由起動を保証（PYTHONPATH 不要）
 - **フロントマター駆動**: メタデータ（date, source, tags, type, status）を Markdown フロントマターで管理
 - **JSON ログ**: lint/query 結果を構造化 JSON で出力（`logs/` ディレクトリ）
 - **AGENTS/ プロンプトシステム**: AI タスク別にモジュール化されたプロンプトテンプレート
-- **Prompt Engine（単一ソース原則）**: Claude CLI を呼ぶ新規コマンドは `AGENTS/{task}.md` + 関連ポリシーを動的ロードしてプロンプトを構築する（`rw_light.py` の `Prompt Engine` セクション）。CLI 側にプロンプトをハードコードせず、AGENTS/ を唯一のソースとする。既存 `synthesize-logs` の二重管理は段階的に解消予定
+- **Prompt Engine（単一ソース原則）**: Claude CLI を呼ぶ新規コマンドは `AGENTS/{task}.md` + 関連ポリシーを動的ロードしてプロンプトを構築する（`rw_cli.py` の `Prompt Engine` セクション）。CLI 側にプロンプトをハードコードせず、AGENTS/ を唯一のソースとする。既存 `synthesize-logs` の二重管理は段階的に解消予定
 - **Severity/Status/Exit Code 統一契約**: 全 CLI コマンドで統一された 3 層契約を維持する:
   - **Severity**: `CRITICAL` / `ERROR` / `WARN` / `INFO`（AGENTS も同名 4 水準）
   - **Status**: `PASS` / `FAIL` の 2 値（`CRITICAL` または `ERROR` が 1 件以上 → `FAIL`）

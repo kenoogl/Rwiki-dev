@@ -84,7 +84,7 @@
   - _Boundary: README.md, templates/, root CLAUDE.md_
   - _Depends: 2.5_
 
-- [ ] 5. (P) steering 記述の同期
+- [x] 5. (P) steering 記述の同期
   - `.kiro/steering/structure.md` と `.kiro/steering/tech.md` の CLI 構成記述を `rw_cli.py` に同期
   - CLI ツール module 構成セクション（Layer 4 の責務記述）、Common Commands セクション（`python scripts/rw_light.py ...` 形式の例示）、Key Technical Decisions セクション（責務別モジュール分割 CLI の記述）等を対象
   - `roadmap.md` は Out of Boundary のため変更しない
