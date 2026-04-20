@@ -197,3 +197,74 @@ class TestLintQueryJsonNewSchema:
     )
     for r in data["results"]:
       assert r["status"] in {"PASS", "FAIL"}
+
+
+# ---------------------------------------------------------------------------
+# Task 2.7: cmd_lint_query stdout 4 水準表示
+# ---------------------------------------------------------------------------
+
+
+class TestLintQueryStdout4Tier:
+  """cmd_lint_query stdout が 4 水準併記 + status を表示することを検証"""
+
+  def _make_valid_files(self, query_dir: Path) -> None:
+    (query_dir / "question.md").write_text(
+      "scope: test-scope\nquery_type: fact\nWhat is X? " + "q" * 60,
+      encoding="utf-8",
+    )
+    (query_dir / "answer.md").write_text("# Answer\nX is Y. " + "A" * 50, encoding="utf-8")
+    (query_dir / "evidence.md").write_text(
+      "# Evidence\nSource: https://example.com\n" + "B" * 50, encoding="utf-8"
+    )
+    meta = {
+      "query_id": "q001",
+      "query_type": "fact",
+      "created_at": "2025-01-15",
+      "scope": "test-scope",
+      "sources": ["https://example.com"],
+    }
+    (query_dir / "metadata.json").write_text(json.dumps(meta), encoding="utf-8")
+
+  def test_summary_line_has_4_tiers(
+    self, patch_constants, query_artifacts, capsys
+  ):
+    """stdout summary 行に CRITICAL/ERROR/WARN/INFO + status が含まれる"""
+    query_dir = query_artifacts("q001")
+    self._make_valid_files(query_dir)
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    captured = capsys.readouterr()
+    assert "CRITICAL" in captured.out
+    assert "ERROR" in captured.out
+    assert "WARN" in captured.out
+    assert "INFO" in captured.out
+    assert "PASS" in captured.out
+
+  def test_status_shown_when_no_issues(
+    self, patch_constants, query_artifacts, capsys
+  ):
+    """問題 0 件でも status（PASS）が表示される（AC 5.5 境界）"""
+    query_dir = query_artifacts("q001")
+    self._make_valid_files(query_dir)
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    captured = capsys.readouterr()
+    assert "PASS" in captured.out
+
+  def test_status_fail_shown_in_stdout(
+    self, patch_constants, query_artifacts, capsys
+  ):
+    """ERROR がある場合は stdout に FAIL が表示される"""
+    query_dir = query_artifacts("q001")
+    (query_dir / "question.md").unlink()
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    captured = capsys.readouterr()
+    assert "FAIL" in captured.out
+
+  def test_warn_not_in_status_position(
+    self, patch_constants, query_artifacts, capsys
+  ):
+    """WARN が status 位置に出現しない"""
+    query_dir = query_artifacts("q001")
+    self._make_valid_files(query_dir)
+    rw_light.cmd_lint_query(["--path", str(query_dir)])
+    captured = capsys.readouterr()
+    assert "— WARN" not in captured.out

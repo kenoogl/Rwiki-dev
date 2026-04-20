@@ -3303,6 +3303,7 @@ def lint_single_query_dir(query_dir: str, strict: bool = False) -> dict[str, Any
 
 
 def print_query_lint_text(results: list[dict[str, Any]]) -> None:
+    agg: dict[str, int] = {"critical": 0, "error": 0, "warn": 0, "info": 0}
     for res in results:
         print(f"Lint Result: {res['status']}")
         print(f"Target: {res['target']}")
@@ -3310,11 +3311,20 @@ def print_query_lint_text(results: list[dict[str, Any]]) -> None:
 
         for chk in res["checks"]:
             print(f"{chk['severity']:5} {chk['id']:6} {chk['message']}")
+            key = chk["severity"].lower()
+            if key in agg:
+                agg[key] += 1
 
         if not res["checks"]:
             print("No issues found.")
 
         print()
+
+    run_status = "FAIL" if any(r["status"] == "FAIL" for r in results) else "PASS"
+    print(
+        f"query lint: CRITICAL {agg['critical']}, ERROR {agg['error']},"
+        f" WARN {agg['warn']}, INFO {agg['info']} — {run_status}"
+    )
 
 
 def cmd_lint_query(args: list[str]) -> int:
