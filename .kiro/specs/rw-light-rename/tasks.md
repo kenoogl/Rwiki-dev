@@ -2,7 +2,7 @@
 
 本スペックは Migration Strategy 5 step を task graph に落とし込む。Task 1 は pre-check、Task 2 は「バッチ A: 原子的 1 コミット推奨」として中間 pytest green を期待しない前提で分解。Task 3-5 は Task 2 完了後に並行実行可能。Task 6 は最終検証で、6.3 は手動検証チェックリスト文書化（autonomous 可）、6.4 は人間による実施（`/kiro-impl` 完了後 hand-off）。
 
-- [ ] 1. Pre-check: `.claude/settings.local.json` の `rw_light` 参照判断
+- [x] 1. Pre-check: `.claude/settings.local.json` の `rw_light` 参照判断
   - `rg -n "rw_light" .claude/settings.local.json` で 6 箇所の実体を確認
   - permission 文字列 / JSON 値内に `scripts/rw_light.py` 等の symlink target 参照があれば更新対象として記録（Task 5 に取り込み）
   - それ以外（permission rule の例示・historical コメント等）は Out of Boundary 確定として記録

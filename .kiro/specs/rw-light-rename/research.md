@@ -307,3 +307,43 @@ Step 5: 最終検証（pytest + grep + 手動検証）
 ### 8.5 Design Review 後の最終 GO 判定
 
 Issue 1 推奨案採択 + Issue 2/3 design repair で全 Critical Issue が解消。Final Assessment は **無条件 GO**。
+
+---
+
+## 9. Task 1 Pre-check: `.claude/settings.local.json` の `rw_light` 参照判断（実装時記録）
+
+_確認日時: 2026-04-21_
+
+### 9.1 確認対象と結果
+
+`rg -n "rw_light" .claude/settings.local.json` で 6 箇所を確認した。全参照を以下に記録する。
+
+| 行番号 | 内容 | 分類 | 根拠 |
+|-------|------|------|------|
+| L11 | `"Bash(python -m pytest tests/test_rw_light.py::TestE2EWorkflow::test_extract_lint_fail_fix_workflow -v --tb=long)"` | **Out of Boundary** | permission allow リストのエントリ。past session で発行した pytest コマンドのキャッシュ。`tests/test_rw_light.py` は Task 2.1 で `tests/test_rw_cli.py` に rename されるが、この permission 文字列はコマンド実行の許可制御であり、rename 後に使われることはない。機能的パス参照ではなく権限キャッシュのため更新不要 |
+| L12 | `"Bash(python -m pytest tests/test_rw_light.py::TestE2EWorkflow::test_extract_lint_fail_fix_workflow -v --tb=short)"` | **Out of Boundary** | 同上（`--tb=short` 変形）|
+| L15 | `"Bash(python -m pytest tests/test_rw_light.py::TestAuditSummaryCriticalVisibility -v --tb=short)"` | **Out of Boundary** | 同上 |
+| L17 | `"Bash(python -m pytest tests/test_rw_light.py::TestAuditExit2OnFail tests/test_lint.py::TestLintExit2OnFail -v --tb=short)"` | **Out of Boundary** | 同上 |
+| L23 | `"Bash(python -m pytest tests/test_rw_light.py::TestQueryExtractExit2OnFail tests/test_rw_light.py::TestQueryFixExit2OnFail -x -q)"` | **Out of Boundary** | 同上 |
+| L25 | `"Bash(python -m pytest tests/test_lint.py tests/test_lint_query.py tests/test_audit.py tests/test_ingest.py tests/test_rw_light.py -q)"` | **Out of Boundary** | 同上 |
+
+### 9.2 判断根拠の詳細
+
+`.claude/settings.local.json` の permission allow リストは Claude Code がコマンド実行を許可するか判断するための**ホワイトリストキャッシュ**である。6 箇所はいずれも以下の性質を持つ:
+
+1. **過去 session で一度だけ許可したコマンドの記録**であり、将来も同一コマンドが再発行されない限り参照されない
+2. `tests/test_rw_light.py` ファイルは Task 2.1 で `git mv` により削除されるため、rename 後に L11-L25 の pytest コマンドが再実行される可能性は実質ゼロ
+3. permission 文字列に `scripts/rw_light.py` のような**symlink ターゲットへの直接参照は含まれていない**
+4. 設定ファイルとして機能的な影響を持つ記述（例: `"scripts/rw_light.py"` をコマンド引数で直接起動するパス）は存在しない
+
+以上から、**6 箇所全て Out of Boundary** と確定する。
+
+### 9.3 Task 5 への影響
+
+- **更新対象として Task 5 に追加すべきエントリなし**
+- `.claude/settings.local.json` は Out of Boundary 確定ファイルとして Task 6.2 の残存参照判定対象リストに追加する
+- tasks.md Task 5 の完了条件「`.claude/settings.local.json` の判断結果が反映済み」は「Out of Boundary 確定、変更なし」として充足
+
+### 9.4 Task 6.2 への影響（残存参照判定の単純化）
+
+Task 6.2 で `rg -l rw_light` を実行した際に `.claude/settings.local.json` が出力に含まれた場合、それは **Out of Boundary 確定済み** のため許容となる。条件分岐不要。
