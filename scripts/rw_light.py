@@ -3344,7 +3344,7 @@ def cmd_lint_query(args: list[str]) -> int:
             i += 1
             if i >= len(args):
                 print("missing value for --path")
-                return 3
+                return _compute_exit_code(None, had_runtime_error=True)
             target_path = args[i]
         elif a == "--strict":
             strict = True
@@ -3352,14 +3352,14 @@ def cmd_lint_query(args: list[str]) -> int:
             i += 1
             if i >= len(args):
                 print("missing value for --format")
-                return 3
+                return _compute_exit_code(None, had_runtime_error=True)
             output_format = args[i]
         else:
             if not a.startswith("--") and target_path is None:
                 target_path = a
             else:
                 print(f"unknown option: {a}")
-                return 3
+                return _compute_exit_code(None, had_runtime_error=True)
         i += 1
 
     if target_path:
@@ -3374,7 +3374,7 @@ def cmd_lint_query(args: list[str]) -> int:
     missing_paths = [p for p in query_dirs if not os.path.isdir(p)]
     if missing_paths:
         print(f"target path not found: {missing_paths[0]}")
-        return 4
+        return _compute_exit_code(None, had_runtime_error=True)
 
     results = [lint_single_query_dir(p, strict=strict) for p in query_dirs]
 

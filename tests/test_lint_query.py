@@ -96,15 +96,15 @@ class TestCmdLintQuery:
     assert result == 2
 
   def test_exit_code_path_not_found(self, patch_constants, tmp_path):
-    """Req 8.7: 存在しないパスを指定した場合 exit 4 を返す。"""
+    """存在しないパスを指定した場合 exit 1（旧: exit 4）を返す。"""
     nonexistent = tmp_path / "does_not_exist" / "q999"
     result = rw_light.cmd_lint_query(["--path", str(nonexistent)])
-    assert result == 4
+    assert result == 1
 
   def test_exit_code_arg_error(self, patch_constants):
-    """Req 8.8: 不正な引数を渡した場合 exit 3 を返す。"""
+    """不正な引数を渡した場合 exit 1（旧: exit 3）を返す。"""
     result = rw_light.cmd_lint_query(["--path"])
-    assert result == 3
+    assert result == 1
 
 
 # ---------------------------------------------------------------------------
@@ -174,6 +174,57 @@ class TestLintQueryJsonNewSchema:
       (patch_constants / "logs" / "query_lint_latest.json").read_text()
     )
     assert "schema_version" not in data
+
+
+# ---------------------------------------------------------------------------
+# Task 2.10: cmd_lint_query 旧 exit 3/4 → exit 1 統合
+# ---------------------------------------------------------------------------
+
+
+class TestLintQueryExitCodeConsolidation:
+  """cmd_lint_query の exit code 3 値契約を検証"""
+
+  def test_arg_error_exit_1(self, patch_constants):
+    """引数エラー（--path 値なし）→ exit 1（旧: exit 3）"""
+    result = rw_light.cmd_lint_query(["--path"])
+    assert result == 1
+
+  def test_path_not_found_exit_1(self, patch_constants, tmp_path):
+    """存在しないパス → exit 1（旧: exit 4）"""
+    nonexistent = tmp_path / "does_not_exist" / "q999"
+    result = rw_light.cmd_lint_query(["--path", str(nonexistent)])
+    assert result == 1
+
+  def test_fail_exit_2(self, patch_constants, query_artifacts):
+    """FAIL（ERROR あり）→ exit 2"""
+    query_dir = query_artifacts("q001")
+    (query_dir / "question.md").unlink()
+    result = rw_light.cmd_lint_query(["--path", str(query_dir)])
+    assert result == 2
+
+  def test_pass_exit_0(self, patch_constants, query_artifacts):
+    """PASS → exit 0"""
+    query_dir = query_artifacts("q001")
+    # 全ファイルを valid に設定
+    (query_dir / "question.md").write_text(
+      "scope: test-scope\nquery_type: fact\nWhat is X? " + "q" * 60,
+      encoding="utf-8",
+    )
+    (query_dir / "answer.md").write_text("# Answer\nX is Y. " + "A" * 50, encoding="utf-8")
+    (query_dir / "evidence.md").write_text(
+      "# Evidence\nSource: https://example.com\n" + "B" * 50, encoding="utf-8"
+    )
+    import json as _json
+    meta = {
+      "query_id": "q001",
+      "query_type": "fact",
+      "created_at": "2025-01-15",
+      "scope": "test-scope",
+      "sources": ["https://example.com"],
+    }
+    (query_dir / "metadata.json").write_text(_json.dumps(meta), encoding="utf-8")
+    result = rw_light.cmd_lint_query(["--path", str(query_dir)])
+    assert result == 0
 
   def test_warn_only_returns_pass_status(
     self, patch_constants, query_artifacts

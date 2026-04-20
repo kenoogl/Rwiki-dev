@@ -185,7 +185,7 @@
   - _Boundary: cmd_lint + cmd_audit_
   - _Depends: 2.2_
 
-- [ ] 2.10 `cmd_lint_query` の旧 exit 3 / 4 を exit 1 に統合（TDD）
+- [x] 2.10 `cmd_lint_query` の旧 exit 3 / 4 を exit 1 に統合（TDD）
   - 先に test_lint_query_exit_code_consolidation を red で追加: 引数エラー / path 不在 → exit 1、FAIL → exit 2、PASS → exit 0
   - 手動パーサー L3041-3064 の旧 `return 3`（引数エラー）/ `return 4`（path 不在）を `_compute_exit_code(status=None, had_runtime_error=True)` 経由で exit 1 に統合
   - FAIL 検出は exit 2 に統一（AC 3.3）
