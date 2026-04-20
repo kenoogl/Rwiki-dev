@@ -172,3 +172,6 @@ extract は `review/query/` にファイルを生成する。fix は `review/que
 9.1. The CLI shall AGENTS/ファイルをプロンプトの正規ソースとして使用し、プロンプトルールを Python コード内にハードコードしない
 
 9.2. When AGENTS/ファイルのルール定義が更新された場合, the CLI shall 次回実行時に更新後の内容を使用する（CLIコードの変更なしに反映される）
+
+_change log_
+- 2026-04-20: severity-unification spec により R4.7 の severity 記述を CRITICAL 含む 4 水準に更新。lint_single_query_dir の status 2 値化(PASS/FAIL、PASS_WITH_WARNINGS 廃止)、exit code 3 値分離(内部 lint FAIL → exit 2)に整合。

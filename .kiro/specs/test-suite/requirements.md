@@ -161,3 +161,6 @@ rw_light.py（3,490 行）の未テスト領域に対するテストを追加し
 2. The テストスイート shall docs/developer-guide.md にモック戦略（monkeypatch による subprocess.run / モジュール定数の差し替え、conftest.py のフィクスチャ利用方法）を記載する
 3. The テストスイート shall docs/developer-guide.md に rw_light.py のアーキテクチャ概要（3 層パイプライン、コマンドハンドラ構造、Prompt Engine）を記載する
 4. When テストスイート構築が完了した時, the テストスイート shall CHANGELOG.md にテスト体系追加のエントリを追記する
+
+_change log_
+- 2026-04-20: severity-unification spec により Req 4 / Req 8 の status 記述(PASS/FAIL 2 値)・exit code 記述(0/1/2 3 値)を新体系に整合。PASS_WITH_WARNINGS および status 位置 WARN を廃止。

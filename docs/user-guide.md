@@ -405,14 +405,14 @@ rw audit monthly [--timeout <秒>]
 - 緊張関係・不整合 → `[TENSION]` マーカー
 - 曖昧な定義・解釈の揺れ → `[AMBIGUOUS]` マーカー
 
-**severity マッピング**（AGENTS/audit.md 4段階 → CLI 3水準）:
+**severity（4 水準）**（詳細: [developer-guide.md §Severity Vocabulary](developer-guide.md#6-severity-vocabulary)）:
 
-| Claude 内部 | 標準出力 | レポートファイル | 終了コードへの影響 |
-|---|---|---|---|
-| CRITICAL | `[ERROR]` | `[ERROR:CRITICAL]` | FAIL |
-| HIGH | `[ERROR]` | `[ERROR:HIGH]` | FAIL |
-| MEDIUM | `[WARN]` | `[WARN]` | — |
-| LOW | `[INFO]` | `[INFO]` | — |
+| Severity | 終了コードへの影響 |
+|----------|-----------------|
+| `CRITICAL` | FAIL（exit 2） |
+| `ERROR` | FAIL（exit 2） |
+| `WARN` | PASS に影響しない |
+| `INFO` | PASS に影響しない |
 
 **出力**:
 - 標準出力: 処理中メッセージ・各 Finding の severity 付き一覧・サマリー

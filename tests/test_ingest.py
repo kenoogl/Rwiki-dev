@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -243,3 +244,65 @@ class TestIngestPreconditionExit1:
     result = rw_light.cmd_ingest()
 
     assert result == 1
+
+
+# ---------------------------------------------------------------------------
+# Task 3.10: 非対象コマンドの exit code 2 値契約 + 無発行義務（AC 7.8 + 8.4）
+# ---------------------------------------------------------------------------
+
+
+class TestIngestExitCodeContract:
+  """cmd_ingest は exit 0/1 の 2 値契約のみ（exit 2 は返さない）"""
+
+  def test_ingest_does_not_return_exit_2(self, patch_constants, lint_json, monkeypatch):
+    """上流 FAIL → exit 1（exit 2 でないこと）"""
+    lint_json({
+      "timestamp": "2025-01-15",
+      "status": "FAIL",
+      "files": [],
+      "summary": {"pass": 0, "fail": 1, "severity_counts": {"critical": 0, "error": 1, "warn": 0, "info": 0}},
+      "drift_events": [],
+    })
+    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+
+    result = rw_light.cmd_ingest()
+
+    assert result == 1
+    assert result != 2, "cmd_ingest は exit 2 を返してはならない（2 値契約: 0/1 のみ）"
+
+  def test_ingest_stdout_no_severity_tag(self, patch_constants, lint_json, monkeypatch, capsys):
+    """cmd_ingest の stdout に severity tag が出現しない（AC 8.4）"""
+    lint_json({
+      "timestamp": "2025-01-15",
+      "status": "PASS",
+      "files": [],
+      "summary": {"pass": 0, "fail": 0, "severity_counts": {"critical": 0, "error": 0, "warn": 0, "info": 0}},
+      "drift_events": [],
+    })
+    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+
+    rw_light.cmd_ingest()
+    captured = capsys.readouterr()
+
+    import re
+    severity_tag_re = re.compile(r"\[(CRITICAL|ERROR|WARN|INFO)\]")
+    assert not severity_tag_re.search(captured.out), (
+      f"cmd_ingest が severity tag を発行している: {captured.out!r}"
+    )
+
+  def test_ingest_stdout_no_pass_fail_status_token(self, patch_constants, lint_json, monkeypatch, capsys):
+    """cmd_ingest の stdout に status トークン PASS/FAIL が自発的に出現しない（AC 8.4）"""
+    lint_json({
+      "timestamp": "2025-01-15",
+      "status": "PASS",
+      "files": [],
+      "summary": {"pass": 0, "fail": 0, "severity_counts": {"critical": 0, "error": 0, "warn": 0, "info": 0}},
+      "drift_events": [],
+    })
+    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+
+    rw_light.cmd_ingest()
+    captured = capsys.readouterr()
+
+    assert "— PASS" not in captured.out
+    assert "— FAIL" not in captured.out

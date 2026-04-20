@@ -276,3 +276,9 @@ QA
 NOT:
 free-form summarization
 ```
+
+## Severity Level
+
+`rw query extract` は内部で `rw lint query` を実行し、lint FAIL（exit 2）の場合でも artifact を保持します。
+
+詳細: [developer-guide.md §Severity Vocabulary](developer-guide.md#6-severity-vocabulary)

@@ -84,12 +84,20 @@ Do NOT tag until after reporting to user and receiving confirmation.
 
 # PRIORITY LEVELS
 
-| Level | Meaning | Examples |
-|-------|---------|---------|
-| CRITICAL | Breaks system integrity | Broken YAML, missing source paths, index duplicates |
-| HIGH | Reduces knowledge trustworthiness | Fact conflicts, unsourced key claims, project status mismatch |
-| MEDIUM | Quality degradation signals | Orphan pages, missing sections, one-directional links |
-| LOW | Improvement suggestions | Tag inconsistencies, heading granularity, type field missing |
+## Severity Level
+
+詳細: [developer-guide.md §Severity Vocabulary](developer-guide.md#6-severity-vocabulary)
+
+| Severity | Meaning | Examples |
+|----------|---------|---------|
+| `CRITICAL` | Breaks system integrity | Broken YAML, missing source paths, index duplicates |
+| `ERROR` | Reduces knowledge trustworthiness | Fact conflicts, unsourced key claims, project status mismatch |
+| `WARN` | Quality degradation signals | Orphan pages, missing sections, one-directional links |
+| `INFO` | Improvement suggestions | Tag inconsistencies, heading granularity, type field missing |
+
+<!-- severity-vocab: legacy-reference -->
+旧語彙（`HIGH` / `MEDIUM` / `LOW`）は廃止されました。新語彙（`ERROR` / `WARN` / `INFO`）を使用してください。
+<!-- /severity-vocab -->
 
 ---
 
@@ -144,17 +152,17 @@ Produce a report only. Do not modify files.
 ## Summary
 - pages scanned:
 - critical:
-- high:
-- medium:
-- low:
+- error:
+- warn:
+- info:
 
 ## Structural Findings
 - [CRITICAL] ...
-- [MEDIUM] ...
+- [WARN] ...
 
 ## Semantic Findings
-- [HIGH] Conflict candidate between [[a]] and [[b]]: ...
-- [MEDIUM] [TENSION] ...
+- [ERROR] Conflict candidate between [[a]] and [[b]]: ...
+- [WARN] [TENSION] ...
 
 ## Strategic Findings
 - synthesis underdeveloped in <domain> cluster

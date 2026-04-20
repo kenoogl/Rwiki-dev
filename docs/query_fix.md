@@ -105,3 +105,9 @@ Before finishing, ensure:
 ## Design Principle
 
 repair minimally, preserve traceability, never hide uncertainty
+
+## Severity Level
+
+`rw query fix` は内部 lint の status（`checks[]` 内の CRITICAL/ERROR）で FAIL を判定します。post-fix lint FAIL → exit 2。
+
+詳細: [developer-guide.md §Severity Vocabulary](developer-guide.md#6-severity-vocabulary)

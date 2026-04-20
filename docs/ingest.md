@@ -45,6 +45,12 @@ Define the ingest process from raw/incoming/ to raw/.
 - Files are placed in raw/
 - Git commit is created
 
+## Severity Level
+
+`rw ingest` は severity を発行しません。上流 `rw lint` の結果（top-level `status == "FAIL"` または `summary.fail > 0`）を確認し、FAIL の場合は **exit 1**（precondition failure）で中断します。
+
+詳細: [developer-guide.md §Exit Code Semantics](developer-guide.md#7-exit-code-semantics)
+
 ## Related
 
 - lint → AGENTS/lint.md

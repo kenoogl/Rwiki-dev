@@ -131,3 +131,13 @@ pytest tests/test_utils.py -v
 ```
 
 詳細は `docs/developer-guide.md` を参照してください。
+
+## Severity / Status / Exit Code
+
+| 概念 | 値 |
+|------|-----|
+| **Severity** | `CRITICAL` / `ERROR` / `WARN` / `INFO`（4 水準） |
+| **Status** | `PASS` / `FAIL`（2 値、WARN は FAIL に影響しない） |
+| **Exit Code** | `0`=PASS / `1`=runtime error または precondition failure / `2`=FAIL 検出 |
+
+詳細は [`docs/developer-guide.md §Severity Vocabulary`](docs/developer-guide.md) および [`§Migration Notes`](docs/developer-guide.md) を参照してください。

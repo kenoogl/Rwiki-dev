@@ -6,6 +6,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### ⚠️ BREAKING CHANGES — severity-unification スペック
+
+以下の変更は後方互換性がありません。既存 Vault / shell スクリプト / JSON consumer の更新が必要です。
+
+**(a) severity vocabulary 4 水準化** — `Requirements 6.2 (b)`
+- `AGENTS/audit.md` の旧語彙（`HIGH` / `MEDIUM` / `LOW`）を `ERROR` / `WARN` / `INFO` に rename（`CRITICAL` は維持）
+- 既存 Vault は `rw init --force <vault-path>` の実行が必要
+
+**(b) status vocabulary 2 値化** — `Requirements 6.2 (a) + (c)`
+- `PASS_WITH_WARNINGS` を廃止。status は `PASS` / `FAIL` の 2 値のみ
+- `rw lint` の per-file status / top-level status から `WARN` を全廃
+- WARN severity は `summary.severity_counts.warn` で件数追跡（status には影響しない）
+
+**(c) exit code 3 値分離** — `Requirements 6.2 (e)`
+- `rw lint` FAIL: `exit 1` → **`exit 2`**
+- `rw audit <tier>` FAIL: `exit 1` → **`exit 2`**
+- `rw lint query` 引数エラー: `exit 3` → **`exit 1`**
+- `rw lint query` path 未存在: `exit 4` → **`exit 1`**
+- shell スクリプトの `$? -eq 1` による FAIL 判定を `$? -eq 2` に更新が必要（`case $?` の 3 値分岐を推奨）
+
+**(d) Finding 構造簡素化**
+- `Finding` NamedTuple から `sub_severity` フィールドを廃止
+- finding prefix が `[CRITICAL]` / `[ERROR]` / `[WARN]` / `[INFO]` の単一表記に統一（`[ERROR:HIGH]` 等の 2 段表記廃止）
+
+**(e) `logs/*_latest.json` schema 値域変更** — `Requirements 6.2 (d)`
+- `errors[]` / `warnings[]` / `infos[]` 廃止 → `checks[]` 単一配列に統合（`checks[].severity` でフィルタ）
+- `summary.warn` キー廃止 → `summary.severity_counts.warn` に移行
+- top-level `status`（`PASS` / `FAIL`）追加
+- `drift_events[]` フィールド追加（空 list 可）
+- `schema_version` フィールドは追加しない（existence-based 検出で新 schema を識別）
+
+Migration Guide: [`docs/developer-guide.md §Migration Notes`](docs/developer-guide.md)
+
+> ⚠️ 既存 Vault 運用者は `rw init --force <vault-path>` の実行が必須です（`rw audit` が deprecated Vault で `SystemExit(1)` abort するため）。
+
+### Added — severity-unification スペック
+
+- `_normalize_severity_token()` — runtime severity drift を検知・降格・drift_events 記録する helper
+- `_validate_agents_severity_vocabulary()` — AGENTS ファイル内の旧語彙残存を Pattern A/B/C の 3 regex で静的検証
+- `_compute_run_status(findings)` — CRITICAL/ERROR が 1 件以上 → `"FAIL"`、それ以外 → `"PASS"`
+- `_compute_exit_code(status, had_runtime_error)` — exit 0/1/2 の 3 値契約を実装
+- `rw init --force` フラグ — 既存 AGENTS を `.backup/<timestamp>/` に退避して新 template で上書き（symlink 防御 + timestamp collision fallback）
+- `build_audit_prompt()` に Severity Vocabulary (STRICT) prefix ブロックを挿入（drift 3 層防御 Layer 2）
+- `logs/*_latest.json` の `drift_events[]` フィールド（drift 発生を記録、cap なし）
+- `docs/developer-guide.md` §Severity Vocabulary / §Exit Code Semantics / §Migration Notes / §Vault Redeployment Procedure / §Glossary / §Debugging FAIL / §Acceptance Smoke Test（7 節）
+
+### Changed — severity-unification スペック
+
+- `templates/AGENTS/audit.md`: HIGH/MEDIUM/LOW → ERROR/WARN/INFO（CRITICAL 維持）
+- `cmd_lint` / `cmd_audit_*` / `cmd_lint_query`: status 計算を `_compute_run_status` に、exit code を `_compute_exit_code` に統一
+- `cmd_ingest`: 上流 FAIL 検知を `top-level status` + `summary.fail` の OR 結合に拡張、WARN status を FAIL と同等に扱う（precondition failure → exit 1）
+
+---
+
 ### Added — test-suite スペック
 
 - `tests/conftest.py` — 共通フィクスチャ（vault_path, patch_constants, fixed_today, make_md_file 等）

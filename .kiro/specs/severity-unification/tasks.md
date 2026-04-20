@@ -221,7 +221,7 @@
 
 ## 3. P3: docs + 隣接 spec + 静的スキャン + Acceptance Smoke Test（縮約、1 PR 推奨）
 
-- [ ] 3.1 `docs/developer-guide.md` SSoT **7 節** の新規執筆（Y Cut 後の authoritative 節構成、Task 3.5 が §Reverse Dependency Inventory を 8 節目として後続追加）
+- [x] 3.1 `docs/developer-guide.md` SSoT **7 節** の新規執筆（Y Cut 後の authoritative 節構成、Task 3.5 が §Reverse Dependency Inventory を 8 節目として後続追加）
   - **Y Cut 整合注記**: design.md L368-414 の developer-guide.md 節構成は original 5-phase plan の参照用。Y Cut 後は本 Task の 7 節のみ実装し、design.md が記述する §Emergency Procedures の `--skip-vault-validation` 以外の項目 / §Environment Variables and CLI Flags の `--strict-severity` / `--validate-vault-only` 関連 / Glossary の `MAX_DRIFT_EVENTS` / `Drift_events sentinel` / `Schema version` / `Transitional normalize` エントリは **記載しない**（`observability-infra` spec に繰延、本 docs では Y Cut 整合の SSoT のみ記述）
   - **§Reverse Dependency Inventory は本 Task の範囲外**: developer-guide.md の 8 節目として Task 3.5 が後続追加する（`_Depends: 3.1_` 関係により本 Task 完了後に 3.5 が節を挿入）。本 Task では placeholder を残さず、節見出しのみ将来位置として comment で予約しておくことを推奨（例: `<!-- §Reverse Dependency Inventory は Task 3.5 で追加 -->`）
   - §Severity Vocabulary: 4 水準 × 定義 × 使用例 table（3 列 10 行以上、`CRITICAL` / `ERROR` / `WARN` / `INFO` を順序保持で列挙）
@@ -236,7 +236,7 @@
   - _Requirements: 6.1, 6.3, 6.4_
   - _Boundary: documentation (SSoT)_
 
-- [ ] 3.2 Reference docs の一括更新（cross-reference + 要約、重複禁止）
+- [x] 3.2 Reference docs の一括更新（cross-reference + 要約、重複禁止）
   - `docs/user-guide.md` / `docs/audit.md` / `docs/lint.md` / `docs/ingest.md` / `docs/query.md` / `docs/query_fix.md` の 6 file を cross-reference + 要約のみに更新（詳細定義は `docs/developer-guide.md` SSoT に委譲、重複禁止）
   - 各 file の §Severity Level 節に「詳細は developer-guide.md §Severity Vocabulary 参照」のリンクを最低 1 箇所含める
   - 観察可能完了条件: 全 6 reference docs に §Severity Level 節 + SSoT への cross-reference が 1 箇所以上存在、旧 severity / status 語彙（HIGH/MEDIUM/LOW、PASS_WITH_WARNINGS、status 位置 WARN）残存 0 件
@@ -244,7 +244,7 @@
   - _Boundary: documentation (reference)_
   - _Depends: 3.1_
 
-- [ ] 3.3 `README.md` 更新
+- [x] 3.3 `README.md` 更新
   - severity / status / exit code 記述を新体系に更新
   - developer-guide.md §Migration Notes / §Acceptance Smoke Test へのリンク追加
   - 観察可能完了条件: README.md に新 4 水準 / 2 値 status / 3 値 exit code の簡潔な記述 + SSoT リンクが存在
@@ -252,7 +252,7 @@
   - _Boundary: documentation (entry point)_
   - _Depends: 3.1_
 
-- [ ] 3.4 `CHANGELOG.md` 追記（Keep a Changelog 形式）
+- [x] 3.4 `CHANGELOG.md` 追記（Keep a Changelog 形式）
   - ⚠️ BREAKING CHANGES 5 項目を列挙（Requirements AC 6.2 (a)-(e) 全カバー必須、本 Task の (a)-(e) 再編版は同じ範囲を組み替え表記）:
     - (a) **severity vocabulary 4 水準化**（AGENTS/audit.md の HIGH/MEDIUM/LOW → ERROR/WARN/INFO rename、CRITICAL 維持）— **Requirements 6.2 (b) 充足**
     - (b) **status vocabulary 2 値化**（PASS / FAIL のみ、`PASS_WITH_WARNINGS` / `rw lint` の status から `WARN` を全廃）— **Requirements 6.2 (a) + (c) 充足**
@@ -266,7 +266,7 @@
   - _Requirements: 6.2, 6.5_
   - _Boundary: documentation_
 
-- [ ] 3.5 Reverse Dependency Inventory scan + `developer-guide.md` §Reverse Dependency Inventory 節への記録
+- [x] 3.5 Reverse Dependency Inventory scan + `developer-guide.md` §Reverse Dependency Inventory 節への記録
   - **Scan 実施タイミング（Y Cut 3-phase 整合）**: design.md §Reverse Dependency Inventory は exit 2 新設の破壊的影響検出のため「P1 commit 前」と規定していたが、Y Cut 3-phase では exit 2 導入は **P2** のため、scan は **P2 commit 前（tasks.md 2.9 直前）に local 実施** し、発見結果の記録・docs 反映は本 Task（P3）で実施する。P2 で hits が発見された場合は P2 PR description に `[reverse-dep scan: N hits]` マーカー付与 + migration 対応 commit を P2 PR に同梱（または先行 PR 独立化）
   - design.md §Reverse Dependency Inventory に列挙された 7 grep コマンドを P2 前に実行し、`.git/hooks` / `.pre-commit-config.yaml` / `Makefile` / `.github/workflows` / `scripts/` / `.claude/skills/` / `templates/AGENTS/` に対する逆依存を洗い出し
   - P3 の本 Task で: scan 結果の snapshot（コマンド + hits 件数 + 対応 commit SHA）を `docs/developer-guide.md` §Reverse Dependency Inventory 節（新規）に MD table として記録、将来の consumer 追加時の checklist として再利用可能にする
@@ -275,7 +275,7 @@
   - _Boundary: documentation + reverse dependency updates_
   - _Depends: 3.1_
 
-- [ ] 3.6 `roadmap.md` governance 更新（Adjacent Spec Synchronization 節の事前敷設）
+- [x] 3.6 `roadmap.md` governance 更新（Adjacent Spec Synchronization 節の事前敷設）
   - Technical Debt L99-111 / L113-122 に完了マーク追記（`**完了**（severity-unification spec により、2026-MM-DD）`）
   - 新規 Technical Debt 1 項目を追加: `observability-infra`（severity-unification Y Cut で除外した schema_version bump / MAX_DRIFT_EVENTS cap + sentinel / `_emit_drift_summary` / strict mode / `--validate-vault-only` / atomic write helper / property-based cross-channel test / Turkish locale regression / coverage gate / flakiness detection / `.git-blame-ignore-revs` を drift 実例観察後に統合対応、着手タイミング: drift 実例観察 or 下流 JSON consumer 特定時）
   - Governance: Adjacent Spec Synchronization 節を新設（後続スペックによる完了済 requirements.md の整合更新は再 approval 不要、`_change log` への記載のみで足りる）
@@ -284,7 +284,7 @@
   - _Requirements: 6.3_
   - _Boundary: steering_
 
-- [ ] 3.7 (P) 隣接 spec requirements.md 同期（cli-audit / cli-query / test-suite）
+- [x] 3.7 (P) 隣接 spec requirements.md 同期（cli-audit / cli-query / test-suite）
   - 前提: 3.6 で roadmap Adjacent Spec Synchronization 節が敷設済（再 approval 免除ルール適用）
   - cli-audit requirements.md: Severity 体系節・Req 1-4 / Req 7 の AC を新体系に更新、`_change log` 追記（`- 2026-MM-DD: severity-unification spec により severity 4 水準 / status 2 値 / exit code 3 値分離に整合`）
   - cli-query requirements.md: R4.7 を `CRITICAL` 含む表記に更新、`_change log` 追記
@@ -295,7 +295,7 @@
   - _Boundary: adjacent specs_
   - _Depends: 3.6_
 
-- [ ] 3.8 (P) `tests/test_agents_vocabulary.py` 新規（静的スキャン AC 7.6）
+- [x] 3.8 (P) `tests/test_agents_vocabulary.py` 新規（静的スキャン AC 7.6）
   - `templates/AGENTS/audit.md` / `templates/AGENTS/lint.md` / `templates/AGENTS/ingest.md` / `templates/AGENTS/git_ops.md` / `docs/audit.md` / `docs/user-guide.md` 等の AGENTS + docs 全 file 内に旧語彙（HIGH / MEDIUM / LOW / status 位置の WARN）が残存しないことを 4 パターン OR 結合 regex で検証:
     - Pattern A（旧 severity、table cell / prose、大文字）: `\b(HIGH|MEDIUM|LOW)\b`
     - Pattern B（旧 severity、Summary field key、小文字、行頭限定）: `^\s*-\s+(high|medium|low)\s*:`
@@ -306,14 +306,14 @@
   - _Requirements: 7.6_
   - _Boundary: tests_
 
-- [ ] 3.9 (P) `tests/test_source_vocabulary.py` 新規（静的スキャン AC 7.7）
+- [x] 3.9 (P) `tests/test_source_vocabulary.py` 新規（静的スキャン AC 7.7）
   - `scripts/rw_light.py` / `tests/` 内に `PASS_WITH_WARNINGS` / status 位置の `WARN` / `HIGH` / `MEDIUM` / `LOW` / 旧 exit code semantics（`rw lint` / `rw audit` の FAIL を `exit 1` として扱う文字列リテラル）の残存がないことを regex で検証
   - `CHANGELOG.md` / `docs/*.md` の Migration Notes 節は対象外（旧値言及が必須）
   - 観察可能完了条件: test_source_vocabulary が pass、対象外エリアのみ旧値残存許容
   - _Requirements: 7.7_
   - _Boundary: tests_
 
-- [ ] 3.10 regression test: severity / status を発行しない非対象コマンドの exit code 契約 + 無発行義務（AC 7.8 + 8.4）
+- [x] 3.10 regression test: severity / status を発行しない非対象コマンドの exit code 契約 + 無発行義務（AC 7.8 + 8.4）
   - `rw init` / `rw ingest` / `rw synthesize-logs` / `rw approve` / `rw query answer` の exit 0 / 1 の 2 値契約が regression していないことを検証
   - 特に `cmd_ingest` の上流 FAIL → exit 1 の扱いを test_ingest で明示（exit 2 ではないこと）
   - **AC 8.4 検証**: 非対象コマンド 5 件が stdout / 構造化出力に `[CRITICAL]` / `[ERROR]` / `[WARN]` / `[INFO]` severity tag および `PASS` / `FAIL` status トークンを **自前で発行しない**（ingest は上流 lint の status を参照するのみ、本規約により発行義務なし）ことを grep ベース assertion で検証

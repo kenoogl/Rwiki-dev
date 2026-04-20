@@ -8,18 +8,22 @@ Validate and normalize files under `raw/incoming/`.
 
 - Only process files under `raw/incoming/**`
 
-## Levels
+## Severity Level
 
-### PASS
-- Valid structure
+詳細: [developer-guide.md §Severity Vocabulary](developer-guide.md#6-severity-vocabulary)
 
-### WARN
-- Minor issues (e.g., short content, missing optional metadata)
+| Severity | 条件 | status への影響 |
+|----------|------|----------------|
+| `ERROR` | 空ファイル、必須フィールド未確定、正規化不可 | FAIL（exit 2） |
+| `WARN` | 短すぎる本文、任意メタデータ欠落 | PASS（影響なし） |
+| `INFO` | 自動補完通知 | PASS（影響なし） |
 
-### FAIL
-- File is empty
-- Required fields cannot be determined
-- Structure cannot be safely normalized
+## Status（2 値）
+
+| Status | 条件 |
+|--------|------|
+| `PASS` | ERROR / CRITICAL が 0 件 |
+| `FAIL` | ERROR / CRITICAL が 1 件以上 |
 
 ## Structure Definition
 
@@ -50,8 +54,9 @@ Valid structure means:
 
 - `logs/lint_latest.json`
 - exit code:
-  - 0 → no FAIL
-  - 1 → at least one FAIL
+  - 0 → PASS（ERROR 0 件）
+  - 1 → runtime error / 引数エラー
+  - 2 → FAIL（ERROR 1 件以上）
 
 ## Contract
 
