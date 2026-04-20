@@ -321,7 +321,7 @@
   - _Requirements: 7.8, 8.4_
   - _Boundary: tests_
 
-- [ ] 3.11 P3 完了ゲート + Acceptance Smoke Test（最終ゲート）
+- [x] 3.11 P3 完了ゲート + Acceptance Smoke Test（最終ゲート）
   - Acceptance Smoke Test 7 ケースを手動実行（Task 3.1 §Acceptance Smoke Test に runbook 転記済、本 Task の実行結果は PR description にも `[smoke test: N/7 pass]` マーカー付与）:
     - (1) `rw audit weekly` 通常実行（PASS Vault）→ exit 0、stdout に 4 水準併記 + PASS 表示
     - (2) `rw audit weekly` FAIL Vault → exit 2、audit markdown に CRITICAL 行
