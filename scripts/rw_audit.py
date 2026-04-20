@@ -1,11 +1,11 @@
 """rw_audit — audit コマンド（micro/weekly/monthly/quarterly）とチェック関数群の集約層。
 
-`rw_light` から `import rw_audit` + `rw_audit.<name>` 形式で参照する。
+`rw_cli` から `import rw_audit` + `rw_audit.<name>` 形式で参照する。
 `from rw_audit import <name>` は禁止（Req 1.3: re-export 禁止、
 Req 3.2: テスト monkeypatch が効かなくなるため）。
 
 このモジュールは `rw_config`, `rw_utils`, `rw_prompt_engine` のみを import し、
-他のサブモジュール（rw_query, rw_light）は import しない（DAG 維持、Req 2.2）。
+他のサブモジュール（rw_query, rw_cli）は import しない（DAG 維持、Req 2.2）。
 """
 import json
 import os

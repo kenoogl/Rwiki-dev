@@ -1,12 +1,12 @@
 """rw_prompt_engine — Claude CLI 呼び出しとプロンプト構築、タスクプロンプトロードの集約層。
 
-`rw_audit`, `rw_query`, `rw_light` から
+`rw_audit`, `rw_query`, `rw_cli` から
 `import rw_prompt_engine` + `rw_prompt_engine.<name>` 形式で参照する。
 `from rw_prompt_engine import <name>` は禁止（Req 1.3: re-export 禁止、
 Req 3.2: テスト monkeypatch が効かなくなるため）。
 
 このモジュールは `rw_config` と `rw_utils` のみを import し、
-他のサブモジュール（rw_audit, rw_query, rw_light）は import しない（DAG 維持、Req 2.2）。
+他のサブモジュール（rw_audit, rw_query, rw_cli）は import しない（DAG 維持、Req 2.2）。
 """
 import json
 import os

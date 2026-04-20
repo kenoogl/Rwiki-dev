@@ -56,7 +56,7 @@
   - 完了条件: `pytest tests/ -q` の出力末尾が `644 passed, 1 skipped` 以上、かつ exit code 0
   - _Requirements: 3.1_
 
-- [ ] 3. (P) scripts 他モジュールの docstring 同期
+- [x] 3. (P) scripts 他モジュールの docstring 同期
   - `scripts/rw_config.py` L3、`scripts/rw_utils.py` L3、`scripts/rw_prompt_engine.py` L3 および L9、`scripts/rw_audit.py` L3 および L8、`scripts/rw_query.py` L7 の計 7 箇所の「現役依存関係説明」を `rw_light` → `rw_cli` に更新
   - `scripts/rw_query.py` L4 の historical 記述は「Phase 4b (module-split spec) で rw_light.py (現 rw_cli.py) から物理移動。」のように補注形で整合化
   - 完了条件: `rg "rw_light" scripts/rw_config.py scripts/rw_utils.py scripts/rw_prompt_engine.py scripts/rw_audit.py scripts/rw_query.py` が 0 件

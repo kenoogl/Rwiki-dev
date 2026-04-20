@@ -1,6 +1,6 @@
 """rw_config — 全グローバル定数（パス・ドメイン）の単一ソース。
 
-他のサブモジュール（rw_utils, rw_prompt_engine, rw_audit, rw_query, rw_light）から
+他のサブモジュール（rw_utils, rw_prompt_engine, rw_audit, rw_query, rw_cli）から
 `import rw_config` + `rw_config.<NAME>` 形式で参照する。`from rw_config import <NAME>` は
 禁止（Req 3.2: テスト monkeypatch が効かなくなるため）。
 

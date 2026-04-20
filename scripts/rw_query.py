@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """rw_query モジュール: query コマンド群と query lint 検査。
 
-Phase 4b (module-split spec) で rw_light.py から物理移動。
+Phase 4b (module-split spec) で rw_cli.py から物理移動（rename 前モジュールを旧称とする）。
 
 DAG: rw_config, rw_utils, rw_prompt_engine のみ import。
-rw_audit / rw_light は import しない（循環防止、Req 2.2）。
+rw_audit / rw_cli は import しない（循環防止、Req 2.2）。
 
 Note:
   `_strip_code_block` は rw_audit にも複製が存在する（Phase 4.1 決定）。

@@ -1,6 +1,6 @@
 """rw_utils — 汎用ユーティリティ関数（日付 / パス / ファイル I/O / frontmatter / git / severity）。
 
-他のサブモジュール（rw_prompt_engine, rw_audit, rw_query, rw_light）から
+他のサブモジュール（rw_prompt_engine, rw_audit, rw_query, rw_cli）から
 `import rw_utils` + `rw_utils.<name>` 形式で参照する。`from rw_utils import <name>` は
 禁止（Req 1.3: re-export 禁止、Req 3.2: テスト monkeypatch が効かなくなるため）。
 
