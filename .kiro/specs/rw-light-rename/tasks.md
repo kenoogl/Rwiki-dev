@@ -66,7 +66,7 @@
 
 - [ ] 4. ドキュメント参照更新
 
-- [ ] 4.1 (P) `docs/` 配下の現役ドキュメント更新
+- [x] 4.1 (P) `docs/` 配下の現役ドキュメント更新
   - `docs/user-guide.md` / `docs/developer-guide.md` / `docs/CLAUDE.md` の `rw_light` 参照を `rw_cli` に更新
   - 手順コマンド例（`python scripts/rw_light.py ...`）、ディレクトリ構造図、symlink 説明、テスト除外コマンド、import 例示などの現役ドキュメント記述を対象
   - `test_rw_light.py` ファイル名言及がある場合は `test_rw_cli.py` に更新
