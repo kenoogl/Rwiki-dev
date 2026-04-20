@@ -5373,7 +5373,7 @@ class TestCmdAuditMicro:
     assert result == 0
 
   def test_cmd_audit_micro_with_error_returns_1(self, tmp_path, monkeypatch):
-    """ERROR finding がある場合 exit 1（Req 1.6）"""
+    """ERROR finding がある場合 exit 2（新体系: FAIL → exit 2）"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     # broken link を含むページを作成
     broken_page = wiki_dir / "broken.md"
@@ -5386,7 +5386,7 @@ class TestCmdAuditMicro:
       lambda args: [str(broken_page)] if "diff" in args else []
     )
     result = rw_light.cmd_audit_micro()
-    assert result == 1
+    assert result == 2
 
   def test_cmd_audit_micro_summary_displayed(self, tmp_path, monkeypatch, capsys):
     """完了後にサマリーが表示されること（Req 1.3）"""
@@ -5549,7 +5549,7 @@ class TestCmdAuditWeekly:
     assert result == 0
 
   def test_cmd_audit_weekly_with_error_returns_1(self, tmp_path, monkeypatch):
-    """ERROR finding がある場合 exit 1（Req 2.5）"""
+    """ERROR finding がある場合 exit 2（新体系: FAIL → exit 2）"""
     wiki_dir, logs_dir = _setup_wiki_for_weekly(tmp_path, monkeypatch)
     broken_page = wiki_dir / "broken.md"
     broken_page.write_text(
@@ -5557,7 +5557,7 @@ class TestCmdAuditWeekly:
       encoding="utf-8",
     )
     result = rw_light.cmd_audit_weekly()
-    assert result == 1
+    assert result == 2
 
   def test_cmd_audit_weekly_summary_displayed(self, tmp_path, monkeypatch, capsys):
     """完了後にサマリーが表示されること（Req 2.3）"""
@@ -5659,8 +5659,8 @@ class TestCmdAuditWeekly:
     )
     monkeypatch.setattr(rw_light, "load_wiki_pages", lambda wiki_dir, target_files=None: [normal_page, error_page])
     result = rw_light.cmd_audit_weekly()
-    # read_error ページが ERROR finding として報告され、exit 1 であること
-    assert result == 1
+    # read_error ページが ERROR finding として報告され、exit 2 であること（新体系: FAIL → exit 2）
+    assert result == 2
     report_files = list(logs_dir.glob("audit-weekly-*.md"))
     content = report_files[0].read_text(encoding="utf-8")
     assert "bad.md" in content
@@ -5800,8 +5800,8 @@ class TestRunLlmAudit:
     monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     result = rw_light.cmd_audit_monthly([])
-    # ERROR finding があるので return 1
-    assert result == 1
+    # ERROR finding があるので exit 2（新体系: FAIL → exit 2）
+    assert result == 2
 
   def test_quarterly_returns_0_on_no_error(self, tmp_path, monkeypatch):
     """quarterly: ERROR なし（WARN のみ）の場合 return 0 であること（Req 4.4）"""
@@ -6486,6 +6486,59 @@ def test_normalize_severity_token():
   assert "demoted_to" in entry
   assert "source_field" in entry
   assert "context" in entry
+
+
+# ---------------------------------------------------------------------------
+# Task 2.9: cmd_lint / cmd_audit_* FAIL → exit 2
+# ---------------------------------------------------------------------------
+
+
+class TestAuditExit2OnFail:
+  """cmd_audit_micro / cmd_audit_weekly の exit code 3 値契約を検証"""
+
+  def test_cmd_audit_micro_exit_2_on_error_finding(self, tmp_path, monkeypatch):
+    """ERROR finding がある場合 cmd_audit_micro は exit 2"""
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    broken_page = wiki_dir / "broken.md"
+    broken_page.write_text(
+      "---\ntitle: B\nsource: web\n---\n\n# B\n\n[[nonexistent]] link.\n",
+      encoding="utf-8",
+    )
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(broken_page)] if "diff" in args else []
+    )
+    result = rw_light.cmd_audit_micro()
+    assert result == 2
+
+  def test_cmd_audit_micro_exit_0_on_pass(self, tmp_path, monkeypatch):
+    """ERROR なし → exit 0"""
+    wiki_dir = tmp_path / "wiki"
+    wiki_dir.mkdir()
+    logs_dir = tmp_path / "logs"
+    logs_dir.mkdir()
+    page = wiki_dir / "page.md"
+    page.write_text(
+      "---\ntitle: P\nsource: web\n---\n\n# P\n\nBody.\n",
+      encoding="utf-8",
+    )
+    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(
+      rw_light, "_git_list_files",
+      lambda args: [str(page)] if "diff" in args else []
+    )
+    result = rw_light.cmd_audit_micro()
+    assert result == 0
 
 
 # ---------------------------------------------------------------------------

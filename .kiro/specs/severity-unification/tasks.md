@@ -176,7 +176,7 @@
   - _Boundary: cmd_audit_
   - _Depends: 2.1_
 
-- [ ] 2.9 `cmd_lint` / `cmd_audit_*` の FAIL → exit 2 移行（TDD）
+- [x] 2.9 `cmd_lint` / `cmd_audit_*` の FAIL → exit 2 移行（TDD）
   - 先に test_lint_exit_2_on_fail / test_audit_exit_2_on_fail を red で追加: FAIL → exit 2、runtime error → exit 1、PASS → exit 0
   - 旧 `return 1`（FAIL 由来）を `_compute_exit_code(status, had_runtime_error)` 経由に置換（exit 2）
   - runtime error 系は `_compute_exit_code(status=None, had_runtime_error=True)` で exit 1

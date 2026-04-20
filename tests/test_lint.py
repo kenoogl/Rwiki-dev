@@ -41,7 +41,7 @@ class TestCmdLint:
     fixed_today: str,
     capsys,
   ) -> None:
-    """空ファイルは FAIL で exit 1。"""
+    """空ファイルは FAIL で exit 2（新体系: FAIL → exit 2）。"""
     articles_dir = patch_constants / "raw" / "incoming" / "articles"
     articles_dir.mkdir(parents=True, exist_ok=True)
     empty_file = articles_dir / "empty.md"
@@ -50,7 +50,7 @@ class TestCmdLint:
     rc = rw_light.cmd_lint()
 
     captured = capsys.readouterr()
-    assert rc == 1
+    assert rc == 2
     assert "[FAIL]" in captured.out
 
   # ------------------------------------------------------------------
@@ -122,14 +122,14 @@ class TestCmdLint:
     patch_constants: Path,
     fixed_today: str,
   ) -> None:
-    """FAIL ファイルが 1 件以上存在する場合は exit 1。"""
+    """FAIL ファイルが 1 件以上存在する場合は exit 2（新体系: FAIL → exit 2）。"""
     articles_dir = patch_constants / "raw" / "incoming" / "articles"
     articles_dir.mkdir(parents=True, exist_ok=True)
     (articles_dir / "empty.md").write_text("", encoding="utf-8")
 
     rc = rw_light.cmd_lint()
 
-    assert rc == 1
+    assert rc == 2
 
   # ------------------------------------------------------------------
   # Req 4.7  exit 0 (FAIL なし)
@@ -177,6 +177,35 @@ class TestCmdLint:
     assert meta["source"] == rw_light.infer_source_from_path(str(md_file))
     assert "added" in meta
     assert meta["added"] == fixed_today
+
+
+# ---------------------------------------------------------------------------
+# Task 2.9: cmd_lint FAIL → exit 2
+# ---------------------------------------------------------------------------
+
+
+class TestLintExit2OnFail:
+  """cmd_lint の exit code 3 値契約を検証"""
+
+  def test_exit_2_on_fail(self, patch_constants, fixed_today):
+    """FAIL（空ファイル）→ exit 2"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    (articles_dir / "empty.md").write_text("", encoding="utf-8")
+
+    rc = rw_light.cmd_lint()
+
+    assert rc == 2
+
+  def test_exit_0_on_pass(self, patch_constants, make_md_file, fixed_today):
+    """PASS → exit 0"""
+    articles_dir = patch_constants / "raw" / "incoming" / "articles"
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    make_md_file(articles_dir / "good.md", {}, "a" * 120)
+
+    rc = rw_light.cmd_lint()
+
+    assert rc == 0
 
 
 # ---------------------------------------------------------------------------

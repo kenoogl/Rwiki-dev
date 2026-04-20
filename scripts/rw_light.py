@@ -377,7 +377,7 @@ def cmd_lint() -> int:
     )
     print(f"Log: {relpath(LINT_LOG)}")
 
-    return 1 if fail_count > 0 else 0
+    return _compute_exit_code(run_status, had_runtime_error=False)
 
 
 # -------------------------
@@ -2469,9 +2469,8 @@ def cmd_audit_micro() -> int:
     # 10. サマリー表示
     print_audit_summary("micro", findings, report_path)
 
-    # 11. ERROR の finding があれば exit 1、なければ exit 0（Req 1.5 / 1.6）
-    has_error = any(f.severity == "ERROR" for f in findings)
-    return 1 if has_error else 0
+    # 11. CRITICAL/ERROR あれば exit 2、なければ exit 0
+    return _compute_exit_code(_compute_run_status(findings), had_runtime_error=False)
 
 
 # audit: commands — weekly
@@ -2565,9 +2564,8 @@ def cmd_audit_weekly() -> int:
     # 14. サマリー表示
     print_audit_summary("weekly", findings, report_path)
 
-    # 15. ERROR の finding があれば exit 1、なければ exit 0（Req 2.4 / 2.5）
-    has_error = any(f.severity == "ERROR" for f in findings)
-    return 1 if has_error else 0
+    # 15. CRITICAL/ERROR あれば exit 2、なければ exit 0
+    return _compute_exit_code(_compute_run_status(findings), had_runtime_error=False)
 
 
 # audit: commands — monthly/quarterly
@@ -2694,9 +2692,8 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
   # 14. print_audit_summary
   print_audit_summary(tier, findings, report_path)
 
-  # 15. ERROR あれば return 1、なければ return 0
-  has_error = any(f.severity == "ERROR" for f in findings)
-  return 1 if has_error else 0
+  # 15. CRITICAL/ERROR あれば exit 2、なければ exit 0
+  return _compute_exit_code(_compute_run_status(findings), had_runtime_error=False)
 
 
 def cmd_audit_monthly(args: list[str]) -> int:
