@@ -12,18 +12,20 @@
 |------------|----------------|-----------|
 | 1 (Phase 1) | `rw_config.py` | pytest green |
 | 2 (Phase 2) | `rw_utils.py` | pytest green |
-| 3 (Phase 3) | `rw_prompt_engine.py` + `call_claude` re-export (AC 1.3) | pytest green |
+| 3 (Phase 3) | `rw_prompt_engine.py`（re-export なし — Req 1.3） | pytest green |
 | 4 (Phase 4a) | `rw_audit.py` | pytest green + `wc -l rw_audit.py ≤ 1,500` |
 | 5 (Phase 4b) | `rw_query.py` | pytest green |
 | 6 (Phase 5) | `rw_light.py` 最終スリム化 + 全体検証 + symlink smoke | pytest 642 件以上 green + 手動 smoke |
 
 並列マーカー `(P)` は付与しない: 各 Phase は rw_light の import 構造を変更するため次 Phase の前提となり、各 Phase 内のコードタスクは対応テストパッチタスクの前提となる。
 
-## Re-Export 戦略（fundamental review 後の確定方針 — design.md「Re-export 戦略の確定」準拠）
+## Re-Export 戦略: ゼロ（Req 1.3 — AC 1.3 再評価後の確定方針）
 
-`rw_light.py` に追加する後方互換 re-export は **AC 1.3 が明示する `call_claude` の 1 件のみ**（外部運用スクリプト互換）。テスト本体に存在する約 299 件の `rw_light.<symbol>` 直接アクセス（test_rw_light.py 208, test_utils.py 28, test_audit.py 23, test_lint_query.py 22, test_git_ops.py 7, conftest.py 5, test_init.py 2, test_lint.py 2, test_conftest_fixtures.py 2）は、各 Phase X.2 で当該 Phase の移動シンボルに対応する箇所を `rw_<module>.<symbol>` 形式に機械置換する。これにより patch 先と access 先が対称化され、モジュール境界がテストコードからも可視となる（網羅 re-export 案を fundamental review で却下した経緯は design.md 参照）。
+`rw_light.py` への後方互換 re-export は **一切追加しない**。`call_claude` 含む全移動済みシンボルは `rw_<module>.<symbol>` 形式での直接参照のみを提供する。テスト本体に存在する約 299 件の `rw_light.<symbol>` 直接アクセス（test_rw_light.py 208, test_utils.py 28, test_audit.py 23, test_lint_query.py 22, test_git_ops.py 7, conftest.py 5, test_init.py 2, test_lint.py 2, test_conftest_fixtures.py 2）のうち **コード行 ~296 件** を各 Phase X.2 で当該 Phase の移動シンボルに対応する箇所を `rw_<module>.<symbol>` 形式に機械置換する。**conftest.py の docstring / コメント言及 3 件は書き換え対象外**（pytest 動作に影響せず、Follow-up Obligation の docs 同期タスクで別途更新）。これにより patch 先と access 先が完全対称化され、モジュール境界がテストコードからも可視となる（網羅 re-export 案を fundamental review で却下、さらに `call_claude` のみ re-export も AC 1.3 再評価で外部運用スクリプト実在なしのため廃止した経緯は design.md 参照）。
 
-**総書き換え件数の見積**: monkeypatch 先更新 ~520 件 + 直接アクセス書き換え ~299 件 = 約 800 件強。大半は sed/正規表現で機械化可能だが、各 Phase X.2 のスコープが Option A 案より約 2 倍に拡大することを織り込んでスケジュールする（Phase X.2 ごとに 2-3 時間 → 4-6 時間程度を想定）。
+**総書き換え件数の見積**: monkeypatch 先更新 ~520 件 + 直接アクセス書き換え ~296 件（コード行のみ、docstring 言及 3 件は除外） = 約 800 件強。大半は sed/正規表現で機械化可能だが、各 Phase X.2 のスコープが当初 Option A 案より約 2 倍に拡大することを織り込んでスケジュールする（Phase X.2 ごとに 2-3 時間 → 4-6 時間程度を想定）。
+
+**Follow-up obligation**: 本スペック実装完了後、`docs/developer-guide.md` L188-190 の呼び出し経路表を `rw_prompt_engine.call_claude` / `rw_prompt_engine.call_claude_for_log_synthesis` 参照に更新する。加えて `tests/conftest.py` L231 docstring 内の `rw_light.call_claude` 例示（および他の docstring 言及 L18 VAULT_DIRS / L55 today など）も同時に更新する（いずれも Phase 5 完了後の docs 同期作業）。
 
 ### 各 Phase X.2 での直接アクセス書き換え手順
 
@@ -50,7 +52,7 @@
 
 | File | Phase 1 (rw_config) | Phase 2 (rw_utils) | Phase 3 (rw_prompt_engine) | Phase 4a (rw_audit) | Phase 4b (rw_query) |
 |------|--------|--------|------------------|----------|----------|
-| `tests/conftest.py` | patch_constants 17 + import + 直接アクセス 1 (L20 VAULT_DIRS) | 直接アクセス 1 (L69 build_frontmatter) + `fixed_today` fixture L58 の `today` patch + import | — | — | — |
+| `tests/conftest.py` | patch_constants 17 + import + 直接アクセス 1 (L20 VAULT_DIRS) | 直接アクセス 1 (L69 build_frontmatter) + `fixed_today` fixture L58 の `today` patch + import | — (L231 docstring の `rw_light.call_claude` 例示は書き換え対象外 — docs 同期 Follow-up で処理) | — | — |
 | `tests/test_rw_light.py` | 定数 patch + 定数直接アクセス + import | utility patch + utility 直接アクセス + import | prompt engine patch + 直接アクセス + import | audit patch + 直接アクセス + import | query patch + 直接アクセス + import |
 | `tests/test_audit.py` | 定数 patch | — | severity 関連 6 件 patch + 直接アクセス | audit 系 17 件 + 残り patch + 直接アクセス + import | — |
 | `tests/test_approve.py` | — | git_path_is_dirty / warn_if_dirty_paths patch + import | — | — | — |
@@ -61,11 +63,12 @@
 | `tests/test_lint.py` | — | 2 件直接アクセス + import | — | — | — |
 | `tests/test_init.py` | 2 件直接アクセス + import | — | — | — | — |
 | `tests/test_lint_query.py` | — | — | — | — | 22 件直接アクセス + import |
-| `tests/test_conftest_fixtures.py` | — (L107/L119 の `rw_light.call_claude` 2 件は AC 1.3 互換 re-export で書き換え対象外) | — | — | — | — |
+| `tests/test_conftest_fixtures.py` | — | — | L107/L119 の `rw_light.call_claude` 2 件を `rw_prompt_engine.call_claude` に更新 + `import rw_prompt_engine` 追加 | — | — |
 
 **最終的な test ファイルの import 状態**:
-- 既存 `import rw_light` は全テストファイルで保持（rw_light に残留する cmd_lint / cmd_ingest 等および AC 1.3 互換 re-export `call_claude` の参照のため）
+- 既存 `import rw_light` は全テストファイルで保持（rw_light に残留する cmd_lint / cmd_ingest / cmd_synthesize_logs / cmd_approve / cmd_init 等の参照のため）。ただし `rw_light` へのアクセスはこれら残留コマンドに限定され、移動済みシンボル（call_claude 含む）へのアクセスは Req 1.3 により許可されない
 - 新規 import は累積で追加（例: test_rw_light.py は最終的に `import rw_light, rw_config, rw_utils, rw_prompt_engine, rw_audit, rw_query` の 6 import）
+- `rw_light` を一切使わないテストファイルが発生した場合（例: test_lint_query.py が cmd_lint_query 以外の rw_light シンボルを使わないケース）、`import rw_light` を削除する選択肢も可だが、本スペックでは削除を必須化しない（Phase 5 の手動確認で削除可能性を観察）
 
 ---
 
@@ -114,28 +117,28 @@
   - 完了状態: `pytest tests/` が green、`tests/` 配下で utility 関数が `rw_light` 経由で patch されている grep ヒット 0 件、かつ rw_utils 移動済みシンボルへの `rw_light.<func>` 直接アクセス grep ヒット 0 件
   - _Requirements: 4.4, 4.6, 5.1_
 
-- [ ] 3. Phase 3: `rw_prompt_engine` 抽出と後方互換 re-export
+- [ ] 3. Phase 3: `rw_prompt_engine` 抽出（re-export なし — Req 1.3）
 
-- [ ] 3.1 `rw_prompt_engine.py` 作成と Claude 関連関数の移動 + `call_claude` 後方互換 re-export
+- [ ] 3.1 `rw_prompt_engine.py` 作成と Claude 関連関数の移動（re-export なし — Req 1.3）
   - `scripts/rw_prompt_engine.py` を新規作成し、design.md「File Structure Plan」の rw_prompt_engine セクションで列挙された全関数を `rw_light.py` から物理移動する（`call_claude`, `call_claude_for_log_synthesis`, `parse_agent_mapping`, `load_task_prompts`, `_validate_agents_severity_vocabulary`, `build_query_prompt`, `read_wiki_content`, `read_all_wiki_content`）
   - `rw_prompt_engine.py` は `import rw_config` および `import rw_utils` のみを行い、定数・ユーティリティ参照を修飾形式に統一する（`rw_audit`, `rw_query`, `rw_light` を import しない — DAG 維持）
   - **Phase 3 時点で rw_light.py 内に存在する全ての関数本体**（最終残留分: cmd_lint / cmd_ingest / cmd_synthesize_logs / cmd_approve / cmd_init / `_backup_timestamp` + **Phase 4a で移動予定の cmd_audit_* / check_* / build_audit_prompt / parse_audit_response / _run_llm_audit / generate_audit_report / print_audit_summary / `_validate_agents_severity_vocabulary` の caller** + **Phase 4b で移動予定の cmd_query_extract / cmd_query_answer / cmd_query_fix / cmd_lint_query**）の上記関数呼び出しをすべて `rw_prompt_engine.X(...)` 形式の修飾参照に書き換える。**特に注意**: (1) rw_light に残留する `cmd_synthesize_logs` は `call_claude_for_log_synthesis` を bare 呼び出し、(2) Phase 4a まで rw_light に残る `cmd_audit_*` は `call_claude` / `load_task_prompts` / `read_all_wiki_content` / `read_wiki_content` / `build_audit_prompt`（後者は同モジュール内なので bare のまま OK、Phase 4a で rw_audit に同居）を bare 呼び出し、(3) Phase 4b まで rw_light に残る `cmd_query_extract/answer/fix` は `build_query_prompt` および `call_claude` を bare 呼び出し。Phase 3 のスコープでは `rw_prompt_engine` 移動シンボルへの bare 参照のみ対象（同モジュール内 bare 呼び出しは Phase 4a/4b の物理移動時に同居解決）
-  - **AC 1.3 互換 re-export 追加**: `rw_light.py` の冒頭に `from rw_prompt_engine import call_claude  # noqa: F401` のみを追加する（外部運用スクリプトの `rw_light.call_claude` アクセス互換を維持。他 prompt engine シンボルは re-export しない — 網羅 re-export は fundamental review で却下済み、Option B 採用）
+  - **Re-export は一切追加しない**（Req 1.3）。`rw_light.py` 内で `from rw_prompt_engine import ...` 形式の行は追加禁止。rw_light.py には `import rw_prompt_engine` のみを追加し、必要な呼び出しは `rw_prompt_engine.X(...)` 形式で行う
   - timeout 値は呼び出し側コマンドで指定する既存パターン（audit=300s, query=120s）を維持する
-  - **残留関数本体の bare 参照ゼロ検証**: `grep -nE "(^|[^a-zA-Z0-9_.])(call_claude_for_log_synthesis|parse_agent_mapping|load_task_prompts|_validate_agents_severity_vocabulary|build_query_prompt|read_wiki_content|read_all_wiki_content)\(" scripts/rw_light.py` を実行し、ヒットがすべて `rw_prompt_engine.X(...)` 形式または関数定義行であることを目視確認する（`call_claude` のみ re-export 経由で bare 参照可だが、修飾参照に統一推奨）
-  - 完了状態: `scripts/rw_prompt_engine.py` が存在し、`python -c "import sys; sys.path.insert(0, 'scripts'); import rw_light; print(rw_light.call_claude.__module__)"` で `rw_prompt_engine` が表示される。`rw_light.read_all_wiki_content` 等の他シンボルは AttributeError となる（テスト書き換えは 3.2 で実施）。**rw_light 単独で `python scripts/rw_light.py` を起動して NameError なく usage 表示**することを smoke 確認
+  - **残留関数本体の bare 参照ゼロ検証**: `grep -nE "(^|[^a-zA-Z0-9_.])(call_claude|call_claude_for_log_synthesis|parse_agent_mapping|load_task_prompts|_validate_agents_severity_vocabulary|build_query_prompt|read_wiki_content|read_all_wiki_content)\(" scripts/rw_light.py` を実行し、ヒットがすべて `rw_prompt_engine.X(...)` 形式または関数定義行であることを目視確認する
+  - 完了状態: `scripts/rw_prompt_engine.py` が存在し、`rw_light.py` には `from rw_prompt_engine import` 文が**一切存在しない**ことを `grep -nE "from rw_prompt_engine import" scripts/rw_light.py` ヒット 0 件で確認。`python -c "import sys; sys.path.insert(0, 'scripts'); import rw_light; hasattr(rw_light, 'call_claude')"` で `False`（`rw_light.call_claude` アクセス不可）を確認。**rw_light 単独で `python scripts/rw_light.py` を起動して NameError なく usage 表示**することを smoke 確認。テスト書き換えは 3.2 で実施
   - _Requirements: 1.1, 1.3, 2.1, 2.2_
 
-- [ ] 3.2 prompt engine patch 先を `rw_prompt_engine` に置換 + 直接アクセス書き換え + pytest green 復帰
+- [ ] 3.2 prompt engine patch 先を `rw_prompt_engine` に置換 + 直接アクセス全件書き換え + pytest green 復帰
   - `tests/test_rw_light.py` の `call_claude` / `load_task_prompts` / `read_wiki_content` / `read_all_wiki_content` / `build_query_prompt` / `parse_agent_mapping` / `_validate_agents_severity_vocabulary` パッチ参照を `rw_prompt_engine` に更新（`call_claude` 関連シンボル使用回数 ~54 件含む）
   - `tests/test_audit.py` の `read_all_wiki_content` / `read_wiki_content` / `load_task_prompts` / `_validate_agents_severity_vocabulary` パッチ参照を `rw_prompt_engine` に更新
   - `tests/test_synthesize_logs.py` の `call_claude_for_log_synthesis` パッチ参照を `rw_prompt_engine` に更新
-  - **直接アクセス書き換え**: `grep -nE "rw_light\.(call_claude_for_log_synthesis|parse_agent_mapping|load_task_prompts|_validate_agents_severity_vocabulary|build_query_prompt|read_wiki_content|read_all_wiki_content)\b" tests/` で全件列挙し、`rw_prompt_engine.<func>` に sed で置換する（test_audit.py の severity 関連 + load_task_prompts / read_wiki_content / read_all_wiki_content 等、test_rw_light.py 該当分）。**`rw_light.call_claude` 直接アクセスは re-export 維持のため書き換え不要**（任意で `rw_prompt_engine.call_claude` に統一しても良いが必須ではない）
-  - **import 文追加**: 上記書き換え対象を持つテストファイル（test_audit.py / test_rw_light.py / test_synthesize_logs.py）に `import rw_prompt_engine` を追加
+  - **直接アクセス書き換え（`call_claude` 含む全 8 シンボル対象、コード行のみ）**: `grep -nE "rw_light\.(call_claude|call_claude_for_log_synthesis|parse_agent_mapping|load_task_prompts|_validate_agents_severity_vocabulary|build_query_prompt|read_wiki_content|read_all_wiki_content)\b" tests/` で全件列挙し、**docstring / コメント言及を除外したコード行のみ**を `rw_prompt_engine.<func>` に sed で置換する（test_audit.py の severity 関連 + load_task_prompts / read_wiki_content / read_all_wiki_content 等、test_rw_light.py 該当分 + `test_rw_light.py` L280/297/314/336/2582/2598/2615/2633/2648/2662 の `rw_light.call_claude` 10 件、`test_conftest_fixtures.py` L107/L119 の `rw_light.call_claude` 2 件の**計 12 件**が call_claude 書き換え対象 — Req 1.3 により再 export ゼロ）。**`conftest.py` L231 は docstring 内例示のため書き換え対象外**（pytest 動作に影響せず、Follow-up Obligation の docs 同期で `docs/developer-guide.md` と合わせて更新）
+  - **import 文追加**: 上記書き換え対象を持つテストファイル（test_audit.py / test_rw_light.py / test_synthesize_logs.py / test_conftest_fixtures.py）に `import rw_prompt_engine` を追加（conftest.py はコード行の書き換えが発生しないため追加不要）
   - **`from rw_light import` 形式の確認**: `grep -nE "from rw_light import\b" tests/` で prompt engine 関数を import している箇所があれば `from rw_prompt_engine import ...` に修正
   - `pytest tests/ --collect-only` で import エラー不在を早期確認、その後 `pytest tests/` を実行して 642 件以上 green になることを確認する（Phase 3 完了ゲート）
-  - 完了状態: `pytest tests/` が green、`tests/` 配下で `grep -nE "monkeypatch\.setattr\(rw_light,\s*\"(call_claude|load_task_prompts|read_wiki_content|read_all_wiki_content|build_query_prompt|_validate_agents_severity_vocabulary|call_claude_for_log_synthesis|parse_agent_mapping)\"" tests/` ヒット 0 件、かつ `grep -nE "rw_light\.(call_claude_for_log_synthesis|parse_agent_mapping|load_task_prompts|_validate_agents_severity_vocabulary|build_query_prompt|read_wiki_content|read_all_wiki_content)\b" tests/` ヒット 0 件（`rw_light.call_claude` のみ AC 1.3 互換 re-export で残存許可、grep パターンから明示的に除外）
-  - _Requirements: 4.1, 4.2, 4.5, 5.1_
+  - 完了状態: `pytest tests/` が green、`tests/` 配下で `grep -nE "monkeypatch\.setattr\(rw_light,\s*\"(call_claude|load_task_prompts|read_wiki_content|read_all_wiki_content|build_query_prompt|_validate_agents_severity_vocabulary|call_claude_for_log_synthesis|parse_agent_mapping)\"" tests/` ヒット 0 件、かつ `grep -nE "rw_light\.(call_claude|call_claude_for_log_synthesis|parse_agent_mapping|load_task_prompts|_validate_agents_severity_vocabulary|build_query_prompt|read_wiki_content|read_all_wiki_content)\b" tests/` ヒット 0 件（Req 1.3 により `call_claude` も除外なし）
+  - _Requirements: 1.3, 4.1, 4.2, 4.5, 5.1_
 
 - [ ] 4. Phase 4a: `rw_audit` 抽出と audit dispatch 切り替え
 
@@ -181,14 +184,14 @@
 
 - [ ] 6. Phase 5: `rw_light` 最終スリム化と全体検証
 
-- [ ] 6.1 `rw_light.py` の最終スリム化と残留参照検査
+- [ ] 6.1 `rw_light.py` の最終スリム化と残留参照・re-export 不在検査
   - `rw_light.py` の残存内容を確認し、design.md「Modified Files」セクションが指定する保持関数のみが残っていることを確認する（`cmd_lint`, `cmd_ingest` + `plan_ingest_moves` + `execute_ingest_moves` + `load_lint_summary`, `cmd_synthesize_logs` + `parse_topics` + `render_candidate_note` + `candidate_note_path`, `cmd_approve` + `candidate_files` + `approved_candidate_files` + `synthesis_target_path` + `merge_synthesis` + `promote_candidate` + `mark_candidate_promoted` + `update_index_synthesis` + `append_approval_log`, `cmd_init` + `_backup_timestamp`, `print_usage`, `main`, `if __name__ == "__main__"` ブロック）
-  - サブモジュール import 文（`import rw_config`, `import rw_utils`, `import rw_prompt_engine`, `import rw_audit`, `import rw_query`）および Phase 3 で追加済みの AC 1.3 互換 re-export `from rw_prompt_engine import call_claude` のみが存在すること（網羅 re-export は採用しない方針）を最終確認する
+  - サブモジュール import 文（`import rw_config`, `import rw_utils`, `import rw_prompt_engine`, `import rw_audit`, `import rw_query`）のみが存在し、**`from rw_<module> import ...` 形式の re-export 文が一切存在しない**ことを `grep -nE "^from rw_(config|utils|prompt_engine|audit|query) import" scripts/rw_light.py` ヒット 0 件で最終確認する（Req 1.3）
   - **残留関数本体（cmd_lint / cmd_ingest / cmd_synthesize_logs / cmd_approve / cmd_init / `_backup_timestamp`）内の参照を grep で検査し、移動済みシンボル（`UPPER_CASE` 定数、utility 関数、prompt engine 関数、audit 関数、query 関数）が bare 形式で残っていないことを確認する**（残っていれば `rw_<module>.X` 修飾参照に修正）
-  - **テスト直接アクセス完全性検証**: `grep -nE "rw_light\.[a-z_][a-zA-Z0-9_]*" tests/ | grep -v "rw_light\.call_claude\b"` で全テストの lower-case 直接アクセスを列挙し（`call_claude` のみ AC 1.3 互換 re-export で残存許可、grep -v で機械的に除外）、移動済みシンボルへの直接アクセスが残っていないことを確認する。`grep -nE "rw_light\.[A-Z_]+\b" tests/` で UPPER_CASE 定数への直接アクセスも残っていないことを確認する（残存ヒットは Phase X.2 の漏れを示す）
+  - **テスト直接アクセス完全性検証**: `grep -nE "rw_light\.[a-z_][a-zA-Z0-9_]*" tests/` で全テストの lower-case 直接アクセスを列挙し、移動済みシンボルへの直接アクセスが一切残っていないことを確認する（`call_claude` 除外なし — Req 1.3 により全シンボルが書き換え対象）。`grep -nE "rw_light\.[A-Z_]+\b" tests/` で UPPER_CASE 定数への直接アクセスも残っていないことを確認する（残存ヒットは Phase X.2 の漏れを示す。docstring / コメント言及のみ許容）
   - `main()` 内の argparse dispatch テーブルが Phase 4a/4b で書き換えられた修飾参照（`rw_audit.cmd_audit`, `rw_query.cmd_query_*`, `rw_query.cmd_lint_query` 等）を正しく呼び出すことを確認する
-  - `wc -l scripts/rw_light.py scripts/rw_config.py scripts/rw_utils.py scripts/rw_prompt_engine.py scripts/rw_audit.py scripts/rw_query.py` を実行し、すべて 1,500 行以内であることを確認する（Req 1.2）。`rw_light.py` は ~700 行 + re-export 1 行 = ~700 行見積
-  - 完了状態: `scripts/rw_light.py` の行数が ~700 行程度に縮小、かつ全 6 モジュールが 1,500 行以内、残留関数本体に bare 移動済みシンボル参照が残っていない、テストに `rw_light.<call_claude 以外の移動済みシンボル>` の直接アクセス grep ヒット 0 件
+  - `wc -l scripts/rw_light.py scripts/rw_config.py scripts/rw_utils.py scripts/rw_prompt_engine.py scripts/rw_audit.py scripts/rw_query.py` を実行し、すべて 1,500 行以内であることを確認する（Req 1.2）。`rw_light.py` は ~700 行見積（re-export ゼロ方針）
+  - 完了状態: `scripts/rw_light.py` の行数が ~700 行程度に縮小、かつ全 6 モジュールが 1,500 行以内、残留関数本体に bare 移動済みシンボル参照が残っていない、テストにコード行として `rw_light.<移動済みシンボル>` の直接アクセス grep ヒット 0 件、rw_light.py 内に re-export 文ゼロ
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 6.1_
 
 - [ ] 6.2 全テスト green、CLI usage 表示、circular import 不在の最終検証

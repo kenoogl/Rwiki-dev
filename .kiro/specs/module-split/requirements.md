@@ -6,7 +6,7 @@
 ## Boundary Context
 - **In scope**: `scripts/` 配下のコード分割、テストの monkeypatch パッチ先更新、モジュール間インポート整理
 - **Out of scope**: コマンドの動作変更、新機能追加、テストロジックの変更（パッチ対象の更新のみ許可）、`rw_light` の外部 API シグネチャ変更
-- **Adjacent expectations**: テストファイル（13 件）は `import rw_light` を継続使用できる。CLI エントリポイント（`rw_light.py` の `main()`）は分割後も同一パスに存在すること
+- **Adjacent expectations**: テストファイル（12 件 — `import rw_light` を使用する全ファイル: conftest.py / test_rw_light.py / test_audit.py / test_approve.py / test_ingest.py / test_synthesize_logs.py / test_utils.py / test_git_ops.py / test_lint.py / test_lint_query.py / test_init.py / test_conftest_fixtures.py）は `import rw_light` を継続使用できる。CLI エントリポイント（`rw_light.py` の `main()`）は分割後も同一パスに存在すること
 
 ## Requirements
 
@@ -16,7 +16,7 @@
 #### Acceptance Criteria
 1. The module split shall produce 以下 6 モジュール: `rw_config.py`（パス定数・全グローバル定数）、`rw_utils.py`（ユーティリティ関数: `today`・`git_path_is_dirty`・`_git_list_files`・frontmatter 操作・ファイル I/O・git 操作 等）、`rw_prompt_engine.py`（プロンプトエンジン + Claude 呼び出し）、`rw_audit.py`（監査コマンド + チェック関数）、`rw_query.py`（クエリコマンド + クエリ lint）、`rw_light.py`（`cmd_lint`・`cmd_ingest`・`cmd_synthesize_logs`・`cmd_approve`・`cmd_init` の実装 + `main()` + ディスパッチ）。Req 4 で明示された関数のホスト先を正とし、設計フェーズでの独自解釈による配置変更を禁止する。
 2. The module split shall ensure 分割後の各モジュールが 1,500 行以内であること（`rw_light.py` 含む）。
-3. If external code calls `rw_light.call_claude(prompt)` directly（テストではなく運用スクリプト等）, the rw_light.py shall そのシンボルへのアクセスを継続すること。
+3. The module split shall not provide 移動したシンボルへの `rw_light.<symbol>` 形式の後方互換 re-export を提供してはならない。テスト・ドキュメント・（将来の）外部コードは `rw_<module>.<symbol>` 形式で直接参照することを要求する（fundamental review + AC 1.3 再評価で外部運用スクリプトの実在が確認できなかったため、re-export は構造的負債として排除）。
 
 ### Requirement 2: 循環インポート禁止
 **Objective:** As a 開発者, I want モジュール間の依存グラフが非循環である, so that インポートエラーや初期化順序の問題が発生しない。

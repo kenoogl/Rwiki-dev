@@ -34,7 +34,7 @@
     - `rw_light`（残置）: `cmd_lint`, `cmd_ingest`, `cmd_synthesize_logs`, `cmd_approve`, `cmd_init`, `plan_ingest_moves`, `execute_ingest_moves`, `promote_candidate`, `merge_synthesis` など + `main()` + `print_usage()`
 - **Implications**:
   - 6 モジュールで合計 2,300–2,700 行程度。各モジュール 1,500 行以内を厳守可能（Req 1 AC2）。
-  - `call_claude_for_log_synthesis`（L452）は `cmd_synthesize_logs` 内部ヘルパーだが、Claude 呼び出しラッパーという性質上 `rw_prompt_engine` に帰属させるのが自然。Req 4 には明示ないが、`rw_light` から利用可能にするため再 import する必要はある。
+  - `call_claude_for_log_synthesis`（L452）は `cmd_synthesize_logs` 内部ヘルパーだが、Claude 呼び出しラッパーという性質上 `rw_prompt_engine` に帰属させるのが自然。Req 4 には明示ないが、最終方針（Req 1.3）により re-export は行わず、`rw_light` 残留の `cmd_synthesize_logs` からは `rw_prompt_engine.call_claude_for_log_synthesis(...)` と修飾参照する。
 
 ### 既存テストの `monkeypatch` 使用パターン
 
@@ -127,19 +127,23 @@
 - **Trade-offs**: 記述量がわずかに増える。可読性には影響軽微。
 - **Follow-up**: 実装時、各サブモジュールの import セクションを lint 的に検証（`from rw_config import` / `from rw_utils import` / `from rw_prompt_engine import` / `from rw_query import` / `from rw_audit import` が存在しないことを確認）。
 
-### Decision: `rw_light.call_claude` 等の後方互換アクセス
+### Decision: `rw_light.call_claude` 等の後方互換アクセス（Option B に確定）
 
-- **Context**: Req 1 AC3 は「外部運用スクリプトが `rw_light.call_claude(prompt)` を直接呼ぶ場合、継続アクセスできること」を要求。
+- **Context**: 当初の Req 1 AC3 は「外部運用スクリプトが `rw_light.call_claude(prompt)` を直接呼ぶ場合、継続アクセスできること」を要求していた。レビュー過程で AC 1.3 の再評価を実施した結果、本 AC は **re-export 禁止** に差し替えられた（現行 requirements.md AC 1.3）。
 - **Alternatives Considered**:
-  1. `rw_light.py` 内で `from rw_prompt_engine import call_claude` として再 export
+  1. `rw_light.py` 内で `from rw_prompt_engine import call_claude` 等として網羅 re-export（Option A）
   2. `rw_light` に deprecation warning 付きのプロキシ関数を作る
-- **Selected Approach**: **選択肢 1（再 export）**
+  3. **re-export を一切追加せず、全参照を `rw_<module>.<symbol>` 形式へ書き換える（Option B、零 re-export）**
+- **Selected Approach**: **選択肢 3（Option B 純粋版 — re-export ゼロ）**
 - **Rationale**:
-  - 最小変更で後方互換を維持。外部スクリプトは `rw_light.call_claude(prompt)` で引き続きアクセス可能。
-  - テストは Req 4 AC1 に従い `rw_prompt_engine.call_claude` を patch する（`rw_light.call_claude` の patch は不要）。
-  - プロキシ関数や deprecation warning はスコープ外（Req で要求されていない）。
-- **Trade-offs**: `rw_light` に import 文が追加される。循環依存リスクなし（`rw_prompt_engine` は `rw_light` を import しない）。
-- **Follow-up**: 他の外部公開シンボル（`today`, `git_path_is_dirty` 等）の扱いは、運用スクリプトからの利用実績が不明なため、デフォルトでは再 export せず、必要が発覚した時点で追加する方針。
+  - **AC 1.3 再評価**: リポジトリ内を grep で全件確認したところ、`rw_light.call_claude` 等の移動対象シンボルを import して使用する**外部運用スクリプトは実在しなかった**（使用箇所はテスト約 299 件 + `docs/developer-guide.md` 2 件 + spec 文書のみ）。よって「外部運用スクリプトとの後方互換維持」という Option A の動機そのものが消滅。
+  - **Fundamental review での Option A 却下理由**:
+    - 網羅 re-export は `rw_light.py` を Facade + Proxy 化し、分割効果をテストから見てゼロにする
+    - patch 先（`rw_audit.X`）と access 先（`rw_light.X`）の非対称ルールが認知負荷を生む
+    - 新規シンボル追加時の re-export 漏れインシデントが永続化する（構造的負債）
+  - **Option B の代償**: テスト側の `rw_light.<symbol>` 直接アクセス約 299 件を `rw_<module>.<symbol>` に機械置換する一度限りのコストを支払う。代償は有限かつ sed/正規表現で機械化可能。
+- **Trade-offs**: テスト書き換え件数が patch 先更新 ~520 件に加えて直接アクセス ~299 件 = 合計 800 件超に膨らむ。各 Phase X.2 のスコープが Option A 案比で約 2 倍。引き換えにモジュール境界がテストコードからも完全に可視化され、re-export 漏れによる長期保守負債を回避。循環依存リスクは Option A/B いずれも同一（`rw_prompt_engine` → `rw_light` の import は禁止）。
+- **Follow-up**: 実装完了後に `docs/developer-guide.md` L188-190 の呼び出し経路表を `rw_prompt_engine.call_claude` / `rw_prompt_engine.call_claude_for_log_synthesis` に更新する（Phase 5 完了後の docs 同期作業）。将来的に外部運用スクリプトが `rw_light.<symbol>` 形式でアクセスしていたことが発覚した場合は、re-export を復活させるのではなくそのスクリプト側を `rw_<module>.<symbol>` 形式に書き換える（構造的負債の回避方針を堅持）。
 
 ### Decision: 依存方向性（DAG）
 
