@@ -6324,3 +6324,67 @@ class TestE2EAuditAllTiers:
     assert len(report_files) == 1
     content = report_files[0].read_text(encoding="utf-8")
     assert "0" in content  # pages_scanned: 0 が記録されること
+
+
+# ---------------------------------------------------------------------------
+# _normalize_severity_token() のテスト（Task 1.2）
+# ---------------------------------------------------------------------------
+
+def test_normalize_severity_token():
+  import io
+
+  # (a) 新 4 水準 identity: CRITICAL/ERROR/WARN/INFO → 同一返却、drift_sink 空のまま
+  for sev in ("CRITICAL", "ERROR", "WARN", "INFO"):
+    sink = []
+    result = rw_light._normalize_severity_token(sev, drift_sink=sink)
+    assert result == sev, f"{sev!r} は identity で返るべき"
+    assert len(sink) == 0, f"{sev!r} で drift_sink に余計なエントリが入った"
+
+  # (b) 旧語彙 HIGH/MEDIUM/LOW → INFO 降格 + drift
+  for old in ("HIGH", "MEDIUM", "LOW"):
+    sink = []
+    stderr_cap = io.StringIO()
+    sys.stderr = stderr_cap
+    try:
+      result = rw_light._normalize_severity_token(
+        old,
+        source_context={"context": "test", "source_field": "x", "location": "f:1"},
+        drift_sink=sink,
+      )
+    finally:
+      sys.stderr = sys.__stderr__
+    assert result == "INFO", f"旧語彙 {old!r} は INFO に降格されるべき"
+    assert len(sink) == 1, f"旧語彙 {old!r} で drift_sink に 1 エントリ追加されるべき"
+    entry = sink[0]
+    assert set(entry.keys()) == {
+      "original_token", "sanitized_token", "demoted_to", "source_field", "context"
+    }, f"drift entry のキーが不正: {set(entry.keys())}"
+    assert entry["demoted_to"] == "INFO"
+    assert "[severity-drift]" in stderr_cap.getvalue(), "stderr に [severity-drift] が出力されるべき"
+
+  # (c) 未知 severity（WARNING 等）→ INFO + drift
+  sink = []
+  result = rw_light._normalize_severity_token("WARNING", drift_sink=sink)
+  assert result == "INFO", "未知トークン WARNING は INFO に降格されるべき"
+  assert len(sink) == 1, "未知トークンで drift_sink に 1 エントリ追加されるべき"
+
+  # (d) 空文字 / None / 非 str → drift + INFO
+  for bad in ("", None, 123):
+    sink = []
+    result = rw_light._normalize_severity_token(bad, drift_sink=sink)
+    assert result == "INFO", f"{bad!r} は INFO に降格されるべき"
+    assert len(sink) == 1, f"{bad!r} で drift_sink に 1 エントリ追加されるべき"
+
+  # (e) drift_sink エントリの shape 検証（5 キー必須）
+  sink = []
+  rw_light._normalize_severity_token(
+    "HIGH",
+    source_context={"context": "c", "source_field": "f", "location": "l"},
+    drift_sink=sink,
+  )
+  entry = sink[0]
+  assert "original_token" in entry
+  assert "sanitized_token" in entry
+  assert "demoted_to" in entry
+  assert "source_field" in entry
+  assert "context" in entry

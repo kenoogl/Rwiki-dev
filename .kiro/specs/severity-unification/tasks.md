@@ -14,7 +14,7 @@
   - _Requirements: 7.1_
   - _Boundary: tests infrastructure_
 
-- [ ] 1.2 `_normalize_severity_token` helper の TDD 実装
+- [x] 1.2 `_normalize_severity_token` helper の TDD 実装
   - 先に `tests/test_rw_light.py` に test_normalize_severity_token を red 状態で追加: (a) 新 4 水準 identity（CRITICAL/ERROR/WARN/INFO → 同一返却、drift_sink 空のまま）/ (b) 旧語彙（HIGH/MEDIUM/LOW）は Y Cut 後の P1 atomic merge 後は AGENTS template から消失するため **drift として扱い INFO 降格 + drift_sink append + stderr 記録**（transitional rename map は Y Cut で廃止、Claude 応答に旧語彙が混入する場合は 3 層防御の Layer 3 runtime gate で捕捉）/ (c) 未知 severity（`WARNING` / `CRITICAL_ERROR` 等）→ `INFO` 降格 + `drift_sink` append + stderr 記録 / (d) 空文字 / None / 非 str は drift 扱い（stderr + INFO 降格 + drift_sink append）/ (e) drift_sink 要素の shape 検証（下記 5 キー必須）
   - `scripts/rw_light.py` に `_normalize_severity_token(token: str, *, source_context: dict | None = None, drift_sink: list[dict] | None = None) -> str` helper を新設
   - **source_context 型は dict**（3 キー: `{"context": <cmd_context_str>, "source_field": <json_path_str>, "location": <file:line_str_or_"-">}`、欠落キーは空文字列補完）。str 型ではない（AC 1.9 の 3 要素 stderr フォーマット "source / related location / demoted to" を構造化出力するため）

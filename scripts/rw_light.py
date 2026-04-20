@@ -1715,6 +1715,86 @@ def map_severity(claude_severity: str) -> tuple[str, str]:
     return ("INFO", "")
 
 
+_VALID_SEVERITIES = {"CRITICAL", "ERROR", "WARN", "INFO"}
+
+
+def _normalize_severity_token(
+  token,
+  *,
+  source_context: dict | None = None,
+  drift_sink: list | None = None,
+) -> str:
+  """severity トークンを正規化する。
+
+  新 4 水準（CRITICAL/ERROR/WARN/INFO）はそのまま返す。
+  それ以外は INFO に降格し、drift_sink に記録、stderr に警告を出力する。
+
+  Args:
+      token: 正規化対象のトークン（str 以外も受け付け、drift 扱い）
+      source_context: {"context": str, "source_field": str, "location": str}
+          欠落キーは空文字列で補完される
+      drift_sink: drift エントリを追記するリスト（None の場合は追記しない）
+
+  Returns:
+      正規化後の severity 文字列（"CRITICAL" | "ERROR" | "WARN" | "INFO"）
+  """
+  # source_context からのキー取得（欠落は空文字補完）
+  ctx: dict = source_context or {}
+  ctx_str = ctx.get("context", "") or ""
+  source_field = ctx.get("source_field", "") or ""
+  location = ctx.get("location", "") or ""
+
+  # 非 str の場合は文字列化し drift 扱い
+  if not isinstance(token, str):
+    raw_str = str(token) if token is not None else ""
+    sanitized = "".join(c for c in raw_str[:40] if c.isprintable() and ord(c) < 128)
+    _record_drift(raw_str, sanitized, ctx_str, source_field, location, drift_sink)
+    return "INFO"
+
+  # 前処理: strip + upper
+  normalized = token.strip().upper()
+
+  # 有効な 4 水準ならそのまま返す
+  if normalized in _VALID_SEVERITIES:
+    return normalized
+
+  # drift 処理: sanitize して記録・降格
+  sanitized = "".join(c for c in token[:40] if c.isprintable() and ord(c) < 128)
+  _record_drift(token, sanitized, ctx_str, source_field, location, drift_sink)
+  return "INFO"
+
+
+def _record_drift(
+  original_token: str,
+  sanitized_token: str,
+  context: str,
+  source_field: str,
+  location: str,
+  drift_sink: list | None,
+) -> None:
+  """drift イベントを stderr に出力し drift_sink に追記する。"""
+  import sys
+
+  # 4 行形式の stderr 出力（AC 1.9）
+  ctx_display = context or "(unknown)"
+  print(
+    f"[severity-drift] unknown token in {ctx_display}: {sanitized_token}\n"
+    f"  - source: {source_field}\n"
+    f"  - related location: {location}\n"
+    f"  - demoted to: INFO",
+    file=sys.stderr,
+  )
+
+  if drift_sink is not None:
+    drift_sink.append({
+      "original_token": original_token,
+      "sanitized_token": sanitized_token,
+      "demoted_to": "INFO",
+      "source_field": source_field,
+      "context": context,
+    })
+
+
 def build_audit_prompt(tier: str, task_prompts: str, wiki_content: str) -> str:
   """audit 用プロンプトを構築する。
 
