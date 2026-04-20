@@ -2938,7 +2938,7 @@ def cmd_query_extract(args: list[str]) -> int:
                 "上記の wiki インデックスと質問から、回答に関連するwikiページのパスを特定してください。\n"
                 '{"identified_pages": ["wiki/path1.md", "wiki/path2.md"]} の形式でJSONのみを出力してください。'
             )
-            stage1_response = call_claude(stage1_prompt)
+            stage1_response = call_claude(stage1_prompt, timeout=120)
 
             # ステージ1のレスポンスから関連ページを特定
             identified_pages: list[str] = []
@@ -2981,7 +2981,7 @@ def cmd_query_extract(args: list[str]) -> int:
 
     # 7. Claude 呼び出し
     try:
-        response = call_claude(prompt)
+        response = call_claude(prompt, timeout=120)
     except RuntimeError as e:
         print(f"[ERROR] Claude 呼び出し失敗: {e}")
         return 1
@@ -3087,7 +3087,7 @@ def cmd_query_answer(args: list[str]) -> int:
 
     # 6. Claude 呼び出し
     try:
-        response = call_claude(prompt)
+        response = call_claude(prompt, timeout=120)
     except RuntimeError as e:
         print(f"[ERROR] Claude 呼び出し失敗: {e}")
         return 1
@@ -3483,7 +3483,7 @@ def cmd_query_fix(args: list[str]) -> int:
 
     # 8. Claude 呼び出し
     try:
-        response = call_claude(prompt)
+        response = call_claude(prompt, timeout=120)
     except RuntimeError as e:
         print(f"[ERROR] Claude 呼び出し失敗: {e}")
         return 1

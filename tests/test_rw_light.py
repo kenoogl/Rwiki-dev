@@ -1105,7 +1105,7 @@ class TestCmdQueryExtract:
         import shutil
         shutil.rmtree(str(tmp_path / "wiki"))
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
         result = rw_light.cmd_query_extract(["test question"])
         assert result == 1
 
@@ -1122,7 +1122,7 @@ class TestCmdQueryExtract:
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         # 事前に同一 query_id ディレクトリを作成
         query_id = rw_light.generate_query_id("test question")
@@ -1136,7 +1136,7 @@ class TestCmdQueryExtract:
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         result = rw_light.cmd_query_extract(["test question"])
 
@@ -1161,7 +1161,7 @@ class TestCmdQueryExtract:
         scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
         called_scopes = []
 
-        def mock_call_claude(p):
+        def mock_call_claude(p, timeout=None):
             return MOCK_EXTRACT_RESPONSE
 
         monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
@@ -1174,7 +1174,7 @@ class TestCmdQueryExtract:
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         result = rw_light.cmd_query_extract(["test question", "--type", "fact"])
         assert result in (0, 2)
@@ -1195,7 +1195,7 @@ class TestCmdQueryExtract:
         call_count = []
         stage1_response = json.dumps({"identified_pages": ["wiki/concepts/test.md"]})
 
-        def mock_call_claude(p):
+        def mock_call_claude(p, timeout=None):
             call_count.append(p)
             if len(call_count) == 1:
                 # ステージ1: 関連ページ特定
@@ -1216,7 +1216,7 @@ class TestCmdQueryExtract:
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         # lint_single_query_dir を FAIL を返すモックに差し替え
         def mock_lint(query_dir):
@@ -1239,7 +1239,7 @@ class TestCmdQueryExtract:
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         # lint_single_query_dir を PASS を返すモックに差し替え
         def mock_lint(query_dir):
@@ -1340,7 +1340,7 @@ class TestCmdQueryAnswer:
         """成功パス: return 0 かつ review/query/ にファイルが生成されないこと"""
         _, review_query_dir = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         result = rw_light.cmd_query_answer(["test question"])
         assert result == 0
@@ -1349,7 +1349,7 @@ class TestCmdQueryAnswer:
         """成功パス: review/query/ にファイルが生成されないこと（Req 2.3）"""
         _, review_query_dir = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
 
@@ -1361,7 +1361,7 @@ class TestCmdQueryAnswer:
         """成功パス: stdout に回答テキストが含まれること"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
 
@@ -1373,7 +1373,7 @@ class TestCmdQueryAnswer:
         """成功パス: stdout に参照ページ（Referenced: セクション）が含まれること"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
 
@@ -1386,7 +1386,7 @@ class TestCmdQueryAnswer:
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         no_ref_response = "This is an answer without referenced section."
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: no_ref_response)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: no_ref_response)
 
         result = rw_light.cmd_query_answer(["test question"])
 
@@ -1398,7 +1398,7 @@ class TestCmdQueryAnswer:
         """--scope オプションが read_wiki_content に渡されること"""
         _, _ = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
         received_scopes = []
@@ -1546,7 +1546,7 @@ class TestCmdQueryFix:
         """lint FAIL → fix → post-fix PASS → return 0"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
         lint_call_count = [0]
 
@@ -1581,7 +1581,7 @@ class TestCmdQueryFix:
         """non-None ファイルは書き出され、None ファイルはスキップされること (Req 5.2)"""
         _, _, query_id, query_dir = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
         original_answer_content = (query_dir / "question.md").read_text(encoding="utf-8")
 
@@ -1621,7 +1621,7 @@ class TestCmdQueryFix:
             },
             "skipped": [{"ql_code": "QL009", "reason": "Cannot auto-fix source references"}],
         })
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: fix_response_with_skipped)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: fix_response_with_skipped)
 
         def mock_lint(_query_dir, **kwargs):
             return {
@@ -1643,7 +1643,7 @@ class TestCmdQueryFix:
         """post-fix lint FAIL → return 2 (Req 3.8, 3.9)"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
         def mock_lint(_query_dir, **kwargs):
             # 事前も事後も FAIL のまま
@@ -1664,7 +1664,7 @@ class TestCmdQueryFix:
         """wiki/ ディレクトリには何も書き出されないこと (Req 5.2)"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
         wiki_dir = tmp_path / "wiki"
         # wiki/ の初期ファイルリストを記録
@@ -2160,7 +2160,7 @@ class TestE2EWorkflow:
         """extract → review/query/<query_id>/ に 4ファイルが作成されること"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         result = rw_light.cmd_query_extract(["What is ML?"])
 
@@ -2181,7 +2181,7 @@ class TestE2EWorkflow:
         """extract → lint が PASS を返すこと"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         extract_result = rw_light.cmd_query_extract(["What is ML?"])
         assert extract_result in (0, 2), f"extract failed: {extract_result}"
@@ -2202,7 +2202,7 @@ class TestE2EWorkflow:
         """extract → answer.md を短縮 → lint FAIL → fix → lint PASS ワークフローの検証"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         # Step 1: extract
         extract_result = rw_light.cmd_query_extract(["What is ML?"])
@@ -2224,7 +2224,7 @@ class TestE2EWorkflow:
         )
 
         # Step 4: fix（call_claude を fix レスポンスにすり替え）
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_fix_response(query_id))
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_fix_response(query_id))
         fix_result = rw_light.cmd_query_fix([query_id])
         assert fix_result in (0, 2), f"fix command returned unexpected code: {fix_result}"
 
@@ -2246,7 +2246,7 @@ class TestE2EWorkflow:
         # 1回目: 初期内容でプロンプトをキャプチャ
         captured_prompts_1 = []
 
-        def mock_claude_1(p):
+        def mock_claude_1(p, timeout=None):
             captured_prompts_1.append(p)
             return _make_extract_response("What is ML? first")
 
@@ -2262,7 +2262,7 @@ class TestE2EWorkflow:
         # 2回目: 更新後のプロンプトをキャプチャ
         captured_prompts_2 = []
 
-        def mock_claude_2(p):
+        def mock_claude_2(p, timeout=None):
             captured_prompts_2.append(p)
             return _make_extract_response("What is ML? second")
 
@@ -2304,7 +2304,7 @@ class TestE2EWorkflow:
         scope_path = str(wiki_dir / "concepts" / "machine_learning.md")
         captured_prompts = []
 
-        def mock_claude(p):
+        def mock_claude(p, timeout=None):
             captured_prompts.append(p)
             return _make_extract_response("What is ML? scoped")
 
@@ -2331,7 +2331,7 @@ class TestE2EWorkflow:
     def test_answer_no_files_created(self, tmp_path, monkeypatch):
         """answer コマンド実行後、review/query/ にファイルが作成されないこと (Req 2.3)"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: "ML is a field of AI.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: "ML is a field of AI.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
 
         result = rw_light.cmd_query_answer(["What is ML?"])
         assert result == 0, f"answer command failed: {result}"
@@ -2358,7 +2358,7 @@ class TestE2EWorkflow:
             return original_read_wiki(scope)
 
         monkeypatch.setattr(rw_light, "read_wiki_content", mock_read_wiki)
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: "Answer about ML.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: "Answer about ML.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
 
         scope_path = str(wiki_dir / "concepts" / "machine_learning.md")
         result = rw_light.cmd_query_answer(["What is ML?", "--scope", scope_path])
@@ -2398,7 +2398,7 @@ class TestE2EWorkflow:
         (tmp_path / "CLAUDE.md").write_text(
             "# CLAUDE.md\n\nNo table here, just text.\n", encoding="utf-8"
         )
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         result = rw_light.cmd_query_extract(["What is ML?"])
         assert result == 1, f"Expected 1 for invalid CLAUDE.md, got {result}"
@@ -2413,7 +2413,7 @@ class TestE2EWorkflow:
     def test_error_scope_page_missing(self, tmp_path, monkeypatch):
         """--scope で存在しないページを指定 → cmd_query_extract が 1 を返すこと"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "call_claude", lambda p: _make_extract_response())
+        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         nonexistent_scope = str(wiki_dir / "concepts" / "nonexistent_page.md")
         result = rw_light.cmd_query_extract(["What is ML?", "--scope", nonexistent_scope])
@@ -6630,7 +6630,7 @@ class TestQueryExtractExit2OnFail:
     _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
     def mock_lint_fail(query_dir):
       return {
@@ -6654,7 +6654,7 @@ class TestQueryExtractExit2OnFail:
     _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
     def mock_lint_pass(query_dir):
       return {"target": query_dir, "status": "PASS", "checks": []}
@@ -6670,7 +6670,7 @@ class TestQueryExtractExit2OnFail:
     _, _ = _setup_mock_vault_for_query(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_EXTRACT_RESPONSE)
+    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
     monkeypatch.setattr(
       rw_light, "write_query_artifacts", lambda *a, **k: (_ for _ in ()).throw(OSError("disk full"))
     )
@@ -6687,7 +6687,7 @@ class TestQueryFixExit2OnFail:
     """post-fix lint FAIL → exit 2 かつ artifact は保持される"""
     _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
     def mock_lint_always_fail(query_dir, **kwargs):
       return {
@@ -6706,7 +6706,7 @@ class TestQueryFixExit2OnFail:
     """post-fix lint PASS → exit 0"""
     _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p: MOCK_FIX_RESPONSE)
+    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
     call_count = [0]
 
@@ -6733,8 +6733,95 @@ class TestQueryFixExit2OnFail:
       return {"target": query_dir, "status": "FAIL", "checks": [{"id": "QL006", "severity": "ERROR", "message": "short"}]}
 
     monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_fail)
-    monkeypatch.setattr(rw_light, "call_claude", lambda p: (_ for _ in ()).throw(RuntimeError("API error")))
+    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: (_ for _ in ()).throw(RuntimeError("API error")))
 
     result = rw_light.cmd_query_fix([query_id])
 
     assert result == 1
+
+
+# ---------------------------------------------------------------------------
+# query コマンドの call_claude() timeout=120 適用テスト
+# ---------------------------------------------------------------------------
+
+
+class TestQueryCallClaudeTimeout:
+  """cmd_query_extract / cmd_query_answer / cmd_query_fix が call_claude に timeout=120 を渡すこと"""
+
+  def test_query_extract_passes_timeout_120(self, tmp_path, monkeypatch):
+    """cmd_query_extract が call_claude を timeout=120 で呼び出すこと"""
+    _setup_mock_vault_for_query(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+
+    captured_timeout = []
+
+    def mock_call_claude(prompt, timeout=None):
+      captured_timeout.append(timeout)
+      return MOCK_EXTRACT_RESPONSE
+
+    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+
+    rw_light.cmd_query_extract(["test question"])
+
+    assert captured_timeout, "call_claude が呼ばれなかった"
+    assert all(t == 120 for t in captured_timeout), (
+      f"timeout=120 を期待したが {captured_timeout} だった"
+    )
+
+  def test_query_answer_passes_timeout_120(self, tmp_path, monkeypatch):
+    """cmd_query_answer が call_claude を timeout=120 で呼び出すこと（stage1/stage2 両方）"""
+    _setup_mock_vault_for_answer(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+
+    captured_timeout = []
+
+    def mock_call_claude(prompt, timeout=None):
+      captured_timeout.append(timeout)
+      return MOCK_ANSWER_RESPONSE
+
+    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+
+    rw_light.cmd_query_answer(["test question"])
+
+    assert captured_timeout, "call_claude が呼ばれなかった"
+    assert all(t == 120 for t in captured_timeout), (
+      f"timeout=120 を期待したが {captured_timeout} だった"
+    )
+
+  def test_query_fix_passes_timeout_120(self, tmp_path, monkeypatch):
+    """cmd_query_fix が call_claude を timeout=120 で呼び出すこと"""
+    _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
+    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+
+    captured_timeout = []
+
+    def mock_call_claude(prompt, timeout=None):
+      captured_timeout.append(timeout)
+      return MOCK_FIX_RESPONSE
+
+    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+
+    lint_call_count = [0]
+
+    def mock_lint(_query_dir, **kwargs):
+      lint_call_count[0] += 1
+      if lint_call_count[0] == 1:
+        return {
+          "target": _query_dir, "status": "FAIL", "errors": ["QL006 short"],
+          "warnings": [], "infos": [],
+          "checks": [{"id": "QL006", "severity": "ERROR", "message": "short"}],
+        }
+      return {
+        "target": _query_dir, "status": "PASS", "errors": [],
+        "warnings": [], "infos": [], "checks": [],
+      }
+
+    monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint)
+
+    rw_light.cmd_query_fix([query_id])
+
+    assert captured_timeout, "call_claude が呼ばれなかった"
+    assert all(t == 120 for t in captured_timeout), (
+      f"timeout=120 を期待したが {captured_timeout} だった"
+    )

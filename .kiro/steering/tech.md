@@ -53,8 +53,14 @@
 - **JSON ログ**: lint/query 結果を構造化 JSON で出力（`logs/` ディレクトリ）
 - **AGENTS/ プロンプトシステム**: AI タスク別にモジュール化されたプロンプトテンプレート
 - **Prompt Engine（単一ソース原則）**: Claude CLI を呼ぶ新規コマンドは `AGENTS/{task}.md` + 関連ポリシーを動的ロードしてプロンプトを構築する（`rw_light.py` の `Prompt Engine` セクション）。CLI 側にプロンプトをハードコードせず、AGENTS/ を唯一のソースとする。既存 `synthesize-logs` の二重管理は段階的に解消予定
+- **Severity/Status/Exit Code 統一契約**: 全 CLI コマンドで統一された 3 層契約を維持する:
+  - **Severity**: `CRITICAL` / `ERROR` / `WARN` / `INFO`（AGENTS も同名 4 水準）
+  - **Status**: `PASS` / `FAIL` の 2 値（`CRITICAL` または `ERROR` が 1 件以上 → `FAIL`）
+  - **Exit Code**: `0`=PASS / `1`=runtime error / `2`=自身の FAIL 検出
+  - 実装パターン: `_compute_run_status(findings)` と `_compute_exit_code(status, had_runtime_error)` を全コマンドで共用
+  - `cmd_ingest` など status を自発的に判定しないコマンドは exit 0/1 の 2 値のみ（exit 2 を発行しない）
 
 ---
 _created_at: 2026-04-18_
 _updated_at: 2026-04-20_
-_change: Prompt Engine（AGENTS/ 動的ロードによる単一ソース原則）を Key Technical Decisions に追加_
+_change: Severity/Status/Exit Code 統一契約（severity-unification 完了）を Key Technical Decisions に追加_
