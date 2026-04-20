@@ -119,7 +119,7 @@
 
 - [ ] 3. Phase 3: `rw_prompt_engine` 抽出（re-export なし — Req 1.3）
 
-- [ ] 3.1 `rw_prompt_engine.py` 作成と Claude 関連関数の移動（re-export なし — Req 1.3）
+- [x] 3.1 `rw_prompt_engine.py` 作成と Claude 関連関数の移動（re-export なし — Req 1.3）
   - `scripts/rw_prompt_engine.py` を新規作成し、design.md「File Structure Plan」の rw_prompt_engine セクションで列挙された全関数を `rw_light.py` から物理移動する（`call_claude`, `call_claude_for_log_synthesis`, `parse_agent_mapping`, `load_task_prompts`, `_validate_agents_severity_vocabulary`, `build_query_prompt`, `read_wiki_content`, `read_all_wiki_content`）
   - `rw_prompt_engine.py` は `import rw_config` および `import rw_utils` のみを行い、定数・ユーティリティ参照を修飾形式に統一する（`rw_audit`, `rw_query`, `rw_light` を import しない — DAG 維持）
   - **Phase 3 時点で rw_light.py 内に存在する全ての関数本体**（最終残留分: cmd_lint / cmd_ingest / cmd_synthesize_logs / cmd_approve / cmd_init / `_backup_timestamp` + **Phase 4a で移動予定の cmd_audit_* / check_* / build_audit_prompt / parse_audit_response / _run_llm_audit / generate_audit_report / print_audit_summary / `_validate_agents_severity_vocabulary` の caller** + **Phase 4b で移動予定の cmd_query_extract / cmd_query_answer / cmd_query_fix / cmd_lint_query**）の上記関数呼び出しをすべて `rw_prompt_engine.X(...)` 形式の修飾参照に書き換える。**特に注意**: (1) rw_light に残留する `cmd_synthesize_logs` は `call_claude_for_log_synthesis` を bare 呼び出し、(2) Phase 4a まで rw_light に残る `cmd_audit_*` は `call_claude` / `load_task_prompts` / `read_all_wiki_content` / `read_wiki_content` / `build_audit_prompt`（後者は同モジュール内なので bare のまま OK、Phase 4a で rw_audit に同居）を bare 呼び出し、(3) Phase 4b まで rw_light に残る `cmd_query_extract/answer/fix` は `build_query_prompt` および `call_claude` を bare 呼び出し。Phase 3 のスコープでは `rw_prompt_engine` 移動シンボルへの bare 参照のみ対象（同モジュール内 bare 呼び出しは Phase 4a/4b の物理移動時に同居解決）
