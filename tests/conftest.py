@@ -17,7 +17,7 @@ import rw_utils
 
 @pytest.fixture
 def vault_path(tmp_path: Path) -> Path:
-  """rw_light.VAULT_DIRS に定義された全ディレクトリを tmp_path 上に作成する。
+  """rw_config.VAULT_DIRS に定義された全ディレクトリを tmp_path 上に作成する。
   tmp_path を返す。各テストで独立したディレクトリが提供される。"""
   for d in rw_config.VAULT_DIRS:
     (tmp_path / d).mkdir(parents=True, exist_ok=True)
@@ -54,7 +54,7 @@ def patch_constants(vault_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture
 def fixed_today(monkeypatch: pytest.MonkeyPatch) -> str:
-  """rw_light.today を固定日付 '2025-01-15' に差し替える。
+  """rw_utils.today を固定日付 '2025-01-15' に差し替える。
   固定日付文字列を返す。"""
   fixed = "2025-01-15"
   monkeypatch.setattr(rw_utils, "today", lambda: fixed)
@@ -77,7 +77,7 @@ def make_md_file() -> Callable[[Path, dict, str], Path]:
 @pytest.fixture
 def lint_json(vault_path: Path) -> Callable[[dict], Path]:
   """lint_latest.json を vault_path / "logs" / "lint_latest.json" に生成するファクトリ。
-  rw_light.LINT_LOG は参照しない（patch_constants 非依存にするため）。
+  rw_config.LINT_LOG は参照しない（patch_constants 非依存にするため）。
   引数: (data: dict) — timestamp, files, summary の 3 キー構造。
   書き込んだ Path を返す。"""
   import json
@@ -95,7 +95,7 @@ def lint_json(vault_path: Path) -> Callable[[dict], Path]:
 def query_artifacts(vault_path: Path) -> Callable[[str], Path]:
   """指定 query_id で vault_path / "review" / "query" / <query_id>/ に
   question.md, answer.md, evidence.md, metadata.json を生成。
-  rw_light.QUERY_REVIEW は参照しない（patch_constants 非依存にするため）。
+  rw_config.QUERY_REVIEW は参照しない（patch_constants 非依存にするため）。
   クエリディレクトリの Path を返す。"""
   import json
 
@@ -119,13 +119,13 @@ def query_artifacts(vault_path: Path) -> Callable[[str], Path]:
 
 
 # 排他制約: mock_templates と patch_constants は同一テストで併用しない。
-# 両フィクスチャが rw_light.DEV_ROOT をパッチするため、後から適用された方が勝ち、
+# 両フィクスチャが rw_config.DEV_ROOT をパッチするため、後から適用された方が勝ち、
 # 挙動が不定になる。test_init.py は mock_templates のみ使用し、
 # 他のテストファイルは patch_constants のみ使用する設計とする。
 @pytest.fixture
 def mock_templates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
   """tmp_path / "templates"/ にモックテンプレートを作成し、
-  rw_light.DEV_ROOT を tmp_path にパッチする。
+  rw_config.DEV_ROOT を tmp_path にパッチする。
   - templates/CLAUDE.md: 最小限のテキスト
   - templates/.gitignore: 最小限のテキスト
   - templates/AGENTS/: ダミー .md ファイル 2 個
@@ -230,7 +230,7 @@ def claude_mock_response(monkeypatch: pytest.MonkeyPatch) -> Callable[[str], Non
   使用例::
       def test_something(claude_mock_response):
           claude_mock_response('{"findings": []}')
-          result = rw_light.call_claude("prompt")
+          result = rw_prompt_engine.call_claude("prompt")
           assert result == '{"findings": []}'
 
   Args:

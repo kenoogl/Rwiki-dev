@@ -214,7 +214,7 @@ class TestLoadTaskPrompts:
 def _setup_mock_vault(tmp_path, monkeypatch):
     """
     tmp_path 配下に最小限の Vault 構造を作成し、
-    rw_light.ROOT を tmp_path に向ける。
+    rw_config.ROOT を tmp_path に向ける。
     """
     agents_dir = tmp_path / "AGENTS"
     agents_dir.mkdir()
@@ -258,7 +258,7 @@ def _setup_mock_vault(tmp_path, monkeypatch):
     for filename, content in agent_files.items():
         (agents_dir / filename).write_text(content, encoding="utf-8")
 
-    # rw_light.ROOT を tmp_path に向ける
+    # rw_config.ROOT を tmp_path に向ける
     monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
 
 
