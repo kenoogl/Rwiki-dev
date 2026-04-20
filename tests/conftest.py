@@ -1,7 +1,9 @@
+import json
 import os
+import subprocess
 import sys
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 import pytest
 
@@ -145,3 +147,105 @@ def mock_templates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
   monkeypatch.setattr(rw_light, "DEV_ROOT", str(tmp_path))
 
   return tmpl_root
+
+
+# ---------------------------------------------------------------------------
+# Task 1.1: 新規 fixture（severity-unification Phase 1-3 共用インフラ）
+# ---------------------------------------------------------------------------
+
+# DEV_ROOT から templates ディレクトリへの絶対パスを解決する
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_TEMPLATES_AUDIT_MD = _REPO_ROOT / "templates" / "AGENTS" / "audit.md"
+
+
+@pytest.fixture(autouse=True)
+def env_normalized(monkeypatch: pytest.MonkeyPatch) -> None:
+  """全テストに自動適用: TZ=UTC / LC_ALL=C.UTF-8 を設定する。
+  テスト間のロケール・タイムゾーン差異を排除するための環境正規化 fixture。"""
+  monkeypatch.setenv("TZ", "UTC")
+  monkeypatch.setenv("LC_ALL", "C.UTF-8")
+
+
+@pytest.fixture
+def tmp_vault(tmp_path: Path) -> Path:
+  """一時 Vault ディレクトリを作成し、templates/AGENTS/audit.md を AGENTS/ にコピーする。
+  新語彙テンプレートのコピー先として使用する（Task 1.5 適用後は新語彙のみ含む）。
+  AGENTS/audit.md を含む最小 Vault を返す。"""
+  agents_dir = tmp_path / "AGENTS"
+  agents_dir.mkdir(parents=True, exist_ok=True)
+  audit_md = agents_dir / "audit.md"
+  audit_md.write_text(
+    _TEMPLATES_AUDIT_MD.read_text(encoding="utf-8"),
+    encoding="utf-8",
+  )
+  return tmp_path
+
+
+@pytest.fixture
+def deprecated_agents_vault(tmp_path: Path) -> Path:
+  """旧語彙 HIGH/MEDIUM/LOW を含む AGENTS/audit.md を持つ Vault を作成する。
+  Pattern A（テーブルセル `| HIGH |`）/ Pattern B（サマリーキー `- high:`）/
+  Pattern C（ファインディングブラケット `[HIGH]`）の 3 パターンをすべてカバーする。
+  tmp_path を返す。"""
+  agents_dir = tmp_path / "AGENTS"
+  agents_dir.mkdir(parents=True, exist_ok=True)
+  audit_md = agents_dir / "audit.md"
+  # Pattern A / B / C をすべて含む最小コンテンツを生成する。
+  # templates/AGENTS/audit.md が既に旧語彙を含む場合はそのままコピー。
+  # 確実に 3 パターンを持つ独立したコンテンツとして直接記述する。
+  deprecated_content = """\
+# AGENTS/audit.md (deprecated vocabulary test fixture)
+
+## Summary
+- pages scanned: 0
+- critical: 0
+- high: 0
+- medium: 0
+- low: 0
+
+## Structural Findings
+- [HIGH] Broken link detected: [[missing-page]]
+- [MEDIUM] Orphan page: orphan.md
+- [LOW] Missing tag on page: example.md
+
+## Priority Levels
+
+| Level | Meaning | Example |
+|---|---|---|
+| CRITICAL | Breaks system integrity | YAML corrupt |
+| HIGH | Reduces knowledge reliability | Factual conflict |
+| MEDIUM | Quality degradation signal | Orphan page |
+| LOW | Improvement suggestion | Tag inconsistency |
+"""
+  audit_md.write_text(deprecated_content, encoding="utf-8")
+  return tmp_path
+
+
+@pytest.fixture
+def claude_mock_response(monkeypatch: pytest.MonkeyPatch) -> Callable[[str], None]:
+  """Claude CLI subprocess を mock し、任意のテキスト応答を注入するファクトリ fixture。
+
+  使用例::
+      def test_something(claude_mock_response):
+          claude_mock_response('{"findings": []}')
+          result = rw_light.call_claude("prompt")
+          assert result == '{"findings": []}'
+
+  Args:
+      monkeypatch: pytest monkeypatch fixture
+
+  Returns:
+      inject(response_text: str) -> None: 呼び出すと subprocess.run を mock して
+      指定テキストを stdout に返す CompletedProcess を返すよう設定する。
+  """
+
+  def inject(response_text: str) -> None:
+    mock_result = subprocess.CompletedProcess(
+      args=["claude", "-p", "..."],
+      returncode=0,
+      stdout=response_text,
+      stderr="",
+    )
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
+
+  return inject

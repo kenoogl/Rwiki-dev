@@ -6,7 +6,7 @@
 
 ## 1. P1: AGENTS 語彙 rename + identity 化 + Vault validation + drift 最低限（atomic、1 PR 強制）
 
-- [ ] 1.1 `tests/conftest.py` + Vault/Claude mock fixture の DRY 化
+- [x] 1.1 `tests/conftest.py` + Vault/Claude mock fixture の DRY 化
   - `tests/conftest.py` を新規作成し、Phase 1-3 の 6-7 test file で共用する fixture を function/session scope で提供
   - fixture 一覧: `tmp_vault`（一時 Vault ディレクトリ + `AGENTS/audit.md` 新語彙 template copy）/ `deprecated_agents_vault`（旧語彙 HIGH/MEDIUM/LOW 残存 Vault、Pattern A/B/C カバー）/ `claude_mock_response`（Claude CLI subprocess を mock し任意 JSON 応答を注入）/ `env_normalized`（autouse=True, TZ=UTC, LC_ALL=C.UTF-8）
   - pytest markers を `pytest.ini` に登録: `slow` / `subprocess` / `locale`
