@@ -73,5 +73,5 @@ from typing import Optional, List, Dict, Tuple
 
 ---
 _created_at: 2026-04-18_
-_updated_at: 2026-04-20_
-_change: module-split 完了による CLI 6 モジュール構成（Layer 0–4 の DAG）、モジュール修飾参照規約、re-export 排除方針を反映_
+_updated_at: 2026-04-21_
+_change: rw-light-rename 完了により CLI エントリポイントを `rw_light.py` → `rw_cli.py` に更新（命名規約との整合）_
