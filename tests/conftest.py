@@ -10,6 +10,7 @@ import pytest
 # scripts/ を sys.path に追加（新規テストファイルで個別の sys.path.insert が不要になる）
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+import rw_config
 import rw_light
 
 
@@ -17,36 +18,36 @@ import rw_light
 def vault_path(tmp_path: Path) -> Path:
   """rw_light.VAULT_DIRS に定義された全ディレクトリを tmp_path 上に作成する。
   tmp_path を返す。各テストで独立したディレクトリが提供される。"""
-  for d in rw_light.VAULT_DIRS:
+  for d in rw_config.VAULT_DIRS:
     (tmp_path / d).mkdir(parents=True, exist_ok=True)
   return tmp_path
 
 
 @pytest.fixture
 def patch_constants(vault_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-  """rw_light の 17 グローバル定数を vault_path ベースに差し替える。
+  """rw_config の 17 グローバル定数を vault_path ベースに差し替える。
   対象: ROOT, RAW, INCOMING, LLM_LOGS, REVIEW, SYNTH_CANDIDATES,
         QUERY_REVIEW, WIKI, WIKI_SYNTH, LOGDIR, LINT_LOG,
         QUERY_LINT_LOG, INDEX_MD, CHANGE_LOG_MD, CLAUDE_MD,
         AGENTS_DIR, DEV_ROOT
   vault_path を返す。"""
-  monkeypatch.setattr(rw_light, "ROOT", str(vault_path))
-  monkeypatch.setattr(rw_light, "RAW", str(vault_path / "raw"))
-  monkeypatch.setattr(rw_light, "INCOMING", str(vault_path / "raw" / "incoming"))
-  monkeypatch.setattr(rw_light, "LLM_LOGS", str(vault_path / "raw" / "llm_logs"))
-  monkeypatch.setattr(rw_light, "REVIEW", str(vault_path / "review"))
-  monkeypatch.setattr(rw_light, "SYNTH_CANDIDATES", str(vault_path / "review" / "synthesis_candidates"))
-  monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(vault_path / "review" / "query"))
-  monkeypatch.setattr(rw_light, "WIKI", str(vault_path / "wiki"))
-  monkeypatch.setattr(rw_light, "WIKI_SYNTH", str(vault_path / "wiki" / "synthesis"))
-  monkeypatch.setattr(rw_light, "LOGDIR", str(vault_path / "logs"))
-  monkeypatch.setattr(rw_light, "LINT_LOG", str(vault_path / "logs" / "lint_latest.json"))
-  monkeypatch.setattr(rw_light, "QUERY_LINT_LOG", str(vault_path / "logs" / "query_lint_latest.json"))
-  monkeypatch.setattr(rw_light, "INDEX_MD", str(vault_path / "index.md"))
-  monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(vault_path / "log.md"))
-  monkeypatch.setattr(rw_light, "CLAUDE_MD", str(vault_path / "CLAUDE.md"))
-  monkeypatch.setattr(rw_light, "AGENTS_DIR", str(vault_path / "AGENTS"))
-  monkeypatch.setattr(rw_light, "DEV_ROOT", str(vault_path))
+  monkeypatch.setattr(rw_config, "ROOT", str(vault_path))
+  monkeypatch.setattr(rw_config, "RAW", str(vault_path / "raw"))
+  monkeypatch.setattr(rw_config, "INCOMING", str(vault_path / "raw" / "incoming"))
+  monkeypatch.setattr(rw_config, "LLM_LOGS", str(vault_path / "raw" / "llm_logs"))
+  monkeypatch.setattr(rw_config, "REVIEW", str(vault_path / "review"))
+  monkeypatch.setattr(rw_config, "SYNTH_CANDIDATES", str(vault_path / "review" / "synthesis_candidates"))
+  monkeypatch.setattr(rw_config, "QUERY_REVIEW", str(vault_path / "review" / "query"))
+  monkeypatch.setattr(rw_config, "WIKI", str(vault_path / "wiki"))
+  monkeypatch.setattr(rw_config, "WIKI_SYNTH", str(vault_path / "wiki" / "synthesis"))
+  monkeypatch.setattr(rw_config, "LOGDIR", str(vault_path / "logs"))
+  monkeypatch.setattr(rw_config, "LINT_LOG", str(vault_path / "logs" / "lint_latest.json"))
+  monkeypatch.setattr(rw_config, "QUERY_LINT_LOG", str(vault_path / "logs" / "query_lint_latest.json"))
+  monkeypatch.setattr(rw_config, "INDEX_MD", str(vault_path / "index.md"))
+  monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(vault_path / "log.md"))
+  monkeypatch.setattr(rw_config, "CLAUDE_MD", str(vault_path / "CLAUDE.md"))
+  monkeypatch.setattr(rw_config, "AGENTS_DIR", str(vault_path / "AGENTS"))
+  monkeypatch.setattr(rw_config, "DEV_ROOT", str(vault_path))
   return vault_path
 
 
@@ -144,7 +145,7 @@ def mock_templates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
   scripts_dir.mkdir(parents=True, exist_ok=True)
   (scripts_dir / "rw_light.py").write_text("# dummy\n", encoding="utf-8")
 
-  monkeypatch.setattr(rw_light, "DEV_ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_config, "DEV_ROOT", str(tmp_path))
 
   return tmpl_root
 

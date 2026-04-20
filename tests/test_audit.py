@@ -18,6 +18,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+import rw_config
 import rw_light
 
 
@@ -309,8 +310,8 @@ class TestTask14VaultValidationHook:
   ) -> None:
     """load_task_prompts(task_name='audit') が _validate_agents_severity_vocabulary を呼ぶこと。"""
     _setup_minimal_vault(tmp_vault)
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_vault))
-    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_vault / "AGENTS"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_vault))
+    monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_vault / "AGENTS"))
 
     calls: list[Path] = []
 
@@ -338,8 +339,8 @@ class TestTask14VaultValidationHook:
     _setup_minimal_vault(deprecated_agents_vault)
     # deprecated_agents_vault の AGENTS/audit.md は旧語彙を含む（上書きせずそのまま使う）
     # _setup_minimal_vault は audit.md を上書きしないため、旧語彙のまま残る
-    monkeypatch.setattr(rw_light, "ROOT", str(deprecated_agents_vault))
-    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(deprecated_agents_vault / "AGENTS"))
+    monkeypatch.setattr(rw_config, "ROOT", str(deprecated_agents_vault))
+    monkeypatch.setattr(rw_config, "AGENTS_DIR", str(deprecated_agents_vault / "AGENTS"))
 
     # skip_vault_validation=True で呼ぶと SystemExit しない
     result = rw_light.load_task_prompts("audit", skip_vault_validation=True)
@@ -390,13 +391,13 @@ class TestTask14VaultValidationHook:
     (iv) drift finding は破棄されず保持されること
     """
     _setup_minimal_vault(tmp_vault)
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_vault))
-    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_vault / "AGENTS"))
-    monkeypatch.setattr(rw_light, "WIKI", str(tmp_vault / "wiki"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_vault / "logs"))
-    monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_vault / "CLAUDE.md"))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_vault / "index.md"))
-    monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_vault / "log.md"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_vault))
+    monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_vault / "AGENTS"))
+    monkeypatch.setattr(rw_config, "WIKI", str(tmp_vault / "wiki"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_vault / "logs"))
+    monkeypatch.setattr(rw_config, "CLAUDE_MD", str(tmp_vault / "CLAUDE.md"))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_vault / "index.md"))
+    monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_vault / "log.md"))
     # git dirty チェックをスキップ（テスト環境では git 操作が不要）
     monkeypatch.setattr(rw_light, "warn_if_dirty_paths", lambda paths, cmd: None)
 

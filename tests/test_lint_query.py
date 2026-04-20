@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+import rw_config
 import rw_light
 
 
@@ -56,7 +57,7 @@ class TestCmdLintQuery:
     """Req 8.3: 実行後 query_lint_latest.json に timestamp, results, summary の 3 キーが存在する。"""
     query_dir = query_artifacts("q001")
     rw_light.cmd_lint_query(["--path", str(query_dir)])
-    log_path = Path(rw_light.QUERY_LINT_LOG)
+    log_path = Path(rw_config.QUERY_LINT_LOG)
     assert log_path.exists()
     data = json.loads(log_path.read_text(encoding="utf-8"))
     assert "timestamp" in data

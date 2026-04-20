@@ -84,7 +84,7 @@
   - 完了状態: `scripts/rw_config.py` が存在し、`scripts/rw_light.py` 内に `UPPER_CASE` グローバル定数の独自定義が残っていない（`grep -nE "^[A-Z_]+ *=" scripts/rw_light.py` でヒット 0 件）、かつ残留関数本体内の bare 定数参照が 0 件。**rw_light 単独で `python scripts/rw_light.py` を起動して NameError なく usage 表示**することを smoke 確認。`pytest tests/` がまだ green でなくてもよい（テスト patch 更新と直接アクセス書き換えは 1.2 で実施）
   - _Requirements: 1.1, 2.1, 2.2, 3.1_
 
-- [ ] 1.2 定数 patch 先を `rw_config` に置換 + 直接アクセス書き換え + pytest green 復帰
+- [x] 1.2 定数 patch 先を `rw_config` に置換 + 直接アクセス書き換え + pytest green 復帰
   - `tests/conftest.py` の `patch_constants` fixture（17 箇所）の `monkeypatch.setattr(rw_light, "ROOT", ...)` 等を `monkeypatch.setattr(rw_config, "ROOT", ...)` 等に更新する。fixture 構造（引数・yield 順序）は変更しない
   - `tests/test_rw_light.py` / `tests/test_audit.py` 内の直接定数パッチ参照（`monkeypatch.setattr(rw_light, "<UPPER_CASE>", ...)` 形式）を `rw_config` 参照に sed/正規表現で一括置換する
   - **直接アクセス書き換え**: `grep -nE "rw_light\.[A-Z_]+\b" tests/` で全件列挙し（**docstring / コメント内の言及は除外**、コード行のみ抽出）、検出された `rw_light.<UPPER_CASE>` を `rw_config.<UPPER_CASE>` に sed で置換する（test_init.py 2, test_conftest_fixtures.py 2, conftest.py fixture body 内 1〔L20 `VAULT_DIRS`〕, test_rw_light.py / test_audit.py 該当分）

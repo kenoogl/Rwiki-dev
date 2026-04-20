@@ -9,6 +9,7 @@ import pytest
 # scripts/ を sys.path に追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
+import rw_config  # noqa: E402
 import rw_light  # noqa: E402
 
 # テスト用 CLAUDE.md が存在する templates/CLAUDE.md のパス
@@ -254,7 +255,7 @@ def _setup_mock_vault(tmp_path, monkeypatch):
         (agents_dir / filename).write_text(content, encoding="utf-8")
 
     # rw_light.ROOT を tmp_path に向ける
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
 
 
 # ---------------------------------------------------------------------------
@@ -361,9 +362,9 @@ class TestReadWikiContent:
             md_file.write_text(f"# Page {i}\n\nContent of page {i}.", encoding="utf-8")
 
         # ROOT / WIKI / INDEX_MD を tmp_path に向ける
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
 
         return wiki_dir
 
@@ -404,9 +405,9 @@ class TestReadWikiContent:
     def test_scope_none_wiki_missing_raises_file_not_found(self, tmp_path, monkeypatch):
         """scope=None・wiki/ 不在: FileNotFoundError を raise すること"""
         # wiki/ を作らずに ROOT のみ設定
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
 
         with pytest.raises(FileNotFoundError):
             rw_light.read_wiki_content(None)
@@ -418,9 +419,9 @@ class TestReadWikiContent:
         # .md ファイルなし（.txt ファイルのみ）
         (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
 
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
 
         with pytest.raises(ValueError):
             rw_light.read_wiki_content(None)
@@ -755,7 +756,7 @@ class TestWriteQueryArtifacts:
         """QUERY_REVIEW を tmp_path/review/query に向ける"""
         review_query_dir = tmp_path / "review" / "query"
         review_query_dir.mkdir(parents=True)
-        monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(review_query_dir))
+        monkeypatch.setattr(rw_config, "QUERY_REVIEW", str(review_query_dir))
         return review_query_dir
 
     def test_creates_query_id_directory(self, tmp_path, monkeypatch):
@@ -1067,12 +1068,12 @@ def _setup_mock_vault_for_query(tmp_path, monkeypatch):
     (tmp_path / "index.md").write_text("# Index\n\n- [[test]]", encoding="utf-8")
 
     # rw_light のグローバル変数を tmp_path に向ける
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(review_query_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
-    monkeypatch.setattr(rw_light, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "QUERY_REVIEW", str(review_query_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_config, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
 
     return tmp_path, review_query_dir
 
@@ -1298,10 +1299,10 @@ def _setup_mock_vault_for_answer(tmp_path, monkeypatch):
     (tmp_path / "index.md").write_text("# Index\n\n- [[test]]", encoding="utf-8")
 
     # rw_light のグローバル変数を tmp_path に向ける
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(review_query_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "QUERY_REVIEW", str(review_query_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
 
     return tmp_path, review_query_dir
 
@@ -1496,12 +1497,12 @@ def _setup_mock_vault_for_fix(tmp_path, monkeypatch):
     )
 
     # rw_light のグローバル変数を tmp_path に向ける
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(review_query_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
-    monkeypatch.setattr(rw_light, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "QUERY_REVIEW", str(review_query_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_config, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
 
     return tmp_path, review_query_dir, query_id, query_dir
 
@@ -2099,12 +2100,12 @@ def _setup_e2e_vault(tmp_path, monkeypatch):
         (agents_dir / filename).write_text(content, encoding="utf-8")
 
     # Patch rw_light module constants
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "QUERY_REVIEW", str(query_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(index_md))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
-    monkeypatch.setattr(rw_light, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "QUERY_REVIEW", str(query_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(index_md))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_config, "QUERY_LINT_LOG", str(logs_dir / "query_lint_latest.json"))
 
     return tmp_path, wiki_dir, query_dir, agents_dir
 
@@ -2759,8 +2760,8 @@ def _setup_wiki_for_audit(tmp_path, monkeypatch, num_files=2):
             encoding="utf-8",
         )
 
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
     return wiki_dir
 
 
@@ -2775,15 +2776,15 @@ class TestValidateWikiDir:
 
     def test_returns_false_when_wiki_dir_missing(self, tmp_path, monkeypatch):
         """wiki/ が存在しない場合 False を返すこと"""
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
         result = rw_light.validate_wiki_dir()
         assert result is False
 
     def test_prints_error_when_wiki_dir_missing(self, tmp_path, monkeypatch, capsys):
         """wiki/ が存在しない場合 [ERROR] メッセージを表示すること"""
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
         rw_light.validate_wiki_dir()
         captured = capsys.readouterr()
         assert "[ERROR]" in captured.out
@@ -2793,8 +2794,8 @@ class TestValidateWikiDir:
         wiki_dir = tmp_path / "wiki"
         wiki_dir.mkdir()
         (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
         result = rw_light.validate_wiki_dir()
         assert result is False
 
@@ -2802,8 +2803,8 @@ class TestValidateWikiDir:
         """wiki/ に .md ファイルがない場合 [ERROR] メッセージを表示すること"""
         wiki_dir = tmp_path / "wiki"
         wiki_dir.mkdir()
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
         rw_light.validate_wiki_dir()
         captured = capsys.readouterr()
         assert "[ERROR]" in captured.out
@@ -2827,8 +2828,8 @@ class TestValidateWikiDir:
         wiki_dir = tmp_path / "wiki"
         wiki_dir.mkdir()
         (wiki_dir / "page.md").write_text("# Page\n\nContent.", encoding="utf-8")
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
         result = rw_light.validate_wiki_dir()
         assert result is True
 
@@ -2887,8 +2888,8 @@ class TestLoadWikiPages:
             "---\ntitle: Test\n---\n\n[[target-page|Display Text]] and [[simple-page]]\n",
             encoding="utf-8",
         )
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
         result = rw_light.load_wiki_pages(str(wiki_dir))
         assert "target-page" in result[0].links
         assert "simple-page" in result[0].links
@@ -2903,8 +2904,8 @@ class TestLoadWikiPages:
             "---\ntitle: Test\nrelated: [[frontmatter-link]]\n---\n\n[[body-link]] text.\n",
             encoding="utf-8",
         )
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
         result = rw_light.load_wiki_pages(str(wiki_dir))
         assert "body-link" in result[0].links
         assert "frontmatter-link" not in result[0].links
@@ -2925,8 +2926,8 @@ class TestLoadWikiPages:
         bad_file = wiki_dir / "broken.md"
         bad_file.write_bytes(b"\xff\xfe broken content that is not valid UTF-8 \x80\x81\x82")
 
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
 
         result = rw_light.load_wiki_pages(str(wiki_dir))
         assert len(result) == 2
@@ -2949,8 +2950,8 @@ class TestLoadWikiPages:
         bad_file.write_bytes(b"\xff\xfe\x80")
         (wiki_dir / "ccc-normal.md").write_text("---\ntitle: C\n---\n\nContent C.\n", encoding="utf-8")
 
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
 
         result = rw_light.load_wiki_pages(str(wiki_dir))
         assert len(result) == 3
@@ -2976,8 +2977,8 @@ class TestLoadWikiPages:
         wiki_dir = tmp_path / "wiki"
         wiki_dir.mkdir()
         (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
         result = rw_light.load_wiki_pages(str(wiki_dir))
         assert result == []
 
@@ -2990,8 +2991,8 @@ class TestLoadWikiPages:
         (concepts / "my-concept.md").write_text(
             "---\ntitle: My Concept\n---\n\nBody text.\n", encoding="utf-8"
         )
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
         result = rw_light.load_wiki_pages(str(wiki_dir))
         assert len(result) == 1
         # path にサブディレクトリが含まれること
@@ -3004,8 +3005,8 @@ class TestLoadWikiPages:
         wiki_dir.mkdir()
         raw = "---\ntitle: Raw Test\n---\n\nBody content here.\n"
         (wiki_dir / "raw-test.md").write_text(raw, encoding="utf-8")
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
         result = rw_light.load_wiki_pages(str(wiki_dir))
         assert result[0].raw_text == raw
 
@@ -3022,8 +3023,8 @@ class TestAllPagesSetConstruction:
         concepts.mkdir()
         (concepts / "concept.md").write_text("# Concept\n", encoding="utf-8")
 
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
 
         # all_pages_set の構築: list_md_files → relpath → wiki/ 除去
         files = rw_light.list_md_files(str(wiki_dir))
@@ -3148,7 +3149,7 @@ class TestGetRecentWikiChanges:
     def test_returns_files_with_uncommitted_changes(self, tmp_path, monkeypatch):
         """未コミット変更のある wiki/.md ファイルがリストに含まれること"""
         wiki_dir = self._make_wiki(tmp_path, {"page-a.md": "# A\n"})
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
 
         def fake_git_list_files(args):
             if args[:2] == ["diff", "--name-only"] and "HEAD~1..HEAD" not in args:
@@ -3162,7 +3163,7 @@ class TestGetRecentWikiChanges:
     def test_returns_files_from_last_commit(self, tmp_path, monkeypatch):
         """直近コミットの変更ファイルがリストに含まれること"""
         wiki_dir = self._make_wiki(tmp_path, {"page-b.md": "# B\n"})
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
 
         def fake_git_list_files(args):
             if "HEAD~1..HEAD" in args:
@@ -3176,7 +3177,7 @@ class TestGetRecentWikiChanges:
     def test_deduplicates_results(self, tmp_path, monkeypatch):
         """未コミット変更と直近コミット変更に同じファイルがある場合、重複が除去されること"""
         wiki_dir = self._make_wiki(tmp_path, {"page-dup.md": "# Dup\n"})
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
         dup_path = os.path.join(wiki_dir, "page-dup.md")
 
         def fake_git_list_files(args):
@@ -3189,7 +3190,7 @@ class TestGetRecentWikiChanges:
     def test_excludes_deleted_files(self, tmp_path, monkeypatch):
         """削除されたファイル（ディスク上に存在しない）は除外されること"""
         wiki_dir = self._make_wiki(tmp_path, {})
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
         deleted_path = os.path.join(wiki_dir, "deleted.md")  # ファイルを作成しない
 
         def fake_git_list_files(args):
@@ -3202,7 +3203,7 @@ class TestGetRecentWikiChanges:
     def test_excludes_non_md_files(self, tmp_path, monkeypatch):
         """.md 以外のファイルは除外されること"""
         wiki_dir = self._make_wiki(tmp_path, {"page.md": "# OK\n"})
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
         txt_path = os.path.join(wiki_dir, "readme.txt")
         open(txt_path, "w").close()
         md_path = os.path.join(wiki_dir, "page.md")
@@ -3218,7 +3219,7 @@ class TestGetRecentWikiChanges:
     def test_returns_empty_list_when_no_changes(self, tmp_path, monkeypatch):
         """変更がない場合は空リストを返すこと"""
         wiki_dir = self._make_wiki(tmp_path, {})
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
 
         def fake_git_list_files(args):
             return []
@@ -3230,7 +3231,7 @@ class TestGetRecentWikiChanges:
     def test_head1_not_found_fallback(self, tmp_path, monkeypatch):
         """HEAD~1 が存在しない場合は HEAD の全追加ファイルにフォールバックすること"""
         wiki_dir = self._make_wiki(tmp_path, {"initial.md": "# Initial\n"})
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
         initial_path = os.path.join(wiki_dir, "initial.md")
 
         def fake_git_list_files(args):
@@ -3249,7 +3250,7 @@ class TestGetRecentWikiChanges:
     def test_returns_list_of_absolute_paths(self, tmp_path, monkeypatch):
         """返されるパスが文字列のリストであること"""
         wiki_dir = self._make_wiki(tmp_path, {"page.md": "# P\n"})
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
         page_path = os.path.join(wiki_dir, "page.md")
 
         def fake_git_list_files(args):
@@ -3266,7 +3267,7 @@ class TestGetRecentWikiChanges:
             "page-uncommitted.md": "# U\n",
             "page-committed.md": "# C\n",
         })
-        monkeypatch.setattr(rw_light, "WIKI", wiki_dir)
+        monkeypatch.setattr(rw_config, "WIKI", wiki_dir)
         uncommitted_path = os.path.join(wiki_dir, "page-uncommitted.md")
         committed_path = os.path.join(wiki_dir, "page-committed.md")
 
@@ -3308,10 +3309,10 @@ def _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=2,
     if create_log:
         (tmp_path / "log.md").write_text("# Log\n\nChange log.\n", encoding="utf-8")
 
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
     return wiki_dir
 
 
@@ -3395,10 +3396,10 @@ class TestReadAllWikiContent:
 
     def test_raises_file_not_found_when_wiki_missing(self, tmp_path, monkeypatch):
         """wiki/ が存在しない場合 FileNotFoundError を raise すること"""
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
         import pytest
         with pytest.raises(FileNotFoundError):
             rw_light.read_all_wiki_content()
@@ -3408,10 +3409,10 @@ class TestReadAllWikiContent:
         wiki_dir = tmp_path / "wiki"
         wiki_dir.mkdir()
         (wiki_dir / "readme.txt").write_text("not markdown", encoding="utf-8")
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
         import pytest
         with pytest.raises(ValueError):
             rw_light.read_all_wiki_content()
@@ -3424,10 +3425,10 @@ class TestReadAllWikiContent:
         for i in range(151):
             page = wiki_dir / f"page-{i:03d}.md"
             page.write_text(f"---\ntitle: P{i}\n---\n\n# P{i}\n", encoding="utf-8")
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
 
         result = rw_light.read_all_wiki_content()
         captured = capsys.readouterr()
@@ -3443,10 +3444,10 @@ class TestReadAllWikiContent:
         for i in range(150):
             page = wiki_dir / f"page-{i:03d}.md"
             page.write_text(f"# P{i}\n", encoding="utf-8")
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
 
         rw_light.read_all_wiki_content()
         captured = capsys.readouterr()
@@ -3458,10 +3459,10 @@ class TestReadAllWikiContent:
         wiki_dir = tmp_path / "wiki"
         wiki_dir.mkdir()
         (wiki_dir / "my-page.md").write_text("# My Page\n\nContent.\n", encoding="utf-8")
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-        monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
 
         result = rw_light.read_all_wiki_content()
         # wiki/ プレフィックス付きのヘッダー
@@ -3822,9 +3823,9 @@ class TestRunMicroChecks:
         """テスト用 wiki と index.md を作成する。"""
         wiki_dir = tmp_path / "wiki"
         wiki_dir.mkdir()
-        monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-        monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-        monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
+        monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+        monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+        monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
         return wiki_dir
 
     def test_returns_list_of_findings(self, tmp_path, monkeypatch):
@@ -4801,7 +4802,7 @@ class TestGenerateAuditReport:
 
   def test_returns_path_object(self, tmp_path, monkeypatch):
     """ファイルパス文字列を返すこと"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4809,7 +4810,7 @@ class TestGenerateAuditReport:
 
   def test_file_created_in_logs(self, tmp_path, monkeypatch):
     """logs/ にレポートファイルが生成されること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4817,7 +4818,7 @@ class TestGenerateAuditReport:
 
   def test_filename_format(self, tmp_path, monkeypatch):
     """ファイル名が audit-{tier}-{timestamp}.md 形式であること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-153000"
     )
@@ -4825,7 +4826,7 @@ class TestGenerateAuditReport:
 
   def test_timestamp_auto_generated_when_none(self, tmp_path, monkeypatch):
     """timestamp=None のとき、ファイル名にタイムスタンプが含まれること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "weekly", [], {}, timestamp=None
     )
@@ -4835,7 +4836,7 @@ class TestGenerateAuditReport:
 
   def test_summary_section_exists(self, tmp_path, monkeypatch):
     """Summary セクションが含まれること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4844,7 +4845,7 @@ class TestGenerateAuditReport:
 
   def test_summary_contains_tier(self, tmp_path, monkeypatch):
     """Summary にティア名が含まれること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4853,7 +4854,7 @@ class TestGenerateAuditReport:
 
   def test_summary_error_warn_info_counts(self, tmp_path, monkeypatch):
     """Summary に ERROR/WARN/INFO カウントが含まれること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4864,7 +4865,7 @@ class TestGenerateAuditReport:
 
   def test_summary_pass_when_no_errors_no_warns(self, tmp_path, monkeypatch):
     """ERROR=0 かつ WARN=0 の場合 PASS と表示されること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     findings = [
       _make_finding("INFO", "source_field", "entities/tool.md", "source 空"),
     ]
@@ -4876,7 +4877,7 @@ class TestGenerateAuditReport:
 
   def test_summary_fail_when_errors_exist(self, tmp_path, monkeypatch):
     """ERROR がある場合 FAIL と表示されること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4885,7 +4886,7 @@ class TestGenerateAuditReport:
 
   def test_findings_section_exists(self, tmp_path, monkeypatch):
     """Findings セクションが含まれること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4894,7 +4895,7 @@ class TestGenerateAuditReport:
 
   def test_micro_structural_findings_label(self, tmp_path, monkeypatch):
     """micro は Structural Findings ラベルであること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4903,7 +4904,7 @@ class TestGenerateAuditReport:
 
   def test_weekly_structural_findings_label(self, tmp_path, monkeypatch):
     """weekly は Structural Findings ラベルであること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "weekly", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4912,7 +4913,7 @@ class TestGenerateAuditReport:
 
   def test_monthly_semantic_findings_label(self, tmp_path, monkeypatch):
     """monthly は Semantic Findings ラベルであること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "monthly", [], {}, timestamp="20260418-120000"
     )
@@ -4921,7 +4922,7 @@ class TestGenerateAuditReport:
 
   def test_quarterly_strategic_findings_label(self, tmp_path, monkeypatch):
     """quarterly は Strategic Findings ラベルであること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "quarterly", [], {}, timestamp="20260418-120000"
     )
@@ -4930,7 +4931,7 @@ class TestGenerateAuditReport:
 
   def test_findings_grouped_by_severity(self, tmp_path, monkeypatch):
     """ERROR -> Structural, WARN -> Semantic, INFO -> Strategic にグループ化されること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4944,7 +4945,7 @@ class TestGenerateAuditReport:
 
   def test_metrics_section_exists(self, tmp_path, monkeypatch):
     """Metrics セクションが含まれること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4953,7 +4954,7 @@ class TestGenerateAuditReport:
 
   def test_metrics_dict_contents(self, tmp_path, monkeypatch):
     """metrics dict の内容が Metrics セクションに含まれること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4963,7 +4964,7 @@ class TestGenerateAuditReport:
 
   def test_recommended_actions_section_exists(self, tmp_path, monkeypatch):
     """Recommended Actions セクションが含まれること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     result = rw_light.generate_audit_report(
       "micro", self._micro_findings(), self._micro_metrics(), timestamp="20260418-120000"
     )
@@ -4972,7 +4973,7 @@ class TestGenerateAuditReport:
 
   def test_micro_recommended_actions_auto_generated(self, tmp_path, monkeypatch):
     """micro で recommended_actions=None のとき、findings から自動生成されること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     findings = [
       _make_finding("ERROR", "broken_link", "concepts/page-a.md", "リンク切れ"),
       _make_finding("WARN", "index_missing", "methods/page-b.md", "未登録"),
@@ -4986,7 +4987,7 @@ class TestGenerateAuditReport:
 
   def test_micro_auto_actions_group_by_category(self, tmp_path, monkeypatch):
     """micro 自動生成アクションは category ごとに集約されること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     findings = [
       _make_finding("ERROR", "broken_link", "concepts/page-a.md", "リンク切れA"),
       _make_finding("ERROR", "broken_link", "concepts/page-b.md", "リンク切れB"),
@@ -5002,7 +5003,7 @@ class TestGenerateAuditReport:
 
   def test_monthly_uses_passed_recommended_actions(self, tmp_path, monkeypatch):
     """monthly は passed recommended_actions をそのまま出力すること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     actions = ["具体的なアクション1", "具体的なアクション2"]
     result = rw_light.generate_audit_report(
       "monthly", [], {}, recommended_actions=actions, timestamp="20260418-120000"
@@ -5014,7 +5015,7 @@ class TestGenerateAuditReport:
   def test_logs_dir_created_if_absent(self, tmp_path, monkeypatch):
     """logs/ ディレクトリが存在しなくても自動作成されること（write_text の既存動作）"""
     new_logdir = tmp_path / "new_logs"
-    monkeypatch.setattr(rw_light, "LOGDIR", str(new_logdir))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(new_logdir))
     result = rw_light.generate_audit_report(
       "micro", [], {}, timestamp="20260418-120000"
     )
@@ -5147,7 +5148,7 @@ class TestAuditSummaryCriticalVisibility:
 
   def test_generate_audit_report_critical_line(self, tmp_path, monkeypatch):
     """generate_audit_report の Summary 節に '- CRITICAL: N' 行が存在する"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     findings = [self._finding("CRITICAL"), self._finding("ERROR")]
     report_path = rw_light.generate_audit_report(
       "weekly", findings, {}, timestamp="20260420-120000"
@@ -5157,7 +5158,7 @@ class TestAuditSummaryCriticalVisibility:
 
   def test_generate_audit_report_status_uses_compute_run_status(self, tmp_path, monkeypatch):
     """WARN のみ → status: PASS（旧: FAIL）"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
     findings = [self._finding("WARN")]
     report_path = rw_light.generate_audit_report(
       "micro", findings, {}, timestamp="20260420-120001"
@@ -5171,7 +5172,7 @@ class TestGenerateAuditReportIntegration:
 
   def test_micro_report_file_and_summary(self, tmp_path, monkeypatch, capsys):
     """micro findings でレポートファイルが生成され、サマリーが標準出力に表示されること"""
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path))
 
     findings = [
       rw_light.Finding("ERROR", "broken_link", "concepts/page.md", "リンク切れ", ""),
@@ -5230,10 +5231,10 @@ def _setup_wiki_for_cmd_audit(tmp_path, monkeypatch, num_files=2):
       encoding="utf-8",
     )
 
-  monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-  monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-  monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-  monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+  monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+  monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+  monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
   return wiki_dir, logs_dir
 
 
@@ -5293,19 +5294,19 @@ class TestCmdAuditMicro:
 
   def test_cmd_audit_micro_no_wiki_returns_1(self, tmp_path, monkeypatch, capsys):
     """wiki/ が存在しない場合 exit 1（Req 7.1）"""
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path / "logs"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path / "logs"))
     result = rw_light.cmd_audit_micro()
     assert result == 1
 
   def test_cmd_audit_micro_no_wiki_prints_error(self, tmp_path, monkeypatch, capsys):
     """wiki/ が存在しない場合 [ERROR] を表示すること"""
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path / "logs"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path / "logs"))
     rw_light.cmd_audit_micro()
     out = capsys.readouterr().out
     assert "[ERROR]" in out
@@ -5477,10 +5478,10 @@ def _setup_wiki_for_weekly(tmp_path, monkeypatch, num_files=2):
       encoding="utf-8",
     )
 
-  monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-  monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-  monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-  monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+  monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+  monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+  monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
   return wiki_dir, logs_dir
 
 
@@ -5500,19 +5501,19 @@ class TestCmdAuditWeekly:
 
   def test_cmd_audit_weekly_no_wiki_returns_1(self, tmp_path, monkeypatch, capsys):
     """wiki/ が存在しない場合 exit 1（Req 7.1）"""
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path / "logs"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path / "logs"))
     result = rw_light.cmd_audit_weekly()
     assert result == 1
 
   def test_cmd_audit_weekly_no_wiki_prints_error(self, tmp_path, monkeypatch, capsys):
     """wiki/ が存在しない場合 [ERROR] を表示すること"""
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path / "logs"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(tmp_path / "logs"))
     rw_light.cmd_audit_weekly()
     out = capsys.readouterr().out
     assert "[ERROR]" in out
@@ -5692,12 +5693,12 @@ def _setup_vault_for_llm_audit(tmp_path, monkeypatch):
     encoding="utf-8",
   )
 
-  monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-  monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-  monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-  monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
-  monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
-  monkeypatch.setattr(rw_light, "AGENTS_DIR", str(agents_dir))
+  monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+  monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+  monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
+  monkeypatch.setattr(rw_config, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+  monkeypatch.setattr(rw_config, "AGENTS_DIR", str(agents_dir))
 
   return wiki_dir, logs_dir, agents_dir
 
@@ -5906,13 +5907,13 @@ class TestRunLlmAudit:
     agents_dir.mkdir()
     (wiki_dir / "page.md").write_text("---\ntitle: T\n---\n# T\n", encoding="utf-8")
 
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
     # CLAUDE.md を作成しない
-    monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
-    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(agents_dir))
+    monkeypatch.setattr(rw_config, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+    monkeypatch.setattr(rw_config, "AGENTS_DIR", str(agents_dir))
 
     result = rw_light.cmd_audit_monthly([])
     assert result == 1
@@ -5928,13 +5929,13 @@ class TestRunLlmAudit:
     (tmp_path / "CLAUDE.md").write_text("# CLAUDE\n", encoding="utf-8")
     (wiki_dir / "page.md").write_text("---\ntitle: T\n---\n# T\n", encoding="utf-8")
 
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
-    monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_config, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
     # AGENTS/ を作成しない
-    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_path / "AGENTS"))
+    monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_path / "AGENTS"))
 
     result = rw_light.cmd_audit_monthly([])
     assert result == 1
@@ -6090,15 +6091,15 @@ def _setup_e2e_audit_vault(tmp_path, monkeypatch):
   log_md.write_text("# Log\n\n## 2026-04-18\n\n- 初回エントリ\n", encoding="utf-8")
 
   # グローバル定数をパッチ
-  monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-  monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-  monkeypatch.setattr(rw_light, "INDEX_MD", str(index_md))
-  monkeypatch.setattr(rw_light, "CHANGE_LOG_MD", str(log_md))
-  monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
-  monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
-  monkeypatch.setattr(rw_light, "AGENTS_DIR", str(agents_dir))
-  monkeypatch.setattr(rw_light, "RAW", str(raw_dir))
-  monkeypatch.setattr(rw_light, "REVIEW", str(review_dir))
+  monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+  monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+  monkeypatch.setattr(rw_config, "INDEX_MD", str(index_md))
+  monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(log_md))
+  monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
+  monkeypatch.setattr(rw_config, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+  monkeypatch.setattr(rw_config, "AGENTS_DIR", str(agents_dir))
+  monkeypatch.setattr(rw_config, "RAW", str(raw_dir))
+  monkeypatch.setattr(rw_config, "REVIEW", str(review_dir))
 
   return wiki_dir, logs_dir, raw_dir, review_dir, agents_dir
 
@@ -6365,12 +6366,12 @@ class TestE2EAuditAllTiers:
     # wiki/ は作成しない
     logs_dir = tmp_path / "logs"
     logs_dir.mkdir()
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(tmp_path / "wiki"))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
-    monkeypatch.setattr(rw_light, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
-    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_path / "AGENTS"))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(tmp_path / "wiki"))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_config, "CLAUDE_MD", str(tmp_path / "CLAUDE.md"))
+    monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_path / "AGENTS"))
 
     assert rw_light.cmd_audit_micro() == 1
     assert rw_light.cmd_audit_weekly() == 1
@@ -6383,7 +6384,7 @@ class TestE2EAuditAllTiers:
     # AGENTS/ を削除
     import shutil as _shutil
     _shutil.rmtree(str(tmp_path / "AGENTS"))
-    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_path / "AGENTS"))
+    monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_path / "AGENTS"))
 
     result = rw_light.cmd_audit_monthly([])
     assert result == 1
@@ -6396,7 +6397,7 @@ class TestE2EAuditAllTiers:
     wiki_dir, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
     import shutil as _shutil
     _shutil.rmtree(str(tmp_path / "AGENTS"))
-    monkeypatch.setattr(rw_light, "AGENTS_DIR", str(tmp_path / "AGENTS"))
+    monkeypatch.setattr(rw_config, "AGENTS_DIR", str(tmp_path / "AGENTS"))
 
     result = rw_light.cmd_audit_quarterly([])
     assert result == 1
@@ -6507,10 +6508,10 @@ class TestAuditExit2OnFail:
       "---\ntitle: B\nsource: web\n---\n\n# B\n\n[[nonexistent]] link.\n",
       encoding="utf-8",
     )
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
     monkeypatch.setattr(
       rw_light, "_git_list_files",
       lambda args: [str(broken_page)] if "diff" in args else []
@@ -6529,10 +6530,10 @@ class TestAuditExit2OnFail:
       "---\ntitle: P\nsource: web\n---\n\n# P\n\nBody.\n",
       encoding="utf-8",
     )
-    monkeypatch.setattr(rw_light, "ROOT", str(tmp_path))
-    monkeypatch.setattr(rw_light, "WIKI", str(wiki_dir))
-    monkeypatch.setattr(rw_light, "INDEX_MD", str(tmp_path / "index.md"))
-    monkeypatch.setattr(rw_light, "LOGDIR", str(logs_dir))
+    monkeypatch.setattr(rw_config, "ROOT", str(tmp_path))
+    monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
+    monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
+    monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
     monkeypatch.setattr(
       rw_light, "_git_list_files",
       lambda args: [str(page)] if "diff" in args else []

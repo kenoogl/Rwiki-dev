@@ -4,6 +4,7 @@ import sys
 
 import pytest
 
+import rw_config
 import rw_light
 
 
@@ -26,7 +27,7 @@ class TestCmdInit:
     """Req 9.1: 空ディレクトリへの init → VAULT_DIRS の全エントリが存在する。"""
     vault = tmp_path / "vault"
     rw_light.cmd_init([str(vault)])
-    for d in rw_light.VAULT_DIRS:
+    for d in rw_config.VAULT_DIRS:
       assert os.path.isdir(os.path.join(str(vault), d)), f"Missing dir: {d}"
 
   def test_creates_target_dir_if_missing(self, tmp_path, mock_templates):
@@ -115,7 +116,7 @@ class TestCmdInit:
     captured = capsys.readouterr()
     out = captured.out
     assert "ディレクトリ生成" in out, "ディレクトリ生成の報告がない"
-    assert str(len(rw_light.VAULT_DIRS)) in out, "生成ディレクトリ数が出力に含まれない"
+    assert str(len(rw_config.VAULT_DIRS)) in out, "生成ディレクトリ数が出力に含まれない"
     assert "CLAUDE.md" in out, "CLAUDE.md の報告がない"
     assert "AGENTS/" in out, "AGENTS/ の報告がない"
 
