@@ -434,6 +434,9 @@ def read_wiki_content(scope: str | None) -> str:
     return rw_utils.read_text(rw_config.INDEX_MD)
 
 
+# audit: data loading
+
+
 def read_all_wiki_content() -> str:
     """wiki/ 内の全 .md ファイル + rw_config.ROOT/index.md + rw_config.ROOT/log.md を結合して返す。
     グローバル定数 rw_config.WIKI, rw_config.INDEX_MD, rw_config.CHANGE_LOG_MD を使用。

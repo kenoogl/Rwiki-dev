@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
 import rw_config  # noqa: E402
 import rw_light  # noqa: E402
+import rw_prompt_engine  # noqa: E402
 import rw_utils  # noqa: E402
 
 # テスト用 CLAUDE.md が存在する templates/CLAUDE.md のパス
@@ -29,19 +30,19 @@ class TestParseAgentMapping:
 
     def test_returns_9_rows(self):
         """templates/CLAUDE.md から 9 行のマッピングが返ること"""
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         assert len(result) == 9, f"Expected 9 rows, got {len(result)}: {list(result.keys())}"
 
     def test_each_row_has_agent(self):
         """各行に agent キーが存在し非空であること"""
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         for task_name, entry in result.items():
             assert "agent" in entry, f"Row '{task_name}' missing 'agent' key"
             assert entry["agent"], f"Row '{task_name}' has empty agent"
 
     def test_each_row_has_policies(self):
         """各行に policies キーが存在しリスト型であること"""
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         for task_name, entry in result.items():
             assert "policies" in entry, f"Row '{task_name}' missing 'policies' key"
             assert isinstance(entry["policies"], list), (
@@ -50,7 +51,7 @@ class TestParseAgentMapping:
 
     def test_each_row_has_mode(self):
         """各行に mode キーが存在すること（具体値は検証しない）"""
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         for task_name, entry in result.items():
             assert "mode" in entry, f"Row '{task_name}' missing 'mode' key"
             assert entry["mode"], f"Row '{task_name}' has empty mode"
@@ -61,24 +62,24 @@ class TestParseAgentMapping:
             "ingest", "lint", "synthesize", "synthesize_logs", "approve",
             "query_answer", "query_extract", "query_fix", "audit",
         }
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         assert set(result.keys()) == expected_tasks
 
     def test_multi_policy_parsed_as_list(self):
         """複数ポリシーがカンマ区切りでリスト化されること"""
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         # synthesize は 2 つのポリシーを持つ
         assert len(result["synthesize"]["policies"]) == 2
 
     def test_single_policy_parsed_as_list(self):
         """単一ポリシーも長さ 1 のリストで返ること"""
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         # ingest は 1 つのポリシー
         assert len(result["ingest"]["policies"]) == 1
 
     def test_agent_path_contains_agents_dir(self):
         """agent パスが AGENTS/ を含むこと"""
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         for task_name, entry in result.items():
             assert "AGENTS/" in entry["agent"], (
                 f"Row '{task_name}' agent path doesn't start with AGENTS/: {entry['agent']}"
@@ -86,7 +87,7 @@ class TestParseAgentMapping:
 
     def test_policy_paths_contain_agents_dir(self):
         """各 policy パスが AGENTS/ を含むこと"""
-        result = rw_light.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
+        result = rw_prompt_engine.parse_agent_mapping(TEMPLATES_CLAUDE_MD)
         for task_name, entry in result.items():
             for pol in entry["policies"]:
                 assert "AGENTS/" in pol, (
@@ -100,7 +101,7 @@ class TestParseAgentMapping:
         no_table_md = tmp_path / "CLAUDE.md"
         no_table_md.write_text("# Header\n\nNo table here.\n", encoding="utf-8")
         with pytest.raises(ValueError, match=".*"):
-            rw_light.parse_agent_mapping(str(no_table_md))
+            rw_prompt_engine.parse_agent_mapping(str(no_table_md))
 
     def test_raises_value_error_when_required_column_missing(self, tmp_path):
         """必須列 (Task, Agent, Policy) のいずれかが欠落している場合 ValueError を raise すること"""
@@ -115,7 +116,7 @@ class TestParseAgentMapping:
             encoding="utf-8",
         )
         with pytest.raises(ValueError, match=".*"):
-            rw_light.parse_agent_mapping(str(missing_col_md))
+            rw_prompt_engine.parse_agent_mapping(str(missing_col_md))
 
     def test_raises_value_error_when_agent_is_empty(self, tmp_path):
         """agent フィールドが空の行がある場合 ValueError を raise すること"""
@@ -129,7 +130,7 @@ class TestParseAgentMapping:
             encoding="utf-8",
         )
         with pytest.raises(ValueError, match=".*"):
-            rw_light.parse_agent_mapping(str(empty_agent_md))
+            rw_prompt_engine.parse_agent_mapping(str(empty_agent_md))
 
     def test_column_order_independent(self, tmp_path):
         """列順が変わっても正しくパースできること"""
@@ -142,7 +143,7 @@ class TestParseAgentMapping:
             """),
             encoding="utf-8",
         )
-        result = rw_light.parse_agent_mapping(str(reordered_md))
+        result = rw_prompt_engine.parse_agent_mapping(str(reordered_md))
         assert "ingest" in result
         assert result["ingest"]["agent"] == "AGENTS/ingest.md"
         assert result["ingest"]["policies"] == ["AGENTS/git_ops.md"]
@@ -159,14 +160,14 @@ class TestLoadTaskPrompts:
         """正常ケース: 文字列が返ること"""
         # Vault ルートを tmp_path に向ける
         _setup_mock_vault(tmp_path, monkeypatch)
-        result = rw_light.load_task_prompts("ingest")
+        result = rw_prompt_engine.load_task_prompts("ingest")
         assert isinstance(result, str)
         assert len(result) > 0
 
     def test_concatenates_agent_and_policy(self, monkeypatch, tmp_path):
         """エージェントとポリシーの内容が結合されて返ること"""
         _setup_mock_vault(tmp_path, monkeypatch)
-        result = rw_light.load_task_prompts("ingest")
+        result = rw_prompt_engine.load_task_prompts("ingest")
         # AGENT_CONTENT と POLICY_CONTENT の両方が含まれること
         assert "AGENT_CONTENT" in result
         assert "POLICY_CONTENT" in result
@@ -174,7 +175,7 @@ class TestLoadTaskPrompts:
     def test_multi_policy_all_included(self, monkeypatch, tmp_path):
         """複数ポリシーが全て結合されること"""
         _setup_mock_vault(tmp_path, monkeypatch)
-        result = rw_light.load_task_prompts("synthesize")
+        result = rw_prompt_engine.load_task_prompts("synthesize")
         assert "SYNTHESIZE_AGENT" in result
         assert "PAGE_POLICY_CONTENT" in result
         assert "NAMING_POLICY_CONTENT" in result
@@ -183,7 +184,7 @@ class TestLoadTaskPrompts:
         """マッピング表に存在しないタスク名の場合 ValueError を raise すること"""
         _setup_mock_vault(tmp_path, monkeypatch)
         with pytest.raises(ValueError, match=".*"):
-            rw_light.load_task_prompts("nonexistent_task")
+            rw_prompt_engine.load_task_prompts("nonexistent_task")
 
     def test_raises_file_not_found_when_agent_missing(self, monkeypatch, tmp_path):
         """エージェントファイルが存在しない場合 FileNotFoundError を raise すること"""
@@ -192,7 +193,7 @@ class TestLoadTaskPrompts:
         agent_file = tmp_path / "AGENTS" / "ingest.md"
         agent_file.unlink()
         with pytest.raises(FileNotFoundError):
-            rw_light.load_task_prompts("ingest")
+            rw_prompt_engine.load_task_prompts("ingest")
 
     def test_raises_file_not_found_when_policy_missing(self, monkeypatch, tmp_path):
         """ポリシーファイルが存在しない場合 FileNotFoundError を raise すること"""
@@ -201,7 +202,7 @@ class TestLoadTaskPrompts:
         policy_file = tmp_path / "AGENTS" / "git_ops.md"
         policy_file.unlink()
         with pytest.raises(FileNotFoundError):
-            rw_light.load_task_prompts("ingest")
+            rw_prompt_engine.load_task_prompts("ingest")
 
 
 # ---------------------------------------------------------------------------
@@ -279,7 +280,7 @@ class TestCallClaude:
 
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
 
-        result = rw_light.call_claude("test prompt")
+        result = rw_prompt_engine.call_claude("test prompt")
         assert result == "hello from claude"
 
     def test_failure_raises_runtime_error(self, monkeypatch):
@@ -296,7 +297,7 @@ class TestCallClaude:
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
 
         with pytest.raises(RuntimeError, match="claude error: something went wrong"):
-            rw_light.call_claude("test prompt")
+            rw_prompt_engine.call_claude("test prompt")
 
     def test_failure_prints_stdout_to_stderr(self, monkeypatch, capsys):
         """失敗時: stdout の先頭500文字が stderr に出力されること"""
@@ -313,7 +314,7 @@ class TestCallClaude:
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
 
         with pytest.raises(RuntimeError):
-            rw_light.call_claude("test prompt")
+            rw_prompt_engine.call_claude("test prompt")
 
         captured = capsys.readouterr()
         # stderr に stdout 先頭500文字が含まれること
@@ -335,7 +336,7 @@ class TestCallClaude:
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
 
         with pytest.raises(RuntimeError) as exc_info:
-            rw_light.call_claude("test prompt")
+            rw_prompt_engine.call_claude("test prompt")
 
         assert "specific error detail" in str(exc_info.value)
 
@@ -376,7 +377,7 @@ class TestReadWikiContent:
         wiki_dir = self._setup_wiki(tmp_path, monkeypatch)
         scope_path = str(wiki_dir / "page_00.md")
 
-        result = rw_light.read_wiki_content(scope_path)
+        result = rw_prompt_engine.read_wiki_content(scope_path)
 
         assert "Content of page 0" in result
 
@@ -385,7 +386,7 @@ class TestReadWikiContent:
         wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=3)
         scope_path = str(wiki_dir / "page_00.md")
 
-        result = rw_light.read_wiki_content(scope_path)
+        result = rw_prompt_engine.read_wiki_content(scope_path)
 
         assert "Content of page 0" in result
         assert "Content of page 1" not in result
@@ -399,7 +400,7 @@ class TestReadWikiContent:
         missing_path = str(tmp_path / "wiki" / "nonexistent.md")
 
         with pytest.raises(FileNotFoundError):
-            rw_light.read_wiki_content(missing_path)
+            rw_prompt_engine.read_wiki_content(missing_path)
 
     # --- エラー系: scope=None ---
 
@@ -411,7 +412,7 @@ class TestReadWikiContent:
         monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
 
         with pytest.raises(FileNotFoundError):
-            rw_light.read_wiki_content(None)
+            rw_prompt_engine.read_wiki_content(None)
 
     def test_scope_none_no_md_files_raises_value_error(self, tmp_path, monkeypatch):
         """scope=None・.md ファイルゼロ: ValueError を raise すること"""
@@ -425,7 +426,7 @@ class TestReadWikiContent:
         monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
 
         with pytest.raises(ValueError):
-            rw_light.read_wiki_content(None)
+            rw_prompt_engine.read_wiki_content(None)
 
     # --- 正常系: scope=None, 小規模 wiki (≤20) ---
 
@@ -433,7 +434,7 @@ class TestReadWikiContent:
         """scope=None・ファイル数≤20: 全ファイル内容を結合して返すこと"""
         wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=3)
 
-        result = rw_light.read_wiki_content(None)
+        result = rw_prompt_engine.read_wiki_content(None)
 
         assert "Content of page 0" in result
         assert "Content of page 1" in result
@@ -443,7 +444,7 @@ class TestReadWikiContent:
         """scope=None・ファイル数=20: 全ファイル内容を返すこと（境界値）"""
         wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=20)
 
-        result = rw_light.read_wiki_content(None)
+        result = rw_prompt_engine.read_wiki_content(None)
 
         for i in range(20):
             assert f"Content of page {i}" in result
@@ -454,7 +455,7 @@ class TestReadWikiContent:
         """scope=None・ファイル数>20: index.md の内容のみ返すこと"""
         wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=21)
 
-        result = rw_light.read_wiki_content(None)
+        result = rw_prompt_engine.read_wiki_content(None)
 
         # index.md の内容を含む
         assert "This is the index" in result
@@ -465,7 +466,7 @@ class TestReadWikiContent:
         """scope=None・ファイル数=21: index.md のみ返すこと（境界値）"""
         wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=21)
 
-        result = rw_light.read_wiki_content(None)
+        result = rw_prompt_engine.read_wiki_content(None)
 
         assert "This is the index" in result
         assert "Content of page" not in result
@@ -475,7 +476,7 @@ class TestReadWikiContent:
         wiki_dir = self._setup_wiki(tmp_path, monkeypatch, num_files=21, with_index=False)
 
         with pytest.raises(FileNotFoundError):
-            rw_light.read_wiki_content(None)
+            rw_prompt_engine.read_wiki_content(None)
 
 
 # ---------------------------------------------------------------------------
@@ -491,7 +492,7 @@ class TestBuildQueryPrompt:
 
     def test_json_format_contains_json_schema_markers(self):
         """output_format='json' の場合、JSON スキーマ指示が含まれること"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -503,7 +504,7 @@ class TestBuildQueryPrompt:
 
     def test_json_format_contains_extract_schema_fields(self):
         """output_format='json' の場合、4ファイル抽出スキーマのフィールドが含まれること"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -518,7 +519,7 @@ class TestBuildQueryPrompt:
 
     def test_plaintext_format_contains_referenced_instruction(self):
         """output_format='plaintext' の場合、Referenced: 指示が含まれること"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -528,7 +529,7 @@ class TestBuildQueryPrompt:
 
     def test_plaintext_format_does_not_contain_json_schema(self):
         """output_format='plaintext' の場合、JSONスキーマ指示が含まれないこと"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -539,7 +540,7 @@ class TestBuildQueryPrompt:
 
     def test_query_type_specified_included_in_prompt(self):
         """query_type 指定時: プロンプトに query_type が含まれること"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -550,7 +551,7 @@ class TestBuildQueryPrompt:
 
     def test_query_type_none_not_explicitly_set(self):
         """query_type=None の場合: 明示的なクエリタイプ指定がプロンプトに含まれないこと"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -572,7 +573,7 @@ class TestBuildQueryPrompt:
             "errors": [{"code": "QL001", "message": "missing file: answer.md"}],
             "warnings": [],
         }
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -587,7 +588,7 @@ class TestBuildQueryPrompt:
             "question.md": "# Question\n\nWhat is ML?",
             "answer.md": "# Answer\n\nML is machine learning.",
         }
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -598,7 +599,7 @@ class TestBuildQueryPrompt:
 
     def test_task_prompts_included_in_result(self):
         """task_prompts の内容がプロンプトに含まれること（エージェント+ポリシー）"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -609,7 +610,7 @@ class TestBuildQueryPrompt:
 
     def test_wiki_content_included_in_result(self):
         """wiki_content の内容がプロンプトに含まれること（知識ソース）"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -619,7 +620,7 @@ class TestBuildQueryPrompt:
 
     def test_question_included_in_result(self):
         """question がプロンプトに含まれること"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -633,7 +634,7 @@ class TestBuildQueryPrompt:
             "errors": [{"code": "QL001", "message": "missing file: answer.md"}],
             "warnings": [],
         }
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -645,7 +646,7 @@ class TestBuildQueryPrompt:
 
     def test_prompt_structure_order(self):
         """プロンプト構造: task_prompts → wiki_content → question の順序であること"""
-        result = rw_light.build_query_prompt(
+        result = rw_prompt_engine.build_query_prompt(
             self.TASK_PROMPTS,
             self.QUESTION,
             self.WIKI_CONTENT,
@@ -1106,8 +1107,8 @@ class TestCmdQueryExtract:
         # wiki/ を削除
         import shutil
         shutil.rmtree(str(tmp_path / "wiki"))
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
         result = rw_light.cmd_query_extract(["test question"])
         assert result == 1
 
@@ -1123,8 +1124,8 @@ class TestCmdQueryExtract:
         """同一 query_id ディレクトリが既存 → return 1"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         # 事前に同一 query_id ディレクトリを作成
         query_id = rw_light.generate_query_id("test question")
@@ -1137,8 +1138,8 @@ class TestCmdQueryExtract:
         """成功パス: 4ファイルが review/query/<query_id>/ に作成されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         result = rw_light.cmd_query_extract(["test question"])
 
@@ -1158,7 +1159,7 @@ class TestCmdQueryExtract:
         """--scope 引数が正しく解析されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
 
         scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
         called_scopes = []
@@ -1166,7 +1167,7 @@ class TestCmdQueryExtract:
         def mock_call_claude(p, timeout=None):
             return MOCK_EXTRACT_RESPONSE
 
-        monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
         result = rw_light.cmd_query_extract(["test question", "--scope", scope_path])
         assert result in (0, 2)
@@ -1175,8 +1176,8 @@ class TestCmdQueryExtract:
         """--type 引数が正しく解析されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         result = rw_light.cmd_query_extract(["test question", "--type", "fact"])
         assert result in (0, 2)
@@ -1185,7 +1186,7 @@ class TestCmdQueryExtract:
         """ファイル数>20 かつ scope=None の場合: 2段階方式が呼び出されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
 
         # wiki/ に 21 ファイル追加
         wiki_dir = tmp_path / "wiki"
@@ -1206,7 +1207,7 @@ class TestCmdQueryExtract:
                 # ステージ2: 本プロンプト
                 return MOCK_EXTRACT_RESPONSE
 
-        monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
         result = rw_light.cmd_query_extract(["test question"])
         assert result in (0, 2)
@@ -1217,8 +1218,8 @@ class TestCmdQueryExtract:
         """lint status=FAIL の場合: return 2"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         # lint_single_query_dir を FAIL を返すモックに差し替え
         def mock_lint(query_dir):
@@ -1240,8 +1241,8 @@ class TestCmdQueryExtract:
         """lint status=PASS の場合: return 0"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
         # lint_single_query_dir を PASS を返すモックに差し替え
         def mock_lint(query_dir):
@@ -1341,8 +1342,8 @@ class TestCmdQueryAnswer:
     def test_success_returns_0(self, tmp_path, monkeypatch):
         """成功パス: return 0 かつ review/query/ にファイルが生成されないこと"""
         _, review_query_dir = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         result = rw_light.cmd_query_answer(["test question"])
         assert result == 0
@@ -1350,8 +1351,8 @@ class TestCmdQueryAnswer:
     def test_success_no_file_created_in_query_review(self, tmp_path, monkeypatch):
         """成功パス: review/query/ にファイルが生成されないこと（Req 2.3）"""
         _, review_query_dir = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
 
@@ -1362,8 +1363,8 @@ class TestCmdQueryAnswer:
     def test_success_stdout_contains_answer_text(self, tmp_path, monkeypatch, capsys):
         """成功パス: stdout に回答テキストが含まれること"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
 
@@ -1374,8 +1375,8 @@ class TestCmdQueryAnswer:
     def test_success_stdout_contains_referenced_pages(self, tmp_path, monkeypatch, capsys):
         """成功パス: stdout に参照ページ（Referenced: セクション）が含まれること"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         rw_light.cmd_query_answer(["test question"])
 
@@ -1386,9 +1387,9 @@ class TestCmdQueryAnswer:
     def test_response_without_referenced_section_still_returns_0(self, tmp_path, monkeypatch, capsys):
         """---\\nReferenced: セパレータなし → 全体を回答として出力し return 0"""
         _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
         no_ref_response = "This is an answer without referenced section."
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: no_ref_response)
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: no_ref_response)
 
         result = rw_light.cmd_query_answer(["test question"])
 
@@ -1399,19 +1400,19 @@ class TestCmdQueryAnswer:
     def test_scope_option_passes_to_read_wiki_content(self, tmp_path, monkeypatch):
         """--scope オプションが read_wiki_content に渡されること"""
         _, _ = _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_ANSWER_RESPONSE)
 
         scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
         received_scopes = []
 
-        original_read_wiki = rw_light.read_wiki_content
+        original_read_wiki = rw_prompt_engine.read_wiki_content
 
         def mock_read_wiki(scope):
             received_scopes.append(scope)
             return original_read_wiki(scope)
 
-        monkeypatch.setattr(rw_light, "read_wiki_content", mock_read_wiki)
+        monkeypatch.setattr(rw_prompt_engine, "read_wiki_content", mock_read_wiki)
 
         result = rw_light.cmd_query_answer(["test question", "--scope", scope_path])
 
@@ -1547,8 +1548,8 @@ class TestCmdQueryFix:
     def test_success_fix_returns_0(self, tmp_path, monkeypatch):
         """lint FAIL → fix → post-fix PASS → return 0"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
         lint_call_count = [0]
 
@@ -1582,8 +1583,8 @@ class TestCmdQueryFix:
     def test_non_none_files_written_none_skipped(self, tmp_path, monkeypatch):
         """non-None ファイルは書き出され、None ファイルはスキップされること (Req 5.2)"""
         _, _, query_id, query_dir = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
         original_answer_content = (query_dir / "question.md").read_text(encoding="utf-8")
 
@@ -1611,7 +1612,7 @@ class TestCmdQueryFix:
     def test_skipped_items_reported(self, tmp_path, monkeypatch, capsys):
         """skipped 項目が報告されること"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
 
         fix_response_with_skipped = json.dumps({
             "fixes": [{"file": "answer.md", "ql_code": "QL006", "action": "expanded content"}],
@@ -1623,7 +1624,7 @@ class TestCmdQueryFix:
             },
             "skipped": [{"ql_code": "QL009", "reason": "Cannot auto-fix source references"}],
         })
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: fix_response_with_skipped)
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: fix_response_with_skipped)
 
         def mock_lint(_query_dir, **kwargs):
             return {
@@ -1644,8 +1645,8 @@ class TestCmdQueryFix:
     def test_post_fix_lint_fail_returns_2(self, tmp_path, monkeypatch):
         """post-fix lint FAIL → return 2 (Req 3.8, 3.9)"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
         def mock_lint(_query_dir, **kwargs):
             # 事前も事後も FAIL のまま
@@ -1665,8 +1666,8 @@ class TestCmdQueryFix:
     def test_no_files_written_to_wiki(self, tmp_path, monkeypatch):
         """wiki/ ディレクトリには何も書き出されないこと (Req 5.2)"""
         _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
+        monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
         wiki_dir = tmp_path / "wiki"
         # wiki/ の初期ファイルリストを記録
@@ -2162,7 +2163,7 @@ class TestE2EWorkflow:
         """extract → review/query/<query_id>/ に 4ファイルが作成されること"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         result = rw_light.cmd_query_extract(["What is ML?"])
 
@@ -2183,7 +2184,7 @@ class TestE2EWorkflow:
         """extract → lint が PASS を返すこと"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         extract_result = rw_light.cmd_query_extract(["What is ML?"])
         assert extract_result in (0, 2), f"extract failed: {extract_result}"
@@ -2204,7 +2205,7 @@ class TestE2EWorkflow:
         """extract → answer.md を短縮 → lint FAIL → fix → lint PASS ワークフローの検証"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
         monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         # Step 1: extract
         extract_result = rw_light.cmd_query_extract(["What is ML?"])
@@ -2226,7 +2227,7 @@ class TestE2EWorkflow:
         )
 
         # Step 4: fix（call_claude を fix レスポンスにすり替え）
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_fix_response(query_id))
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_fix_response(query_id))
         fix_result = rw_light.cmd_query_fix([query_id])
         assert fix_result in (0, 2), f"fix command returned unexpected code: {fix_result}"
 
@@ -2252,7 +2253,7 @@ class TestE2EWorkflow:
             captured_prompts_1.append(p)
             return _make_extract_response("What is ML? first")
 
-        monkeypatch.setattr(rw_light, "call_claude", mock_claude_1)
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_claude_1)
         result1 = rw_light.cmd_query_extract(["What is ML? first"])
         assert result1 in (0, 2), f"first extract failed: {result1}"
         assert len(captured_prompts_1) >= 1
@@ -2268,7 +2269,7 @@ class TestE2EWorkflow:
             captured_prompts_2.append(p)
             return _make_extract_response("What is ML? second")
 
-        monkeypatch.setattr(rw_light, "call_claude", mock_claude_2)
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_claude_2)
         result2 = rw_light.cmd_query_extract(["What is ML? second"])
         assert result2 in (0, 2), f"second extract failed: {result2}"
         assert len(captured_prompts_2) >= 1
@@ -2295,13 +2296,13 @@ class TestE2EWorkflow:
 
         # read_wiki_content の呼び出し引数をキャプチャ
         captured_scope = []
-        original_read_wiki = rw_light.read_wiki_content
+        original_read_wiki = rw_prompt_engine.read_wiki_content
 
         def mock_read_wiki(scope):
             captured_scope.append(scope)
             return original_read_wiki(scope)
 
-        monkeypatch.setattr(rw_light, "read_wiki_content", mock_read_wiki)
+        monkeypatch.setattr(rw_prompt_engine, "read_wiki_content", mock_read_wiki)
 
         scope_path = str(wiki_dir / "concepts" / "machine_learning.md")
         captured_prompts = []
@@ -2310,7 +2311,7 @@ class TestE2EWorkflow:
             captured_prompts.append(p)
             return _make_extract_response("What is ML? scoped")
 
-        monkeypatch.setattr(rw_light, "call_claude", mock_claude)
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_claude)
         result = rw_light.cmd_query_extract(["What is ML? scoped", "--scope", scope_path])
         assert result in (0, 2), f"scope extract failed: {result}"
 
@@ -2333,7 +2334,7 @@ class TestE2EWorkflow:
     def test_answer_no_files_created(self, tmp_path, monkeypatch):
         """answer コマンド実行後、review/query/ にファイルが作成されないこと (Req 2.3)"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: "ML is a field of AI.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: "ML is a field of AI.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
 
         result = rw_light.cmd_query_answer(["What is ML?"])
         assert result == 0, f"answer command failed: {result}"
@@ -2353,14 +2354,14 @@ class TestE2EWorkflow:
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
 
         captured_scope = []
-        original_read_wiki = rw_light.read_wiki_content
+        original_read_wiki = rw_prompt_engine.read_wiki_content
 
         def mock_read_wiki(scope):
             captured_scope.append(scope)
             return original_read_wiki(scope)
 
-        monkeypatch.setattr(rw_light, "read_wiki_content", mock_read_wiki)
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: "Answer about ML.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
+        monkeypatch.setattr(rw_prompt_engine, "read_wiki_content", mock_read_wiki)
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: "Answer about ML.\n\n---\nReferenced: wiki/concepts/machine_learning.md")
 
         scope_path = str(wiki_dir / "concepts" / "machine_learning.md")
         result = rw_light.cmd_query_answer(["What is ML?", "--scope", scope_path])
@@ -2400,7 +2401,7 @@ class TestE2EWorkflow:
         (tmp_path / "CLAUDE.md").write_text(
             "# CLAUDE.md\n\nNo table here, just text.\n", encoding="utf-8"
         )
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         result = rw_light.cmd_query_extract(["What is ML?"])
         assert result == 1, f"Expected 1 for invalid CLAUDE.md, got {result}"
@@ -2415,7 +2416,7 @@ class TestE2EWorkflow:
     def test_error_scope_page_missing(self, tmp_path, monkeypatch):
         """--scope で存在しないページを指定 → cmd_query_extract が 1 を返すこと"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
+        monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         nonexistent_scope = str(wiki_dir / "concepts" / "nonexistent_page.md")
         result = rw_light.cmd_query_extract(["What is ML?", "--scope", nonexistent_scope])
@@ -2581,7 +2582,7 @@ class TestCallClaudeTimeout:
 
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
 
-        result = rw_light.call_claude("test prompt", timeout=300)
+        result = rw_prompt_engine.call_claude("test prompt", timeout=300)
         assert result == "response text"
 
     def test_timeout_none_is_default(self, monkeypatch):
@@ -2597,7 +2598,7 @@ class TestCallClaudeTimeout:
 
         monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_result)
 
-        result = rw_light.call_claude("test prompt")
+        result = rw_prompt_engine.call_claude("test prompt")
         assert result == "default response"
 
     def test_timeout_passed_to_subprocess(self, monkeypatch):
@@ -2614,7 +2615,7 @@ class TestCallClaudeTimeout:
 
         monkeypatch.setattr(subprocess, "run", mock_run)
 
-        rw_light.call_claude("test prompt", timeout=120)
+        rw_prompt_engine.call_claude("test prompt", timeout=120)
         assert captured_kwargs.get("timeout") == 120
 
     def test_timeout_none_not_passed_to_subprocess(self, monkeypatch):
@@ -2632,7 +2633,7 @@ class TestCallClaudeTimeout:
 
         monkeypatch.setattr(subprocess, "run", mock_run)
 
-        rw_light.call_claude("test prompt", timeout=None)
+        rw_prompt_engine.call_claude("test prompt", timeout=None)
         # timeout=None が渡されても subprocess は無制限タイムアウトとして動作する
         timeout_val = captured_kwargs.get("timeout")
         assert timeout_val is None
@@ -2647,7 +2648,7 @@ class TestCallClaudeTimeout:
         monkeypatch.setattr(subprocess, "run", mock_run)
 
         with pytest.raises(RuntimeError) as exc_info:
-            rw_light.call_claude("test prompt", timeout=300)
+            rw_prompt_engine.call_claude("test prompt", timeout=300)
 
         assert "300" in str(exc_info.value)
 
@@ -2661,7 +2662,7 @@ class TestCallClaudeTimeout:
         monkeypatch.setattr(subprocess, "run", mock_run)
 
         with pytest.raises(RuntimeError) as exc_info:
-            rw_light.call_claude("test prompt", timeout=60)
+            rw_prompt_engine.call_claude("test prompt", timeout=60)
 
         error_msg = str(exc_info.value)
         assert "60" in error_msg
@@ -2673,7 +2674,7 @@ class TestAuditSectionHeaders:
     def test_audit_data_loading_header_exists(self):
         """# audit: data loading ヘッダーが存在すること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_prompt_engine)
         assert "# audit: data loading" in source
 
     def test_audit_static_checks_micro_header_exists(self):
@@ -2721,7 +2722,7 @@ class TestAuditSectionHeaders:
     def test_audit_headers_after_read_wiki_content(self):
         """audit ヘッダーが read_wiki_content の後にあること"""
         import inspect
-        source = inspect.getsource(rw_light)
+        source = inspect.getsource(rw_prompt_engine)
         idx_read_wiki = source.find("def read_wiki_content(")
         idx_audit_data = source.find("# audit: data loading")
         assert idx_read_wiki != -1, "read_wiki_content が見つからない"
@@ -2730,6 +2731,7 @@ class TestAuditSectionHeaders:
             "audit ヘッダーは read_wiki_content の後に配置されるべき"
         )
 
+    @pytest.mark.skip(reason="module-split Phase 3.1: # audit: data loading moved to rw_prompt_engine; output utilities remain in rw_light — cross-module order no longer meaningful. Re-evaluate in Phase 6.1.")
     def test_audit_headers_before_output_utilities(self):
         """audit ヘッダーが Output utilities セクションの前にあること"""
         import inspect
@@ -3323,13 +3325,13 @@ class TestReadAllWikiContent:
     def test_returns_string(self, tmp_path, monkeypatch):
         """正常ケース: 文字列を返すこと"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         assert isinstance(result, str)
 
     def test_all_wiki_pages_included(self, tmp_path, monkeypatch):
         """wiki/ の全 .md ファイルが結合に含まれること"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=3)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         assert "Content 0" in result
         assert "Content 1" in result
         assert "Content 2" in result
@@ -3337,7 +3339,7 @@ class TestReadAllWikiContent:
     def test_each_file_has_file_header(self, tmp_path, monkeypatch):
         """各ファイルが <!-- file: ... --> ヘッダー付きで結合されること"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=2)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         assert "<!-- file:" in result
         # wiki ページのヘッダーが含まれること
         assert "page-00.md" in result
@@ -3346,32 +3348,32 @@ class TestReadAllWikiContent:
     def test_index_md_included_in_result(self, tmp_path, monkeypatch):
         """ROOT/index.md が結合に含まれること"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1, create_index=True)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         assert "Top-level index." in result
 
     def test_log_md_included_in_result(self, tmp_path, monkeypatch):
         """ROOT/log.md が結合に含まれること"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1, create_log=True)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         assert "Change log." in result
 
     def test_index_md_header_format(self, tmp_path, monkeypatch):
         """ROOT/index.md が <!-- file: index.md --> ヘッダー付きで含まれること"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1, create_index=True)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         assert "<!-- file: index.md -->" in result
 
     def test_log_md_header_format(self, tmp_path, monkeypatch):
         """ROOT/log.md が <!-- file: log.md --> ヘッダー付きで含まれること"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1, create_log=True)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         assert "<!-- file: log.md -->" in result
 
     def test_index_md_missing_skipped_not_error(self, tmp_path, monkeypatch):
         """index.md が存在しない場合はスキップしてエラーにならないこと"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1,
                                   create_index=False, create_log=True)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         # index.md ヘッダーが含まれないこと
         assert "<!-- file: index.md -->" not in result
         # log.md は含まれること
@@ -3381,7 +3383,7 @@ class TestReadAllWikiContent:
         """log.md が存在しない場合はスキップしてエラーにならないこと"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1,
                                   create_index=True, create_log=False)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         # log.md ヘッダーが含まれないこと
         assert "<!-- file: log.md -->" not in result
         # index.md は含まれること
@@ -3391,7 +3393,7 @@ class TestReadAllWikiContent:
         """index.md と log.md の両方が存在しない場合もスキップして続行すること"""
         _setup_wiki_for_read_all(tmp_path, monkeypatch, num_files=1,
                                   create_index=False, create_log=False)
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         # wiki ページは含まれること
         assert "Content 0" in result
 
@@ -3403,7 +3405,7 @@ class TestReadAllWikiContent:
         monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
         import pytest
         with pytest.raises(FileNotFoundError):
-            rw_light.read_all_wiki_content()
+            rw_prompt_engine.read_all_wiki_content()
 
     def test_raises_value_error_when_no_md_files(self, tmp_path, monkeypatch):
         """wiki/ に .md ファイルがない場合 ValueError を raise すること"""
@@ -3416,7 +3418,7 @@ class TestReadAllWikiContent:
         monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
         import pytest
         with pytest.raises(ValueError):
-            rw_light.read_all_wiki_content()
+            rw_prompt_engine.read_all_wiki_content()
 
     def test_warns_when_page_count_exceeds_150(self, tmp_path, monkeypatch, capsys):
         """150 ページ超の場合に標準出力に警告を表示すること（処理は続行）"""
@@ -3431,7 +3433,7 @@ class TestReadAllWikiContent:
         monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
         monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
 
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         captured = capsys.readouterr()
         # 警告が表示されること
         assert "150" in captured.out or "警告" in captured.out or "WARN" in captured.out
@@ -3450,7 +3452,7 @@ class TestReadAllWikiContent:
         monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
         monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
 
-        rw_light.read_all_wiki_content()
+        rw_prompt_engine.read_all_wiki_content()
         captured = capsys.readouterr()
         # 150 ページ以下なので警告は出ないこと
         assert "WARN" not in captured.out
@@ -3465,7 +3467,7 @@ class TestReadAllWikiContent:
         monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
         monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_path / "log.md"))
 
-        result = rw_light.read_all_wiki_content()
+        result = rw_prompt_engine.read_all_wiki_content()
         # wiki/ プレフィックス付きのヘッダー
         assert "<!-- file: wiki/my-page.md -->" in result
         # ページコンテンツが含まれること
@@ -5633,7 +5635,7 @@ class TestCmdAuditWeekly:
       claude_called.append(prompt)
       return "{}"
 
-    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
     rw_light.cmd_audit_weekly()
     assert claude_called == []
 
@@ -5787,9 +5789,9 @@ class TestRunLlmAudit:
       "recommended_actions": ["記述を明確にする"],
     })
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: warn_response)
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: warn_response)
 
     result = rw_light.cmd_audit_monthly([])
     assert result == 0
@@ -5797,9 +5799,9 @@ class TestRunLlmAudit:
   def test_monthly_returns_1_on_error(self, tmp_path, monkeypatch):
     """monthly: ERROR finding がある場合 return 1 であること（Req 3.7）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     result = rw_light.cmd_audit_monthly([])
     # ERROR finding があるので exit 2（新体系: FAIL → exit 2）
@@ -5808,9 +5810,9 @@ class TestRunLlmAudit:
   def test_quarterly_returns_0_on_no_error(self, tmp_path, monkeypatch):
     """quarterly: ERROR なし（WARN のみ）の場合 return 0 であること（Req 4.4）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
 
     result = rw_light.cmd_audit_quarterly([])
     # WARN finding のみで ERROR なし → return 0
@@ -5819,9 +5821,9 @@ class TestRunLlmAudit:
   def test_raw_response_saved(self, tmp_path, monkeypatch):
     """Claude 生レスポンスが logs/audit-{tier}-{ts}-raw.txt に保存されること"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     rw_light.cmd_audit_monthly([])
     raw_files = list(logs_dir.glob("audit-monthly-*-raw.txt"))
@@ -5832,9 +5834,9 @@ class TestRunLlmAudit:
   def test_report_generated(self, tmp_path, monkeypatch):
     """レポートファイルが logs/audit-monthly-*.md として生成されること（Req 3.4）"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     rw_light.cmd_audit_monthly([])
     report_files = list(logs_dir.glob("audit-monthly-*.md"))
@@ -5843,9 +5845,9 @@ class TestRunLlmAudit:
   def test_severity_mapping_applied(self, tmp_path, monkeypatch):
     """severity ERROR finding がレポートに記載されること（Req 5.3）"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     rw_light.cmd_audit_monthly([])
     report_files = list(logs_dir.glob("audit-monthly-*.md"))
@@ -5856,9 +5858,9 @@ class TestRunLlmAudit:
   def test_category_from_claude_response(self, tmp_path, monkeypatch):
     """Finding の category フィールドが Claude レスポンスの category から取得されること"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     rw_light.cmd_audit_monthly([])
     report_files = list(logs_dir.glob("audit-monthly-*.md"))
@@ -5875,9 +5877,9 @@ class TestRunLlmAudit:
       called_with.append(timeout)
       return _make_valid_monthly_response()
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
     rw_light.cmd_audit_monthly(["--timeout", "600"])
     assert called_with == [600]
@@ -5891,9 +5893,9 @@ class TestRunLlmAudit:
       called_with.append(timeout)
       return _make_valid_monthly_response()
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
     rw_light.cmd_audit_monthly([])
     assert called_with == [300]
@@ -5946,10 +5948,9 @@ class TestRunLlmAudit:
   def test_claude_failure_returns_1(self, tmp_path, monkeypatch, capsys):
     """Claude CLI 呼び出し失敗時 return 1 かつ [ERROR] 表示（Req 7.2）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude", lambda prompt, timeout=None: (_ for _ in ()).throw(RuntimeError("Claude 失敗"))
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: (_ for _ in ()).throw(RuntimeError("Claude 失敗"))
     )
 
     result = rw_light.cmd_audit_monthly([])
@@ -5960,9 +5961,9 @@ class TestRunLlmAudit:
   def test_parse_failure_returns_1_with_raw_path(self, tmp_path, monkeypatch, capsys):
     """パース失敗時 return 1 + raw ファイルパスが [INFO] 表示されること（Req 7.3）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: "not valid json {{{")
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: "not valid json {{{")
 
     result = rw_light.cmd_audit_monthly([])
     assert result == 1
@@ -5974,9 +5975,9 @@ class TestRunLlmAudit:
   def test_processing_message_printed(self, tmp_path, monkeypatch, capsys):
     """処理中メッセージが標準出力に表示されること（Req 3.1, 4.1）"""
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     rw_light.cmd_audit_monthly([])
     out = capsys.readouterr().out
@@ -5994,10 +5995,10 @@ class TestRunLlmAudit:
       tiers_used.append(tier)
       return orig_build(tier, task_prompts, wiki_content)
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
     monkeypatch.setattr(rw_light, "build_audit_prompt", capture_build)
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
 
     rw_light.cmd_audit_quarterly([])
     assert tiers_used == ["quarterly"]
@@ -6007,9 +6008,9 @@ class TestRunLlmAudit:
     _setup_vault_for_llm_audit(tmp_path, monkeypatch)
     prompts_called = []
 
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: (prompts_called.append(name), "task prompts")[1])
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: (prompts_called.append(name), "task prompts")[1])
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_monthly_response())
 
     rw_light.cmd_audit_monthly([])
     assert "audit" in prompts_called
@@ -6017,9 +6018,9 @@ class TestRunLlmAudit:
   def test_quarterly_report_generated(self, tmp_path, monkeypatch):
     """quarterly のレポートが logs/audit-quarterly-*.md として生成されること（Req 4.3）"""
     _, logs_dir, _ = _setup_vault_for_llm_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "task prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(rw_light, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "task prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda prompt, timeout=None: _make_valid_quarterly_response())
 
     rw_light.cmd_audit_quarterly([])
     report_files = list(logs_dir.glob("audit-quarterly-*.md"))
@@ -6197,10 +6198,9 @@ class TestE2EAuditAllTiers:
   def test_monthly_generates_report_with_mock_claude(self, tmp_path, monkeypatch):
     """monthly が Claude CLI モック環境で JSON レスポンスをパースしレポートを生成する（Req 3.4）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
 
@@ -6213,10 +6213,9 @@ class TestE2EAuditAllTiers:
   def test_monthly_raw_response_saved(self, tmp_path, monkeypatch):
     """monthly の raw レスポンスファイルが logs/ に保存される（Req 5.6 design）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
 
@@ -6228,10 +6227,9 @@ class TestE2EAuditAllTiers:
   def test_monthly_report_in_logs_only(self, tmp_path, monkeypatch):
     """monthly のレポートが logs/ にのみ出力される（Req 5.6, 6.1-6.3）"""
     _, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
 
@@ -6245,10 +6243,9 @@ class TestE2EAuditAllTiers:
   def test_quarterly_generates_report_with_mock_claude(self, tmp_path, monkeypatch):
     """quarterly が Claude CLI モック環境で quarterly レポートを生成する（Req 4.3）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_quarterly_response(),
     )
 
@@ -6261,10 +6258,9 @@ class TestE2EAuditAllTiers:
   def test_quarterly_raw_response_saved(self, tmp_path, monkeypatch):
     """quarterly の raw レスポンスファイルが logs/ に保存される（Req 5.6 design）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_quarterly_response(),
     )
 
@@ -6276,10 +6272,9 @@ class TestE2EAuditAllTiers:
   def test_quarterly_report_in_logs_only(self, tmp_path, monkeypatch):
     """quarterly のレポートが logs/ にのみ出力される（Req 5.6, 6.1-6.3）"""
     _, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_quarterly_response(),
     )
 
@@ -6293,10 +6288,9 @@ class TestE2EAuditAllTiers:
   def test_readonly_wiki_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
     """全ティア実行後に wiki/ のファイルが変更されていない（Req 6.1）"""
     wiki_dir, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
     # micro 用 git モック（変更なし → 対象 0 件でも OK）
@@ -6319,10 +6313,9 @@ class TestE2EAuditAllTiers:
   def test_readonly_raw_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
     """全ティア実行後に raw/ のファイルが変更されていない（Req 6.2）"""
     _, _, raw_dir, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
@@ -6341,10 +6334,9 @@ class TestE2EAuditAllTiers:
   def test_readonly_review_not_modified_after_all_tiers(self, tmp_path, monkeypatch):
     """全ティア実行後に review/ のファイルが変更されていない（Req 6.3）"""
     _, _, _, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda name, **kw: "audit prompts")
-    monkeypatch.setattr(rw_light, "read_all_wiki_content", lambda: "wiki content")
-    monkeypatch.setattr(
-      rw_light, "call_claude",
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda name, **kw: "audit prompts")
+    monkeypatch.setattr(rw_prompt_engine, "read_all_wiki_content", lambda: "wiki content")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude",
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
     monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
@@ -6631,8 +6623,8 @@ class TestQueryExtractExit2OnFail:
     """lint FAIL → exit 2 かつ artifact は保持される"""
     _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-20")
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
     def mock_lint_fail(query_dir):
       return {
@@ -6655,8 +6647,8 @@ class TestQueryExtractExit2OnFail:
     """lint PASS → exit 0"""
     _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-20")
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
     def mock_lint_pass(query_dir):
       return {"target": query_dir, "status": "PASS", "checks": []}
@@ -6671,8 +6663,8 @@ class TestQueryExtractExit2OnFail:
     """runtime error（artifact 書き出し失敗）→ exit 1"""
     _, _ = _setup_mock_vault_for_query(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-20")
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
     monkeypatch.setattr(
       rw_light, "write_query_artifacts", lambda *a, **k: (_ for _ in ()).throw(OSError("disk full"))
     )
@@ -6688,8 +6680,8 @@ class TestQueryFixExit2OnFail:
   def test_post_fix_lint_fail_exit_2_artifact_preserved(self, tmp_path, monkeypatch):
     """post-fix lint FAIL → exit 2 かつ artifact は保持される"""
     _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
     def mock_lint_always_fail(query_dir, **kwargs):
       return {
@@ -6707,8 +6699,8 @@ class TestQueryFixExit2OnFail:
   def test_post_fix_lint_pass_exit_0(self, tmp_path, monkeypatch):
     """post-fix lint PASS → exit 0"""
     _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
-    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: MOCK_FIX_RESPONSE)
 
     call_count = [0]
 
@@ -6729,13 +6721,13 @@ class TestQueryFixExit2OnFail:
   def test_runtime_error_exit_1(self, tmp_path, monkeypatch):
     """Claude 呼び出し失敗（runtime error）→ exit 1"""
     _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
 
     def mock_lint_fail(query_dir, **kwargs):
       return {"target": query_dir, "status": "FAIL", "checks": [{"id": "QL006", "severity": "ERROR", "message": "short"}]}
 
     monkeypatch.setattr(rw_light, "lint_single_query_dir", mock_lint_fail)
-    monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: (_ for _ in ()).throw(RuntimeError("API error")))
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", lambda p, timeout=None: (_ for _ in ()).throw(RuntimeError("API error")))
 
     result = rw_light.cmd_query_fix([query_id])
 
@@ -6754,7 +6746,7 @@ class TestQueryCallClaudeTimeout:
     """cmd_query_extract が call_claude を timeout=120 で呼び出すこと"""
     _setup_mock_vault_for_query(tmp_path, monkeypatch)
     monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
 
     captured_timeout = []
 
@@ -6762,7 +6754,7 @@ class TestQueryCallClaudeTimeout:
       captured_timeout.append(timeout)
       return MOCK_EXTRACT_RESPONSE
 
-    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
     rw_light.cmd_query_extract(["test question"])
 
@@ -6774,7 +6766,7 @@ class TestQueryCallClaudeTimeout:
   def test_query_answer_passes_timeout_120(self, tmp_path, monkeypatch):
     """cmd_query_answer が call_claude を timeout=120 で呼び出すこと（stage1/stage2 両方）"""
     _setup_mock_vault_for_answer(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
 
     captured_timeout = []
 
@@ -6782,7 +6774,7 @@ class TestQueryCallClaudeTimeout:
       captured_timeout.append(timeout)
       return MOCK_ANSWER_RESPONSE
 
-    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
     rw_light.cmd_query_answer(["test question"])
 
@@ -6794,7 +6786,7 @@ class TestQueryCallClaudeTimeout:
   def test_query_fix_passes_timeout_120(self, tmp_path, monkeypatch):
     """cmd_query_fix が call_claude を timeout=120 で呼び出すこと"""
     _, _, query_id, _ = _setup_mock_vault_for_fix(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
+    monkeypatch.setattr(rw_prompt_engine, "load_task_prompts", lambda task, **kw: "mock prompts")
 
     captured_timeout = []
 
@@ -6802,7 +6794,7 @@ class TestQueryCallClaudeTimeout:
       captured_timeout.append(timeout)
       return MOCK_FIX_RESPONSE
 
-    monkeypatch.setattr(rw_light, "call_claude", mock_call_claude)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude", mock_call_claude)
 
     lint_call_count = [0]
 

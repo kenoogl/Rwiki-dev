@@ -99,12 +99,13 @@ def test_claude_mock_response_injects_json(claude_mock_response, monkeypatch):
   import sys
 
   sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-  import rw_light
+  import rw_light  # noqa: F401
+  import rw_prompt_engine
 
   mock_data = {"findings": [{"severity": "ERROR", "message": "test"}]}
   claude_mock_response(json.dumps(mock_data))
 
-  result = rw_light.call_claude("dummy prompt")
+  result = rw_prompt_engine.call_claude("dummy prompt")
   assert json.loads(result) == mock_data
 
 
@@ -113,8 +114,9 @@ def test_claude_mock_response_custom_stdout(claude_mock_response):
   import sys
 
   sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-  import rw_light
+  import rw_light  # noqa: F401
+  import rw_prompt_engine
 
   claude_mock_response("hello world")
-  result = rw_light.call_claude("any prompt")
+  result = rw_prompt_engine.call_claude("any prompt")
   assert result == "hello world"

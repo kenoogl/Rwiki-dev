@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import rw_config
 import rw_light
+import rw_prompt_engine
 import rw_utils
 
 
@@ -73,7 +74,7 @@ class TestVaultVocabularyValidation:
 """
     audit_md = make_agents_audit_md(tmp_path, content)
     # _validate_agents_severity_vocabulary が存在し、新語彙のみで None を返す
-    result = rw_light._validate_agents_severity_vocabulary(audit_md)
+    result = rw_prompt_engine._validate_agents_severity_vocabulary(audit_md)
     assert result is None
 
   # ------------------------------------------------------------------
@@ -94,7 +95,7 @@ class TestVaultVocabularyValidation:
 """
     audit_md = make_agents_audit_md(tmp_path, content)
     with pytest.raises(SystemExit) as exc_info:
-      rw_light._validate_agents_severity_vocabulary(audit_md)
+      rw_prompt_engine._validate_agents_severity_vocabulary(audit_md)
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     assert "[agents-vocab-error]" in captured.err
@@ -121,7 +122,7 @@ class TestVaultVocabularyValidation:
 """
     audit_md = make_agents_audit_md(tmp_path, content)
     with pytest.raises(SystemExit) as exc_info:
-      rw_light._validate_agents_severity_vocabulary(audit_md)
+      rw_prompt_engine._validate_agents_severity_vocabulary(audit_md)
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     assert "[agents-vocab-error]" in captured.err
@@ -144,7 +145,7 @@ class TestVaultVocabularyValidation:
 """
     audit_md = make_agents_audit_md(tmp_path, content)
     with pytest.raises(SystemExit) as exc_info:
-      rw_light._validate_agents_severity_vocabulary(audit_md)
+      rw_prompt_engine._validate_agents_severity_vocabulary(audit_md)
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     assert "[agents-vocab-error]" in captured.err
@@ -177,7 +178,7 @@ class TestVaultVocabularyValidation:
 """
     audit_md = make_agents_audit_md(tmp_path, content)
     with pytest.raises(SystemExit) as exc_info:
-      rw_light._validate_agents_severity_vocabulary(audit_md)
+      rw_prompt_engine._validate_agents_severity_vocabulary(audit_md)
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     err = captured.err
@@ -215,7 +216,7 @@ class TestVaultVocabularyValidation:
 - [CRITICAL] Real issue
 """
     audit_md = make_agents_audit_md(tmp_path, content)
-    result = rw_light._validate_agents_severity_vocabulary(audit_md)
+    result = rw_prompt_engine._validate_agents_severity_vocabulary(audit_md)
     assert result is None
 
   # ------------------------------------------------------------------
@@ -231,7 +232,7 @@ class TestVaultVocabularyValidation:
     # 1 MB + 1 byte のファイルを作成
     audit_md.write_bytes(b"x" * (1024 * 1024 + 1))
     with pytest.raises(SystemExit) as exc_info:
-      rw_light._validate_agents_severity_vocabulary(audit_md)
+      rw_prompt_engine._validate_agents_severity_vocabulary(audit_md)
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     assert captured.err  # エラーメッセージが stderr に出力される
@@ -258,7 +259,7 @@ class TestVaultVocabularyValidation:
     symlink_path.symlink_to(outside_file)
 
     with pytest.raises(SystemExit) as exc_info:
-      rw_light._validate_agents_severity_vocabulary(symlink_path)
+      rw_prompt_engine._validate_agents_severity_vocabulary(symlink_path)
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     assert "[vault-validation] path escape detected" in captured.err
@@ -319,10 +320,10 @@ class TestTask14VaultValidationHook:
     def mock_validate(p: Path) -> None:
       calls.append(p)
 
-    monkeypatch.setattr(rw_light, "_validate_agents_severity_vocabulary", mock_validate)
+    monkeypatch.setattr(rw_prompt_engine, "_validate_agents_severity_vocabulary", mock_validate)
 
     # load_task_prompts("audit") を呼ぶと _validate_agents_severity_vocabulary が 1 回呼ばれる
-    rw_light.load_task_prompts("audit")
+    rw_prompt_engine.load_task_prompts("audit")
 
     assert len(calls) == 1, f"_validate_agents_severity_vocabulary が呼ばれなかった: calls={calls}"
     assert calls[0] == tmp_vault / "AGENTS" / "audit.md"
@@ -344,7 +345,7 @@ class TestTask14VaultValidationHook:
     monkeypatch.setattr(rw_config, "AGENTS_DIR", str(deprecated_agents_vault / "AGENTS"))
 
     # skip_vault_validation=True で呼ぶと SystemExit しない
-    result = rw_light.load_task_prompts("audit", skip_vault_validation=True)
+    result = rw_prompt_engine.load_task_prompts("audit", skip_vault_validation=True)
     assert isinstance(result, str)
 
     # stderr に [vault-validation] SKIPPED 警告が出ること
@@ -413,7 +414,7 @@ class TestTask14VaultValidationHook:
     claude_mock_response(claude_response)
 
     # _validate_agents_severity_vocabulary をスキップ（vault validation は別テストで検証済み）
-    monkeypatch.setattr(rw_light, "_validate_agents_severity_vocabulary", lambda p: None)
+    monkeypatch.setattr(rw_prompt_engine, "_validate_agents_severity_vocabulary", lambda p: None)
 
     # _run_llm_audit を直接呼ぶ（--skip-vault-validation 相当）
     exit_code = rw_light._run_llm_audit("monthly", ["--skip-vault-validation"])

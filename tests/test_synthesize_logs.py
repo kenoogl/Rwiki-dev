@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 import rw_light
+import rw_prompt_engine
 import rw_utils
 
 
@@ -25,7 +26,7 @@ class TestCmdSynthesizeLogs:
   ):
     """Req 6.1: llm_logs/ の .md ファイルから synthesis_candidates/ に候補ファイルが生成される"""
     monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
-    monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_claude_ok)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", mock_claude_ok)
 
     vault = patch_constants
     make_md_file(
@@ -55,7 +56,7 @@ class TestCmdSynthesizeLogs:
   ):
     """Req 6.3: 候補生成後に CHANGE_LOG_MD にエントリが存在する"""
     monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
-    monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_claude_ok)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", mock_claude_ok)
 
     vault = patch_constants
     make_md_file(
@@ -76,7 +77,7 @@ class TestCmdSynthesizeLogs:
   ):
     """Req 6.4: 候補ファイルに必要なフロントマターが含まれる"""
     monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
-    monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_claude_ok)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", mock_claude_ok)
 
     vault = patch_constants
     make_md_file(
@@ -125,7 +126,7 @@ class TestCmdSynthesizeLogs:
         raise Exception("synthesis error")
       return MOCK_JSON
 
-    monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_raise_then_ok)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", mock_raise_then_ok)
 
     rw_light.cmd_synthesize_logs()
     captured = capsys.readouterr()
@@ -147,7 +148,7 @@ class TestCmdSynthesizeLogs:
     for f in (vault / "review" / "synthesis_candidates").glob("*.md"):
       f.unlink()
 
-    monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_invalid_then_ok)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", mock_invalid_then_ok)
 
     rw_light.cmd_synthesize_logs()
     captured2 = capsys.readouterr()
@@ -161,7 +162,7 @@ class TestCmdSynthesizeLogs:
     """Req 6.6: 全ファイルが FAIL でも exit 0"""
     monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
     monkeypatch.setattr(
-      rw_light,
+      rw_prompt_engine,
       "call_claude_for_log_synthesis",
       lambda p: (_ for _ in ()).throw(Exception("always fails")),
     )
@@ -181,7 +182,7 @@ class TestCmdSynthesizeLogs:
   ):
     """Req 6.7: synthesis_candidates/ に同名ファイルが存在する場合スキップ"""
     monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
-    monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_claude_ok)
+    monkeypatch.setattr(rw_prompt_engine, "call_claude_for_log_synthesis", mock_claude_ok)
 
     vault = patch_constants
     make_md_file(
@@ -226,7 +227,7 @@ class TestCmdSynthesizeLogs:
       "]}"
     )
     monkeypatch.setattr(
-      rw_light, "call_claude_for_log_synthesis", lambda p: collision_json
+      rw_prompt_engine, "call_claude_for_log_synthesis", lambda p: collision_json
     )
 
     vault = patch_constants

@@ -129,7 +129,7 @@
   - 完了状態: `scripts/rw_prompt_engine.py` が存在し、`rw_light.py` には `from rw_prompt_engine import` 文が**一切存在しない**ことを `grep -nE "from rw_prompt_engine import" scripts/rw_light.py` ヒット 0 件で確認。`python -c "import sys; sys.path.insert(0, 'scripts'); import rw_light; hasattr(rw_light, 'call_claude')"` で `False`（`rw_light.call_claude` アクセス不可）を確認。**rw_light 単独で `python scripts/rw_light.py` を起動して NameError なく usage 表示**することを smoke 確認。テスト書き換えは 3.2 で実施
   - _Requirements: 1.1, 1.3, 2.1, 2.2_
 
-- [ ] 3.2 prompt engine patch 先を `rw_prompt_engine` に置換 + 直接アクセス全件書き換え + pytest green 復帰
+- [x] 3.2 prompt engine patch 先を `rw_prompt_engine` に置換 + 直接アクセス全件書き換え + pytest green 復帰
   - `tests/test_rw_light.py` の `call_claude` / `load_task_prompts` / `read_wiki_content` / `read_all_wiki_content` / `build_query_prompt` / `parse_agent_mapping` / `_validate_agents_severity_vocabulary` パッチ参照を `rw_prompt_engine` に更新（`call_claude` 関連シンボル使用回数 ~54 件含む）
   - `tests/test_audit.py` の `read_all_wiki_content` / `read_wiki_content` / `load_task_prompts` / `_validate_agents_severity_vocabulary` パッチ参照を `rw_prompt_engine` に更新
   - `tests/test_synthesize_logs.py` の `call_claude_for_log_synthesis` パッチ参照を `rw_prompt_engine` に更新
@@ -209,3 +209,7 @@
   - 検証結果（実行コマンド + 出力 + 成功/失敗判定）を本タスクの完了報告に記録する
   - 完了状態: 一時 Vault からの symlink 起動で usage 表示が確認され、コマンド出力が完了報告に記録されている
   - _Requirements: 6.3_
+
+## Implementation Notes
+
+- Phase 3.1 で rw_prompt_engine に移動した read_wiki_content / read_all_wiki_content の "# audit: data loading" 位置検証テスト `test_audit_headers_before_output_utilities` は output utilities が rw_light に残るため cross-module 順序検証として意味を失う。Phase 6.1 の rw_light 最終スリム化完了後に re-author を検討する。
