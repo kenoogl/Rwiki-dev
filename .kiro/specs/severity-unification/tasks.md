@@ -165,7 +165,7 @@
   - _Boundary: cmd_lint_query (stdout)_
   - _Depends: 2.1_
 
-- [ ] 2.8 `cmd_audit_*` の status 計算差替え + CRITICAL 可視化（TDD）
+- [x] 2.8 `cmd_audit_*` の status 計算差替え + CRITICAL 可視化（TDD）
   - 先に test_audit_summary_critical_visibility を red で追加: Summary 節に `- CRITICAL: N` 行 / stdout format `audit <tier>: CRITICAL X, ERROR Y, WARN Z, INFO W — status` / 件数 0 水準も常時表示 を検証
   - `generate_audit_report` / `print_audit_summary` で `_compute_run_status(findings)` 使用
   - Summary 節に `- CRITICAL: {critical_count}` 行を追加（4 水準件数を全て常時表示）

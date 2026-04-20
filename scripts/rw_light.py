@@ -2248,10 +2248,11 @@ def generate_audit_report(
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
 
   # カウント集計
+  critical_count = sum(1 for f in findings if f.severity == "CRITICAL")
   error_count = sum(1 for f in findings if f.severity == "ERROR")
   warn_count = sum(1 for f in findings if f.severity == "WARN")
   info_count = sum(1 for f in findings if f.severity == "INFO")
-  status = "FAIL" if (error_count > 0 or warn_count > 0) else "PASS"
+  status = _compute_run_status(findings)
 
   # Findings セクションのラベル決定
   if tier in ("micro", "weekly"):
@@ -2296,6 +2297,7 @@ def generate_audit_report(
   lines.append("")
   lines.append(f"- tier: {tier}")
   lines.append(f"- timestamp: {timestamp}")
+  lines.append(f"- CRITICAL: {critical_count}")
   lines.append(f"- ERROR: {error_count}")
   lines.append(f"- WARN: {warn_count}")
   lines.append(f"- INFO: {info_count}")
@@ -2356,13 +2358,17 @@ def print_audit_summary(tier: str, findings: list, report_path: str) -> None:
       print(f"[{f.severity}] {f.message}")
 
   # カウント集計
+  critical_count = sum(1 for f in findings if f.severity == "CRITICAL")
   error_count = sum(1 for f in findings if f.severity == "ERROR")
   warn_count = sum(1 for f in findings if f.severity == "WARN")
   info_count = sum(1 for f in findings if f.severity == "INFO")
-  status = "FAIL" if (error_count > 0 or warn_count > 0) else "PASS"
+  status = _compute_run_status(findings)
 
   print("---")
-  print(f"audit {tier}: ERROR {error_count}, WARN {warn_count}, INFO {info_count} \u2014 {status}")
+  print(
+    f"audit {tier}: CRITICAL {critical_count}, ERROR {error_count},"
+    f" WARN {warn_count}, INFO {info_count} \u2014 {status}"
+  )
   print(f"レポート: {report_path}")
 
 

@@ -5048,10 +5048,13 @@ class TestPrintAuditSummary:
     assert "[INFO] : カバレッジ不足" not in out
 
   def test_summary_line_format(self, capsys):
-    """サマリー行が audit {tier}: ERROR N, WARN N, INFO N — PASS/FAIL 形式であること"""
+    """サマリー行が audit {tier}: CRITICAL N, ERROR N, WARN N, INFO N — PASS/FAIL 形式であること"""
     rw_light.print_audit_summary("micro", self._findings(), "logs/audit-micro-test.md")
     out = capsys.readouterr().out
-    assert "audit micro: ERROR 1, WARN 2, INFO 1" in out
+    assert "CRITICAL 0" in out
+    assert "ERROR 1" in out
+    assert "WARN 2" in out
+    assert "INFO 1" in out
 
   def test_fail_when_error_exists(self, capsys):
     """ERROR > 0 のとき FAIL と表示されること"""
@@ -5059,12 +5062,12 @@ class TestPrintAuditSummary:
     out = capsys.readouterr().out
     assert "FAIL" in out
 
-  def test_fail_when_warn_exists_no_error(self, capsys):
-    """WARN > 0（ERROR = 0）のとき FAIL と表示されること"""
+  def test_pass_when_warn_only(self, capsys):
+    """WARN > 0（CRITICAL/ERROR = 0）のとき PASS と表示されること（新体系: status 2 値化）"""
     findings = [_make_finding("WARN", "index_missing", "methods/page.md", "未登録")]
     rw_light.print_audit_summary("weekly", findings, "logs/audit-weekly-test.md")
     out = capsys.readouterr().out
-    assert "FAIL" in out
+    assert "PASS" in out
 
   def test_pass_when_only_info(self, capsys):
     """ERROR=0 かつ WARN=0 のとき PASS と表示されること"""
@@ -5096,6 +5099,71 @@ class TestPrintAuditSummary:
     rw_light.print_audit_summary("micro", self._findings(), "logs/test.md")
     out = capsys.readouterr().out
     assert "INFO 1" in out
+
+
+# ---------------------------------------------------------------------------
+# Task 2.8: cmd_audit_* status 計算 + CRITICAL 可視化
+# ---------------------------------------------------------------------------
+
+
+class TestAuditSummaryCriticalVisibility:
+  """audit summary に CRITICAL 行と 4 水準出力が含まれることを検証"""
+
+  def _finding(self, sev: str) -> rw_light.Finding:
+    return rw_light.Finding(severity=sev, category="test", page="p.md", message="m", marker="")
+
+  def test_summary_line_includes_critical(self, capsys):
+    """stdout summary 行に CRITICAL が含まれる"""
+    rw_light.print_audit_summary("weekly", [self._finding("CRITICAL")], "logs/test.md")
+    out = capsys.readouterr().out
+    assert "CRITICAL" in out
+
+  def test_stdout_format_4_tiers(self, capsys):
+    """stdout summary 行が 'audit {tier}: CRITICAL X, ERROR Y, WARN Z, INFO W — status' 形式"""
+    rw_light.print_audit_summary(
+      "micro",
+      [self._finding("CRITICAL"), self._finding("ERROR"), self._finding("WARN"), self._finding("INFO")],
+      "logs/test.md",
+    )
+    out = capsys.readouterr().out
+    assert "CRITICAL 1" in out
+    assert "ERROR 1" in out
+    assert "WARN 1" in out
+    assert "INFO 1" in out
+    assert "FAIL" in out
+
+  def test_warn_only_is_pass(self, capsys):
+    """WARN のみ（CRITICAL/ERROR なし）は PASS（新体系: status 2 値化）"""
+    rw_light.print_audit_summary("micro", [self._finding("WARN")], "logs/test.md")
+    out = capsys.readouterr().out
+    assert "PASS" in out
+
+  def test_zero_findings_shows_status(self, capsys):
+    """findings 0 件でも status 行が表示される（AC 5.5 境界）"""
+    rw_light.print_audit_summary("micro", [], "logs/test.md")
+    out = capsys.readouterr().out
+    assert "PASS" in out
+    assert "CRITICAL" in out
+
+  def test_generate_audit_report_critical_line(self, tmp_path, monkeypatch):
+    """generate_audit_report の Summary 節に '- CRITICAL: N' 行が存在する"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    findings = [self._finding("CRITICAL"), self._finding("ERROR")]
+    report_path = rw_light.generate_audit_report(
+      "weekly", findings, {}, timestamp="20260420-120000"
+    )
+    content = (tmp_path / "audit-weekly-20260420-120000.md").read_text()
+    assert "- CRITICAL:" in content
+
+  def test_generate_audit_report_status_uses_compute_run_status(self, tmp_path, monkeypatch):
+    """WARN のみ → status: PASS（旧: FAIL）"""
+    monkeypatch.setattr(rw_light, "LOGDIR", str(tmp_path))
+    findings = [self._finding("WARN")]
+    report_path = rw_light.generate_audit_report(
+      "micro", findings, {}, timestamp="20260420-120001"
+    )
+    content = (tmp_path / "audit-micro-20260420-120001.md").read_text()
+    assert "- status: PASS" in content
 
 
 class TestGenerateAuditReportIntegration:
@@ -5137,7 +5205,10 @@ class TestGenerateAuditReportIntegration:
     out = capsys.readouterr().out
     assert "[ERROR] concepts/page.md: リンク切れ" in out
     assert "[WARN] methods/page.md: index 未登録" in out
-    assert "audit micro: ERROR 1, WARN 1, INFO 1" in out
+    assert "CRITICAL 0" in out
+    assert "ERROR 1" in out
+    assert "WARN 1" in out
+    assert "INFO 1" in out
     assert report_path in out
 
 
