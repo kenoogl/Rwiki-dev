@@ -30,24 +30,31 @@
 
 - `logs/lint_latest.json`（全ファイルの検証結果を含む）
 - 終了コード:
-  - `0` → FAIL が存在しない
-  - `1` → FAIL が1件以上存在する
+  - `0` → PASS（ERROR / CRITICAL なし）
+  - `1` → ランタイムエラー / 前提条件不成立
+  - `2` → FAIL（ERROR または CRITICAL が 1 件以上）
 
 ### lint_latest.json スキーマ
 
 ```json
 {
   "timestamp": "ISO 8601",
+  "status": "PASS | FAIL",
   "files": [
     {
       "path": "raw/incoming/...",
-      "status": "PASS | WARN | FAIL",
-      "warnings": [],
-      "errors": [],
-      "fixes": []
+      "status": "PASS | FAIL",
+      "checks": [
+        { "severity": "CRITICAL | ERROR | WARN | INFO", "message": "説明" }
+      ]
     }
   ],
-  "summary": { "pass": 0, "warn": 0, "fail": 0 }
+  "summary": {
+    "pass": 0,
+    "fail": 0,
+    "severity_counts": { "critical": 0, "error": 0, "warn": 0, "info": 0 }
+  },
+  "drift_events": []
 }
 ```
 
@@ -57,18 +64,24 @@
 
 ### 判定レベル
 
-**PASS**
-- 有効な構造を持つ（マークダウン + パース可能なYAML frontmatter + 必須フィールド確認済み）
-- 内容が80文字以上（正規化後）
+#### status（2 値）
 
-**WARN**
-- 内容が80文字未満（too short）
-- 任意メタデータの欠如など軽微な問題
+**PASS**: ERROR も CRITICAL も検出されなかった。
+**FAIL**: ERROR または CRITICAL が 1 件以上検出された。
 
-**FAIL**
+#### severity（各チェック項目の重要度、4 水準）
+
+**ERROR**（FAIL を引き起こす）
 - ファイルが空
 - 必須フィールドが判定不能（値が推測できない場合）
 - 安全に正規化できない構造
+
+**WARN**（FAIL を引き起こさない）
+- 内容が80文字未満（too short）
+- 任意メタデータの欠如など軽微な問題
+
+**INFO**
+- 情報のみ（自動修正が適用された通知など）
 
 ### 必須フィールド（frontmatter）
 

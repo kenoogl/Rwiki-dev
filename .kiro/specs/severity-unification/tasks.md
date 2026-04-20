@@ -121,7 +121,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
   - _Boundary: severity helpers_
 
-- [ ] 2.3 (P) `templates/AGENTS/lint.md` の status / exit code / severity 記述更新
+- [x] 2.3 (P) `templates/AGENTS/lint.md` の status / exit code / severity 記述更新
   - L32-34 終了コード（0/1 → 0/1/2）更新、L44 status スキーマ（`"PASS | WARN | FAIL"` → `"PASS | FAIL"`）、L50 summary 構造（`{pass, warn, fail}` → `{pass, fail, severity_counts: {critical, error, warn, info}}`）、判定レベル節を status / severity の 2 次元構造に再構成
   - `templates/AGENTS/ingest.md` L43 の schema reference を top-level status 参照に更新（`summary.fail > 0` は deprecated alias として維持、意味不変）
   - `templates/AGENTS/git_ops.md` の FAIL 件数参照箇所が新体系で意味保持されることを verify

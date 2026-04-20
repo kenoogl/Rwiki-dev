@@ -40,7 +40,7 @@ lint済みの未検証ファイルを検証済み状態に遷移させる。
 
 ## Processing Rules
 
-1. `logs/lint_latest.json` を読み込み、`summary.fail > 0` の場合は即座に中止する
+1. `logs/lint_latest.json` を読み込み、top-level `status == "FAIL"`（または後方互換として `summary.fail > 0`）の場合は即座に中止する
 2. `raw/incoming/` 配下の全 `.md` ファイルを列挙する
 3. 各ファイルの移動先パスを計算する（`raw/incoming/` → `raw/` プレフィックス置換、ディレクトリ構造保持）
 4. 移動先に既存ファイルがある場合は **STOP**（上書き禁止）
