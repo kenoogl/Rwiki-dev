@@ -122,7 +122,7 @@
   - _Requirements: 1.2, 2.1, 4.1, 4.2, 5.1, 5.2, 5.3, 5.4_
   - _Depends: 6.1_
 
-- [ ] 6.4 人間による手動検証実施（autonomous 外、`/kiro-impl` 完了後 hand-off）
+- [x] 6.4 人間による手動検証実施（autonomous 外、`/kiro-impl` 完了後 hand-off）
   - **本 task は autonomous 実装範囲外**。`/kiro-impl rw-light-rename` 完了後、人間が `.kiro/specs/rw-light-rename/manual-verification.md` に従って 5 項目を実施する
   - 各項目の実行結果（pass/fail）を manual-verification.md に記録、全項目 pass で本 task を完了マーク
   - いずれかの項目が fail した場合、原因を特定し対応する実装 task に差し戻す

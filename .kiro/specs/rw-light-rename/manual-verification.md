@@ -16,7 +16,7 @@
 
 ### 項目 1: git 履歴連続性の確認（Req 1.2）
 
-- [ ] **完了**
+- [x] **完了**
 
 #### 説明
 
@@ -38,16 +38,17 @@ git log --follow --oneline scripts/rw_cli.py
 
 | 項目 | 内容 |
 |------|------|
-| 実行日時 | |
-| 実行者 | |
-| 結果 | pass / fail |
-| 備考 | |
+| 実行日時 | 2026-04-21|
+| 実行者 | keno |
+| 結果 | pass|
+| 備考 | % git log --follow --oneline scripts/rw_cli.py | grep rw_cli.py
+69b34ea feat(rw-light-rename): バッチ A — rw_light.py → rw_cli.py rename + cmd_init --reinstall-symlink 拡張 + tests 全参照更新 (644 passed)|
 
 ---
 
 ### 項目 2: 引数なし起動時の usage 表示確認（Req 2.1, 5.4）
 
-- [ ] **完了**
+- [x] **完了**
 
 #### 説明
 
@@ -78,16 +79,16 @@ python scripts/rw_cli.py init --help
 
 | 項目 | 内容 |
 |------|------|
-| 実行日時 | |
-| 実行者 | |
-| 結果 | pass / fail |
+| 実行日時 | 2026-04-21 |
+| 実行者 | keno |
+| 結果 | pass |
 | 備考 | |
 
 ---
 
 ### 項目 3: 新規 Vault 初期化時の symlink ターゲット確認（Req 4.1, 4.2）
 
-- [ ] **完了**
+- [x] **完了**
 
 #### 説明
 
@@ -122,16 +123,16 @@ rm -rf ./tmp-vault
 
 | 項目 | 内容 |
 |------|------|
-| 実行日時 | |
-| 実行者 | |
-| 結果 | pass / fail |
-| 備考（ls -l 出力の symlink ターゲット値を記載推奨） | |
+| 実行日時 | 2026-04-21 |
+| 実行者 | keno |
+| 結果 | pass|
+| 備考（ls -l 出力の symlink ターゲット値 ./tmp-vault/scripts/rw@ -> /Users/Daily/Development/Rwiki-dev/scripts/rw_cli.py） | |
 
 ---
 
 ### 項目 4: `--reinstall-symlink` による symlink 再作成確認（Req 5.1, 5.2）
 
-- [ ] **完了**
+- [x] **完了**
 
 #### 説明
 
@@ -174,16 +175,16 @@ rm -rf ./tmp-vault
 
 | 項目 | 内容 |
 |------|------|
-| 実行日時 | |
-| 実行者 | |
-| 結果 | pass / fail |
+| 実行日時 | 2026-04-21 |
+| 実行者 | keno |
+| 結果 | pass |
 | 備考（mtime 変化なしの確認方法・結果を記載推奨） | |
 
 ---
 
 ### 項目 5: 非 Vault ディレクトリへの `--reinstall-symlink` エラー確認（Req 5.3）
 
-- [ ] **完了**
+- [x] **完了**
 
 #### 説明
 
@@ -219,10 +220,10 @@ rm -rf ./non-vault
 
 | 項目 | 内容 |
 |------|------|
-| 実行日時 | |
-| 実行者 | |
-| 結果 | pass / fail |
-| 備考（exit code 値・stderr メッセージの実際の文言を記載推奨） | |
+| 実行日時 | 2026-04-21|
+| 実行者 | keno |
+| 結果 | pass |
+| 備考（exit code: 1・[ERROR] './non-vault' は既存の Vault ではありません（CLAUDE.md または index.md が不在）。--reinstall-symlink は既存 Vault にのみ適用可能です。） | |
 
 ---
 
@@ -230,11 +231,13 @@ rm -rf ./non-vault
 
 | 項目 | 対応 Req | 結果 |
 |------|----------|------|
-| 1. git 履歴連続性 | 1.2 | |
-| 2. 引数なし usage 表示 | 2.1, 5.4 | |
-| 3. 新規 Vault symlink ターゲット | 4.1, 4.2 | |
-| 4. `--reinstall-symlink` symlink 再作成 | 5.1, 5.2 | |
-| 5. 非 Vault エラー確認 | 5.3 | |
+| 1. git 履歴連続性 | 1.2 | pass |
+| 2. 引数なし usage 表示 | 2.1, 5.4 | pass |
+| 3. 新規 Vault symlink ターゲット | 4.1, 4.2 | pass |
+| 4. `--reinstall-symlink` symlink 再作成 | 5.1, 5.2 | pass |
+| 5. 非 Vault エラー確認 | 5.3 | pass |
 
 **最終承認者:**
+keno
 **承認日時:**
+2026-04-21
