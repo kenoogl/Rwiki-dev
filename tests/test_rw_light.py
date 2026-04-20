@@ -4252,40 +4252,8 @@ class TestRunWeeklyChecks:
 
 
 # ---------------------------------------------------------------------------
-# Task 3.1: build_audit_prompt() + map_severity()
+# Task 3.1: build_audit_prompt()
 # ---------------------------------------------------------------------------
-
-
-class TestMapSeverity:
-    """map_severity() の全パターンをテストする（identity mapping）"""
-
-    def test_critical_maps_to_critical(self):
-        """CRITICAL → "CRITICAL" にマッピングされること"""
-        assert rw_light.map_severity("CRITICAL") == "CRITICAL"
-
-    def test_error_maps_to_error(self):
-        """ERROR → "ERROR" にマッピングされること"""
-        assert rw_light.map_severity("ERROR") == "ERROR"
-
-    def test_warn_maps_to_warn(self):
-        """WARN → "WARN" にマッピングされること"""
-        assert rw_light.map_severity("WARN") == "WARN"
-
-    def test_info_maps_to_info(self):
-        """INFO → "INFO" にマッピングされること"""
-        assert rw_light.map_severity("INFO") == "INFO"
-
-    def test_high_maps_to_error(self):
-        """旧語彙 HIGH → "ERROR" にマッピングされること（後方互換）"""
-        assert rw_light.map_severity("HIGH") == "ERROR"
-
-    def test_medium_maps_to_warn(self):
-        """旧語彙 MEDIUM → "WARN" にマッピングされること（後方互換）"""
-        assert rw_light.map_severity("MEDIUM") == "WARN"
-
-    def test_low_maps_to_info(self):
-        """旧語彙 LOW → "INFO" にマッピングされること（後方互換）"""
-        assert rw_light.map_severity("LOW") == "INFO"
 
 
 class TestBuildAuditPrompt:
@@ -6435,3 +6403,13 @@ def test_normalize_severity_token():
   assert "demoted_to" in entry
   assert "source_field" in entry
   assert "context" in entry
+
+
+# ---------------------------------------------------------------------------
+# Task 1.7: map_severity() 全廃
+# ---------------------------------------------------------------------------
+
+
+def test_map_severity_deleted():
+  """map_severity should no longer exist after task 1.7"""
+  assert not hasattr(rw_light, "map_severity"), "map_severity should be deleted in task 1.7"

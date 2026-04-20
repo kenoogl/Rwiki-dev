@@ -66,7 +66,7 @@
   - _Boundary: Finding data structure + output formatting_
   - _Depends: 1.2_
 
-- [ ] 1.7 `map_severity()` 全廃と `_normalize_severity_token` 置換（機械的一括置換）
+- [x] 1.7 `map_severity()` 全廃と `_normalize_severity_token` 置換（機械的一括置換）
   - `map_severity()` L1696-1715 の関数定義を削除
   - `_run_llm_audit` L2360-2376 の `cli_severity, sub_severity = map_severity(f["severity"])` を `severity = _normalize_severity_token(f["severity"], source_context={"context": f"audit {tier}", "source_field": f"findings[{i}].severity", "location": f.get("location", "-")}, drift_sink=drift_events)` に置換（source_context は dict 必須、Task 1.2 signature 確定事項）
   - `parse_audit_response` 等の残存 `map_severity` 呼び出し箇所を全て `_normalize_severity_token` に置換

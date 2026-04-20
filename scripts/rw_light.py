@@ -1702,37 +1702,6 @@ def run_weekly_checks(
 # audit: LLM engine
 
 
-def map_severity(claude_severity: str) -> str:
-  """AGENTS/audit.md の severity を CLI 4水準にマッピングする。
-
-  新語彙（CRITICAL/ERROR/WARN/INFO）と旧語彙（HIGH/MEDIUM/LOW）の両方をサポートする。
-  旧語彙は後方互換のためマッピングを保持するが、parse_audit_response で
-  _normalize_severity_token により INFO に降格されるため、通常は新語彙が渡される。
-
-  Args:
-      claude_severity: severity 文字列
-          新語彙: "CRITICAL" | "ERROR" | "WARN" | "INFO"
-          旧語彙（後方互換）: "HIGH" | "MEDIUM" | "LOW"
-  Returns:
-      cli_severity 文字列。"CRITICAL" | "ERROR" | "WARN" | "INFO"
-  """
-  if claude_severity == "CRITICAL":
-    return "CRITICAL"
-  elif claude_severity == "ERROR":
-    return "ERROR"
-  elif claude_severity == "WARN":
-    return "WARN"
-  elif claude_severity == "INFO":
-    return "INFO"
-  elif claude_severity == "HIGH":
-    return "ERROR"
-  elif claude_severity == "MEDIUM":
-    return "WARN"
-  else:
-    # LOW およびその他
-    return "INFO"
-
-
 _VALID_SEVERITIES = {"CRITICAL", "ERROR", "WARN", "INFO"}
 
 
@@ -2529,6 +2498,7 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
       終了コード（0: PASS, 1: FAIL, 2: PASS with drift）
   """
   # 1. args から --timeout と --skip-vault-validation をパース
+  drift_events: list[dict] = []
   timeout = 300
   skip_vault_validation = os.environ.get("RW_SKIP_VAULT_VALIDATION") == "1"
   i = 0
@@ -2602,11 +2572,19 @@ def _run_llm_audit(tier: str, args: list[str]) -> int:
     print(f"[INFO] Claude の生レスポンスは {raw_path} に保存されています")
     return 1
 
-  # 12. map_severity で Finding に変換
+  # 12. _normalize_severity_token で Finding に変換
   raw_findings = data.get("findings", [])
   findings: list[Finding] = []
-  for f in raw_findings:
-    cli_severity = map_severity(f["severity"])
+  for i, f in enumerate(raw_findings):
+    cli_severity = _normalize_severity_token(
+      f["severity"],
+      source_context={
+        "context": f"audit {tier}",
+        "source_field": f"findings[{i}].severity",
+        "location": f.get("location", "-"),
+      },
+      drift_sink=drift_events,
+    )
     category = f.get("category", "")
     page = f.get("page") or ""
     message = f.get("message", "")
