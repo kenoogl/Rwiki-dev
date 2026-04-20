@@ -77,7 +77,7 @@
   - _Boundary: audit parsing layer_
   - _Depends: 1.2, 1.6_
 
-- [ ] 1.8 `parse_audit_response` の 4 段構造検証（silent skip 廃止、TDD）
+- [x] 1.8 `parse_audit_response` の 4 段構造検証（silent skip 廃止、TDD）
   - 先に test_parse_audit_response_structural_invariants を red で追加: (a) 非 dict 応答 → `RuntimeError` → exit 1 / (b) `findings` key 非 list / (c) `findings[i]` 非 dict → placeholder finding + drift_events 記録 / (d) 必須 key（severity / message / location）欠落 → 補完 + drift_events 記録 / (e) 正常応答の 5 fixture
   - 実装: (i) top-level type 検証（非 dict は `RuntimeError`）、(ii) findings key 型検証、(iii) 各 finding item の `isinstance(dict)` + placeholder + drift_events 記録、(iv) message / location 欠落は補完 + drift_events 記録
   - severity coerce 3 段（`raw_sev → str coerce → _normalize_severity_token` 呼出、drift_events に missing-severity 記録）。**呼出パターン**（Task 1.2 signature 準拠、source_context は dict）: `severity = _normalize_severity_token(coerced_sev, source_context={"context": cmd_context, "source_field": f"findings[{i}].severity" if raw_sev is not None else f"findings[{i}].<missing-severity>", "location": finding.get("location", "-")}, drift_sink=drift_events)`。missing-severity 時も source_field を `<missing-severity>` 付き JSON path で記録し、drift_events の可観測性を保持

@@ -438,3 +438,257 @@ class TestTask14VaultValidationHook:
     # (iv) finding が保持されること（ログファイルに drift finding が書き込まれる）
     log_files = list((tmp_vault / "logs").glob("audit-monthly-*.md"))
     assert log_files, "audit レポートファイルが生成されていない"
+
+
+# ---------------------------------------------------------------------------
+# Task 1.8: parse_audit_response 4 段構造検証 + silent skip 廃止
+# ---------------------------------------------------------------------------
+
+import json as _json
+
+
+def _make_valid_response(**overrides) -> str:
+  """最小有効 audit レスポンス JSON 文字列を生成する。"""
+  base = {
+    "findings": [
+      {
+        "severity": "ERROR",
+        "message": "test finding",
+        "location": "wiki/test.md:10",
+        "page": "wiki/test.md",
+      }
+    ],
+    "metrics": {"pages_scanned": 1, "total_findings": 1},
+    "recommended_actions": ["fix it"],
+  }
+  base.update(overrides)
+  return _json.dumps(base)
+
+
+class TestParseAuditResponseStructuralInvariants:
+  """Task 1.8: parse_audit_response の 4 段構造検証テスト。
+
+  (a) 非 dict 応答 → RuntimeError（_run_llm_audit に補足されず exit 1 相当）
+  (b) findings key が list でない → ValueError
+  (c) findings[i] が dict でない → placeholder finding + drift_events 記録（silent skip 廃止）
+  (d) 必須 key (severity / message / location) 欠落 → 補完 + drift_events 記録
+  (e) 正常応答の 5 fixture → 全 finding が intact で返る
+  """
+
+  # ------------------------------------------------------------------
+  # (a) 非 dict 応答（JSON list）→ RuntimeError
+  # ------------------------------------------------------------------
+  def test_a_non_dict_top_level_raises_runtime_error(self) -> None:
+    """JSON はパースできるが dict ではない場合（例：list）→ RuntimeError を raise する。"""
+    list_response = _json.dumps([{"severity": "ERROR", "message": "oops"}])
+    with pytest.raises(RuntimeError, match="dict"):
+      rw_light.parse_audit_response(list_response)
+
+  # ------------------------------------------------------------------
+  # (b) findings key が list でない → ValueError
+  # ------------------------------------------------------------------
+  def test_b_findings_not_a_list_raises_value_error(self) -> None:
+    """findings が list でない場合（例：string）→ ValueError を raise する。"""
+    bad_response = _json.dumps({
+      "findings": "not a list",
+      "metrics": {},
+      "recommended_actions": [],
+    })
+    with pytest.raises(ValueError):
+      rw_light.parse_audit_response(bad_response)
+
+  # ------------------------------------------------------------------
+  # (c) findings[i] が dict でない → placeholder finding + drift_events 記録
+  # ------------------------------------------------------------------
+  def test_c_non_dict_finding_becomes_placeholder_with_drift(self, capsys) -> None:
+    """findings 要素が dict でない場合、silent skip せず placeholder finding + drift_events を生成する。"""
+    response = _json.dumps({
+      "findings": [
+        "this is a string, not a dict",  # 非 dict finding
+        {"severity": "INFO", "message": "valid", "location": "wiki/a.md:1"},
+      ],
+      "metrics": {},
+      "recommended_actions": [],
+    })
+    result = rw_light.parse_audit_response(response)
+
+    # 配列長が保持されること（2 要素のまま）
+    assert len(result["findings"]) == 2, (
+      f"finding 配列長が保持されていない: {result['findings']}"
+    )
+
+    # 1 つ目は placeholder
+    placeholder = result["findings"][0]
+    assert placeholder["severity"] == "INFO", f"placeholder severity が INFO でない: {placeholder}"
+    assert "structurally invalid" in placeholder["message"].lower() or "invalid" in placeholder["message"].lower(), (
+      f"placeholder message に 'invalid' が含まれない: {placeholder}"
+    )
+
+    # drift_events に記録されていること
+    assert "drift_events" in result, "drift_events が result に存在しない"
+    drift_sources = [e.get("source_field", "") for e in result["drift_events"]]
+    assert any("findings[0]" in s for s in drift_sources), (
+      f"drift_events に findings[0] のエントリがない: {drift_sources}"
+    )
+
+  # ------------------------------------------------------------------
+  # (d-1) severity key 欠落 → INFO 補完 + drift_events に missing-severity 記録
+  # ------------------------------------------------------------------
+  def test_d1_missing_severity_is_normalized_to_info_with_drift(self, capsys) -> None:
+    """severity key が欠落している finding → INFO に補完し drift_events に <missing-severity> を記録する。"""
+    response = _json.dumps({
+      "findings": [
+        {"message": "no severity here", "location": "wiki/b.md:5"},  # severity 欠落
+      ],
+      "metrics": {},
+      "recommended_actions": [],
+    })
+    result = rw_light.parse_audit_response(response)
+
+    assert len(result["findings"]) == 1
+    f = result["findings"][0]
+    assert f["severity"] == "INFO", f"severity が INFO でない: {f}"
+
+    # drift_events に missing-severity の記録があること
+    assert "drift_events" in result, "drift_events が存在しない"
+    drift_sources = [e.get("source_field", "") for e in result["drift_events"]]
+    assert any("<missing-severity>" in s for s in drift_sources), (
+      f"drift_events に <missing-severity> エントリがない: {drift_sources}"
+    )
+
+  # ------------------------------------------------------------------
+  # (d-2) message key 欠落 → 空文字補完 + drift_events 記録
+  # ------------------------------------------------------------------
+  def test_d2_missing_message_is_complemented_with_drift(self, capsys) -> None:
+    """message key が欠落している finding → 空文字補完し drift_events に記録する。"""
+    response = _json.dumps({
+      "findings": [
+        {"severity": "WARN", "location": "wiki/c.md:3"},  # message 欠落
+      ],
+      "metrics": {},
+      "recommended_actions": [],
+    })
+    result = rw_light.parse_audit_response(response)
+
+    assert len(result["findings"]) == 1
+    f = result["findings"][0]
+    assert "message" in f, "message key が finding に存在しない"
+    # message は何らかの値（空文字か placeholder）で補完されること
+    assert isinstance(f["message"], str), f"message が str でない: {f}"
+
+    # drift_events に missing-message の記録があること
+    assert "drift_events" in result, "drift_events が存在しない"
+    drift_sources = [e.get("source_field", "") for e in result["drift_events"]]
+    assert any("missing-message" in s or "message" in s for s in drift_sources), (
+      f"drift_events に message 欠落エントリがない: {drift_sources}"
+    )
+
+  # ------------------------------------------------------------------
+  # (d-3) location key 欠落 → "-" 補完 + drift_events 記録
+  # ------------------------------------------------------------------
+  def test_d3_missing_location_is_complemented_with_drift(self, capsys) -> None:
+    """location key が欠落している finding → "-" 補完し drift_events に記録する。"""
+    response = _json.dumps({
+      "findings": [
+        {"severity": "INFO", "message": "no location"},  # location 欠落
+      ],
+      "metrics": {},
+      "recommended_actions": [],
+    })
+    result = rw_light.parse_audit_response(response)
+
+    assert len(result["findings"]) == 1
+    f = result["findings"][0]
+    assert "location" in f, "location key が finding に存在しない"
+    assert f["location"] == "-", f"location が '-' でない: {f}"
+
+    # drift_events に missing-location の記録があること
+    assert "drift_events" in result, "drift_events が存在しない"
+    drift_sources = [e.get("source_field", "") for e in result["drift_events"]]
+    assert any("missing-location" in s or "location" in s for s in drift_sources), (
+      f"drift_events に location 欠落エントリがない: {drift_sources}"
+    )
+
+  # ------------------------------------------------------------------
+  # (e) 正常応答の 5 fixture
+  # ------------------------------------------------------------------
+  def test_e1_valid_single_critical_finding(self) -> None:
+    """CRITICAL finding 1 件の正常応答 → そのまま返る。"""
+    response = _json.dumps({
+      "findings": [
+        {"severity": "CRITICAL", "message": "critical issue", "location": "wiki/a.md:1"},
+      ],
+      "metrics": {"pages_scanned": 5},
+      "recommended_actions": ["fix immediately"],
+    })
+    result = rw_light.parse_audit_response(response)
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "CRITICAL"
+    assert "drift_events" not in result
+
+  def test_e2_valid_multiple_findings_all_severities(self) -> None:
+    """4 水準すべてを含む正常応答 → 全 finding が intact で返る。"""
+    response = _json.dumps({
+      "findings": [
+        {"severity": "CRITICAL", "message": "c", "location": "a.md:1"},
+        {"severity": "ERROR", "message": "e", "location": "b.md:2"},
+        {"severity": "WARN", "message": "w", "location": "c.md:3"},
+        {"severity": "INFO", "message": "i", "location": "d.md:4"},
+      ],
+      "metrics": {},
+      "recommended_actions": [],
+    })
+    result = rw_light.parse_audit_response(response)
+    assert len(result["findings"]) == 4
+    severities = [f["severity"] for f in result["findings"]]
+    assert severities == ["CRITICAL", "ERROR", "WARN", "INFO"]
+    assert "drift_events" not in result
+
+  def test_e3_valid_empty_findings(self) -> None:
+    """findings が空 list の正常応答 → 空 list で返る。"""
+    response = _json.dumps({
+      "findings": [],
+      "metrics": {"pages_scanned": 10},
+      "recommended_actions": [],
+    })
+    result = rw_light.parse_audit_response(response)
+    assert result["findings"] == []
+    assert "drift_events" not in result
+
+  def test_e4_valid_finding_with_extra_keys(self) -> None:
+    """finding に余分なキーがある正常応答 → 余分なキーも保持される。"""
+    response = _json.dumps({
+      "findings": [
+        {
+          "severity": "WARN",
+          "message": "warn msg",
+          "location": "wiki/x.md:99",
+          "category": "style",
+          "marker": "MARKER",
+          "page": "wiki/x.md",
+        }
+      ],
+      "metrics": {},
+      "recommended_actions": [],
+    })
+    result = rw_light.parse_audit_response(response)
+    assert len(result["findings"]) == 1
+    f = result["findings"][0]
+    assert f["severity"] == "WARN"
+    assert f.get("category") == "style"
+    assert "drift_events" not in result
+
+  def test_e5_valid_finding_with_lowercase_severity(self) -> None:
+    """小文字 severity（'warn'）の finding → 大文字正規化されて返る。"""
+    response = _json.dumps({
+      "findings": [
+        {"severity": "warn", "message": "lowercase severity", "location": "wiki/y.md:1"},
+      ],
+      "metrics": {},
+      "recommended_actions": [],
+    })
+    result = rw_light.parse_audit_response(response)
+    assert len(result["findings"]) == 1
+    assert result["findings"][0]["severity"] == "WARN"
+    # 有効な severity の strip+upper なので drift_events は不要
+    assert "drift_events" not in result

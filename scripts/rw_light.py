@@ -2031,39 +2031,35 @@ def build_audit_prompt(tier: str, task_prompts: str, wiki_content: str) -> str:
   return "\n\n".join(parts)
 
 
-def parse_audit_response(response: str) -> dict:
+def parse_audit_response(response: str, cmd_context: str = "audit") -> dict:
   """Claude CLI のレスポンスから JSON をパースし、スキーマ検証を行う。
 
   既存の _strip_code_block() ヘルパーでコードブロックを除去してから
   json.loads() でパース。
 
-  スキーマ検証（プロンプトインジェクション・モデル幻覚への防御）:
-  1. トップレベル必須キー: "findings"（list）, "metrics"（dict）, "recommended_actions"（list）
-  2. 各 finding の必須キー: "severity"（str）, "page"（str or None）, "message"（str）
-  3. severity の値が CRITICAL / ERROR / WARN / INFO（新 4 水準）のいずれかであること。
-     旧語彙（HIGH/MEDIUM/LOW 等）は _normalize_severity_token() で drift として記録し、
-     INFO に降格して finding を保持する（破棄しない）。
-  4. finding.message に改行が含まれる場合は空白に置換する
-  5. finding.marker / finding.page が JSON null の場合は空文字列 "" に変換する
+  スキーマ検証（プロンプトインジェクション・モデル幻覚への防御）4 段構造:
+  1. トップレベル型検証: dict でない場合は RuntimeError（exit 1 相当）
+  2. findings key 型検証: list でない場合は ValueError
+  3. 各 finding 要素の型検証: dict でない場合は placeholder + drift_events 記録（silent skip 廃止）
+  4. 必須 key 欠落検証: severity / message / location 欠落は補完 + drift_events 記録
 
-  検証失敗時: finding 必須キー欠落の場合は当該 finding をスキップして [WARN] を標準出力に表示。
-  トップレベルキー欠落・型不一致の場合は ValueError を raise。
-
-  パース失敗時は ValueError を raise。
+  severity の値が CRITICAL / ERROR / WARN / INFO（新 4 水準）のいずれかであること。
+  旧語彙（HIGH/MEDIUM/LOW 等）は _normalize_severity_token() で drift として記録し、
+  INFO に降格して finding を保持する（破棄しない）。
 
   Args:
       response: Claude CLI のレスポンス文字列（JSON または ```json...``` 形式）
+      cmd_context: drift_events の context フィールドに使う呼び出し文脈文字列
 
   Returns:
       {"findings": [...], "metrics": {...}, "recommended_actions": [...],
        "drift_events": [...]} の dict
-      drift_events は severity drift があった場合のみ含まれる（Req 1.9, 7.10）
+      drift_events は severity drift または構造的不正があった場合のみ含まれる（Req 1.9, 7.10）
 
   Raises:
-      ValueError: 不正な JSON またはトップレベルスキーマ違反の場合
+      RuntimeError: トップレベルが dict でない場合（exit 1 相当）
+      ValueError: 不正な JSON またはトップレベルスキーマ違反の場合（findings が list でない等）
   """
-  _FINDING_REQUIRED_KEYS = ("severity", "page", "message")
-
   # コードブロック除去 + JSON パース
   try:
     cleaned = _strip_code_block(response)
@@ -2071,7 +2067,13 @@ def parse_audit_response(response: str) -> dict:
   except json.JSONDecodeError as e:
     raise ValueError(f"audit レスポンスの JSON パースに失敗しました: {e}") from e
 
-  # ステップ 1: トップレベル必須キーの型チェック
+  # ステップ 1: トップレベル型検証（非 dict は RuntimeError、Req 1.9 AC (a)）
+  if not isinstance(data, dict):
+    raise RuntimeError(
+      f"audit レスポンスのトップレベルが dict でありません（got {type(data).__name__}）"
+    )
+
+  # ステップ 2: findings key 型検証
   if not isinstance(data.get("findings"), list):
     raise ValueError(
       "audit レスポンスに必須フィールドが欠落または型不一致です: findings（list が必要）"
@@ -2086,55 +2088,101 @@ def parse_audit_response(response: str) -> dict:
     )
 
   # drift イベント収集バッファ（Req 1.9, 7.10）
-  drift_sink: list[dict] = []
+  drift_events: list[dict] = []
 
-  # ステップ 2-5: finding ごとの検証と変換
-  valid_findings: list[dict] = []
-  for finding in data["findings"]:
-    # ステップ 2: finding 必須キー検証
-    missing_keys = [k for k in _FINDING_REQUIRED_KEYS if k not in finding]
-    if missing_keys:
-      print(
-        f"[WARN] audit finding に必須キーが欠落しています（スキップ）: {', '.join(missing_keys)}"
-      )
+  # ステップ 3-4: finding ごとの検証と変換（silent skip 廃止、配列長保持）
+  validated_findings: list[dict] = []
+  for i, finding in enumerate(data["findings"]):
+    # ステップ 3: finding 要素の型検証（非 dict → placeholder + drift_events 記録）
+    if not isinstance(finding, dict):
+      drift_events.append({
+        "original_token": "<non-dict-finding>",
+        "sanitized_token": "<structurally-invalid>",
+        "demoted_to": "INFO",
+        "source_field": f"findings[{i}]",
+        "context": f"expected dict, got {type(finding).__name__}",
+      })
+      validated_findings.append({
+        "severity": "INFO",
+        "message": f"[structurally invalid finding at index {i}, see drift_events]",
+        "location": "-",
+      })
       continue
 
     # コピーして変換処理（元の dict を破壊しない）
     f = dict(finding)
 
-    # ステップ 3: severity 正規化（drift トークンは INFO に降格して保持）
-    severity_raw = f.get("severity")
-    page_ctx = f.get("page") or ""
-    severity = _normalize_severity_token(
-      severity_raw,
-      source_context={
-        "context": f"audit finding (page={page_ctx})",
-        "source_field": "severity",
-        "location": page_ctx,
-      },
-      drift_sink=drift_sink,
-    )
-    f["severity"] = severity
+    # ステップ 4: location 欠落検証 → "-" 補完 + drift_events 記録
+    if "location" not in f:
+      drift_events.append({
+        "original_token": "<missing>",
+        "sanitized_token": "<missing>",
+        "demoted_to": "-",
+        "source_field": f"findings[{i}].<missing-location>",
+        "context": cmd_context,
+      })
+      f["location"] = "-"
 
-    # ステップ 4: message の改行→空白置換
-    if "message" in f and f["message"]:
+    location_val = f.get("location") or "-"
+
+    # ステップ 4: severity 正規化（raw_sev → str coerce → _normalize_severity_token）
+    raw_sev = f.get("severity") if "severity" in f else None
+    coerced_sev = str(raw_sev) if raw_sev is not None else None
+    source_field_sev = (
+      f"findings[{i}].severity" if raw_sev is not None else f"findings[{i}].<missing-severity>"
+    )
+    if raw_sev is None:
+      # severity 欠落: drift_events に missing-severity を記録して INFO に補完
+      drift_events.append({
+        "original_token": "<missing>",
+        "sanitized_token": "<missing>",
+        "demoted_to": "INFO",
+        "source_field": source_field_sev,
+        "context": cmd_context,
+      })
+      f["severity"] = "INFO"
+    else:
+      severity = _normalize_severity_token(
+        coerced_sev,
+        source_context={
+          "context": cmd_context,
+          "source_field": source_field_sev,
+          "location": location_val,
+        },
+        drift_sink=drift_events,
+      )
+      f["severity"] = severity
+
+    # ステップ 4: message 欠落検証 → 空文字補完 + drift_events 記録
+    if "message" not in f:
+      drift_events.append({
+        "original_token": "<missing>",
+        "sanitized_token": "<missing>",
+        "demoted_to": "-",
+        "source_field": f"findings[{i}].<missing-message>",
+        "context": cmd_context,
+      })
+      f["message"] = ""
+
+    # message の改行→空白置換
+    if f.get("message"):
       f["message"] = f["message"].replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
 
-    # ステップ 5: null → "" 変換（page, marker）
+    # null → "" 変換（page, marker）
     if f.get("page") is None:
       f["page"] = ""
     if f.get("marker") is None:
       f["marker"] = ""
 
-    valid_findings.append(f)
+    validated_findings.append(f)
 
   result: dict = {
-    "findings": valid_findings,
+    "findings": validated_findings,
     "metrics": data["metrics"],
     "recommended_actions": data["recommended_actions"],
   }
-  if drift_sink:
-    result["drift_events"] = drift_sink
+  if drift_events:
+    result["drift_events"] = drift_events
   return result
 
 

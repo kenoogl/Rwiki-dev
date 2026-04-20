@@ -4656,7 +4656,7 @@ class TestParseAuditResponse:
   # ── finding 必須キー欠落: スキップ or ValueError ──────────────
 
   def test_finding_missing_severity_skipped(self):
-    """finding に severity キーが欠落している場合はスキップされること（severity なしは必須キー欠落）"""
+    """finding に severity キーが欠落している場合は INFO 補完して保持されること（Task 1.8: silent skip 廃止）"""
     data = {
       "findings": [
         {
@@ -4675,12 +4675,18 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     result = rw_light.parse_audit_response(self._to_json(data))
-    # severity キー欠落の finding はスキップ、LOW は drift → INFO に降格されて保持
-    assert len(result["findings"]) == 1
+    # Task 1.8: severity 欠落の finding は INFO 補完して保持（silent skip 廃止）
+    # LOW は drift → INFO に降格されて保持。合計 2 件。
+    assert len(result["findings"]) == 2
     assert result["findings"][0]["severity"] == "INFO"
+    assert result["findings"][1]["severity"] == "INFO"
+    # drift_events に missing-severity の記録があること
+    assert "drift_events" in result
+    drift_sources = [e.get("source_field", "") for e in result["drift_events"]]
+    assert any("<missing-severity>" in s for s in drift_sources)
 
   def test_finding_missing_page_skipped(self):
-    """finding に page キーが欠落している場合はスキップされること（page は必須キー）"""
+    """finding に page キーが欠落している場合も保持されること（Task 1.8: page は非必須、location に統一）"""
     data = {
       "findings": [
         {
@@ -4699,12 +4705,13 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     result = rw_light.parse_audit_response(self._to_json(data))
-    # page キー欠落の finding はスキップ、LOW は drift → INFO に降格されて保持
-    assert len(result["findings"]) == 1
+    # Task 1.8: page は非必須（location に統一）。HIGH/LOW ともに drift → INFO に降格して保持。合計 2 件。
+    assert len(result["findings"]) == 2
     assert result["findings"][0]["severity"] == "INFO"
+    assert result["findings"][1]["severity"] == "INFO"
 
   def test_finding_missing_message_skipped(self):
-    """finding に message キーが欠落している場合はスキップされること（message は必須キー）"""
+    """finding に message キーが欠落している場合は空文字補完して保持されること（Task 1.8: silent skip 廃止）"""
     data = {
       "findings": [
         {
@@ -4723,9 +4730,14 @@ class TestParseAuditResponse:
       "recommended_actions": [],
     }
     result = rw_light.parse_audit_response(self._to_json(data))
-    # message キー欠落の finding はスキップ、LOW は drift → INFO に降格されて保持
-    assert len(result["findings"]) == 1
+    # Task 1.8: message 欠落の finding は空文字補完して保持（silent skip 廃止）。合計 2 件。
+    assert len(result["findings"]) == 2
     assert result["findings"][0]["severity"] == "INFO"
+    assert result["findings"][1]["severity"] == "INFO"
+    # drift_events に missing-message の記録があること
+    assert "drift_events" in result
+    drift_sources = [e.get("source_field", "") for e in result["drift_events"]]
+    assert any("missing-message" in s for s in drift_sources)
 
   # ── 返却値の構造確認 ────────────────────────────────────────
 
