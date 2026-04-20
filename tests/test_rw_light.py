@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
 import rw_config  # noqa: E402
 import rw_light  # noqa: E402
+import rw_utils  # noqa: E402
 
 # テスト用 CLAUDE.md が存在する templates/CLAUDE.md のパス
 TEMPLATES_CLAUDE_MD = os.path.join(
@@ -667,13 +668,13 @@ class TestGenerateQueryId:
 
     def test_ascii_question_generates_slug(self, monkeypatch):
         """ASCII 質問文からスラッグが生成されること"""
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         result = rw_light.generate_query_id("What is machine learning?")
         assert result == "20260417-what-is-machine-learning"
 
     def test_non_ascii_question_slugified(self, monkeypatch):
         """非ASCII 質問文が slugify されること（ASCII 変換後にスラッグ生成）"""
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         result = rw_light.generate_query_id("機械学習とは何か？")
         # 非ASCII は除去されて "untitled" または空になるケース
         assert result.startswith("20260417-")
@@ -682,19 +683,19 @@ class TestGenerateQueryId:
 
     def test_empty_question_raises_value_error(self, monkeypatch):
         """空の質問文で ValueError が raise されること"""
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         with pytest.raises(ValueError, match=".*"):
             rw_light.generate_query_id("")
 
     def test_whitespace_only_raises_value_error(self, monkeypatch):
         """空白のみの質問文で ValueError が raise されること"""
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         with pytest.raises(ValueError, match=".*"):
             rw_light.generate_query_id("   ")
 
     def test_date_prefix_is_8_digits(self, monkeypatch):
         """日付プレフィックスが YYYYMMDD 形式 (8桁) であること"""
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         result = rw_light.generate_query_id("test question")
         prefix = result.split("-")[0]
         assert len(prefix) == 8
@@ -703,7 +704,7 @@ class TestGenerateQueryId:
 
     def test_max_slug_length_80_chars(self, monkeypatch):
         """非常に長い質問文でスラッグ部分が 80 文字以下になること"""
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         long_question = "a " * 100  # 200文字の質問
         result = rw_light.generate_query_id(long_question)
         # プレフィックス "20260417-" を除いたスラッグ部分
@@ -712,7 +713,7 @@ class TestGenerateQueryId:
 
     def test_format_is_yyyymmdd_hyphen_slug(self, monkeypatch):
         """YYYYMMDD-{slug} 形式であること"""
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-01-15")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-01-15")
         result = rw_light.generate_query_id("hello world")
         assert result == "20260115-hello-world"
 
@@ -1121,7 +1122,7 @@ class TestCmdQueryExtract:
     def test_duplicate_query_id_returns_1(self, tmp_path, monkeypatch):
         """同一 query_id ディレクトリが既存 → return 1"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
@@ -1135,7 +1136,7 @@ class TestCmdQueryExtract:
     def test_success_creates_4_files(self, tmp_path, monkeypatch):
         """成功パス: 4ファイルが review/query/<query_id>/ に作成されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
@@ -1156,7 +1157,7 @@ class TestCmdQueryExtract:
     def test_success_with_scope_arg(self, tmp_path, monkeypatch):
         """--scope 引数が正しく解析されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
 
         scope_path = str(tmp_path / "wiki" / "concepts" / "test.md")
@@ -1173,7 +1174,7 @@ class TestCmdQueryExtract:
     def test_success_with_type_arg(self, tmp_path, monkeypatch):
         """--type 引数が正しく解析されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
@@ -1183,7 +1184,7 @@ class TestCmdQueryExtract:
     def test_large_wiki_triggers_2stage(self, tmp_path, monkeypatch):
         """ファイル数>20 かつ scope=None の場合: 2段階方式が呼び出されること"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
 
         # wiki/ に 21 ファイル追加
@@ -1215,7 +1216,7 @@ class TestCmdQueryExtract:
     def test_lint_fail_returns_2(self, tmp_path, monkeypatch):
         """lint status=FAIL の場合: return 2"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
@@ -1238,7 +1239,7 @@ class TestCmdQueryExtract:
     def test_lint_pass_returns_0(self, tmp_path, monkeypatch):
         """lint status=PASS の場合: return 0"""
         _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
         monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
@@ -2160,7 +2161,7 @@ class TestE2EWorkflow:
     def test_extract_creates_4_files(self, tmp_path, monkeypatch):
         """extract → review/query/<query_id>/ に 4ファイルが作成されること"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         result = rw_light.cmd_query_extract(["What is ML?"])
@@ -2181,7 +2182,7 @@ class TestE2EWorkflow:
     def test_extract_then_lint_pass(self, tmp_path, monkeypatch):
         """extract → lint が PASS を返すこと"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         extract_result = rw_light.cmd_query_extract(["What is ML?"])
@@ -2202,7 +2203,7 @@ class TestE2EWorkflow:
     def test_extract_lint_fail_fix_workflow(self, tmp_path, monkeypatch):
         """extract → answer.md を短縮 → lint FAIL → fix → lint PASS ワークフローの検証"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
         monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: _make_extract_response())
 
         # Step 1: extract
@@ -2242,7 +2243,7 @@ class TestE2EWorkflow:
     def test_agents_file_update_reflected(self, tmp_path, monkeypatch):
         """AGENTS/query_extract.md 変更後に extract を実行すると新内容がプロンプトに反映されること (Req 9.2)"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
 
         # 1回目: 初期内容でプロンプトをキャプチャ
         captured_prompts_1 = []
@@ -2290,7 +2291,7 @@ class TestE2EWorkflow:
     def test_scope_option_limits_wiki_content(self, tmp_path, monkeypatch):
         """--scope 指定時、そのページのみが wiki コンテンツとして読み込まれること"""
         tmp_path, wiki_dir, query_dir, agents_dir = _setup_e2e_vault(tmp_path, monkeypatch)
-        monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+        monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
 
         # read_wiki_content の呼び出し引数をキャプチャ
         captured_scope = []
@@ -2817,7 +2818,7 @@ class TestValidateWikiDir:
         def mock_warn(paths, action_name):
             called_with.append((paths, action_name))
 
-        monkeypatch.setattr(rw_light, "warn_if_dirty_paths", mock_warn)
+        monkeypatch.setattr(rw_utils, "warn_if_dirty_paths", mock_warn)
         rw_light.validate_wiki_dir()
         # warn_if_dirty_paths が "wiki" パスを含む引数で呼ばれること
         assert len(called_with) == 1
@@ -3027,7 +3028,7 @@ class TestAllPagesSetConstruction:
         monkeypatch.setattr(rw_config, "WIKI", str(wiki_dir))
 
         # all_pages_set の構築: list_md_files → relpath → wiki/ 除去
-        files = rw_light.list_md_files(str(wiki_dir))
+        files = rw_utils.list_md_files(str(wiki_dir))
         all_pages_set = set()
         for f in files:
             rel = os.path.relpath(f, str(wiki_dir))
@@ -3057,7 +3058,7 @@ class TestGitListFiles:
             return fake_result
 
         monkeypatch.setattr(subprocess, "run", fake_run)
-        result = rw_light._git_list_files(["diff", "--name-only", "--", "wiki/"])
+        result = rw_utils._git_list_files(["diff", "--name-only", "--", "wiki/"])
         assert result == ["wiki/page-a.md", "wiki/page-b.md"]
 
     def test_returns_empty_list_on_failure(self, monkeypatch):
@@ -3070,7 +3071,7 @@ class TestGitListFiles:
             return fake_result
 
         monkeypatch.setattr(subprocess, "run", fake_run)
-        result = rw_light._git_list_files(["diff", "--name-only"])
+        result = rw_utils._git_list_files(["diff", "--name-only"])
         assert result == []
 
     def test_returns_empty_list_on_exception(self, monkeypatch):
@@ -3081,7 +3082,7 @@ class TestGitListFiles:
             raise OSError("git not found")
 
         monkeypatch.setattr(subprocess, "run", fake_run)
-        result = rw_light._git_list_files(["diff"])
+        result = rw_utils._git_list_files(["diff"])
         assert result == []
 
     def test_excludes_empty_lines(self, monkeypatch):
@@ -3094,7 +3095,7 @@ class TestGitListFiles:
             return fake_result
 
         monkeypatch.setattr(subprocess, "run", fake_run)
-        result = rw_light._git_list_files(["diff", "--name-only"])
+        result = rw_utils._git_list_files(["diff", "--name-only"])
         assert "" not in result
         assert result == ["wiki/a.md", "wiki/b.md"]
 
@@ -3110,7 +3111,7 @@ class TestGitListFiles:
             return fake_result
 
         monkeypatch.setattr(subprocess, "run", fake_run)
-        rw_light._git_list_files(["diff", "--name-only", "HEAD~1..HEAD", "--", "wiki/"])
+        rw_utils._git_list_files(["diff", "--name-only", "HEAD~1..HEAD", "--", "wiki/"])
         assert captured["cmd"] == ["git", "diff", "--name-only", "HEAD~1..HEAD", "--", "wiki/"]
 
     def test_call_claude_not_affected(self, monkeypatch):
@@ -3128,7 +3129,7 @@ class TestGitListFiles:
             return original_run(cmd, **kwargs)
 
         monkeypatch.setattr(subprocess, "run", counting_fake_run)
-        result = rw_light._git_list_files(["status"])
+        result = rw_utils._git_list_files(["status"])
         assert git_call_count == 1
         assert result == ["wiki/page.md"]
 
@@ -3156,7 +3157,7 @@ class TestGetRecentWikiChanges:
                 return [os.path.join(wiki_dir, "page-a.md")]
             return []
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert any("page-a.md" in p for p in result)
 
@@ -3170,7 +3171,7 @@ class TestGetRecentWikiChanges:
                 return [os.path.join(wiki_dir, "page-b.md")]
             return []
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert any("page-b.md" in p for p in result)
 
@@ -3183,7 +3184,7 @@ class TestGetRecentWikiChanges:
         def fake_git_list_files(args):
             return [dup_path]
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert result.count(dup_path) == 1
 
@@ -3196,7 +3197,7 @@ class TestGetRecentWikiChanges:
         def fake_git_list_files(args):
             return [deleted_path]
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert deleted_path not in result
 
@@ -3211,7 +3212,7 @@ class TestGetRecentWikiChanges:
         def fake_git_list_files(args):
             return [txt_path, md_path]
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert txt_path not in result
         assert md_path in result
@@ -3224,7 +3225,7 @@ class TestGetRecentWikiChanges:
         def fake_git_list_files(args):
             return []
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert result == []
 
@@ -3243,7 +3244,7 @@ class TestGetRecentWikiChanges:
                 return [initial_path]
             return []
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert initial_path in result
 
@@ -3256,7 +3257,7 @@ class TestGetRecentWikiChanges:
         def fake_git_list_files(args):
             return [page_path]
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert isinstance(result, list)
         assert all(isinstance(p, str) for p in result)
@@ -3281,7 +3282,7 @@ class TestGetRecentWikiChanges:
                 return []
             return [uncommitted_path]
 
-        monkeypatch.setattr(rw_light, "_git_list_files", fake_git_list_files)
+        monkeypatch.setattr(rw_utils, "_git_list_files", fake_git_list_files)
         result = rw_light.get_recent_wiki_changes()
         assert uncommitted_path in result
 
@@ -5288,7 +5289,7 @@ class TestCmdAuditMicro:
     """cmd_audit_micro が int を返すこと"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     # _git_list_files を空リスト返却にモック（変更なし扱い）
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
     result = rw_light.cmd_audit_micro()
     assert isinstance(result, int)
 
@@ -5315,14 +5316,14 @@ class TestCmdAuditMicro:
     """対象ファイル 0 件のとき exit 0（Req 1.7）"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     # 変更なしにモック
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
     result = rw_light.cmd_audit_micro()
     assert result == 0
 
   def test_cmd_audit_micro_no_changes_prints_info(self, tmp_path, monkeypatch, capsys):
     """対象ファイル 0 件のとき [INFO] 変更なしを表示すること（Req 1.7）"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
     rw_light.cmd_audit_micro()
     out = capsys.readouterr().out
     assert "[INFO]" in out
@@ -5330,7 +5331,7 @@ class TestCmdAuditMicro:
   def test_cmd_audit_micro_no_changes_generates_report(self, tmp_path, monkeypatch, capsys):
     """対象ファイル 0 件のとき pages_scanned: 0 のレポートを生成すること（Req 1.7）"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
     rw_light.cmd_audit_micro()
     # logs/ にレポートファイルが生成されること
     report_files = list(logs_dir.glob("audit-micro-*.md"))
@@ -5344,7 +5345,7 @@ class TestCmdAuditMicro:
     page_path = wiki_dir / "page-00.md"
     # _git_list_files が wiki ページを返すようモック
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
     rw_light.cmd_audit_micro()
@@ -5354,7 +5355,7 @@ class TestCmdAuditMicro:
   def test_cmd_audit_micro_report_in_logs_only(self, tmp_path, monkeypatch):
     """レポートが logs/ にのみ出力され wiki/ には書き込まれないこと（Req 6.1）"""
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
     rw_light.cmd_audit_micro()
     # wiki/ 内に新規ファイルがないこと
     wiki_files_after = list(wiki_dir.rglob("*.md"))
@@ -5366,7 +5367,7 @@ class TestCmdAuditMicro:
     page_path = wiki_dir / "page-00.md"
     # 正常ページ（リンク切れなし）
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
     result = rw_light.cmd_audit_micro()
@@ -5383,7 +5384,7 @@ class TestCmdAuditMicro:
       encoding="utf-8",
     )
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(broken_page)] if "diff" in args else []
     )
     result = rw_light.cmd_audit_micro()
@@ -5394,7 +5395,7 @@ class TestCmdAuditMicro:
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     page_path = wiki_dir / "page-00.md"
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
     rw_light.cmd_audit_micro()
@@ -5406,7 +5407,7 @@ class TestCmdAuditMicro:
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     page_path = wiki_dir / "page-00.md"
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
     rw_light.cmd_audit_micro()
@@ -5418,7 +5419,7 @@ class TestCmdAuditMicro:
     wiki_dir, logs_dir = _setup_wiki_for_cmd_audit(tmp_path, monkeypatch)
     page_path = wiki_dir / "page-00.md"
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(page_path)] if "diff" in args else []
     )
     rw_light.cmd_audit_micro()
@@ -6134,7 +6135,7 @@ class TestE2EAuditAllTiers:
     wiki_dir, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
     # get_recent_wiki_changes は 1 つのファイルを返すようにモック
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(wiki_dir / "page-alpha.md")] if "diff" in args else [],
     )
 
@@ -6148,7 +6149,7 @@ class TestE2EAuditAllTiers:
     """micro のレポートが logs/ にのみ出力される（Req 5.6）"""
     wiki_dir, logs_dir, raw_dir, review_dir, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(wiki_dir / "page-alpha.md")] if "diff" in args else [],
     )
 
@@ -6299,7 +6300,7 @@ class TestE2EAuditAllTiers:
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
     # micro 用 git モック（変更なし → 対象 0 件でも OK）
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
 
     # 実行前スナップショット
     before = _collect_file_snapshots(wiki_dir)
@@ -6324,7 +6325,7 @@ class TestE2EAuditAllTiers:
       rw_light, "call_claude",
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
 
     before = _collect_file_snapshots(raw_dir)
 
@@ -6346,7 +6347,7 @@ class TestE2EAuditAllTiers:
       rw_light, "call_claude",
       lambda prompt, timeout=None: _make_valid_monthly_response(),
     )
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
 
     before = _collect_file_snapshots(review_dir)
 
@@ -6406,7 +6407,7 @@ class TestE2EAuditAllTiers:
     """micro 対象 0 件（変更なし）の場合 exit 0 を返す（Req 1.7）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
     # 変更ファイルなしをモック
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
 
     result = rw_light.cmd_audit_micro()
 
@@ -6415,7 +6416,7 @@ class TestE2EAuditAllTiers:
   def test_micro_no_changes_generates_report_with_zero_pages(self, tmp_path, monkeypatch):
     """micro 対象 0 件の場合、pages scanned: 0 のレポートが生成される（Req 1.7）"""
     _, logs_dir, _, _, _ = _setup_e2e_audit_vault(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "_git_list_files", lambda args: [])
+    monkeypatch.setattr(rw_utils, "_git_list_files", lambda args: [])
 
     rw_light.cmd_audit_micro()
 
@@ -6513,7 +6514,7 @@ class TestAuditExit2OnFail:
     monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
     monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(broken_page)] if "diff" in args else []
     )
     result = rw_light.cmd_audit_micro()
@@ -6535,7 +6536,7 @@ class TestAuditExit2OnFail:
     monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_path / "index.md"))
     monkeypatch.setattr(rw_config, "LOGDIR", str(logs_dir))
     monkeypatch.setattr(
-      rw_light, "_git_list_files",
+      rw_utils, "_git_list_files",
       lambda args: [str(page)] if "diff" in args else []
     )
     result = rw_light.cmd_audit_micro()
@@ -6569,7 +6570,7 @@ def _severity_finding(severity: str) -> rw_light.Finding:
 
 def test_compute_run_status():
   """_compute_run_status: CRITICAL or ERROR → FAIL, otherwise → PASS"""
-  fn = rw_light._compute_run_status
+  fn = rw_utils._compute_run_status
 
   # (a) 空 findings → PASS
   assert fn([]) == "PASS"
@@ -6597,7 +6598,7 @@ def test_compute_run_status():
 
 def test_compute_exit_code():
   """_compute_exit_code: had_runtime_error=True → 1, FAIL → 2, PASS → 0"""
-  fn = rw_light._compute_exit_code
+  fn = rw_utils._compute_exit_code
 
   # (a) PASS + no runtime error → 0
   assert fn("PASS", False) == 0
@@ -6629,7 +6630,7 @@ class TestQueryExtractExit2OnFail:
   def test_lint_fail_exit_2_artifact_preserved(self, tmp_path, monkeypatch):
     """lint FAIL → exit 2 かつ artifact は保持される"""
     _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
+    monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-20")
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
     monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
@@ -6653,7 +6654,7 @@ class TestQueryExtractExit2OnFail:
   def test_lint_pass_exit_0(self, tmp_path, monkeypatch):
     """lint PASS → exit 0"""
     _, review_query_dir = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
+    monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-20")
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
     monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
 
@@ -6669,7 +6670,7 @@ class TestQueryExtractExit2OnFail:
   def test_runtime_error_exit_1(self, tmp_path, monkeypatch):
     """runtime error（artifact 書き出し失敗）→ exit 1"""
     _, _ = _setup_mock_vault_for_query(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "today", lambda: "2026-04-20")
+    monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-20")
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
     monkeypatch.setattr(rw_light, "call_claude", lambda p, timeout=None: MOCK_EXTRACT_RESPONSE)
     monkeypatch.setattr(
@@ -6752,7 +6753,7 @@ class TestQueryCallClaudeTimeout:
   def test_query_extract_passes_timeout_120(self, tmp_path, monkeypatch):
     """cmd_query_extract が call_claude を timeout=120 で呼び出すこと"""
     _setup_mock_vault_for_query(tmp_path, monkeypatch)
-    monkeypatch.setattr(rw_light, "today", lambda: "2026-04-17")
+    monkeypatch.setattr(rw_utils, "today", lambda: "2026-04-17")
     monkeypatch.setattr(rw_light, "load_task_prompts", lambda task, **kw: "mock prompts")
 
     captured_timeout = []

@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import rw_config
 import rw_light
+import rw_utils
 
 
 # ---------------------------------------------------------------------------
@@ -399,7 +400,7 @@ class TestTask14VaultValidationHook:
     monkeypatch.setattr(rw_config, "INDEX_MD", str(tmp_vault / "index.md"))
     monkeypatch.setattr(rw_config, "CHANGE_LOG_MD", str(tmp_vault / "log.md"))
     # git dirty チェックをスキップ（テスト環境では git 操作が不要）
-    monkeypatch.setattr(rw_light, "warn_if_dirty_paths", lambda paths, cmd: None)
+    monkeypatch.setattr(rw_utils, "warn_if_dirty_paths", lambda paths, cmd: None)
 
     # Claude CLI が HIGH severity を含む findings を返す
     claude_response = (

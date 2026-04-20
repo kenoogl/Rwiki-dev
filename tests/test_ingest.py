@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import rw_light
+import rw_utils
 
 
 class TestCmdIngest:
@@ -22,7 +23,7 @@ class TestCmdIngest:
     make_md_file(src, {"title": "Test Article", "source": "web"}, "# Test\nBody text here.")
     assert src.exists()
 
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     rw_light.cmd_ingest()
 
@@ -37,7 +38,7 @@ class TestCmdIngest:
       "files": [],
       "summary": {"pass": 0, "warn": 0, "fail": 0},
     })
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     result = rw_light.cmd_ingest()
 
@@ -59,7 +60,7 @@ class TestCmdIngest:
     def mock_git_commit(paths, msg):
       calls.append((paths, msg))
 
-    monkeypatch.setattr(rw_light, "git_commit", mock_git_commit)
+    monkeypatch.setattr(rw_utils, "git_commit", mock_git_commit)
 
     rw_light.cmd_ingest()
 
@@ -76,7 +77,7 @@ class TestCmdIngest:
     src = vault / "raw" / "incoming" / "articles" / "blocked.md"
     make_md_file(src, {"title": "Blocked", "source": "web"}, "# Blocked\nBody.")
 
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     result = rw_light.cmd_ingest()
 
@@ -97,7 +98,7 @@ class TestCmdIngest:
     def failing_git_commit(paths, msg):
       raise subprocess.CalledProcessError(1, "git commit")
 
-    monkeypatch.setattr(rw_light, "git_commit", failing_git_commit)
+    monkeypatch.setattr(rw_utils, "git_commit", failing_git_commit)
 
     result = rw_light.cmd_ingest()
 
@@ -106,7 +107,7 @@ class TestCmdIngest:
   def test_lint_not_run(self, patch_constants, monkeypatch):
     """Req 5.6: lint_latest.json が存在しない場合 FileNotFoundError が発生する"""
     # lint_json フィクスチャを使わず lint_latest.json を作成しない
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     with pytest.raises(FileNotFoundError):
       rw_light.cmd_ingest()
@@ -127,7 +128,7 @@ class TestCmdIngest:
     os.makedirs(dst.parent, exist_ok=True)
     dst.write_text("# Existing\nExisting content.", encoding="utf-8")
 
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     with pytest.raises(RuntimeError):
       rw_light.cmd_ingest()
@@ -157,7 +158,7 @@ class TestCmdIngest:
       original_move(src, dst)
 
     monkeypatch.setattr(rw_light.shutil, "move", failing_move)
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     # execute_ingest_moves が例外を再 raise する
     with pytest.raises(Exception):
@@ -188,7 +189,7 @@ class TestIngestPreconditionExit1:
       "summary": {"pass": 0, "fail": 1, "severity_counts": {"critical": 0, "error": 1, "warn": 0, "info": 0}},
       "drift_events": [],
     })
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     result = rw_light.cmd_ingest()
 
@@ -205,7 +206,7 @@ class TestIngestPreconditionExit1:
       "summary": {"pass": 0, "fail": 0, "severity_counts": {"critical": 0, "error": 0, "warn": 0, "info": 0}},
       "drift_events": [],
     })
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     result = rw_light.cmd_ingest()
 
@@ -222,7 +223,7 @@ class TestIngestPreconditionExit1:
       "summary": {"pass": 1, "fail": 0, "severity_counts": {"critical": 0, "error": 0, "warn": 1, "info": 0}},
       "drift_events": [],
     })
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     result = rw_light.cmd_ingest()
 
@@ -239,7 +240,7 @@ class TestIngestPreconditionExit1:
       "summary": {"pass": 1, "fail": 0, "severity_counts": {"critical": 1, "error": 0, "warn": 0, "info": 0}},
       "drift_events": [],
     })
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     result = rw_light.cmd_ingest()
 
@@ -263,7 +264,7 @@ class TestIngestExitCodeContract:
       "summary": {"pass": 0, "fail": 1, "severity_counts": {"critical": 0, "error": 1, "warn": 0, "info": 0}},
       "drift_events": [],
     })
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     result = rw_light.cmd_ingest()
 
@@ -279,7 +280,7 @@ class TestIngestExitCodeContract:
       "summary": {"pass": 0, "fail": 0, "severity_counts": {"critical": 0, "error": 0, "warn": 0, "info": 0}},
       "drift_events": [],
     })
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     rw_light.cmd_ingest()
     captured = capsys.readouterr()
@@ -299,7 +300,7 @@ class TestIngestExitCodeContract:
       "summary": {"pass": 0, "fail": 0, "severity_counts": {"critical": 0, "error": 0, "warn": 0, "info": 0}},
       "drift_events": [],
     })
-    monkeypatch.setattr(rw_light, "git_commit", lambda paths, msg: None)
+    monkeypatch.setattr(rw_utils, "git_commit", lambda paths, msg: None)
 
     rw_light.cmd_ingest()
     captured = capsys.readouterr()

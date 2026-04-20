@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 import rw_light
+import rw_utils
 
 
 MOCK_JSON = (
@@ -23,7 +24,7 @@ class TestCmdSynthesizeLogs:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 6.1: llm_logs/ の .md ファイルから synthesis_candidates/ に候補ファイルが生成される"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
     monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_claude_ok)
 
     vault = patch_constants
@@ -40,7 +41,7 @@ class TestCmdSynthesizeLogs:
 
   def test_empty_llm_logs(self, patch_constants, monkeypatch, capsys):
     """Req 6.2: llm_logs/ が空の場合、exit 0 で候補ファイルなし"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     result = rw_light.cmd_synthesize_logs()
@@ -53,7 +54,7 @@ class TestCmdSynthesizeLogs:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 6.3: 候補生成後に CHANGE_LOG_MD にエントリが存在する"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
     monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_claude_ok)
 
     vault = patch_constants
@@ -74,7 +75,7 @@ class TestCmdSynthesizeLogs:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 6.4: 候補ファイルに必要なフロントマターが含まれる"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
     monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_claude_ok)
 
     vault = patch_constants
@@ -100,7 +101,7 @@ class TestCmdSynthesizeLogs:
     self, patch_constants, make_md_file, fixed_today, monkeypatch, capsys
   ):
     """Req 6.5: エラーが発生しても次ファイルの処理を継続する（Exception と invalid JSON の 2 パターン）"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     # 2 ファイル配置（アルファベット順で 1 番目がエラーになるよう命名）
@@ -158,7 +159,7 @@ class TestCmdSynthesizeLogs:
     self, patch_constants, make_md_file, monkeypatch
   ):
     """Req 6.6: 全ファイルが FAIL でも exit 0"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
     monkeypatch.setattr(
       rw_light,
       "call_claude_for_log_synthesis",
@@ -179,7 +180,7 @@ class TestCmdSynthesizeLogs:
     self, patch_constants, make_md_file, fixed_today, monkeypatch, capsys
   ):
     """Req 6.7: synthesis_candidates/ に同名ファイルが存在する場合スキップ"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
     monkeypatch.setattr(rw_light, "call_claude_for_log_synthesis", mock_claude_ok)
 
     vault = patch_constants
@@ -203,7 +204,7 @@ class TestCmdSynthesizeLogs:
 
   def test_dirty_warning(self, patch_constants, monkeypatch, capsys):
     """Req 6.8: git_path_is_dirty が True のとき [WARN] が出力される"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: True)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: True)
 
     rw_light.cmd_synthesize_logs()
     captured = capsys.readouterr()
@@ -214,7 +215,7 @@ class TestCmdSynthesizeLogs:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """False confidence 防止: slug 衝突時は 1 つ目が作成され 2 つ目がスキップされる"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     collision_json = (
       '{"topics": ['

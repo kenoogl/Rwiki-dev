@@ -105,7 +105,7 @@
   - 完了状態: `scripts/rw_utils.py` が存在し、Phase 2 で移動した utility 関数のうち bare 形式（`today(...)` 等）の呼び出しが `rw_light.py` 残留関数本体内に残っていない。**rw_light 単独で `python scripts/rw_light.py` を起動して NameError なく usage 表示**することを smoke 確認。テスト patch 更新と直接アクセス書き換えは 2.2 で実施
   - _Requirements: 1.1, 2.1, 2.2_
 
-- [ ] 2.2 utility patch 先を `rw_utils` に置換 + 直接アクセス書き換え + pytest green 復帰
+- [x] 2.2 utility patch 先を `rw_utils` に置換 + 直接アクセス書き換え + pytest green 復帰
   - `tests/test_approve.py` の `git_path_is_dirty` / `warn_if_dirty_paths` パッチ（~15 箇所）を `rw_utils` 参照に更新
   - `tests/test_ingest.py` の `git_commit` パッチ（15 箇所）を `rw_utils` 参照に更新（`rw_light.shutil.move` パッチは `cmd_ingest` が rw_light 残留のため**更新不要**）
   - `tests/test_synthesize_logs.py` の `git_path_is_dirty` パッチを `rw_utils` 参照に更新（~20 箇所中該当分）

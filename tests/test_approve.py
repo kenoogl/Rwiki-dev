@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 import rw_light
+import rw_utils
 
 
 APPROVED_META = {
@@ -22,7 +23,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.1: 承認済み候補が wiki/synthesis/ に type=synthesis で昇格される"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     make_md_file(
@@ -42,7 +43,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.2a: status が pending の候補は昇格されない"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     meta = dict(APPROVED_META)
@@ -62,7 +63,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.2b: reviewed_by が空の候補は昇格されない"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     meta = dict(APPROVED_META)
@@ -82,7 +83,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.2c: approved が無効な日付の候補は昇格されない"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     meta = dict(APPROVED_META)
@@ -102,7 +103,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.2d: promoted が true の候補は昇格されない"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     meta = dict(APPROVED_META)
@@ -122,7 +123,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.3: 昇格後、元候補ファイルに promoted/promoted_at/promoted_to が設定される"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     candidate_path = vault / "review" / "synthesis_candidates" / "test-synthesis.md"
@@ -139,7 +140,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.4: wiki に同名ファイルが存在する場合、セパレータ付き追記でマージされる"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     make_md_file(
@@ -170,7 +171,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.5: 昇格後、index.md に ## synthesis セクションが存在する"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     make_md_file(
@@ -190,7 +191,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.6: 昇格後、log.md にエントリが存在する"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
     make_md_file(
@@ -211,7 +212,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch
   ):
     """Req 7.7: 承認ファイルがあってもなくても exit 0"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: False)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: False)
 
     vault = patch_constants
 
@@ -232,7 +233,7 @@ class TestCmdApprove:
     self, patch_constants, make_md_file, fixed_today, monkeypatch, capsys
   ):
     """Req 7.8: git_path_is_dirty が True の場合、[WARN] が stdout に出力される"""
-    monkeypatch.setattr(rw_light, "git_path_is_dirty", lambda *args, **kwargs: True)
+    monkeypatch.setattr(rw_utils, "git_path_is_dirty", lambda *args, **kwargs: True)
 
     patch_constants
 

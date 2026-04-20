@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 import rw_light
+import rw_utils
 
 
 class TestCmdLint:
@@ -170,11 +171,11 @@ class TestCmdLint:
     rw_light.cmd_lint()
 
     written = md_file.read_text(encoding="utf-8")
-    meta, _ = rw_light.parse_frontmatter(written)
+    meta, _ = rw_utils.parse_frontmatter(written)
     assert "title" in meta
     assert "source" in meta
     # articles/ ディレクトリから source が推論される
-    assert meta["source"] == rw_light.infer_source_from_path(str(md_file))
+    assert meta["source"] == rw_utils.infer_source_from_path(str(md_file))
     assert "added" in meta
     assert meta["added"] == fixed_today
 

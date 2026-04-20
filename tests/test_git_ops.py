@@ -1,6 +1,7 @@
 import subprocess
 import pytest
 import rw_light
+import rw_utils
 
 
 class TestGitCommit:
@@ -15,7 +16,7 @@ class TestGitCommit:
       return subprocess.CompletedProcess(args, returncode=0)
 
     monkeypatch.setattr(subprocess, "run", mock_run)
-    rw_light.git_commit(["file.md"], "test commit")
+    rw_utils.git_commit(["file.md"], "test commit")
 
     assert any("add" in str(c) for c in calls), "git add が呼ばれていない"
     assert any("diff" in str(c) for c in calls), "git diff が呼ばれていない"
@@ -31,7 +32,7 @@ class TestGitCommit:
       return subprocess.CompletedProcess(args, returncode=0)
 
     monkeypatch.setattr(subprocess, "run", mock_run)
-    rw_light.git_commit(["file.md"], "test commit")
+    rw_utils.git_commit(["file.md"], "test commit")
 
     assert all("commit" not in str(c) for c in calls), "変更なしなのに git commit が呼ばれた"
 
@@ -45,7 +46,7 @@ class TestGitCommit:
     monkeypatch.setattr(subprocess, "run", mock_run_add_fails)
 
     with pytest.raises(subprocess.CalledProcessError):
-      rw_light.git_commit(["file.md"], "test commit")
+      rw_utils.git_commit(["file.md"], "test commit")
 
   def test_git_commit_failure_raises(self, monkeypatch):
     # Req 3.3b: git commit 失敗 → CalledProcessError 送出
@@ -59,7 +60,7 @@ class TestGitCommit:
     monkeypatch.setattr(subprocess, "run", mock_run_commit_fails)
 
     with pytest.raises(subprocess.CalledProcessError):
-      rw_light.git_commit(["file.md"], "test commit")
+      rw_utils.git_commit(["file.md"], "test commit")
 
 
 class TestGitStatusPorcelain:
@@ -71,7 +72,7 @@ class TestGitStatusPorcelain:
       return subprocess.CompletedProcess(args, returncode=0, stdout=expected_output)
 
     monkeypatch.setattr(subprocess, "run", mock_run)
-    result = rw_light.git_status_porcelain()
+    result = rw_utils.git_status_porcelain()
 
     assert result == expected_output
 
@@ -85,7 +86,7 @@ class TestGitPathIsDirty:
       )
 
     monkeypatch.setattr(subprocess, "run", mock_run)
-    result = rw_light.git_path_is_dirty("path/to")
+    result = rw_utils.git_path_is_dirty("path/to")
 
     assert result is True
 
@@ -97,6 +98,6 @@ class TestGitPathIsDirty:
       )
 
     monkeypatch.setattr(subprocess, "run", mock_run)
-    result = rw_light.git_path_is_dirty("path/to")
+    result = rw_utils.git_path_is_dirty("path/to")
 
     assert result is False

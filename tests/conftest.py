@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 import rw_config
 import rw_light
+import rw_utils
 
 
 @pytest.fixture
@@ -56,7 +57,7 @@ def fixed_today(monkeypatch: pytest.MonkeyPatch) -> str:
   """rw_light.today を固定日付 '2025-01-15' に差し替える。
   固定日付文字列を返す。"""
   fixed = "2025-01-15"
-  monkeypatch.setattr(rw_light, "today", lambda: fixed)
+  monkeypatch.setattr(rw_utils, "today", lambda: fixed)
   return fixed
 
 
@@ -67,7 +68,7 @@ def make_md_file() -> Callable[[Path, dict, str], Path]:
   path にファイルを書き込み、path を返す。"""
   def _make(path: Path, meta: dict, body: str) -> Path:
     os.makedirs(path.parent, exist_ok=True)
-    content = rw_light.build_frontmatter(meta) + body
+    content = rw_utils.build_frontmatter(meta) + body
     path.write_text(content, encoding="utf-8")
     return path
   return _make
