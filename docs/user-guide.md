@@ -723,17 +723,78 @@ rw audit quarterly  # Tier 3: LLM支援による戦略的監査
 
 ---
 
-## 既存VaultのAGENTS更新手順
+## システム更新時の運用
 
-新しいバージョンの `templates/AGENTS/` をVaultに適用する場合:
+Rwiki のシステム（dev リポジトリ）が更新されても、**Vault の知識データ（`raw/` / `review/` / `wiki/` / `index.md` / `log.md`）は一切影響を受けません**。更新の種類に応じて、必要な操作は異なります。
+
+### Vault とシステムの依存関係
+
+| Vault 側の要素 | 更新方式 |
+|---------------|---------|
+| `raw/` / `review/` / `wiki/` / `index.md` / `log.md` | ユーザー所有。システム更新で一切触らない |
+| `scripts/rw` シンボリックリンク | dev リポジトリのコードへの参照。`git pull` で自動追従 |
+| `CLAUDE.md` / `AGENTS/` | init 時のスナップショット。明示的な re-sync が必要 |
+
+### シナリオ別の手順
+
+**① CLI の機能追加・バグ修正（コードのみ変更）**
 
 ```bash
-rw init <vault-path>
+cd ~/Rwiki-dev
+git pull
 ```
 
-`rw init` は `templates/AGENTS/` の内容をVaultの `AGENTS/` ディレクトリに再配置する。
+これだけで完了。symlink 経由で新しいコードが即反映される。Vault 側の操作は不要。
 
-> **注意**: 既存のVault固有のカスタマイズがある場合は、`rw init` の前にバックアップを取ること。
+**② `templates/CLAUDE.md` や `templates/AGENTS/` の更新**
+
+```bash
+cd ~/Rwiki-dev
+git pull
+python scripts/rw_cli.py init ~/my-vault
+```
+
+既存 Vault に対して `rw init` を再実行すると:
+
+- 上書き確認のプロンプトが表示される（`y` で承認）
+- 旧 `CLAUDE.md` を `CLAUDE.md.bak` にバックアップ
+- 旧 `AGENTS/` を `AGENTS.bak/` にバックアップ
+- 新しい template をコピー
+- **`raw/` / `review/` / `wiki/` には一切触らない**
+
+確認をスキップする場合（タイムスタンプ付きバックアップ）:
+
+```bash
+python scripts/rw_cli.py init ~/my-vault --force
+# 旧 AGENTS/ は <vault>/.backup/<timestamp>/ に退避される
+```
+
+**③ エントリポイントのファイル名変更（例: rw-light-rename）**
+
+```bash
+python scripts/rw_cli.py init ~/my-vault --reinstall-symlink
+```
+
+symlink のみを張り替え、他のファイル・ディレクトリには一切触らない。通常初期化処理（ディレクトリ生成・template コピー・git init）はスキップされる。
+
+**④ スキーマ・フォーマットの破壊的変更**（今後の検討課題）
+
+frontmatter のフィールド変更・JSON ログの schema バージョンアップ・severity 体系の変更など、既存データに影響する変更については、**現時点では共通のマイグレーションフレームワークは未整備**です。これまでは個別のスペックで対応してきました:
+
+- `severity-unification`（2026-04-20 完了）: AGENTS ファイルの severity 語彙 rename（HIGH→ERROR 等）と CLI の exit code 契約統一。既存 JSON ログとの互換性を考慮した設計を実施。
+- `rw-light-rename`（2026-04-21 完了）: エントリポイントのファイル名変更に伴う Vault symlink 張り替え手段として `--reinstall-symlink` を追加。
+
+将来的に必要になりうる共通基盤:
+
+- `rw migrate <from-version> <to-version>` のような専用コマンド
+- Vault 側の state version（`.rw-version` ファイル等）による自動マイグレーション検出
+- 破壊的変更を伴うスペックでの「マイグレーションガイド」標準フォーマット
+
+該当する変更が発生した場合は、**`CHANGELOG.md` と該当スペックの `requirements.md` に移行手順を明記する**運用とします。
+
+### 共通原則
+
+どのシナリオでも **ユーザーの知識データ（`raw/` / `review/` / `wiki/` / `index.md` / `log.md`）は触らない**。これは Rwiki の Safety Guardrails（LLM が `raw/` と `wiki/` を直接変更できない設計）と同じ思想で、システム更新もユーザーデータを守る設計になっています。
 
 ---
 
