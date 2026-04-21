@@ -1,8 +1,127 @@
 # Rwiki ユーザーガイド
 
-## はじめに
+## Rwiki とは
 
-Rwikiは制御された知識パイプラインです。LLMが知識を直接編集するのではなく、raw → review → (human approval) → wiki というフローで知識を構築します。
+Rwiki は、**生データから知識をキュレーションして蓄積し、それを活用するための基盤**です。
+
+日々の情報収集（論文・記事・会議メモ・LLM との対話ログなど）は膨大ですが、それをそのまま溜め込んでも「後で参照できる知識」にはなりません。Rwiki は、生データを **人間の判断を経てキュレーションされた Wiki** へ変換するパイプラインを提供します。
+
+### どんな問題を解決するか
+
+| 課題 | Rwiki の解決策 |
+|------|---------------|
+| 読んだ論文・記事が後から参照できない | 構造化された Wiki ページとして蓄積 |
+| LLM に生成させた文章の品質が不安 | 人間の承認を必須とする review 層でフィルタリング |
+| 蓄積した知識の整合性が崩れていく | audit コマンドで定期的に検証 |
+| 「あの情報どこにあったっけ」が解消しない | query コマンドで Wiki から回答を抽出 |
+
+### 3 層パイプラインの概念
+
+```
+raw/          生データ層    — 変更禁止。信頼できるソースのアーカイブ
+  ↓
+review/       検証・待機層  — LLM が生成した候補を人間がレビューする場所
+  ↓
+wiki/         知識層        — 人間が承認した信頼できる知識だけが存在する
+```
+
+**核心ルール**: LLM は `wiki/` を直接書き換えられない。すべての知識は `review/` での人間承認を経て昇格する。これにより、蓄積した知識の信頼性を担保します。
+
+### 典型的なユースケース
+
+**ケース 1: 論文・記事を知識として蓄積する**
+1. 論文 PDF や記事を `raw/incoming/` に置く
+2. `rw lint` → `rw ingest` で raw 層に取り込む
+3. Claude で `synthesize` タスクを実行 → `review/` に Wiki ページ候補が生成される
+4. 候補を人間がレビューして承認 → `rw approve` で `wiki/` に昇格
+
+**ケース 2: LLM との対話ログを知識に変換する**
+1. Claude との対話ログを `raw/llm_logs/` に保存
+2. `rw synthesize-logs` で synthesis 候補を生成
+3. レビュー・承認 → `wiki/` に昇格
+
+**ケース 3: 蓄積した知識に質問する**
+```bash
+rw query answer "SINDy と疎回帰の関係を説明してほしい"
+```
+
+**ケース 4: 定期的に知識の整合性を確認する**
+```bash
+rw audit weekly    # リンク切れ・孤立ページ等の構造チェック
+rw audit monthly   # LLM による意味的矛盾の検出
+```
+
+---
+
+## 初めて使う場合: セットアップ
+
+### 1. Vault（知識ベースのディレクトリ）を作成する
+
+```bash
+python /path/to/Rwiki-dev/scripts/rw_cli.py init ~/my-vault
+```
+
+これにより、以下の構造が作成され、`rw` コマンドのシンボリックリンクが設定されます:
+
+```
+~/my-vault/
+├── raw/
+│   ├── incoming/       ← ここに生データを置く
+│   └── llm_logs/       ← LLM との対話ログ
+├── review/
+│   ├── synthesis_candidates/
+│   └── query/
+├── wiki/
+│   ├── concepts/
+│   ├── methods/
+│   └── synthesis/
+├── CLAUDE.md           ← Claude CLI 用のルール定義
+├── AGENTS/             ← Claude CLI が読み込むタスク別プロンプト
+└── scripts/
+    └── rw -> rw_cli.py ← CLIコマンドへのリンク
+```
+
+### 2. Vault のディレクトリで作業する
+
+```bash
+cd ~/my-vault
+```
+
+以降のコマンドは Vault のルートで実行します。シンボリックリンク経由で `rw` コマンドが使えます:
+
+```bash
+python scripts/rw <command>
+# または絶対パスで
+python ~/my-vault/scripts/rw <command>
+```
+
+### 3. 生データを投入する
+
+論文・記事・メモを `raw/incoming/` 配下の適切なサブディレクトリに置きます:
+
+```
+raw/incoming/
+├── articles/           ← ウェブ記事
+├── papers/
+│   ├── local/          ← ローカルの論文
+│   └── zotero/         ← Zotero 管理の論文
+├── meeting-notes/      ← 会議メモ
+└── code-snippets/      ← コードメモ
+```
+
+各ファイルには YAML フロントマターが必要です:
+
+```yaml
+---
+title: "SINDy: 非線形力学系の疎同定"
+date: 2026-04-21
+source: "https://example.com/sindy-paper"
+type: paper
+tags: [sparse-regression, dynamical-systems]
+---
+
+# 本文...
+```
 
 ---
 
