@@ -435,6 +435,91 @@ Lint Result: PASS
 
 ---
 
+##### 4 ファイル契約 — それぞれの役割
+
+`rw query extract` は**必ず 4 ファイルをセットで生成**します。4 つは独立した役割を持ち、組み合わせることで「エビデンスに裏付けられた再利用可能な知識アーティファクト」を構成します。
+
+**① `question.md` — 問いの記録**
+
+何をクエリしたかを記録する。フィールド:
+- `query`: クエリ本文
+- `query_type`: `fact` / `structure` / `comparison` / `why` / `hypothesis`
+- `scope`: 対象スコープ（wiki のどこを参照したか）
+- `date`: YYYY-MM-DD
+
+👉 **後から「何を問うたか」を再現できる**。同じクエリの再実行・検索条件としての再利用が可能。
+
+**② `answer.md` — 構造化された回答**
+
+エビデンスに基づく回答本体。見出し・箇条書きで構造化される。
+
+- 推論・解釈・クロスページ横断を含む場合は `[INFERENCE]` マーカーで明示
+- 「前述」「これ」等の文脈依存表現は禁止（単独で読める自己完結性）
+
+👉 **論文の「結論・考察」に相当**。レビュー論文のドラフトや説明資料の素材として直接使える。
+
+**③ `evidence.md` — 根拠となる wiki 抜粋**
+
+回答を支える wiki からの引用集。各ブロックに以下を含む:
+- `source:` フィールド（どの wiki ページから引用したか）
+- 最小十分な抜粋（関連箇所のみ、バルクダンプ禁止）
+
+👉 **論文の「引用・参考文献」に相当**。**ハルシネーション防止の要**。`answer.md` の各主張が本当に wiki に書かれていたかを検証できる。
+
+**④ `metadata.json` — プログラム処理用インデックス**
+
+機械処理のための構造化メタデータ:
+- `query_id`: 識別子（`YYYYMMDD-slug` 形式）
+- `query_type`, `scope`: 上記と同じ
+- `sources`: 参照した wiki ページのリスト
+- `created_at`: ISO 8601 タイムスタンプ
+- `synthesis_candidate`（任意）: `true` なら synthesis への昇格候補
+
+👉 **`rw lint query` の検証、synthesis 候補の自動抽出、audit での参照元追跡**に使われる。
+
+##### 設計思想：なぜ 4 ファイル分離なのか
+
+```
+question.md    ← "何を問うたか"
+    ↓
+evidence.md    ← wiki からの生引用（source 付き）
+    ↓
+answer.md      ← evidence を構造化、推論は [INFERENCE] 明示
+    ↓
+metadata.json  ← 全体のインデックスと分類
+```
+
+3 つの原則：
+
+1. **Fact-Evidence 分離**: 「回答」と「根拠」を別ファイルにすることで、`rw lint query` が「answer の各主張は本当に evidence に裏付けられているか？」を機械検証できる。
+2. **Reusability First**: 4 ファイルだけで自己完結。チャット履歴や文脈を知らなくても、後から読んで理解・再利用できる。
+3. **Trust Chain**: `wiki → evidence → answer` の信頼の連鎖。すべての主張の根拠を wiki まで辿れ、推論部分は `[INFERENCE]` で区別される。
+
+##### 具体例：SINDy と Koopman 演算子の比較
+
+```bash
+rw query extract "SINDy と Koopman 演算子の違い" --type comparison
+```
+
+生成される 4 ファイル:
+
+```
+review/query/20260421-sindy-koopman-difference/
+├── question.md      # "SINDy と Koopman..." / comparison / wiki/methods/ / 2026-04-21
+├── answer.md        # 比較表、各セルに [INFERENCE] or エビデンス参照
+├── evidence.md      # wiki/methods/sindy.md L23-30、wiki/methods/koopman.md L45-52
+└── metadata.json    # query_id, sources: [sindy.md, koopman.md], synthesis_candidate: true
+```
+
+後日「レビュー論文の Related Work を書く」といった場面で：
+- `answer.md` をそのまま下書きに使う
+- `evidence.md` の `source:` を辿って元の wiki ページに戻る
+- `metadata.json` の `sources` を citation リストの元にする
+
+といった再利用が自然に行える。
+
+---
+
 #### `rw query answer`
 
 ```
