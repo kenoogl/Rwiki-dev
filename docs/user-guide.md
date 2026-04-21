@@ -3,6 +3,8 @@
 > **Inspired by Andrej Karpathy's LLM Wiki approach**
 >
 > Rwiki は、Andrej Karpathy 氏が公開した [LLM Wiki のアイデア](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) に着想を得て構築されています。「LLM による知識のキュレーションを、人間の判断で品質を担保しながら継続的に行う」という Karpathy 氏の洞察に深い敬意を表します。
+>
+> Karpathy 氏の原案と Rwiki の差分は [karpathy-comparison.md](./karpathy-comparison.md) で継続的に記録しています。
 
 ## Rwiki とは
 
