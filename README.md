@@ -90,31 +90,50 @@ rw [lint|ingest|synthesize-logs|approve|init|query|audit]
 ## 開発リポジトリのディレクトリ構成
 
 ```
-Rwiki-dev/                     # 開発リポジトリルート
-├── scripts/
-│   └── rw_cli.py              # メイン CLI スクリプト（全コマンドの実体）
-├── templates/
-│   ├── CLAUDE.md              # Wiki 運用カーネル（init 時に Vault へコピー）
-│   ├── .gitignore             # Vault 用 .gitignore テンプレート
-│   └── AGENTS/                # AI タスク別プロンプトテンプレート（init 時にコピー）
-├── tests/
-│   ├── conftest.py            # 共通フィクスチャ（vault_path, patch_constants 等）
-│   ├── test_rw_cli.py         # query/audit/Prompt Engine テスト（450+件）
-│   ├── test_utils.py          # ユーティリティ関数テスト
-│   ├── test_git_ops.py        # Git 操作関数テスト
-│   ├── test_lint.py           # cmd_lint テスト
-│   ├── test_ingest.py         # cmd_ingest テスト
-│   ├── test_synthesize_logs.py# cmd_synthesize_logs テスト
-│   ├── test_approve.py        # cmd_approve テスト
-│   ├── test_lint_query.py     # cmd_lint_query テスト
-│   └── test_init.py           # cmd_init テスト
-├── docs/
-│   ├── user-guide.md          # ユーザー操作ガイド
-│   ├── developer-guide.md     # 開発者向けガイド（テスト実行・アーキテクチャ）
-│   ├── audit.md               # 監査コマンド詳細仕様
-│   └── Rwiki仕様案.md         # 詳細仕様ドキュメント
-├── README.md                  # このファイル
-└── CHANGELOG.md               # 変更履歴（Keep a Changelog 形式）
+Rwiki-dev/                              # 開発リポジトリルート
+├── scripts/                            # CLI ツール（責務別 6 モジュールの DAG）
+│   ├── rw_cli.py                       # エントリポイント + argparse + 残留コマンド (Layer 4)
+│   ├── rw_config.py                    # 全グローバル定数の単一ソース (Layer 0)
+│   ├── rw_utils.py                     # 汎用ユーティリティ (Layer 1)
+│   ├── rw_prompt_engine.py             # Claude CLI 呼び出し + プロンプト構築 (Layer 2)
+│   ├── rw_audit.py                     # audit コマンド + チェック関数群 (Layer 3)
+│   └── rw_query.py                     # query コマンド + query lint (Layer 3)
+├── templates/                          # Vault 初期化時にコピーされるテンプレート群
+│   ├── CLAUDE.md                       # Wiki 運用カーネル
+│   ├── .gitignore                      # Vault 用 .gitignore
+│   └── AGENTS/                         # AI タスク別プロンプトテンプレート
+├── tests/                              # pytest 自動テスト（644+件）
+│   ├── conftest.py                     # 共通フィクスチャ
+│   ├── test_rw_cli.py                  # エントリポイント・Prompt Engine テスト
+│   ├── test_utils.py                   # rw_utils テスト
+│   ├── test_git_ops.py                 # Git 操作テスト
+│   ├── test_lint.py                    # cmd_lint テスト
+│   ├── test_ingest.py                  # cmd_ingest テスト
+│   ├── test_synthesize_logs.py         # cmd_synthesize_logs テスト
+│   ├── test_approve.py                 # cmd_approve テスト
+│   ├── test_lint_query.py              # cmd_lint_query テスト
+│   ├── test_init.py                    # cmd_init テスト
+│   ├── test_audit.py                   # rw_audit テスト
+│   ├── test_agents_vocabulary.py       # AGENTS 語彙一貫性テスト
+│   ├── test_source_vocabulary.py       # ソース語彙一貫性テスト
+│   └── test_conftest_fixtures.py       # fixture 自体の妥当性テスト
+├── docs/                               # 現役ドキュメント
+│   ├── user-guide.md                   # ユーザー操作ガイド
+│   ├── developer-guide.md              # 開発者向けガイド（テスト・アーキテクチャ）
+│   ├── karpathy-comparison.md          # Karpathy LLM Wiki 原案との差分記録（生きた文書）
+│   ├── test-log.md                     # 手動テスト記録
+│   ├── dev-log-cc-sddv3.md             # 開発ログ（cc-sdd v3.0）
+│   └── archive/                        # 初期設計ドラフト（歴史記録）
+├── sample/                             # 動作確認用サンプルデータ
+│   └── fairy-tale/
+│       └── 三匹の子豚.md                # synthesize/query 動作確認用
+├── .kiro/                              # Kiro-style spec-driven development
+│   ├── steering/                       # プロジェクト全体の方針（product/tech/structure/roadmap）
+│   └── specs/                          # スペック（requirements/design/tasks + 承認メタ）
+├── pytest.ini                          # pytest 設定
+├── CLAUDE.md                           # 開発リポジトリ用 Claude Code 指示（Kiro ワークフロー）
+├── README.md                           # このファイル
+└── CHANGELOG.md                        # 変更履歴（Keep a Changelog 形式）
 ```
 
 ## テスト実行
