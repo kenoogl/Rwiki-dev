@@ -199,6 +199,20 @@ tags: [sparse-regression, dynamical-systems]
 # 本文...
 ```
 
+### 4. 動作確認: サンプルデータで試す（任意）
+
+dev リポジトリには `sample/` ディレクトリに動作確認用の入力データが含まれています。Rwiki の運用サイクル（ingest → synthesize → approve → audit）を実データ投入前に体験したい場合に利用できます。
+
+```
+Rwiki-dev/sample/
+└── fairy-tale/
+    └── 三匹の子豚.md      ← synthesize/query の動作確認用サンプル
+```
+
+**試し方の手順詳細は [docs/test-log.md](./test-log.md) を参照してください。**
+
+> サンプルデータ（`sample/` 配下）は今後、異なるタスクタイプ（論文要約、会議メモ、LLM ログ等）の動作確認用に追加される可能性があります。
+
 ---
 
 ## 基本的な運用サイクル
