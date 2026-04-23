@@ -303,6 +303,105 @@ audit はレポートのみ（`logs/` に出力）。`wiki/`・`raw/`・`review/
 
 ---
 
+## タスク早見表
+
+各タスクについて「**どこに置くか・前提条件・実行方法・出力**」をタスクごとに整理した cheat sheet。**「拒絶されて初めて暗黙のルールに気づく」を避けるため**、コマンドを実行する前に参照してください。
+
+### データ投入
+
+**`rw lint`** — `raw/incoming/` のファイルを検証
+
+- **入力**: `raw/incoming/` 配下
+- **前提**: なし（コミット不要）
+- **実行**: `rw lint`（CLI）
+- **出力**: `logs/lint_latest.json` + 標準出力
+
+**`rw ingest`** — `raw/incoming/` のファイルを `raw/` に取り込む
+
+- **入力**: `raw/incoming/` 配下
+- **前提**: 直近の `rw lint` で FAIL == 0
+- **実行**: `rw ingest`（CLI）
+- **出力**: `raw/` に移動 + 自動コミット
+
+---
+
+### 知識生成
+
+**`synthesize`（Prompt / 対話型）** — 生ソースから wiki ページ候補を生成
+
+- **入力**: `raw/` 配下の任意ファイル（論文・記事・会議メモ等）
+- **前提**: **git commit 済み**
+- **実行**: Claude CLI で synthesize タスクを対話実行（`rw` コマンドではない）
+- **出力**: `review/synthesis_candidates/`、**Rwiki wiki ページ形式**
+
+**`rw synthesize-logs`（CLI Hybrid）** — LLM 対話ログから決定事項を抽出
+
+- **入力**: **`raw/llm_logs/` 配下のみ**（他ディレクトリの LLM ログは対象外）
+- **前提**: **git commit 済み**
+- **実行**: `rw synthesize-logs`（CLI）
+- **出力**: `review/synthesis_candidates/`、**`Summary / Decision / Reason / Alternatives / Reusable Pattern` 形式**
+
+---
+
+### 知識の活用
+
+**`rw query answer`（CLI Hybrid）** — wiki 知識に基づいて直接回答
+
+- **入力**: `wiki/` の既存コンテンツ（参照のみ）
+- **前提**: `wiki/` にコンテンツが存在
+- **実行**: `rw query answer "<質問>"`
+- **出力**: **標準出力のみ**（アーティファクト生成なし）
+
+**`rw query extract`（CLI Hybrid）** — wiki から構造化アーティファクトを生成
+
+- **入力**: `wiki/` の既存コンテンツ（参照のみ）
+- **前提**: `wiki/` にコンテンツが存在
+- **実行**: `rw query extract "<質問>" [--scope ...] [--type ...]`
+- **出力**: `review/query/<query_id>/` に **4 ファイル**（`question.md` / `answer.md` / `evidence.md` / `metadata.json`）
+
+**`rw query fix`（CLI Hybrid）** — 既存クエリアーティファクトの lint エラーを修復
+
+- **入力**: `review/query/<query_id>/` の 4 ファイル
+- **前提**: 対象クエリが存在 + 直近の lint で指摘あり
+- **実行**: `rw query fix <query_id>`
+- **出力**: 同一クエリのアーティファクトを更新
+
+---
+
+### 承認と監査
+
+**`rw approve`（CLI）** — 承認済み synthesis 候補を wiki に昇格
+
+- **入力**: `review/synthesis_candidates/` の承認済みファイル
+- **前提**: frontmatter に **`status: approved` + `reviewed_by:` + `approved: YYYY-MM-DD`** が揃っている
+- **実行**: `rw approve`（CLI）
+- **出力**: `wiki/synthesis/` に昇格 + 候補の `promoted: true` 更新（**手動コミット必要**）
+
+**`rw audit`（CLI / CLI Hybrid）** — `wiki/` の整合性を読み取り専用で監査
+
+- **入力**: `wiki/` の全ページ
+- **前提**: `wiki/` にコンテンツが存在
+- **実行**: `rw audit {micro|weekly|monthly|quarterly}`
+- **出力**: `logs/audit-<tier>-<timestamp>.md` + 標準出力
+- **制約**: `wiki/` ・ `raw/` ・ `review/` を**一切変更しない**
+
+---
+
+### よくある落とし穴
+
+Rwiki の Failure Conditions が「拒絶」として現れる典型パターン。事前に確認することで回避できます。
+
+- **入力が `raw/llm_logs/` 外なのに `synthesize_logs` を指定した**
+  → `synthesize_logs` は `raw/llm_logs/` 限定。任意パスの LLM ログには非対応。ディレクトリごと `raw/llm_logs/` に配置 + git commit してから再実行。
+- **git commit していないのにタスクを実行した**
+  → Rwiki は commit 済みの入力のみ扱う。`git status` で確認 → 未コミットなら `git add <path> && git commit` してから再実行。
+- **既存 Agent を指定して別の出力形式を求めた**
+  → Agent 定義の出力形式は固定。別形式が必要な場合は**別タスクの起票が必要**（例: 物語構造からの教訓抽出 → 新規 `narrative_extract` タスクを検討）。
+- **CLI Hybrid タスクを対話型 prompt で呼ぼうとした**
+  → `synthesize-logs` / `query-*` / `audit monthly|quarterly` は必ず `rw` コマンドで実行（Claude CLI から直接呼ばない）。
+
+---
+
 ## CLIコマンドリファレンス
 
 ### `rw init`
