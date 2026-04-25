@@ -1,6 +1,6 @@
-# Rwiki v2 シナリオ仕様書（Draft v0.7.4）
+# Rwiki v2 シナリオ仕様書（Draft v0.7.5）
 
-**Version**: 0.7.4
+**Version**: 0.7.5
 **Date**: 2026-04-25
 **Purpose**: Rwiki v2 の**ユースケース集**。各 Spec の requirements 起草時に「このシナリオをどう満たすか」の基点として参照される。
 
@@ -42,7 +42,7 @@
 |---|---------|------|------|------|------|---------|
 | 7 | 既存 wiki 拡張 | 進化・編集 | L3 | MVP | 合意済 | 2, 4, 7 |
 | 8 | synthesis 候補 merge | 進化・編集 | L2/L3 | MVP | 合意済 | 4, 7 |
-| 9 | wiki ページ分割 | 進化・編集 | L3 | MVP | 未議論 | 7 |
+| 9 | wiki ページ分割 | 進化・編集 | L3 / L2 振り分け | MVP | 合意済（v0.7.5、High gap 解消、Medium 残） | 7, 5 |
 | 10 | audit ERROR 修正ループ（+ graph consistency） | 品質管理 | L2/L3 | MVP | 合意済（v0.7.1） | 7, 5 |
 | 11 | archive / deprecation | 品質管理 | L3（+L2 edges 連動） | MVP | 合意済 | 7 |
 | 12 | タグ vocabulary 管理 | 品質管理 | L3 | MVP | 合意済 | 1 |
@@ -55,7 +55,7 @@
 | 19 | rollback / unapprove | 運用 | L3 | MVP | 合意済 | 4, 7 |
 | 20 | custom skill 作成 | 運用・拡張 | Meta | MVP | 合意済 | 2 |
 | 25 | llm_log_extract | 生成 | L1→L3 | MVP | 合意済 | 2 |
-| 26 | incoming lint-fail リカバリ | 取り込み | L0→L1 | MVP | 未議論 | 0, 4 |
+| 26 | incoming lint-fail リカバリ | 取り込み | L0→L1 | MVP | 合意済（v0.7.5、High gap 解消、Medium 残） | 0, 4, 2 |
 | 33 | メンテナンス UX 全般原則 | 運用 | All | MVP | 合意済（v0.7.1 L2 統合） | 0, 4 |
 | **34** | **Entity/Relation 自動抽出** | **L2 管理** | **L1→L2** | **MVP** | **skeleton（v0.7.1、要件化待ち）** | **5, 2** |
 | **35** | **Edge reject workflow** | **L2 管理** | **L2** | **MVP** | **skeleton（v0.7.1、要件化待ち）** | **5, 4** |
@@ -73,13 +73,13 @@
 | 31 | vault ポータビリティ | 運用進化 | All | Future | 将来拡張 | — |
 | 32 | raw dead-link / source chain | — | L1/L2 | MVP | Scenario 13 に統合 | 7, 5 |
 
-**集計（v0.7.1 時点）**: MVP 対象 22 件（合意済 16、skeleton 5、未議論 1 = Scenario 9 と 26）、統合済 3 件、将来拡張 7 件、計 32 件。
+**集計（v0.7.5 時点）**: MVP 対象 22 件（合意済 18、skeleton 5、未議論 0）、統合済 3 件、将来拡張 7 件、計 32 件。**全 MVP scenario が合意済 or skeleton に到達**。
 
 **凡例**:
 - **合意済**: ユーザーフローと spec 参照で要件化完了、`/kiro-spec-init` 起票可能
-- **合意済（v0.7.1）**: 本版で L2 Graph Ledger 統合対応済み
+- **合意済（v0.7.X）**: 本版で L2 Graph Ledger 統合 / High gap 解消等の改訂を受けた scenario
 - **skeleton**: フロー骨子は確定、詳細要件化は Phase B-2 以降
-- **未議論**: フロー未確定、要討議
+- ~~**未議論**~~（v0.7.5 で 0 件に到達）
 
 ---
 
@@ -87,11 +87,11 @@
 
 ### Scenario 26: Incoming lint-fail 滞留リカバリ
 
-**Status**: 未議論（v2 初版対象）  
+**Status**: 合意済（v0.7.5、High gap 解消、Medium 残）  
 **Priority**: MVP  
 **Theme**: 取り込み  
-**Related**: Scenario 10（audit ERROR 修正、層が違う）  
-**Specs**: Spec 0 (lint policy), Spec 4 (CLI)
+**Related**: Scenario 10（audit ERROR 修正、層が違う）、Scenario 33（長期滞留の autonomous 通知）  
+**Specs**: Spec 0 (lint policy), Spec 4 (CLI), Spec 2 (frontmatter_completion skill)
 
 #### ユースケース
 
@@ -134,6 +134,71 @@ Claude: [内部: rw ingest --only-pass]
   FAIL 2 件は滞留中です。後で `rw lint --show-pending` で一覧できます。
 ```
 
+#### 修復方法 (b)(c) の詳細（ユーザー視点）
+
+**(b) 一括修復**: LLM が FAIL 全件を一気に分析し、修復案をまとめて提示
+
+```
+You: (b) 一括修復で
+
+Claude: [内部: frontmatter_completion skill で各 FAIL に proposal 生成]
+
+  修復提案:
+    1. draft-2024.md (empty file)
+       → 提案: 空ファイルは削除を推奨（誤作成と推測）
+    2. notes-a.md (YAML 不正、tags: [foo, bar の閉じカッコなし)
+       → 提案: tags: [foo, bar] に修正
+
+  各提案の処理:
+    [a] 全件採用（一括 fix）
+    [b] 個別に確認（次の対話へ）
+    [c] 部分採用（採用するものだけ番号で指示）
+
+You: [a]
+
+Claude: 2 件修正、再 lint で 10 PASS 確認、ingest 続行可能。
+```
+
+**(c) 個別対話**: ファイルごとに `rw chat` 内で深掘り修復
+
+```
+You: (c) 個別に
+
+Claude: 1 ファイル目: draft-2024.md (empty)
+  → 削除しますか？ それとも内容を書く予定ですか？
+
+You: 削除して
+
+Claude: [削除 + 次のファイル]
+  2 ファイル目: notes-a.md (YAML parse error)
+  問題箇所: line 3 'tags: [foo, bar' の閉じカッコ欠落
+  修正案: tags: [foo, bar]
+  どうしますか？
+...
+```
+
+frontmatter_completion skill の詳細は **Spec 2 所管**。修復行為そのもの（提案採用 / 棄却）は **decision_log（§2.13）** に記録される。
+
+#### Pending list 機構（ユーザー視点）
+
+```bash
+rw lint --show-pending   # 滞留中の FAIL/WARN 一覧
+```
+
+出力例:
+```
+滞留 FAIL 2 件 / WARN 1 件:
+  draft-2024.md      empty file       3 日前から滞留
+  notes-a.md         YAML parse error  3 日前から滞留
+  short-memo.md      too short (warn)  3 日前から滞留
+
+長期滞留（7 日超）: なし
+```
+
+長期滞留が一定件数を超えると Maintenance autonomous mode で通知（Scenario 33 連携）。
+
+Pending list の記録 schema・retry 機構・autonomous 通知閾値は **Spec 0 / Spec 4 所管**。
+
 #### ユーザーが呼ぶ意図
 
 - 「incoming を検証したい」
@@ -150,8 +215,16 @@ CLI コマンド名・オプション・サブコマンド体系は **Spec 0 / S
 #### Edge cases（ユーザー視点）
 
 - 全件 FAIL → ingest 対象 0 件（警告表示）
-- FAIL 滞留が多数蓄積 → 一括修復を推奨
+- FAIL 滞留が多数蓄積 → Maintenance autonomous mode で通知（Scenario 33 連携）
+- 長期滞留（30 日超）→ 自動アーカイブ提案 or 削除促進
 - WARN の扱い（default 通過 / strict モード）は Spec 0 参照
+- Empty file → user に「削除 / placeholder として保持」を確認
+
+#### 残 Medium gap（v0.8 候補）
+
+- WARN の選択肢別扱いの細分化
+- frontmatter_completion skill との連携の詳細仕様（prompt / output / validation）
+- Curation Provenance での修復決定の記録粒度（個別 fix or batch fix で粒度が違う）
 
 ---
 
@@ -509,11 +582,12 @@ merge strategy の列挙、preview / cancel のサブコマンド体系、frontm
 
 ### Scenario 9: 肥大化した wiki ページの分割
 
-**Status**: 未議論（v2 対象）  
+**Status**: 合意済（v0.7.5、High gap 解消、Medium 残）  
 **Priority**: MVP  
 **Theme**: 進化・編集  
-**Related**: Scenario 11（archive、元ページの処遇）  
-**Specs**: Spec 7
+**Layer**: L3 wiki 中心、L2 edges 振り分けと L3 trust chain 保全を伴う  
+**Related**: Scenario 11（archive、元ページの処遇）、Scenario 8（merge、逆操作）、Scenario 10（audit でも検出）  
+**Specs**: Spec 7（中心）、Spec 5（L2 edges 振り分け API）
 
 #### ユースケース
 
@@ -556,36 +630,82 @@ Claude: [再計算]
 
 You: OK
 
-Claude: [Stage 4-5: 参照元解析 + 差分生成]
-  元 wiki/methods/sindy.md への参照 42 件を検出。
-  分割後は以下に振り分け:
-    - 「SINDy の概要」言及 20 件: 新 wiki/methods/sindy.md で継続
-    - 「SINDy-MPC」言及 8 件: sindy-advanced.md に向ける
-    - 「SINDy 実装例」言及 3 件: sindy-implementation.md に向ける
-    - 曖昧 11 件: 要確認
+Claude: [Stage 4-5: 参照元解析 + L2 edges 振り分け + 差分生成]
 
-  review/synthesis_candidates/ に 5 ファイル生成:
+  L3 backlinks 解析:
+    元 wiki/methods/sindy.md への wiki 内参照 42 件を検出。
+    分割後の振り分け:
+      - 「SINDy の概要」言及 20 件: 新 wiki/methods/sindy.md で継続
+      - 「SINDy-MPC」言及 8 件: sindy-advanced.md に向ける
+      - 「SINDy 実装例」言及 3 件: sindy-implementation.md に向ける
+      - 曖昧 11 件: 要確認（Stage 5 個別判断）
+
+  L2 edges 振り分け（Spec 5 API 経由）:
+    元 wiki/methods/sindy.md を source / target に持つ edges 38 件:
+      - 「概要」関連の edge（数学基盤、入門的関係）22 件 → 新 sindy.md
+      - 「Extensions」関連 edge（E-SINDy 等への extended_by）9 件 → sindy-advanced.md
+      - 「Implementation」関連 edge 4 件 → sindy-implementation.md
+      - 不明 3 件: 個別判断
+    各 edge の evidence_ids は分割後ページにも継承（trust chain 保全）。
+
+  Trust chain への影響:
+    元ページの sources（raw/papers/local/brunton-2016.md 等 5 件）は
+    全分割後ページに**複製継承**（同じ raw が複数 wiki ページに裏付けを与える）。
+    L2 evidence.jsonl の関連 evidence_id は影響なし（raw は変わらないため）。
+
+  review/synthesis_candidates/ に生成:
     - sindy-split-new-overview.md
     - sindy-split-new-advanced.md
     - sindy-split-new-implementation.md
     - backlinks-update-XXX.md × N
+    - edge_redistribution-sindy-2026-04-25.md ★ L2 振り分け案
 
-  曖昧 11 件について個別確認が必要です...（Stage 5 個別判断）
+  Curation Provenance（§2.13）への記録:
+    decision_log に以下を記録予定（approve 時確定）:
+      - decision_type: split
+      - subject_refs: [wiki/methods/sindy.md, sindy-advanced.md, sindy-implementation.md]
+      - reasoning: "Core 概念 / 拡張 / 実装の 3 軸で分離。User が
+                    Extensions と Applications を統合判断（chat session 参照）"
+      - alternatives_considered: [4-way 分割案 (rejected by user)]
+      - context_ref: raw/llm_logs/chat-sessions/chat-<ts>.md
+
+  曖昧 14 件（L3 11 + L2 3）について個別確認が必要です...（Stage 5）
 ```
+
+#### Trust chain と L2 edges の保全（v0.7.5 明確化）
+
+分割は L1 raw → L2 ledger → L3 wiki の trust chain を破壊しない設計:
+- **L1 raw**: 変更なし（元 source ファイルは保持）
+- **L2 evidence.jsonl**: 変更なし（evidence そのものは raw 由来で不変）
+- **L2 edges.jsonl**: 元ページ id を持つ edges を分割後ページに振り分け、`split_event` を edge_events.jsonl に記録（type: split_origin / split_target）
+- **L3 wiki**: 元ページが分割後ページに分割、各分割後ページが元の sources を継承
+
+**Audit による検証**: 分割後に `rw audit graph` で trust chain 整合性を verify、dangling evidence なきことを確認。
 
 #### ユーザーが呼ぶ意図
 
 - 「肥大化した wiki ページを分割したい」 → `rw split`
 
-自動クラスタリング等のオプション、Skill 選択（構造分析系）、backlinks 解析、参照元更新差分、`superseded_by:` frontmatter、分割判断基準（行数閾値）、follow-up 追跡は **Spec 7** 所管。
+自動クラスタリング等のオプション、Skill 選択（構造分析系）、backlinks 解析、L2 edges 振り分け API、`superseded_by:` frontmatter、分割判断基準（行数閾値）、follow-up 追跡は **Spec 7** 所管。L2 edges 振り分けの API spec は **Spec 5 所管**（既存 `normalize_frontmatter` の拡張または別 API）。
 
-**Dangerous op category**: 高（8 段階 + backlinks 解析）
+**Dangerous op category**: 高（8 段階 + backlinks 解析 + L2 edges 振り分け + Curation Provenance reasoning 必須）
 
 #### Edge cases
 
-- **参照元が大量（100+）**: 一括更新時の commit 分割戦略
-- **分割境界が曖昧**: LLM が人間判断を求める
-- **既に synthesis に統合されている内容**: `wiki/synthesis/` 側も連動更新必要
+- **参照元が大量（100+）**: 一括更新時の commit 分割戦略（Spec 7 所管）
+- **分割境界が曖昧**: LLM が人間判断を求める（Curation Provenance に判断理由が記録される）
+- **既に synthesis に統合されている内容**: `wiki/synthesis/` 側も連動更新必要、audit で検出
+- **L2 edges 振り分けが曖昧**: 各 edge の evidence を見て user が個別判断、または複数ページに複製継承
+- **段階的分割が必要な場合**: 1 回目で粗い分割、後日 audit で細分化提案（v0.8 候補、Medium gap）
+
+#### 残 Medium gap（v0.8 候補）
+
+- 分割閾値の default 値（3000 行 / 5000 行 等）の合意 → Spec 7 起票時に決定
+- 段階的分割 vs 一括分割の選択 UI
+- L3 `related:` cache invalidation の挙動（通常の stale_pages mechanism で十分か検証）
+- 外部参照（source URL）の振り分けポリシー
+- 自動 trigger（audit 警告）vs user 主導の default
+- Hypothesis / Perspective scoring への影響（分割後ページの novelty / recency 計算リセット？）
 
 ---
 
@@ -2278,8 +2398,9 @@ Claude: [内部: 指定 edge の history を取得]
 | 2026-04-25 | Draft v0.7.1（Phase B-1 完了: scenario 簡略化 + L2 統合） | **方針転換**「シナリオに仕様を書き込むのは過剰、内部動作は spec に委譲」を受け、Scenario 14 の YAML config / frontmatter schema / Step 1-5 詳細等を consolidated-spec §5.9.1 / §5.9.2 / Spec 5 / Spec 6 参照に委譲（~40% 削減）。**Scenario 13/10/18/33 を L2 統合で v0.7 書き換え**: 13 evidence.jsonl 一級市民化、10 `rw audit graph` 追加、18 pre-flight に L2 state サマリ、33 maintenance surface に reject queue / decay / typed-edge 率。**Scenario 34-38 skeleton 追加**: extract-relations / reject workflow / Hygiene 実行 / lifecycle 管理 / edge events 監査（全 skeleton、詳細は Spec 5 所管）。**Scenario 12/15/20/25 軽微更新**: Layer 列追加、L2 連携注記。**§10 付録 v0.7 対応**: シナリオ連携に 4 組追加、review layer 表に L2 ledger ファイル群を併記、skill マッピング v0.7 更新。 |
 | 2026-04-25 | Draft v0.7.2（Phase B-1 仕上げ: 純粋なユースケース集化） | 「シナリオには**シナリオ以外を書かない**」方針を徹底。**削除**: §1 ビジョン要約（Trust+Graph+Perspective+Hypothesis、3 層アーキテクチャ、Graph Ledger 核心、中核原則、コマンド階層 4 Level — 全て consolidated-spec §1-§3 に所管）、各シナリオの `#### 内部動作` セクション全削（Scenario 26/15/25/7/8/9/11/12/17/19/20）、§10.2 共通パターン・§10.3 Skill マッピング・§10.4 Review 層の種類（横断仕様で scenarios スコープ外、consolidated-spec 所管）。**残置**: シナリオ本体、§1 索引表、§10.1 シナリオ間連携、§10.2 改訂履歴。各シナリオでは **コマンド（ユーザー視点）** と **Dangerous op category** / **Edge cases** / **シナリオ間連携** のみ残し、frontmatter スキーマ・File operations・Skill 定義・差分マーカー書式・git 操作詳細等は全て対応 Spec 参照に委譲。 |
 | 2026-04-25 | Draft v0.7.3（未定コマンド詳細の抽象化） | 「詳細未定なコマンドを含むと spec 策定時に混乱する」方針を受け、**全シナリオの具体的な CLI コマンド表記を「ユーザーが呼ぶ意図」のリストに置換**。削除: 詳細 flag（`--since "7 days"`, `--only-pass`, `--max-questions N`, `--commit <sha>`, `--dry-run`, `--yes`, `--auto-fixable-only`, `--check-all`, `--filter=...` 等）、サブコマンド列挙表（`rw tag scan/stats/diff/merge/split/rename/...`, `rw skill draft/test/install/list/show/...`, `rw merge preview/cancel`, `rw query promote/promote-preview/list`）、Scenario 34-38 タイトルからの具体コマンド名括弧、将来拡張の `rw sync --source zotero ...`, `rw export --format marp` 等。**残置**: ユーザー意図記述と、そのコマンドの正式仕様が所管 Spec（主に Spec 4 CLI / Spec 2 Skill / Spec 5 L2 / Spec 7 Audit）であることの明示。 |
+| 2026-04-25 | Draft v0.7.5（Scenario 9 / 26 未議論の High gap 解消） | 「未議論」扱いだった 2 シナリオを精査し、High 優先度 gap 計 5 件を解消。MVP 全 22 件が合意済 or skeleton に到達:<br>• **Scenario 26 Incoming lint-fail リカバリ**:<br>  - Gap #1（pending list 機構）解消: `rw lint --show-pending` の出力例、長期滞留時の Maintenance autonomous 通知（Scenario 33 連携）、retry 機構は Spec 0/4 所管<br>  - Gap #3（修復方法 (b)(c) の詳細）解消: (b) 一括修復は frontmatter_completion skill 経由で全件 proposal、user が一括/個別 approve、(c) 個別対話は rw chat で 1 ファイルずつ深掘り。修復行為は decision_log に記録（§2.13 連携）<br>  - Status: 未議論 → 合意済（v0.7.5、High gap 解消、Medium 残）<br>• **Scenario 9 肥大化 wiki ページ分割**:<br>  - Gap #1（L2 edges 振り分け）解消: 元ページ id を持つ edges を分割後ページに振り分け（Spec 5 API 経由）、各 edge の evidence_ids を継承して trust chain 保全<br>  - Gap #3（Trust chain 保全）解消: L1 raw / L2 evidence は不変、L2 edges を振り分け、`split_event` を edge_events.jsonl に記録（type: split_origin / split_target）、分割後 audit graph で verify<br>  - Gap #7（Curation Provenance）解消: split は重要 decision として decision_log に reasoning 必須記録（章ごとの振り分け理由、user 判断と alternatives）<br>  - Status: 未議論 → 合意済（v0.7.5、High gap 解消、Medium 残）<br>• **Index 表更新**: 集計を MVP 22 件（合意済 18 / skeleton 5 / 未議論 0）に、凡例から「未議論」を削除（0 件到達）<br>• **残 Medium gap**: Scenario 26 は WARN 細分化 / skill prompt 仕様 / Curation 記録粒度、Scenario 9 は分割閾値 default / 段階的分割 / 自動 trigger / Hypothesis scoring 影響等。これらは Spec 7 / Spec 0 / Spec 2 起票時に決定可能。 |
 | 2026-04-25 | Draft v0.7.4（シナリオ間矛盾レビュー patch） | 9 次元 thorough レビューを実施し、Medium 2 件を修正:<br>• **Scenario 34 Related を補完**: Scenario 15（interactive_synthesis 対話ログが抽出素材）と Scenario 25（llm_log_extract と同素材から extract 可能）への双方向参照を追加。ユースケース説明にも `raw/llm_logs/` 由来の対話ログが入力源である旨を明記<br>• **Scenario 10 / 13 の audit 責務分離**: `rw audit graph`（Scenario 10）= L2 graph 構造整合性（cache 乖離 / event 矛盾 / rejected 再出現）、`rw audit evidence`（Scenario 13）= evidence chain 健全性（raw 死活 / dangling 深掘り / trust 分断）、重複領域である L2 dangling evidence 参照は「Scenario 10 で第一次検出 → Scenario 13 で深掘り」という役割分担を両シナリオに明記<br><br>**誤検として却下した 4 件**（検査済みとして記録）:<br>• Scenario 14 hypothesis approve と Scenario 16 query promote の dangerous op 分類差 — 両方「最高 / 8 段階必須」で既に整合、実装複雑度の違いは dangerous op 分類とは別次元<br>• Scenario 12 `.rwiki/vocabulary/tags.yml` と Scenario 33 のパス表記差 — Scenario 33 は maintenance UX 診断で Scenario 12（vocabulary 所管）に委譲する構造（既に「← Scenario 12」参照あり）、矛盾ではない<br>• Scenario 7 ↔ 11 の Related 片方向参照 — 実際は双方向記載あり（agent の自己誤検）<br>• Perspective autonomous mode の記録先不明 — Scenario 14 §4「結果の記録形式」で `review/perspectives/` と明示済み<br><br>**スキップ**（Low 1 件）: Scenario 8 synthesis merge の skill 名明示 — skill 詳細は Spec 2 (skill-library) 所管、scenarios 側で書かない方針と整合 |
 
 ---
 
-_本ドキュメントは `rwiki-v2-consolidated-spec.md` と並行参照される。v0.7.4 時点で scenarios.md は純粋なユースケース集（ユーザー意図のみ）として整形完了、シナリオ間矛盾レビューも実施済み。コマンド仕様は全て対応 Spec 所管。_
+_本ドキュメントは `rwiki-v2-consolidated-spec.md` と並行参照される。v0.7.5 時点で全 MVP scenario が合意済 or skeleton に到達（未議論 0 件）、コマンド仕様は全て対応 Spec 所管。_
