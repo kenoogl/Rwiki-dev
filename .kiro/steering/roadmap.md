@@ -29,16 +29,16 @@ Rwiki v2 は **Curated GraphRAG**（候補 graph + 人間承認 wiki + Hygiene +
 - **Concurrency lock**: `.rwiki/.hygiene.lock` で Hygiene バッチと CLI 操作を排他（Spec 4 ↔ Spec 5）
 - **Reject 理由必須**: rejected_edges.jsonl の `reject_reason_text` は空文字禁止（reject_learner 学習素材）
 
-## Spec 一覧
+## Specs (dependency order)
 
-- [ ] **Spec 0**: rwiki-v2-foundation — 傘 spec、ビジョン・原則・用語集・3 層アーキテクチャ。Dependencies: none
-- [ ] **Spec 1**: classification-system — カテゴリ、frontmatter、vocabulary。Dependencies: Spec 0
-- [ ] **Spec 4**: cli-mode-unification — `rw chat`、全コマンド `rw` 統一、対話 default。Dependencies: Spec 0, 1
-- [ ] **Spec 7**: lifecycle-management — deprecate/retract/archive/merge/split/rollback。Dependencies: Spec 4
-- [ ] **Spec 5**: knowledge-graph — typed edges、graph query、P0-P4 段階実装。Dependencies: Spec 0, 1, 4, 7
-- [ ] **Spec 2**: skill-library — スキル定義・dispatch・custom skill、extraction skills 含む。Dependencies: Spec 5
-- [ ] **Spec 3**: prompt-dispatch — スキル選択メカニズム。Dependencies: Spec 1, 2
-- [ ] **Spec 6**: perspective-generation — 視点創発・仮説生成（本丸）。Dependencies: 全前 spec
+- [ ] rwiki-v2-foundation -- 傘 spec、ビジョン・原則・用語集・3 層アーキテクチャ. Dependencies: none
+- [ ] rwiki-v2-classification -- カテゴリ、frontmatter、vocabulary. Dependencies: rwiki-v2-foundation
+- [ ] rwiki-v2-cli-mode-unification -- rw chat、全コマンド rw 統一、対話 default. Dependencies: rwiki-v2-foundation, rwiki-v2-classification
+- [ ] rwiki-v2-lifecycle-management -- deprecate/retract/archive/merge/split/rollback. Dependencies: rwiki-v2-foundation, rwiki-v2-classification
+- [ ] rwiki-v2-knowledge-graph -- typed edges、graph query、P0-P4 段階実装. Dependencies: rwiki-v2-foundation, rwiki-v2-classification, rwiki-v2-cli-mode-unification, rwiki-v2-lifecycle-management
+- [ ] rwiki-v2-skill-library -- スキル定義・dispatch・custom skill、extraction skills 含む. Dependencies: rwiki-v2-knowledge-graph
+- [ ] rwiki-v2-prompt-dispatch -- スキル選択メカニズム. Dependencies: rwiki-v2-classification, rwiki-v2-skill-library
+- [ ] rwiki-v2-perspective-generation -- 視点創発・仮説生成（本丸）. Dependencies: rwiki-v2-foundation, rwiki-v2-classification, rwiki-v2-cli-mode-unification, rwiki-v2-lifecycle-management, rwiki-v2-knowledge-graph, rwiki-v2-skill-library, rwiki-v2-prompt-dispatch
 
 ## 5 Phase 実装順序
 
