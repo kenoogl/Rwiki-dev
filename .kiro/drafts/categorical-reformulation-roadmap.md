@@ -162,6 +162,24 @@ Section 7.5 self-application study が **存在を示す** S が一意か、fixe
 
 **含意**: Auto-generative property の形式的定式化
 
+### Hypothesis 8: Curation provenance は profunctor / decoration
+
+§2.13 で導入された decision_log は、edges.jsonl と evidence.jsonl の **両方を indexing する**追加層:
+
+```
+P : (Decision)^op × (Edge | Page | Hypothesis) → Set
+    decision_log entry が「対象（edge / page / hypothesis）に対する判断」を記述
+```
+
+または **decorated category** として、category Edges / Pages の各 morphism / object に decision_log の記録を decoration として付加。
+
+**圏論的問い**:
+- Curation provenance は trust chain（vertical functor chain）に対する **horizontal categorical structure** か
+- Decision_log の context_ref は **lax functor** として記述可能か
+- Self-application（H7）と curation provenance（H8）の合成が monad を成すか
+
+**含意**: 「what」と「why」の二層構造を categorical lens で正確に記述、§2.10 と §2.13 の orthogonality を formal に証明
+
 ---
 
 ## 3. Rwiki v2 を用いた reformulation の手順

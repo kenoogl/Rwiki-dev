@@ -37,7 +37,7 @@ a "hallucination network", and (2) the *static graph assumption* — once
 constructed, knowledge graphs do not adapt to use patterns or accumulating
 contradictions.
 
-We propose **Curated GraphRAG**, a framework with three contributions.
+We propose **Curated GraphRAG**, a framework with four contributions.
 First, a **three-layer trust gradient** (Raw / Graph Ledger / Curated Wiki)
 with distinct human involvement at each layer: humans write at L1, *only
 reject* at L2, and *approve* at L3. Second, **Hygiene** — five operational
@@ -46,7 +46,12 @@ Edge Merging) that govern how a graph evolves through use, with explicit
 mathematical semantics for confidence dynamics. Third, an **evidence-backed
 candidate graph** model where every edge carries provenance, with a hard
 upper bound (≤0.3) on confidence for evidence-less edges to prevent
-hallucination drift.
+hallucination drift. Fourth, **curation provenance** — a decision log
+recording the *why* of each curation step, orthogonal to the *what* of
+evidence chains, enabling reproducibility, self-reflection, and
+self-application. We integrate visualization (CLI views, markdown
+timelines, embedded mermaid diagrams) directly into the recording schema
+to ensure provenance is immediately consumable.
 
 A distinctive property of our framework is *contradiction preservation*:
 unlike traditional knowledge bases that resolve conflicts, Curated GraphRAG
@@ -179,6 +184,35 @@ Perspective generation の土壌として機能
 - Atomic transaction semantics
 - 5 Phase progression: P0 (Ledger) → P1 (Query cache) → P2 (Hygiene) → P3 (Competition L2/3) → P4 (export)
 - MVP 範囲: P0 + P1 + P2
+
+### 5.5 Curation Provenance Layer（★ 新貢献、2 pages）
+
+#### 5.5.1 Decision Log Schema
+- decision_log.jsonl の 9 fields（decision_id / ts / type / actor / subject_refs / reasoning / alternatives_considered / outcome / context_ref）
+- 10 decision types
+- Append-only、git 管理 default、privacy mode
+
+#### 5.5.2 Selective Recording
+- Volume 爆発防止のため auto-record 閾値を tuned に
+- 6 trigger 条件（境界決定 / 矛盾 / 人間 action / status 遷移 / synthesis 操作）
+- Routine events は edge_events.jsonl に集約、decision_log には記録しない
+
+#### 5.5.3 Reasoning Input（Hybrid）
+- Auto-generate from chat session（rw chat の context）
+- Manual `--reason` flag
+- Default skip with marker
+- Required reasoning for high-stakes decisions
+
+#### 5.5.4 Visualization Tiers
+- Tier 1: CLI views (`rw decision history / recent / stats / search / contradictions`)
+- Tier 2: Markdown timeline (`rw decision render` → `review/decision-views/`)
+- Tier 3: Mermaid embeddings (gantt / flowchart) — Obsidian / GitHub render
+- Tier 4 / 5: Phase 2 候補（graph view 拡張、web dashboard）
+
+#### 5.5.5 Orthogonality to Evidence Chain
+- Trust chain (vertical, §2.10): L1 raw → L2 evidence → L3 sources
+- Curation provenance (horizontal, §2.13): decision_log → context_ref → chat-session
+- 両方が交差する point から WHY と WHAT が同時に辿れる
 
 ### 6. Discovery: Perspective and Hypothesis Generation（2 pages）
 
