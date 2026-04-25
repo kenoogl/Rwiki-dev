@@ -59,3 +59,7 @@ Skills are located in `.claude/skills/kiro-*/SKILL.md`
 - Load entire `.kiro/steering/` as project memory
 - Default files: `product.md`, `tech.md`, `structure.md`
 - Custom files are supported (managed via `/kiro-steering-custom`)
+
+## 出力フォーマット
+    - 表のセルは日本語全角45文字以内
+    - 長文は表外に出す
