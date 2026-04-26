@@ -246,7 +246,7 @@ Spec 4 / Spec 7 が本 spec を引用することで、Perspective / Hypothesis 
 5. When 昇格が完了した, the Spec 6 Perspective-Hypothesis Subsystem shall Spec 5 `record_decision` API を呼び、`decision_type: synthesis_approve` で必須記録することを規定する（Spec 5 Requirement 11.6「`synthesis_approve` は reasoning 必須」と整合）。
 6. The Spec 6 Perspective-Hypothesis Subsystem shall Hypothesis 本体を `wiki/synthesis/` 昇格後も `review/hypothesis_candidates/` に残す（物理削除しない）ことを規定する（Requirement 7.7「歴史保全」と整合）。
 7. If Spec 7 の 8 段階対話が user の中断で完了しなかった, then the Spec 6 Perspective-Hypothesis Subsystem shall hypothesis status を `confirmed` のまま維持し、`successor_wiki:` を記録しないことを規定する（再 approve 可能な状態を保つ）。
-8. The Spec 6 Perspective-Hypothesis Subsystem shall `rw approve <hypothesis-id>` を `--auto` 不可コマンドとして扱うことを規定し（Spec 7 Requirement 6.4 / Spec 4 Requirement 3.3 と整合、`promote-to-synthesis` は `--auto` 不可リスト）、`--auto` flag が渡されても 8 段階対話を必ず経由することを規定する。
+8. The Spec 6 Perspective-Hypothesis Subsystem shall `rw approve <hypothesis-id>` を `--auto` 不可コマンドとして扱うことを規定し（Spec 7 Requirement 6.4 / Spec 4 Requirement 3.3 と整合、Spec 7 の `promote-to-synthesis`（= Spec 4 R3.3 の `rw query promote`） は `--auto` 不可リスト）、`--auto` flag が渡されても 8 段階対話を必ず経由することを規定する。
 
 ### Requirement 10: Maintenance autonomous trigger 6 種の surface
 

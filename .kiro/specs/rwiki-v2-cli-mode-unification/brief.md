@@ -76,4 +76,33 @@ CLI のエントリは `rw_cli.py`、各タスクを `cmd_*` 関数で実装。`
 ## Coordination 必要事項
 
 - **Spec 4 ↔ Spec 5**: `.rwiki/.hygiene.lock` Concurrency strategy の整合
+- **Spec 4 ↔ Spec 5**: Decision Log API（`record_decision()` / `query_decisions()` / `find_contradictions()` / `render_decision_timeline()`）契約 — Requirement 15 / 16 由来
+- **Spec 4 ↔ Spec 1**: `rw approve` の `vocabulary_candidates/` dispatch 拡張 — Spec 1 Requirement 4.9 / 本 spec Requirement 16 由来
+- **Spec 4 ↔ Spec 1**: vocabulary 変動操作（`rw tag merge / split / rename / deprecate / register`）の `.hygiene.lock` 取得 — Spec 1 Requirement 8.14 / 本 spec Requirement 10.1 由来
+- **Spec 4 ↔ Spec 1**: `source:` field の重複検出・canonical 化 audit — Spec 1 Requirement 5 Adjacent expectations / 本 spec Requirement 13.5 由来
+- **Spec 4 ↔ Spec 2**: `rw chat` 対話ログ frontmatter スキーマと markdown フォーマット — drafts Scenario 15 / 25 / 本 spec Requirement 1.8 由来
+- **Spec 4 ↔ Spec 6**: 対話ログ保存 trigger の規定（perspective / hypothesis 生成時等）
+- **Spec 4 ↔ Spec 7**: `rw doctor` の L3 診断項目計算 API — 本 spec Requirement 4 由来
+- **Spec 4 ↔ Spec 7**: `rw merge` (wiki) / `rw split` (wiki) の状態遷移ルール — 本 spec Requirement 3 / 13.2 由来
 - v1 から継承: モジュール責務分割（rw_<責務>.py、各 ≤ 1,500 行、DAG 依存、モジュール修飾参照）
+
+## Design phase 持ち越し項目（requirements レビューで合意、design phase で詰める）
+
+### 要件レベルでは固定せず design phase で確定する項目
+
+- **I-1**: `/mute maintenance` 永続化媒体の具体先（候補: `.rwiki/config.toml` の `[maintenance]` セクション or `~/.rwiki/global.toml`、Requirement 8.5 で「永続化媒体は本 spec の所管」と固定済、具体先は design）
+- **整-3**: `rw follow-up resolve <file>` 実行時の状態変更表現（Spec 7 lifecycle 規約と整合、Requirement 5.4 で再委譲）
+- **本-C**: Foundation §2.4 Dangerous ops 8 段階対話の各段の入力 / 出力 / abort 条件の AC 化レベル（Requirement 3.5 で Foundation 委譲済、design で詳細化）
+- **本-G**: `rw init` で生成する Vault 構造の最小集合の引用先（Foundation §3 / drafts §5 を SSoT として参照、本 spec で繰り返さない、design で具体化）
+- **本-N**: lock 待機なし規約の UX 影響（高頻度 batch 環境での再試行戦略、Requirement 10.2 で「待機なし即 exit 1」と固定済、再試行はクライアント側責務として design 持ち越し）
+- **本-Q**: Edge status 6 種 / Page status 5 種の人間可読表記（短縮 vs full、colorize、status 区別を保証する出力 contract、Requirement 12.3 と整合）
+- **整-5**: Requirement 12.3「Edge status 6 種と Page status 5 種を CLI 出力で区別」を保証する具体コマンド（`rw doctor` / `rw graph status` / `rw edge show` 等の出力 contract）
+- **B-4**: AGENTS 自動ロード時の改ざん検知（hash / signing）— Spec 2 / Spec 3 所管寄り、本 spec での AC 化は design 持ち越し
+- **B-7**: dangerous op の事前 dry-run 一律提供（drafts Scenario 18 pre-flight 連携）— `rw deprecate --dry-run` 等の必要性は design phase で判断
+
+### 設計時に詳細化する API / Schema
+
+- 対話ログ frontmatter スキーマ（Spec 2 所管、本 spec design 時点で Spec 2 が確定済か確認）
+- Decision Log API の signature（`query_decisions(filter)` の filter スキーマ、`render_decision_timeline()` の出力 markdown スキーマ等、Spec 5 所管）
+- `rw doctor` JSON 出力の `schema_version` 値の管理体系（semantic version 採用可否、design 持ち越し）
+- `rw chat --mode autonomous` の `/mode` トグルコマンド構文（Requirement 1.9、Spec 6 の autonomous mode 内部生成ロジックと協調 design）
