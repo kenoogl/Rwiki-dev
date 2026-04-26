@@ -40,7 +40,8 @@ Git 管理: 全層 ✓（L2 cache `*.sqlite` `*.pkl` のみ gitignore）
 │   ├── skill_candidates/             # Spec 2
 │   ├── vocabulary_candidates/        # Spec 1
 │   ├── audit_candidates/
-│   └── relation_candidates/          # Spec 5
+│   ├── relation_candidates/          # Spec 5
+│   └── decision-views/               # Tier 2 markdown timeline（§2.13）
 ├── wiki/                             # L3
 │   ├── concepts/  methods/  projects/
 │   ├── entities/{people,tools}/
@@ -61,7 +62,8 @@ Git 管理: 全層 ✓（L2 cache `*.sqlite` `*.pkl` のみ gitignore）
 │   │   ├── entities.yaml             # normalized
 │   │   ├── edges.jsonl               # source of truth
 │   │   ├── edge_events.jsonl         # confidence 変遷
-│   │   ├── evidence.jsonl            # 根拠引用集
+│   │   ├── evidence.jsonl            # 根拠引用集（§2.10 trust 縦軸）
+│   │   ├── decision_log.jsonl        # curator decision rationale（§2.13 横軸）
 │   │   ├── rejected_edges.jsonl
 │   │   └── reject_queue/
 │   └── cache/                        # gitignore
