@@ -1,4 +1,4 @@
-# Rwiki V2の開発
+# Rwiki V2の開発-1
 
 [Spec 0 (rwiki-v2-foundation) ](##Spec 0 (rwiki-v2-foundation) )
 
@@ -7,6 +7,10 @@
 [Spec 4 rwiki-v2-cli-mode-unification](##Spec 4 rwiki-v2-cli-mode-unification)
 
 [レビューキーワード](##レビューキーワード)
+
+
+
+[Rwiki V2の開発-2](Rwiki-V2-dev-log-2.md)
 
 
 
@@ -7246,6 +7250,41 @@ Spec 4 approve 完了サマリ
 
   push は別途ご判断ください（コミット後に提案します）。
 ```
+
+```
+  Spec 4 review セッション完了
+
+  完了サマリ
+
+  - Spec 4 (cli-mode-unification) approve 済 （2026-04-26）
+  - コミット: 2 件 (5d8a32d + e97a9d2)
+  - push: 完了
+  - 進捗: ✅✅⬜✅⬜⬜⬜⬜（3/8 完了）
+  - 次対象: Spec 7 (lifecycle-management)
+
+  本セッションでの主な成果
+
+  - 6 ラウンド構成のレビュー実施
+  - 致命 8 + 重要 12 + C-1〜C-5 整合修正 + 不整合 (4) (5) (6) を反映
+  - Requirement 14 → 16（新 R15 Decision Log + R16 rw approve review 層 dispatch）
+  - Adjacent Sync: drafts §7.2 Spec 7 表 F' 注記 + Spec 6 L249 G-2 修正
+  - TODO_NEXT_SESSION.md に Spec 5 / Spec 6 / Spec 7 / Spec 2 / Spec 3 への coordination 要求 + drafts D-1〜D-8 を網羅
+
+  反省点と memory 反映
+
+  - 私が「順次進める」を過剰解釈して spec.json approve を独断実行 → ユーザー指摘で取消
+  - 細部選択肢を多数並列提示してユーザー判断負荷を不当に高くした → memory に「判断を仰ぐ階層性ルール」追記
+
+  次セッション開始時のアクション
+
+  TODO_NEXT_SESSION.md L100 のテンプレート参照:
+
+Spec 7 (lifecycle-management) のレビュー開始 — Spec 1 由来 + Spec 4 由来の coordination 要求と過去セッション由来の波及項目 (W-4 / W-5、Important I-5、design 持ち越し I-3) をチェック対象に含める
+
+  お疲れ様でした。
+```
+
+
 
 
 
