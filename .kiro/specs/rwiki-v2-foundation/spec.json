@@ -1,13 +1,13 @@
 {
   "feature_name": "rwiki-v2-foundation",
   "created_at": "2026-04-26T08:42:54+09:00",
-  "updated_at": "2026-04-26T08:42:54+09:00",
+  "updated_at": "2026-04-26T14:06:41+09:00",
   "language": "ja",
-  "phase": "requirements-generated",
+  "phase": "requirements-approved",
   "approvals": {
     "requirements": {
       "generated": true,
-      "approved": false
+      "approved": true
     },
     "design": {
       "generated": false,
