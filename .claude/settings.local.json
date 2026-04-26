@@ -23,7 +23,8 @@
       "Bash(python -m pytest tests/test_rw_light.py::TestQueryExtractExit2OnFail tests/test_rw_light.py::TestQueryFixExit2OnFail -x -q)",
       "Bash(git commit -m ' *)",
       "Bash(python -m pytest tests/test_lint.py tests/test_lint_query.py tests/test_audit.py tests/test_ingest.py tests/test_rw_light.py -q)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(python3 *)"
     ]
   }
 }
