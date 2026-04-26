@@ -2414,3 +2414,10 @@ When Page→Edge orchestration が rollback 不能な部分的失敗を起こし
 
 ```
 
+
+
+
+
+仕様間の整合性をチェック
+
+仕様間の依存関係をチェック
