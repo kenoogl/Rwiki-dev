@@ -24,7 +24,8 @@
       "Bash(git commit -m ' *)",
       "Bash(python -m pytest tests/test_lint.py tests/test_lint_query.py tests/test_audit.py tests/test_ingest.py tests/test_rw_light.py -q)",
       "Read(//tmp/**)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }

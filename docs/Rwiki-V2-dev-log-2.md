@@ -10,6 +10,8 @@
 
 [Spec 5 rwiki-v2-knowledge-grap](##Spec 5 rwiki-v2-knowledge-grap)
 
+[Spec 2 rwiki-v2-skill-library](##Spec 2 rwiki-v2-skill-library)
+
 [レビュー方法について再検討](##レビュー方法について再検討)
 
 
@@ -3701,6 +3703,1395 @@ Foundation を改版した場合、傘下全 spec に対して以下を実施:
 - 第 5 ラウンドの 5 step 手順を機械的に踏むことで形骸化防止
 - Foundation 改版時は 5 step の step 3 で傘下 7 spec を必ず精査
 ```
+
+
+
+
+
+## Spec 2 rwiki-v2-skill-library
+
+##### ❯ TODO_NEXT_SESSION.mdを読んで 
+
+```
+⏺ TODO_NEXT_SESSION.md を読みました。現在の状況をまとめます。
+
+  現状サマリ
+
+  - 進捗: ✅✅⬜✅✅✅⬜⬜（5/8 完了）
+    - approve 済: Spec 0 / 1 / 4 / 5 / 7
+    - 未着手: Spec 2 (skill-library) ← 次対象 / Spec 3 / Spec 6
+  - ブランチ: main（origin より複数 commit 進行、未 push）
+  - 直前セッション完了: Spec 5 approve + Foundation/Spec 4 Adjacent Sync + memory 再構成（5 ラウンド構成へ移行）
+
+  次のアクション
+
+  Spec 2 (rwiki-v2-skill-library) の requirements レビューを 5 ラウンド構成で開始する想定です。
+
+  Spec 2 で必ずチェックする coordination 要求
+
+  - Spec 5 由来: R3.5 entity skill schema / R4.5 relation skill schema / R3.6 validation 失敗時 ERROR / R19.2 skill prompt vs validation interface境界
+  - Spec 4 由来: R1.8 対話ログ frontmatter / R13.7 Skill ファイル schema・dry-run
+  - Spec 7 由来: R6.9 Skill lifecycle 拡張 2 種 / R11.6 Backlink 走査範囲 / R12.7 Skill 起源 decision_type 3 種
+  - Important 残課題: I-5（Backlink 走査範囲、要件レベル）/ I-3（HTML 差分マーカー、design 持ち越し）
+  - 波及項目: 本-14（applicable_categories 値域）/ C-1（type → entity_type 統一）/ W-7（SSoT 引用整合性、design 持ち越し）
+
+  適用方針（memory 継承）
+
+  - 5 ラウンド構成（基本整合性 → 上位文書照合 → 本質的観点 → B 観点 → 波及精査）
+  - 深掘り検討 + 自動採択方針（致命的デメリットなしなら自動採択、escalate 条件 5 種）
+  - dominated 案除外、選択肢提示時はラベル + 階層性 + 1 ターン 3 選択肢以内
+  - spec.json approve / commit / push は明示承認必須
+
+  Spec 2 のレビューを開始してよいですか？開始する場合、まず Requirement タイトル一覧 + cross-spec 由来 coordination 要求 + Important /波及項目を整理して提示します。
+```
+
+##### ❯ レビューを開始
+
+```
+⏺ Spec 2 を読み込みました。第 1 ラウンド Step 1 (要点提示) として、Requirement 一覧と coordination 要求の対応状況を提示します。まず関連 spec のcoordination 要求文言を確認します。
+⏺ 確認終わり。第 1 ラウンド Step 1 として要点を提示します。
+
+  ---
+  第 1 ラウンド Step 1: Spec 2 (rwiki-v2-skill-library) 要点提示
+
+  Requirement 一覧（14 件 / AC 75 件）
+
+  - R1: AGENTS/skills/ ディレクトリ構造と命名規約 (AC 5)
+  - R2: Skill ファイルの 8 section スキーマ (AC 5)
+  - R3: Skill frontmatter スキーマ (AC 5)
+  - R4: 初期 skill 群（知識生成 12 種） (AC 4)
+  - R5: 初期 skill 群（Graph 抽出 2 種）と Spec 5 連携 (AC 7)
+  - R6: 初期 skill 群（lint 支援 1 種） (AC 4)
+  - R7: Custom skill 作成フロー（draft / test / install） (AC 7)
+  - R8: Install 前 dry-run 必須化 (AC 4)
+  - R9: Install validation（8 section / YAML / 衝突 / 参照整合性） (AC 5)
+  - R10: update_mode: extend と差分マーカー (AC 5)
+  - R11: origin: standard | custom の区別と rw init 配布 (AC 6)
+  - R12: review/skill_candidates/ 層の frontmatter (AC 5)
+  - R13: rw skill subcommand 振る舞い契約 (AC 7)
+  - R14: Foundation 規範への準拠と SSoT 整合 (AC 6)
+
+  ---
+  第 1 ラウンドで検出した気になる点（致命級 2 件 + 重要級 3 件）
+
+  致命級
+
+  - 致-1: R5.2 entity_extraction schema の field 名 type → entity_type 統一漏れ
+    - 該当箇所: requirements.md L136 の name / canonical_path / type（entity_types.yml の値）/ aliases / evidence_ids
+    - 根拠: 前回 Spec 5 第 1 ラウンド 重-2 で entity の YAML field 名を type → entity_type に統一済（Spec 5 R1.2 / R3.5 / Spec 1 R2.3 確定）。Spec 2の本 AC が type のままだと SSoT 矛盾
+    - 過去セッション C-1 (type → entity_type 統一) と同件
+  - 致-2: 対話ログ frontmatter スキーマの規定欠落
+    - Spec 4 R1.8 が明示: frontmatter スキーマ（type: dialogue_log / session_id / started_at / ended_at / turns 等）と markdown フォーマットの規定はSpec 2（skill-library）の所管
+    - 本 Spec 2 では対話ログ frontmatter スキーマに関する Requirement / AC が一切存在しない（grep 結果、dialogue_log も session_id も requirements.mdに出現しない）
+    - Spec 4 起票時のチェック項目として本ファイルにも記録あり（TODO_NEXT_SESSION.md L101）
+
+  重要級
+
+  - 重-1: R3.2 applicable_categories の 値域未定義（本-14 由来、Spec 1 由来波及項目）
+    - 現記述: 「文字列配列、推奨される content category 一覧」のみ
+    - Spec 1 で確定された content category enum との整合性が示されていない
+    - dispatch (Spec 3) が安全に参照するためには値域が enum として固定される必要
+  - 重-2: R12.4 の decision_type: skill_install 言及と Spec 5 R11.2 / Spec 7 R12.7 との所管不明確
+    - 現記述: 「履歴は decision_log.jsonl の decision_type: skill_install で保全」
+    - Spec 7 R12.7 では Skill lifecycle 起源 3 種 (skill_deprecate / skill_retract / skill_archive) を Spec 7 が規定、Spec 5 R11.2 もこの 3 種を継承
+    - 残る skill_install の SSoT 所管は Spec 4 R15.10「dangerous op 完了時に record_decision() 呼出」由来で、Spec 2 / Spec 4 / Spec 7
+  のどれが所管かが未明確
+  - 重-3: R3.1 version: 整数（default 1） の version up 操作の所管詳細
+    - R1.5: 「version up 操作は Spec 7 所管のため本 spec では不可」
+    - 現状: Spec 7 R10 / R11 (Skill lifecycle) で skill_deprecate / skill_retract / skill_archive の 3 種のみ規定、version up 操作の具体 handler規定が見当たらない
+    - 「version up は MVP 外」なら本 spec で明示、「Spec 7 所管」なら Spec 7 への coordination 追加が必要
+
+  ---
+  既知 coordination 要求の対応状況
+
+  Spec 5 由来（既記録）
+
+  - ❌ R3.5 entity_extraction schema → R5.2 が type のまま（致-1）
+  - ✅ R4.5 relation_extraction schema → R5.3 で対応
+  - ✅ R3.6 schema validation 失敗時 ERROR → R5.7 で対応
+  - ✅ R19.2 schema vs validation 責務境界 → R5.5 で明示
+
+  Spec 4 由来（既記録）
+
+  - ❌ R1.8 対話ログ frontmatter → 規定欠落（致-2）
+  - ✅ R13.7 Skill ファイル schema・validation・dry-run → R2 / R3 / R7 / R8 / R9 で対応
+
+  Spec 7 由来（既記録）
+
+  - ⚠️ R6.9 Skill lifecycle 拡張 2 種 (skill deprecate / archive) → 本 spec R3.1 で status 4 値定義のみ、Spec 7 design phase で危険度確定とあるが特に矛盾なし
+  - ✅ R11.6 Backlink 走査範囲 → 本 spec で記述なし、Spec 7 所管に投げる方針で OK
+  - ⚠️ R12.7 Skill 起源 decision_type 3 種 → 重-2 に関連
+
+  Important 残課題
+
+  - ⚠️ I-5 Backlink 走査範囲（要件レベル） → 本 spec で記述なし、Spec 7 所管投げで OK と判断
+  - ✅ I-3 HTML 差分マーカー attribute → R10.4 で design 持ち越し済
+
+  過去セッション波及（既記録）
+
+  - ❌ 本-14 applicable_categories 値域 → R3.2 値域未定義（重-1）
+  - ❌ C-1 type → entity_type 統一 → R5.2 のまま（致-1）
+  - ✅ W-7 SSoT 引用整合性 → R14.4 で SSoT 出典明示、検証手段は design 持ち越し
+
+  ---
+  Step 2 として、次の進め方を選んでください
+
+  1. 「全部読む」 — 14 Requirement を順に詳細確認（時間 大）
+  2. 「上記 5 件のみ詳細審議」 — 致-1 / 致-2 / 重-1 / 重-2 / 重-3 を順に深掘り
+  3. 「致命 2 件のみ先に審議 → 第 2 ラウンドへ進む」 — 重要級は他ラウンドで再評価
+  4. 「approve（修正なし）」 — 上記 5 件含めて何も修正しない（非推奨）
+
+  ご指示ください。
+```
+
+##### ❯ 2
+
+```
+⏺ 了解。致-1（自動採択）→致-2（escalate）の順で進めます。並行して致-1 の Edit と致-2 の drafts 確認を行います。
+⏺ 致-1 の修正を適用しました（R5.2 の type → entity_type 統一 + Spec 1 R2.3 整合参照追加）。
+
+  drafts 確認で 致-2 の範囲が想定より広いことが判明しました。Spec 2 が SSoT として所管すべき項目が 4 つあります。
+
+  ---
+  致-2 深掘り結果（drafts 確認後の発見）
+
+  drafts §2.11 / Scenario 15 で「Spec 2 所管」と明示されている項目 (4 項目):
+
+  1. 対話ログ frontmatter スキーマ（type: dialogue_log / session_id / started_at / ended_at / turns 等）— Spec 4 R1.8 で「Spec 2 所管」明記
+  2. Skill frontmatter の dialogue_guide / auto_save_dialogue 拡張フィールド（drafts L341, L2393）
+  3. 対話ログ命名規則（chat-sessions/ / interactive/ / manual/ の path 規約、drafts L356）
+  4. 対話ログ markdown フォーマット（Turn 表現、auto-save 単位等、drafts L356）
+
+  現状の Spec 2 でカバーされている範囲: 0 / 4（1 ～ 4 すべて欠落）。R3.1 で Skill frontmatter は interactive のみ規定、dialogue_guide /auto_save_dialogue も無い。
+
+  ---
+  致-2 escalate 選択肢（2 案）
+
+  【選択肢あり / 範囲拡張・大】 案 A: 4 項目すべてを新 Requirement で確定
+
+  - 新 R15「対話ログ frontmatter スキーマと markdown フォーマット」（AC 5-7 件）
+  - 新 R16「Interactive skill 拡張 frontmatter（dialogue_guide / auto_save_dialogue）」（AC 3-4 件）
+  - R3.2 / R4 / R6 にも skill 個別の対話ログ参照追記（連鎖修正 5 箇所程度）
+  - メリット: drafts SSoT との整合が完全、design phase に渡す情報が確定
+  - デメリット: 範囲拡張が大きい、AC 75 → 約 90 件、design 検討余地のある詳細（Turn 内部構造）まで要件レベルで固定するリスク
+
+  【選択肢あり / 範囲拡張・小】 案 B: Spec 4 が直接依存する frontmatter 5 field のみ確定、他 3 項目は brief.md 持ち越し（推奨）
+
+  - 新 R15「対話ログ frontmatter スキーマと skill 連携」（AC 5 件想定）
+    - AC 1: 対話ログ markdown frontmatter 必須 field 5 種を SSoT として固定（type: dialogue_log / session_id / started_at / ended_at / turns）
+    - AC 2: 命名規則 / markdown フォーマット詳細 / Turn 内部構造は design phase 持ち越し（drafts §2.11 / Scenario 15 / 25 を参照点として残す）
+    - AC 3: Skill frontmatter 任意 field として dialogue_guide / auto_save_dialogue を許容（値域 / 運用詳細は design 持ち越し）
+    - AC 4: 対話ログ生成 skill (interactive_synthesis / frontmatter_completion) の Output section で本スキーマを参照する旨を必須化
+    - AC 5: Spec 4 R1.8 / R1.9 との責務分離（schema 確定は本 spec / 保存実装は Spec 4）を明示
+  - brief.md「Design phase 持ち越し項目」に「対話ログ markdown フォーマット詳細・命名規則・Turn 内部構造」を追記
+  - メリット: Spec 4 approve 済の coordination 要求を満たす最小限、design 余地を保つ
+  - デメリット: 4 項目のうち 1 項目のみが要件レベル固定、残 3 項目は design 期に再合意要
+
+  ---
+  推奨: 案 B（範囲拡張を抑えつつ Spec 4 の coordination 要求を満たす）。ご判断ください。
+```
+
+##### ❯ B
+
+```
+⏺ 案 B で実装します。requirements.md に R15 を追加 + R14.6 の「14 個」→「15 個」更新 + Boundary Context Spec 2 ↔ Spec 4 に追記 + brief.md に Design phase 持ち越し項目を新設します。
+⏺ 致-1 / 致-2 の修正完了です。続けて重-1 / 重-2 / 重-3 の深掘りに進みます。並行して関連 spec の文言を確認します。
+⏺ 3 件の深掘り結果を整理します。重-1 と重-3 は自動採択可能、重-2 は SSoT 判定要件で escalate です。
+
+  ---
+  重-1 深掘り結果（自動採択）
+
+  発見: Spec 1 R10.3 で「applicable_categories の値域 = .rwiki/vocabulary/categories.yml の name field の値集合と整合」が既に規定済（line 222）。Spec1 R7.1 が categories.yml のスキーマを所管。
+
+  修正案: R3.2 に SSoT 参照点を追記し値域を Spec 1 categories.yml に固定
+
+  致命的デメリット: なし（Spec 1 SSoT 参照のみ）→ 自動採択
+
+  重-3 深掘り結果（自動採択）
+
+  発見: Spec 7 で version up 関連の handler 規定が grep 結果ゼロ。Spec 7 R6 / R10 / R11 は Skill lifecycle 3 種（deprecate / retract /
+  archive）のみ所管。version up は誰も所管していない。
+
+  修正案: R1.5 と R3.1 で version up を v2 MVP 外として明示
+
+  致命的デメリット: なし（MVP 外明記、改版時は新規 skill 名 install で対応可能）→ 自動採択
+
+  修正を並行適用します。
+  
+⏺ 重-1 / 重-3 の修正を適用しました。続いて重-2 を escalate で提示します。
+
+  ---
+  重-2 escalate（SSoT 判定要件）
+
+  発見: Spec 5 R11.2 で decision_type 21 種が確定済だが、Skill lifecycle 起源は 3 種 (skill_deprecate / skill_retract / skill_archive)のみ。skill_install は明示的に含まれていない。Spec 5 R11.2 の拡張可規約は「Spec 1 / Spec 6 / Spec 7」に限定（line 276）で Spec 2 単独の追加権なし。つまり Spec 2 R12.4 の decision_type: skill_install は 現 SSoT に存在しない値への言及になっている。
+
+  ---
+  大局選択肢（3 案）
+
+  【SSoT 判定要】 案 A: skill_install を decision_log に記録する（推奨）
+
+  - Spec 7 が拡張可規約に従い skill_install を追加宣言する coordination を本 spec から要請
+  - Spec 5 R11.2 を Adjacent Sync で 21 → 22 種化（Skill 4 種：lifecycle 3 + install 1）
+  - 本 Spec 2 R12.4 を「履歴は decision_log.jsonl の decision_type: skill_install で保全（Spec 7 所管 / Spec 5 R11.2 への Adjacent Sync経由で追加宣言）」と修正
+  - Adjacent Sync 必要箇所: Spec 5 requirements.md（R11.2 Skill 3 → 4 種）+ Spec 7 requirements.md（R12.7 に skill_install 追加）
+  - メリット: dangerous op 13 種すべてが decision_log に揃う、ledger 網羅性
+  - デメリット: Spec 5 / Spec 7 への波及 2 件発生（再 approval 不要、change log + updated_at のみ）
+
+  【選択肢あり】 案 B: skill_install を decision_log に記録しない
+
+  - 本 Spec 2 R12.4 から decision_type: skill_install 言及を削除
+  - 「install 履歴は AGENTS/skills/ 配下のファイル存在 + frontmatter version で追跡し、decision_log.jsonl には記録しない」と明確化
+  - Spec 5 R11.2 / Spec 7 R12.7 の改版不要
+  - メリット: SSoT 改版の連鎖回避、本セッション内の波及最小化
+  - デメリット: dangerous op 13 種のうち install のみ decision_log 不在で不均一。「今この skill が誰によりいつ install されたか」を query しにくい
+
+  【選択肢あり】 案 C: 本 Round では確定せず design phase 持ち越し
+
+  - 本 Spec 2 R12.4 を「install 履歴の保存方法（decision_log / frontmatter / 別 ledger）は design phase で確定」と修正
+  - メリット: 即時の波及回避
+  - デメリット: SSoT 不整合を持ち越す、approve 後に再合意要
+
+  ---
+  推奨: 案 A（dangerous op の ledger 網羅性 + Spec 5/7 拡張可規約の本来の使い方）。Spec 5/7 への Adjacent Sync は再 approval 不要で軽微です。
+
+  ご判断ください。
+```
+
+##### ❯ A
+
+```
+⏺ 案 A で実施します。Spec 2 R12.4 修正 + Spec 5 R11.2 Adjacent Sync + Spec 7 R12.7 Adjacent Sync を並行適用します。事前に Spec 5 「21種」表記の全箇所を grep 確認します。
+⏺ 更新箇所が確定しました。並行で 6 箇所を編集します。
+⏺ change log を更新します。Spec 5 は既存セクションへ追記、Spec 7 は新規セクション追加。
+⏺ Spec 5 / Spec 7 の spec.json.updated_at を更新します。
+⏺ 第 1 ラウンドの修正適用が完了しました。
+
+  ---
+  第 1 ラウンド完了サマリ
+
+  Spec 2 修正（致命級 2 件 + 重要級 3 件、計 5 件全件反映）
+
+│  ID  │                       修正内容                                                        │   採択方式   │
+│ 致-1 │ R5.2 entity_extraction schema の type → entity_type（Spec 1 R2.3 整合参照追加）         │ 自動採択     │
+│ 致-2 │ 新 R15「対話ログ frontmatter スキーマと Interactive skill 連携」追加（AC 5 件）           │ escalate→案B │
+│      │    + R14.6「14 → 15 個」+ Boundary Context Spec 2↔Spec 4 追記                      │                │
+│      │   + brief.md「Design phase 持ち越し項目」新設                                        │             │
+│ 重-1 │ R3.2 applicable_categories 値域に Spec 1 categories.yml SSoT 参照追加（許可値外は WARN） │ 自動採択     │
+│ 重-2 │ R12.4 decision_type: skill_install 所管を Spec 7 / Spec 5 へ明示                     │ escalate→案A │
+│ 重-3 │ R1.5 + R3.1 で version up を v2 MVP 外として明示                                           │ 自動採択     │
+
+  Adjacent Sync（重-2 案 A 採択に伴う波及、再 approval 不要）
+
+  - Spec 5 (rwiki-v2-knowledge-graph):
+    - R11.2 を 21 種 → 22 種 に拡張、Skill 起源を「lifecycle 3 種」→「Skill 起源 4 種」に再分類して skill_install を追加
+    - 連鎖 3 箇所更新: R11.2 文言（line 266/272）/ R11.15 schema 違反件数（line 301）/ Phase 表 P0 概要文（line 564）
+    - change log 追記、spec.json.updated_at = 2026-04-27T11:41:00+09:00
+  - Spec 7 (rwiki-v2-lifecycle-management):
+    - R12.7 を Skill 起源 3 種 → 4 種 に再分類、skill_install を追加宣言
+    - change log セクション新設、spec.json.updated_at = 2026-04-27T11:41:00+09:00
+
+  Spec 2 状態
+
+  - AC 数: 75 → 80 件（+5、新 R15 追加）
+  - Requirement 数: 14 → 15 個
+  - spec.json は未更新（approve 直前段階で一括更新予定）
+
+  ---
+  次のアクション選択
+
+  第 1 ラウンドの修正が適用されたので、5 ラウンド構成の続きへ。
+
+  1. 第 2 ラウンド開始（上位文書照合 — roadmap / brief / drafts §2.8 / §5.6 / §5.7 / §7.2 Spec 2 / §11.2 との SSoT 整合）
+  2. 第 1 ラウンド再点検（修正適用箇所に新たな矛盾が出ていないか軽く再確認してから第 2 へ）
+  3. 致命級が出尽くしたので一気に第 5 ラウンドの波及精査まで進める（第 2-4 を Claude が機械的にチェック → 結果を集約報告）
+
+  ご指示ください。
+```
+
+##### ❯ 表出力禁止。2を実施
+
+```
+⏺ 第 1 ラウンド再点検（精査ラウンド）を実施します。修正適用箇所の連鎖更新漏れと内部不整合を grep で検出します。
+⏺ 精査結果として 発見 3 件を検出（修正必要 2 件 + 現状維持 1 件）。
+
+  - 発見 1: Spec 7 Boundary Context line 61 の Spec 4↔Spec 7 dispatch 列挙に cmd_skill_install が漏れ。R13.1 (line 248) では既に含まれているがBoundary Context は 3 種のみ。本 Adjacent Sync を機に整合化（修正必要）
+  - 発見 2: Spec 7 R3.8 (line 82) の update_history type 値の Skill lifecycle 起源 3 種は skill_install を含めない方が適切。update_history は status遷移用 field であり、初期 install は新規作成（status 遷移ではない）。Spec 2 R3.1 で update_history が skill 必須でない事実とも整合（現状維持）
+  - 発見 3: Spec 2 R15.2 の命名規則記述「interactive-<skill>/」が drafts §2.11 の subdirectory形式（interactive/）ともファイル名形式（interactive-<skill>-<timestamp>.md）とも不一致の中間表記。design phase 持ち越し記述として整理（修正必要）
+
+  発見 1, 3 を修正します。
+⏺ Spec 7 spec.json.updated_at を再度更新します。
+⏺ 第 1 ラウンド再点検（精査ラウンド）が完了しました。
+
+  精査結果は箇条書きで以下のとおりです。
+
+  - 発見 1（修正済）: Spec 7 Boundary Context line 61 の Spec 4↔Spec 7 dispatch 列挙に cmd_skill_install を追加。R13.1 line 248 (4 種列挙)との内部整合を回復。Spec 7 change log に追記、spec.json.updated_at = 2026-04-27T11:49:15+09:00 に再更新
+  - 発見 2（現状維持）: Spec 7 R3.8 update_history type 値の Skill lifecycle 起源 3 種は status 遷移用 field の性質上 installを含めず維持。判断理由を Spec 7 change log に記録
+  - 発見 3（修正済）: Spec 2 R15.2 の対話ログ命名規則記述を整理。drafts §2.11 内に subdirectory 形式 (chat-sessions/ / interactive/ / manual/)とファイル名形式 (interactive-<skill>-<timestamp>.md) の表記揺れがある旨を明示し、design phase で一意化が必要と記述
+
+  その他の精査は問題なし:
+  - Spec 2 内「14 個」記述: R14.6 修正のみで漏れなし
+  - Spec 2 内 entity 関連 type 表記: R5.2 修正以外は本体名・説明文で問題なし
+  - Spec 5 内「21 種」記述: change log 履歴 2 箇所のみ、本体は 22 種に統一済
+  - Spec 7 内 cmd 関連列挙: Boundary Context 修正で R13.1 と整合
+
+  第 1 ラウンドの全修正と再点検が完了しました。次は第 2 ラウンド（上位文書照合 — roadmap / brief / drafts §2.8 / §5.6 / §5.7 / §7.2 Spec 2 / §11.2との SSoT 整合）に進みますか？
+```
+
+##### ❯ 第 2 ラウンド開始
+
+```
+⏺ 第 2 ラウンド (上位文書照合) を開始します。drafts §2.8 / §5.6 / §5.7 / §7.2 Spec 2 / §11.2 と roadmap.md / brief.md の Spec 2
+  該当箇所を確認します。
+
+  Searched for 3 patterns, read 1 file (ctrl+o to expand)
+
+⏺ drafts §7.2 Spec 2 を直接読みます。
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ 第 2 ラウンド (上位文書照合) の結果を報告します。
+❯ 第 2 ラウンド開始
+
+⏺ 第 2 ラウンド (上位文書照合) を開始します。drafts §2.8 / §5.6 / §5.7 / §7.2 Spec 2 / §11.2 と roadmap.md / brief.md の Spec 2
+  該当箇所を確認します。
+
+  Searched for 3 patterns, read 1 file (ctrl+o to expand)
+
+⏺ drafts §7.2 Spec 2 を直接読みます。
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ 第 2 ラウンド (上位文書照合) の結果を報告します。
+
+  drafts §2.8 / §5.6 / §5.7 / §7.2 Spec 2 / §11.2 と Spec 2 requirements / brief を全件照合した結果、致命級 0 件 / 重要級 0
+  件。本体修正は不要です。Adjacent Sync TODO 3 件のみ検出しました。
+
+  主な照合結果は箇条書きで以下のとおりです。
+
+  - drafts §11.2 知識生成 skills 12 種 = Spec 2 R4.1 と完全一致 ✅
+  - drafts §11.2 Graph 抽出 skills 2 種 = Spec 2 R5.1 と完全一致 ✅
+  - drafts §11.2 Lint 支援 skills 1 種 = Spec 2 R6.1 と完全一致 ✅
+  - drafts §5.6 Skill frontmatter 必須 7 + 任意 1 (applicable_categories) = Spec 2 R3.1 / R3.2 と完全一致 ✅
+  - drafts §5.7 Skill candidate frontmatter 4 field = Spec 2 R12.1 と完全一致 ✅
+  - drafts §7.2 Spec 2 Boundary In scope 7 項目 / Out of scope 3 項目 = Spec 2 Boundary Context と完全一致 ✅
+  - drafts §7.2 Spec 2 Key Requirements 7 項目 = Spec 2 R2 / R5 / R8 / R9 / R10 / R11 と完全一致 ✅
+
+  検出した drafts Adjacent Sync TODO 3 件は箇条書きで以下のとおりです。
+
+  - D-18 (新): drafts §2.8 例示 skills (line 433) から meeting_synthesis を削除し、drafts §11.2 / Spec 2 R4 の 12 種と整合させる。meeting_synthesis
+  は §11.2 / Spec 2 R4 に存在しない skill 名で、§2.8 の例示が古い
+  - D-19 (新): drafts §5.6 Skill ファイル frontmatter table に dialogue_guide / auto_save_dialogue を任意 field として追記。本 Spec 2 R15.3 で任意
+  field として規定したので、drafts §5.6 の frontmatter table への反映が必要
+  - D-20 (新): drafts §7.2 Spec 2 知識生成 skills 列挙順序 (interactive_synthesis と generic_summary の順序) を drafts §11.2 / Spec 2 R4.1 順
+  (generic_summary が最後) に揃える
+
+  軽微な観察事項は箇条書きで以下のとおりです。
+
+  - drafts §5.6 example の applicable_categories: papers/local / papers/zotero は階層 path 表記。Spec 1 R7.1 の categories.yml の name fieldは階層表記の許容/禁止を明示していない。Spec 2 R3.2 (修正後) で「categories.yml の name field と一致」と規定したので、design phase で name fieldの値域形式 (フラット / 階層) を確定する必要 (本 Round では要件レベル不整合なし)
+  - roadmap.md L39 で Spec 2 の dependency が rwiki-v2-knowledge-graph のみ。本 Spec 2 R15 で Spec 4 R1.8 を参照する関係になったが、依存方向は Spec 4
+   → Spec 2 (本 spec が SSoT) なので roadmap.md は更新不要
+
+  第 2 ラウンド完了。次は第 3 ラウンド (本質的観点 — 全体俯瞰 / 文書内矛盾 / 概念定義の整合性) に進みますか？
+```
+
+##### ❯ 第 3 ラウンド開始
+
+```
+⏺ 第 3 ラウンド (本質的観点 / 文書内矛盾 / 概念定義整合性) で深掘りした結果、致命級 1 件 + 軽微 1 件を検出しました。
+
+  ---
+  致-1: skill candidate status 値域 3 値のうち approved の遷移条件が未定義 (R12 内部矛盾)
+
+  発見の経緯
+
+  drafts §5.7 で skill candidate frontmatter の status を 3 値で定義: draft / approved / validated。Spec 2 R12.1 もこの 3 値を継承して規定。しかしSpec 2 R12 / R7 / R8 全体を読み返すと、approved の遷移条件・意味が一切定義されていない。
+
+  文書内記述の照合結果
+
+  - R12.2: 新規生成時 status: draft / dry_run_passed: false
+  - R12.3: validation 全件通過後 status: validated に更新
+  - R12.4: install 完了で candidate ファイルを削除
+  - R7 (7 段階対話フロー): approved への遷移ステップなし
+  - R8 (dry-run 必須化): approved 言及なし
+  - R13.1 (rw skill list): status 4 値（active / deprecated / retracted / archived）を返すと規定（Skill ファイルの status であって candidate の
+  status とは別）
+
+  つまり Spec 2 R12.1 は値域として approved を許容しているが、どこからどう遷移するか・install 時に approved 状態は許容/拒否かが未規定。
+
+  致命的な含意
+
+  - Custom skill 作成者が approved を frontmatter に書いた場合の振る舞いが未定義
+  - R7.5 install は「Requirement 9 の install validation を全件通過した場合」で R12.3 から validated 必須と推察できるが、approved での installが許容されるかは要件不明
+  - drafts §5.7 SSoT と Spec 2 SSoT で食い違いがあり、design phase で再合意要
+
+  修正案 (escalate)
+
+  【選択肢あり】 案 A: status 値域を 2 値 (draft / validated) に絞る
+
+  - R12.1 で approved を採用しないと明示し、drafts §5.7 を Adjacent Sync で 2 値化
+  - ロジック: validation 全件通過 = 承認済みとみなす（二重承認は不要）
+  - メリット: シンプル、内部矛盾完全解消、Spec 2 が SSoT で approved を仕様外と確定
+  - デメリット: drafts §5.7 への Adjacent Sync 必要（D-NEW として記録）
+
+  【選択肢あり】 案 B: status 値域 3 値を維持し、approved の遷移条件を本 Round で追加
+
+  - R7 の 7 段階対話フローに「user が dry-run 結果を確認して手動 approve するステップ」を新設、status: approved への遷移を規定
+  - R12 に新 AC「approved は user が dry-run 結果を確認して手動承認したマーカー、validation 全件通過後に validated へ遷移」を追加
+  - メリット: drafts §5.7 と整合維持、user 承認ステップが明示化されて安全性向上
+  - デメリット: R7 の 7 段階フロー → 8 段階に拡張、要件粒度が上がる、現状の 7 段階フローと SSoT 不整合（R7.1 と矛盾）
+
+  【SSoT 判定要】 案 C: status 値域は本 Round 確定せず design phase 持ち越し
+
+  - R12.1 に「各 status 値の遷移条件は design phase で確定」と注記
+  - メリット: 即時の意思決定不要
+  - デメリット: SSoT 不整合を design に持ち越す、Spec 2 approve 後に再合意要
+
+  ---
+  推奨: 案 A (シンプル化、内部矛盾完全解消、design 余地を保つ)。drafts §5.7 への Adjacent Sync は D-NEW として記録、別セッション一括処理で対応可能。
+
+  ---
+  軽微: R6.2 で frontmatter_completion の出力先 review path が未明示
+
+  R6.2 で「補完提案 frontmatter（YAML 文字列）と確信度」と Output 内容のみ規定し、Output 先 review path（例: review/lint_proposals/等）は記載なし。R6.3 で「決定は decision_log.jsonl に記録、Spec 5 所管」とあるが、これは決定の保存先であり、補完提案 candidate自体の出力先ではない。
+
+  これは Spec 2 内の記述精度の問題。design phase で確定可能なレベル (要件レベル不整合ではない) なので、本 Round では brief.md「Design phase持ち越し項目」に追記する形で扱う方針が妥当。
+
+  ---
+  致-1 の選択肢を判断ください。
+```
+
+##### ❯ 新規生成時はそのスキルがうまく動作するかdry-runは必要ではないか。自動検証ができれば不要かもしれないが。
+
+```
+⏺ ご指摘の論点を整理します。表禁止に従い箇条書きで。
+
+  現状の R7 / R8 / R9 フロー (Spec 2 既規定)
+
+  - Validation (R9) = 4 種の静的検査 (8 section 完備 / YAML 妥当 / 名前衝突なし / 参照整合性)。文法・構造レベルのみ
+  - Dry-run (R7.4 / R8) = テストサンプル入力で出力生成を試行。動作レベルの動的検証
+  - R8.1: install 前に dry-run 最低 1 回必須化
+  - R8.3: candidate ファイル修正時に dry_run_passed: false 自動リセット → 修正後 dry-run やり直し強制
+
+  つまり「自動検証 (validation = 静的) + dry-run (動的)」の 2 段階が既に必須化されています。Validation
+  だけでは動作品質保証できない、というご認識のとおりで R8 / R9 の並立が正解です。
+
+  approved の現状の使われ方
+
+  - status × dry_run_passed の 4 状態空間:
+    - draft + dry_run_passed: false (新規生成直後)
+    - validated + dry_run_passed: false (validation 通過、dry-run 未実施)
+    - validated + dry_run_passed: true (install 可能)
+    - (approved は現フローに登場しない)
+  - R7 の 7 段階対話フロー全体で approved への遷移ステップが定義されていない
+  - dry_run_passed フラグが frontmatter で独立管理されており、dry-run の通過記録は status とは別軸で運用される
+
+  ご指摘の論点の 2 解釈
+
+  ご指摘「新規生成時に dry-run 必要」が、以下のどちらの方向を示しているか確認したいです。
+
+  解釈 X: approved は冗長で削除 (案 A 強化)
+
+  - 現状 dry-run が R8 で既に必須化されている以上、approved という中間 status の存在は機能上 redundant
+  - dry_run_passed フラグが既に独立軸で動作確認の記録を担っているので、status 軸で重複させる必要なし
+  - → drafts §5.7 を draft / validated の 2 値に Adjacent Sync するのが論理整合的 (案 A)
+
+  解釈 Y: dry-run の階層化 (案 B の精緻化)
+
+  - 新規生成直後の 簡易 dry-run (構文・呼び出し可能性のみ) を導入し、通過で status: approved
+  - validation 4 種 + 完全 dry-run (テストサンプル入力) 通過で status: validated
+  - approved を「動作する見込みあり」、validated を「validation + 完全 dry-run 通過」と意味付け
+  - メリット: drafts §5.7 の 3 値を意味的に活かす、user に段階的 feedback を与える
+  - デメリット: 検証段階を 2 種類に分けることで実装複雑度が上がる、要件粒度も増える
+
+  私の見解
+
+  - 解釈 X (案 A) を推奨します
+  - 理由 1: 現状の Spec 2 で dry_run_passed: bool フラグが既に独立軸として「動作確認の通過記録」を担っており、status
+  軸で同じ概念を重複させる必要がない
+  - 理由 2: 解釈 Y の階層化は「簡易 dry-run」と「完全 dry-run」の境界線が design phase で曖昧になりやすい（どこまで簡易か、何を完全とするか）
+  - 理由 3: drafts §5.7 が 3 値で書かれているのは初期設計の名残と推察できる (R7 / R8 / R12 のどの AC も approved を参照していないため)
+
+  ただしユーザー視点で「user が draft を見て手動 approve したマーカーが欲しい」という UX 要件がある場合は解釈 Y / 案 B が適切です。
+
+  どちらの方向で進めますか？
+```
+
+##### ❯ 解釈 X (案 A)
+
+```
+⏺ 案 A で実装します。R12.1 修正 + brief.md への軽微項目追記を並行適用します。
+⏺ 第 3 ラウンドの修正適用が完了しました。
+
+  主な対応は箇条書きで以下のとおりです。
+
+  - 致-1 (案 A 採択): R12.1 で status 値域を draft / validated の 2 値に絞り、drafts §5.7 が記述する approved 値を本 specでは採用しない旨を明示。理由（dry_run_passed 独立軸で動作確認記録を担うため status 軸での重複不要）と Adjacent Sync 要請も AC 内に記述
+  - 軽微 (R6.2 出力先未明示): brief.md「Design phase 持ち越し項目」に追記。drafts §11.2「review via rw lint --fix」記述との整合も含めて design phaseで確定する方針
+
+  drafts §5.7 への Adjacent Sync TODO（D-NEW: status 値域 3 → 2 値化）はセッション末尾の TODO_NEXT_SESSION.md 更新時に記録予定です。
+
+  第 3 ラウンドの主要な観察結果（修正不要箇所）は箇条書きで以下のとおりです。
+
+  - 3 subject (Skill Library / Skill Authoring Workflow / Skill Validator) の使い分けは全 Requirement で適切
+  - frontmatter 3 種 (Skill ファイル R3 / candidate R12 / 対話ログ R15) の概念区別が R15 追加後も明確
+  - Standard / Custom / Origin の概念定義と参照が一貫
+  - R5.5 の Adjacent Sync 運用ルール参照や R11.6 の rw init 整合性検証の暗黙前提も Spec 4 R13.7 / 4 で実装責務が確保されている
+
+  第 3 ラウンド完了。次は第 4 ラウンド (B 観点 — failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模 / 暗黙前提崩壊) に進みますか？
+```
+
+##### ❯ 次へ
+
+```
+⏺ 第 4 ラウンド (B 観点) で深掘りした結果、重要級 3 件を検出しました。致命級 0 件です。
+
+  ---
+  重-1: skill install 中断時の atomic 性 / 半完了状態回復が未規定
+
+  発見
+
+  - R7.5 で「candidate を AGENTS/skills/.md に移動」、R12.4 で「install 完了で candidate ファイルを削除」を規定
+  - しかし 2 つの操作 (移動 + 削除) の atomic 性が要件で保証されていない
+  - 失敗シナリオ:
+    - process kill / disk full / OOM などで「AGENTS/skills/ への copy 完了 + candidate 削除前に中断」→ skill が両方に存在する重複状態
+    - 「candidate 削除完了 + AGENTS/skills/ への copy 失敗」→ skill 完全ロスト
+  - Foundation R11.5 や Spec 5 R7.11 では Hygiene の crash 後 tmp 領域 cleanup や .hygiene.lock で同様の問題に対処しているが、Spec 2 では skill install の atomic 性が言及ゼロ
+
+  修正案 (escalate 案件)
+
+  【選択肢あり】 案 A: 要件レベルで「install は atomic でなければならない」原則のみ追加、実装機構は design 持ち越し
+
+  - R7 または R9 に新 AC として「install operation (candidate → AGENTS/skills/ 移動 + candidate 削除) は atomic でなければならず、中断時は元の状態(candidate 残置 / AGENTS/skills/ 未配置) に復帰する」を追加
+  - 具体的な atomic rename / tmp file 機構等は design phase で確定
+  - メリット: 軽量、要件粒度を保つ
+
+  【選択肢あり】 案 B: 完全に design phase 持ち越し、brief.md「Design phase 持ち越し項目」に追記
+
+  - R7 / R12 への AC 追加なし、brief.md にのみ追記
+  - メリット: 要件最小化
+  - デメリット: 「skill が消失する可能性」を要件レベルで認知していない状態が続く
+
+  ---
+  重-2: skill install と他 dangerous op の並行制御 (lock 機構) が未規定
+
+  発見
+
+  - Foundation R11.5 で .rwiki/.hygiene.lock を vocabulary 操作 / Hygiene batch などで取得規定 (Spec 1 R8.14、Spec 5 R17 等で明示)
+  - Spec 2 では skill install / draft / test の lock 取得経路が一切規定されていない
+  - 並行シナリオ:
+    - skill install と Hygiene batch (Spec 5 R7) が同時実行 → AGENTS/skills/ への並行書き込み
+    - skill install と vocabulary 操作 (Spec 1 R8.14) が同時実行 → applicable_categories 値域 (R3.2) の参照整合性が一時的に崩れる可能性
+    - 複数端末で同時 skill install → 名前衝突 race condition (R1.5 / R9.1.c の検査が race の谷間で漏れる)
+  - skill install は dangerous op category 中 (R9.4)、1-stage confirm のみで lock 取得は規定なし
+
+  修正案 (escalate 案件)
+
+  【選択肢あり】 案 A: skill install / draft / test を .hygiene.lock 取得対象に追加
+
+  - R7 / R9 に新 AC として「skill install 操作は Foundation Requirement 11.5 が規定する .rwiki/.hygiene.lock を取得することを Spec 4 へのcoordination 要求として明示する」を追加 (Spec 1 R8.14 と同パターン)
+  - メリット: Foundation 既存の lock 機構を再利用、整合的
+  - デメリット: skill install ごとに Hygiene batch とのシリアル化、UX で「lock 取得待ち」体験が発生
+
+  【選択肢あり】 案 B: skill install のための独自 lock 機構 (例: .skill_install.lock)
+
+  - メリット: Hygiene batch との並行実行が可能で UX 良
+  - デメリット: lock 機構の重複、.hygiene.lock 設計と分裂
+
+  【選択肢あり】 案 C: design phase 持ち越し、brief.md に追記
+
+  - メリット: 要件最小化
+  - デメリット: skill install の並行衝突を要件レベルで認知していない
+
+  ---
+  重-3: rw skill test 失敗時の status / dry_run_passed 扱いが未規定 (自動採択候補)
+
+  発見
+
+  - R7.4: 「rw skill test ... 成功時 に dry_run_passed: true に更新」← 成功時のみ規定
+  - 失敗時 (LLM crash / timeout / output error) の dry_run_passed / status の扱いが未規定
+  - Foundation R11 で LLM CLI subprocess timeout は必須化されているが、Spec 2 で test の timeout 考慮が明示されていない
+
+  修正案 (自動採択)
+
+  R7.4 を以下のように拡張:
+
+When rw skill test <candidate-or-name> [--sample <file>] が呼び出された, the Skill Authoring Workflow shall 当該 candidate に対して入力サンプルでdry-run を実行し、成功時に candidate の frontmatter dry_run_passed を true に更新することを規定する。LLM CLI 呼び出しの timeout (Foundation Requirement 11 で必須化) / crash / 出力 schema 違反 / その他 dry-run 内部例外で dry-run が失敗した場合, the Skill Authoring Workflow shall dry_run_passed を false のまま維持し、ERROR severity で失敗種別 (timeout / crash / output_error 等) と原因を report することを規定する。
+
+  - 致命的デメリット: なし
+  - Foundation 既存規定 (R11 timeout 必須) を継承するだけ、追加複雑度ゼロ
+  - → 自動採択
+
+  ---
+  推奨
+
+  - 重-1: 案 A (原則のみ要件、実装機構 design 持ち越し)。軽量で要件粒度保ちつつ skill ロストの可能性を要件レベルで認知できる
+  - 重-2: 案 A (Foundation の .hygiene.lock を再利用)。Spec 1 R8.14 / Spec 5 R17 と同パターンで整合的
+  - 重-3: 自動採択 (R7.4 拡張で test failure handling を明示)
+
+  進め方の選択
+
+  1. 3 件まとめて推奨どおり適用 (重-3 自動採択 + 重-1 案 A + 重-2 案 A)
+  2. 1 件ずつ判断 (重-1 → 重-2 → 重-3 の順で個別 escalate)
+  3. 重-3 のみ自動採択し、重-1 / 重-2 は別案を選択
+
+  ご指示ください。
+```
+
+##### ❯ 1
+
+```
+⏺ 3 件まとめて推奨どおり適用します。R7.4 拡張 + R9.6 追加 + R13.8 追加を順次実施します。
+⏺ 第 4 ラウンドの修正適用が完了しました。
+
+  主な対応は箇条書きで以下のとおりです。
+
+  - 重-3 (自動採択): R7.4 を拡張し、LLM CLI timeout / crash / output schema 違反等の dry-run 失敗時に dry_run_passed: false 維持 + ERROR severityで失敗種別 (timeout / crash / output_error 等) と原因を report する規定を追加
+  - 重-1 (案 A): R9.6 として install operation の atomic 性原則を追加。中断時に元の状態（candidate 残置 / AGENTS/skills/未配置）へ復帰を保証、具体機構は design phase 持ち越し
+  - 重-2 (案 A): R13.8 として rw skill draft / test / install の write 系操作で .rwiki/.hygiene.lock 取得を Spec 4 への coordination要求として追加。list / show は read-only のため対象外と明示。Spec 1 R8.14 / Spec 5 R17 と同パターン
+
+  Spec 2 状態
+
+  - AC 数: 80 → 82 件 (R9.6 + R13.8 追加)
+  - Requirement 数: 15 個 (変動なし)
+
+  B 観点で軽微判定とした項目 (本 Round 修正対象外)
+
+  - skill 内容への signing / hash 検証 (MVP 外、R11.5 で skill export/import を MVP 外と既規定済)
+  - skill 数上限 / ファイルサイズ制限 (MVP 範囲では問題化せず、~50-100 skill 程度想定)
+  - skill uninstall (= 物理削除) の独立操作 (MVP 外、Spec 7 R10 / R11 の retract で代替可能)
+  - dry-run 失敗時の error message 詳細フォーマット (R7.4 拡張で粒度確保、design phase で UX 確定)
+
+  第 4 ラウンド完了。次は第 5 ラウンド (波及精査 — 変更値リスト化 → 網羅的 grep → Foundation 改版時の傘下精査 → Adjacent Sync TODO 整理 →ユーザー判断) に進みますか？
+```
+
+##### ❯ 第 5 ラウンドへ
+
+```
+⏺ 第 5 ラウンド (波及精査) を 5 step で実施します。
+
+  Step 1: 変更値リスト化
+
+  本セッションで適用した修正値を以下に列挙します。
+
+  - R5.2: entity_extraction schema field type → entity_type
+  - 新 R15: 対話ログ frontmatter 必須 5 field (type: dialogue_log / session_id / started_at / ended_at / turns) + dialogue_guide / auto_save_dialogue
+   任意 field
+  - R3.2: applicable_categories 値域に Spec 1 categories.yml SSoT 参照、許可値外は WARN
+  - R12.4: decision_type: skill_install を Spec 7 R12.7 / Spec 5 R11.2 経由で宣言と明示
+  - R12.1: skill candidate status 値域 3 → 2 値 (draft / validated)
+  - R1.5 + R3.1: version up を v2 MVP 外と明示
+  - R7.4: dry-run 失敗時 (timeout / crash / output_error) の handling
+  - R9.6 (新): install operation の atomic 性
+  - R13.8 (新): .hygiene.lock 取得 (write 系 skill 操作)
+  - R14.6: 14 → 15 個
+  - Spec 5 R11.2 / R11.15 / Phase 表: 21 → 22 種、Skill 起源 4 種
+  - Spec 7 R12.7 + Boundary Context: Skill 起源 4 種、cmd_skill_install 追加
+
+  Step 2: 網羅的 grep 検索
+  
+⏺ 第 5 ラウンドの Step 2-3 結果と Step 4-5 の整理を報告します。
+
+  Step 2-3 grep 結果
+
+  entity_type 統一: 既 approve 済 spec 全件で entity 関連 field 名は全て entity_type で統一済 ✅。Spec 1 brief.md L155-159 で C-1として既知問題が記録済（致-1 で本 Spec 2 R5.2 修正により対応完了、Spec 1 brief.md status 更新の Adjacent Sync 必要）
+
+  decision_type 22 種: Spec 5 内で 22 種統一済（line 266 / 301 / 564）✅。change log の履歴記述（line 576）に「Skill3」記載があるが履歴なので変更不要 ✅
+
+  対話ログ frontmatter: Spec 4 R1.8（line 84）+ Boundary Context（line 64）で「Spec 2 所管」明記済、本 Spec 2 R15 と完全整合 ✅
+
+  applicable_categories: 検索結果から 重要な未解決問題を検出しました（重-1 として下記）
+
+  Foundation 改版: なし（本セッションで Foundation requirements は変更ゼロ）→ 傘下 7 spec 精査は不要
+
+  ---
+  重-1: applicable_categories 値域と L1 raw 入力 skill (llm_log_extract) の不整合
+
+  発見
+
+  Spec 1 brief.md L103 で Spec 2 起票時の coordination 要求として既に記録済の問題:
+
+  ▎ Spec 2 起票時に skill applicable_categories の値域を「L3 categories.yml.name のみ」と限定し、L1 raw raw/llm_logs/ を入力対象とする skill（例:
+  ▎ consolidated-spec L2572 の llm_log_extract）は applicable_categories ではなく別の input path 規約（例: applicable_input_paths field
+  ▎ 等）で表現するよう coordination する
+
+  問題状況:
+  - 本 Spec 2 R3.2 修正で applicable_categories 値域を categories.yml.name に固定（許可値外は WARN）
+  - drafts §11.2 line 2651 / Spec 2 R4.1 で llm_log_extract skill は L1 raw raw/llm_logs/ を入力対象
+  - L1 raw は L3 wiki の category 概念に該当しない → applicable_categories 値域 (categories.yml.name) で表現不能
+  - Spec 1 brief.md D-2 で「applicable_categories: [llm_logs]」記述が drafts L2572 に存在するが、これは category 概念の混用
+
+  修正案 (escalate)
+
+  【選択肢あり】 案 A: 新 frontmatter 任意 field applicable_input_paths を導入 (Spec 1 brief.md L103 推奨)
+
+  - Spec 2 R3.2 を拡張:「optional フィールドとして applicable_categories（L3 categories.yml.name のみ）と applicable_input_paths（L1 raw path
+  glob、例: raw/llm_logs/** / raw/incoming/**）の 2 種を許容、各 skill は片方または両方を指定可能」
+  - llm_log_extract 等の L1 raw 入力 skill は applicable_input_paths: [raw/llm_logs/**] を指定
+  - Spec 3 dispatch（Spec 3 R3）への coordination 要求として「applicable_input_paths も入力解析時の skill 選択 hint として使う」を追加
+  - メリット: Spec 1 brief.md L103 推奨どおり、概念分離が明確 (L3 category vs L1 path)
+  - デメリット: frontmatter field 増加、Spec 3 dispatch logic 拡張
+
+  【選択肢あり】 案 B: applicable_categories 値域を緩和し、raw_* プレフィックスを categories.yml.name 以外にも許容
+
+  - Spec 2 R3.2 を緩和:「各値は categories.yml.name または raw_<subdir> 形式のいずれか」
+  - メリット: field 増やさず単一機構
+  - デメリット: applicable_categories の意味が膨らむ (L3 category と L1 raw subdir 混在)、値域 parsing が分岐
+
+  【選択肢あり】 案 C: design phase 持ち越し
+
+  - R3.2 に注記追加「L1 raw 入力 skill (llm_log_extract 等) の applicable 表現は design phase で確定」
+  - メリット: 即時の意思決定不要
+  - デメリット: SSoT 不整合を持ち越す、Spec 1 brief.md L103 の coordination 要求が未対応のまま approve
+
+  ---
+  Step 4: Adjacent Sync TODO 整理 (累計 6 件)
+
+  drafts への TODO (本セッション集計、別セッション一括処理予定):
+
+  - D-18 (新): drafts §2.8 例示 skills から meeting_synthesis 削除（drafts §11.2 / Spec 2 R4 整合）
+  - D-19 (新): drafts §5.6 frontmatter table に dialogue_guide / auto_save_dialogue 任意 field 追記（本 Spec 2 R15.3 整合）
+  - D-20 (新): drafts §7.2 Spec 2 知識生成 skills 列挙順序を §11.2 / Spec 2 R4.1 順に整理
+  - D-21 (新): drafts §5.7 skill candidate status 値域を 2 値化 (approved 削除)（致-1 案 A 由来）
+  - D-22 (新): drafts §11.2 / §7.2 Spec 5 line 1670 / line 196 の decision_type 列挙を 22 種化、Skill 起源 4 種 (skill_install 追加)（既存 D-10「21
+  種」更新）
+
+  Spec 1 への Adjacent Sync TODO:
+
+  - D-NEW: Spec 1 brief.md L155-159 の C-1「type → entity_type 統一」status を「対応済（Spec 2 R5.2 / Spec 5 R3.5 で修正、2026-04-27）」に更新
+
+  ---
+  Step 5: 進め方の選択
+
+  第 5 ラウンドの致命級 0 件、重要級 1 件です。
+
+  1. 重-1 案 A 採択 (applicable_input_paths 新規 frontmatter field を導入) → Spec 2 R3.2 拡張 + Spec 3 への coordination 要求追加
+  2. 重-1 案 B 採択 (applicable_categories 値域緩和)
+  3. 重-1 案 C 採択 (design phase 持ち越し)
+  4. 重-1 を別の解で対処 (ユーザー独自案)
+
+  合わせて、Spec 1 brief.md C-1 status 更新の Adjacent Sync を本セッション内で実施するかも確認ください。
+
+  ご指示ください。
+```
+
+##### ❯ A案で、Adjacent Sync を本セッション内で実施
+
+```
+⏺ 案 A で実装します。Spec 2 R3.2 拡張 + Boundary Context Spec 2 ↔ Spec 3 拡張 + Spec 1 brief.md C-1 Adjacent Sync を順次実施します。
+⏺ Spec 1 brief.md の change log を確認して追記、spec.json.updated_at を更新します。
+⏺ 第 5 ラウンドの主要作業が完了しました。
+
+  重-1 案 A 適用結果
+
+  - Spec 2 R3.2 拡張: applicable_categories (L3 wiki content category) と applicable_input_paths (L1 raw 入力 path glob、POSIX glob 互換) の 2 種任意field を許容。各 skill は片方または両方指定可能。Skill Validator は path 形式の構文妥当性のみ検査
+  - Spec 2 Boundary Context Spec 2 ↔ Spec 3 拡張: 2 系統 (L3 category マッチ + L1 raw path マッチ) の skill 選択ロジックを Spec 3 が構築するcoordination を明示
+
+  Spec 1 Adjacent Sync 完了
+
+  - brief.md C-1 status 更新: 「対応済（2026-04-27）」に変更、Spec 5 / Spec 2 / 命名衝突解消の詳細を反映
+  - brief.md D-2 注記追加: Spec 2 第 5 ラウンド 重-1 案 A 採択による解決経緯を記述
+  - change log 新設: 本セッション Adjacent Sync を記録
+  - spec.json.updated_at: 2026-04-27T12:32:22+09:00 更新、approve 状態維持
+
+  Spec 2 状態 (全 5 ラウンド完了時点)
+
+  - AC 数: 82 件 (初期 75 → R15 新設 +5、R9.6 + R13.8 +2 = 82)
+  - Requirement 数: 15 個 (初期 14 → R15 新設)
+  - requirements.md 修正完了、brief.md「Design phase 持ち越し項目」追記完了
+  - spec.json は approve 用に未更新 (approve 直前に一括更新予定)
+
+  全ラウンド検出内訳
+
+  - 第 1 ラウンド: 致命級 2 + 重要級 3 (全件適用) + 精査ラウンド発見 2 件 (Spec 7 連鎖更新漏れ修正 + Spec 2 R15.2 整理)
+  - 第 2 ラウンド: 致命級 0、Adjacent Sync TODO 3 件 (drafts D-18/19/20)
+  - 第 3 ラウンド: 致命級 1 (案 A 採択) + 軽微 1 (brief.md 持ち越し)
+  - 第 4 ラウンド: 重要級 3 (全件適用)
+  - 第 5 ラウンド: 重要級 1 (案 A 採択) + Adjacent Sync 4 spec へ実施 (Spec 5 / Spec 7 / Spec 1 / 本 Spec 2)
+
+  Adjacent Sync TODO 累計 (drafts、別セッション一括処理予定)
+
+  - D-18: drafts §2.8 から meeting_synthesis 削除
+  - D-19: drafts §5.6 に dialogue_guide / auto_save_dialogue 任意 field 追記
+  - D-20: drafts §7.2 Spec 2 知識生成 skills 列挙順序整理
+  - D-21: drafts §5.7 skill candidate status 値域を 2 値化（approved 削除）
+  - D-22: drafts §11.2 / §7.2 Spec 5 line 196/1670 の decision_type 列挙を 22 種化、Skill 起源 4 種（既存 D-10 更新）
+  - D-23 (新): drafts §5.6 frontmatter table に applicable_input_paths 任意 field 追記、L1 raw 入力 skill 用 dispatch hint として（重-1 案 A 由来）
+
+  次のアクション選択
+
+  1. 第 5 ラウンド再点検（精査） — 重-1 適用後の連鎖更新漏れを再 grep
+  2. approve に進む — spec.json の approvals.requirements.approved = true + phase = requirements-approved 更新、commit 準備
+  3. 追加レビュー / 中断
+
+  ご指示ください。
+```
+
+##### ❯ 1
+
+```
+⏺ 第 5 ラウンド再点検 (精査) を実施します。重-1 案 A 適用後の連鎖更新漏れを grep で検出します。
+⏺ 精査で発見 2 件 (連鎖更新漏れ) を検出しました。Spec 2 内の skill frontmatter 列挙箇所に applicable_input_paths が未追加です。
+
+  - 発見 1: Spec 2 requirements.md L28 (Boundary Context In scope) の Skill frontmatter 列挙に applicable_input_paths 漏れ
+  - 発見 2: Spec 2 brief.md L31 (Scope.In) の Skill frontmatter 列挙に applicable_input_paths 漏れ
+
+  発見 3 件目 (情報共有のみ): Spec 3 (未 approve) の requirements.md draft で applicable_categories を参照する記述が複数あり、applicable_input_paths
+  言及ゼロ。Spec 3 はまだ approve 前のため Adjacent Sync 対象外、本 Spec 2 修正は Spec 3 起票時のチェック項目として TODO_NEXT_SESSION.md
+  末尾更新時に記録。
+
+  発見 1 / 2 を修正します。
+  
+⏺ 第 5 ラウンド再点検 (精査) が完了しました。連鎖更新漏れ 2 件修正により、Spec 2 内の Skill frontmatter 列挙が完全に整合した状態になりました。
+
+  修正内容
+
+  - 発見 1 修正: requirements.md Boundary Context In scope (L28) に optional field を網羅追加 (applicable_categories / applicable_input_paths /
+  dialogue_guide / auto_save_dialogue)
+  - 発見 2 修正: brief.md Scope.In (L31) に同 4 種 optional field を網羅追加
+  - 副次効果: 第 1 ラウンドで R15 追加時に dialogue_guide / auto_save_dialogue も Boundary Context への反映漏れがあった分も同時に解消
+
+  Skill frontmatter の最終確定形
+
+  - 必須 7 種 (R3.1): name / origin / version / status / interactive / update_mode / handles_deprecated
+  - optional 4 種: applicable_categories (R3.2) / applicable_input_paths (R3.2) / dialogue_guide (R15.3) / auto_save_dialogue (R15.3)
+
+  発見 3 (情報共有のみ、本 Round 修正対象外)
+
+  Spec 3 (rwiki-v2-prompt-dispatch、未 approve) の requirements.md draft で applicable_categories を 9 箇所参照するが applicable_input_paths
+  言及ゼロ。Spec 3 起票時に以下を必須チェック項目として追加する旨を TODO_NEXT_SESSION.md 末尾更新時に記録予定:
+
+  - Spec 3 が L1 raw 入力 skill (例: llm_log_extract) の dispatch 時に applicable_input_paths を読み取り、L1 raw path glob match による skill 選択logic を構築する coordination 要求 (Spec 2 R3.2 / Boundary Context Spec 2 ↔ Spec 3 由来)
+
+  Spec 2 状態 (第 5 ラウンド再点検完了時点)
+
+  - AC 数: 82 件 (変動なし、Boundary Context は AC 外)
+  - Requirement 数: 15 個
+  - 内部矛盾 / 連鎖更新漏れ: ゼロ
+  - 全 5 ラウンド + 各精査 + Adjacent Sync (Spec 1 / Spec 5 / Spec 7) 完了
+
+  approve に進める準備が整いました。次のアクション選択:
+
+  1. approve 実施 — spec.json の approvals.requirements.approved = true + phase = requirements-approved 更新、commit 戦略の確認 (Spec 2 修正 /Foundation 不変 / Spec 1 Adjacent Sync / Spec 5 Adjacent Sync / Spec 7 Adjacent Sync の commit 分割)
+  2. 追加レビュー / 中断
+
+  ご指示ください。
+```
+
+##### ❯ 厳しく再精査
+
+```
+⏺ 厳しく再精査した結果、重要級 1 件 + 軽微 4 件を新たに検出しました。これまでのラウンドで見逃していた精度問題です。
+
+  重-1: R3.2 の「POSIX glob 互換」と例示「**」の矛盾
+
+  発見
+
+  R3.2 (修正後) の applicable_input_paths 規定:
+
+  ▎ glob は POSIX glob 互換 とし、Skill Validator は path 形式の構文妥当性のみを検査する
+
+  例示として記載:
+
+  ▎ 例: raw/llm_logs/** / raw/incoming/**
+
+  矛盾: POSIX glob (IEEE Std 1003.1) は * / ? / [...] のみで、** (recursive match) は POSIX 準拠ではなく extended glob (bash 4+ globstar / Pythonpathlib 等の拡張)。例示と「POSIX glob 互換」規定が技術的に矛盾。
+
+  修正案 (自動採択候補)
+
+  「POSIX glob 互換」→「extended glob 互換 (POSIX glob + ** recursive match)」に修正、例示は維持。実用上は ** recursive match が必須 (例:raw/llm_logs/ 配下の全 markdown を対象とする L1 raw 入力 skill) なので、規定側を緩める方向。
+
+  致命的デメリットなし → 自動採択候補
+
+  ---
+  軽-A: R3 と R15.3 で任意 field の所在分散 (要件読解の精度問題)
+
+  R3.1 で必須 7 種、R3.2 で optional として applicable_categories / applicable_input_paths を規定。一方 R15.3 で dialogue_guide / auto_save_dialogueを「Skill frontmatter (Requirement 3) の任意フィールドとして」追加。
+
+  → R3 のみ読んでも Skill frontmatter 全体像 (任意 field 4 種) が掴めず、R15 までクロス参照しないと完全な像が見えない。要件読解性低下。
+
+  修正検討:
+  - 案 (i): R3.2 末尾に「dialogue_guide / auto_save_dialogue も任意 field として許容、詳細は Requirement 15.3 を参照」と cross-reference 追加
+  - 案 (ii): R3 に新 AC 「任意 field 一覧として applicable_categories / applicable_input_paths / dialogue_guide / auto_save_dialogue の 4 種」を集約
+
+  軽微判定で案 (i) が dominant (記述追加だけで集約は不要)。
+
+  ---
+  軽-B: Spec 7 R3.8 の Skill 用 update_history と Spec 2 R3.1 の不整合 (第 1 ラウンド再点検で発見済、要件レベル明示化未対応)
+
+  Spec 7 R3.8 (line 82) で「Skill lifecycle 起源 (skill_deprecation / skill_retract / skill_archive) も同じ pattern で本 spec が規定する (Spec 1
+  Requirement 3.6 が宣言した update_history schema と整合)」と記載。これは Skill ファイルにも update_history field が存在する前提を暗黙に置いている。
+
+  しかし本 Spec 2 R3.1 の必須 7 種にも optional 4 種にも update_history は含まれていない。
+
+  第 1 ラウンド再点検 (発見 2) で「skill_install を含めず現状維持」と判断した時に「Spec 2 R3.1 が update_history を skill必須に含めない事実とも整合」と書いたが、これは「Spec 7 R3.8 が暗示する update_history field が Spec 2 で未規定」という SSoT 不整合を放置している。
+
+  修正検討:
+  - 案 (i): Spec 2 R3.2 (optional field) に update_history を追加、Skill ファイルにも optional field として許容、Spec 7 R3.8 が遷移時に追記
+  - 案 (ii): Spec 2 で update_history を MVP 外 と明示、Spec 7 R3.8 の Skill 起源記述を「Skill update_history は MVP 外として本 specでは適用しない」に修正
+  - 案 (iii): design phase 持ち越し、本 Round では brief.md に追記のみ
+
+  軽微 → 重要級 寄り (SSoT 不整合の本質的問題)。escalate 候補。
+
+  ---
+  軽-C: R15.4「等」の曖昧さ
+
+  R15.4: 「対話ログを生成または依拠する skill (interactive_synthesis / frontmatter_completion / llm_log_extract 等) を扱う場合」
+
+  「等」の解釈が未確定。R3.1 で interactive: true の skill 全般が対象か、明示列挙 3 種のみか、auto_save_dialogue: true の skill か、の曖昧さ。
+
+  修正検討: R15.4 末尾に「具体的な該当 skill 判定基準 (frontmatter interactive: true または auto_save_dialogue: true を真とする等) は design phase
+  で確定」と注記追加。
+
+  軽微、本 Round で追記しても OK / brief.md 持ち越しでも OK。
+
+  ---
+  軽-D: R5.5 と R5.6 の記述重複
+
+  - R5.5: 「Graph 抽出 skill の出力 schema 自体 (フィールド名・値域・必須性) を本 spec が SSoT として確定し、Spec 5 が当該 schema を入力 contract
+  として validation 実装する責務分離を skill ファイルおよび本 requirements に明記する」
+  - R5.6: 「本 spec が Graph 抽出 skill の出力 schema を変更する必要が生じた, 変更を Spec 5 と先行合意した上でしか反映できない手順
+  (roadmap.md「Adjacent Spec Synchronization」運用ルール) を skill ファイルおよび本 requirements に参照点として残す」
+
+  R5.5 = 責務分離の明示、R5.6 = 変更時の Adjacent Sync 手順。意味的には別だが、両方とも「skill ファイルおよび本 requirements
+  に参照点を残す」と書かれており、表現重複。
+
+  → 軽微、本 Round 修正不要 (内容上の冗長性なし、記述の冗長性のみ)。記録のみ。
+
+  ---
+  進め方の選択
+
+  1. 重-1 (自動採択) + 軽-A 案 (i) 適用 + 軽-B escalate (3 案から選択) + 軽-C 注記追加 をまとめて適用
+  2. 重-1 のみ自動採択 + 軽 4 件は brief.md「精度懸念事項」セクション新設で記録 (軽微判定優先)
+  3. 重-1 自動採択 + 軽-B のみ別途 escalate (要件レベル不整合のため) + 軽-A / 軽-C / 軽-D は brief.md 記録
+  4. 個別判断したい (1 件ずつ提示)
+
+  ご指示ください。
+```
+
+##### ❯ 3
+
+```
+⏺ 選択 3 で進めます。重-1 自動採択 + 軽-A / 軽-C / 軽-D を brief.md 記録 + 軽-B を escalate 提示の順で実施します。
+⏺ 重-1 自動採択 + 軽-A / 軽-C / 軽-D の brief.md 記録が完了しました。続いて軽-B を escalate で提示します。
+
+  ---
+  軽-B (escalate): Spec 7 R3.8 の Skill 用 update_history と Spec 2 R3.1 の不整合
+
+  発見の再整理
+
+  Spec 7 R3.8 (line 82) の文言:
+
+  ▎ 全 status 遷移 dangerous op の approve 完了時に対象ページの update_history: field へ要素 {date, type, summary, evidence?} を自動追記する。type の
+  ▎  lifecycle 起源許可値として deprecation / retract / archive / merge / split / reactivate / promote_to_synthesis を本 spec
+  ▎ が初期セットとして規定し、Skill lifecycle 起源（skill_deprecation / skill_retract / skill_archive）も同じ pattern で本 spec が規定する
+
+  「同じ pattern」= Skill ファイルにも update_history field が存在する前提。
+
+  Spec 2 の現状:
+  - R3.1 必須 7 種: name / origin / version / status / interactive / update_mode / handles_deprecated
+  - R3.2 optional 2 種: applicable_categories / applicable_input_paths
+  - R15.3 optional 2 種: dialogue_guide / auto_save_dialogue
+  - update_history は必須にも optional にも含まれていない
+
+  → Spec 7 R3.8 が暗示する update_history を Spec 2 では未規定。SSoT 不整合。
+
+  補足: decision_log との関係
+
+  Spec 5 R11.2 / Spec 7 R12.7 で Skill 起源 4 種 (skill_install / skill_deprecate / skill_retract / skill_archive) が decision_log.jsonl
+  に記録される設計が確定済。つまり Skill の lifecycle 履歴は decision_log で完全網羅されている状態。
+
+  update_history は wiki page frontmatter (Spec 1 R3.3 / R3.6) に対する履歴 field で、Skill ファイルへの適用は Spec 7 R3.8 の「同じ
+  pattern」記述から暗示されているのみ。
+
+  ---
+  修正案 (escalate、3 案、深掘り検討付き)
+
+  【選択肢あり】 案 (i): Spec 2 R3.2 に optional update_history 追加、Skill ファイルにも適用
+
+  - 修正範囲:
+    - Spec 2 R3.2 に optional として update_history（配列、要素は {date, type, summary, evidence?}）を追加
+    - Spec 7 R3.8 は現状文言維持 (Skill 起源 3 種が「同じ pattern」で適用される前提が成立)
+  - メリット:
+    - Spec 7 R3.8 の暗黙前提を実体化、SSoT 整合
+    - Skill の lifecycle 履歴を frontmatter (個別 skill ファイル内) でも追跡可能、decision_log と二重保全
+  - デメリット:
+    - Skill 数は通常少数 (~50-100)、status 変動も少ない → over-engineering の可能性
+    - decision_log で既に網羅されているので二重保全の必要性が薄い
+    - Skill frontmatter の field 数増加 (任意 5 種に)
+
+  【選択肢あり】 案 (ii): Spec 2 で update_history を MVP 外と明示、Spec 7 R3.8 を Adjacent Sync で修正 (推奨)
+
+  - 修正範囲:
+    - Spec 2 R3.5 (status 遷移所管) または新 AC で「Skill ファイルには update_history field を適用しない (MVP 外)。Skill の lifecycle 履歴は
+  decision_log.jsonl の Skill 起源 4 種 (skill_install / skill_deprecate / skill_retract / skill_archive、Spec 5 R11.2 / Spec 7 R12.7)
+  で網羅する」を明示
+    - Spec 7 R3.8 を Adjacent Sync で修正: 「Skill lifecycle 起源 (skill_deprecation / skill_retract / skill_archive) も同じ pattern で本 spec
+  が規定する」を「Skill ファイルには update_history field を MVP では適用せず、Skill の lifecycle 履歴は decision_log.jsonl の Skill 起源 4
+  種で網羅する (Spec 2 R3.x / Spec 5 R11.2 / 本 spec R12.7 と整合)」に変更
+  - メリット:
+    - MVP scope の明確化、不要な field 排除
+    - Skill 履歴管理を decision_log に集約 (single source of truth、二重保全なし)
+    - Spec 7 R3.8 の skill_deprecation (Spec 5 R11.2 では skill_deprecate、語尾不一致の軽微発見!) も同時整理可能
+  - デメリット:
+    - Spec 7 R3.8 の Adjacent Sync (再 approval 不要、change log + updated_at)
+    - 将来 Skill update_history が必要になった時に再合意要
+
+  【選択肢あり】 案 (iii): design phase 持ち越し、本 Round では brief.md に記録のみ
+
+  - メリット: 即時意思決定不要
+  - デメリット: SSoT 不整合を design に持ち越す、Spec 2 approve 後の再合意経路が必要
+
+  ---
+  深掘り検討で追加発見
+
+  案 (ii) の検討中に Spec 7 R3.8 で skill_deprecation と表記されているが、Spec 5 R11.2 / Spec 7 R12.7 では skill_deprecate (語尾 -tion
+  なし)。本セッションで skill_install 追加した時に併せて気付くべきだった命名不一致。
+
+  - Spec 7 R3.8 (line 82): skill_deprecation
+  - Spec 7 R12.7 (line 239): skill_deprecate
+  - Spec 5 R11.2 (line 272): skill_deprecate
+
+  → Spec 7 内部で R3.8 と R12.7 の命名が不一致。本 Round で同時修正必要。
+
+  ---
+  推奨
+
+  案 (ii):
+  - MVP scope 明確化
+  - Skill 履歴を decision_log に single source of truth として集約
+  - 命名不一致 (skill_deprecation → skill_deprecate) も同時解消
+
+  ご判断ください。
+```
+
+##### ❯ 案 (ii)
+
+```
+⏺ 案 (ii) で実装します。Spec 2 R3.6 新設 + Spec 7 R3.8 修正 (Adjacent Sync) を順次実施します。
+⏺ 軽-B 案 (ii) の修正適用が完了しました。
+
+  適用内容
+
+  - Spec 2 R3.6 (新設): Skill ファイルには update_history field を v2 MVP 外として明示。Skill lifecycle 履歴は decision_log.jsonl の Skill 起源 4
+  種で single source of truth として集約。Spec 1 R3.6 / Spec 7 R3.8 page lifecycle pattern との区別を明示
+  - Spec 7 R3.8 修正 (Adjacent Sync): 「Skill lifecycle 起源 (skill_deprecation / skill_retract / skill_archive) も同じ pattern で本 spec
+  が規定する」を削除、「Skill ファイルには本 AC を v2 MVP では適用せず、decision_log.jsonl の Skill 起源 4 種で網羅する」に変更。命名不一致
+  skill_deprecation → 削除で解消
+  - Spec 7 change log 追記: 本セッション内 3 件目の変更履歴 (Spec 2 第 1 R 由来 / 精査 / 第 5 R 再精査 軽-B)
+  - Spec 7 spec.json.updated_at: 2026-04-27T12:54:49+09:00 更新、approve 状態維持
+
+  Spec 2 状態 (厳しく再精査完了時点)
+
+  - AC 数: 82 → 83 件 (R3.6 新設 +1)
+  - Requirement 数: 15 個 (R3 内部 AC 増加のみ、R 数変動なし)
+  - 内部矛盾 / 連鎖更新漏れ / 命名不一致: ゼロ
+  - 全 5 ラウンド + 各精査 + 厳しく再精査 + Adjacent Sync 4 spec (Spec 1 / Spec 5 / Spec 7 二重 / Spec 2) 完了
+
+  厳しく再精査で検出した全 5 件の処理サマリ
+
+  - 重-1 (POSIX glob 矛盾): 自動採択で extended glob に修正
+  - 軽-A (任意 field 所在分散): brief.md「精度懸念事項」に記録、design phase で集約検討
+  - 軽-B (Skill update_history 不整合): 案 (ii) 採択、Spec 7 R3.8 と Spec 2 R3.6 で MVP 外明示、命名不一致も同時解消
+  - 軽-C (R15.4 等の曖昧さ): brief.md「Design phase 持ち越し項目」に判定基準を追記
+  - 軽-D (R5.5 / R5.6 表現重複): brief.md「精度懸念事項」に記録、design phase で統合検討
+
+  approve 進行可否の判断ができる状態です。次のアクション選択は以下の通りです。
+
+  1. approve 実施 — Spec 2 spec.json の approvals.requirements.approved = true + phase = requirements-approved 更新、commit 戦略確認
+  2. 追加レビュー / 中断
+
+  ご指示ください。
+```
+
+##### ❯ この修正でMVPスコープなどが変更になった。本仕様内で整合性をチェック
+
+```
+⏺ 了解。R3.6 新設で「Skill ファイルへの update_history 適用 = v2 MVP 外」という新しい MVP 境界が生まれたので、本 Spec 2
+  内の関連記述を整合性チェックします。
+⏺ 整合性チェック結果として、MVP 外項目の集約が分散した状態を発見しました。修正が必要です。
+
+  現状の MVP 外項目 (本 Spec 2 内、3 系統に分散)
+
+  - R1.5 (skill 名衝突 AC 内 inline): version up 操作は v2 MVP 外
+  - R3.1 version 注記 (frontmatter 必須 field 注記): v2 MVP では install 時 1 固定
+  - R3.6 (新設、独立 AC): Skill update_history field 適用を v2 MVP 外
+  - R11.5 (独立 AC): Skill export / import を v2 MVP 外
+  - Boundary Context Out of scope (line 43): 「Skill export / import (v2 MVP 外、将来拡張)」のみ列挙
+  - brief.md Constraints (line 70): 「Skill export/import は v2 MVP 外」のみ列挙
+
+  → Boundary Context Out of scope と brief.md Constraints に列挙されている MVP 外項目が古い (export / import のみ)。新たに追加された version up と
+  update_history が反映されていない不整合状態
+
+  修正範囲
+
+  - requirements.md Boundary Context Out of scope に MVP 外 2 項目追加
+  - brief.md Constraints に MVP 外 2 項目追加
+
+  致命的デメリットなし、整合性回復のための機械的反映 → 自動採択 で実施します。
+⏺ MVP スコープの整合性確保が完了しました。
+
+  最終的な MVP 外項目の集約状態
+
+  Boundary Context Out of scope (requirements.md L43 周辺)
+
+  - Skill export / import (R11.5 整合)
+  - version up 操作 (R1.5 / R3.1 整合) ← 新規追加
+  - Skill ファイルへの update_history field 適用 (R3.6 整合) ← 新規追加
+
+  brief.md Constraints (line 70 周辺)
+
+  - Skill export/import は v2 MVP 外
+  - version up 操作は v2 MVP 外 ← 新規追加
+  - Skill ファイルへの update_history field 適用は v2 MVP 外 ← 新規追加
+
+  Requirements 内 inline 記述 (各 AC 内、整合維持)
+
+  - R1.5 / R3.1 / R3.6 / R11.5 で各 MVP 外項目を個別に明示
+
+  → Boundary Context (要件全体俯瞰) / brief.md Constraints (制約集約) / 個別 AC (詳細規定) の 3 層で MVP 外項目が一貫して列挙され、SSoT 整合確保
+
+  残存する整合状態の確認
+
+  - decision_log への集約整合: R12.4 (install 履歴 → skill_install) + R3.6 (lifecycle 履歴 → 4 種網羅) で Skill 起源 4 種が完全に decision_log
+  に集約。記述としては R12.4 と R3.6 で部分重複だが、視点 (install 個別 / lifecycle 全体) が異なるため冗長性は許容範囲
+  - Spec 7 R3.8 との整合: Spec 7 R3.8 が Skill update_history MVP 外を明示、Spec 2 R3.6 が同じ内容を本 spec 側で確定、Boundary Context Out of scope
+  に列挙、brief.md Constraints に集約 → 4 箇所で SSoT 一貫
+  - 命名整合: Skill 起源 4 種 (skill_install / skill_deprecate / skill_retract / skill_archive) は Spec 2 R3.6 / R12.4 + Spec 5 R11.2 / Spec 7 R12.7
+  の全 4 spec 言及箇所で完全一致 (skill_deprecation 不在を再確認)
+
+  Spec 2 状態
+
+  - AC 数: 83 件 (R3.6 新設で 82 → 83、本整合性チェックは Boundary Context / brief.md のみで AC 増減なし)
+  - Requirement 数: 15 個
+
+  approve に進める状態が完成しました。次のアクション選択は以下のとおりです。
+
+  1. approve 実施 — Spec 2 spec.json の approvals.requirements.approved = true + phase = requirements-approved 更新、commit 戦略確認
+  2. 追加レビュー / 中断
+
+  ご指示ください。
+```
+
+#####  ❯ Spec2の変更により、隣接スペックへの影響を再度精査
+
+```
+⏺ 了解。本セッションの全変更を再リストアップし、隣接 spec への影響を再精査します。
+
+⏺ 新規発見: Spec 4 R10.1 に Adjacent Sync 漏れを検出しました。
+
+  発見の詳細
+
+  Spec 2 R13.8 で本セッションに新規追加した「write 系 rw skill * 操作 (draft / test / install) の .hygiene.lock 取得を Spec 4 への coordination
+  要求」に対し、Spec 4 R10.1 (line 210) の lock 取得対象は L2 Graph Ledger 変更コマンド + vocabulary 変動 rw tag * 操作のみで skill
+  操作が含まれていない。
+
+  具体的に Spec 4 R10.1 既存対象:
+  - L2 変更: rw graph hygiene / rw reject / rw extract-relations / rw edge promote / rw edge demote
+  - vocabulary 変動: rw tag merge / rw tag split / rw tag rename / rw tag deprecate / rw tag register
+
+  → skill 操作 3 種追加が必要 (Adjacent Sync)。
+
+  他の隣接 spec 影響確認 (再精査結果)
+
+  - Spec 0 (foundation): 影響なし。Foundation R5.5 / R11.5 / R11 は一般規定で skill 操作も含む解釈可能、明示変更不要 ✅
+  - Spec 1 (classification): 既 Adjacent Sync 完了 (C-1 status / D-2 注記 / change log / spec.json) ✅
+  - Spec 5 (knowledge-graph): 既 Adjacent Sync 完了 (R11.2 22 種化、Skill 起源 4 種、change log) ✅。本セッション末尾の Skill update_history MVP
+  外明示は Spec 5 直接規定外で影響なし
+  - Spec 7 (lifecycle-management): 既 Adjacent Sync 完了 (R12.7 4 種化、Boundary Context cmd_skill_install、R3.8 修正、change log 3 件) ✅
+  - Spec 4 (cli-mode-unification): ★ Adjacent Sync 漏れ検出 ← 本 Round で対処
+  - Spec 3 (prompt-dispatch): 未 approve、TODO_NEXT_SESSION.md 記録予定
+  - Spec 6 (perspective-generation): 未 approve、TODO_NEXT_SESSION.md 記録予定
+
+  Spec 4 への Adjacent Sync を実施します。
+  
+⏺ Spec 4 への Adjacent Sync が完了しました。
+
+  隣接 spec 影響再精査の最終結果
+
+  本セッションで実施された Adjacent Sync の累計 (再 approval 不要、change log + spec.json.updated_at のみ):
+
+  - Spec 0 (foundation): 影響なし ✅ (Foundation 不変、R5.5 / R11.5 は一般規定で skill 操作も含む解釈可能)
+  - Spec 1 (classification): 完了 — C-1 status「対応済」更新、D-2 注記追加、brief.md change log 新設、spec.json.updated_at = 2026-04-27T12:32:22+09:00
+  - Spec 4 (cli-mode-unification): 本 Round 追加で完了 — R10.1 lock 取得対象に skill 操作 3 種追加、Boundary Context Spec 4 ↔ Spec 5 拡張、change log 1 件追加、spec.json.updated_at = 2026-04-27T13:01:34+09:00
+  - Spec 5 (knowledge-graph): 完了 — R11.2 22 種化、Skill 起源 4 種、change log 1 件、spec.json.updated_at = 2026-04-27T11:41:00+09:00
+  - Spec 7 (lifecycle-management): 完了 — R12.7 4 種化、Boundary Context cmd_skill_install、R3.8 update_history MVP 外明示、change log 3件、spec.json.updated_at = 2026-04-27T12:54:49+09:00
+  - Spec 3 (prompt-dispatch): 未 approve、TODO_NEXT_SESSION.md に Spec 3 起票時チェック項目を記録予定 (applicable_input_paths / 対話ログ frontmatter/ Skill 起源 4 種 dispatch logic)
+  - Spec 6 (perspective-generation): 未 approve、TODO_NEXT_SESSION.md に Spec 6 起票時チェック項目を記録予定 (対話ログ保存タイミング、interactiveskill 連携)
+
+  双方向整合の確認
+
+  - Spec 2 R13.8 (write 系 skill 操作の lock 取得 coordination 要求発行) ↔ Spec 4 R10.1 (skill 操作を lock 取得対象に追加) → 双方向整合 ✅
+  - Spec 2 R3.6 (Skill update_history MVP 外明示) ↔ Spec 7 R3.8 (Skill update_history 適用を MVP 外と修正) → 双方向整合 ✅
+  - Spec 2 R12.4 (decision_type: skill_install 参照) ↔ Spec 5 R11.2 / Spec 7 R12.7 (Skill 起源 4 種) → 三方向整合 ✅
+
+  Spec 4 内の軽微な既存問題 (本 Round 修正対象外、Spec 4 今後の対応)
+
+  - R13.7 で rw skill install / deprecate / retract の Spec 4 dispatch 言及あるが、rw skill draft / test の dispatch 言及なし
+  - R3.2 --auto 許可リストで rw skill install のみ、rw skill draft / test の --auto ポリシー未明示
+
+  → Spec 4 既存問題、本 Spec 2 の Adjacent Sync 範囲外。TODO_NEXT_SESSION.md に Spec 4 軽微 Adjacent Sync 候補として記録予定 (D-NEW Spec 4 R13.7 / R3.2 整合)
+
+  Spec 2 状態 (隣接 spec 影響再精査完了時点)
+
+  - AC 数: 83 件
+  - Requirement 数: 15 個
+  - 内部矛盾 / 連鎖更新漏れ / 命名不一致 / 隣接 spec への波及漏れ: ゼロ
+
+  approve に進める状態が完成しました。次のアクション選択は以下のとおりです。
+
+  1. approve 実施 — Spec 2 spec.json の approvals.requirements.approved = true + phase = requirements-approved 更新、commit 戦略確認
+  2. 追加レビュー / 中断
+
+  ご指示ください。
+```
+
+##### ❯ 最後にもう一度精査
+
+```
+⏺ 最終精査を厳格に実施します。本セッションで適用した全変更を改めて grep verification します。
+
+⏺ 最終精査を完了しました。致命的な見落としは検出されませんでした。
+
+  検証結果サマリ (全件 grep verification)
+
+  A1: Spec 2 構造完整性
+
+  - Requirement 数: 15 件 (grep ^### Requirement  で 15 ヒット) ✅
+  - AC 番号最大値合計: 83 件 (R1:5 + R2:5 + R3:6 + R4:4 + R5:7 + R6:4 + R7:7 + R8:4 + R9:6 + R10:5 + R11:6 + R12:5 + R13:8 + R14:6 + R15:5) ✅
+
+  B1: 古い表記残存検査 (全 4 spec)
+
+  - Spec 2「14 個 / 14 Requirement」: 検出ゼロ ✅
+  - Spec 5 本体「21 種」: 検出ゼロ (change log 履歴のみ残存、これは正常) ✅
+  - Spec 7「skill_deprecation」(-tion 表記): 検出ゼロ (軽-B 案 ii 修正で完全削除) ✅
+
+  C1: applicable_input_paths 整合性 (5 箇所一貫)
+
+  - requirements.md L28 (Boundary Context In scope) / L48 (Adjacent expectations Spec 2 ↔ Spec 3) / L101-103 (R3.2 本文) / brief.md L31 (Scope.In) /
+  brief.md L90 (精度懸念事項 軽-A) ✅
+
+  C2: dialogue_log 双方向整合
+
+  - Spec 2 R15.1 L283 (frontmatter 必須 5 field 規定) ↔ Spec 4 R1.8 L84 (Spec 2 所管明示、5 field 一致) + Spec 4 Boundary Context L64 ✅
+
+  C3: skill 操作 lock 双方向整合
+
+  - Spec 2 R13.8 L262 (coordination 要求発行) ↔ Spec 4 R10.1 L210 + Boundary Context L62 (lock 取得対象に追加) + change log L315 ✅
+
+  D1: Skill 起源 4 種の三方向整合
+
+  - Spec 2 R3.6 L107 + brief.md L45 ↔ Spec 5 R11.2 L272 ↔ Spec 7 R3.8 L82 + R12.7 L239 + R13.1 L248 + Boundary Context L61 ✅
+  - 各箇所で skill_install / skill_deprecate / skill_retract / skill_archive の 4 種が一字一句一致 ✅
+
+  追加チェック項目 (静的検証)
+
+  - decision_type 22 種: Spec 5 R11.2 / R11.15 / Phase 表で完全統一 ✅
+  - MVP 外項目: requirements.md Boundary Context Out of scope (3 項目) / brief.md Constraints (3 項目) / 個別 AC (R1.5, R3.1 注記, R3.6, R11.5)
+  で一貫 ✅
+  - 命名一貫性: entity_type (Spec 1 / 2 / 5 で統一済)、Skill 起源 4 種 (Spec 2 / 5 / 7 で統一済) ✅
+
+  Spec 2 状態 (最終精査完了時点)
+
+  - AC 数: 83 件
+  - Requirement 数: 15 個
+  - 内部矛盾 / 連鎖更新漏れ / 命名不一致 / 隣接 spec 波及漏れ: 完全ゼロ
+  - 隣接 spec への Adjacent Sync: 完了 (Spec 1 / 4 / 5 / 7 全件)
+  - approve 進行可能状態 ✅
+
+  軽微な観察 (本 Round 修正対象外、approve 後の design phase で扱う):
+
+  - R3.6 の文言が冗長 (Skill lifecycle 履歴 = decision_log の 4 種網羅、と 2 度類似表現) — SSoT 整合に影響なし、記述の冗長性のみ
+  - Spec 4 既存の R13.7 / R3.2 で rw skill draft / rw skill test の dispatch / --auto ポリシー言及不在 — Spec 4 既存問題、本 Spec 2
+  範囲外、TODO_NEXT_SESSION.md に Spec 4 軽微 Adjacent Sync 候補として記録予定
+
+  approve に進める状態が確認できました。次のアクション選択は以下のとおりです。
+
+  1. approve 実施 — Spec 2 spec.json の approvals.requirements.approved = true + phase = requirements-approved 更新、commit 戦略確認
+  2. 追加レビュー / 中断
+
+  ご指示ください。
+```
+
+##### ❯ 承認
+
+```
+ Spec 2 を approve 状態に更新します。
+⏺ Spec 2 requirements.md に change log セクションを新設して本セッション履歴を記録します。
+⏺ Spec 2 approve が完了しました。
+
+  進捗状態 (6/8 完了)
+
+  - Spec 0 ✅ / Spec 1 ✅ / Spec 4 ✅ / Spec 5 ✅ / Spec 7 ✅ / Spec 2 ✅ (新規 approve)
+  - 残: Spec 3 (prompt-dispatch) / Spec 6 (perspective-generation)
+
+  本セッション変更ファイル一覧
+
+  Spec 2 approve 関連
+
+  - .kiro/specs/rwiki-v2-skill-library/requirements.md (大幅修正、change log 新設)
+  - .kiro/specs/rwiki-v2-skill-library/brief.md (Coordination / Design phase 持ち越し / 精度懸念事項追加)
+  - .kiro/specs/rwiki-v2-skill-library/spec.json (approved=true、phase=requirements-approved)
+
+  Adjacent Sync 関連 (再 approval 不要、change log + spec.json.updated_at)
+
+  - Spec 1: brief.md (C-1 status / D-2 注記 / change log) + spec.json
+  - Spec 4: requirements.md (R10.1 拡張 + Boundary Context + change log) + spec.json
+  - Spec 5: requirements.md (R11.2 22 種化 + R11.15 + Phase 表 + change log) + spec.json
+  - Spec 7: requirements.md (R3.8 / R12.7 / Boundary Context + change log 3 件) + spec.json
+
+  commit 戦略 (TODO_NEXT_SESSION.md 慣例準拠)
+
+  memory feedback_approval_required.md に従い、commit 実行は明示承認必須のため、commit 戦略を提示してご承認を求めます。
+
+  提案する commit 順序 (5 commit)
+
+  1. Spec 2 approve: feat(specs): rwiki-v2-skill-library requirements approve (5 ラウンドレビュー + 厳しく再精査、AC 75→83、Req 14→15) (3 ファイル:
+  requirements.md + brief.md + spec.json)
+  2. Spec 1 Adjacent Sync: docs(specs): rwiki-v2-classification を Spec 2 第 5 R 由来 Adjacent Sync で更新 (C-1 status closed / D-2 注記) (2
+  ファイル: brief.md + spec.json)
+  3. Spec 4 Adjacent Sync: docs(specs): rwiki-v2-cli-mode-unification を Spec 2 R13.8 由来 Adjacent Sync で更新 (R10.1 lock 取得対象に skill
+  操作追加) (2 ファイル: requirements.md + spec.json)
+  4. Spec 5 Adjacent Sync: docs(specs): rwiki-v2-knowledge-graph を Spec 2 R12.4 由来 Adjacent Sync で更新 (R11.2 21→22 種化、Skill 起源 4 種) (2
+  ファイル: requirements.md + spec.json)
+  5. Spec 7 Adjacent Sync: docs(specs): rwiki-v2-lifecycle-management を Spec 2 由来 Adjacent Sync で更新 (R12.7 4 種化、R3.8 update_history MVP
+  外、Boundary Context cmd_skill_install) (2 ファイル: requirements.md + spec.json)
+
+  push 方針
+
+  push は本セッション完了時にまとめて実施 (TODO_NEXT_SESSION.md / dev-log 更新後)。push 自体は別途明示承認をお願いします。
+
+  後続作業 (本コミット戦略の対象外)
+
+  - docs/Rwiki-V2-dev-log-2.md への本セッション議論ログ追記
+  - TODO_NEXT_SESSION.md 更新 (Spec 2 approve 反映、drafts D-18~D-23 / Spec 1 D-NEW / Spec 4 軽微 D-NEW / Spec 3 / Spec 6 起票時チェック項目記録)
+
+  上記 5 commit をこの順番で実行してよいですか？
+⏺ 5 commit が完了しました。origin/main から 5 commit 進んだ状態です。
+
+  Commit 完了履歴
+
+  - 8a9d428 Spec 7 Adjacent Sync (3 件: R12.7 4 種化 / Boundary Context cmd_skill_install / R3.8 update_history MVP 外)
+  - fa5a467 Spec 5 Adjacent Sync (R11.2 21→22 種化、Skill 起源 4 種)
+  - 7c1a496 Spec 4 Adjacent Sync (R10.1 lock 取得対象に skill 操作追加)
+  - 69b3756 Spec 1 Adjacent Sync (C-1 status closed / D-2 注記)
+  - 5fbd33d Spec 2 approve (5 ラウンドレビュー + 厳しく再精査、AC 75→83、Req 14→15)
+
+  残作業 (3 件)
+
+  1. dev-log commit — 本セッション分のレビュー議論ログ (約 1370 行追記、既に working tree に存在) を別 commit
+  2. TODO_NEXT_SESSION.md 更新 + commit — Spec 2 approve 反映、進捗 6/8、Adjacent Sync TODO 累計 (drafts D-18~D-23 / Spec 1 D-NEW / Spec 4 軽微
+  D-NEW)、Spec 3 / Spec 6 起票時チェック項目記録
+  3. push (本セッション完了時、明示承認必須)
+
+  次のアクション選択
+
+  1. dev-log + TODO_NEXT_SESSION.md 更新まで実行 → 完了報告 → push 承認 (推奨、本セッション完結)
+  2. TODO_NEXT_SESSION.md 更新のみ実行 → dev-log commit はユーザー判断 (dev-log の自動追記内容を一度確認したい場合)
+  3. 本セッションをここで中断 (commit までで一旦停止)
+
+  ご指示ください。
+```
+
+
 
 
 
