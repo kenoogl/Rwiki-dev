@@ -83,6 +83,7 @@ Phase 5: 本丸
 
 - **Spec 1 ↔ Spec 3**: frontmatter 推奨フィールドに `type:` 追加（distill dispatch の手掛かり）
 - **Spec 1 ↔ Spec 3**: `categories.yml` の default_skill mapping 方式（inline / 別ファイル）
+- **Spec 2 ↔ Spec 3**: skill frontmatter optional field 2 系統（`applicable_categories` = L3 wiki content category 系統 + `applicable_input_paths` = L1 raw 入力 path glob 系統、extended glob 互換）による 2 系統 dispatch logic（Spec 3 R1 段階 3.5 で path glob match dispatch、Spec 3 R9 で 2 系統 hint 用途明記）
 - **Spec 2 ↔ Spec 5**: extraction skill（relation_extraction / entity_extraction）の出力 validation interface
 - **Spec 5 ↔ Spec 7**: Page deprecation → Edge demotion の interaction flow
 - **Spec 4 ↔ Spec 5**: `.rwiki/.hygiene.lock` concurrency strategy の整合
