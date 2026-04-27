@@ -10,7 +10,7 @@
 
 [Spec 5 rwiki-v2-knowledge-grap](##Spec 5 rwiki-v2-knowledge-grap)
 
-
+[レビュー方法について再検討](##レビュー方法について再検討)
 
 
 
@@ -3425,16 +3425,15 @@ When Page→Edge orchestration が rollback 不能な部分的失敗を起こし
 ⏺ Spec 5 approve 完了。続いて TODO_NEXT_SESSION.md と dev-log を更新します。
 ⏺ dev-log-2 は既に本セッション議論を保持しています。TODO_NEXT_SESSION.md を全面更新します。
 
-```
+  セッション総括
 
-
-
-仕様間の整合性をチェック
-
-仕様間の依存関係をチェック
-
----
-
+  - 完了: Spec 5 (knowledge-graph) approve + Foundation R13.5 Adjacent Sync + Spec 4 Query API 14→15 種 Adjacent Sync + dev-log 追記、計 4 commit を
+  push 済
+  - 進捗: 5/8 spec approve（Spec 0 / 1 / 4 / 5 / 7）
+  - 次セッション: Spec 2 (skill-library) — TODO_NEXT_SESSION.md にチェック項目（Spec 5 由来 R3.5 / R4.5 / R3.6 / R19.2、Spec 4 由来 R1.8 /
+  R13.7、Spec 7 由来 R6.9 / R11.6 / R12.7、Important I-5 / I-3 等）記載済
+  - 本セッション確立: 深掘り検討 + 自動採択方針（memory feedback_deepdive_autoadopt.md）+ Foundation 改版時の他 spec 波及精査必須化
+  
 ## セッション完了サマリ（2026-04-27、Spec 5 approve）
 
 - Spec 5 (rwiki-v2-knowledge-graph) を approve（174 → 184 AC、全 17 修正反映）
@@ -3444,4 +3443,275 @@ When Page→Edge orchestration が rollback 不能な部分的失敗を起こし
 - 次対象: Spec 2 (skill-library)
 - 確立した方針: 深掘り検討 + 自動採択（feedback_deepdive_autoadopt.md）
 - ユーザー指摘により Spec 4 への波及（5 箇所の Query API 種数表記）を発見・修正できた、Foundation 改版時の波及精査を必須プロセスとして TODO_NEXT_SESSION.md に明記
+```
+
+
+
+
+
+## レビュー方法について再検討
+
+```
+❯ レビュー方法について再度検討。レビューの6ラウンドを示して
+
+⏺ 現行の 6 ラウンド構成（本セッションで「精査ラウンド」を追加して実質 7 ラウンドに発展）を整理し、再検討の論点を示します。
+
+  ---
+  現行レビュー構成（過去 4 spec で適用、Spec 5 で精査ラウンド追加）
+
+  第 1 ラウンド: 基本整合性チェック
+
+  - 観点: 内部矛盾 / 参照漏れ / 既知 coordination 要求の反映状況
+  - 対象: AC 番号、表記揺れ、上流 spec の Adjacent expectations が requirements に反映されているか
+  - 典型発見: enum 値の追加忘れ / API シグネチャ抜け / フィールド整合
+  - Spec 5 実績: 致命級 5 + 重要級 3 = 8 件
+
+  第 2 ラウンド: roadmap / brief / drafts 厳格照合
+
+  - 観点: 上位文書（SSoT）との齟齬
+  - 対象: roadmap Constraints / MVP / Coordination、brief Scope.In/Out、drafts §7.X / §5.X
+  - 典型発見: drafts と requirements の field 数 / API 列挙の不一致、運用ルール継承漏れ
+  - Spec 5 実績: escalate 1 件（pre_reject_confidence、Foundation 波及伴う）
+
+  第 3 ラウンド: 本質的観点
+
+  - 観点: 異なる視点での全体俯瞰、文書内矛盾、概念定義の整合性
+  - 対象: Subject 一貫性、Phase マーカー、event/decision の網羅性、用語使用
+  - 典型発見: 内部参照する enum 値が固定リストに欠落、概念の用法不一致
+  - Spec 5 実績: 致命級 1 + 重要級 2 = 3 件
+
+  第 4 ラウンド: B 観点（failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模）
+
+  - 観点: 暗黙前提が崩れた時の動作仕様
+  - 対象: crash recovery、partial failure、permission denied、disk full、大規模時の cap 接触、privacy mode
+  - 典型発見: transaction の crash 後 clean-up 規定欠落、batch 処理の continue/halt 方針未明示
+  - Spec 5 実績: 重要級 3 + 軽微 3（design 持ち越し）= 6 件
+
+  第 5 ラウンド: C 観点（他 spec 波及）
+
+  - 観点: 修正による既 approve 済 spec への影響、未 approve spec への coordination 追加
+  - 対象: Adjacent Sync 候補、未 approve spec 起票時のチェックリスト
+  - 典型発見: 文言同期が必要な spec（ただし本セッションで初期見落としあり）
+  - Spec 5 実績: 0 件（ただし最終精査で Spec 4 への波及 5 箇所を補足発見）
+
+  第 6 ラウンド: D 観点（drafts 整合）
+
+  - 観点: drafts との同期状況
+  - 対象: drafts Adjacent Sync TODO の整理（別セッション処理）
+  - 典型発見: drafts に古い表記が残存、本 spec が SSoT として優位な箇所
+  - Spec 5 実績: drafts Adjacent Sync TODO 7 件（D-11 ~ D-17）
+
+  精査ラウンド（本セッション新規追加）
+
+  - 観点: 修正適用後の連鎖更新漏れ検出
+  - 対象: 第 1-6 ラウンドの修正で生じた他 AC への波及不整合（例: 「3 種」→「4 種」更新漏れ、Boundary 概要の数値更新漏れ）
+  - 典型発見: enum 拡張時の他参照箇所、Phase 表の概要文、Boundary Context の概要記述
+  - Spec 5 実績: 重要級 7 件（連鎖更新漏れ）
+
+  ---
+  再検討の論点
+
+  観察された問題点
+
+  - 第 5 ラウンドで Spec 4 への波及を見落とした: ユーザー指摘で Spec 4 の Query API 14 → 15 種未更新（5 箇所）が判明。第 5 ラウンドの「他 spec
+  波及」が形骸化していた可能性
+  - 精査ラウンドが 7 件発見: 第 1-6 ラウンドの修正適用で生じた連鎖更新漏れが顕著、修正適用が機械的に行われた結果
+  - 第 6 ラウンドが薄い: Spec 5 では drafts Adjacent Sync TODO 列挙のみで、本 spec の修正には繋がらない。常に「次セッション処理」になっている
+
+  改善案（4 案）
+
+  案 A: 現状維持（6 ラウンド + 精査ラウンド）
+
+  - メリット: 既存パターン、過去 4 spec で適用済
+  - デメリット: 第 5 ラウンドの形骸化リスク残存、精査ラウンドが「事後対応」のため見落としリスク
+
+  案 B: 精査ラウンドを正式化して 7 ラウンド構成に改名
+
+  - メリット: 明示的に「修正適用後の連鎖更新漏れ検出」を必須プロセス化
+  - デメリット: ラウンド数増、各 spec の所要時間増
+
+  案 C: 精査を「各ラウンド後の即時精査」として分散
+
+  - メリット: 連鎖更新漏れの早期発見、ラウンド単位で完結
+  - デメリット: 精査タイミングが多重化、認知負荷増、過剰精査リスク
+
+  案 D: ラウンドの再編（C 観点と D 観点を統合 + 精査を強化）
+
+  - 第 1: 基本整合性
+  - 第 2: 上位文書照合（roadmap / brief / drafts）
+  - 第 3: 本質的観点
+  - 第 4: B 観点（failure mode 等）
+  - 第 5: 波及精査（C + D 観点 + 精査の連鎖更新漏れ統合、修正適用後に必ず実施）
+  - メリット: 5 ラウンドに集約、波及精査が独立した最終ガード、Spec 4 見落としのような事象を防げる
+  - デメリット: C と D の独立性が薄れる、drafts Adjacent Sync が他工程と混在
+
+  案 E: 第 5 ラウンドの強化（明示的な precondition + grep 検索手順）
+
+  - 第 5 ラウンドの実施手順を明文化:
+        i. 修正で変更した値（数値、enum、API 名等）をリスト化
+        ii. 既 approve 済 spec 全件 grep で参照箇所を確認
+        iii. 文言同期が必要な箇所を Adjacent Sync TODO として記録
+        iv. 必要なら本セッション内で同期適用
+  - メリット: 形骸化防止、現行構成変更最小、見落とし防止が手順化される
+  - デメリット: 各ラウンドで grep 作業が増える
+
+  推奨
+
+  私からは 案 D（ラウンド再編 5 ラウンド）+ 案 E（第 5 ラウンド手順明文化） の組み合わせが、Spec 4 見落としのような事象の再発防止 +
+  精査の事後対応化を防ぐ の 2 観点でベストと考えます。
+
+  ただし、変更によって過去 4 spec のレビュー記録（dev-log）と新規 spec のレビュー記録の構成が異なる懸念もあります。
+
+  ---
+  確認
+
+  どの案で次セッション以降を進めますか？ あるいは、ここで提示していない別の改善案や、特定の観点（例: 各ラウンドの所要時間 / 発見数 / 形骸化リスク）への深掘りが必要でしょうか？
+```
+
+##### ❯ D+Eの提案で仕様レビューラウンドを構成してください。隣接スペックへ影響が及ぶ場合に、その情報が抜け漏れのなく必ず伝わること、特にfoundationへの影響の場合には、その傘下のスペック全てに影響するため、影響範囲について必ず精査すること。また、/Users/keno/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/feedback*.mdがアドホックに追加されたため、整合性がないので、レビューラウンドとともに全体の再構成を図ってください。
+
+```
+⏺ memory ディレクトリの現状を確認してから、5 ラウンド構成（D+E）の memory 化と既存 feedback*.md の再構成を実施します。
+⏺ 現状を把握しました。memory 6 ファイルの整合性問題と新規必要な memory を整理し、再構成を進めます。
+⏺ 1. feedback_review_rounds.md 新規作成（5 ラウンド + Foundation 傘下精査）
+⏺ 2. feedback_choice_presentation.md 新規切り出し
+⏺ 3. feedback_approval_required.md 改訂（pure approval ルールに）
+⏺ 4. 既存 feedback に関連 memory 参照追加
+⏺ deepdive_autoadopt.md は既に冒頭で他 memory に参照しているため、末尾に「関連 memory」セクションを追加して整合性向上します。
+⏺ 5. MEMORY.md 全面再構成（関連性を明示）
+⏺ memory 再構成完了。最終構成を報告します。
+
+  ---
+  memory 再構成完了サマリ
+
+  ファイル構成 (9 ファイル、計 449 行)
+
+  レビュー / 修正適用ワークフロー (連携する 5 feedback memory)
+
+  - feedback_review_rounds.md (103 行、新規) — 5 ラウンド構成 (D+E 統合) + 第 5 ラウンドの 5 step 必須手順 + Foundation 改版時の傘下 7 spec精査ルール
+  - feedback_deepdive_autoadopt.md (45 行、関連 memory 参照追加) — 深掘り検討 + 自動採択
+  - feedback_dominant_dominated_options.md (22 行、関連 memory 参照追加) — dominated 案除外
+  - feedback_choice_presentation.md (61 行、新規) — approval_required から「選択肢ラベル」「階層性ルール」を分離
+  - feedback_approval_required.md (42 行、改訂) — pure な visible action 承認ルールに絞り込み
+
+  project memory (3 ファイル、不変)
+
+  - project_severity_system.md / project_exit_code_ambiguity.md / project_call_claude_timeout.md
+
+  MEMORY.md (13 行、再構成)ワークフロー 5 memory を最上位に、project memory を下層に。各 memory が他 memory とどう連携するかを 1 行で示す index に。
+
+  ---
+  5 ラウンド構成（feedback_review_rounds.md より）
+
+  - 第 1 ラウンド: 基本整合性
+  - 第 2 ラウンド: 上位文書照合 (roadmap / brief / drafts)
+  - 第 3 ラウンド: 本質的観点
+  - 第 4 ラウンド: B 観点 (failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模)
+  - 第 5 ラウンド: 波及精査 (隣接 spec 影響伝達 + drafts 整合 + 連鎖更新漏れ) — 修正適用後に必ず実施する最終ガード
+
+  第 5 ラウンドの 5 step 必須手順
+
+  1. 変更値リスト化: 修正した値 (数値 / enum / API 名 / AC 番号 / シグネチャ / 必須 field / event type / decision_type) すべて
+  2. 網羅的 grep 検索: 既 approve 済の他 spec 全件 + drafts + Foundation + 当該 spec 自身の他 AC
+  3. Foundation 改版時の傘下精査必須: 傘下 7 spec (Spec 1/2/3/4/5/6/7) 全件 に対して影響精査を実行 — 改版要件番号 + 章番号 +改版内容に依存する具体記述を grep、波及あり / なしを判定 + 全件報告
+  4. Adjacent Sync TODO 整理: D-N 通し番号、(対象 spec、修正前後文言、同期理由)
+  5. 本セッション内同期判断: ユーザー判断 (本セッション内同期 / 別セッション処理)
+
+  関連方針
+
+  - 各ラウンドで発見した修正候補は deepdive_autoadopt で自動採択 / escalate 判断
+  - escalate 案件は choice_presentation のラベル + 階層性で提示
+  - spec.json approve / commit / push は approval_required で必ず明示承認
+  - ラウンドを跳ばさない原則: 過去 4 spec で第 3-4 ラウンドに致命級が初出した実例から、全 5 ラウンド必須
+
+  ---
+  整合性向上のポイント
+
+  - 関係性明示: 各 feedback memory に「関連 memory」セクションを追加、相互参照を明示化
+  - 責務分離: approval_required から選択肢提示ルールを切り出し (choice_presentation)、各 memory の責務を 1 つに絞る
+  - MEMORY.md の階層化: ワークフロー 5 memory と project memory を分離、index を関連性 hub として機能させる
+  - Foundation 影響精査の memory 化: 暗黙ルールだった「Foundation 改版時の傘下精査」を review_rounds に明文化
+
+  ---
+  memory は git 管理外（個人 memory）のため、commit / push 対象ではありません。次セッションから新 5 ラウンド構成で Spec 2
+  以降のレビューを進められます。
+```
+
+```
+## 追加議論 (2026-04-27、Spec 5 push 後): レビュー方法の再検討と memory 再構成
+
+### 背景
+
+Spec 5 レビューで以下の問題が顕在化:
+
+- 旧第 5 ラウンド「他 spec 波及」が形骸化、Spec 4 への波及 (Query API 14 → 15 種、5 箇所未更新) をユーザー指摘で初めて発見
+- 旧 6 ラウンド構成では精査が「事後対応」で、修正適用時の連鎖更新漏れが多発 (Spec 5 では精査ラウンドで 7 件発見)
+- Foundation 改版時の傘下精査ルールが暗黙、Foundation R13.5 拡張時に Spec 4 への波及を見落としかけた
+- ~/.claude/memory/ の feedback*.md がアドホックに追加されたため整合性なし
+
+### レビューラウンド構成: 旧 6 ラウンド → 新 5 ラウンド (D+E 統合)
+
+過去採用していた 6 ラウンド構成 (基本整合性 / 上位文書照合 / 本質的観点 / B 観点 / C 観点 / D 観点) + 事後精査ラウンドを、5 ラウンドに集約し精査を最終ガードに統合。
+
+- 第 1 ラウンド: 基本整合性
+- 第 2 ラウンド: 上位文書照合 (roadmap / brief / drafts)
+- 第 3 ラウンド: 本質的観点
+- 第 4 ラウンド: B 観点 (failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模)
+- 第 5 ラウンド: 波及精査 (隣接 spec 影響伝達 + drafts 整合 + 連鎖更新漏れ) — 修正適用後の最終ガード
+
+### 第 5 ラウンドの 5 step 必須手順 (形骸化防止)
+
+1. 変更値リスト化 (数値 / enum / API 名 / AC 番号 / シグネチャ / 必須 field / event type / decision_type)
+2. 網羅的 grep 検索 (既 approve 済の他 spec 全件 + drafts + Foundation + 当該 spec 自身の他 AC)
+3. Foundation 改版時は傘下 7 spec (Spec 1/2/3/4/5/6/7) 全件への精査必須
+4. Adjacent Sync TODO 整理 (D-N 通し番号、対象 spec / 修正前後文言 / 同期理由)
+5. 本セッション内同期 / 別セッション処理をユーザー判断
+
+### Foundation 改版時の傘下精査ルール明文化
+
+Foundation を改版した場合、傘下全 spec に対して以下を実施:
+
+- 改版した requirement 番号への参照を grep
+- 章番号参照を grep
+- 改版内容に依存する具体記述を grep
+- 波及あり / なしを判定し、全件報告 (波及なしも明示記録)
+
+### memory 再構成 (~/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/)
+
+#### 新規作成 (2 件)
+
+- feedback_review_rounds.md (103 行): 5 ラウンド構成 + 第 5 ラウンド手順詳細 + Foundation 傘下精査ルール
+- feedback_choice_presentation.md (61 行): approval_required から「選択肢ラベル」「階層性ルール」を分離
+
+#### 改訂 (3 件)
+
+- feedback_approval_required.md: pure な visible action 承認ルールに絞り込み
+- feedback_deepdive_autoadopt.md: 関連 memory 参照追加
+- feedback_dominant_dominated_options.md: 関連 memory 参照追加
+
+#### MEMORY.md 階層化
+
+- ワークフロー 5 feedback memory を最上位に
+- project memory 3 件を下層に
+- 各 memory の関連性を 1 行で示す index に
+
+### 次セッション以降の運用
+
+- 新 5 ラウンド構成で Spec 2 (skill-library) からレビュー
+- 第 5 ラウンドの 5 step 手順を機械的に踏むことで形骸化防止
+- Foundation 改版時は 5 step の step 3 で傘下 7 spec を必ず精査
+```
+
+
+
+
+
+
+
+##### 最後に
+
+- 仕様間の整合性をチェック
+
+- 仕様間の依存関係をチェック
+
 
