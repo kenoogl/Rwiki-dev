@@ -135,10 +135,17 @@ graph TB
 
 | Layer | Choice / Version | Role in Feature | Notes |
 |-------|------------------|-----------------|-------|
-| Document Format | Markdown (CommonMark + YAML frontmatter) | `foundation.md` 規範文書のフォーマット | プロジェクト標準 |
+| Document Format | Markdown (CommonMark + YAML frontmatter、GitHub Flavored Markdown 仕様準拠) | `foundation.md` 規範文書のフォーマット | プロジェクト標準。ID 生成 logic の準拠先 (cmark-gfm / Linguist 等) は Phase 2 Spec 4 design で確定 |
 | Schema Definition | YAML (frontmatter 骨格) / 構造化 list | 規範 schema の表現 | Spec 1 で詳細化 |
 | Validation Reference | (Phase 2 Spec 4 で確定) | 検証 4 種の実装 | 本 spec は schema 規範のみ所管 |
 | Runtime / Infrastructure | (該当なし) | — | 規範文書 spec のため |
+
+**Phase 2 Spec 4 引き継ぎ依存事項** (Spec 4 design 着手時に最終確定):
+
+- Python 標準ライブラリ想定: `pathlib` (path 操作) / `re` (正規表現 link 抽出) / `json` (logs 出力) / `subprocess` (grep 実行)、追加なし
+- 第三者ライブラリ想定: `pyyaml` (yaml block parse、`yaml.safe_load` 必須、version 制約は Spec 4 で確定)
+- 依存禁止: 検証 4 種実装は Spec 1-7 design.md / requirements.md を **markdown ファイルとして読み込むのみ**、Spec 5/6/7 等 downstream spec を Python module として `import` しない (一方向参照規律)
+- v1-archive/ への依存禁止規律 (フルスクラッチ方針) は Phase 2 でも継続
 
 ## File Structure Plan
 
@@ -473,7 +480,7 @@ flowchart LR
 **Schema 規範**
 
 - **入力**: `foundation.md` ファイル path
-- **検査内容**: foundation.md 内の `[...](#anchor)` 形式 link を抽出 → 各 anchor が foundation.md 内のヘッダー自動生成 ID と一致することを検査
+- **検査内容**: foundation.md 内の `[...](#anchor)` 形式 link を抽出 → 各 anchor が foundation.md 内のヘッダー自動生成 ID と一致することを検査。正規化アルゴリズム (GitHub markdown 自動 ID 生成 logic 準拠、CJK 保持) と edge case (空ヘッダー / HTML タグ / コードブロック内 link / 同名衝突 `-1` 接尾) の取り扱いは Phase 2 Spec 4 design 着手時に確定
 - **出力**: JSON `{check: "anchor_existence", failures: [{link_text: str, missing_anchor: str, line: int}]}`
 - **severity**: アンカー欠落 1 件以上 = ERROR
 - **exit code**: 全 PASS = 0 / 1 件以上 FAIL = 2
@@ -487,8 +494,8 @@ flowchart LR
 
 **Schema 規範**
 
-- **入力**: `foundation.md` + `.kiro/drafts/rwiki-v2-consolidated-spec.md` ファイル path、想定 SSoT version (例: v0.7.12)
-- **検査内容**: foundation.md §1-§6 の各章タイトル → consolidated-spec §1-6 の各章タイトルとの正規化マッチ (例: `## §2.12 Evidence-backed Candidate Graph` ↔ `### 2.12 Graph Ledger による Evidence-backed Candidate Graph`)
+- **入力**: `foundation.md` + `.kiro/drafts/rwiki-v2-consolidated-spec.md` ファイル path、想定 SSoT version 識別子 (例: v0.7.12)。version 識別子の **受け渡し方法** (CLI 引数 / consolidated-spec ヘッダ自動抽出 / hardcode) は Phase 2 Spec 4 design 着手時に確定 (本 spec では入力として受け取ることまでを規範化)
+- **検査内容**: foundation.md §1-§6 の各章タイトル → consolidated-spec §1-6 の各章タイトルとの正規化マッチ (例: `## §2.12 Evidence-backed Candidate Graph` ↔ `### 2.12 Graph Ledger による Evidence-backed Candidate Graph`)。マッチ logic (章番号一致のみ / タイトル類似度 / 完全一致 + alias 表) の選択は Phase 2 Spec 4 design 着手時に確定
 - **出力**: JSON `{check: "ssot_alignment", drift_items: [{foundation_section: str, consolidated_section: str | null, drift_type: "missing" | "title_mismatch" | "extra"}]}`
 - **severity**: drift 1 件以上 = WARN (consolidated-spec 改版時の差分検出を主用途とし、即 FAIL ではない)
 - **exit code**: 全 PASS = 0 / WARN 検出 = 0 (WARN は exit 0 だが logs に記録)
@@ -503,9 +510,9 @@ flowchart LR
 **Schema 規範**
 
 - **入力**: Spec 1-7 design.md + requirements.md (合計 14 ファイル) + `foundation.md`
-- **検査内容**: Spec 1-7 全 markdown を grep で `foundation.md#[a-z0-9-]+` 形式 link 抽出 → 各 anchor が foundation.md §4 (用語集) または §1-§3 / §5-§9 (用語以外) の anchor として実在することを検査
+- **検査内容**: Spec 1-7 全 markdown を grep で `foundation.md#<anchor>` 形式 link 抽出 → 各 anchor が foundation.md §4 (用語集) または §1-§3 / §5-§9 (用語以外) の anchor として実在することを検査。anchor の文字集合 (ASCII + CJK + hyphen 等)、URL-decode 要否、正規表現の Unicode 対応は Phase 2 Spec 4 design 着手時に確定
 - **出力**: JSON `{check: "citation_link_integrity", broken_links: [{source_file: str, line: int, target_anchor: str, missing: bool}]}`
-- **severity**: link 切れ 1 件以上 = WARN (改名 / 改版過渡期は WARN、長期化なら ERROR 昇格)
+- **severity**: link 切れ 1 件以上 = WARN (改名 / 改版過渡期は WARN 扱い)。長期化判定 (改版日付閾値による ERROR 昇格 logic 等) は Phase 2 Spec 4 design 着手時に確定、Spec 0 では規範化しない
 - **exit code**: 全 PASS = 0 / WARN = 0 (logs に記録)
 
 #### Component: 検証 4 — frontmatter schema 妥当性チェック
@@ -574,7 +581,7 @@ graph LR
 **章節構造 (markdown)**:
 
 - ヘッダー深さ: `#` (タイトル) / `##` (§N 章) / `###` (§N.M 節) / `####` (用語サブヘッダー)
-- 自動生成 ID: GitHub 標準 — lowercase + hyphen + 英数字とハイフン以外の記号除去 (例: `## §2.12 Evidence-backed Candidate Graph` → `#212-evidence-backed-candidate-graph`、`§` も `.` も除去対象)
+- 自動生成 ID: GitHub markdown の自動 ID 生成 logic に準拠 — ASCII 文字は lowercase、空白は hyphen、`§` 等の punctuation は除去、CJK 文字 (日本語含む) は保持。例: `## §2.12 Evidence-backed Candidate Graph` → `#212-evidence-backed-candidate-graph` (ASCII のみ) / `#### 用語集 5 分類` → `#用語集-5-分類` (CJK 保持)。正規化アルゴリズムの厳密実装は Phase 2 Spec 4 design 着手時に確定 (本 spec では準拠先を規範化、edge case = 同名ヘッダー衝突 `-1` 接尾 / 空ヘッダー / HTML タグ内 / コードブロック内 link の取り扱いは Spec 4 で確定)
 
 **用語アンカー (markdown)**:
 
@@ -589,8 +596,13 @@ graph LR
 
 **検証 4 種 JSON 出力**:
 
-- 共通 schema: `{check: str, status: "pass" | "warn" | "fail", details: object}`
-- 集約結果: `logs/doctor_foundation_latest.json` (Phase 2 Spec 4 design で確定)
+- 共通 envelope schema: `{check: str, status: "pass" | "warn" | "fail", details: object}`
+- 各検証個別 schema は envelope の `details` オブジェクトに内包される対応関係:
+  - 検証 1 (anchor 存在): `details = {failures: [{link_text, missing_anchor, line}]}`
+  - 検証 2 (SSoT 章番号整合): `details = {drift_items: [{foundation_section, consolidated_section, drift_type}]}`
+  - 検証 3 (citation link): `details = {broken_links: [{source_file, line, target_anchor, missing}]}`
+  - 検証 4 (frontmatter schema): `details = {parse_errors: [...], missing_fields: [...]}`
+- 集約結果: `logs/doctor_foundation_latest.json` (Phase 2 Spec 4 design で確定、複数 envelope を array で内包)
 
 ### Physical Data Model
 
@@ -622,16 +634,30 @@ graph LR
 
 本 spec は規範文書 spec のため、runtime error より **文書品質エラー** が中心。検証 4 種で機械検出可能なエラーは Phase 2 Spec 4 で `rw doctor foundation` 実装、それ以外は人間レビュー gate で吸収。
 
+検証実行時の **runtime error** (foundation.md ファイル読込失敗 / consolidated-spec 不在 / yaml parse 中の OOM 等) の handling は Phase 2 Spec 4 design 着手時に確定。本 spec では exit code 規律 (runtime error = exit 1、FAIL 検出 = exit 2、PASS = exit 0、roadmap.md L132 準拠) のみ規範化。
+
+検証 4 種の **集約 exit code logic** (例: 検証 1 ERROR + 検証 2 WARN + 検証 3 PASS の集約) の規範: いずれか 1 件でも ERROR があれば exit 2、全て PASS または WARN のみなら exit 0、runtime error 発生で exit 1。集約 logic の詳細実装は Phase 2 Spec 4 design 着手時に確定。
+
 ### Error Categories and Responses
 
 - **章節アンカー欠落** (検証 1 ERROR): foundation.md 内 link target 不在 → ユーザーは欠落 anchor を補完するか、引用元 link 修正
 - **SSoT 章番号 drift** (検証 2 WARN): consolidated-spec 改版で章タイトル変動 → Adjacent Sync 経路で foundation.md 同期
-- **用語集引用 link 切れ** (検証 3 WARN): Spec 1-7 引用先 anchor が消滅 → foundation.md anchor 追加 or Spec 1-7 引用修正、長期化 (3 ヶ月超) で ERROR 昇格
+- **用語集引用 link 切れ** (検証 3 WARN): Spec 1-7 引用先 anchor が消滅 → foundation.md anchor 追加 or Spec 1-7 引用修正 (長期化判定による severity 昇格 logic は Phase 2 Spec 4 design 着手時に確定)
 - **frontmatter schema 妥当性違反** (検証 4 ERROR): yaml block parse error or 必須 field 欠落 → foundation.md §5 を修正
+
+### Rollback Procedures
+
+- **Adjacent Sync 経路** での rollback: `spec.json.updated_at` + change log 追記の取り消しのみ (git revert)、波及なし
+- **実質変更経路** での rollback: foundation.md 改版後に不整合検出時 → git revert で foundation.md + requirements.md + spec.json approvals.requirements を一括 rollback。波及済みの Spec 1-7 改版は roadmap.md Adjacent Sync 規律で再同期 (spec.json.updated_at + change log 追記)
+- 検証 4 種は idempotent (副作用なし、副本 JSON 生成のみ)、retry 安全
 
 ### Monitoring
 
-- `logs/doctor_foundation_latest.json` (Phase 2 Spec 4 で確定): 検証 4 種の最新結果
+- `logs/doctor_foundation_latest.json` (Phase 2 Spec 4 で確定): 検証 4 種の最新結果 (複数 envelope を array で内包、共通 schema は Data Models 参照)
+- **実行 trace の履歴保全**: 最新結果のみ logs に保持、履歴 (実行日時 / 所要時間 / 検出件数推移) の保全方法 (logs ディレクトリへの追記 / 別 metrics ファイル / git 経由のみ等) は Phase 2 Spec 4 design 着手時に確定
+- **logs null 状態**: 検証 4 種が一度も実行されていない場合の `logs/doctor_foundation_latest.json` 不在は許容、初回実行時に Spec 4 が `logs/` ディレクトリを生成する規範は Phase 2 Spec 4 design で確定
+- **対応推奨記述**: ERROR / WARN 検出時の対応手順 (例: 「foundation.md §X を修正」) を logs JSON に含めるかは Phase 2 Spec 4 design で best practice として規範化
+- **改版種別整合性検査の追加可否**: 検証 5 種目として「改版種別 (Adjacent Sync vs 実質変更) と change log + spec.json.updated_at + requirements.md 改版有無の整合性」を機械検証する案は、現状 R10.7 決定 0-2 (link 切れ検出 (a) のみ採用、(b)(c) 不採用) と整合する形で **Spec 0 では検証 4 種維持**、Phase 2 Spec 4 design 着手時に追加可否を確定
 - 人間レビュー gate: foundation.md 改版時の人間チェック (実質変更経路)、Spec 0 spec.json approvals.requirements 再 approve
 
 ## Testing Strategy
@@ -640,10 +666,16 @@ graph LR
 
 ### Document Lint (検証 4 種、Phase 2 Spec 4 で実装)
 
-- **検証 1 章節アンカー存在**: foundation.md 内 link integrity (3-5 anchor sample)
-- **検証 2 SSoT 章番号整合**: consolidated-spec ↔ foundation 章番号 alignment (§1-§6 全章)
-- **検証 3 用語集引用 link 切れ**: Spec 1-7 全 design + requirements (合計 14 ファイル) → foundation.md anchor (3-5 link sample)
-- **検証 4 frontmatter schema 妥当性**: §5 内 yaml block (3-5 block) parse + 必須 field 検査
+検査対象は **全件検査** が原則 (sampling では coverage 不足)。Phase 2 Spec 4 design で実装規律として確定:
+
+- **検証 1 章節アンカー存在**: foundation.md 内全 anchor link を検査 (foundation.md は §1-§9 で章節 anchor 数十個、§4 用語集で約 50 anchor)
+- **検証 2 SSoT 章番号整合**: consolidated-spec ↔ foundation §1-§6 全章 alignment
+- **検証 3 用語集引用 link 切れ**: Spec 1-7 全 design + requirements (合計 14 ファイル) 全件 grep → foundation.md anchor 全件照合
+- **検証 4 frontmatter schema 妥当性**: §5 内全 yaml block parse + 必須/推奨 field 検査
+
+**検証 4 種実装の unit test 戦略**: 検証 1-4 各々の logic に対する unit test (例: 検証 1 で同名衝突 anchor / 空ヘッダー / コードブロック内 link / CJK anchor の入力 → 期待 output) は Phase 2 Spec 4 design 着手時に確定 (本 spec は schema 規範のみ所管)
+
+**regression test**: foundation.md 改版時に既存 anchor / 章番号が壊れていないかの regression test の必要性 + 実装方法 (snapshot test / golden file 比較等) は Phase 2 Spec 4 design 着手時に確定。Spec 0 では人間レビュー gate (実質変更経路) で代替
 
 ### Cross-spec Integration Test (中心 spec として end-to-end)
 
@@ -651,6 +683,8 @@ graph LR
 
 - 例: Spec 1 design 内で「Spec 1 frontmatter 詳細スキーマが foundation §5 骨格と整合する」test を記述
 - 例: Spec 5 design 内で「Spec 5 L2 ledger schema が foundation §3 6 ファイル骨格と整合する」test を記述
+
+**Test 形式**: markdown lint (検証 4 種に統合) / pytest unit test / 別途 spec 整合性検査 script のいずれにするかは Phase 2 Spec 4 design + 各 consumer spec design 着手時に確定 (Spec 0 では「consumer 側に記述する規律」のみ規範化)
 
 ### 人間レビュー Gate
 
@@ -663,17 +697,30 @@ graph LR
 
 - **Privacy**: foundation.md 自体に個人情報・秘匿情報は含まない (規範のみ)
 - **Integrity**: git の commit hash で改版 trail を保全、検証 4 種で機械的整合検出
+- **YAML deserialization**: 検証 4 で foundation.md §5 内 yaml block を parse する際、Phase 2 Spec 4 design 実装では `yaml.safe_load` を必須とする (任意コード実行を防止)。Spec 0 では規範のみ宣言、実装は Spec 4 で確定
+- **Path traversal**: 検証 1-4 の検査対象 path (foundation.md / consolidated-spec / Spec 1-7 14 ファイル) は本 spec では固定的に規範化。Phase 2 Spec 4 で CLI 引数 (`-f` / `--file` 等) によって外部から path が渡される場合の検証 (`Path.resolve()` + `vault_root` 配下チェック等) は Spec 4 design 着手時に規範化
 
 ## Performance & Scalability
 
 本 spec は規範文書 spec のため、runtime 性能要件はない。検証 4 種 (Phase 2 Spec 4 実装) の実行時間は以下を目安:
 
-- 検証 1-4 を foundation.md (~500-1000 行想定) + Spec 1-7 14 ファイル (~10,000 行合計) に対して < 5 秒で完了
+- **target**: 検証 1-4 を foundation.md (~500-1000 行想定) + Spec 1-7 14 ファイル (design.md + requirements.md × 7 spec、~10,000 行合計) に対して **< 5 秒で完了**
+- **target 根拠**: CI 統合時の許容実行時間 + 人間レビュー gate での待ち時間として許容できる範囲。検証 1-4 はいずれも O(N) または O(N×M) で N, M は中規模 (anchor 数 ~100 / link 数 ~100 / yaml block 数 ~10)、5 秒は十分余裕のある閾値
+- **想定規模の根拠**: Spec 0 design 738 行 / Spec 1 design 1140 行 / 各 requirements ~200 行で実測、Spec 1-7 で design ~1000 行 + requirements ~200 行 × 7 = ~10K 行
+- **性能達成手段**: 検証 1-4 は state を共有しない独立検査のため並列実行可能 (Flow 3 と整合)、Phase 2 Spec 4 design で並列化採否を確定
+- **性能劣化シナリオ** (Phase 2 Spec 4 で対策検討): foundation.md anchor 数が 1000 個超 / Spec 1-7 link 数が 1000 個超になると検証 3 の O(L×H) が顕在化、cache 機構等の対策余地あり
 - 機能優先 (correctness 優先)、性能は prototype 測定で検証 (memory feedback_design_review.md)
 
 ## Migration Strategy
 
-本 spec はフルスクラッチ (v1 から継承する規範文書なし)、移行不要。ただし以下の lifecycle が発生:
+本 spec はフルスクラッチ (v1 spec / 実装からの継承なし、R10.5)、v1 → v2 の **移行は不要**。ただし以下の遷移と lifecycle が発生:
+
+**v2 設計 draft 群との関係 (v1 spec ではなく v2 設計議論ログ)**:
+
+- `docs/curatedRraphRAG-V2.md` / `docs/仕様V2に向けての議論.md` / `docs/dev-log-cc-sddv3.md` 等は v1 spec ではなく v2 設計 draft / 議論ログ。foundation.md 確定後も **参照ログとして残置** (移行対象外)、SSoT は foundation.md + consolidated-spec → foundation.md
+- `.kiro/drafts/rwiki-v2-consolidated-spec.md` v0.7.12: foundation.md 確定の起点となる議論ログ。foundation.md 初版生成後は consolidated-spec を **議論ログ参照として残置** (二重管理を避けるため SSoT は foundation.md に一元化、L76 既述)
+
+**Lifecycle (v1 → v2 移行ではなく v2 内部の遷移)**:
 
 ```mermaid
 flowchart LR
@@ -689,8 +736,9 @@ flowchart LR
   EssentialChange --> ReverifyAll[傘下 7 spec 全件精査] --> ReApprove[再 approve] --> UpdateFoundation[foundation.md 改版]
 ```
 
-- **Phase breakdown**: implementation phase で foundation.md 初版生成 → Spec 1-7 引用整合確認 → Phase 2 Spec 4 で `rw doctor foundation` 実装
-- **Rollback triggers**: foundation.md 初版で重大不整合発覚 → Spec 0 design 段階に戻る (本 design.md 改版経由)
+- **Phase breakdown**: Spec 0 implementation phase で foundation.md 初版生成 → Spec 1-7 引用整合確認 → **dev-log Phase 2 (Spec 4 + Spec 7 並列 design)** で Spec 4 design が `rw doctor foundation` を実装。本 design 内で「Phase 2 Spec 4 design」と表記する箇所はすべてこの dev-log Phase 2 の Spec 4 design 着手を指す
+- **Spec 1-7 連鎖 migration**: Foundation 実質変更経路 (Flow 2) で foundation.md 改版時、傘下 Spec 1-7 全件波及精査 → 必要に応じて Spec N の requirements / design を追従改版する flow が migration の一部として位置付けられる (Flow 2 参照)
+- **Rollback triggers**: foundation.md 初版で重大不整合発覚 → Spec 0 design 段階に戻る (本 design.md 改版経由)。foundation.md 改版後の rollback 手順は Error Handling §「Rollback Procedures」参照
 - **Validation checkpoints**: 検証 4 種 + 人間レビュー gate
 
 ## 設計決定事項
@@ -734,3 +782,14 @@ _change log_
 - 2026-04-27: 初版生成 — 14 Requirements を foundation §1-9 にマップ、検証 4 種規範 schema 確定 (Spec 4 実装委譲)、設計決定 0-1〜0-5 確定。Phase 2 Spec 4 design 着手時に `rw doctor foundation` coordination 必要
 - 2026-04-27: 12 ラウンドレビュー — 6 件自動採択 (軽-1 R2.3 reject_queue/ 明示 / 軽-2 R3.7 不変項目 4 種表記統一 / 軽-3 R10.5 §7-§9 重複解消 / 軽-5 R14.5 §「Boundary Commitments」マッピング是正 / 軽-2-1 upstream 依存記述明確化 / 軽-3 用語アンカー GitHub 自動 ID 準拠 + 同名衝突回避規定追加)
 - 2026-04-27: 厳しく再精査 — 連鎖更新漏れ 3 件是正 (致-1A §7 Requirements 列挙から R10.5 削除 / 致-1B 検証 1 Requirements から R14.5 削除 / mermaid Note 内 anchor 例示を GitHub 自動 ID 形式に更新)
+- 2026-04-27: ラウンド 4-12 個別やり直し (前回レビューで一括処理 batching によりユーザー判断機会が省略された問題への遡及対応、memory feedback_no_round_batching.md 新設に伴う) — 計 9 件自動採択 + 1 件 escalate 確定:
+  - R4 (軽-4-1 envelope ↔ 個別 schema 対応明示 / 軽-4-2 SSoT version 受け渡し方法 Phase 2 委譲明記)
+  - R4 escalate (軽-4-3「3 ヶ月超で ERROR 昇格」削除、長期化判定 logic を Phase 2 Spec 4 design 委譲、案 A 採択)
+  - R5 (軽-5-1 GitHub 自動 ID 正規化 logic 準拠 + CJK 保持規定追加 / 軽-5-2 検証 2 マッチ logic 委譲明記 / 軽-5-3 検証 3 日本語 anchor 対応委譲明記 / 軽-5-4 edge case 取扱委譲明記)
+  - R6 (軽-6-1〜4 性能 target 根拠 + 想定規模実証 + 並列実行可能性 + 性能劣化シナリオを Performance section に統合)
+  - R7 (軽-7-1〜2 / 7-4 runtime error handling + 集約 exit code logic + Rollback Procedures section 追加)
+  - R8 (軽-8-1〜2 yaml safe_load 必須 + path traversal 検証規律を Security Considerations に追加)
+  - R9 (軽-9-1〜4 実行 trace / null 状態 / 対応推奨記述 / 改版種別整合性検査の追加可否を Monitoring section に統合)
+  - R10 (軽-10-1〜4 Phase 2 引き継ぎ依存事項 + 依存禁止規律 + GitHub markdown 仕様準拠を Technology Stack に追加)
+  - R11 (軽-11-1〜4 「3-5 sample」誤記是正 → 全件検査 + unit test / regression test / Integration Test 形式委譲明記)
+  - R12 (軽-12-1〜4 v2 設計 draft 残置 + drafts → foundation.md 遷移 + Spec 1-7 連鎖 migration + Phase 名整合)
