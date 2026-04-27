@@ -151,12 +151,12 @@ frontmatter スキーマ・カテゴリ体系・tag vocabulary を Spec 1 の責
 
 ### 第 5 ラウンド指摘（C 観点：他 spec への波及影響、各 spec 起票時 / Adjacent Sync で coordination）
 
-- **C-1: Spec 5 / Spec 2 の `type` 表記が entity type を指す箇所の調整**:
-  - Spec 5 R1.2 (entities.yaml): `type`（entity type、`entity_types.yml` の値）
-  - Spec 5 R5.5 (relation_extraction skill 出力 schema): `type`（`entity_types.yml` の値）
-  - Spec 2 R7.2 (entity_extraction skill 出力 schema): `type`（`entity_types.yml` の値）
-  - **問題**: 本 spec 修正（本-2）で `type:` を content 種別、`entity_type:` を entity 種別に **2 系統分離** したが、Spec 5 / Spec 2 の出力 schema および `entities.yaml` 内の field では entity type を依然 `type` と表記している。本 spec frontmatter の `type:` (content) と Spec 5 / Spec 2 の `type` (entity) が同名で意味が異なる二重命名状態。
-  - **対応方針**: Spec 5 / Spec 2 起票時または Adjacent Sync で、それぞれの schema field 名を `entity_type` に統一するよう coordination 要求を出す。本 spec の `entity_type:` (frontmatter) と一貫させることで命名混乱を排除。
+- **C-1: Spec 5 / Spec 2 の `type` 表記が entity type を指す箇所の調整** ✅ **対応済（2026-04-27）**:
+  - Spec 5 R1.2 (entities.yaml): `type` → `entity_type` に統一（2026-04-27 Spec 5 第 1 ラウンド 重-2 で修正済）
+  - Spec 5 R3.5 (entity_extraction skill 出力 schema): `type` → `entity_type` に統一（2026-04-27 Spec 5 第 1 ラウンド 重-2 で修正済）
+  - Spec 5 R4.5 (relation_extraction skill 出力 schema): `type` は relation type を表す別概念のため変更不要（entity の field 名としての `type` ではない）
+  - Spec 2 R5.2 (entity_extraction skill 出力 schema): `type` → `entity_type` に統一（2026-04-27 Spec 2 第 1 ラウンド 致-1 で修正済、Spec 1 R2.3 整合参照を追加）
+  - **対応結果**: Spec 1 frontmatter の `type:` (content) と Spec 5 / Spec 2 の entity field 名 `entity_type` が完全に分離され、命名衝突が解消。本 C-1 は本 spec / Spec 5 / Spec 2 の整合確認のみで closed。
 - **C-3: Spec 4 で `rw approve` の各 review 層対応 AC が未記述**:
   - Spec 4 requirements には `rw approve` がサブコマンド・タスクリストに登場するのみで、対応する review 層（`synthesis_candidates/` / `vocabulary_candidates/` / `audit_candidates/` / `decision-views/` / `relation_candidates/` / `Follow-up` 等）の dispatch 詳細 AC はなし。
   - 本 spec R4.9 で「`vocabulary_candidates/` approve は Spec 4 拡張責務」を coordination 要求として明示済（本-6 対応）。
@@ -181,4 +181,11 @@ frontmatter スキーマ・カテゴリ体系・tag vocabulary を Spec 1 の責
 #### 確認済（修正不要、参考記録）
 
 - **D-1**: consolidated-spec.md L1502 の 7 カテゴリ列挙 → 本-14「consolidated-spec.md drafts への Adjacent Sync」で別セッション対応として記載済（重複）
-- **D-2**: consolidated-spec.md L2572 の `applicable_categories: [llm_logs]` (`llm_log_extract` skill) → 本-14「Spec 2 起票時の coordination」で持ち越し記載済（重複）
+- **D-2**: consolidated-spec.md L2572 の `applicable_categories: [llm_logs]` (`llm_log_extract` skill) → 本-14「Spec 2 起票時の coordination」で持ち越し記載済（重複）。2026-04-27 Spec 2 第 5 ラウンド 重-1 案 A 採択により Spec 2 R3.2 で `applicable_input_paths` 任意 field を新設し L1 raw 入力 skill 用に分離、L2572 例の混用は drafts D-NEW として別セッション一括処理予定。
+
+---
+
+_change log_
+
+- 2026-04-26: 初版生成 + 6 ラウンドレビュー反映（要件 / 設計持ち越し / Adjacent Sync TODO 集約）
+- 2026-04-27 (Adjacent Sync): Spec 2 第 5 ラウンド波及精査由来 — C-1「type → entity_type 統一」を ✅ 対応済（2026-04-27、Spec 5 第 1 ラウンド 重-2 + Spec 2 第 1 ラウンド 致-1 で完了）に更新。本-14（applicable_categories 値域）由来の L1 raw 入力 skill 不整合は Spec 2 第 5 ラウンド 重-1 案 A 採択で `applicable_input_paths` 新設により coordination 解決。Adjacent Spec Synchronization 運用ルールに従い再 approval は不要、`spec.json.updated_at` 更新のみ。
