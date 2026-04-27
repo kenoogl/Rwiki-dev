@@ -8,9 +8,11 @@
 
 [Spec 0 rwiki-v2-foundation](##Spec 0 rwiki-v2-foundation)
 
+[Spec 0 design ラウンド 4-12 やり直し](##Spec 0 design ラウンド 4-12 やり直し)
+
 [Spec 1 rwiki-v2-classification](##Spec 1 rwiki-v2-classification)
 
-
+[Spec 1 design ラウンド 4-12 やり直し](##Spec 1 design ラウンド 4-12 やり直し)
 
 
 
@@ -592,3 +594,589 @@
   セッション終了準備完了。Phase 2 着手は別セッションで TODO_NEXT_SESSION.md の更新指示に従って再開できます。
 ```
 
+##### ❯ 次のセッションを始めるが、レビューログを見ると、ラウンド4−12は機能していないようにみえる
+
+```
+⏺ レビューログを確認しました。ユーザー指摘の通りです。memory の規定と実態を照合します。
+
+⏺ レビューログと memory feedback_design_review.md 規定を照合しました。指摘の通り、ラウンド 4-12 が機能していません。
+
+  規定違反の実態
+
+  memory feedback_design_review.md の規定:
+  - 各ラウンド Step 1-4 (要点提示 → ユーザー判断 → 詳細抽出 → 深掘り) 必須手順
+  - 「該当なし」確認も明示的に行い、ラウンドを跳ばさない
+  - 観点 11 (テスト戦略) / 12 (マイグレーション) は規模の小さい spec でも 該当なし扱いせず必ずラウンドを実施
+
+  Spec 0 の実態 (dev-log-3 L223-285):
+  - ラウンド 1-3 は個別実施 (5 step あり)
+  - ラウンド 4-12 は「一括して結果報告します」で集約処理、各ラウンド「判定: 該当なし」のみ。Step 2 ユーザー判断が完全に省略
+
+  Spec 1 の実態 (dev-log-3 L446-533):
+  - ラウンド 1-2 は個別実施
+  - ラウンド 3-12 は「一括して実施します」で集約処理、Step 2 省略
+  - Spec 1 は実装含む spec で「アルゴリズム検証」「性能達成手段」「失敗モード handler」「テスト戦略」が「検出なし」のみで素通り —
+  本来深く厚くなるべき観点
+
+  具体的な問題
+
+  - Spec 0: 観点 11 (テスト戦略) を「本 spec の Testing Strategy は十分」で済ませた。memory 規定「規模の小さい spec
+  でも必ずラウンドを実施」と整合しない
+  - Spec 1: 観点 5 (アルゴリズム) で Levenshtein 近似採用の根拠がユーザー対話を経ていない (本来 escalate 候補)
+  - 両 spec ともラウンド 4-12 で ユーザー判断機会 (Step 2) を 9 ラウンド分 skip している
+
+  これから Phase 2 (Spec 4 / Spec 7) に入る前の判断
+
+  Phase 2 は Spec 4 (CLI 統一規約の中核) + Spec 7 (lifecycle management、実装重) で、ラウンド 4-12
+  を一括処理すると重大な検出漏れリスクがあります。大局判断を仰ぎたい点が 1 件あります。
+
+  【SSoT 判定要】Spec 0 / Spec 1 design の遡及対応をどうしますか？
+
+  - 案 A: Phase 2 着手前に Spec 0 / Spec 1 の design review を「ラウンド 4-12 個別実施」でやり直す — 検出された修正があれば適用 + 再
+  commit。コスト大だが Phase 2 以降の基準を確立できる (Recommended)
+  - 案 B: Spec 0 / Spec 1 はそのまま、Phase 2 から正規プロセスを徹底 — 過去 2 spec の検出漏れリスクは残るが Phase 2 着手が早まる
+
+  どちらでも Phase 2 着手時には 12 ラウンド個別実施 (Step 1-4 全踏襲、ユーザー対話 gate を skip しない) を徹底します。
+```
+
+##### ❯ スキップ防止策をメモリに記入。Spec 0 / Spec 1 の design review をラウンド 4-12についてはやりなおし。
+
+
+
+## Spec 0 design ラウンド 4-12 やり直し
+
+```
+⏺ 承知しました。まず memory にスキップ防止策を追記します。
+⏺ 既存 feedback_design_review.md にも skip 防止の強化規定を追記します。
+⏺ MEMORY.md にインデックス追加します。
+⏺ memory 更新完了。次に Spec 0 のラウンド 4-12 個別やり直しに着手します。Spec 0 design.md の現在の内容を確認します。
+
+⏺ Spec 0 design.md を確認しました。ラウンド 4 から個別 5 step で進めます。
+
+  第 4 ラウンド: API interface 具体化 (観点 4)
+
+  Step 1: 要点提示
+
+  Spec 0 における "API interface" 該当箇所:
+
+  - 検証 4 種の schema 規範 (design.md L462-527): 検証 1 (anchor 存在) / 検証 2 (SSoT 章番号整合) / 検証 3 (citation link) / 検証 4 (frontmatter schema)
+  - 各検証で確定済の要素:
+    - 入力 (foundation.md path、consolidated-spec path、Spec 1-7 14 ファイル)
+    - 検査内容 (linkable / link target / yaml block parse 等)
+    - 出力 JSON schema ({check, failures, ...})
+    - severity (ERROR / WARN)
+    - exit code (PASS=0 / FAIL=2 / WARN=0 logs)
+  - Spec 1-7 引用 contract (L601-605): path 形式 + anchor 安定性 + 引用検証
+  - Adjacent Sync contract / 実質変更 contract (L607-617)
+
+  潜在的検出 (詳細抽出は Step 3 で行うが、Step 1 で示す候補):
+
+  - 軽-4-1 候補: 検証 1-4 の JSON 出力 top-level schema が個別 ({check, failures} / {check, drift_items} / {check, broken_links} / {check, parse_errors, missing_fields})。集約 (logs/doctor_foundation_latest.json) で複数 check を含む際の 共通 envelope schema が L590-593 で「{check, status: "pass"|"warn"|"fail", details: object}」と記述あるが、個別 schema との対応規定なし
+  - 軽-4-2 候補: 検証 2 SSoT 章番号整合の入力に「想定 SSoT version (例: v0.7.12)」が記載されているが、これを どう渡すか (CLI 引数 / consolidated-spec 内記述から自動抽出 / hardcode) が未確定。Phase 2 Spec 4 委譲事項で良いが、design 内に明記推奨
+  - 軽-4-3 候補: 検証 3 citation link チェックの「長期化 (3 ヶ月超) で ERROR 昇格」(L508 / L629) は どこで「3 ヶ月」を判定するか (lint metadata?
+  改版日付からの計算?) が未確定。Phase 2 委譲か削除か判断要
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 4 ラウンドの進め方をどうしますか？
+
+  - 案 A: 上記 3 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 4 は「該当なし」で次ラウンドへ (検証 schema は十分具体化、Phase 2 委譲も明示済み)
+```
+
+##### ❯ A
+
+```
+⏺ requirements.md を確認してから Step 3-4 に進みます。
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  requirements R10.7 確認: 整合性検証手段の選択肢 (a)(b)(c) は要件化、severity 区別 (ERROR/WARN) と「3 ヶ月閾値」は requirements 規定外で design
+  先取り。
+
+  3 候補の判断:
+
+  - 軽-4-1 (envelope ↔ 個別 schema 対応未明示): 自動採択 (内部矛盾解消、致命的デメリットなし)
+  - 軽-4-2 (SSoT version 受け渡し方法未確定): 自動採択 (Phase 2 Spec 4 委譲を明記、boundary clarification)
+  - 軽-4-3 (「3 ヶ月超で ERROR 昇格」閾値): escalate (requirements 規定外の design 先取り、削除 / 委譲明記の選択肢あり)
+
+  軽-4-1 / 軽-4-2 を Edit で適用してから escalate 提示します。
+⏺ 軽-4-1 / 軽-4-2 適用済。軽-4-3 を escalate します。
+
+  軽-4-3 escalate: 「3 ヶ月超で ERROR 昇格」閾値の取り扱い
+
+  【SSoT 判定要】design.md L508 / L629 の「長期化 (3 ヶ月超) で ERROR 昇格」は requirements 規定外の design 先取り記述です。どう扱いますか？
+
+  - 案 A: 記述を削除し、長期化判定は Phase 2 Spec 4 design 委譲と明記 — Spec 0 規範を最小に保ち、運用判断は Spec 4 で確定 (Recommended)
+  - 案 B: 「3 ヶ月超」表記を残し、判定機構 (改版日付の保持場所 / 閾値判定 logic) を Phase 2 Spec 4 委譲と明記 — Spec 0で具体閾値を規範化、実装手段のみ委譲
+```
+
+##### ❯ A
+
+```
+⏺ 第 4 ラウンドの修正適用 3 件完了 (軽-4-1 / 軽-4-2 自動採択、軽-4-3 escalate → 案 A 採択)。次のラウンドへ進みます。
+
+  第 5 ラウンド: アルゴリズム検証 (観点 5)
+
+  Step 1: 要点提示
+
+  Spec 0 は規範文書 spec のため、アルゴリズムは検証 4 種に限定:
+
+  - 検証 1 (anchor 存在): foundation.md 内 [...](#anchor) 形式 link を抽出 → 各 anchor がヘッダー自動生成 ID と一致するか検査。計算量 O(L + H) (L =
+  link 数、H = ヘッダー数)
+  - 検証 2 (SSoT 章番号整合): foundation §1-§6 章タイトルと consolidated-spec §1-6 章タイトルの正規化マッチ。計算量 O(N×M) (N, M
+  はそれぞれ章数、~10×10)
+  - 検証 3 (citation link): Spec 1-7 全 14 ファイルを grep で foundation.md#[a-z0-9-]+ 抽出 → foundation.md の anchor と照合。計算量 O(F + L×H) (F =
+  ファイルサイズ、L = link 数、H = anchor 数)
+  - 検証 4 (frontmatter schema): foundation.md §5 内 yaml block を pyyaml で parse + 必須 field 出現検査。計算量 O(B) (B = yaml block 総サイズ)
+
+  潜在的検出候補:
+
+  - 軽-5-1 候補: 検証 1 の「ヘッダー自動生成 ID 計算」が 正規化ルールの不完全記述。design.md L577「lowercase + hyphen +
+  英数字とハイフン以外の記号除去」と書いたが、GitHub の実際のルールはより複雑 (連続スペース → 単一 hyphen / 末尾 punctuation 除去 / 日本語文字保持 /
+  連続 hyphen 圧縮なし等)。foundation.md は日本語混在 (## §2.12 Evidence-backed Candidate Graph 等) のため、正規化アルゴリズムが正しく実装されないと
+  false positive を出す
+  - 軽-5-2 候補: 検証 2 の「正規化マッチ」が マッチ logic 未確定。L491 例 ## §2.12 Evidence-backed Candidate Graph ↔ ### 2.12 Graph Ledger による
+  Evidence-backed Candidate Graph の対応をどう判定するか (章番号一致のみ / タイトル含む文字列類似度 / 完全一致) が未確定。Phase 2 Spec 4
+  委譲で良いが、現在の design では「正規化マッチ」が ambiguous
+  - 軽-5-3 候補: 検証 3 の grep で foundation.md#[a-z0-9-]+ 形式と書いたが、foundation.md は 日本語ヘッダーも持つ (e.g. #### 用語集 5 分類 → GitHub自動 ID #用語集-5-分類)。正規表現に日本語文字を含めないと日本語 anchor の link 切れを検出できない
+  - 軽-5-4 候補: 検証の edge case 網羅性 — 同名ヘッダー衝突時 GitHub -1 接尾、空ヘッダー、HTML タグを含むヘッダー、コードブロック内 #anchor等が記述されているか? design.md L583 で同名ヘッダー衝突対策は記述あり、他は未記述
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 5 ラウンドの進め方をどうしますか？
+
+  - 案 A: 4 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 5 は「アルゴリズム詳細は Phase 2 Spec 4 design 委譲、Spec 0 は schema 規範のみ」で「該当なし」判定、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 第 5 ラウンド修正適用 4 件完了 (全件自動採択)。次のラウンドへ。
+ 第 6 ラウンド: 性能達成手段 (観点 6)
+
+  Step 1: 要点提示
+
+  design.md L668-672 の Performance & Scalability:
+
+  - target: 検証 1-4 を foundation.md (~500-1000 行想定) + Spec 1-7 14 ファイル (~10,000 行合計) に対して < 5 秒で完了
+  - 方針: 機能優先 (correctness)、性能は prototype 測定で検証 (memory feedback_design_review.md 整合)
+
+  潜在的検出候補:
+
+  - 軽-6-1 候補: 性能 target「< 5 秒」の 根拠が未明示。foundation.md 1000 行 + Spec 1-7 14 ファイル 10,000 行は決して大規模ではないが、5
+  秒は妥当な閾値か? CI 統合時の許容実行時間として妥当か? 根拠記述があると Phase 2 Spec 4 prototype 測定の評価基準になる
+  - 軽-6-2 候補: 想定規模の妥当性 — Spec 1-7 design.md は実際にどの程度の行数になるか? Spec 0 だけで既に 738 行、Spec 1 design.md は 1140 行 (dev-log
+   L580 より)。14 ファイル (Spec 1-7 × design + requirements) で 10,000 行は 過小見積 の可能性あり (実際は 15,000-20,000 行になる可能性)
+  - 軽-6-3 候補: 性能劣化要因の明示なし — 検証 3 (Spec 1-7 grep) は Spec 1-7 の規模に線形スケールするが、Foundation 改版で anchor 数が増えると O(L×H)
+   で逆相関的に増加。性能劣化シナリオを記述しておくと Phase 2 Spec 4 で対策設計可能
+  - 軽-6-4 候補: 並列実行記述の不整合 — Flow 3 (L227) で「4 種は並列独立に実行可能」、L245 で「並列独立」と記述があるが、Performance section
+  ではこの並列性が性能達成手段として明示されていない (Phase 2 Spec 4 で実装委譲だが design で並列実行を性能達成手段として記述しておくと boundary
+  明確化)
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 6 ラウンドの進め方をどうしますか？
+
+  - 案 A: 4 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 6 は「prototype 測定で検証、design では target のみ規範化」で「該当なし」判定、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  4 候補すべて軽微 / 内部矛盾解消で 自動採択:
+
+  - 軽-6-1: 「< 5 秒」根拠を CI 統合許容時間として明示
+  - 軽-6-2: 想定規模を「各 spec design ~1000 行 + requirements ~200 行 × Spec 1-7 = ~10K 行」と明示 (Spec 0 738 / Spec 1 1140 行で実証済規模)
+  - 軽-6-3: 性能劣化シナリオ (Foundation anchor 1000+ / Spec 1-7 link 1000+) を記述
+  - 軽-6-4: 並列実行可能性を Performance section にも記述 (Flow 3 と整合)
+
+  修正適用します。
+⏺ 第 6 ラウンド修正適用 1 件完了 (4 候補を統合修正)。次のラウンドへ。
+
+  第 7 ラウンド: 失敗モード handler (観点 7)
+
+  Step 1: 要点提示
+
+  design.md L619-636 の Error Handling:
+
+  - 章節アンカー欠落 (検証 1 ERROR): 欠落 anchor 補完 or 引用 link 修正
+  - SSoT 章番号 drift (検証 2 WARN): Adjacent Sync 経路で foundation.md 同期
+  - 用語集引用 link 切れ (検証 3 WARN): foundation.md anchor 追加 or Spec 1-7 引用修正
+  - frontmatter schema 妥当性違反 (検証 4 ERROR): foundation.md §5 修正 rollback / retry / timeout の具体パターン:
+  - rollback: git revert (標準運用、design.md L283 lifecycle で言及)
+  - retry: 検証 4 種は idempotent (副作用なし、副本生成のみ)、retry 安全
+  - timeout: Phase 2 Spec 4 で確定 (本 design では schema のみ)
+
+  潜在的検出候補:
+
+  - 軽-7-1 候補: 検証実行時の runtime error handling 未記述 — 例: foundation.md ファイル読込失敗 (file not found / permission denied) / consolidated-spec ファイル不在 / yaml parse 中の OOM 等。これは Phase 2 Spec 4 委譲事項だが、design で boundary 明示推奨
+  - 軽-7-2 候補: Foundation 改版時の rollback 手順 — design.md L693 「foundation.md 初版で重大不整合発覚 → Spec 0 design 段階に戻る」とあるが、実質変更経路で改版後に検出された不整合の rollback 手順 が未記述。git revert が標準だが、Spec 1-7 への波及反映済みの場合の連鎖 rollback はどうするか?
+  - 軽-7-3 候補: 検証 2 WARN の「長期化対応」削除済 (前ラウンド) → 削除に伴う Error Handling section の整合性確認が必要
+  - 軽-7-4 候補: 検証 4 種の partial failure — 検証 1 が ERROR、検証 2 が WARN、検証 3 が PASS のような混合状態の exit code は? L527 で「ERROR = 2 / WARN のみ = 0」と書いたが、複数検証の集約 exit code logic が design 内未明示 (Phase 2 Spec 4 委譲) — boundary 明示推奨
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 7 ラウンドの進め方をどうしますか？
+
+  - 案 A: 4 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 7 は「failure mode は規範 schema レベルで網羅、runtime error は Phase 2 委譲」で「該当なし」判定、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  4 候補:
+
+  - 軽-7-1 (runtime error handling 未記述): 自動採択 (Phase 2 Spec 4 委譲明記、boundary clarification)
+  - 軽-7-2 (実質変更経路の rollback 手順): 自動採択 (情報追加、design 内補足記述)
+  - 軽-7-3 (前ラウンド「長期化」削除の整合確認): 修正不要 (前ラウンドで両方修正済、整合 ✓)
+  - 軽-7-4 (検証 4 種の集約 exit code logic): 自動採択 (Phase 2 Spec 4 委譲明記、boundary clarification)
+
+  修正適用します。
+⏺ 第 7 ラウンド修正適用 1 件 (3 候補統合)。次のラウンドへ。
+
+  第 8 ラウンド: セキュリティ / プライバシー (観点 8)
+
+  Step 1: 要点提示
+
+  design.md L660-665 の Security Considerations:
+
+  - foundation.md は public 規範文書、認証 / 認可 / 秘匿情報なし
+  - Privacy: foundation.md 自体に個人情報・秘匿情報なし
+  - Integrity: git commit hash で改版 trail を保全、検証 4 種で機械的整合検出
+
+  潜在的検出候補:
+
+  - 軽-8-1 候補: 検証 4 種の入力 path traversal 防止記述なし — Spec 4 で実装される rw doctor foundation は foundation.md / consolidated-spec.md /
+  Spec 1-7 14 ファイルを読む。Phase 2 Spec 4 で path 検証必要だが、Spec 0 design でこの種の入力検証規範は出てこない (規範 spec の境界として意図的に
+  Out of Boundary)
+  - 軽-8-2 候補: yaml deserialization リスク — 検証 4 で foundation.md §5 内 yaml block を parse する際、yaml.safe_load を使うことが暗黙前提。Spec 0
+  design で「safe_load 必須」を規範化すべきか? Phase 2 Spec 4 委譲事項
+  - 軽-8-3 候補: 改版 trail の git 依存 — Integrity を「git commit hash」に依存しているが、git 履歴が rebase / squash / force push
+  で書き換えられた場合の改版 trail 保全は? これは運用判断 (rebase 禁止) で対処、Spec 0 規範対象外
+  - 軽-8-4 候補: 規範 spec として「該当なし」のまま十分か — 認証/認可/sensitive data がないのは事実、Privacy & Integrity 記述で過不足ない。memory
+  feedback_design_review.md「規模の小さい spec でも該当なし扱いせず」でも、Security の場合は「該当なし」確認自体が判断
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 8 ラウンドの進め方をどうしますか？
+
+  - 案 A: 4 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 8 は「規範文書 spec で sensitive data なし、yaml safe_load 等は Phase 2 委譲で十分」と「該当なし」判定、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  4 候補:
+
+  - 軽-8-1 (path traversal 防止): 自動採択 (Phase 2 Spec 4 委譲明記)
+  - 軽-8-2 (yaml safe_load 必須): 自動採択 (security best practice、Phase 2 Spec 4 規範化)
+  - 軽-8-3 (git rebase/force push リスク): 修正不要 (運用判断、Spec 0 規範対象外)
+  - 軽-8-4 (「該当なし」確認): 軽-8-1 / 軽-8-2 で改善余地が出たため事実上対応済
+
+  修正適用します。
+⏺ 第 8 ラウンド修正適用 1 件 (2 候補統合)。次のラウンドへ。
+
+  第 9 ラウンド: 観測性 (観点 9)
+
+  Step 1: 要点提示
+
+  design.md L632-635 / L592-593 の Monitoring:
+
+  - logs/doctor_foundation_latest.json (Phase 2 Spec 4 で確定): 検証 4 種の最新結果
+  - 集約結果: logs/doctor_foundation_latest.json (Phase 2 Spec 4 design で確定、複数 envelope を array で内包)
+  - 人間レビュー gate: foundation.md 改版時のチェック (実質変更経路)、Spec 0 spec.json approvals.requirements 再 approve
+
+  潜在的検出候補:
+
+  - 軽-9-1 候補: 検証 4 種の実行 trace 観測性 — logs/doctor_foundation_latest.json は 最新結果のみ で履歴は git 経由か? 検証 4 種を CI
+  で連続実行した場合の trace (実行日時 / 所要時間 / 検出件数の推移) を観測する手段は? Phase 2 Spec 4 委譲事項だが、Spec 0 で観測 schema
+  規範化が必要か判断
+  - 軽-9-2 候補: 改版 trail の観測性 — design.md / foundation.md / requirements.md の change log は markdown
+  末尾に手書きで追記される運用。spec.json.updated_at は更新されるが、実質変更 vs Adjacent Sync の判別 が trail から自動抽出可能か? 検証 4
+  種の対象に「改版種別の整合性検査」を追加すべきか? (現状未含)
+  - 軽-9-3 候補: 検証 4 種の logs にユーザー対応推奨記述を含めるか — 例: ERROR 検出時に「対応手順 (foundation.md §X を修正してください)」を logs
+  に含めると人間レビュー gate での対応が容易。Phase 2 Spec 4 委譲事項、Spec 0 では regulation level
+  - 軽-9-4 候補: 観測性の null 状態 (logs/ ディレクトリ未生成) — 検証 4 種が一度も実行されていない場合、logs/doctor_foundation_latest.json
+  不在は許容? Phase 2 Spec 4 で CLI 初回実行時に logs/ ディレクトリを生成する規範を Spec 0 で先取りすべきか?
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 9 ラウンドの進め方をどうしますか？
+
+  - 案 A: 4 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 9 は「観測 schema は Phase 2 Spec 4 委譲、Spec 0 では集約 path のみ規範化」で「該当なし」判定、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  4 候補:
+
+  - 軽-9-1 (実行 trace 観測性): 自動採択 (Phase 2 Spec 4 委譲明記)
+  - 軽-9-2 (改版種別整合性検査): 自動採択 (検証 5 種目の追加可否を Phase 2 Spec 4 design で確定、現状 4 種維持。R10.7 決定 0-2 で (b)(c)
+  不採用方針と整合)
+  - 軽-9-3 (logs に対応推奨記述): 自動採択 (Phase 2 Spec 4 design で best practice として規範化)
+  - 軽-9-4 (logs 未生成 null 状態): 自動採択 (Phase 2 Spec 4 委譲明記)
+
+  修正適用します。
+⏺ 第 9 ラウンド修正適用 1 件 (4 候補統合)。次のラウンドへ。
+
+  第 10 ラウンド: 依存選定 (観点 10)
+
+  Step 1: 要点提示
+
+  design.md L132-141 の Technology Stack:
+
+  - Document Format: Markdown (CommonMark + YAML frontmatter)
+  - Schema Definition: YAML (frontmatter 骨格) / 構造化 list
+  - Validation Reference: Phase 2 Spec 4 で確定
+  - Runtime / Infrastructure: 該当なし
+
+  requirements R11 の依存規範:
+
+  - Python 3.10+ / Git 必須 / LLM CLI / Markdown エディタ
+  - Python 依存を sqlite3 (標準) と networkx >= 3.0 (Spec 5 で追加) に限定
+  - 検証 4 種実装で必要: pyyaml (標準) + 標準 grep / pathlib / re
+
+  潜在的検出候補:
+
+  - 軽-10-1 候補: 検証 4 種実装の依存記述が design 内分散 — Phase 2 Spec 4 で pyyaml / pathlib / re 等を使う想定だが、Spec 0 design では「Phase 2
+  Spec 4 で確定」と委譲明記のみ。具体な Python 標準ライブラリ依存を Phase 2 引き継ぎとして列挙すべきか? (現状 dev-log L269 で言及あり、design
+  内未明示)
+  - 軽-10-2 候補: pyyaml の version 制約未記述 — yaml.safe_load を使う前提だが、最低 version 制約 (PyYAML 3.13+ で safe_load 標準化等) は Phase 2
+  Spec 4 で確定。Spec 0 では委譲明記
+  - 軽-10-3 候補: CommonMark 仕様 version の参照点未明示 — Document Format に「CommonMark」と記述あるが、CommonMark 0.30 / 0.31 等の version 整合は
+  GitHub markdown 自動 ID 生成 logic 準拠の前提。design 内に GitHub markdown spec への参照点 (kramdown 風 / commonmark 風 / GitHub Flavored Markdown
+  仕様) を Phase 2 Spec 4 で確定として明記
+  - 軽-10-4 候補: 依存禁止規律の追加 — design.md L57 で「v1 spec / 実装への参照」を依存禁止としているが、検証 4 種実装段階で Spec 5 / Spec 6 等
+  downstream spec への依存禁止 (検証 4 種は Spec 1-7 を読み込むが、library として Spec X モジュールを import しない) を明記すべきか?
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 10 ラウンドの進め方をどうしますか？
+
+  - 案 A: 4 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 10 は「依存は Phase 2 Spec 4 design で確定、Spec 0 規範対象外」で「該当なし」判定、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  4 候補すべて軽微 / boundary clarification で 自動採択:
+
+  - 軽-10-1: 検証 4 種実装の Python 標準ライブラリ依存 (pyyaml / pathlib / re / json / subprocess (grep)) を Phase 2 引き継ぎとして列挙
+  - 軽-10-2: pyyaml version 制約は Phase 2 Spec 4 委譲明記
+  - 軽-10-3: GitHub markdown spec (Linguist / cmark-gfm 等) 参照点は Phase 2 Spec 4 委譲明記
+  - 軽-10-4: 検証 4 種実装は Spec 5/6/7 等 downstream spec を library として import しない (markdown ファイルとして読み込むのみ) を明記
+
+  修正適用します。
+⏺ 第 10 ラウンド修正適用 1 件 (4 候補統合)。次のラウンドへ。
+
+  第 11 ラウンド: テスト戦略 (観点 11)
+
+  memory feedback_design_review.md 規定: 観点 11 / 12 は規模の小さい spec でも該当なし扱いせず必ずラウンドを実施。
+
+  Step 1: 要点提示
+
+  design.md L637-658 の Testing Strategy:
+
+  - Document Lint (検証 4 種、Phase 2 Spec 4 で実装):
+    - 検証 1 章節アンカー存在: foundation.md 内 link integrity (3-5 anchor sample)
+    - 検証 2 SSoT 章番号整合: consolidated-spec ↔ foundation 章番号 alignment (§1-§6 全章)
+    - 検証 3 用語集引用 link 切れ: Spec 1-7 全 design + requirements (14 ファイル) → foundation.md anchor (3-5 link sample)
+    - 検証 4 frontmatter schema 妥当性: §5 内 yaml block (3-5 block) parse + 必須 field 検査
+  - Cross-spec Integration Test (consumer 側に記述、ハイブリッド方式):
+    - 例: Spec 1 design 内で「Spec 1 frontmatter 詳細スキーマが foundation §5 骨格と整合する」test
+    - 例: Spec 5 design 内で「Spec 5 L2 ledger schema が foundation §3 6 ファイル骨格と整合する」test
+  - 人間レビュー Gate: foundation.md 初版生成 / 実質変更時
+
+  潜在的検出候補:
+
+  - 軽-11-1 候補: Document Lint sample 数「3-5」の根拠不明 — foundation.md は §1-§9 で章節 anchor が数十個、用語集 §4 で約 50 anchor 想定。「3-5
+  sample」では coverage 不足の可能性。Phase 2 Spec 4 で全件検査すべきでは? 「3-5 sample」記述を「全件検査」に変更すべき
+  - 軽-11-2 候補: Cross-spec Integration Test の詳細未確定 — Spec 1-7 design 内で「foundation §X と整合する」test を書く規律は明示されているが、test
+  の形式 (markdown lint として書くか / Python pytest として書くか / 検証 4 種の sub-task として書くか) が未確定。Phase 2 Spec 4 委譲か?
+  - 軽-11-3 候補: 検証 4 種自体の test 戦略未記述 — 検証 4 種実装そのものの unit test (例: 検証 1 で同名衝突 anchor 入力 → 期待 output) は Phase 2
+  Spec 4 design で記述、Spec 0 で boundary 明示
+  - 軽-11-4 候補: regression test の記述なし — foundation.md 改版時に既存検証 4 種が壊れていないかの regression test (例: 過去の anchor
+  が変動していないか) は Phase 2 Spec 4 委譲か運用判断 (人間レビュー gate) か未明示
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 11 ラウンドの進め方をどうしますか？
+
+  - 案 A: 4 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 11 は「test 戦略は consumer 側 + Phase 2 Spec 4 委譲で網羅」で軽微のみ追記、escalate なし、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  4 候補:
+
+  - 軽-11-1 (sample 数「3-5」誤り → 全件検査): 自動採択 (誤った記述の是正、検証 1 / 検証 3 / 検証 4 は対象を全件検査が正しい)
+  - 軽-11-2 (Integration Test 形式未確定): 自動採択 (Phase 2 Spec 4 委譲明記)
+  - 軽-11-3 (検証 4 種 unit test): 自動採択 (Phase 2 Spec 4 委譲明記)
+  - 軽-11-4 (regression test): 自動採択 (Phase 2 Spec 4 委譲明記)
+
+  修正適用します。
+⏺ 第 11 ラウンド修正適用 1 件 (4 候補統合)。次のラウンドへ。
+
+  第 12 ラウンド: マイグレーション戦略 (観点 12)
+
+  memory feedback_design_review.md 規定: 観点 12 は規模の小さい spec でも該当なし扱いせず必ずラウンドを実施。
+
+  Step 1: 要点提示
+
+  design.md L674-694 の Migration Strategy:
+
+  - v1 から継承する規範文書なし (フルスクラッチ)
+  - foundation.md lifecycle: Init (initial generation) → Approve → Reference → Revision (Adjacent Sync / 実質変更)
+  - mermaid flowchart で lifecycle 図示
+  - Phase breakdown: implementation phase で foundation.md 初版生成 → Spec 1-7 引用整合確認 → Phase 2 Spec 4 で rw doctor foundation 実装
+  - Rollback triggers: foundation.md 初版で重大不整合発覚 → Spec 0 design 段階に戻る
+  - Validation checkpoints: 検証 4 種 + 人間レビュー gate
+
+  潜在的検出候補:
+
+  - 軽-12-1 候補: 「v1 から継承なし、移行不要」の completeness — フルスクラッチ方針は確立済 (R10.5)、ただし v1 で同等の規範文書 (例:
+  docs/curatedRraphRAG-V2.md / docs/仕様V2に向けての議論.md 等) が存在する。これらは drafts として位置付けて参照、移行対象ではないが migration
+  strategy で「参照ログとして残置」を明示すべきか?
+  - 軽-12-2 候補: drafts (consolidated-spec) からの「移行」概念 — drafts/rwiki-v2-consolidated-spec.md v0.7.12 は議論ログ、foundation.md 確定後は
+  drafts は議論ログとして残置 (design.md L76)。これは「migration」ではないが、drafts → foundation.md の遷移時点を migration strategy で明示すべき
+  - 軽-12-3 候補: Foundation 改版時の Spec 1-7 連鎖 migration — foundation.md の実質変更時に傘下 Spec 1-7 が再 approve される migration flow が
+  Migration Strategy に統合されていない (Flow 2 と重複だが、Migration Strategy section で参照点として明示推奨)
+  - 軽-12-4 候補: Phase breakdown の Phase 名統一 — Phase 1-2 が dev-log の Phase 1 (Spec 0+1) / Phase 2 (Spec 4+7) と区別不明確。design.md L692
+  の「Phase 2 Spec 4」は dev-log Phase 2 の Spec 4 design 着手を指しており用語衝突なし、ただし整合確認
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 12 ラウンドの進め方をどうしますか？
+
+  - 案 A: 4 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 12 は「フルスクラッチで migration なし、lifecycle のみ flowchart で図示済」で軽微確認のみ、escalate なし、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  4 候補:
+
+  - 軽-12-1 (v1 docs 残置): 自動採択 (docs/curatedRraphRAG-V2.md / docs/仕様V2に向けての議論.md 等は v1 spec ではなく v2 設計
+  draft、参照ログとして残置を明示)
+  - 軽-12-2 (drafts → foundation.md 遷移): 自動採択 (Migration Strategy で明示)
+  - 軽-12-3 (Spec 1-7 連鎖 migration): 自動採択 (Flow 2 への参照点を追加)
+  - 軽-12-4 (Phase 名整合): 自動採択 (design 内「Phase 2 Spec 4 design」が dev-log Phase 2 と一致することを明示)
+
+  修正適用します。
+⏺ 第 12 ラウンド修正適用 1 件 (4 候補統合)。12 ラウンド完了。
+
+  厳しく再精査 (最終ガード)
+
+  memory feedback_review_rounds.md 規定に従い、12 ラウンド + 修正後の連鎖更新漏れを精査します。
+⏺ 連鎖更新漏れ精査結果: design 内整合は維持されている。requirements.md / research.md への波及なし (実質変更なし)。change logに修正サマリを追記します。
+
+⏺ Spec 0 design ラウンド 4-12 やり直し完了サマリ
+
+  修正適用: 計 10 件
+  - R4: 3 件 (軽-4-1 / 4-2 自動採択 / 4-3 escalate → 案 A)
+  - R5-R12: 各観点で軽微 1-4 件、すべて自動採択
+  - 9 ラウンド全てで Step 1-4 個別実施 + ユーザー判断機会 (Step 2) 確保
+
+  escalate 確定: 1 件
+  - 軽-4-3「3 ヶ月超で ERROR 昇格」記述削除、Phase 2 Spec 4 design 委譲
+
+  requirements.md / research.md への波及: なし (design 内記述精度向上のみ、実質変更なし)
+
+  spec.json phase: design-approved 維持 (本やり直しは Adjacent Sync 経路として位置付け可能、design 内整合性向上)
+
+⏺ 次のアクション確認
+
+  memory feedback_approval_required.md 規律により commit はユーザー明示承認必要。
+
+  【選択肢あり】次のアクションをどうしますか？
+
+  - 案 A: Spec 0 修正を単独 commit してから Spec 1 ラウンド 4-12 やり直しに着手 (Recommended、変更単位を分離して履歴明確化)
+  - 案 B: Spec 1 まで完了させてから両方を一括 commit (Phase 1 やり直しを 1 commit に集約)
+```
+
+##### 
+
+## Spec 1 design ラウンド 4-12 やり直し
+
+```
+⏺ Spec 1 design.md 確認完了。1145 行で実装含む spec、観点 5/6/7 が深く厚くなる想定。ラウンド 4 から個別 5 step で進めます。
+
+  第 4 ラウンド: API interface 具体化 (観点 4)
+
+  Step 1: 要点提示
+
+  Spec 1 における API interface 該当箇所:
+
+  - G1: resolve_category(page_path, vocab) → CategoryInfo (Service)
+  - G2: parse_frontmatter(file_path) → Frontmatter / validate_frontmatter(fm, vocab) → List[LintFinding] (Service)
+  - G3: VocabularyStore (State、3 YAML 永続)
+  - G4: rw tag * 13 サブコマンド CLI signature (API Contract table)
+  - G5: run_checks(file_paths, vocab) → LintReport (Service) + JSON output schema
+
+  各 component で確定済の要素:
+  - preconditions / postconditions / invariants
+  - exit code 規約 (R8.11、PASS=0 / runtime=1 / FAIL=2)
+  - subprocess timeout 必須 (R8.12)
+  - API Contract table (G4 で 13 サブコマンド signature)
+  - JSON output schema (G5 で例示)
+
+  潜在的検出候補:
+
+  - 軽-4-1 候補: G1 / G2 の error model 暗黙化 — resolve_category で page_path が wiki/ 配下でない場合 (raw/ / review/) の処理が Preconditions
+  で「wiki/ 配下」と書かれているが、違反時の error 定義なし。parse_frontmatter も markdown 以外を渡された場合の error 定義なし
+  - 軽-4-2 候補: vocabulary 操作の idempotency 未明示 — 同じ canonical を 2 回 merge / 同じ tag を 2 回 register / 既に deprecated の tag を再
+  deprecate した場合の動作。rw tag merge は vocabulary_candidates/ 経由なので review buffer で衝突検出するが、規範 level で idempotency 規約なし
+  - 軽-4-3 候補: G4 13 サブコマンドの引数詳細未確定 — long flag / short flag / 必須 vs 任意の 正規化 (例: -f / --file / --no-prompt 等の flag
+  命名規約) は Phase 2 Spec 4 CLI 統一規約所管 (本-22 で再委譲済) — boundary 明示推奨
+  - 軽-4-4 候補: G3 VocabularyStore の thread safety / read 同時実行 — write 系は .hygiene.lock 取得必須 (R8.14) を明示、read 系の同時実行は safe
+  (ファイル read のみ) と明示なし
+  - 軽-4-5 候補: G5 JSON output category enum の不完全列挙 — "unregistered_tag" | "alias_usage" | "deprecated_tag" | "..." で 8 検査項目 (+ 拡張 2
+  項目) 全件列挙されていない、enum 値の完全列挙が API consumer (Spec 4 lint 統合) に必要
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 4 ラウンドの進め方をどうしますか？
+
+  - 案 A: 5 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 観点 4 は「API contract は十分具体化、CLI 詳細は Spec 4 委譲」で軽微 1-2 件のみ追記、次ラウンドへ
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TODO_NEXT_SESSION.md を読んでください。Phase 1 (Spec 0 + Spec 1) design approve 完了済 (origin/main 同期済 = e41b412)。これから Phase 2 (Spec 4 / Spec 7 並列) design phase に着手します。設計レビューは memory feedback_design_review.md の 12 観点 = 12 ラウンドを基本全件網羅実施で進め、各ラウンドで仕様レビュー継承の 5 step 必須手順 + 深掘り検討 + 自動採択 + 厳しく再精査を踏襲します。設計決定は ADR 不採用、design.md 本文「設計決定事項」セクション + change log の二重記録。仕様⇄設計往復は「仕様 AC として読めるかどうか」+ ユーザー対話必須。最初の対象 spec (Spec 4 か Spec 7) を確認してから着手してください。
