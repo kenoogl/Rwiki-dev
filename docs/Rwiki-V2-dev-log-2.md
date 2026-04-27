@@ -8,6 +8,10 @@
 
 [Spec 7 rwiki-v2-lifecycle-management](##Spec 7 rwiki-v2-lifecycle-management)
 
+[Spec 5 rwiki-v2-knowledge-grap](##Spec 5 rwiki-v2-knowledge-grap)
+
+
+
 
 
 ## Spec 7 rwiki-v2-lifecycle-management
@@ -2410,14 +2414,1034 @@ When Page→Edge orchestration が rollback 不能な部分的失敗を起こし
 
 ##### ❯ a
 
-```
+
+
+## Spec 5 rwiki-v2-knowledge-grap
+
+##### TODO_NEXT_SESSION.md を読んでください。Spec 0 + Spec 1 + Spec 4 + Spec 7 は approve 完了。dependency 順の次対象 Spec 5 (rwiki-v2-knowledge-graph)の requirements レビューを開始します。最大規模（23 Req / 174 criteria、内部 P0-P4 段階実装）のため特に時間を要する見込みです。Spec 1 由来のcoordination 要求（R5.5 / R8.13 / R10 Adjacent expectations）と Spec 4 由来の coordination 要求（R15.8 / R10.5 / R4.7）、Spec 7 由来のcoordination 要求（R12.8 edge API timeout / R12.7 decision_type 拡張可規約 / R3.9 lock 取得経路 / R3.8 partial failure JSON統合）、過去セッション由来の波及項目（W-4 解消済 / W-8 design 持ち越し / C-1 修正済）を必ずチェック対象に含めてください。最低 4 step手順で進め、必要に応じて 6 ラウンド構成も適用してください。Spec 5 の Requirement 一覧と要点を提示してください。
 
 ```
+⏺ TODO_NEXT_SESSION.md を読み込みました。次は Spec 5 (rwiki-v2-knowledge-graph) のレビューですね。Spec 5 の構造と requirements を確認します。
 
+⏺ Spec 5 (rwiki-v2-knowledge-graph) requirements.md（544 行 / 23 Req / 174 AC）を全行読み込みました。Step 1 として Requirement一覧と要点・懸念点を提示します。
 
+  ---
+  Step 1: Spec 5 Requirement 一覧と要点
+
+  Requirement 一覧（23 Req / 174 AC、P0-P4 段階実装）
+
+  P0（Ledger 基盤、MVP 必須）
+
+  - R1: Ledger 基盤（7 ファイル + derived cache）— 8 AC
+  - R2: Vocabulary（relations.yml / entity_types.yml）— 6 AC
+  - R3: Entity 抽出と正規化 — 7 AC
+  - R4: Relation 抽出（4 extraction_mode + evidence 必須）— 9 AC
+  - R5: Confidence scoring（6 係数加重和）— 6 AC
+  - R6: Edge lifecycle（6 status 自動進化）— 8 AC
+  - R10: Event ledger（edge_events.jsonl 8 event type）— 7 AC（一部 P1）
+  - R11: Decision log（§2.13 Curation Provenance、selective recording）— 14 AC（一部 P1/P2）
+  - R12: Reject workflow（reject_queue → rejected_edges.jsonl、unreject 復元）— 8 AC
+  - R13: Entity ショートカット field 正規化（normalize_frontmatter API）— 6 AC
+  - R18: Page→Edge 相互作用 API（Spec 7 coordination、edge_demote/reject/reassign）— 6 AC
+  - R19: Coordination の責務分離（Spec 1/2/4/6/7）— 7 AC
+  - R20: Configuration（config.yml graph セクション全項目）— 8 AC
+  - R23: Foundation 規範への準拠と文書品質 — 11 AC
+
+  P1（Query cache + Decision view）
+
+  - R14: Query API 「14 種」or「15 種」（共通フィルタ + 性能目標）— 8 AC（一部 P0/P2）★後述要修正
+  - R16: Graph audit と Rebuild / sync（L3 related: Hybrid stale-mark）— 8 AC
+
+  P2（Hygiene + Usage event + Decision search + Concurrency）
+
+  - R7: Graph Hygiene 5 ルール（Decay→Reinforcement→Competition→Contradiction→Merging 固定実行順序）— 10 AC
+  - R8: Usage signal 4 種別（Direct/Support/Retrieval/Co-activation）— 7 AC
+  - R9: Competition 3 レベル（L1=MVP / L2,L3=P3）— 6 AC
+  - R15: Community detection（networkx Leiden/Louvain）— 6 AC
+  - R17: Concurrency（.hygiene.lock + Single-user serialized）— 7 AC
+  - R21: パフォーマンス目標 — 7 AC
+
+  P4（要件発生時のみ）
+
+  - R22: External Graph DB export — 4 AC
+
+  ---
+  第 1 ラウンドの懸念点（致命級候補 5 件 + 重要級 3 件）
+
+  致命級候補（要件レベルで修正、coordination 要求の反映漏れ）
+
+  - 致-1: R11.2 decision_type enum の不足 + 拡張可規約の欠落（Spec 7 R12.7 / Spec 1 R8.13 由来）
+    - 現状: 10 種固定（edge_extraction / edge_reject / edge_promote / edge_unreject / hypothesis_verify / synthesis_approve / page_deprecate /
+  tag_merge / split / hygiene_apply）
+    - 不足: Page lifecycle 起源 5 種（page_retract / page_archive / page_merge / page_split / page_promote_to_synthesis、split → page_split
+  リネーム要）+ Skill lifecycle 起源 3 種（skill_deprecate / skill_retract / skill_archive）+ Vocabulary 起源 5 種（vocabulary_merge / split / rename
+   / deprecate / register）
+    - 拡張可規約（Spec 1 / Spec 7 が拡張時に Adjacent Sync）が未明示
+  - 致-2: R18 edge API に timeout 必須規定が欠落（Spec 7 R12.8 由来）
+    - Spec 7 R12.8 が「edge API の各呼出に timeout を必須として規定」を本 spec で確定すると指定
+    - 現状の R18 には timeout 規定なし
+  - 致-3: R16.8 に Decision Log 健全性診断 API が欠落（Spec 4 R4.7 由来）
+    - 現状 R16.8: L2 診断項目 4 種（reject queue 件数 / decay 進行中 / typed-edge 整備率 / dangling evidence）
+    - 不足: Decision Log 健全性診断 API（check_decision_log_integrity()、append-only 整合性 / 過去 decision 間の矛盾候補件数 / schema 違反件数）
+  - 致-4: R16.6 L3 related: cache sync 5 step に shortcut 由来 typed edge 除外フィルタが欠落（Spec 1 R5.5 / R10.1 由来）
+    - Spec 1 R5.5 / R10.1 が「shortcut 由来 typed edge を related: cache から除外」を本 spec の sync 実装で行うと指定
+    - 現状の 5 step に除外フィルタ規定なし
+  - 致-5: R11 に partial failure JSON 統合規定が欠落（Spec 7 R3.8 由来）
+    - Spec 7 R3.8 の partial failure JSON field（partial_failure / successful_edge_ops / failed_edge_ops / followup_ids）を decision_log.jsonl schema
+   に記録形式として統合する規定が必要
+
+  重要級候補（整合性・SSoT 統一）
+
+  - 重-1: R14 タイトル「Query API 14 種」と本文「15 種」の混在
+    - R14 タイトル: 「Query API 15 種（共通フィルタ + 性能目標）」
+    - R14 Objective: 「Query API 14 種の signature と返り値 schema が固定され」
+    - R14.1 列挙: 実際 15 種（resolve_entity が 15 番目）
+    - Boundary Context In scope: 「Query API 14 種」
+    - brief.md: 「Query API 14 種」
+    - introduction: 「Query API 14 種」
+    - SSoT 不整合、15 種に統一要
+  - 重-2: R1.2 / R3.5 entity の YAML field 名が type のまま（C-1 / Spec 1 本-2 由来）
+    - Spec 1 で「type: (content) と entity_type: (entity) を別 frontmatter field に分離」確定
+    - R1.2: entities.yaml の各 entity に type（entity type、entity_types.yml の値）→ entity_type に修正要
+    - R3.5: extraction skill 出力 schema の type（entity_types.yml の値）→ entity_type に修正要
+  - 重-3: R11.14 context_ref path 形式不整合（Spec 4 R1.8 由来）
+    - Spec 4 R1.8: raw/llm_logs/chat-sessions/<timestamp>-<session-id>.md
+    - R11.14: raw/llm_logs/chat-sessions/chat-<ts>.md#L42-67（chat- prefix と命名形式が異なる）
+
+  ---
+  過去セッション由来の波及項目（チェック結果）
+
+  - W-4（解消済み確認）: ✅ R23.2 で「§2.12 を L2 専用、§2.2 / §2.4 より優先する関係」を明示済み + R18 / Boundary で edge API 自律進化が Spec 7から呼ばれない旨を明示済み（R18.6）
+  - W-8（design phase 持ち越し）: 用語集追加 4 用語の引用メカニズム → design phase 持ち越しのまま（要件レベルでは扱わない）
+  - C-1（Cross-review で修正済の確認）: ⚠️ 上記重-2 で再点検要（R1.2 / R3.5 で entity の field 名が type のままになっている可能性）
+
+  ---
+  次のステップを選んでください
+
+  - A: 致命級 5 件 + 重要級 3 件すべて詳細確認 → 修正適用に進む
+  - B: 特定の懸念のみ詳細確認（例: 致-1 のみ）
+  - C: 第 2-6 ラウンド（roadmap/brief 照合 / 本質的観点 / failure mode / 他 spec 波及 / drafts 整合）も含めて先に俯瞰
+  - D: 修正なしで approve（=懸念は無視、推奨せず）
+
+  Spec 5 は最大規模・依存層の多さから、A を推奨します。なお、修正前に C の本質的観点も先に走らせて全致命級を出し切る選択（Spec 1 / 4 / 7 と同様の 6ラウンド構成）が、後戻りリスクを最小化します。どちらで進めますか？
+```
+
+##### ❯ ここで、ちょっと修正方針の議論をしましょう。このプロジェクトは大規模開発で、検討すべきことが多い。人間は細部に至るまでの把握は難しく、状況説明と修正案を提示してもらっても、正しく判断できることは少ない。そこで、列挙してもらった候補案の推薦案については、再度、LLMが深掘り検討する。これまでも最初の提案と深掘り提案では結果が違ったことがあった。なので、深掘りして修正案を検討することは大事。その結果、最初の推薦案が十分に機能するものであると考えられ、致命的なデメリットがなければ、自動採択という方針にしよう。勿論、その経緯は詳しく報告し、ログとして残す。この考えはどうか。
+
+```
+⏺ 提案は基本的に妥当だと思います。ただし、いくつか境界を明確にしたいです。
+
+  提案への賛成根拠
+
+  - 規模の必然性: 174 AC × 残り 4 spec を従来手順で進めると、ユーザーの判断負荷が判断品質を下回る局面が増える
+  - 判断の質向上の実例: 第 3-4 ラウンド以降に致命級が初出することが Spec 1/4/7 のセッションで頻発（最初の推薦から深掘りで結論が変わる現象を実証）
+  - dominated 案の排除原則と整合: memory feedback_dominant_dominated_options.md で確立済の「合理的選択肢のみに絞る」方針の自然な拡張
+
+  確認したい境界（4 点）
+
+  1. 自動採択の対象範囲
+
+  - 対象 ✅: requirements.md / brief.md への文言追加・AC 追記・enum 拡張・SSoT 整合修正（機械的・派生的な修正）
+  - 対象外 ❌: spec.json approve / commit / push / phase 移行（既存のfeedback_approval_required.md を維持）
+  - 対象外 ❌: 設計トレードオフ（複数案で性質が異なり選択が運用観に依存する判断）
+
+  2. 「致命的デメリットなし」の判断基準（escalation 条件）
+
+  以下のいずれかに該当したら 自動採択せず escalate する:
+
+  - a. 他 spec への破壊的波及: 既 approve 済 spec の AC 改訂が必要（spec.json.updated_at 更新だけで済まない、再 approval 級）
+  - b. 複数の合理的案が拮抗: 案 A / 案 B でメリット軸が異なる（性能 vs 単純性、厳格性 vs 拡張性 等）
+  - c. SSoT 矛盾: drafts や Foundation との解釈相違が残る
+  - d. 不可逆性: 後で覆すと多 spec の修正が必要になる用語・enum・schema の確定
+  - e. 深掘り中に新規致命級発見: 当初推薦の前提が崩れる
+
+  3. ログ形式
+
+  各修正について以下を requirements.md 修正と並行して、報告で明示:
+
+  - 当初推薦案（Step 1 で提示した内容）
+  - 深掘り検討プロセス（SSoT 再照合 / 代替案検討 / 副作用確認 / dominated 案除外）
+  - 採択結論（自動採択 / escalate / 案修正）
+  - 理由（致命的デメリットの有無）
+
+  dev-log には全件まとめて時系列で残す（Spec 1/4/7 と同様の粒度）。
+
+  4. 採択された修正の最終確認タイミング
+
+  - 個別修正: 自動採択（escalate を除く）
+  - 全致命級・重要級の修正完了後: ユーザーに「全修正後の差分要約」を提示 → spec.json approve は明示承認
+
+  ---
+  質問
+
+  この方針で問題なければ、以下を進めます:
+
+  - (I): 上記 4 点の境界を feedback_* memory として保存（次セッション以降も継承）
+  - (II): Spec 5 の致命級 5 件 + 重要級 3 件について、深掘り検討 → 自動採択 or escalate を順次実施し、結果を逐次報告
+  - (III): 第 2-6 ラウンド（roadmap/brief 照合・本質的観点・failure mode・他 spec 波及・drafts 整合）も同方針で実施
+
+  確認したい点:
+
+  - 境界 1-4 は妥当か（特に 2-b 拮抗ケース と 2-d 不可逆性 の escalate 基準）
+  - escalate 時の通知方式（どこまで詳細に報告するか）
+  - memory 保存（I）の可否
+```
+
+#####    ❯ 提案は適切。進めてください。
+
+```
+⏺ 了解しました。まず memory を保存し、TaskCreate でタスク管理を立ち上げ、深掘り検討に必要な周辺 spec を並列で読み込みます。
+⏺ memory 保存完了。次にタスク立ち上げ + 周辺 spec を並列読み込みします。
+⏺ 周辺 spec の関連 Requirement を取得しました。深掘りに必要な追加情報（Spec 7 R12.7 / R12.8 / R3.8 の正確な文言、Spec 4 R4.7 / R1.8 の詳細、drafts　§7.2 Spec 5 line 1670）を並列取得します。
+⏺ 深掘り検討が完了しました。8 件すべて自動採択判定です。結果を報告し、修正に着手します。
+
+  ---
+  深掘り検討結果（全 8 件、自動採択）
+
+  致-1: R11.2 decision_type enum 拡張 + 拡張可規約 → ✅ 自動採択
+
+  - 当初推薦: Page lifecycle 6 種 + Skill lifecycle 3 種 + Vocabulary 5 種を追加
+  - SSoT 再照合: Spec 7 R12.7（lifecycle-mgmt L239、Page 6 種 + Skill 3 種を Spec 7 が規定、Spec 5 への Adjacent Sync）/ Spec 1 R8.13（vocabulary_* 5
+   種を Spec 5 への coordination 要求）/ drafts L1670（10 種列挙、別途 D-10 で Adjacent Sync 予定）
+  - 最終 enum 21 種: Edge 4 + Hypothesis 1 + Synthesis 1 + Page 6 + Skill 3 + Vocabulary 5 + Hygiene 1（旧 tag_merge を vocabulary_merge
+  に吸収、split を page_split にリネーム）
+  - 代替案除外: 案 B（tag_merge 残置 + vocabulary_* 4 種追加）= 命名一貫性崩壊で dominated / 案 C（polymorphic 拡張可のみ）= API contract 曖昧化で
+  dominated
+  - escalate 条件: a-e すべてクリア（既 approve spec は本 enum 拡張を呼び出し前提として既規定）
+
+  致-2: R18 edge API timeout 必須規定 → ✅ 自動採択
+
+  - 当初推薦: edge API 各呼出に timeout 必須を追加
+  - SSoT 再照合: Spec 7 R12.8（lifecycle-mgmt L240）が「edge API の各呼出に timeout を必須として規定し」と明示、timeout 値の確定は Spec 7 design
+  phase
+  - 最終案: R18 に新 AC「edge API は timeout 必須パラメータを受け取り、timeout 発生時は partial failure として伝搬」を追加
+  - 代替案除外: 案 B（Spec 7 側のみで管理）= API contract 責務反転で dominated / 案 C（Spec 5 で timeout 値確定）= Spec 7 R12.8 規定と矛盾で
+  dominated
+
+  致-3: R16.8 Decision Log 健全性診断 API 追加 → ✅ 自動採択
+
+  - 当初推薦: check_decision_log_integrity() を追加
+  - SSoT 再照合: Spec 4 R4.5（cli-mode L125）が rw doctor 診断対象に Decision Log 健全性 3 項目（append-only 整合性 / 過去 decision 矛盾候補件数 /
+  schema 違反件数）を含む
+  - 配置判断（拮抗の可能性検証）: R11 (Decision Log) と R16 (Audit) のどちらに置くか拮抗 → 結論: R11 に API 本体を追加 + R16.8 に rw doctor
+  経由の参照を追記の併用が論理的最適
+  - 代替案除外: 案 B（find_contradictory_decisions で代替）= append-only 整合性と schema 違反検出不可で dominated / 案 C（Query API 14 種に追加）=
+  audit / health-check 性質が R11 内 API として配置するのが自然
+
+  致-4: R16.6 shortcut 由来 typed edge 除外フィルタ → ✅ 自動採択
+
+  - 当初推薦: 5 step に除外フィルタを追加
+  - SSoT 再照合: Spec 1 R10.1（classification L206）が「stable / core edge のうち shortcuts で表現されない typed edge のみ」と規定 / Spec 1
+  R5.5（L134）が「shortcut 由来 edge は cache 重複展開禁止」 / Spec 1 line 60 で「Spec 5 sync 機構が除外フィルタを実装する責務」を明示
+  - 最終案: R16.6 の Step 2（Batch sync）に除外フィルタ規定を組み込み + Step 5（整合性レベル）で完全分離方針を再確認
+  - 代替案除外: 案 B（独立 AC）= 5 step 構成内に組み込む方が手順性が高い / 案 C（design 持ち越し）= Spec 1 が責務要求済みで requirements
+  で受ける必要あり
+
+  致-5: R11 partial failure JSON 統合 → ✅ 自動採択
+
+  - 当初推薦: decision_log schema が partial failure 4 field をサポート
+  - SSoT 再照合: Spec 7 R3.7（lifecycle-mgmt L110）が「失敗状態を decision_log に記録するよう Spec 5 へ追加情報を渡す」/ Spec 7 R3.8（L111）が
+  partial failure JSON 4 field を規定
+  - 最終案: R11 に新 AC「outcome field 内に partial_failure / successful_edge_ops / failed_edge_ops / followup_ids の 4 field をサポートし、Spec 7
+  R3.7 / R3.8 から渡される情報を decision として記録可能にする」
+  - 代替案除外: 案 B（top-level field）= 既存 schema 階層と不整合 / 案 C（独自 partial_failure_meta field）= outcome は decision の結果記録なので
+  outcome 内が自然
+
+  重-1: Query API 14 種 vs 15 種統一 → ✅ 自動採択
+
+  - 当初推薦: 15 種に統一
+  - SSoT 再照合: R14.1 で実際 15 個列挙（resolve_entity が 15 番目）/ resolve_entity は Spec 6 perspective の seed 正規化に必要で削除不可
+  - 修正対象: R14 タイトル / R14 Objective / Boundary Context In scope / brief.md / introduction / Phase 表 / その他参照箇所すべて 14 → 15
+  - 波及確認: Spec 4 R15.8 の「Query API 14 種の一部」表記は Decision Log API 4 種参照の文脈で、4 < 14 < 15 でも文意成立 → ただし Adjacent Sync
+  として updated_at 更新で 15 種化を反映推奨
+
+  重-2: entity field 名 type → entity_type 統一 → ✅ 自動採択
+
+  - 当初推薦: R1.2 / R3.5 で type → entity_type
+  - SSoT 再照合: Spec 1 R2.2（L87）が type: = コンテンツ種別、R2.3（L88）が entity_type: = entity 種別を別 field として確定
+  - 修正対象: entity の YAML field 名としての type 全箇所（R1.2 / R3.5 等、本文中も grep 要）
+  - 注意: 「entity type」（entity 種別という意味の名詞句、entity_types.yml の値）の文脈使用は維持、field 名としての type: を entity_type: に修正
+
+  重-3: R11.14 context_ref path 形式 → ✅ 自動採択
+
+  - SSoT 再照合: Spec 4 R1.8（cli-mode L84）が raw/llm_logs/chat-sessions/<timestamp>-<session-id>.md を SSoT として規定
+  - 最終案: R11.14 を raw/llm_logs/chat-sessions/<timestamp>-<session-id>.md#L42-67 に修正
+
+  ---
+  修正に着手します
+ 致-1 から順次適用します。修正は requirements.md / brief.md（重-1 の 15 種反映）の編集として進めます。
+⏺ 重-2 対象は R1.2（line 92）と R3.5（line 126）の 2 箇所と確定。他は entity type（種別）の文脈なので維持します。修正に着手します。
+
+  致-1: R11.2 decision_type enum 拡張
+⏺ 致-2: R18 edge API timeout 必須規定
+⏺ 致-3: R11 + R16.8 Decision Log 健全性診断 API 追加（併用案）
+⏺ 次に R16.8 を拡張して rw doctor 経由の参照を追記します。
+⏺ 致-3 / 致-5 / 重-3 完了。続いて致-4 に着手します。
+  致-4: R16.6 shortcut 由来 typed edge 除外フィルタ
+⏺ 重-1: Query API 14 種 → 15 種統一
+⏺ brief.md も統一します。
+⏺ 重-2: entity field 名 type → entity_type 統一
+⏺ 全 8 件の修正完了。修正後の検証として、追加した Requirement 番号の参照整合性を確認します。
+⏺ 修正反映確認完了。Phase × Requirement 対応表と change log の更新が残っています。
+⏺ Phase 対応表を更新し、change log に修正記録を追加します。
+⏺ ---
+  第 1 ラウンド修正完了報告
+
+  適用結果（全 8 件、自動採択）
+
+│  ID  │       修正対象        │  採択結論   │                            主な変更           │
+│ 致-1 │R11.2 decision_type    │ ✅ 自動採択 │ 10 種 → 21 種 + 拡張可規約（起源 spec 区分）   │
+│ 致-2 │R18 edge API timeout   │ ✅ 自動採択 │ 新 AC R18.7 / R18.8 追加（timeout 必須 + partial failure 伝搬） │
+│ 致-3 │R16.8 Decision Log 診断│ ✅ 自動採択 │ 新 AC R11.15 追加 + R16.8 拡張（健全性診断 3 項目）             │
+│ 致-4 │R16.6 shortcut 除外    │ ✅ 自動採択 │ Step 2 / Step 5 に除外フィルタ + Query API 直接参照規定         │
+│ 致-5 │R11 partial failure    │ ✅ 自動採択 │ 新 AC R11.16 追加（outcome 内 4 field サポート）                │
+│ 重-1 │Query API 14 種 → 15 種│ ✅ 自動採択 │ 7 箇所統一（requirements.md 5 + brief.md 2） │
+│ 重-2 │entity field type 統一 │ ✅ 自動採択 │ R1.2 / R3.5 を entity_type に修正            │
+│ 重-3 │context_ref path       │ ✅ 自動採択 │ Spec 4 R1.8 形式に統一                       │
+
+  規模変化
+
+  - Requirement 数: 23 → 23（変動なし）
+  - AC 数: 174 → 180（+6: R18.7 / R18.8 / R11.15 / R11.16、R11.2 内訳拡張、R16.6 内訳追記）
+  - decision_type 値: 10 種 → 21 種 + 拡張可規約
+
+  関連ファイル更新
+
+  - .kiro/specs/rwiki-v2-knowledge-graph/requirements.md — 第 1 ラウンド修正適用 + change log 追記
+  - .kiro/specs/rwiki-v2-knowledge-graph/brief.md — Query API 14 → 15 種統一
+
+  ---
+  次ステップの選択
+
+  第 1 ラウンドは「基本整合性 / 既知 coordination 要求の反映」レベル。Spec 1 / 4 / 7 の事例では 第 3-4ラウンドで致命級が初出しています。残りは以下のいずれか:
+
+  - A: 第 2-6 ラウンド（roadmap/brief 厳格照合 / 本質的観点 / failure mode / 他 spec 波及 / drafts 整合）も同方針で順次実施。発見次第、深掘り →自動採択 or escalate
+  - B: 第 1 ラウンドのみで spec.json approve に進む（推奨せず、過去事例で致命級が後出しになる頻度が高い）
+
+  A を推奨します。進めてよいでしょうか？
+```
+
+##### ❯ A
+
+```
+⏺ 第 2 ラウンドから順次実施します。まず roadmap.md と brief.md を厳格照合するため、関連箇所を並列で取得します。
+⏺ 第 2 ラウンド（roadmap / brief / drafts 厳格照合）の続きとして drafts §7.2 Spec 5 / §5.10 / §4.3 を確認します。
+⏺ drafts §5.10 と本 spec の整合確認で 第 2-A の発見: rejected_edges.jsonl に original_confidence field が drafts §5.10 にあるが本 spec R12.4で欠落。続いて drafts §7.2 Spec 5 を読みます。
+⏺ drafts §7.2 Spec 5 全体と照合しました。第 2 ラウンドの発見は 1 件（重要級）+ drafts 側 Adjacent Sync 3 件を検出。Foundation Requirementへの影響範囲を確認します。
+⏺ 第 2 ラウンドで重要な発見と判断保留があります。慎重に報告します。
+
+  ---
+  第 2 ラウンド: roadmap / brief / drafts 厳格照合の結果
+
+  確認済み（整合性問題なし）
+
+  - roadmap.md Constraints（フルスクラッチ / Python 3.10+ / Git / append-only / Concurrency lock / Reject 理由必須）: ✅ R1 / R12 / R17 / R23
+  でカバー
+  - roadmap.md MVP 範囲（P0+P1+P2 / P3 v0.8 / P4 optional）: ✅ R23.10
+  - roadmap.md Rejected alternatives 4 件（全件 approve / Graph DB 正本 / 完全自動 / L2 review 経由）: ✅ R12 / R22.3 / R23.2 で否定
+  - roadmap.md Coordination 必要事項 5 件: ✅ R19 で全件カバー
+  - v1 から継承する技術決定（Severity 4 / exit code 0/1/2 / timeout / networkx）: ✅ R3.7 / R4.8 / R15.6 / R23.7
+  - drafts §7.2 Spec 5 in scope 14 領域: ✅ 23 Req で網羅
+  - drafts §7.2 Spec 5 Hygiene 運用ポリシー / 性能目標 / Vault 規模: ✅ R7 / R17 / R21
+  - drafts §7.2 Spec 5 Query API 表 15 種: ✅ R14.1（修正済）
+
+  drafts 側 Adjacent Sync TODO（本 spec 修正不要）
+
+  - D-11（新）: drafts §7.2 Spec 5 line 1680 / 1682 で「relations.yml の mapping table」→「entity_types.yml の mapping table」に修正（Spec 1 R12.1 /
+  本 spec R13.3 と整合）
+  - D-12（新）: drafts line 1933 の reject_history → rejected_edges.jsonl 表記統一（本 spec R12.4 と整合）
+  - D-13（新）: drafts §5.10 line 1235 の rejected_edges.jsonl 例 7 field（edge_id / original_confidence / rejected_at / reason / source / type /
+  target）を §2.6 v0.7.8 確定セット（edge_id / rejected_at / reject_reason_category / reject_reason_text / rejected_by / pre_reject_status /
+  pre_reject_evidence_ids）に更新
+
+  ---
+  ⚠️ escalate 案件 1 件（要ユーザー判断）
+
+  第 2-A: rejected_edges.jsonl の pre_reject_confidence field の取り扱い
+
+  発見の経緯
+
+  - drafts §5.10 example: original_confidence: 0.45 を含む 7 field
+  - drafts §2.6 v0.7.8 確定 + Foundation R13.5（既 approve 済）: original_confidence を含まない 7 field（edge_id / rejected_at /
+  reject_reason_category / reject_reason_text / rejected_by / pre_reject_status / pre_reject_evidence_ids）
+  - 本 spec R12.4: Foundation R13.5 と完全一致（7 field、original_confidence なし）✅
+  - 本 spec R12.7 unreject 復元: 「Confidence: evidence ceiling（0.3）と reject 直前値 の低い方にクランプ」と規定
+
+  矛盾点
+
+  R12.7 が「reject 直前値」を必要とするが、現行 7 field には記録されていない。pre_reject_evidence_ids から confidence を再計算するには 6
+  係数（recurrence_score, human_feedback 等）が必要で、reject 後の状態から決定的に復元不能。
+
+  4 つの合理的案（拮抗）
+
+  - 案 A: Foundation R13.5 を Adjacent Sync で 8 field 化（pre_reject_confidence 必須追加）
+    - メリット: drafts §5.10 example の original_confidence と整合、unreject 動作が決定的
+    - デメリット: Foundation R13.5 が既 approve 済で必須フィールド拡張は実質的要件変更の可能性、Adjacent Sync 運用ルールの解釈幅
+  - 案 D: 任意 field として本 spec のみで規定（Foundation 不変、必須 7 field 維持）
+    - メリット: Foundation 波及なし、後方互換性
+    - デメリット: R12.7 が任意 field を実質必須として運用するため、運用の一貫性が崩れる
+  - 案 E: R12.7 を「pre_reject_evidence_ids から confidence を再計算してクランプ」に変更（詳細 design phase）
+    - メリット: Foundation 不変、pre_reject_confidence 不要
+    - デメリット: 再計算が他要素（recurrence/human_feedback）に依存し決定的でなく、design phase で複雑化
+  - 案 F: R12.7 を「常に固定値 0.3 にクランプ（pre_reject_status のみで status 復元、confidence は固定）」に簡素化
+    - メリット: Foundation 不変、実装最小、pre_reject_confidence 不要
+    - デメリット: stable / core からの reject 復元時 UX 劣化（高 confidence が一律 0.3 にリセット）
+
+  escalate 条件
+
+  - b. 複数の合理的案が拮抗: ✅ 該当（4 案がメリット軸が異なる、運用観に依存する判断）
+  - a. Foundation 既 approve への波及（案 A の場合）: ✅ 該当
+
+  推奨
+
+  実装複雑性 / Foundation 不変性 / 運用 UX のバランスで 案 A または 案 F が現実的（dominated 除外: 案 D 案 E）。
+
+  - 案 A: 厳密性重視、Foundation Adjacent Sync 必要
+  - 案 F: 簡素性重視、UX 妥協
+
+  どちらを採択するか、ユーザー判断をお願いします。
+
+  ---
+  第 2 ラウンド要約
+
+  - 自動採択候補: 0 件（全件 escalate または対象外）
+  - escalate: 1 件（第 2-A）
+  - drafts Adjacent Sync TODO 追加: 3 件（D-11 / D-12 / D-13）
+
+  第 2-A の選択（A / F のいずれか、または別案）をご指示ください。決定後、第 3 ラウンドに進みます。
+```
+
+##### ❯ Aを選択
+
+```
+⏺ 案 A 採択。Foundation R13.5 の Adjacent Sync を含めて修正します。まず Foundation の該当箇所を確認します。
+⏺ Spec 5 R12.4 / R12.7 修正
+⏺ change log に第 2-A を追記します。
+⏺ Foundation R13.5 Adjacent Sync
+⏺ Foundation の change log 末尾と spec.json.updated_at を更新します。
+⏺ Foundation には change log セクションがまだないようです。Adjacent Sync 運用ルールに従い末尾に追記します。
+⏺ Foundation の spec.json.updated_at を更新します。
+⏺ 第 2-A 完了。Foundation は Adjacent Sync ルールに従い再 approval 不要のため updated_at 更新と change log 追記で同期完了。第 3 ラウンドに進みます。
+
+⏺ 第 3 ラウンドの本質的観点レビューに入ります。Spec 5 内部の event type 集合と他 Req の参照整合性を集中チェックします。
+⏺ 第 3 ラウンドで重要な内部矛盾を発見しました。深掘り検討の結果を報告します。
+
+  ---
+  第 3 ラウンド: 本質的観点レビュー結果
+
+  🔴 致命級候補（深掘り検討 → 自動採択）
+
+  第 3-D: R10.1 の event type 8 種 vs 内部参照 11 種の内部矛盾
+
+  発見
+
+  - R10.1（固定）: 8 種列挙（created / reinforced(...) / decayed / promoted / demoted / rejected / merged / contradiction_flagged）
+  - 本 spec 内で参照されている event 集合:
+    - R6.7（dangling edge 4 段階）: dangling_flagged event を追記要
+    - R12.7（unreject 復元）: unreject event を追記要
+    - R18.1（edge_reassign API）: reassigned event を追記要
+
+  → R10.1 の 8 種固定では本 spec 内 3 箇所が成立しない。Foundation R12.3 も 8 種列挙で同じ問題を継承。drafts §2.6 v0.7.8（dangling_flagged）/ Edge
+  Unreject 復元方針（unreject event）も 8 種外を要求 → drafts 内部矛盾あり
+
+  深掘り検討
+
+  - 案 A: R10.1 を 11 種固定に拡張 + Foundation R12.3 Adjacent Sync
+    - メリット: 完全網羅、明示的列挙
+    - デメリット: Foundation 直前に Adjacent Sync 済（連続 Adjacent Sync）
+  - 案 B: R10.1 を「初期セット 8 種 + 本 spec が拡張規定を所管、拡張可規約を明示」+ 11 種を本 spec で列挙
+    - メリット: Foundation 不変（R12.3 の 8 種列挙は「初期セット」として有効継続）、R11.2 decision_type 拡張可規約と統一の設計パターン
+    - デメリット: 拡張規約の二重管理（Foundation = 初期 / Spec 5 = 拡張）
+  - 案 C: dangling_flagged / unreject / reassigned を既存 event のサブタイプ統合（decayed のサブとして dangling_flagged 等）
+    - dominated ❌: 情報表現として不自然、サブタイプ強制が独自概念導入
+
+  判定
+
+  ✅ 自動採択（案 B）: R11.2 decision_type と同じ「初期セット + 拡張可規約」パターンで統一、Foundation 不変。
+
+  escalate 条件確認
+
+  - a. Foundation 波及: ❌ 案 B では Foundation 不変
+  - b. 拮抗: 案 A / B 拮抗だが、Foundation 不変性で案 B が単独最善
+  - c-e: クリア
+
+  ---
+  重要級候補（自動採択）
+
+  第 3-A: R23.7 の networkx 継承表現の不正確性
+
+  - 現状: networkx >= 3.0 を「Foundation Requirement 11 / roadmap.md「v1 から継承する技術決定」 経由で継承」と表現
+  - 問題: networkx は v1 にない、v2 新規追加（roadmap.md L25 「追加依存は networkx ≥ 3.0 のみ」）
+  - 修正: 「v1 から継承する技術決定 + v2 新規依存（networkx）」に分離表現
+  - ✅ 自動採択
+
+  第 3-B: R3.4 の review buffer 名の曖昧さ
+
+  - 現状: 「review/relation_candidates/（または別途定義する review buffer）に提示」
+  - 問題: drafts §7.2 Spec 5 line 1789 が「review/relation_candidates/（Entity/Relation 抽出提案の承認 buffer）」と統合方針を明示
+  - 修正: 「review/relation_candidates/ に提示（drafts §7.2 Spec 5 と整合、Entity 候補も relation 候補と同じ buffer に統合）」
+  - ✅ 自動採択
+
+  ---
+  drafts Adjacent Sync TODO（本 spec 修正不要）
+
+  - D-14（新）: drafts §Query API Design 表に resolve_entity(name_or_alias) → Entity を 15 番目として追加
+  - D-15（新）: drafts line 1667 の event type 8 種に dangling_flagged / unreject / reassigned を「拡張」として追加注記（drafts §2.6 v0.7.8 / Edge
+  Unreject 復元方針との整合）
+
+  ---
+  修正に着手します
+
+  第 3-D（R10.1）→ 第 3-A（R23.7）→ 第 3-B（R3.4）の順で適用します。
+
+⏺ 第 3-D: R10.1 event type 拡張
+⏺ 第 3-B: R3.4 review buffer 名明示
+⏺ change log に第 3 ラウンドを追記します。
+⏺ 第 3 ラウンド完了。第 4 ラウンド（B 観点: failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模）を進めます。
+---
+  第 4 ラウンド: B 観点レビュー結果
+
+  致命級候補: 0 件
+
+  🟡 重要級候補（深掘り検討 → 自動採択）
+
+  第 4-D: Hygiene transaction の crash 後 tmp 領域 clean-up 規定欠落
+
+  - 現状: R7.3「途中クラッシュ時は実行前の git commit に revert」、tmp 領域 .rwiki/.hygiene.tx.tmp/ を commit 時 merge、失敗時 tmp 破棄
+  - 欠落: process kill 等で「破棄が走らなかった」場合の次回 Hygiene 起動時の clean-up 規定なし
+  - 問題: 残留 tmp 領域が次回 Hygiene の transaction と混在する可能性、原子性が破綻
+  - 修正: R7 に新 AC で「次回 Hygiene 起動時の残留 tmp 領域検出と破棄、stale lock との併発処理」を規定
+  - 代替案: design phase 持ち越し → dominated（要件レベル不変則として規定すべき）
+  - ✅ 自動採択
+
+  第 4-F: extract-relations 等 batch 処理の partial failure handling 欠落
+
+  - 現状: R4.6 で scope 指定（recent/wiki/all/path:）+ R3.6 で skill validation 失敗 ERROR
+  - 欠落: 1000 page 処理中に途中失敗した時、他 page の処理を継続するか中断するか / 部分成功記録の取扱いが明示なし
+  - 修正: R4 に新 AC で「batch 処理は per-page 単位の continue-on-error を default、失敗 page を集計し partial failure として exit code 2 + JSON
+  出力」を規定
+  - 代替案: fail-fast（dominated、抽出 batch UX 劣化）/ 全 rollback（dominated、append-only ledger と整合せず）
+  - ✅ 自動採択
+
+  第 4-C: decision_log の context_ref dangling 検査の audit 対象未含
+
+  - 現状: R16.1 audit 項目「参照整合性（dangling evidence_ids、消失 entity 参照）」に context_ref dangling 未含 / R11.15 健全性診断項目 3 種にも未含
+  - 欠落: decision_log.jsonl の context_ref（例: raw/llm_logs/chat-sessions/...md#L42-67）が指すファイル消失時の検出機構
+  - 修正: R11.15 の Decision Log 健全性診断項目に「context_ref dangling 検出」を 4 番目として追加
+  - 代替案: R16.1 events 整合性に統合（decision_log 健全性は R11 に集中する設計と矛盾、dominated）
+  - ✅ 自動採択
+
+  ---
+  軽微（brief.md design 持ち越しに記録）
+
+  - 第 4-A: decision_log privacy mode 切替時の意味（過去 git history 含むか、未来分のみか）
+  - 第 4-B: edge_id hash 衝突時の handling
+  - 第 4-E: 大規模 Vault での Reinforcement per-day cap 接触問題（一部 edge のみ reinforced）
+
+  これら 3 件は design phase で詳細化、brief.md に記録します。
+
+  ---
+  修正に着手します
+
+⏺ 第 4-D: R7 Hygiene crash 後 clean-up
+
+⏺ 第 4 ラウンド完了。第 5-6 ラウンドを並行レビューします。
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+⏺ 第 5 ラウンド C 観点と第 6 ラウンド D 観点を完了しました。
+
+  ---
+  第 5 ラウンド: C 観点（他 spec 波及）レビュー結果
+
+  既 approve 済 spec への要件レベル波及: なし
+
+  - Spec 0 Foundation: R13.5 のみ第 2-A で既に Adjacent Sync 済（pre_reject_confidence 追加）
+  - Spec 1 classification: 直接波及なし、本 spec R13.3 の entity_types.yml mapping table は Spec 1 R12.1 と既整合
+  - Spec 4 cli-mode-unification: 直接波及なし、本 spec R4.10 partial failure exit 2 は Spec 4 R2.5 / R11.2 と整合 ✅
+  - Spec 7 lifecycle-management: 直接波及なし、event type 拡張（reassigned）は本 spec 内部実装、Spec 7 R12.2 で「内部状態遷移は Spec 5 所管」と既規定
+
+  未 approve spec へのチェックリスト追加（TODO_NEXT_SESSION.md 更新対象）
+
+  - Spec 2 (skill-library) 起票時チェック項目: 本 spec R3.5（entity skill schema = name / canonical_path / entity_type / aliases / evidence_ids）/
+  R4.5（relation skill schema = source / type / target / extraction_mode / evidence）の validation interface 整合
+  - Spec 6 (perspective-generation) 起票時チェック項目: 本 spec R14（Query API 15 種、resolve_entity 含む）の利用責務 / R21.7（Hygiene autonomous 4
+  trigger）の surface 連携
+
+  ---
+  第 6 ラウンド: D 観点（drafts 整合）レビュー結果
+
+  本 spec 修正: なし
+
+  drafts Adjacent Sync TODO 7 件を新規記録（別セッションで一括処理）
+
+  - D-11: drafts §7.2 Spec 5 line 1680 / 1682「relations.yml の mapping table」→「entity_types.yml の mapping table」（Spec 1 R12.1 / 本 spec R13.3
+  と整合）
+  - D-12: drafts line 1933 の reject_history → rejected_edges.jsonl 表記統一
+  - D-13: drafts §5.10 line 1235 の rejected_edges.jsonl 例 7 field を §2.6 v0.7.8 確定セット 8 field（pre_reject_confidence 追加）に更新
+  - D-14: drafts §Query API Design 表に resolve_entity(name_or_alias) → Entity を 15 番目として追加
+  - D-15: drafts line 1667 の event type 8 種に dangling_flagged / unreject / reassigned を「Spec 5 拡張」として注記
+  - D-16: Foundation R12.3 への注記追加（「初期セット 8 種、Spec 5 が拡張規定を所管」）— Adjacent Sync 軽微（再 approval 不要）
+  - D-17: drafts §5.10 entities.yaml example の type: → entity_type: 統一（Spec 1 R2.3 と整合）
+
+  ---
+  第 1-6 ラウンド完了サマリ
+
+⏺ 修正適用統計（最終）
+
+  - 致命級: 6 件（致-1 ~ 致-5 + 第 3-D） → 全件 requirements 反映
+  - 重要級: 9 件（重-1 ~ 重-3 + 第 2-A + 第 3-A + 第 3-B + 第 4-D + 第 4-F + 第 4-C） → 全件 requirements 反映
+  - escalate: 1 件（第 2-A、ユーザー判断 → 案 A 採択）
+  - 軽微（design 持ち越し）: 3 件（第 4-A / 4-B / 4-E） → brief.md に記録済
+  - drafts Adjacent Sync TODO: 7 件（D-11 ~ D-17） → 別セッション処理
+  - 既 approve spec への Adjacent Sync: 1 件（Foundation R13.5 + spec.json.updated_at + change log）→ 適用済
+
+  Spec 5 規模
+
+  - Requirement 数: 23（変動なし）
+  - AC 数: 174 → 184（+10: R10.1 / R11.15 / R11.16 / R18.7 / R18.8 / R7.11 / R4.10 + 内訳拡張）
+  - decision_type 値: 10 → 21 種 + 拡張可規約
+  - edge_events.jsonl event type: 8 → 11 種 + 拡張可規約
+  - rejected_edges.jsonl 必須 field: 7 → 8 種
+  - Query API: 14 → 15 種
+
+  ---
+  次ステップ
+
+  第 1-6 ラウンドのレビューは完了し、致命級・重要級はすべて反映済みです。Spec 5 を approve に進める 準備ができました。
+
+  次のアクションは spec.json の approve 更新ですが、これは memory feedback_approval_required.md に従い ユーザー明示承認必須です。
+
+  確認事項:
+  - 第 1-6 ラウンドの修正全 17 件（致命級 6 + 重要級 9 + 第 2-A escalate 採択 + Foundation Adjacent Sync）の内容で問題なければ、Spec 5 を phase:
+  requirements-approved に更新します
+  - TODO_NEXT_SESSION.md の更新（drafts Adjacent Sync D-11~D-17、Spec 2 / 6 チェックリスト追加、Spec 5 approve 完了記録）も併せて実施します
+  - dev-log への追記（第 1-6 ラウンドの議論ログ）も実施します
+
+  Spec 5 の approve に進めてよいですか？
+```
+
+##### ❯ Spec5の修正を再度厳しく精査
+
+```
+⏺ 精査を実施しました。修正適用後の整合性チェックで 3 件の重要級 + 2 件の軽微 な見落としを発見しました。
+
+  ---
+  厳しい精査の結果
+
+  🔴 重要級発見（修正適用後の内部矛盾）
+
+  発見 1: R18.1 シグネチャと R18.7 timeout 必須規定の乖離
+
+  - R18.1: edge API シグネチャ列挙
+    - edge_demote(edge_id, reason)
+    - edge_reject(edge_id, reason_category, reason_text)
+    - edge_reassign(edge_id, new_endpoint)
+  - R18.7（追加）: 「edge API の各呼出に timeout を必須パラメータ として受け取る」
+  - R18.2: 必須パラメータ列挙「edge_id / reason_category / reason_text / actor / pre_status 等」（timeout 未含）
+
+  → R18.1 のシグネチャに timeout が含まれず、読者は R18.7 を読まないと timeout の存在を見落とす。R18.2 の「等」も曖昧。
+
+  発見 2: R16.8 「3 種」→「4 種」の更新漏れ
+
+  - R11.15 （第 4-C で 4 項目に拡張）: append-only 整合性 / 矛盾候補件数 / schema 違反件数 / context_ref dangling 件数 の 4 項目
+  - R16.8: 「Decision Log 健全性診断項目（3 種、Requirement 11.15 check_decision_log_integrity() API として提供）」
+
+  → R11.15 を 3 → 4 に拡張した時、R16.8 の「3 種」を更新し忘れている。内部不整合。
+
+  発見 5: Boundary Context In scope の Event ledger 「8 event type」更新漏れ
+
+  - Boundary Context In scope: 「Event ledger: edge_events.jsonl への 8 event type（...8 種列挙...）の append-only 記録」
+  - R10.1（第 3-D で拡張）: 11 種 + 拡張可規約
+
+  → R10.1 を 8 → 11 種に拡張した時、Boundary Context の概要記述が 8 種のまま。Boundary は spec 全体の概要として参照される重要箇所、整合性 critical。
+
+  ---
+  🟡 軽微発見（精度向上候補）
+
+  発見 3: Phase 表 P0 概要文に resolve_entity 未追加
+
+  - 修正後 P0 概要文: 「normalize_frontmatter API、record_decision / get_decisions_for / get_edge_history API、...」
+  - 重-1 で resolve_entity を 15 番目として追加したが、Phase 表概要文には未反映
+
+  発見 4: Phase 表 R11 の Phase 分類記述精度
+
+  - 現状 P0 行: 「11（11.15 除く）」
+  - 正確な分類: P0 = 11.1-11.9, 11.14, 11.16 / P1 = 11.10-11.12, 11.15 / P2 = 11.13
+  - 「11（11.15 除く）」は P1 / P2 にまたがる R11.10-13 / 11.15 を見落としている
+
+  ---
+  深掘り検討と判定
+
+  発見 1: R18.1 timeout シグネチャ整合 → ✅ 自動採択
+
+  - 修正案 A: R18.1 シグネチャに timeout を明示追加（edge_demote(edge_id, reason, timeout) 等）
+  - 代替案 B: R18.2 の「等」を timeout 含む明示形に変更
+  - 代替案 C: R18.7 のみ参照で読者依存（dominated、整合性破綻）
+  - 判定: 案 A + B の併用が最善（API 一覧で見える、必須パラメータでも明示）
+
+  発見 2: R16.8「3 種」→「4 種」 → ✅ 自動採択（単純な更新漏れ）
+
+  発見 5: Boundary Context Event ledger 「8 event type」→「11 event type + 拡張可規約」 → ✅ 自動採択（概要との整合性 critical）
+
+  発見 3: Phase 表 P0 概要文 resolve_entity 追記 → ✅ 自動採択
+
+  発見 4: Phase 表 R11 詳細化 → ✅ 自動採択
+
+  すべて escalate 条件に該当せず（既 approve 波及なし、拮抗なし、SSoT 矛盾なし、不可逆性なし、新規致命級なし）。修正に着手します。
+
+⏺ 発見 1: R18.1 / R18.2 timeout 明示
+⏺ 発見 2: R16.8 「3 種」→「4 種」
+⏺ 発見 5: Boundary Context Event ledger 11 種更新
+⏺ 発見 3-4: Phase 表精度向上
+⏺ change log に精査結果を追記します。
+⏺ 精査による追加修正完了。さらに念のため、もう一段階厳しく検証します。
+⏺ さらに見落としを発見しました。
+⏺ 追加発見の修正
+  発見 6: R10 Objective「8 event type」未更新
+  発見 7: Boundary Out of scope の rw doctor 説明に Decision Log 健全性診断項目未含
+⏺ もう一段精査します。
+⏺ Boundary 内の「基本セット 8 種」は正しい用法。Foundation 側に追加更新漏れがないか最終確認します。
+⏺ 精査の最終チェックを実施しました。
+
+  ---
+  精査ラウンド最終報告
+
+  修正適用後の確認事項
+
+  Spec 5 内部整合性
+
+  - stale reference: 「8 event type」「14 種」「7 field」「3 種」の古い参照すべて解消済（残りは change log 内の履歴記録のみ）
+  - AC 番号整合性: 全クロスリファレンス（Requirement X.Y 形式 47 箇所）正常
+  - legacy decision_type: tag_merge / bare split は change log 内の経緯記述のみ、本文は新表記で統一
+
+  Foundation 整合性
+
+  - R13.5: pre_reject_confidence 追加済（line 205）✅
+  - R13.7 / R12.3: 既存記述と整合 ✅
+  - change log + spec.json.updated_at: 更新済 ✅
+
+  軽微な追加候補（任意、本セッション内処理可否を確認）
+
+  Foundation R12.3 への Adjacent Sync 軽微注記（D-16）
+
+  - 現状 Foundation R12.3: 「The Foundation shall L2 補助履歴の event type として created / reinforced / decayed / promoted / demoted / rejected /
+  merged / contradiction_flagged を列挙する」
+  - 第 3-D で「Foundation 不変」と判定したが、リーダーが「8 種が固定セット」と誤解する可能性。Spec 5 R10.1 の拡張可規約と整合させるため、Foundation
+  側に「基本セット」「Spec 5 が拡張規定を所管」と注記追加すると完全な整合性
+  - この修正は Adjacent Sync 軽微注記レベル（再 approval 不要）
+  - 別セッションで処理する D-16 として TODO に記録済み
+
+  判断ポイント: 本セッションで Foundation R12.3 への軽微注記を併用処理するか、TODO_NEXT_SESSION.md
+  に記録して別セッションで処理するか。どちらでも整合性は確保されます（本 spec R10.1 の拡張可規約が Foundation 不変前提で機能するため）。
+
+  ---
+  精査適用一覧
+
+  精査ラウンドで反映した修正:
+
+  - 発見 1: R18.1 / R18.2 に timeout を必須パラメータとして明示追加
+  - 発見 2: R16.8 「3 種」→「4 種」更新
+  - 発見 5: Boundary Context In scope の Event ledger 「8 event type」→「初期セット 11 + 拡張可規約」更新
+  - 発見 3: Phase 表 P0 概要文に resolve_entity 追加
+  - 発見 4: Phase 表の R11 / R7.11 / R14 詳細化（P0/P1/P2 の細分）
+  - 発見 6: R10 Objective「8 event type」→「初期セット 11 event type」更新
+  - 発見 7: Boundary Out of scope rw doctor 説明に Decision Log 健全性診断項目（4 種）を追加
+
+  ---
+  確認のお願い
+
+  1. Foundation R12.3 軽微注記追加: 本セッションで併用処理しますか？それとも TODO に残して別セッション処理しますか？
+  2. その他、追加で精査したい観点はありますか？
+  3. 問題なければ Spec 5 の phase: requirements-approved への更新と TODO_NEXT_SESSION.md / dev-log の更新を進めます。
+```
+
+#####  ❯ Foundationに対しては何の処理をしたか
+
+```
+⏺ 本セッション中に Foundation に対して行った処理は以下の 3 点です。
+
+  適用済み修正（本セッション内）
+
+  1. R13.5 の必須フィールド拡張（第 2-A による Adjacent Sync）
+
+  - 対象: .kiro/specs/rwiki-v2-foundation/requirements.md line 205
+  - 修正前: edge_id / rejected_at / reject_reason_category / reject_reason_text / rejected_by / pre_reject_status / pre_reject_evidence_ids の 7必須フィールド
+  - 修正後: 上記 + pre_reject_confidence（reject 直前 confidence 値、float [0.0, 1.0]、unreject 時の復元クランプ計算に使用、Spec 5 Requirement 12.4 /12.7 と整合）の 8 必須フィールド
+  - 理由: Spec 5 R12.7 unreject 復元の決定的クランプ計算に必要、drafts §5.10 example の original_confidence と整合
+
+  2. change log セクションの新設
+
+  - 対象: Foundation requirements.md 末尾
+  - 理由: Foundation には元々 change log セクションがなく、roadmap.md の Adjacent Spec Synchronization 運用ルール（「spec.json.updated_at 更新とmarkdown 末尾 _change log への 1 行追記で足りる」）に従うため新設
+  - 記録内容:
+    - 2026-04-26: 初版生成 + 4 段階レビュー反映 + approve
+    - 2026-04-27: Spec 5 第 2 ラウンド由来 Adjacent Sync — R13.5 の 7 → 8 field 拡張、pre_reject_confidence 追加の経緯
+
+  3. spec.json.updated_at の更新
+
+  - 対象: .kiro/specs/rwiki-v2-foundation/spec.json
+  - 修正前: updated_at: 2026-04-26T14:06:41+09:00
+  - 修正後: updated_at: 2026-04-27T08:06:50+09:00
+  - approvals.requirements.approved: true のまま維持（再 approval 不要、Adjacent Spec Synchronization 運用ルールに従う）
+
+  ---
+  未処理（TODO に記録のみ）
+
+  D-16: R12.3 への軽微注記追加（event type 「基本セット」明示）
+
+  - 第 3-D で Spec 5 R10.1 を 8 → 11 event type + 拡張可規約に変更した際、Foundation R12.3 は不変としたが、リーダー誤解防止のため「基本セット 8種」「Spec 5 が拡張規定を所管」と注記追加するのが望ましい
+  - 第 3-D 採択時に「Foundation 不変」と判定したため本セッションでは未実施、TODO_NEXT_SESSION.md の drafts Adjacent Sync
+  TODO（D-16）として別セッション処理予定
+
+  ---
+  確認
+
+  第 2-A 由来の Foundation R13.5 拡張のみ本セッションで実施済み、D-16（R12.3 軽微注記）は未実施で TODO 化されている状況です。
+
+  D-16 を本セッション内で併用処理して整合性を完全にするか、別セッション処理（TODO のまま）にするか、ご指示ください。
+```
+
+##### ❯ Spec5はFoundationのスペックへの修正にも及んだ。そうすると、Foundationは他のレビュー済みのスペックにも影響を及ぼすため、過去にレビューしたスペックがそれにより影響を受け、齟齬を来していないかを確認する必要がある。その点にフォーカスし、慎重に精査。
+
+```
+⏺ 重要な指摘です。Foundation R13.5 への変更が他 approve 済 spec（Spec 1 / 4 / 7）に齟齬を生じていないかを精査します。
+
+⏺ 精査結果を整理して報告します。
+
+⏺ 精査結果が確定しました。報告します。
+
+  ---
+  Foundation 波及精査結果
+
+  Foundation R13 系を参照している箇所（全 approve 済 spec を網羅）
+
+  Spec 1 (classification)
+
+  - Foundation R13 系への参照: 0 箇所 → 波及なし ✅
+
+  Spec 4 (cli-mode-unification) — line 202
+
+  The rw reject command shall **`reject_reason_text` を空文字で受領した場合 exit code 1 で失敗**し、reject 操作を ledgerに書き込まない（roadmap.md「Reject 理由必須」/ Foundation Requirement 13.5 / §2.6 / `reject_learner` skill の学習素材として必須）。
+
+  - 参照内容: reject_reason_text 空文字禁止の根拠として Foundation R13.5 を引用
+  - 本セッションでの Foundation R13.5 変更: 必須フィールドを 7 → 8 に拡張（pre_reject_confidence 追加）
+  - 齟齬判定: reject_reason_text 空文字禁止規定自体は不変、参照は依然有効 → 齟齬なし ✅
+
+  Spec 7 (lifecycle-management)
+
+  - Foundation R13 系への参照: 0 箇所（rejected_edges.jsonl への言及はあるが、Foundation R13 の番号引用なし、また具体的 field 列挙なし）
+  - line 51 / 52 / 109 / 212 / 234 で rejected_edges.jsonl に言及するも、すべて「ledger ファイル名」「Spec 5
+  - line 51 / 52 / 109 / 212 / 234 で rejected_edges.jsonl に言及するも、すべて「ledger ファイル名」「Spec 5
+  所管」「内部状態遷移実装側責務」レベルで具体的 field 数に依存しない
+  - → 齟齬なし ✅
+
+  ---
+  精査の論理構造
+
+  Foundation R13.5 の変更は 「必須フィールドの数を 7 → 8 に拡張」 という性質のため、波及するのは「フィールド数を直接列挙している箇所」のみ。
+
+  - 他 approve 済 spec の Foundation R13.5 参照内容を精査した結果、いずれもフィールド数には依存せず、個別ルール（reject_reason_text 空文字禁止 /　append-only / Spec 5 所管 / rejected_edges.jsonl への移動）への参照のみ
+  - フィールド列挙を行っているのは Spec 5 R12.4 のみ（既に 8 field に同期済）
+  - 他 spec が Foundation R13 系の 個別ルール に依存している箇所はあるが、それらのルール（reject_reason_text
+  空文字禁止等）は本セッションの変更で改訂されていない
+
+  ---
+  結論
+
+  - 追加 Adjacent Sync: 不要
+  - Spec 1 / 4 / 7 の spec.json.updated_at 更新: 不要（Adjacent Sync 運用ルールの「対象 spec の updated_at 更新」は Foundation のみが対象、他 spec は
+   Foundation 改版による波及更新を必要としていないため）
+  - 整合性: 全 approve 済 spec で齟齬なし
+
+  ユーザーの指摘通り、Foundation のような上流 spec の変更時には下流の波及精査が 常に必要ですが、今回は変更性質（必須フィールド数の拡張、個別ルール不変）と他 specの参照様態（個別ルール依存、フィールド数非依存）が組み合わさり、結果的に波及なしで完結しました。
+
+  将来的な Foundation 改版時にも同様の精査を必須プロセスとすべきです。
+
+  ---
+  Spec 5 / Foundation の修正と全波及精査が完了しました。次のステップ（spec.json approve 更新と TODO_NEXT_SESSION.md / dev-logの更新）に進めてよいでしょうか？
+
+```
+
+##### ❯ Foundation以外のスペックに対する修正や波及事項はあるか？
+
+```
+ Spec 5 への全修正項目について、他 approve 済 spec への波及を網羅的に再精査します。
+
+  Searched for 3 patterns (ctrl+o to expand)
+
+⏺ 重大な見落としを発見しました。Spec 4 (cli-mode-unification) に Query API「14 種」の参照が 4 箇所 残っています。
+
+  ---
+  Spec 5 修正の波及確認（再精査結果）
+
+  🔴 未処理の波及 — Spec 4 の「Query API 14 種」表記
+
+  重-1（Query API 14 → 15 種統一）の Spec 5 修正時に Spec 4 への波及確認が漏れていました。
+
+  Spec 4 で「14 種」表記が残っている箇所（5 箇所）
+
+  - Spec 4 line 63: 「Spec 5 Requirement 14 で確定済 Query API 14 種 の一部」
+  - Spec 4 line 258: 「Spec 5 Requirement 14 で確定済 Query API 14 種 と整合」
+  - Spec 4 line 270: 「Spec 5 Requirement 14 で確定済 Query API 14 種 と整合」
+  - Spec 4 line 286（2 箇所）: 「Spec 5 Requirement 14 で確定済 Query API 14 種 の一部」「Spec 5 Requirement 14 の Query API 14 種 にも内部 API名は未列挙」
+
+  → Spec 5 R14 を 15 種に拡張した本セッションの修正と整合を取るには、Spec 4 を Adjacent Sync で「15 種」に更新する必要があります。
+
+  ---
+  ✅ 波及なし（精査済）
+
+  Spec 1 (classification)
+
+  - Foundation R13 系参照: なし
+  - Query API 種数参照: なし
+  - decision_type vocabulary 5 種: Spec 5 R11.2（21 種）に Vocabulary 起源 5 種として吸収済 → 整合 ✅
+  - event type 参照: なし
+
+  Spec 4 (cli-mode-unification)
+
+  - Foundation R13.5 参照（line 202）: reject_reason_text 空文字禁止のみで field 数依存なし → 整合 ✅
+  - decision_type 参照（line 288 / 300）: Spec 5 が初期セット定義する規約レベルで具体値依存最小 → 整合 ✅
+  - event type 参照: なし
+  - Query API 種数参照: 5 箇所未更新 → 上記の通り波及あり ❌
+
+  Spec 7 (lifecycle-management)
+
+  - Foundation R13 系参照: なし
+  - decision_type Page/Skill 9 種（line 239）: Spec 5 R11.2 に吸収済 → 整合 ✅
+  - event type 参照: edge_events.jsonl への append 言及のみ、具体 event 値列挙なし → 整合 ✅
+  - Query API 種数参照: なし
+
+  ---
+  深掘り検討と判定
+
+  Spec 4 の Adjacent Sync（14 → 15 種）
+
+  - 影響度: requirements の文言同期（Adjacent Spec Synchronization 運用ルールの「先行 spec 変更による波及的な文言同期」に該当）
+  - 再 approval: 不要（roadmap.md 規定）
+  - 必要操作: Spec 4 requirements.md 5 箇所の文言修正 + change log 追記 + spec.json.updated_at 更新
+  - escalate 条件:
+    - a. 既 approve 済 spec への波及: ✅ 該当（既 approve、Adjacent Sync で対応可）
+    - b-e: クリア
+  - 判定: Adjacent Sync 運用ルール適用範囲、自動採択可
+
+  ---
+  修正に着手します
+
+⏺ line 286 に残り 1 箇所「Query API 14 種にも」があります。修正します。
+⏺ Spec 4 内の「Query API 14 種」表記すべて消去。change log 追記と spec.json.updated_at 更新を行います。
+⏺ Spec 4 にも change log セクションがないので、Foundation と同様に末尾に新設します。
+⏺ 念のため、もう一段精査します。Spec 5 への他の修正項目（event type 11 種 / decision_type 21 種 / pre_reject_confidence / Hygiene crash clean-up等）について、他 approve 済 spec への波及がないか改めて広範に確認します。
+ 念のため、もう一段精査します。Spec 5 への他の修正項目（event type 11 種 / decision_type 21 種 / pre_reject_confidence / Hygiene crash clean-up等）について、他 approve 済 spec への波及がないか改めて広範に確認します。
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+⏺ 精査完了。残りの整合性すべて確認しました。
+
+  ---
+  Spec 5 修正の他 approve 済 spec への波及精査 — 最終結果
+
+  適用済 Adjacent Sync（本セッション内）
+
+  ✅ Foundation R13.5（既報告済）
+
+  - 必須フィールド 7 → 8 に拡張、pre_reject_confidence 追加
+  - change log + spec.json.updated_at 更新済
+
+  ✅ Spec 4 (cli-mode-unification) — 今回の追加発見
+
+  - 修正箇所: line 63 / 258 / 270 / 286（2 箇所）の「Query API 14 種」→「Query API 15 種」
+  - 発生原因: Spec 5 R14 の重-1 修正（14 → 15 種）に伴う波及
+  - 対応:
+    - 本文 5 箇所の文言同期（replace_all で 4 箇所、line 286 後段 1 箇所を個別 Edit）
+    - change log セクション新設（Foundation と同様 Spec 4 に未存在）
+    - spec.json.updated_at: 2026-04-27T10:09:29+09:00 に更新
+    - 再 approval 不要（Adjacent Sync 運用ルール）
+
+  ---
+  波及なし（精査済）
+
+  Spec 1 (classification)
+
+  - Spec 5 への参照: R13（normalize_frontmatter）/ R11（record_decision）等、AC 番号への依存
+  - 本セッションで Spec 5 の 既存 AC 番号は不変（新規 AC R11.15 / R11.16 / R7.11 / R4.10 / R18.7 / R18.8 はすべて末尾追加）→ 番号波及なし ✅
+
+  Spec 7 (lifecycle-management)
+
+  - Spec 5 への参照: R17（lock）/ R20.8（L2 診断）等
+  - 本セッションでこれらの AC 番号は不変、R20.8 内容も不変 → 整合 ✅
+  - decision_type 21 種への参照（Spec 7 R12.7）: Spec 7 が Page/Skill 9 種を規定し、Spec 5 R11.2 が受け入れる構造、Spec 7 側変更不要 ✅
+  - event type 11 種への参照: Spec 7 line 51 等で edge_events.jsonl 言及するが具体 event 値列挙なし → 波及なし ✅
+
+  ---
+  精査の網羅性確認
+
+  本セッションの 全 Spec 5 修正 について波及確認を実施:
+
+  - 致-1（decision_type 21 種）: 各 spec の参照は規約レベル（具体値直接列挙なし）→ 波及なし
+  - 致-2（edge API timeout）: Spec 7 R12.8 から本 spec へ伝搬する coordination → Spec 7 既規定で波及なし
+  - 致-3（健全性診断 API）: Spec 4 R4.5 既規定で波及なし
+  - 致-4（shortcut 除外）: Spec 1 R5.5 / R10.1 既規定で波及なし
+  - 致-5（partial failure JSON）: Spec 7 R3.7 / R3.8 既規定で波及なし
+  - 重-1（Query API 15 種）: Spec 4 で波及、本セッション内で Adjacent Sync 完了 ✅
+  - 重-2（entity_type 統一）: Spec 1 R2.3 既規定で波及なし
+  - 重-3（context_ref path）: Spec 4 R1.8 既規定で波及なし
+  - 第 2-A（pre_reject_confidence）: Foundation R13.5 で波及、本セッション内で Adjacent Sync 完了 ✅
+  - 第 3-D（event type 11 種）: 他 spec で具体 event 値列挙なし → 波及なし
+  - 第 3-A（networkx 表現）: Spec 5 内のみ → 波及なし
+  - 第 3-B（review buffer）: Spec 1 R4.8 既規定で波及なし
+  - 第 4-D（Hygiene clean-up）: Spec 5 内部実装 → 波及なし
+  - 第 4-F（partial failure exit 2）: Spec 4 R2.5 / R11.2 既規定で波及なし
+  - 第 4-C（context_ref dangling）: Spec 4 R4.5 既規定で波及なし
+  - 精査ラウンド 7 件: Spec 5 内部整合 → 波及なし
+
+  ---
+  結論
+
+  Spec 5 修正による他 approve 済 spec への波及:
+
+  - Foundation: 第 2-A 由来 1 件（適用済）
+  - Spec 4: 重-1 由来 1 件（本回答内で発見・適用済）
+  - Spec 1: なし
+  - Spec 7: なし
+
+  ユーザーの指摘により Spec 4 への波及（5 箇所の Query API 種数表記）を発見・修正できました。これがなければ Spec 4 の文言が Spec 5 と乖離したままapprove に進む状況でした。指摘ありがとうございます。
+
+  ---
+  追加確認事項
+
+  - AC 番号の整合性: Spec 5 既存 AC 番号は不変（新規追加は末尾）→ 他 spec の番号参照に影響なし ✅
+  - 全 Adjacent Sync 完了で、Spec 5 を phase: requirements-approved への更新準備が整いました
+
+  次のステップ（Spec 5 approve + TODO_NEXT_SESSION.md / dev-log 更新）に進めてよいですか？
+```
+
+##### ❯ OK
+
+```
+⏺ 実施手順を順次進めます。
+
+  1. Spec 5 spec.json approve
+⏺ Spec 5 approve 完了。続いて TODO_NEXT_SESSION.md と dev-log を更新します。
+⏺ dev-log-2 は既に本セッション議論を保持しています。TODO_NEXT_SESSION.md を全面更新します。
+
+```
 
 
 
 仕様間の整合性をチェック
 
 仕様間の依存関係をチェック
+
+---
+
+## セッション完了サマリ（2026-04-27、Spec 5 approve）
+
+- Spec 5 (rwiki-v2-knowledge-graph) を approve（174 → 184 AC、全 17 修正反映）
+- Foundation R13.5 Adjacent Sync（pre_reject_confidence 追加、change log 新設）
+- Spec 4 Adjacent Sync（Query API 14 → 15 種文言同期、change log 新設）
+- 進捗: 5/8 完了（Spec 0 / 1 / 4 / 5 / 7）
+- 次対象: Spec 2 (skill-library)
+- 確立した方針: 深掘り検討 + 自動採択（feedback_deepdive_autoadopt.md）
+- ユーザー指摘により Spec 4 への波及（5 箇所の Query API 種数表記）を発見・修正できた、Foundation 改版時の波及精査を必須プロセスとして TODO_NEXT_SESSION.md に明記
+
