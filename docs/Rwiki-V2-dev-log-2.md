@@ -16,6 +16,8 @@
 
 [Spec 6 rwiki-v2-perspective-generation](##Spec 6 rwiki-v2-perspective-generation)
 
+[仕様書の最終確認](##仕様書の最終確認)
+
 
 
 [レビュー方法について再検討](##レビュー方法について再検討)
@@ -7001,13 +7003,145 @@ When rw skill test <candidate-or-name> [--sample <file>] が呼び出された, 
 → Rwiki v2 全 8 spec の requirements 確定、design phase へ移行可能な状態に到達。
 ````
 
+```
+  全完了報告
 
+  Rwiki v2 全 8 spec requirements approve 完成 🎉
+
+  ✅ Spec 0 (foundation) — 2026-04-26
+  ✅ Spec 1 (classification) — 2026-04-26
+  ✅ Spec 4 (cli-mode-unification) — 2026-04-26 (本セッションで 4 度目の Adjacent Sync)
+  ✅ Spec 7 (lifecycle-management) — 2026-04-26
+  ✅ Spec 5 (knowledge-graph) — 2026-04-27
+  ✅ Spec 2 (skill-library) — 2026-04-27
+  ✅ Spec 3 (prompt-dispatch) — 2026-04-27
+  ✅ Spec 6 (perspective-generation) — 2026-04-27 (本セッション、最終 spec)
+
+  本セッション成果
+
+  - Spec 6 修正: 32 件 (致 4 + 重 13 + 軽 5 + 連鎖更新漏れ 8 + 整合性審査 2)
+  - AC 数: 131 → 132 (+1、R9.9 三者命名関係新設)
+  - Adjacent Sync: Spec 4 (D-27 + D-28) 本セッション内同期完了
+  - drafts TODO: D-25 + D-26 別セッション処理
+  - commit: 3 件、origin/main push 完了
+
+  次セッション候補
+
+  - (1) drafts Adjacent Sync 一括処理 (計 26 件、D-1〜D-26)
+  - (2) design phase 移行 (/kiro-spec-design、Phase 1〜5 順次)
+  - (3) その他改善活動
+
+  design phase 移行の場合、依存関係上は Phase 1 (Spec 0 / Spec 1) から開始が最も自然です。次の指示があればお知らせください。
+```
+
+
+
+## 仕様書の最終確認
+
+##### ❯ 各スペックの整合性を全スペック毎にステップバイステップで精査
+
+```
+⏺ 全 8 spec の cross-spec 整合性精査を開始します。効率と網羅性のため、以下の 2 段階方式で進めます。
+
+  精査計画
+
+  Stage 1: Cross-spec quick scan (本ターン)
+
+  主要な共通 enum / 数値 / API / 必須 field を全 spec で grep して一貫性検証:
+
+  - (a) Query API 種数 (Spec 5 が SSoT、15 種 + resolve_entity)
+  - (b) decision_type 種数 (Spec 5 R11.2 が SSoT、22 種 + 拡張可規約)
+  - (c) edge_events.jsonl event type 種数 (Spec 5 R10.1 が SSoT、11 種 + 拡張可規約)
+  - (d) Hypothesis status 7 種 (Foundation R5.4 が SSoT)
+  - (e) Edge status 6 種 (Foundation R5.1 が SSoT)
+  - (f) Page status 5 種 (Foundation R5.2 が SSoT)
+  - (g) Skill 起源 4 種 (skill_install / skill_deprecate / skill_retract / skill_archive、Spec 7 R12.7 / Spec 5 R11.2 SSoT)
+  - (h) Dangerous op 13 種 (Spec 7 R6.1 が SSoT)
+  - (i) --auto 不可 5 種 (Spec 7 R6.4 / Spec 4 R3.3 が SSoT)
+  - (j) Maintenance autonomous trigger 種数 (Spec 5 R21.7 = 4 種 / Spec 6 R10.1 = 6 種、合計 6 種が SSoT)
+  - (k) Foundation 13 中核原則 (Foundation R3 が SSoT)
+  - (l) 3 層アーキテクチャ用語 (L1 raw / L2 ledger / L3 wiki)
+
+  Stage 2: 検出不整合に対する spec 別 detailed 精査
+
+  Stage 1 で検出した不整合があれば、影響 spec に対して詳細精査 + 修正提案。
+
+  ---
+  Stage 1 開始 — Cross-spec quick scan
+
+⏺ 出力規模が大きいため、Explore agent (very thorough) を起動して全 spec の cross-spec audit を網羅的に実施させます。
+⏺ Cross-spec 整合性精査 結果
+
+  Explore agent が全 8 spec を 12 観点で very thorough に精査。致命的 / 重要級の不整合は 0 件、軽微 3 件のみ検出。
+
+  整合確認 (9 観点 = 完全整合 ✅)
+
+  - (1) Query API 15 種 — Spec 5 R14.1 ↔ Spec 4 (本セッション中の Adjacent Sync 完了) ↔ Spec 6 R11.2 で完全整合
+  - (2) decision_type 22 種 — Spec 5 R11.2 ↔ Spec 4 R15.10 ↔ Spec 7 R12.7 ↔ Spec 1 R8.13 で完全整合
+  - (3) edge_events.jsonl event type 11 種 — Spec 5 R10.1 ↔ Foundation R12.3 (基本 8 種 SSoT) ↔ Spec 6 R12.6 / R12.7 (reinforced event
+  利用、独自追加なし) で完全整合
+  - (4) Hypothesis status 7 種 — Foundation R5.4 ↔ Spec 6 R7.1 で完全一致 (R8.5 outcome 5 値は別 dimension として正しく区別)
+  - (5) Edge status 6 種 — Foundation R5.1 ↔ Spec 5 R6.1 ↔ Spec 7 で完全一致
+  - (6) Page status 5 種 — Foundation R5.2 ↔ Spec 7 R1.1 で完全一致
+  - (7) Skill 起源 4 種 — Spec 5 R11.2 ↔ Spec 7 R12.7 ↔ Spec 2 R12.4 で完全整合 (本セッション Spec 7 Skill 3→4 種化済)
+  - (8) Dangerous op 13 種 — Spec 7 R6.1 ↔ Spec 4 R3 で完全整合
+  - (9) --auto 不可 5 種 — Spec 7 R6.4 ↔ Spec 4 R3.3 で完全一致、本セッション D-27 で rw approve <hypothesis-id> 注記追加済
+  - (11) Foundation 13 中核原則 — 各 spec の Adjacent expectations で適切参照、独自再定義なし
+
+  軽微不整合 3 件 (修正検討要)
+
+  軽-A: Spec 6 R9.9 → Spec 4 R3.3 / R16.1 への逆参照不足
+
+  - 検出: Spec 4 R3.3 / R16.1 注記は本セッション D-27 / D-28 で「Spec 6 R9.8 / R9.9 と整合」と Spec 4→Spec 6 方向の参照を追加済。但し Spec 6 R9.9
+  側は「Spec 4 R3.3 注記追加要請」とのみ記述、Adjacent Sync 適用後の現状反映 (Spec 4 R3.3 / R16.1 で既に注記追加済) が未更新
+  - 影響: 文書化レベル、動作影響なし
+  - 修正案: Spec 6 R9.9 に「(2026-04-27 Spec 4 R3.3 / R16.1 注記追加 Adjacent Sync 適用済)」と注記追加 (1 行修正)
+  - 判定: 自動採択 (本セッション内同期推奨、Spec 6 単独修正)
+
+  軽-B: config 項目命名規約の cross-spec 統合 (Spec 5 / Spec 6)
+
+  - 検出: Spec 5 (graph.*) / Spec 6 (chat.autonomous.maintenance_triggers.* / graph.perspective.* / graph.hypothesis.* / graph.verify.*) で config
+  セクション構造が独立、各 spec が個別 SSoT を持つ。実害なし (各 section が独立、ハードコード回避は満たされている)
+  - 影響: design phase で .rwiki/config.yml 全体構造マトリクスを 1 表に統合する coordination 案件
+  - 判定: design phase 持ち越し (本 requirements 範囲外、実害なし)
+
+  軽-C: Spec 3 R1.1 段階 3.5 の coordination 文書化
+
+  - 検出: Spec 3 R1.1 で 5 段階 dispatch (段階 3.5 = applicable_input_paths glob match) は明示済、但し Spec 2 R3.2 / Spec 1 R5.5 への明示的
+  coordination 参照が Spec 3 Requirement 1 内に不足。Spec 4 R13.4 / Spec 1 R11.4 / Spec 5 Boundary は本セッション中の Adjacent Sync で 5 段階化適用済
+  - 影響: 文書化レベル、動作影響なし
+  - 判定: 軽微 Adjacent Sync 候補 (drafts D-27 / D-28 と同様の別セッション処理 or Spec 3 R1 末尾に短い注記追加)
+
+  最終評価
+
+  - 致命的・重要級: 0 件
+  - 動作衝突 / 値域矛盾 / 数値不整合: 0 件
+  - 軽微文書化 3 件: 1 件 (軽-A) は本セッション内同期可、2 件 (軽-B / 軽-C) は design phase or 別セッション処理
+
+  修正実施判断要請
+
+  以下から選択ください:
+
+  - (α): 軽-A のみ本セッション内同期 (Spec 6 R9.9 に 1 行注記追加 + Spec 6 spec.json updated_at 更新 + 1 commit + push)、軽-B / 軽-C は design phase/ 別セッション処理
+  - (β): 軽-A + 軽-C 両方を本セッション内同期 (Spec 6 R9.9 + Spec 3 R1 注記、2 spec Adjacent Sync 各 1 commit + push)
+  - (γ): 全件保留 (現状で完了確定、軽微 3 件はすべて別セッション / design phase 処理)
+
+  整合性的にはどの選択肢でも本番実装に支障なしです。
+```
+
+##### ❯ β
+
+```
+⏺ β 確定。軽-A (Spec 6 R9.9) + 軽-C (Spec 3 R1) を本セッション内同期します。
+⏺ 続いて Spec 3 R1 (軽-C) の修正に進みます。
+⏺ Spec 3 R1 を精査した結果、既に Spec 2 R3.2 への参照が R1.1 / R1.6 / R2.3 / R12.4 の 4 箇所、Spec 1 R11.4 への参照が R12.3 で 完備されていることを確認しました。agent の指摘 [3] は誤検出と判断、本文修正は不要 (change log への確認記録のみ) で対応します。
+```
 
 
 
 ##### 最後に
 
-- 各スペックの整合性を全てステップバイステップで精査
+
 
 - 仕様間の整合性をチェック
 
