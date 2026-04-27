@@ -65,7 +65,7 @@
 - **SSoT 出典**: `.kiro/drafts/rwiki-v2-consolidated-spec.md` v0.7.12 §5 / §6.2 / §7.2 Spec 1
 - **Upstream Spec**: Spec 0 (rwiki-v2-foundation) — 13 中核原則 / 用語集 / 3 層アーキテクチャ / Edge / Page status の区別 / Hypothesis status の独立性
 - **Steering**: `roadmap.md` (Adjacent Spec Synchronization L163-, v1 から継承される実装レベル決定 L132-, Severity 4 / Exit code 0/1/2 / LLM CLI subprocess timeout)
-- **Python 標準ライブラリ**: `pyyaml` (yaml parse) / `unicodedata` (NFC normalization) / `pathlib` (file walking) / `difflib` (Levenshtein 風 suggestion)
+- **Python 標準ライブラリ**: `pyyaml` (yaml parse) / `unicodedata` (NFC normalization) / `pathlib` (file walking) / `difflib` (Ratcliff/Obershelp 類似度 による suggestion)
 - **依存禁止**: v1 spec / 実装への参照 (フルスクラッチ方針、`v1-archive/` 内容に依存しない)
 
 ### Revalidation Triggers
@@ -139,12 +139,18 @@ graph TB
 | Layer | Choice / Version | Role in Feature | Notes |
 |-------|------------------|-----------------|-------|
 | CLI Runtime | Python 3.10+ | `rw tag *` 13 サブコマンド + lint vocabulary 統合 | プロジェクト標準 (steering tech.md) |
-| YAML Parsing | `pyyaml` (Python 標準環境) | vocabulary YAML 3 種の load/dump | 新規依存なし |
+| YAML Parsing | `pyyaml` (PyPI、>= 5.1 想定、`yaml.safe_load` 必須) | vocabulary YAML 3 種の load/dump | 第三者ライブラリ、Python 標準ではない (version 制約最終確定は Phase 2 Spec 4 design) |
 | Unicode Normalization | `unicodedata` (Python 標準) | tag canonical の NFC normalization (決定 1-3) | 新規依存なし |
 | File Walking | `pathlib.Path.rglob` (Python 標準) | markdown ページ走査 (rw tag scan / rw lint) | 新規依存なし |
-| Levenshtein Distance | `difflib.SequenceMatcher` (Python 標準) | lint suggestion (決定 1-6) | 新規依存なし、距離計算近似 |
+| String Similarity | `difflib.SequenceMatcher` (Python 標準、Ratcliff/Obershelp アルゴリズム) | lint suggestion (決定 1-6、ratio ≥ 0.8) | 新規依存なし |
 | Concurrency Lock | `.rwiki/.hygiene.lock` (Spec 4 提供) | vocabulary 編集時 lock 取得 (決定 1-14, R8.14) | Spec 4 / Spec 5 design 時に詳細確定 |
-| Cache (Phase 2) | sqlite3 (Python 標準) | mtime ベース cache (決定 1-8、Phase 2) | v2 MVP では未使用 |
+| Cache (Phase 2) | `sqlite3` (Python 標準) | mtime ベース cache (決定 1-8、Phase 2) | v2 MVP では未使用、cache schema / migration / corruption recovery は Phase 2 Spec 4 design で確定 |
+
+### 依存形式の規範
+
+- **Upstream Spec 0 (Foundation)**: markdown ファイル参照のみ (`.kiro/specs/rwiki-v2-foundation/foundation.md#anchor` 形式、決定 1-1)、Python module としては `import` しない
+- **Downstream Spec 4 / Spec 5 / Spec 7 への coordination**: 実装段階では **同 `rw` 単一 process 内での Python module import 形式** を想定 (例: `from rw_concurrent import acquire_lock` / `from rw_decision_log import record_decision`)、subprocess / IPC 形式は採用しない (性能 / atomicity の観点)。各 API の具体 signature は Phase 2 Spec 4 / Phase 3 Spec 5 design 着手時に確定
+- **依存禁止 (再掲)**: v1 spec / 実装への参照禁止 (フルスクラッチ方針、L69 既述、`v1-archive/` 配下の `rw_tag.py` / `rw_lint.py` 等は存在しないことを research.md で確認済)
 
 ## File Structure Plan
 
@@ -200,7 +206,7 @@ graph TB
 > - `rw_classification.py` = frontmatter parse (yaml + 共通 field) + category resolution (path 由来)
 > - `rw_vocabulary.py` = vocabulary YAML 3 種の load / validate / dump (重複検出 / NFC 正規化検査含む)
 > - `rw_tag.py` = `rw tag *` 13 サブコマンドのエントリポイント (subprocess timeout 必須)
-> - `rw_lint_vocabulary.py` = lint 8 検査項目 + suggestion 生成 (Levenshtein 距離)
+> - `rw_lint_vocabulary.py` = lint 8 検査項目 + suggestion 生成 (Ratcliff/Obershelp 類似度)
 > - `rw_utils.py` = NFC normalization / file walking 共通
 
 ## System Flows
@@ -266,7 +272,7 @@ flowchart LR
   CheckShortcut --> Aggregate
   CheckRequired --> Aggregate
   FailSoft --> Aggregate
-  Aggregate --> Suggest[Levenshtein 距離 ≤ 2 の<br>canonical 候補 suggestion 付与<br>決定 1-6]
+  Aggregate --> Suggest[Ratcliff/Obershelp 類似度 ratio ≥ 0.8 の<br>canonical 候補 suggestion 付与<br>決定 1-6]
   Suggest --> Output[JSON / human-readable 出力]
   Output --> ExitCode{exit code}
   ExitCode -->|ERROR 0 件| Exit0([exit 0])
@@ -373,6 +379,7 @@ def resolve_category(page_path: Path, vocab: VocabularyStore) -> CategoryInfo:
 - Preconditions: `page_path` は wiki/ 配下の path
 - Postconditions: 推奨カテゴリディレクトリと一致する場合は `categories.yml` から CategoryInfo を構築、不一致でも例外を投げず INFO severity 用の placeholder を返す
 - Invariants: `categories.yml` 未配置時は内蔵 6 カテゴリのみで動作
+- Error model: `page_path` が wiki/ 配下でない場合 (raw/ / review/ 等) は `CategoryInfo(name=None, enforcement="not_applicable", ...)` を返却、例外を投げない (fail-soft)。caller (lint G5 / dispatch hint Spec 3) は `name=None` を「カテゴリ判定対象外」として扱う
 
 **Implementation Notes**
 
@@ -456,9 +463,10 @@ def validate_frontmatter(fm: Frontmatter, vocab: VocabularyStore) -> List[LintFi
     """
 ```
 
-- Preconditions: `file_path` は markdown ファイル
+- Preconditions: `file_path` は markdown ファイル (`.md` 拡張子)
 - Postconditions: parse 失敗でも例外を投げず、`Frontmatter(parse_error=...)` を返す (fail-soft)
 - Invariants: vocabulary が未配置でも検証は INFO に降格して継続
+- Error model: `file_path` が markdown でない (binary / 拡張子不一致) 場合は `Frontmatter(parse_error="not a markdown file")` を返却、例外を投げない (fail-soft)。caller (lint G5) は `parse_error` 有無で finding 生成を判断
 
 **Implementation Notes**
 
@@ -492,8 +500,11 @@ def validate_frontmatter(fm: Frontmatter, vocab: VocabularyStore) -> List[LintFi
   - `entity-person.shortcuts.mentored` → `mentored` (directed)
   - `entity-tool.shortcuts.implements` → `implements` (directed)
 - **NFC normalization 必須** (決定 1-3): tag canonical / category name / entity type name の入力は NFC normalization
+- **NFC 比較順序**: vocabulary 登録時に input 値を NFC 正規化して保存、frontmatter から input された tag / category / entity_type も比較前に NFC 正規化、両者の文字列等価で比較。NFD 由来の Unicode 結合文字は NFC で合成形に統一されるため等価比較可能
 - **case-sensitive** (決定 1-3): 英数字は大文字小文字区別、日本語は維持
 - **全角半角揃え** (決定 1-3): 全角半角混在を WARN 通知 (lint G5)
+- **クロス YAML 重複の許容**: `tags.yml.canonical` / `categories.yml.name` / `entity_types.yml.name` は **独立 namespace** のため、同一文字列が複数 vocabulary に存在することは許容 (例: 文字列 "method" が tag canonical かつ entity_type name でも衝突なし)。frontmatter 上で `type:` / `entity_type:` は別 field として直交分離 (R2.7) されているため意味の混同なし
+- **input 長さ制約 / edge case** (B-5 と整合): canonical / name の length は最低 1 / 最大 256 文字を Phase 2 Spec 4 design で確定 (CLI 統一規約所管)。空文字 / 0 文字は ERROR、1 文字 tag (例: "a") は WARN (短すぎる canonical の可読性低下を喚起、自動拒否はしない)
 - **Unicode injection 防御** (B-5): canonical / description / aliases に YAML 制御文字 (`:` / `[` / `&` 等) を含む場合は ERROR (vocabulary 操作 CLI が事前検査)
 - **path traversal 防御** (B-6): `rw tag register <tag>` の引数 sanitize、`../` / 絶対 path / null byte を含む場合は ERROR
 - **vocabulary entry の evidence chain 適用範囲** (決定 1-15): vocabulary entry は §2.10 直接適用対象外、`description` field と decision_log で curation provenance (§2.13) で代替
@@ -511,6 +522,8 @@ def validate_frontmatter(fm: Frontmatter, vocab: VocabularyStore) -> List[LintFi
 - 状態モデル: 3 つの YAML ファイル (tags.yml / categories.yml / entity_types.yml) を `<vault>/.rwiki/vocabulary/` 配下に配置 (R6.6)
 - 永続性: git 管理対象 (R14.4)、derived cache (lint cache 等) は gitignore
 - 並行制御: vocabulary 編集 (write 系 `rw tag *` 操作) は `.rwiki/.hygiene.lock` 取得 (R8.14、決定 1-14)
+- Read 系 thread safety: `VocabularyStore.load()` は file read のみで thread-safe (lint G5 / parser G2 から並列呼び出し可)。Write 系 (`rw tag merge` / `rename` / `register` / `deprecate` の最終適用) は `.hygiene.lock` 取得必須でシリアライズ
+- vocabulary 操作の idempotency 規範: 同一操作の 2 回目実行は **no-op** (副作用なし) を原則とする — `register <tag>`: 既存 canonical なら no-op + INFO「既に登録済」/ `deprecate <tag>`: 既に `deprecated: true` なら no-op + INFO / `merge <canonical> <aliases>...`: aliases が既に該当 canonical 配下なら no-op、衝突 (別 canonical 配下) なら ERROR / `rename <old> <new>`: `<new>` が既存 canonical なら ERROR (merge 経路を案内)
 - mtime ベース cache (Phase 2): v2 MVP では未使用、規模 (10K+ ページ) 超過時の Phase 2 拡張 (決定 1-8)
 
 **Implementation Notes**
@@ -546,8 +559,9 @@ def validate_frontmatter(fm: Frontmatter, vocab: VocabularyStore) -> List[LintFi
 - **decision_log 自動記録** (R8.13、決定 1-7 関連): vocabulary 変動操作 (merge / split / rename / deprecate / register) の approve 完了時に Spec 5 `record_decision()` API で `decision_type: vocabulary_*` を append-only 記録 → Spec 5 への coordination 要求
 - **`.hygiene.lock` 取得** (R8.14、決定 1-14): write 系操作で必須、Hygiene batch / 複数 `rw tag` 同時実行 / 複数端末競合を排他
 - **rollback 手順** (B-13 / B-14、決定 1-7): git revert + Spec 5 `record_decision(decision_type='vocabulary_rollback')` 補正記録、専用 `rw tag undo` は v2 MVP 範囲外
-- **lint suggestion** (B-11、決定 1-6): `scan` 出力で「未登録タグ → 距離 ≤ 2 の canonical 候補上位 3 件」を suggestion 併記
+- **lint suggestion** (B-11、決定 1-6): `scan` 出力で「未登録タグ → Ratcliff/Obershelp 類似度 ratio ≥ 0.8 の canonical 候補上位 3 件」を suggestion 併記
 - **help text / man page 所管** (本-22): Spec 4 CLI 統一規約に従う、本 spec は help text の文言を design phase で確定せず、Spec 4 design 着手時の coordination として申し送る (テンプレート規約 + 各サブコマンドの `--help` メッセージ標準化)
+- **引数詳細の正規化** (本-22 と整合): long flag / short flag 命名規約 (例: `-f` / `--file` / `--no-prompt` / `--dry-run`) / 必須 vs 任意 / 値型 (string / path / bool flag) の正規化は Phase 2 Spec 4 CLI 統一規約所管。本 spec の API Contract table は signature を確定するが、flag 命名は Spec 4 統一規約に従う
 
 **Dependencies**
 
@@ -608,8 +622,10 @@ def validate_frontmatter(fm: Frontmatter, vocab: VocabularyStore) -> List[LintFi
 - **exit code 0/1/2 分離** (R9.6): ERROR 1 件以上で exit 2
 - **fail-soft on YAML parse 失敗** (R9.7): 該当 vocabulary 検査のみ ERROR、他は継続
 - **fail-soft on 整合性 ERROR** (R9.8): 重複登録時は関連検査を skip + WARN「整合性 ERROR のため関連検査を skip」(誤検出回避)
-- **lint suggestion** (B-11、決定 1-6): 未登録タグの近傍 canonical を上位 3 件提案 (Levenshtein 距離 ≤ 2)
+- **lint suggestion** (B-11、決定 1-6): 未登録タグの近傍 canonical を上位 3 件提案 (Ratcliff/Obershelp 類似度 ratio ≥ 0.8)
 - **lint 大規模 vault 対策** (B-15 / 本-10): v2 MVP は cache なし、Phase 2 で mtime ベース cache 導入 (決定 1-8)
+- **`pathlib.rglob` walking 規範**: 隠しディレクトリ (`.git/` / `.rwiki/cache/` / `.kiro/` 等 dot-prefix) は skip、シンボリックリンクは follow しない (循環参照防止)。具体 skip pattern (`.[a-z]*` / `node_modules/` / `.venv/` 等) の確定は Phase 2 Spec 4 design 着手時に CLI 統一規約として確定
+- **suggestion の決定性**: 同一 ratio の候補が複数ある場合、辞書順 (canonical 文字列の lexicographic order) で安定 sort、上位 3 件抽出
 - **`entity_types.yml` 空時の WARN 大量発生抑制** (B-17): `entity_types.yml` が空の場合、shortcut field 記述で発生する WARN は INFO 降格 (`entity_types.yml` 未初期化時)
 
 **Dependencies**
@@ -646,7 +662,7 @@ def run_checks(file_paths: List[Path], vocab: VocabularyStore) -> LintReport:
   "findings": [
     {
       "severity": "INFO" | "WARN" | "ERROR" | "CRITICAL",
-      "category": "unregistered_tag" | "alias_usage" | "deprecated_tag" | "...",
+      "category": "unregistered_tag" | "alias_usage" | "deprecated_tag" | "unregistered_category" | "invalid_type" | "invalid_entity_type" | "shortcut_without_entity_type" | "vocabulary_duplicate" | "missing_required_field" | "invalid_merge_strategy" | "unused_category",
       "file": "path/to/page.md",
       "line": 5,
       "message": "未登録タグ 'pythn' (もしかして 'python' / 'Python' ?)",
@@ -934,19 +950,47 @@ vocabulary YAML / frontmatter parse / CLI invocation の各 layer で fail-soft 
 ### Error Categories and Responses
 
 - **vocabulary YAML parse failure** (R9.7): 該当 vocabulary 検査のみ ERROR、他検査継続 (G5)
+- **vocabulary YAML 部分破損 (entry 単位)**: file 全体は valid YAML だが特定 entry が schema 違反 (例: `canonical` 欠落 / 型違反) の場合、該当 entry のみ skip + WARN「entry skipped due to schema violation」、有効 entry は load 継続 (fail-soft 拡張)
 - **vocabulary 整合性 ERROR (重複登録)** (R9.8): 関連検査 skip + WARN (G5)
 - **frontmatter parse failure**: `Frontmatter(parse_error=...)` 返却 + lint ERROR (G2)
 - **YAML injection / path traversal** (B-5 / B-6): CLI 引数検査で ERROR (G3 / G4)
 - **lock 取得失敗** (R8.14): `.hygiene.lock` 取得 timeout 時 ERROR + retry guidance (Spec 4 design 確定)
+- **subprocess timeout 失敗** (R8.12): LLM CLI 呼び出し subprocess の timeout 発生時、partial output は廃棄、exit code 1 (runtime error) + stderr に「timeout exceeded」message。具体 timeout 値 / partial output の取扱詳細は Phase 2 Spec 4 design (CLI 統一規約) で確定
+- **`rw tag merge` 8 段階対話中断** (例: Ctrl+C / network 断 / lock 解放失敗): review buffer の `vocabulary_candidates/` candidate file は `status: draft` で残置 (再開可能、`rw approve` で再開判断)。`.hygiene.lock` は process 終了時の自動解放を Phase 2 Spec 4 が保証 (lock 自動解放 logic は Spec 4 design 所管)
+- **lint JSON 出力 write 失敗** (disk full / permission denied): JSON output file が write できない場合、stdout fallback で JSON を直接出力 + stderr に WARN「JSON file write failed, fallback to stdout」、exit code は本来の lint result code (0/1/2) を維持
 - **誤 approve 復旧** (B-14、決定 1-7): git revert で全ファイル戻す + Spec 5 `record_decision(decision_type='vocabulary_rollback')`
 - **`tag merge` rollback** (B-13、決定 1-7): git revert + decision_log 補正、専用 `rw tag undo` 不採用 (v2 MVP)
 - **既存 markdown migration** (本-11): v2 MVP では migration 不要 (フルスクラッチ)、将来 v2 → v2.1 でスキーマ拡張時の migration 規約を Spec 7 と coordination
 
+### Transaction Guarantee 規範 (Eventual Consistency)
+
+Flow 1 (`rw tag merge` approve) の 3 操作 (vocabulary YAML 更新 / 影響 markdown 一括更新 / decision_log.jsonl 記録) は **eventual consistency** 規範に従う。file system レベルの atomic transaction は採用しない (実装不可能なため)。
+
+- **vocabulary YAML 更新**: 正本確定の起点。approve 時に最初に commit (lock 取得 → YAML write → fsync)。失敗時 rollback 容易 (git untracked / write 未完了)
+- **影響 markdown 一括更新**: vocabulary 確定後に逐次 update。partial failure (例: 100 ファイル中 50 ファイル更新後 disk full) 発生時、成功分は確定、失敗分は **lint G5 で stale 検出** (frontmatter `tags:` が deprecated alias を参照したまま) + retry guidance「`rw tag scan --retry-stale` で再実行」(Phase 2 Spec 4 で `--retry-stale` flag 追加 coordination)
+- **decision_log.jsonl 記録**: vocabulary + markdown 操作完了後に append-only 記録。記録失敗 (Spec 5 `record_decision()` API failure) 時は stderr に WARN「decision_log record failed, manual retry required」+ stash 機構 (`<vault>/.rwiki/cache/pending_decisions.jsonl` 等) で後追い retry を Phase 3 Spec 5 design で規範化
+- **整合性 invariant**: vocabulary YAML が正本、markdown / decision_log は **eventually** vocabulary 状態に追従。stale 期間中の lint は WARN で通知 (ERROR ではない、運用継続可)
+- **rollback 規律**: 全 3 操作の rollback は git revert + Spec 5 `record_decision(decision_type='vocabulary_rollback')` で統一 (決定 1-7)
+
+**Coordination 申し送り**:
+
+- Phase 2 Spec 4: `rw approve` 拡張に `--atomic` flag (markdown 一括更新の partial failure 時 vocabulary 更新も rollback) の採否判断、`--retry-stale` flag 追加
+- Phase 3 Spec 5: `record_decision()` API の failure response + stash 機構 (`pending_decisions.jsonl`) + 後追い retry 仕様確定
+
 ### Monitoring
 
-- `lint` 結果: JSON / human-readable 両形式 (R9.5)、CI 統合
+- `lint` 結果: JSON / human-readable 両形式 (R9.5)、CI 統合。各 run に `lint_run_id` (uuid) を含み、JSON output に severity 別 summary を併記
 - `rw tag scan`: severity 規約に従って vocabulary 違反一覧 (R8.2)
+- `rw tag stats [<tag>]`: 全タグまたは指定タグの出現件数・最終使用日・使用ページ数集計 (R8.3、現時点 snapshot)
 - decision_log: vocabulary 操作の curation provenance (R8.13、Spec 5 所管の `decision_log.jsonl`)
+
+### Out of scope (本 spec 規範対象外、他 spec / 外部委譲)
+
+- **lint output 実行履歴の保全** (timestamp / 所要時間 / 検出件数推移): Phase 2 Spec 4 design 着手時に確定 (logs ディレクトリへの追記 / 別 metrics ファイル / git 経由のいずれか)
+- **`rw tag scan` の時系列 statistics** (週次 / 月次 trend / long-tail tag detection): 本 spec は snapshot のみ、時系列分析は Phase 2 Spec 4 拡張 or 外部 BI tool 所管
+- **vocabulary 操作 audit log の集約 summary** (日次 / 週次の merge / deprecate / register 件数): Phase 3 Spec 5 `rw decision recent` / `rw decision stats` 所管
+- **lint failure rate trend** (CI 統合時の ERROR 数月次推移): Phase 2 Spec 4 / 外部 CI dashboard 所管
+- **vocabulary 整合性 dashboard** (deprecated tag 比率 / orphan canonical / unused category 集約 view): Phase 3 Spec 5 / Phase 2 Spec 4 dashboard 所管
 
 ## Testing Strategy
 
@@ -954,8 +998,17 @@ vocabulary YAML / frontmatter parse / CLI invocation の各 layer で fail-soft 
 
 - frontmatter parse 各種 (共通必須欠落 / L3 lifecycle / Entity ショートカット / review)
 - vocabulary YAML 3 種の load / 重複検出 / NFC 正規化チェック
-- lint 8 検査項目 + suggestion (Levenshtein 距離 ≤ 2)
+- lint 8 検査項目 + suggestion (Ratcliff/Obershelp 類似度 ratio ≥ 0.8)
 - `rw tag *` 13 サブコマンドの個別 test (mock LLM CLI)
+
+**追加 test 観点 (本ラウンド明示)**:
+
+- **subprocess timeout test**: LLM CLI subprocess の timeout 発生時の error response (exit code 1 + stderr message + partial output 廃棄)
+- **lock 取得失敗 test**: `.hygiene.lock` 競合時の ERROR + retry guidance 出力
+- **YAML injection sanitize test**: 全 write 系サブコマンド (merge / split / rename / deprecate / register) で制御文字 (`:` / `[` / `&` 等) を含む input → ERROR
+- **idempotency test**: `register` 既存 canonical → no-op + INFO / `deprecate` 既 deprecated → no-op + INFO / `merge` 同一 alias 再 merge → no-op / `rename` 既存 canonical → ERROR (merge 経路案内)
+- **NFC boundary test**: 全角半角混在 (例: "Ｐｙｔｈｏｎ" vs "Python") / NFD 入力 (合成前文字列) / surrogate pair / 異常長 input (1KB+) — fail-soft で expected return 検証
+- **suggestion 閾値妥当性 test**: Ratcliff/Obershelp `ratio() ≥ 0.8` の境界 case (典型タイポ "pythn" → "python" の ratio 確認 / false positive 抑制)
 
 ### Integration Tests
 
@@ -964,11 +1017,30 @@ vocabulary YAML / frontmatter parse / CLI invocation の各 layer で fail-soft 
 - frontmatter parse → `normalize_frontmatter` (Spec 5) → typed edge 生成 → `related:` cache exclusion フィルタ
 - `.hygiene.lock` 取得 / 解放 (Spec 4 連携)
 
-### Cross-spec Integration Tests (consumer 側に記述、ハイブリッド方式)
+**Transaction Guarantee Integration Tests** (第 7 ラウンド「Eventual Consistency」規範対応):
 
-- Spec 4 design: `rw lint` 統合 + `rw approve` 拡張 + `.hygiene.lock` の test
-- Spec 5 design: `normalize_frontmatter` API + `record_decision()` 連携 + shortcut 除外フィルタ の test
-- Spec 7 design: `status` 遷移 / merge 操作 / `update_history` 自動追記 の test
+- markdown 一括更新中の partial failure シナリオ (例: 100 ファイル中 50 ファイル目で disk full) → 成功分は確定、失敗分は lint G5 で stale 検出 + retry guidance
+- decision_log 記録失敗シナリオ (Spec 5 `record_decision()` failure) → vocabulary + markdown 操作完了、stderr WARN「decision_log record failed, manual retry required」+ stash 機構 (`pending_decisions.jsonl`) への保存
+
+### Regression Tests
+
+- vocabulary YAML schema 変更時の既存 markdown 影響検出 (例: `tags.yml.successor` → `successor_tag` rename 後の既存 frontmatter parse 整合性)
+- mapping table (entity_types.yml.shortcuts) 改版時の typed edge 生成整合 (Spec 5 連携)
+- snapshot test / golden file 比較等の具体実装は Phase 2 Spec 4 design 着手時に確定 (本 spec はテスト観点のみ規範化)
+
+### Cross-spec Integration Tests (ハイブリッド方式)
+
+- **本 spec が provider** (Spec 4 / Spec 5 / Spec 7 への API 提供) の test は **consumer 側 design** に記述 (memory feedback_design_review.md 整合):
+  - Spec 4 design: `rw lint` 統合 + `rw approve` 拡張 + `.hygiene.lock` の test
+  - Spec 5 design: `normalize_frontmatter` API + `record_decision()` 連携 + shortcut 除外フィルタ の test
+  - Spec 7 design: `status` 遷移 / merge 操作 / `update_history` 自動追記 の test
+- **本 spec が consumer** (Spec 0 Foundation 規範整合性) の test は **本 spec design** に記述:
+  - foundation.md §5 frontmatter 骨格 ↔ Spec 1 frontmatter 詳細スキーマ (G2) の整合 test
+  - foundation.md §4.3 用語集 (Edge status / Page status 等) ↔ Spec 1 frontmatter 値域の整合 test (Spec 0 検証 4 種 = 用語集引用 link 切れチェックで検出)
+
+### Coverage Target
+
+- Unit / Integration test の coverage target (% / branch coverage 含む) は Phase 2 Spec 4 design (CLI 統一規約) で確定
 
 ### 大規模 vault test (Phase 2)
 
@@ -977,11 +1049,19 @@ vocabulary YAML / frontmatter parse / CLI invocation の各 layer で fail-soft 
 
 ## Security Considerations
 
-- **YAML injection** (B-5): vocabulary YAML への自動追記 (`rw tag register` 等) 時に YAML 制御文字 (`:` / `[` / `&` / `*` / `<<` / etc.) を含む input は ERROR
-- **path traversal** (B-6): `rw tag register <tag>` の引数 sanitize、`../` / 絶対 path / null byte を含む場合は ERROR
+- **YAML injection** (B-5): vocabulary YAML への自動追記時に YAML 制御文字 (`:` / `[` / `&` / `*` / `<<` / etc.) を含む input は ERROR。検査対象は `rw tag register` のみならず、**全 write 系サブコマンド** (`merge` / `split` / `rename` / `deprecate` / `register`) の CLI 引数、および対話ガイド中のユーザー入力に拡張
+- **YAML safe deserialization**: vocabulary YAML 3 種 + frontmatter yaml block の parse は **`yaml.safe_load` 必須** (`yaml.load` 不採用、任意コード実行を防止)。Spec 0 design Security Considerations と整合
+- **path traversal** (B-6): `rw tag register <tag>` の引数 sanitize、`../` / 絶対 path / null byte を含む場合は ERROR。同等の sanitize は `rw tag rename <new>` の `<new>` 引数 / `vocabulary edit` の対象 entry 名にも適用
 - **vocabulary entry の curation provenance** (決定 1-15): vocabulary は §2.10 evidence chain 直接適用対象外、`description` field と decision_log で §2.13 curation provenance を保全
 - **Privacy**: vocabulary YAML は git commit される public、個人情報を含めない (人間 curator の責任)
 - **整合性**: git commit hash で改版 trail を保全、決定 1-7 で rollback + decision_log 補正記録
+
+### Out of scope (本 spec 規範対象外、他 spec 委譲)
+
+- **file system permission / ownership**: vault ディレクトリの write 権限制御 / 複数ユーザー共有時の vocabulary 編集権限は OS layer + Phase 2 Spec 4 design 所管 (本 spec は process 内 lock acquired 状態を前提)
+- **frontmatter sensitive data 検出**: メールアドレス / ID / API key 等の pattern matching は Phase 2 Spec 4 audit task 所管 (本 spec lint G5 は vocabulary 整合性のみ検査)
+- **subprocess LLM CLI への secret leak**: vocabulary content (canonical / aliases / description) は public で問題なし、frontmatter `source:` 等の sensitive URL の LLM 送信判定は Phase 2 Spec 4 / Phase 5 Spec 6 の audit + dispatch 所管
+- **decision_log tampering 検出**: `decision_log.jsonl` の hash chain / 改ざん検出機構は Phase 3 Spec 5 design 所管 (本 spec は record_decision() 呼出と data 提供のみ)
 
 ## Performance & Scalability
 
@@ -991,11 +1071,33 @@ vocabulary YAML / frontmatter parse / CLI invocation の各 layer で fail-soft 
 - vault: 1,000 wiki ページ + 1,000 raw ページ程度
 - `rw tag scan` / `rw lint`: < 5 秒 (cache なし)
 
+### target 根拠
+
+- 「< 5 秒」: CI 統合時の許容実行時間 + 人間レビュー gate での待ち時間として許容できる範囲 (Spec 0 design Performance section 整合)
+- 計算量見積: vocabulary load (3 YAML × 1K-5K entries) ~50ms / 2K markdown 走査 (`pathlib.rglob` + `yaml.safe_load`) ~2 秒 / suggestion 生成 (未登録 tag 典型 10 件 × 1K canonical × `difflib.SequenceMatcher` ~900 ops/pair) ~10ms — 合計 ~2 秒で 5 秒 target に十分余裕
+
+### vocabulary load の頻度規範
+
+- 各 process (例: `rw tag scan` / `rw lint` 1 回実行) 内では vocabulary は **起動時 1 回 load** + process 内で in-memory 共有 (R9.3 整合)
+- Process 跨ぎの cache (連続実行時の load skip) は v2 MVP 範囲外、Phase 2 で mtime ベース cache 導入時に対応 (決定 1-8)
+
+### suggestion 生成の早期打ち切り
+
+- 1K canonical 全件比較ではなく **未登録 tag に対してのみ** suggestion 生成 (G5 で明示)
+- top-k 抽出は `heapq.nlargest(3, candidates, key=ratio)` ベースで早期打ち切り
+- 同 ratio の安定 sort 規律 (lexicographic order) は G3 で明示済
+
+### lock 競合の性能影響
+
+- 本 spec の性能 target (< 5 秒) は **lock acquired 状態** を前提
+- `.hygiene.lock` 取得失敗時の retry / timeout / wait 規範は Phase 2 Spec 4 design 着手時に確定 (決定 1-14、Spec 4 R10.1 所管)。lock 競合状態下の性能は本 spec target 対象外
+
 ### 大規模 vault (Phase 2)
 
 - 10K+ ページ + 5K+ タグ: 分単位の遅延リスク
 - 対策: mtime ベース cache (決定 1-8)、`rw_lint_vocabulary` 内に SQLite cache を追加
 - target: cache hit 時 < 5 秒 維持
+- **cache invalidation 規範** (Phase 2 詳細確定): cache key (file path + mtime) / invalidation trigger (vocabulary YAML 変更 / file mtime 更新) / partial rebuild (差分のみ再走査) の詳細は Phase 2 Spec 4 design 着手時に確定
 
 ### 性能達成手段
 
@@ -1006,7 +1108,31 @@ vocabulary YAML / frontmatter parse / CLI invocation の各 layer で fail-soft 
 
 v2 はフルスクラッチ (v1 から継承する frontmatter / vocabulary なし)、初期 migration 不要。
 
-### v2 → v2.1 で frontmatter スキーマ拡張する場合 (本-11、Phase 2)
+### Phase 名と本 spec の所属
+
+design 内で表記する **Phase 2 Spec 4** / **Phase 3 Spec 5** は、dev-log Phase 番号 (Phase 1 = Spec 0+1 / Phase 2 = Spec 4+7 / Phase 3 = Spec 5+2 / Phase 4 = Spec 3 / Phase 5 = Spec 6) と整合する。本 spec (Spec 1) は **Phase 1** に所属、後続 Phase での coordination 申し送りを各 section で明示。
+
+### 本 design 確定後の連鎖 migration (3 件、実質変更経路)
+
+本 design 内で確定した 3 件の決定が requirements.md 改版を伴う (実質変更経路、別 commit で再 approve):
+
+- **決定 1-4** (`successor` → `successor_tag` rename): requirements.md R6.1 改版 PR を別 commit で起票
+- **決定 1-13** (`decision-views/` `period_start` / `period_end` 必須化): requirements.md R4.7 改版 PR を別 commit で起票
+- **決定 1-16** (lint G5 「許可値外 `merge_strategy:` WARN」追加): requirements.md R9.1 改版 PR を別 commit で起票
+
+3 件は本 design approve 後の **連鎖 migration として位置付け**、1 commit に集約 + 再 approve PR 起票 (change log L1145 既述)。
+
+### vocabulary YAML 3 種の初期化 migration
+
+`rw init` で `<vault>/.rwiki/vocabulary/` 配下に空 YAML 3 種を生成 (R6.6)。**初期 seed 規範**:
+
+- `categories.yml`: 推奨 6 カテゴリ (`articles` / `papers` / `notes` / `narratives` / `essays` / `code-snippets`、enforcement = `recommended`、決定 1-1 整合) を初期 entry として seed
+- `entity_types.yml`: 初期 entity types `entity-person` (`directory_name: "people"`、`shortcuts: authored / collaborated_with / mentored`) + `entity-tool` (`directory_name: "tools"`、`shortcuts: implements`) を seed (R5.3、決定 1-9 / 1-12)
+- `tags.yml`: 空 (ユーザーが運用中に register、初期 seed 不要)
+
+`rw init` 実装は Phase 2 Spec 4 design 着手時に確定 (本 spec は seed 内容のみ規範化)。
+
+### vocabulary YAML schema 拡張 migration (本-11、Phase 2 以降)
 
 ```mermaid
 flowchart LR
@@ -1022,9 +1148,20 @@ flowchart LR
   MigrationScript --> Validation[migration 完了検証]
 ```
 
-- Phase breakdown: 既存 markdown が新スキーマ field を欠く場合のデフォルト値 / migration script 仕様を Spec 7 design 着手時に coordination
+- **後方互換 (任意 field 追加)** の例: 決定 1-9 `entity_types.yml.directory_name` 追加 = 既存 markdown 影響なし、Adjacent Sync 範囲
+- **後方非互換 (必須 field 追加 / 値域変更)** の例: 将来 `tags.yml.canonical_kind` 必須化 = 既存 markdown migration script が必要、実質変更経路
+- Phase breakdown: 既存 markdown が新スキーマ field を欠く場合のデフォルト値 / migration script 仕様を Phase 2 Spec 7 design 着手時に coordination (Spec 7 page lifecycle 所管)
 - Rollback triggers: migration 後の lint ERROR 急増 → git revert で migration script 適用前に戻す
 - Validation checkpoints: migration 前後の lint result diff、decision_log への migration 記録
+
+### vocabulary rename / 廃止 rollback
+
+決定 1-4 (`successor` → `successor_tag`) のような rename / 廃止に対する rollback 規範:
+
+- git revert で rename 前 commit に戻す
+- Spec 5 `record_decision(decision_type='vocabulary_rollback')` 補正記録 (決定 1-7 経路を継承)
+- 影響 markdown frontmatter は migration script で逆方向更新 (実質変更経路の場合)
+- 専用 `rw vocabulary undo` は v2 MVP 範囲外 (決定 1-7 整合)
 
 ## 設計決定事項
 
@@ -1061,11 +1198,12 @@ flowchart LR
 - **決定**: 必須 = `operation` / `target` / `affected_files` / `status` (デフォルト `draft`) / 任意 = `aliases` (operation = `merge` 時のみ条件付き必須)
 - **影響**: parser G2 で operation 値ごとに必須 field を分岐検査
 
-### 決定 1-6: lint suggestion = Levenshtein 距離による類似 canonical 提案
+### 決定 1-6: lint suggestion = Ratcliff/Obershelp 類似度による類似 canonical 提案
 
 - **経緯**: B-11、未登録タグの root cause (タイポ / 新概念) 判別支援
-- **決定**: lint output に「未登録タグ → 距離 ≤ 2 の canonical 候補上位 3 件」を suggestion 併記、`difflib.SequenceMatcher` で算出
-- **影響**: G5 lint output に `suggestions` field 追加、JSON / human-readable 両形式に反映
+- **決定**: lint output に「未登録タグ → Ratcliff/Obershelp 類似度 ratio ≥ 0.8 の canonical 候補上位 3 件」を suggestion 併記、`difflib.SequenceMatcher.ratio()` で算出 (Python 標準ライブラリ、新規依存なし)
+- **訂正経緯** (ラウンド 5 個別やり直しで escalate 解消): 初版で「Levenshtein 距離 ≤ 2」と記述したが、`difflib.SequenceMatcher` は Levenshtein 距離ではなく Ratcliff/Obershelp アルゴリズム (LCS 系)。アルゴリズム名と閾値を実装と整合する形に訂正。新規 library (`python-Levenshtein` 等) 採用は新規依存禁止方針と矛盾するため不採択
+- **影響**: G5 lint output に `suggestions` field 追加、JSON / human-readable 両形式に反映、design 全体の「Levenshtein」記述を「Ratcliff/Obershelp 類似度 ratio ≥ 0.8」に統一
 
 ### 決定 1-7: tag merge/rename rollback = git revert + decision_log 補正記録
 
@@ -1143,3 +1281,15 @@ _change log_
 - 2026-04-27: 12 ラウンドレビュー — 3 件自動採択 (軽-2 → 決定 1-16 lint 拡張 / 軽-2-1 File Structure Plan G1+G2 統合明記 / 致-1 確認 = 既存決定 1-4 で吸収済)。escalate 案件 1 件 (軽-2 → 決定 1-16 で確定)。第 3-12 ラウンドは「該当なし / 軽微なし」中心で観点 4-12 の各規律を design.md セクションで網羅確認。
 - 2026-04-27: 厳しく再精査 — wiki frontmatter `successor` と tags.yml `successor_tag` の使い分け整合確認、連鎖更新漏れなし。
 - 2026-04-27: 実質変更経路 (別 commit + 再 approve) 計 3 件 = 決定 1-4 (successor_tag rename) / 決定 1-13 (period 必須化) / 決定 1-16 (lint 検査項目拡張)。本 design approve 後、Spec 1 requirements.md R6.1 / R4.7 / R9.1 を 1 commit で改版し再 approve PR を起票予定。
+- 2026-04-27: ラウンド 4-12 個別やり直し (前回レビューで一括処理 batching によりユーザー判断機会が省略された問題への遡及対応、memory feedback_no_round_batching.md 新設に伴う) — 計 9 件自動採択 + 2 件 escalate 確定:
+  - R4 API interface (5): G1/G2 error model / vocabulary 操作 idempotency / G4 引数詳細 Phase 2 委譲 / G3 read 系 thread safety / G5 JSON output category enum 完全列挙
+  - R5 アルゴリズム (5 自動採択 + 1 escalate): NFC 比較順序 / クロス YAML 重複許容 / suggestion 決定性 / input edge case / rglob walking 規範 + escalate 「Levenshtein 距離 → Ratcliff/Obershelp 類似度 ratio ≥ 0.8」訂正 (案 A 採択、決定 1-6 アルゴリズム名と閾値を実装整合に訂正)
+  - R6 性能 (6): target 根拠 + vocabulary load 頻度 + suggestion 早期打ち切り (heapq.nlargest) + lock 競合性能影響 + cache invalidation 規範 + 計算量見積
+  - R7 失敗 mode (4 自動採択 + 1 escalate): subprocess timeout / vocabulary YAML 部分破損 / merge 中断 cleanup / lint JSON write 失敗 + escalate 「transaction guarantee」(案 A 採択 = Eventual Consistency 規範を Spec 1 で確定 + Spec 4/5 coordination 申し送り)
+  - R8 セキュリティ (5): YAML injection 全 write 系拡張 / yaml.safe_load 必須 / file system permission 委譲 / sensitive data 検出委譲 / decision_log tampering 委譲
+  - R9 観測性 (5): 実行履歴 / 時系列 statistics / audit log summary / failure rate trend / dashboard を Phase 2/3 委譲明記
+  - R10 依存 (5): pyyaml は第三者ライブラリ訂正 (Python 標準ではない) + version 制約 + upstream 参照形式 + API 依存形式 (module import) + Phase 2 cache 詳細委譲
+  - R11 テスト (7): subprocess timeout / lock 失敗 / YAML injection / idempotency / NFC boundary / suggestion 閾値 / Transaction Integration / Regression / Coverage target を unit/integration/regression に統合
+  - R12 マイグレーション (6): Phase 名整合 + 連鎖 migration 3 件 + vocabulary 初期化 seed + schema 拡張 (後方互換 vs 非互換) + rollback 規範
+
+requirements.md 改版: なし (本ラウンドで新規確定した決定はなし、前回確定の 3 件のみ実質変更経路維持)
