@@ -230,3 +230,10 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 4. The Skill Dispatcher shall 本 requirements の各記述項目について SSoT 出典（`.kiro/drafts/rwiki-v2-consolidated-spec.md` v0.7.12 §7.2 Spec 3 / §6.1 distill / §1.2 LLM 非依存 / §11.2 v0.7.10 決定 6-1）を辿れるよう参照点を残すことを規定する。
 5. If SSoT が改版された場合に本 requirements の更新が必要となる, then the Skill Dispatcher shall 自身の更新が roadmap.md「Adjacent Spec Synchronization」運用ルールに従い、`spec.json.updated_at` 更新と markdown 末尾 `_change log` への追記で足りる旨を参照点として残すことを規定する。
 6. The Skill Dispatcher shall 本 requirements が定める 12 個の Requirement の各々について、design 段階で「Boundary Commitments」として境界が再確認されることを前提とし、本 requirements の境界（in scope / out of scope / adjacent expectations）を design phase に渡せる形で固定することを規定する。
+
+---
+
+_change log_
+
+- 2026-04-27: 初版生成 + 5 ラウンドレビュー反映 + approve（致命級 3 件 + 重要級 7 件 + 軽微 3 件、AC 数 67 → 74、Requirement 数 12 維持、`dispatch_reason` enumeration 10 → 11 種化、段階 3.5 `applicable_input_paths` glob match 追加で 5 段階 dispatch 化、Adjacent Sync 4 spec = Spec 1 R11.4 / Spec 4 Boundary line 51 + R13.4 line 254 / Spec 5 Boundary line 66 を 5 段階化、本セッション内同期完了）
+- 2026-04-27 (cross-spec 全 8 spec 整合性精査由来 軽-C 確認): cross-spec 整合性精査で「Spec 3 R1 内の Spec 2 Requirement 3.2 / Spec 1 Requirement 11.4 への coordination 参照不足」可能性が agent 検出されたが、本文精査の結果、既に R1.1 / R1.6 / R2.3 / R12.4 の 4 箇所で Spec 2 R3.2 への参照、R12.3 で Spec 1 R11.4 への Adjacent Sync 言及が完備済であることを確認、本文修正は不要 (確認記録のみ)。Adjacent Spec Synchronization 運用ルール準拠で再 approval 不要、`spec.json.updated_at` 更新のみ。
