@@ -12,6 +12,10 @@
 
 [Spec 2 rwiki-v2-skill-library](##Spec 2 rwiki-v2-skill-library)
 
+[Spec 3 rwiki-v2-prompt-dispatch](##Spec 3 rwiki-v2-prompt-dispatch)
+
+
+
 [レビュー方法について再検討](##レビュー方法について再検討)
 
 
@@ -5097,9 +5101,864 @@ When rw skill test <candidate-or-name> [--sample <file>] が呼び出された, 
 
 
 
+## Spec 3 rwiki-v2-prompt-dispatch
+
+##### ❯ TODO_NEXT_SESSION.md を読んでください。Spec 0 + Spec 1 + Spec 4 + Spec 7 + Spec 5 + Spec 2 は approve 完了。dependency 順の次対象 Spec 3 (rwiki-v2-prompt-dispatch) の requirements レビューを 5 ラウンド構成で開始します。Spec 1 / Spec 2 / Spec 4 由来の coordination 要求を必ずチェック対象に含め、深掘り検討 + 自動採択方針 \+ 第 5 ラウンドの 5 step 必須手順 \+ 厳しく再精査による最終ガードを厳守してください。Spec3 の Requirement 一覧と要点を提示してください。
+
+```
+⏺ Spec 3 (rwiki-v2-prompt-dispatch) の要点を提示します。
+
+  Spec 3 (rwiki-v2-prompt-dispatch) Requirement 一覧と要点
+
+  基本情報
+
+  - 位置づけ: Phase 4 / Spec 3 — distill タスク向けスキル選択（dispatch）メカニズムを所管
+  - ファイル状況: requirements.md 224 行、brief.md 69 行、Requirement 12 件、phase = requirements-generated（approve 未済）
+  - 依存: Upstream = Spec 0 / Spec 1 / Spec 2、Downstream = Spec 4（呼び出し側）/ Spec 6（dispatch 対象外確認のみ）
+  - subject: Skill Dispatcher（中核）+ LLM Skill Inferencer（subroutine）
+
+  Requirement 一覧（12 件）
+
+  - R1: スキル選択 4 段階優先順位の規定（明示 --skill → frontmatter type: → categories.yml の default_skill → LLM 毎回判定、AC 7 件、短絡評価 +
+  コンセンサス確認の併走例外）
+  - R2: LLM 毎回判定方式の振る舞い契約（AC 7 件、cache 禁止、subprocess timeout 必須、applicable_categories を入力ヒント化、失敗時 fallback）
+  - R3: 明示 --skill と LLM 推論結果のコンセンサス確認（AC 6 件、3 択 明示採用 / LLM 採用 / abort、--auto 時は明示優先 + WARN）
+  - R4: frontmatter type: と LLM 推論のコンセンサス確認（AC 6 件、--auto 時は LLM 優先、type: 値 unknown 時は次段階降格）
+  - R5: categories.yml の inline default_skill 読み取り契約（AC 7 件、cache 禁止、未配置・未設定時の段階 4 降格、整合 check は Spec 1 lint へ委譲）
+  - R6: skill 欠如時の generic_summary fallback 規約（AC 7 件、status: active でない場合も fallback、generic_summary 自体不在で ERROR + 拒否）
+  - R7: dispatch 結果の返却契約（内部 API、AC 5 件、必須 5 field = skill_name / input_file / dispatch_reason / severity / notes、dispatch_reason
+  enumeration 10 種）
+  - R8: Spec 1 ↔ Spec 3 coordination 契約継承（AC 5 件、type: field と inline default_skill 方式が Spec 1 確定済み事実を明文化）
+  - R9: Spec 2 ↔ Spec 3 coordination 契約（AC 6 件、initial 15 種のうち distill 向け 12 種、applicable_categories の 2 用途、generic_summary fallback
+   前提）
+  - R10: Perspective / Hypothesis dispatch 対象外の規定（AC 5 件、Spec 6 が固定 skill を直接呼ぶ事実の明文化）
+  - R11: 通知 severity と exit code の整合（AC 5 件、4 水準 + 各 Requirement の severity 紐付け一覧 + notes 集約 + 最重 severity 採用）
+  - R12: Foundation 規範への準拠と SSoT 整合（AC 6 件、用語 5 分類、SSoT 出典明示、Adjacent Spec Synchronization 運用）
+
+  第 1 ラウンド時点で気になる観点（深掘り対象候補）
+
+  上流 spec 由来 coordination 要求の反映状況
+
+  - Spec 2 由来 R3.2「applicable_input_paths」未反映の疑い (重大候補): Spec 2 で本セッション新設された optional field applicable_input_paths（L1 raw
+  入力 path glob による dispatch hint、extended glob 互換）が Spec 3 の Requirement に取り込まれていない。Spec 3 のレビュー時点で Spec 2 R3.2
+  拡張は既決事項なので、本 spec の dispatch logic（特に R1 / R2 / R9）にこの 2 系統 dispatch（applicable_categories = L3 wiki 用 +
+  applicable_input_paths = L1 raw 用）を反映する必要がある可能性が高い
+  - Spec 4 由来 R13.4 の優先順位記述との微妙な差異 (要確認): Spec 4 R13.4 が type: 明示 → applicable_categories → category default → LLM 判断
+  と整理しているのに対し、Spec 3 R1 は明示 --skill → frontmatter type: → categories.yml の default_skill → LLM 判定。applicable_categories
+  がどの段階で参照されるかが Spec 3 内では「ヒントとしてのみ」（R2.3 / R9.3）として扱われているが、Spec 4 側の理解と乖離しないか要確認
+  - Spec 2 R 番号引用の整合性: Spec 3 内で「Spec 2 Requirement 4 / 4.1 / 4.4 / 3.2 / 5 / 6」を引用しているが、Spec 2 が R 数 14 → 15（R15 対話ログ
+  frontmatter 新設）に変更された影響で番号がずれていないかの再点検必要
+  - Spec 2 R3.6 由来 Skill 起源 4 種: Spec 3 dispatch の対象外なので影響軽微だが、明示的な参照点が R9 / R10 にあってもよい（dispatch
+  対象外スキル群との関係明確化）
+
+  内部矛盾 / 概念定義の整合性候補
+
+  - R3.5 と R3.6 の責任分担: R3.5「LLM 併走推論失敗時の handling」と R3.6「対話 UI 詳細は Spec 4 所管」の境界が、--auto 時の WARN
+  ハンドリング（R3.4）と並べた時に design phase で扱う粒度に踏み込んでいないか
+  - R7.2 の dispatch_reason enumeration 10 種: R3 / R4 / R5 / R6 の各分岐とすべて 1:1 対応するか機械的検証が必要（特に「--auto 時の自動 LLM 採用」が
+  type_llm_chosen に同居している記述は別値として分離すべきか要検討）
+
+  上流 spec 由来 coordination 要求のチェック状況（一次評価）
+
+  - Spec 1 由来 R7.1 / R7.2 / R11.1 / R11.2 / R11.4: R5 / R8 で参照済（OK）
+  - Spec 1 由来 R10.3 dispatch logic: 直接の引用は見当たらず（要確認）
+  - Spec 1 由来「type: 値の許可集合 = categories.yml.recommended_type と Spec 2 applicable_categories の整合」: R4.5 / R4.6 / R8.5
+  で言及あり（マッピング表自体は design phase 持ち越し、OK）
+  - Spec 2 由来 R3.2 applicable_categories + applicable_input_paths: 前者のみ反映、後者未反映の疑い（要対処候補）
+  - Spec 2 由来 R3.6 Skill 起源 4 種: 直接の参照なし（軽微、本 spec dispatch 対象外なので影響限定的）
+  - Spec 2 由来 R6 lint 支援 skill frontmatter_completion の interactive: true: Boundary Out of scope に「rw lint --fix
+  が直接呼ぶ」記述あり、interactive な点には言及なし（軽微）
+  - Spec 4 由来 R13.4 Skill 選択 dispatch を Spec 3 所管: R1 全体および R7 / R8.3 で明示済（OK）
+  - Spec 4 由来 R3.2 --auto flag: R3.4 / R4.4 で参照済（OK）
+
+  次の進行案
+
+  ユーザー判断を待ちます。以下から選択してください。
+
+  - (a) 全 12 Requirement を順に詳細確認（R1 から R12 まで全 AC を Read で抽出して点検）
+  - (b) 気になる Requirement のみ詳細（特に Spec 2 R3.2 applicable_input_paths 未反映の疑いがある R1 / R2 / R9 + dispatch_reason enumeration の R7
+  を優先）
+  - (c) 修正なし approve（指摘なしと判断したらスキップ可能、ただし Spec 2 R3.2 未反映の疑いは強いので非推奨）
+
+  私の推奨は (b) です。Spec 2 R3.2 拡張（applicable_input_paths）が Spec 3 dispatch logic に反映されていない可能性が第 1ラウンド時点の最大の関心事項なので、R1 / R2 / R9 を優先的に詳細確認したいです。
+```
+
+##### ❯ a
+
+```
+⏺ (a) 全 12 Requirement を順に詳細確認します。requirements.md は既に全文読み込み済みなので、引用整合性を精査するため Spec 1 / Spec 2 の Requirement構造を確認します。
+⏺ 第 1 ラウンド: 基本整合性レビュー結果
+
+  上流 spec 引用整合性（番号レベル）
+
+  - Spec 1 R7.1 / R7.2 → Spec 3 R5 / R8 で参照済 ✅
+  - Spec 1 R11.1 / R11.2 / R11.4 → Spec 3 R8.1 / R8.2 / R8.3 で参照済 ✅
+  - Spec 1 R11.3（type: 値許可集合 = recommended_type + applicable_categories 整合）→ Spec 3 R8.5 で内容言及あり、番号は明示されず（軽微）
+  - Spec 1 R9.3 / R9.4 / R11.3（cache せず / 未配置時 INFO / lint 委譲）→ Spec 3 R5 で参照済 ✅
+  - Spec 2 R3.2 applicable_categories → Spec 3 R2.3 / R9.3 で参照済 ✅
+  - Spec 2 R4 / R4.1 / R4.4（知識生成 12 種 / generic_summary standard）→ Spec 3 R9.1 / R9.2 で参照済 ✅
+  - Spec 2 R5 / R6（Graph 抽出 / lint 支援 dispatch 対象外）→ Spec 3 R9.6 / R10.5 / Out of scope で参照済 ✅
+  - Spec 4 R13.4（dispatch を Spec 3 所管、4 段階優先順位）→ Spec 3 R1 / R8.3 で整合 ✅
+  - Spec 4 R3.2 --auto → Spec 3 R3.4 / R4.4 で参照済 ✅
+  - Foundation R11（Severity 4 水準）→ Spec 3 R7.1 / R11.1 / R11.2 で参照済 ✅
+
+  検出した懸念事項
+
+  致命級候補（1 件）
+
+  - 致-1: Spec 2 R3.2 で新設された optional field applicable_input_paths（L1 raw 入力 path glob、extended glob 互換、本セッション Spec 2 第 5ラウンド案 A 由来）が Spec 3 の Requirement に全く反映されていない
+    - 影響箇所: Spec 3 R1（4 段階優先順位に組み込むか否か未規定）/ R2.3（LLM 推論ヒントに含めるか未規定）/ R9（Spec 2 coordination でapplicable_input_paths の用途未明記）/ Boundary Context In scope（AGENTS/skills/*.md frontmatter applicable_categoriesの解釈契約のみ言及、applicable_input_paths 不在）
+    - Spec 2 起票時に「Spec 3 dispatcher が L1 raw 入力 path glob match による skill 選択 hint を構築する責務」が Boundary Context Spec 2 ↔ Spec 3 で2 系統 dispatch logic として明文化された（TODO_NEXT_SESSION.md L97-99 参照）
+    - Spec 3 がこの coordination 要求を reception せずに完了すると、llm_log_extract 等の L1 raw 入力対象 skill が deterministic dispatch されず、毎回LLM 推論経路に流れる（精度上問題なくても、コストと一貫性で問題）
+
+  軽微（1 件）
+
+  - 軽-1: Spec 3 R8.5 が「Spec 1 / Spec 2 の整合表」と書きつつ Spec 1 R11.3 / Spec 2 R3.2 の番号を明示していない（後続 Adjacent Sync 検出性が低下）
+
+  致-1 の深掘り検討
+
+  applicable_input_paths を 4 段階優先順位のどこに組み込むかで 3 択。
+
+  dominated 案（除外）
+
+  - (c) 段階追加なし、段階 4 LLM 推論時のヒント / 整合 check のみ: L1 raw 入力対象 skill の deterministic dispatch 機会を逃し、毎回 LLMコスト発生。applicable_input_paths を field として導入する意義（path glob で確定的に skill を絞る）が薄れる → dominated
+
+  合理的選択肢（escalate）
+
+  - (a) 段階 2.5 として挿入（段階 2 と段階 3 の間）: 「明示 → type: → input path glob match → category default → LLM」
+    - Pros: frontmatter type: 不在 + L1 raw 入力（categories 不在）でも segment 3.5 で deterministic dispatch
+    - Cons: category default を path match より下位にするのは Spec 1 の default_skill 優先性と意味付けが変わる
+  - (b) 段階 3.5 として挿入（段階 3 と段階 4 の間）: 「明示 → type: → category default → input path glob match → LLM」
+    - Pros: 既存 4 段階の優先関係（明示 → type → category default → LLM）を維持し、その間に補助段階として挿入。L1 raw 入力（categories.ymlに該当しない raw/... 配下）で path match のみが発火
+    - Cons: 5 段階化の文書改変、dispatch_reason enumeration に path_match 追加
+
+  私見
+
+  (b) 段階 3.5 案を推奨。理由は次の通り。
+
+  - L1 raw 入力（raw/llm_logs/** 等）は通常 category に属さない（Spec 1 R1 「カテゴリは強制ではなく推奨」原則 + Spec 2 brief.md L103 由来）。categorydefault が空の時に path match が発火する補助段階として機能する
+  - 既存 Spec 1 R11.4 / Spec 4 R13.4 の優先順位「明示 → type: → category default → LLM」を破壊しない
+  - L3 wiki 入力時は path match が wiki/** 等の category-specific path で重複しなければ skip され、既存 4 段階の挙動を保つ
+  - 致命的デメリットは検出されず、自動採択しても問題ない範囲
+
+  致-1 は (b) 案で自動採択を推奨します。ただし、4 段階 → 5 段階化は brief.md / Boundary Context / Spec 4 R13.4 (type: → category default → LLM 判断
+  の 4 段階記述) への波及があり、ユーザー判断で escalate する余地もあります。
+
+  第 1 ラウンドの選択肢
+
+  - (I) 致-1 を (b) 案で自動採択（私の推奨、5 段階化、Spec 4 への Adjacent Sync 必要）
+  - (II) 致-1 を (a) 案で自動採択（path match を category default より上位、Spec 1 と Spec 4 への Adjacent Sync 必要）
+  - (III) 致-1 を escalate しユーザーが判断（(a) / (b) / その他案を検討）
+  - (IV) 致-1 を全 R 詳細確認後の修正にまとめて回す（先に他 12 R の AC 全件を read し、致-1 の影響範囲を完全把握してから決定）
+
+  私の推奨は (I) または (IV) です。(IV) を選ぶと修正前に R7.2 dispatch_reason enumeration / R11.2 severity
+  紐付け等の連鎖更新も同時把握できます。どちらを選びますか？
+```
+
+##### ❯ 致-1は深掘りしてみましたか？
+
+```
+⏺ ご指摘の通り、深掘りが浅かったです。以下、致-1 を本質レベルで深掘りします。
+
+  致-1 深掘り検討（再）
+
+  Spec 2 R3.2 applicable_input_paths の意味再確認
+
+  Spec 2 R3.2 の文言（line 103）:
+
+  - L1 raw 入力 path glob 一覧（例: raw/llm_logs/** / raw/incoming/**）
+  - L3 category に該当しない L1 raw 入力対象 skill の dispatch hint を表現する独立 field
+  - 用途例: llm_log_extract が raw/llm_logs/ を入力対象とするケース
+  - glob 構文妥当性検査は Spec 2、実 path の存在検証は dispatch 時の Spec 3 所管
+
+  つまり Spec 2 起票者の意図は「L1 raw 入力に対する dispatch hint であり、L3 category（applicable_categories）と独立した別系統」。これは既存 4 段階の
+   category default とは違う dimension の hint。
+
+  dispatch logic への組み込み方の本質的選択肢
+
+  選択肢 (a) 段階 2.5 として type: の後、category default の前に挿入
+
+  - 入力 path → path glob match で skill 候補確定（match 時のみ）
+  - L3 wiki 入力で type: 不在 + ある skill が applicable_input_paths: ["wiki/synthesis/**"] 等を誤設定すると、category default を上書き
+  - Spec 2 R3.2 の意図「L1 raw 入力対象」が path 形式の構文妥当性のみ検査され、L1 / L3 のセマンティック制約が validation されないため、誤設定リスク
+  - → デメリットあり
+
+  選択肢 (b) 段階 3.5 として category default の後、LLM の前に挿入
+
+  - L3 wiki 入力で category default があれば段階 3 で確定し path match に進まない
+  - L1 raw 入力（categories.yml に該当しない raw/... 配下）で初めて path match 発火
+  - Spec 2 R3.2「L1 raw 入力対象」の意図と最も整合
+  - → 意図整合性で dominant
+
+  選択肢 (c) LLM 推論時の入力ヒントのみ（段階追加なし）
+
+  - L1 raw 入力でも毎回 LLM 推論
+  - LLM コストが永続的に発生
+  - applicable_input_paths field を設けた意義（path で deterministic dispatch する）が消失
+  - → dominated
+
+  選択肢 (d) 段階 4 LLM 推論結果との整合 check 材料のみ
+
+  - LLM 推論を必ず実行 → コスト発生
+  - (c) と本質的に同じ → dominated
+
+  段階 3.5 案 (b) を採用した場合の波及項目（深掘り）
+
+  Spec 3 内部の連鎖修正
+
+  - R1: 4 段階 → 5 段階化、AC 追加（段階 3.5 規定）+ R1.2 短絡評価 / R1.6 段階 4 進行条件 / R1.7 fallback の段階番号更新
+  - R1 新 AC: path match で複数 skill 該当時の挙動規定が必要（LLM 推論にエスカレート + WARN が筋、曖昧性回避）
+  - R2.3: LLM 推論ヒントに applicable_input_paths も追加
+  - R7.2: dispatch_reason enumeration に path_match 値追加（10 種 → 11 種）
+  - R9.3 / R9 新 AC: Spec 2 ↔ Spec 3 coordination で applicable_input_paths の dispatch 用途を明記
+  - Boundary Context In scope: applicable_input_paths 解釈契約追加
+  - R11.2 severity 紐付け: path match 複数該当時の WARN を追加列挙
+  - brief.md L24: 4 段階 → 5 段階化
+
+  隣接 spec への Adjacent Sync 必要
+
+  - Spec 1 R11.4: dispatch 優先順位記述「明示 → type: → category default → LLM」→「明示 → type: → category default → input path match → LLM」
+  - Spec 4 R13.4: dispatch 優先順位記述（同上）
+  - drafts §7.2 Spec 3 部分: 4 段階 → 5 段階化（D-N で別セッション処理）
+
+  path match の振る舞い詳細（Requirement に必要な AC）
+
+  - AC: glob match は extended glob 互換（Spec 2 R3.2 と整合）
+  - AC: 1 skill のみ match → 当該 skill を候補として確定
+  - AC: 複数 skill match → 段階 4 LLM 推論にエスカレート + WARN（曖昧性回避）
+  - AC: 0 skill match → 段階 4 へ降格（INFO 通知不要、L3 wiki 入力で当然のケースのため）
+  - AC: path match で確定した候補は段階 1 / 2 と同様に R6 fallback / R3 / R4 コンセンサス確認の対象外（path match 自体が deterministic、整合 check
+  は不要）
+
+  ただし path match と LLM 推論のコンセンサス確認は必要か？
+  - 段階 1 (明示 --skill) → R3 コンセンサス確認（明示意図尊重 + LLM 並走で誤指定検出）
+  - 段階 2 (type:) → R4 コンセンサス確認（type: ヒントとコンテンツ実態のドリフト検出）
+  - 段階 3 (category default) → コンセンサス確認なし（category 配置から自然に決まる）
+  - 段階 3.5 (path match) → コンセンサス確認なしで良いか？
+
+  → path match も段階 3 と同じく「配置から自然に決まる deterministic dispatch」なので、コンセンサス確認は不要が筋。Spec 2 R3.2 が「L1 raw
+  入力対象」を意図する以上、path 一致は確定的。
+
+  致命的デメリットの厳密判定
+
+  - L3 wiki 入力での意図しない発火: 段階 3 で category default が確定する場合、段階 3.5 はスキップ → 影響なし
+  - Spec 1 / Spec 4 への Adjacent Sync 漏れリスク: 第 5 ラウンドで grep 必須項目に追加すれば検出可能
+  - brief.md / Spec 4 R13.4 / Spec 1 R11.4 の Adjacent Sync 工数: 軽微（文言同期 1 箇所ずつ）
+  - 複数 skill match の曖昧性: 上記 AC で「LLM 推論にエスカレート」として明示すれば回避
+  - path match と R3 / R4 コンセンサス確認の関係: 段階 3.5 はコンセンサス確認対象外として明記すれば曖昧性なし
+
+  → 致命的デメリットなし、自動採択可能
+
+  escalate 条件 5 種への該当判定
+
+  - 致命的デメリットあり → なし
+  - 範囲拡張（Boundary Context を変える） → In scope の中身詳細化（5 段階化）に留まる、新責務追加ではない（path match 解釈は既に Spec 2 起票時に Spec
+   3 所管として確定）
+  - 文言確定不能 → 段階 3.5 案 (b) は文言確定可能
+  - SSoT 判定要 → drafts §7.2 Spec 3 の 4 段階記述との不整合は Adjacent Sync で解消可能、SSoT 改版判定不要
+  - 合理的選択肢が複数で絞れない → (b) が dominant、(a) / (c) / (d) は dominated
+
+  → escalate 条件 5 種に該当せず、自動採択可能
+
+  致-1 自動採択の最終判断
+
+  (b) 段階 3.5 案で自動採択を推奨します。
+
+  連鎖修正（Spec 3 内部）:
+
+  - R1 全面改訂（4 段階 → 5 段階、AC 7 → 9 件程度）
+  - R2.3 拡張
+  - R7.2 dispatch_reason enumeration 11 種化
+  - R9 拡張（applicable_input_paths 用途明記、AC 追加）
+  - Boundary Context In scope 追記
+  - R11.2 severity 紐付け追加
+  - brief.md L24 5 段階化
+
+  Adjacent Sync（第 5 ラウンドで処理）:
+
+  - Spec 1 R11.4 文言同期
+  - Spec 4 R13.4 文言同期
+  - drafts §7.2 Spec 3 部分（D-N で別セッション）
+
+  確認
+
+  この深掘り結果に基づき 致-1 を (b) 案で自動採択 して良いですか？それとも以下のいずれかですか。
+
+  - (I) (b) 案で自動採択して即修正（推奨）
+  - (II) escalate（ユーザーが (a) / (b) / (c) / (d) を再判断）
+  - (III) (b) 案を採択するが、第 1 ラウンドの他指摘（軽-1）と一括修正したいので、先に他 R 詳細確認を続行
+```
+
+##### ❯ (I)
+
+```
+⏺ 致-1 (b) 案 + 軽-1 を Spec 3 に適用します。まず Boundary Context と R1 から修正します。
+⏺ 次に R8.5 軽-1 修正、R9 拡張（applicable_input_paths 用途、null 扱い）、R11.2 severity 紐付け修正。
+⏺ 第 1 ラウンドの修正完了を整理し、TaskUpdate で完了マーク、第 2 ラウンドへ移行する前に修正後の整合性を再確認します。
+⏺ 第 1 ラウンド完了
+
+  適用した修正（致-1 + 軽-1）
+
+  致-1 (b) 段階 3.5 案、自動採択):
+
+  - Boundary Context In scope: 5 段階優先順位への変更 + applicable_input_paths 解釈契約追記
+  - R1 タイトル + Objective: 4 段階 → 5 段階化
+  - R1.1: 5 段階の定義（段階 3.5 挿入）
+  - R1.6 (新): 段階 3.5 path glob match 唯一 skill 確定の挙動 + コンセンサス確認対象外規定
+  - R1.7 (新): 段階 3.5 複数 skill match 時の LLM 推論エスカレート + WARN 規定
+  - R1.8 / R1.9 (旧 R1.6 / R1.7): 段階番号更新
+  - R2.3: LLM 推論ヒントに applicable_input_paths 追加
+  - R7.2: dispatch_reason enumeration 10 → 11 種化（path_match 追加）
+  - R9.4 (新): applicable_input_paths の用途規定 + 実 path 検証責務の明記
+  - R9.6 (新): applicable_input_paths null/空配列時の path match 候補除外規定
+  - R9.3 / R9.7 / R9.8: applicable_input_paths 整合再 check 必要性追記 / 番号 shift
+  - R11.2 WARN: R1.7 path match 複数該当を追加
+  - brief.md Approach: 5 段階化
+  - brief.md Scope.In: applicable_input_paths 系統 dispatch 追記
+
+  軽-1: R8.5 で Spec 1 R11.3 / Spec 2 R3.2 の番号を明示
+
+  AC 数の変化
+
+  - R1: 7 → 9 件（+2）
+  - R2: 7 → 7 件（変動なし、R2.3 拡張のみ）
+  - R7: 5 → 5 件（変動なし、R7.2 enumeration 拡張のみ）
+  - R9: 6 → 8 件（+2）
+  - R11: 5 → 5 件（変動なし、R11.2 内訳追加のみ）
+  - 合計 AC 数: 推定 67 → 71 件（+4）
+
+  次のラウンドへ
+
+  第 2 ラウンド（上位文書照合）に進みます。roadmap.md / brief.md（修正済）/ drafts §7.2 Spec 3 / §6.1 distill / §1.2 LLM 非依存 / §11.2 v0.7.10 決定
+  6-1 との SSoT 整合を厳格照合します。
+
+  進めて良いですか？
+```
+
+##### ❯ OK
+
+```
+⏺ 第 2 ラウンド: 上位文書照合の結果
+
+  整合確認済み（OK）
+
+  - drafts §1.2 LLM 非依存 (line 171): 「抽象層は Spec 3 で定義」→ Spec 3 Out of scope の「抽象層 API 設計詳細は design phase」と整合 ✅
+  - drafts §6.1 distill task (line 1292): Skill による → Spec 3 dispatch メカニズム所管と整合 ✅
+  - drafts §11.2 v0.7.10 決定 6-1 (line 2726): Spec 3 dispatch は distill 専用 → Spec 3 R10 で参照済 ✅
+  - drafts Scenario llm_log_extract (line 2568-2604): raw/llm_logs/ × --skill llm_log_extract → 致-1 (b) 案 applicable_input_paths glob match
+  の正当性を裏付ける scenario ✅
+  - roadmap.md §9.4 Phase 4: Spec 3 dispatch 起票 → 整合 ✅
+  - roadmap.md Spec 1 ↔ Spec 3 coordination: 2 件（type: + categories.yml default_skill mapping）→ Spec 1 で対応済 ✅
+  - brief.md（修正済）: Approach + Scope.In に 5 段階化 + applicable_input_paths 反映済 ✅
+
+  検出した懸念事項
+
+  重要級候補（2 件）
+
+  - 重-1 (drafts §7.2 Spec 3 line 1556-1573): 致-1 修正で 5 段階化したため drafts 記述（4 段階）が古い
+    - line 1562: In scope の優先順位記述「明示指定 → frontmatter type: → カテゴリ default → LLM 判断」（4 段階）
+    - line 1565: In scope に「applicable_input_paths glob match dispatch」が未列挙
+    - 該当 drafts は consolidated-spec.md（議論記録的色彩、SSoT 性は中程度）
+    - Adjacent Sync TODO 一覧（D-1 ~ D-23）への追加が標準処理
+    - D-24（新）: drafts §7.2 Spec 3 In scope を 5 段階化 + applicable_input_paths glob match dispatch 追記（致-1 (b) 案由来、別セッション一括処理）
+  - 重-2 (roadmap.md Spec 2 ↔ Spec 3 coordination 未記載):
+    - roadmap.md line 2382「Spec 1 ↔ Spec 3」coordination のみ記載
+    - 本セッションで Spec 2 R3.2 拡張 → Spec 3 R9.4 で 2 系統 dispatch logic 確定
+    - 「Spec 2 ↔ Spec 3」coordination も roadmap に明示すべき（applicable_input_paths による L1 raw 入力 path 系統 dispatch hint）
+    - roadmap.md は steering 文書で integrity 重要 → 本セッション内同期が筋
+    - 軽微な追記（1 行追加）なので、本セッション内 Adjacent Sync で処理可能
+
+  軽微（1 件）
+
+  - 軽-1: drafts §5.6 Skill ファイル frontmatter table に applicable_input_paths 未記載 → 既に D-23 として TODO 記録済 ✅、追加対応不要
+
+  深掘り検討
+
+  重-1 (drafts §7.2 Spec 3 修正)
+
+  - 致命的デメリット: なし（drafts は別セッション一括処理が標準、TODO_NEXT_SESSION.md の運用ルール）
+  - escalate 条件: 「文言確定不能」「SSoT 判定要」のいずれにも該当しない
+  - 自動採択判断: D-24 として TODO 記録、別セッション処理（自動採択）
+
+  重-2 (roadmap.md Spec 2 ↔ Spec 3 coordination 追記)
+
+  - 致命的デメリット: なし
+  - 範囲拡張: roadmap.md は spec ではなく steering 文書、文言追記のみ
+  - escalate 条件: 該当しない
+  - 自動採択判断: 本セッション内 Adjacent Sync で処理、軽微追記 1 行
+
+  第 2 ラウンドの選択肢
+
+  私の推奨: 重-1 を D-24 として TODO 記録 + 重-2 を本セッション内で roadmap.md に追記。
+
+  - (I) 重-1 D-24 化 + 重-2 roadmap.md Adjacent Sync を自動採択（推奨）
+  - (II) 重-1 / 重-2 とも本セッション内で同期（drafts も含めて全てここで修正）
+  - (III) 重-1 / 重-2 とも別セッション TODO 化（本セッションでは Adjacent Sync しない）
+
+  進めて良いですか？それとも別の判断ですか。
+```
+
+##### ❯ (I)
+
+```
+⏺ 第 2 ラウンド完了
+
+  適用した修正
+
+  - roadmap.md L86: 「Spec 2 ↔ Spec 3」coordination 1 行追加（2 系統 dispatch logic、applicable_categories + applicable_input_paths）
+  - TODO_NEXT_SESSION.md: Spec 3 由来 Adjacent Sync TODO D-24 追加（drafts §7.2 Spec 3 line 1556-1573 の 4 段階 → 5 段階化、別セッション一括処理）
+
+  Adjacent Sync TODO の整理
+
+  - 計 23 件（Spec 4 由来 4 + Spec 4 由来 v2 3 + Spec 7 由来 1 + Spec 5 由来 7 + Spec 2 由来 6 + Spec 3 由来 1 + Spec 1 由来 3、D-10 は D-22
+  統合済）+ Spec 4 軽微 D-NEW
+
+  第 3 ラウンドへ
+
+  第 3 ラウンド（本質的観点）に進みます。全体俯瞰 / 文書内矛盾 / 概念定義の整合性を観点に、修正後の Spec 3 を再点検します。
+
+  進めて良いですか？
+```
+
+##### ❯ OK
+
+```
+⏺ 第 3 ラウンド: 本質的観点のレビュー結果
+
+  検出した懸念事項
+
+  致命級候補（1 件）
+
+  - 致-1 (R10.5 連鎖更新漏れ): R10.5「Graph 抽出 / lint 支援も Requirement 9.6 と重複しない範囲で再確認」→ 第 1 ラウンド R9 修正で「Graph 抽出 / lint支援は dispatch 対象外」を規定する AC は R9.8 に shift（修正後 R9.6 は applicable_input_paths null 扱い規定）。R10.5 の番号引用を 9.6 → 9.8に更新必要
+
+  重要級候補（2 件）
+
+  - 重-1 (R8.3 dispatch 優先順位記述の更新漏れ): R8.3「dispatch 優先順位（明示 → type: → default_skill → LLM）」→ 致-1 修正で 5 段階化。R8.3内の優先順位記述も 5 段階化が筋（4 段階表記と Spec 1 R11.4 への整合参照のため）
+  - 重-2 (R7.3 aborted 時の severity 未指定): R7.1 で severity が必須 field、R11.2 の severity 紐付けに aborted 時の severity が列挙されていない
+    - aborted = ユーザー選択による正常な abort → INFO が自然（dispatch 失敗ではなく user intent の表明）
+    - Foundation R11 で Severity 4 水準（CRITICAL / ERROR / WARN / INFO）固定 → 追加 severity 不可
+    - 案 A: INFO として扱い R11.2 INFO 列挙に追加 + R7.3 で aborted 時 INFO を明示
+    - 案 B: severity field を optional 化し、aborted 時 null
+    - 案 A が dominant（severity 必須を維持、ユーザー abort も「通知」の一種として位置付け）
+
+  軽微（1 件）
+
+  - 軽-1 (R7.1 severity field の集約規約参照): R7.1 で「severity（4 水準のいずれか）」と単一値規定だが、複数通知集約は R11.4 規定。R7.1 内で「（最終severity = 最重 severity、Requirement 11.4 と整合）」を補足すると読みやすい
+
+  深掘り検討
+
+  致-1 / 重-1（連鎖更新漏れ）
+
+  - 致命的デメリット: なし、純粋な番号更新と文言同期
+  - escalate 条件: 該当しない
+  - → 自動採択
+
+  重-2（aborted severity 明示）
+
+  - 致命的デメリット: なし
+  - 案 A（INFO 採用）vs 案 B（optional 化）
+    - 案 B は R7.1「severity（4 水準のいずれか）」必須規定との不整合が発生 → dominated
+    - 案 A は既存 severity 体系内で完結 → dominant
+  - → 案 A で自動採択
+
+  軽-1（可読性向上）
+
+  - 致命的デメリット: なし
+  - 単なる読みやすさ向上
+  - → 自動採択
+
+  第 3 ラウンドの選択肢
+
+  私の推奨: 全 4 件（致-1 / 重-1 / 重-2 / 軽-1）を自動採択。
+
+  - (I) 全 4 件を自動採択して即修正（推奨）
+  - (II) 重-2 は escalate（aborted の severity 扱いをユーザー判断、案 A / 案 B 検討）
+  - (III) 一部のみ自動採択（特定の指摘を escalate）
+
+  進めて良いですか？
+```
+
+##### ❯ はい
+
+```
+⏺ 第 3 ラウンド完了
+
+  適用した修正（4 件、全て自動採択）
+
+  - 致-1: R10.5「Requirement 9.6」→「Requirement 9.8」更新（連鎖更新漏れ修正）
+  - 重-1: R8.3 dispatch 優先順位記述を 5 段階化 + Spec 1 R11.4 への Adjacent Sync 必要性明記
+  - 重-2: R7.3 aborted 時の severity を INFO で明示（user intent 表明として severity 4 水準内に収める） + R11.2 INFO 列挙に R7.3 を追加
+  - 軽-1: R7.1 severity / notes field の集約規約参照（R11.4 整合）+ skill_name に aborted 時挙動を補記（R7.3 整合）
+
+  第 4 ラウンドへ
+
+  第 4 ラウンド（B 観点）に進みます。failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模 / 暗黙前提崩壊を観点に再点検します。
+
+  進めて良いですか？
+```
+
+##### ❯ OK
+
+```
+⏺ 第 4 ラウンド: B 観点のレビュー結果
+
+  検出した懸念事項
+
+  重要級候補（3 件）
+
+  - 重-1 (categories.yml parse 失敗時の handling 未規定): R5.6 で未配置時の挙動はあるが、parse 失敗 / 部分破損時の挙動が未規定
+    - Spec 1 R9.7 で「lint task は parse 不可で当該 vocabulary 関連検査のみ ERROR で fail、他検査は継続」と規定
+    - Spec 3 dispatch 実行時に categories.yml が parse 不可になっている場合、dispatch を fail させるか継続させるか未規定
+    - 案 A: 段階 3 をスキップして段階 3.5 / 4 に進む + WARN 通知（dispatch 継続、lint で根本解決）
+    - 案 B: ERROR severity で dispatch 拒否（exit code 2）
+    - dominant: 案 A（dispatch 中断は ux 悪化、Spec 1 R9.7 の「partial broken は他検査継続」原則と整合的）
+  - 重-2 (frontmatter parse 失敗時の handling 未規定): R4 で type: 値存在 / unknown 値は規定するが、frontmatter 自体が parse 不可な場合の handling
+  未規定
+    - rw distill 直接呼び出しで lint を経由しない場合に発生
+    - 案 A: 段階 2 をスキップして段階 3 以降に進む + WARN 通知
+    - 案 B: ERROR で拒否
+    - dominant: 案 A（dispatch の継続性、Spec 1 lint で根本検知の二重防御）
+  - 重-3 (AGENTS/skills/ 読み取りタイミング規定漏れ): R5 で categories.yml の cache せず規定（R5.5）はあるが、AGENTS/skills/*.md の load
+  タイミング規定なし
+    - cache の有無で並行実行時の skill 一覧整合性に差分発生（skill install / deprecate / archive 直後の dispatch）
+    - 案 A: dispatch 実行毎に load（cache せず、Spec 1 R9.3 / R9.5 vocabulary cache せず規定と整合）
+    - 案 B: 起動時 1 回 cache（性能優先だが整合性懸念）
+    - dominant: 案 A（vocabulary cache 規定との一貫性、skill 変更の即時反映、design phase で性能調整可）
+
+  軽微（2 件）
+
+  - 軽-1 (path match 候補集合での status: active フィルタ): R1.6 で段階 3.5 path match の評価対象が暗黙。status: active skill
+  のみを候補とすべきか明示が筋。R6.1 が dispatch 実行直前に check するが、段階 3.5 候補絞り込み時に既に filter する方が無駄計算回避 + 曖昧性回避
+  - 軽-2 (大規模時 path match cost): design phase 持ち越し、軽微効率問題（initial 15 skill 想定では問題なし、1000 skill で軽微）
+
+  確認済み（OK）
+
+  - 可逆性: dispatch は read-only 行為（実 distill 実行は Spec 4 / Spec 2 所管）→ 問題なし ✅
+  - 並行制御: dispatch は read-only なので .rwiki/.hygiene.lock 不要、Spec 1 R8.14 の vocabulary 操作 lock と整合 ✅
+  - 規模: initial 15 skill で path match cost 問題なし、design phase で N=1000+ 検討 ✅
+  - 観測: dispatch は内部契約として Spec 4 に返すのみ、decision_log.jsonl への永続化対象外（dispatch 結果ではなく user approve 等が対象）✅
+  - LLM CLI subprocess timeout: R2.5 で必須化済 ✅
+
+  深掘り検討（全 3 件 + 軽-1）
+
+  重-1 (categories.yml parse 失敗、案 A)
+
+  - 致命的デメリット: なし
+  - Spec 1 R9.7 の「partial broken は他検査継続」原則と整合
+  - escalate 条件: 該当しない
+  - 自動採択
+
+  重-2 (frontmatter parse 失敗、案 A)
+
+  - 致命的デメリット: なし
+  - 段階スキップ + WARN で dispatch 継続、Spec 1 lint で根本検知
+  - 自動採択
+
+  重-3 (AGENTS/skills/ load タイミング、案 A)
+
+  - 致命的デメリット: なし
+  - Spec 1 R9.3 / R9.5 vocabulary cache 規定と整合
+  - 自動採択
+
+  軽-1 (status: active フィルタ、自動採択)
+
+  - 致命的デメリット: なし
+  - R1.6 で段階 3.5 候補絞り込みに status: active filter を含めると曖昧性回避
+  - 自動採択
+
+  第 4 ラウンドの選択肢
+
+  私の推奨: 全 4 件（重-1 / 重-2 / 重-3 / 軽-1）を自動採択。
+
+  - (I) 全 4 件を自動採択して即修正（推奨）
+  - (II) escalate （特定指摘の案 A vs 案 B をユーザー判断）
+  - (III) 一部のみ自動採択
+
+  進めて良いですか？
+```
+
+##### ❯ (I)
+
+```
+⏺ R6 と R6.6 / R6.7 の整合確認のあと、修正を順次適用します。
+⏺ R6 の表記更新（4 段階 → 5 段階）と R9 への load タイミング AC 追加。
+⏺ R11.2 の WARN / INFO に新 AC の severity を追加。
+⏺ 第 4 ラウンド完了
+
+  適用した修正（4 件、全て自動採択）
+
+  - 重-1 (R5.8 新): categories.yml parse 失敗時の handling 規定（段階 3 スキップ + WARN + dispatch 継続、Spec 1 R9.7 partial broken handling
+  原則と整合）
+  - 重-2 (R4.7 新): 入力ファイル frontmatter parse 失敗時の handling 規定（段階 2 スキップ + WARN + dispatch 継続、Spec 1 lint task との二重防御）
+  - 重-3 (R9.9 新): AGENTS/skills/*.md を cache せず dispatch 実行毎に最新読み込み（vocabulary cache 規定 R5.5 と整合、skill lifecycle
+  変更の即時反映）
+  - 軽-1 (R1.6 改訂): 段階 3.5 path match 候補絞り込みに status: active filter を明示
+  - R6 (4 段階 → 5 段階表記の更新漏れ): Objective + R6.1 の「4 段階」→「5 段階」更新（軽微な連鎖更新漏れ、自動採択範囲）
+  - R11.2 WARN 列挙: R4.7 / R5.8 を追加
+
+  AC 数の変化
+
+  - R1: 9 件（変動なし、R1.6 改訂のみ）
+  - R4: 6 → 7 件（+1）
+  - R5: 7 → 8 件（+1）
+  - R9: 8 → 9 件（+1）
+  - R11: 5 件（変動なし、R11.2 内訳追加のみ）
+
+  累積 AC 数: 推定 71 → 74 件
+
+  第 5 ラウンドへ
+
+  第 5 ラウンド（波及精査、最終ガード）に進みます。memory feedback_review_rounds.md の 5 step 必須手順を厳守:
+
+  - Step 1: 第 1-4 ラウンドで修正した値リスト化
+  - Step 2: 既 approve 済 spec 全件 + drafts + Foundation + 当該 spec 自身 grep
+  - Step 3: Foundation 改版した場合の傘下 7 spec 全件精査（本セッションで Foundation 改版なしのため、Foundation 関連の grep のみで完了）
+  - Step 4: Adjacent Sync TODO 整理（D-N 通し番号）
+  - Step 5: 本セッション内同期 / 別セッション処理のユーザー判断
+
+  進めて良いですか？
+```
+
+##### ❯ OK
+
+```
+⏺ Step 1: 第 1-4 ラウンドで修正した値リスト化
+
+  値リスト
+
+  - dispatch 段階数: 4 段階 → 5 段階（明示 → type: → category default → applicable_input_paths glob match → LLM）
+  - 新規 field: applicable_input_paths（L1 raw 入力 path glob、extended glob 互換、Spec 2 R3.2 由来）
+  - 新規 dispatch_reason 値: path_match（dispatch_reason enumeration 10 種 → 11 種）
+  - 新規段階番号: 段階 3.5（path glob match）
+  - 新規 AC: R1.6 / R1.7 / R4.7 / R5.8 / R9.4 / R9.6 / R9.9 / R11.2 WARN 列挙拡張
+  - AC 番号 shift: R9 で旧 R9.6 →新 R9.8、R10.5 内引用「9.6」→「9.8」更新済
+  - Spec 1 R11.4 への Adjacent Sync 必要性: R8.3 で言及（Spec 1 R11.4 4 段階記述との不整合）
+  - Spec 4 R13.4 への Adjacent Sync 必要性: 5 段階化で「明示 → type: → category default → input path match → LLM」へ
+
+  Step 2: 既 approve 済 spec + drafts + Foundation の grep
+⏺ Step 2 grep 結果
+
+  連鎖更新漏れ検出（4 件、Adjacent Sync 必要）
+
+  - A-1 (Spec 1 R11.4 line 223): 「dispatch 優先順位（明示 → type: → category default → LLM 判断）」→ 5 段階化必要（Spec 3 R8.3 で言及済の Adjacent
+  Sync）
+  - A-2 (Spec 4 Boundary line 51): 「Skill 選択 dispatch ロジック（Spec 3 / 明示 → type: → category default → LLM 判断の優先順位）」→ 5 段階化必要
+  - A-3 (Spec 4 R13.4 line 254): 「Skill 選択 dispatch（明示 → type: → category default → LLM 判断の優先順位）を Spec 3 の所管」→ 5 段階化必要
+  - A-4 (Spec 5 line 66): 「Skill 選択 dispatch: Spec 3（明示 → type: → category default → LLM 判断の優先順位）」→ 5 段階化必要
+
+  内部整合性確認（OK）
+
+  - 「Requirement 9.6」「R9.6」は本 spec 内に残存していない（R10.5 → 9.8 修正済） ✅
+  - 「段階 3.5」「path_match」「applicable_input_paths」は Spec 3 内で整合的に登場 ✅
+  - Spec 2 R3.2 / Boundary Context Spec 2 ↔ Spec 3 と整合 ✅
+
+  Foundation / Spec 0 / Spec 7 への影響
+
+  - Foundation: 「4 段階」は「初版 + 4 段階レビュー」（review step 数）で dispatch 無関係 ✅
+  - Spec 5 R7「Dangling edge policy 4 段階 degrade」は dispatch 無関係 ✅
+  - Spec 7: dispatch 優先順位記述なし、影響なし ✅
+
+  Step 3: Foundation 改版時の傘下 7 spec 精査
+
+  - 本セッションで Foundation 改版なし → 該当なし
+
+  Step 4: Adjacent Sync TODO 整理
+
+  本セッション内同期（4 件、必須）
+
+  - A-1: Spec 1 R11.4 line 223 を 5 段階化 + change log + spec.json.updated_at
+  - A-2: Spec 4 Boundary line 51 を 5 段階化（Spec 4 既存 change log に追記）
+  - A-3: Spec 4 R13.4 line 254 を 5 段階化（A-2 と同一 commit）
+  - A-4: Spec 5 line 66 を 5 段階化 + change log + spec.json.updated_at
+
+  別セッション処理（記録済）
+
+  - D-24: drafts §7.2 Spec 3 5 段階化（第 2 ラウンドで記録済）
+
+  Step 5: 判断要件
+
+  私の推奨: 過去 Spec 2 / Spec 5 と同様、A-1 ~ A-4 を本セッション内 Adjacent Sync で処理。
+
+  確認事項
+
+  Spec 5 line 66 が Boundary Out of scope か In scope か確認したいので、その前に Spec 5 line 66 を read で確認します。
+
+  進めて良いですか? (進行確認、Step 5 結論に向けた手前のアクション)
+```
+
+##### ❯ OK
+
+```
+⏺ Adjacent Sync を順次適用します。Spec 1 → Spec 4 → Spec 5 の順。
+⏺ Spec 1 の change log を確認・追加します。
+⏺ change log 形式を把握しました。Spec 1 は requirements.md に change log 末尾セクションがないので、新設します。
+⏺ Spec 1 の spec.json updated_at を更新。
+⏺ Spec 4 修正（A-2 / A-3）。
+⏺ Spec 5 修正（A-4）。
+⏺ Spec 4 / Spec 5 の spec.json updated_at を更新。
+⏺ 第 5 ラウンド完了
+
+  適用した Adjacent Sync（4 件、本セッション内同期）
+
+  - A-1 Spec 1 R11.4: dispatch 優先順位 5 段階化 + change log セクション新設 + spec.json.updated_at = 2026-04-27T14:34:38+09:00
+  - A-2 Spec 4 Boundary line 51: Skill 選択 dispatch 記述 5 段階化
+  - A-3 Spec 4 R13.4 line 254: dispatch 優先順位 5 段階化（A-2 と同 spec、change log 1 件追加） + spec.json.updated_at = 2026-04-27T14:35:34+09:00
+  - A-4 Spec 5 Boundary line 66: dispatch 記述 5 段階化 + change log 1 件追加 + spec.json.updated_at = 2026-04-27T14:35:34+09:00
+
+  第 5 ラウンドの 5 step 実施結果
+
+  - Step 1: 修正値リスト化 ✅
+  - Step 2: 既 approve 済 6 spec + drafts grep ✅、4 件の連鎖更新漏れ検出 → 是正済
+  - Step 3: Foundation 改版なし → 該当なし ✅
+  - Step 4: Adjacent Sync TODO 整理（A-1 ~ A-4 本セッション、D-24 別セッション）✅
+  - Step 5: 本セッション内同期判断 → 4 件即時是正完了 ✅
+
+  次は厳しく再精査（最終ガード）
+
+  「厳しく再精査」では、第 1-5 ラウンドで自動採択した修正が連鎖更新漏れを起こしていないか、本 spec 内および Adjacent Sync 4 specを再点検します。memory feedback_review_rounds.md の最終ガードに従い、見落とした連鎖を網羅 grep で再検出します。
+
+  進めて良いですか？
+```
+
+##### ❯ OK
+
+```
+⏺ 厳しく再精査の結果
+
+  1 件の連鎖更新漏れを検出しました。
+
+  致-1 (Spec 3 Introduction line 17)
+
+  「本 spec が SSoT として固定するのは、(1) 4 段階優先順位の判断順序とその個別実行条件、...」
+
+  → 致-1 修正で 5 段階化したが Introduction の文言が 4 段階のまま残存。連鎖更新漏れ。即時修正します。
+⏺ 更に厳しく再精査を続行。Adjacent Sync 4 spec で「4 段階 / 5 段階」記述の混在がないか確認。
+⏺ 厳しく再精査（最終ガード）完了
+
+  検出 / 是正
+
+  - 致-1 (Spec 3 Introduction line 17): 「(1) 4 段階優先順位の判断順序」→「(1) 5 段階優先順位（明示 → type: → default_skill → applicable_input_paths
+  glob match → LLM 毎回判定）の判断順序」に修正（自動採択）
+
+  再 grep 確認（全て整合）
+
+  - Spec 3 内部の段階数表記: 5 段階記述で統一 ✅
+  - Spec 3 内部の AC 番号引用: R10.5 → 9.8 / R11.2 列挙 / R7 series 全件整合 ✅
+  - 「12 個の Requirement」記述: R12.6 で維持 ✅
+  - Spec 1 R11.4 + change log: 5 段階記述統一 ✅
+  - Spec 4 line 51 + 254 + change log: 5 段階記述統一（Introduction line 9 は段階数言及なしで OK）✅
+  - Spec 5 line 66 + change log: 5 段階記述統一（line 184「Dangling edge 4 段階 degrade」は dispatch 無関係）✅
+  - brief.md: 5 段階化 + applicable_input_paths 反映済 ✅
+
+  全 5 ラウンド + 厳しく再精査の総括
+
+  Spec 3 (rwiki-v2-prompt-dispatch) 修正サマリ
+
+  - 致命級: 第 1 R 1 件（applicable_input_paths 未反映）+ 第 3 R 1 件（R10.5 番号 shift）+ 厳しく再精査 1 件（Introduction 段階数）= 3 件、全自動採択
+  - 重要級: 第 2 R 2 件（roadmap / drafts Adjacent Sync）+ 第 3 R 2 件（R8.3 / aborted severity）+ 第 4 R 3 件（parse 失敗 handling × 2 +
+  AGENTS/skills load タイミング）= 7 件、全自動採択
+  - 軽微: 第 1 R 1 件（R8.5 番号明示）+ 第 3 R 1 件（severity 集約参照）+ 第 4 R 1 件（status: active filter）= 3 件、全自動採択
+  - AC 数: 67 → 74 件（+7）
+  - Requirement 数: 12 件（変動なし）
+  - dispatch_reason enumeration: 10 → 11 種（path_match 追加）
+
+  Adjacent Sync（本セッション内同期、再 approval 不要）
+
+  - Spec 1 R11.4: dispatch 5 段階化 + change log 新設 + spec.json.updated_at 更新
+  - Spec 4 line 51 / 254: dispatch 5 段階化 + change log 1 件追加 + spec.json.updated_at 更新
+  - Spec 5 line 66: dispatch 5 段階化 + change log 1 件追加 + spec.json.updated_at 更新
+  - roadmap.md: Spec 2 ↔ Spec 3 coordination 追記
+
+  別セッション TODO
+
+  - D-24: drafts §7.2 Spec 3 line 1556-1573 の 5 段階化（TODO_NEXT_SESSION.md 記録済）
+
+  approve 判断
+
+  memory feedback_approval_required.md に従い、approve は visible action として明示承認が必須です。
+
+  approve しますか？承認いただければ次を実行します。
+
+  - spec.json.approvals.requirements.approved = true 設定
+  - spec.json.phase = 'requirements-approved' 設定
+  - spec.json.updated_at 更新
+
+  approve してよいですか？
+```
+
+##### ❯ 承認
+
+```
+⏺ Spec 3 (rwiki-v2-prompt-dispatch) approve 完了
+
+  完了状態
+
+  - approvals.requirements.approved = true
+  - phase = "requirements-approved"
+  - updated_at = 2026-04-27T14:38:13+09:00
+
+  進捗
+
+  ✅✅✅✅✅✅✅⬜（7/8 完了 — Spec 0 / Spec 1 / Spec 4 / Spec 7 / Spec 5 / Spec 2 / Spec 3 approve 済、残 Spec 6 のみ）
+
+  次セッションに引き継ぐべき事項
+
+  コミット（未実施、ユーザー判断で commit & push）
+
+  本セッションで未 commit な変更:
+  - Spec 3 approve: requirements.md + brief.md + spec.json（5 ラウンド + 厳しく再精査、AC 67→74、Requirement 12 維持）
+  - Spec 1 Adjacent Sync: requirements.md（R11.4 5 段階化、change log 新設）+ spec.json
+  - Spec 4 Adjacent Sync: requirements.md（Boundary line 51 + R13.4 line 254 5 段階化、change log 追加）+ spec.json
+  - Spec 5 Adjacent Sync: requirements.md（Boundary line 66 5 段階化、change log 追加）+ spec.json
+  - roadmap.md: Spec 2 ↔ Spec 3 coordination 1 行追記
+  - TODO_NEXT_SESSION.md: D-24 追加（drafts §7.2 Spec 3 別セッション処理）
+
+  次対象 Spec 6 (rwiki-v2-perspective-generation)
+
+  - dependency 順: 残最終 Spec
+  - coordination 要求多数: Spec 4 由来 R1.8 / R1.9 / R13.3 + Spec 5 由来 R14 / R14.4 / R21.7 / R8 + Spec 7 由来 R13.7 + Spec 2 由来 R15.4 / R15.5
+  - I-2 解消済、W-1（rw discover 生成ロジック）が起票時確認
+
+  Adjacent Sync TODO 累計
+
+  - 24 件（D-1 ~ D-24）+ Spec 1 由来 3 件（本-14 / 本-17 / C-6）+ Spec 4 軽微 D-NEW、別セッション一括処理
+
+  コミット戦略の確認
+
+  memory feedback_approval_required.md に従い、commit / push もユーザー明示承認が必要です。本セッションの変更を以下のように commit
+  する案を提示します。
+
+  - (1) Spec 3 approve commit（requirements.md + brief.md + spec.json）
+  - (2) Spec 1 Adjacent Sync commit
+  - (3) Spec 4 Adjacent Sync commit
+  - (4) Spec 5 Adjacent Sync commit
+  - (5) roadmap.md + TODO_NEXT_SESSION.md commit
+  - (6) dev-log は別 commit（本セッションのレビュー議論ログ追記分）
+
+  commit しますか？それとも別セッションで処理しますか。
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ##### 最後に
+
+- 各スペックの整合性を全てステップバイステップで精査
 
 - 仕様間の整合性をチェック
 
