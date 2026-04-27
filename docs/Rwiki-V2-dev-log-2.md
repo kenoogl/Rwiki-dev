@@ -22,7 +22,7 @@
 
 [レビュー方法について再検討](##レビュー方法について再検討)
 
-
+[設計レビューについて](##設計レビューについて)
 
 ## Spec 7 rwiki-v2-lifecycle-management
 
@@ -7137,17 +7137,478 @@ When rw skill test <candidate-or-name> [--sample <file>] が呼び出された, 
 ⏺ Spec 3 R1 を精査した結果、既に Spec 2 R3.2 への参照が R1.1 / R1.6 / R2.3 / R12.4 の 4 箇所、Spec 1 R11.4 への参照が R12.3 で 完備されていることを確認しました。agent の指摘 [3] は誤検出と判断、本文修正は不要 (change log への確認記録のみ) で対応します。
 ```
 
+##### ❯ 仕様間の依存関係を厳しく精査
+
+```
+⏺ 仕様間の依存関係を厳しく精査します。Explore agent (very thorough) を起動して dependency graph の網羅的検証を実施。
+⏺ Agent の検出結果を受領しましたが、複数の誤検出が含まれている可能性があるため、主要な検出項目を私が直接 verify します。
+
+⏺ Agent 検出結果を私が直接 verify した結果、多数の誤検出 を発見しました。requirements 本文の読み込みが不完全だったようです。
+
+  私の verify 結果 — agent 検出 9 件の再評価
+
+  誤検出 7 件 (agent が requirements を不完全に読んだケース)
+
+  ❌ 致-1 「Spec 5 API contract 未宣言」 → 誤検出
+
+  - Spec 5 R11 (line 259-303): Decision Log API + 22 種 decision_type 完全宣言済
+  - Spec 5 R17 (line 421-462): .rwiki/.hygiene.lock 物理実装 完全宣言済 (fcntl/flock、stale lock 検出、PID 記録)
+  - agent は brief.md 表面のみ読み、requirements の AC を見ていない
+
+  ❌ 致-2 「Query API 15 種が R20 に未列挙」 → 誤検出
+
+  - Spec 5 R14 (line 352-383): 15 種 API signature と返り値 schema を formal contract として完全宣言済
+  - agent は R 番号を「R20」と誤認、実際は R14
+
+  ❌ 重-1 「Extraction skill output validation interface 未明示」 → 誤検出
+
+  - Spec 5 R3.5 (line 126): entity_extraction 出力 schema (name / canonical_path / entity_type / aliases / evidence_ids) を validation 対象として固定
+  - Spec 5 R4.5 (line 140): relation_extraction 出力 schema (source / type / target / extraction_mode / evidence) を validation 対象として固定
+  - Spec 5 R19.2 (line 460): Spec 5 ↔ Spec 2 coordination 明示
+
+  ❌ 重-2 「Entity shortcut 展開ロジック委譲記述なし」 → 誤検出
+
+  - Spec 5 R14.1 (line 360): normalize_frontmatter(page_path) → List[Edge] を 11 番目の Query API として明示
+  - Spec 1 R5.5: 展開は Spec 5 normalize_frontmatter API が担うと明示
+
+  ❌ 重-4 「Page→Edge cascade API contract 未宣言」 → 誤検出
+
+  - Spec 7 R3 (line 98-): Page lifecycle と Edge lifecycle の相互作用 orchestration を formal contract として宣言済
+  - Spec 5 R6 / R18: edge demotion / edge API contract を formal 宣言済
+  - Spec 7 R3.0 / line 36 で「Page deprecation → 関連 Edges demote 候補化」明示
+
+  ❌ 軽-2 「Spec 3 type: dispatch 優先度未明示」 → 誤検出
+
+  - Spec 3 R1.1 (line 68): 5 段階優先順位の 段階 (2) として明示済
+  - Spec 3 R1.4: 「段階 2 で frontmatter type: 値が存在する」と handler 動作規定
+
+  ❌ 軽-3 「Spec 2 ↔ Spec 6 lifecycle 二重記述」 → 整合済
+
+  - Spec 7 R6.1 13 種に skill_install / skill_retract / skill_archive 含む
+  - Spec 6 R3.4 / Spec 2 R3 で lifecycle 参加明示
+
+  真の design phase 持ち越し 2 件 (不整合ではなく意図的)
+
+  ℹ️ 重-3 「Sync history metadata 形式」 — design phase 持ち越し
+
+  - Spec 5 R16 で rebuild / sync 機構の存在は規定済
+  - stale_pages.txt の具体形式は design phase 持ち越し (drafts §11.2 v0.7.10 決定 5-2 参照)
+  - → requirements レベルでは契約済、design phase で実装詳細を確定する正常な状態
+
+  ℹ️ 軽-1 「Spec 2 対話ログ frontmatter schema 不完全」 — design phase 持ち越し
+
+  - Spec 2 R15.2 で「Turn 内部構造、auto-save の append 単位等は design phase 持ち越し項目 として位置付け」と明示済
+  - 本 requirements は最低限 5 field (type / session_id / started_at / ended_at / turns) を SSoT として確定
+  - → 故意の design phase 持ち越し、不整合ではない
+
+  ---
+  真の依存関係精査結果 (verify 後)
+
+  検出した不整合: 0 件
+
+  - 致命級: 0 件
+  - 重要級: 0 件
+  - 軽微: 0 件 (design phase 持ち越し 2 件は正常状態、不整合ではない)
+
+  依存関係マトリクス (実測、A〜H 観点で verify 済)
+
+  依存方向の整合性 (観点 A): ✅ 全 8 spec で双方向整合
+  循環依存検出 (観点 B): ✅ なし (Phase 1〜5 のトポロジカル順序維持)
+  API contract 方向 (観点 C): ✅ provider/consumer 関係明確
+
+  主要 dependency:
+  - Spec 0 (foundation): 上流なし、全 spec の規範参照元 ✅
+  - Spec 1 (classification): Spec 0 → ✅
+  - Spec 4 (cli-mode-unification): Spec 0 / Spec 1 → ✅
+  - Spec 7 (lifecycle-management): Spec 0 / Spec 1 → ✅
+  - Spec 5 (knowledge-graph): Spec 0 / Spec 1 / Spec 4 → ✅ (Phase 2/3 並列起票でも整合)
+  - Spec 2 (skill-library): Spec 0 / Spec 1 / Spec 4 / Spec 5 / Spec 7 → ✅
+  - Spec 3 (prompt-dispatch): Spec 0 / Spec 1 / Spec 2 / Spec 4 → ✅
+  - Spec 6 (perspective-generation): 全前 spec → ✅
+
+  Coordination 往復整合 (観点 D): ✅ 全 coordination 要求が双方向で履行
+  Phase 順序整合 (観点 E): ✅ roadmap.md 5 Phase と各 spec 整合
+  Transitive dependency (観点 F): ✅ 各 spec が直接依存のみ宣言、間接依存は推移整理
+  未宣言依存 (観点 G): ✅ 検出なし
+  過剰依存 (観点 H): ✅ 検出なし
+
+  ---
+  最終判定
+
+  - 依存関係は完全に健全 (致命・重要・軽微の不整合 0 件)
+  - design phase 持ち越し 2 件: 重-3 (Sync metadata) / 軽-1 (対話ログ schema 詳細) — 故意の design phase 委譲、不整合ではない
+  - agent 検出の信頼性: 9 件中 7 件が誤検出、要 verify (本セッションで実施済)
+
+  修正実施判断
+
+  修正必要事項なし。Rwiki v2 全 8 spec の requirements + dependency graph + cross-spec 整合性 がすべて完全な状態で approve 完成。design phase
+  移行可能な状態を確認しました。
+
+  次セッション候補 (再掲)
+
+  - (1) drafts Adjacent Sync 一括処理 (D-1〜D-26)
+  - (2) design phase 移行 (/kiro-spec-design、Phase 1〜5)
+  - (3) その他改善活動
+```
 
 
-##### 最後に
 
+## 設計レビューについて
 
+##### ❯ design phase 移行の前に、レビュー方法について議論しよう。既に仕様レビューについては、議論し，メモリに保存したが、仕様と設計では観点が若干異なる。
 
-- 仕様間の整合性をチェック
+```
+⏺ 設計レビューの観点を整理して議論の起点を提示します。
 
-- 仕様間の依存関係をチェック
+  ---
+  仕様レビューと設計レビューの本質的違い
 
+  観点の対比
 
+  - 仕様 (requirements): 「何 (WHAT) を満たすか」の宣言 → 内部矛盾 / SSoT 整合 / 概念定義 / Coordination 契約 が中心
+  - 設計 (design): 「どう (HOW) 実現するか」の具体化 → アーキテクチャ / データモデル / アルゴリズム / 実装可能性 が中心
 
----
+  仕様レビューで強い観点 (設計でも継承)
+
+  - 内部矛盾検出 / 文書内 cross-reference
+  - SSoT 整合 (drafts / Foundation / roadmap)
+  - Coordination 要求の双方向確認
+  - Adjacent Sync の波及精査
+
+  → これらは設計でも有効だが、仕様レビューで既に確定済み事項は再検証コスト低。設計レビューでは「仕様確定済みの何が、設計でどう具体化されているか」の検証が中心。
+
+  仕様レビューでは弱く、設計レビューで新たに必要な観点
+
+  1. アーキテクチャ整合性
+
+  - モジュール分割 / レイヤ構造 / コンポーネント境界
+  - 依存関係グラフの実装レベル整合 (仕様レベルの dependency が実装の import / 呼出構造に正しく反映されているか)
+  - 例: Spec 5 が provide する Query API 15 種を、Spec 6 がどのモジュールから呼ぶか、共通インターフェース層を経由するか直接呼ぶか
+
+  2. データモデル / スキーマ具体化
+
+  - 仕様で宣言された field / 値域が、実際の JSONL / YAML / SQLite テーブルスキーマでどう表現されるか
+  - 仕様レベルで「暗黙の field」だったものを設計で明示化
+  - 例: Spec 5 R10.1 reinforced event の context attribute (Spec 6 が定義) の JSONL 表現スキーマ を設計で確定
+
+  3. API interface の signature 詳細
+
+  - 仕様レベルでは「record_decision(decision) → decision_id」のような抽象 signature
+  - 設計レベルでは型定義 / error model / retry semantics / idempotency / pagination 等を具体化
+  - 例: Spec 5 Query API 15 種の具体的な型定義 (Python type hint / Protocol / dataclass)
+
+  4. アルゴリズム検証
+
+  - 仕様で要求した動作要件 (例: scoring 計算式 / Hygiene 5 ルール / dispatch 5 段階) が 実装可能なアルゴリズム に変換されているか
+  - 計算量見積もり / 数値安定性 / edge case 網羅
+  - 例: Spec 5 confidence scoring 6 係数の浮動小数点精度、Spec 6 missing bridge detection の類似度計算アルゴリズム
+
+  5. 性能達成手段
+
+  - 仕様では性能目標を宣言 (例: Spec 5 R21.3 「100-500 edges で 100ms 以下」)
+  - 設計では 達成手段 を具体化 (SQLite index 設計 / cache 戦略 / 並列化 / batch size)
+
+  6. 失敗モード具体化
+
+  - 仕様で言及した failure handling (例: 第 4-A record_decision 失敗時 rollback) を、設計で 具体的な実装パターン に落とす (transaction / 2-phase commit / saga / idempotent retry)
+  - partial failure 時の状態遷移図 / decision tree
+
+  7. セキュリティ / プライバシー具体化
+
+  - 仕様の privacy mode / selective recording を、設計で具体的な実装に落とす
+  - 機密情報 sanitize / encryption at rest / log redaction / git ignore 戦略
+
+  8. 観測性 (Observability)
+
+  - 仕様レベルでは「severity 4 水準」程度の宣言
+  - 設計レベルではログフォーマット / メトリクス収集点 / トレース ID 伝播 / 診断 dump 形式 / rw doctor の出力スキーマ等を具体化
+
+  9. 依存ライブラリ / 技術選定
+
+  - v1 継承 (Python 3.10+ / git / networkx) は仕様で確定
+  - 設計では追加 library 選定 (例: SQLite ORM 使うか / file lock 実装 / YAML parser / glob 実装) と version 制約
+
+  10. テスト戦略
+
+  - unit / integration / e2e のテスト境界
+  - mocking 戦略 (LLM CLI subprocess / git / SQLite)
+  - 仕様 AC ベースの test case マトリクス
+
+  11. マイグレーション戦略
+
+  - v1 → v2 移行 (v1-archive からのデータ移行)
+  - ledger フォーマット変更時の migration script
+  - backward compatibility / forward compatibility
+
+  12. 設定具体化
+
+  - 仕様で「config 化」と宣言した項目を、設計で具体的な YAML schema / default 値 / validation rule / 環境変数 override 等に落とす
+
+  ---
+  設計レビュー特有の検討事項
+
+  ADR (Architectural Decision Record) の位置付け
+
+  - 設計時に重要な技術選定が発生 (例: SQLite のテーブル分割戦略、glob 実装の選択、subprocess timeout の default 値)
+  - 各選定について trade-off / 採択理由 / 却下案を ADR として記録するかどうか
+  - drafts §11.2 に類似の「決定 5-1 / 5-2 / 5-3 / 6-1 / 6-2 / 6-3」が既に存在 → 仕様レベル決定。設計レベル決定をどこに記録するか?
+
+  Prototype / spike による実装可能性検証
+
+  - 性能目標が達成可能か、設計時点で prototype で測定するか
+  - 例: Spec 5 R21.3 100ms 性能目標を、設計時に SQLite + networkx で実測
+  - spike が必要な箇所の事前識別
+
+  Failure scenario walkthrough
+
+  - 設計レビュー時に「N 個の典型的失敗シナリオ」を walkthrough し、設計が正しく対処するか確認
+  - 例: 「LLM CLI timeout → record_decision 失敗 → frontmatter rollback → 再実行」の end-to-end シナリオ
+
+  Cross-spec integration テスト設計
+
+  - 仕様レベルの coordination が、複数 spec を横断する実装でどう検証されるか
+  - 例: Spec 5 / Spec 6 / Spec 7 が交差する hypothesis verify → approve → wiki/synthesis/ 昇格フロー
+
+  ---
+  既存 memory の継承可否
+
+  - ✅ 継承可: 深掘り検討 + 自動採択 / dominated 選択肢除外 / 選択肢提示 (ラベル + 階層性) / 承認なしで進めない
+  - ✅ 継承可: 5 ラウンド構成 (但し各ラウンドの観点を設計向けに置換)
+  - ⚠️ 修正必要: 第 5 ラウンドの「Foundation 傘下精査」 → 設計では「設計レベル波及」が異なる (仕様 spec 改版を伴うか / 設計内で吸収可能かの判断軸が変わる)
+  - 🆕 新設必要: ADR / prototype / failure scenario walkthrough / cross-spec integration の方法論
+
+  ---
+  議論したい論点 (まずは 3 つ)
+
+  論点 1: 設計レビューのラウンド構成
+
+  仕様の 5 ラウンドを設計向けに置換する案:
+
+  - 第 1 ラウンド (基本整合性) → 設計が requirements の全 AC を網羅しているか / 内部矛盾 / アーキテクチャ図と本文の整合
+  - 第 2 ラウンド (上位文書照合) → drafts §11.2 設計決定事項との整合 / requirements 改版必要性の判断
+  - 第 3 ラウンド (本質的観点) → アーキテクチャ整合性 / データモデル / API interface 具体化 / アルゴリズム検証
+  - 第 4 ラウンド (B 観点) → 失敗モード具体化 / セキュリティ / 観測性 / 性能達成手段 / 依存選定
+  - 第 5 ラウンド (波及精査) → cross-spec integration / 他 spec design への波及 / 設計 phase 内での Adjacent Sync
+
+  → この 5 ラウンドで設計レビューが満たされるか、追加で「テスト戦略」「マイグレーション」を独立ラウンド化すべきか?
+
+  論点 2: ADR / prototype / spike の位置付け
+
+  設計レビュー中に「これは prototype で検証すべき」「これは ADR として記録すべき」が発生したとき、どう扱うか:
+
+  - (a) 設計レビュー中は ADR / prototype が必要な箇所を識別のみ、実検証は別フェーズ
+  - (b) 設計レビュー中に小規模 prototype を実行して結果を反映
+  - (c) ADR を design.md 内のセクションとして埋め込む / 別ファイル decisions/ で管理
+
+  論点 3: 設計と仕様の往復改版の判断軸
+
+  設計レビュー中に「仕様で確定した X が設計で実現困難」と判明した場合:
+
+  - 仕様改版 (requirements 改版 + 再 approve) が必要か
+  - 設計内での吸収 (仕様の文言は変えず設計で対処) が可能か
+  - 判断基準を明確化したい (例: 「仕様の AC 文言を変えずに設計で実現可能なら設計内吸収、AC 文言の変更が必要なら仕様改版」)
+
+  ---
+  これらの論点について、どこから議論しますか? あるいは別の観点 (例: 設計 phase 特有の進め方、kiro skill との関係) から始めますか?
+```
+
+##### ❯ 仕様フェーズの観点はリストされたものでカバーできていると考えられる。仕様のメモリー内容から設計専用のものを起こす。ADRについては、機能するか？。以前LLMにADRを記録させたが、そのうち存在さえ忘れて機能しなかった。性能はプロトタイプで測定する。機能優先。Failure scenario walkthroughはできれば良い。Cross-spec integration テスト設計はどう設計する？？設計レビューは5ラウンドに固執しない。設計と仕様の往復改版の判断軸はその時点で仕様改訂も検討する。ユーザとの対話必須。判断基準は仕様の ACとして読めるかどうか。
+
+```
+⏺ ユーザー回答を踏まえて、3 つの論点を順次整理します。
+
+  ---
+  論点 A: ADR 代替案 (ADR が機能しなかった経験を踏まえて)
+
+  ADR の運用失敗 root cause: 独立ファイルが孤立し、design.md / requirements.md から参照されず忘却される
+
+  代替案 (推奨): 「本文一体型 + change log の二重記録」
+
+  - design.md 本文に「設計決定事項」セクションを設ける (drafts §11.2 と同形式、当該 spec の本文と一体管理)
+  - change log にも 1 行サマリで追記 (履歴 + 検索性確保)
+  - 独立 decisions/ directory は 作らない (孤立リスクの再発)
+
+  この方式の利点
+
+  - design.md を読めば必ず決定事項が目に入る (忘却しにくい)
+  - requirements の change log と同じ運用ルールに乗るため、別フォーマット学習不要
+  - drafts §11.2 v0.7.10 の決定 5-1 / 5-2 / 5-3 / 6-1 / 6-2 / 6-3 と同形式で連続性
+
+  記録対象 (基準)
+
+  - trade-off が明確で複数案から 1 つを選んだ決定 (例: SQLite ORM の選択 / file lock 実装)
+  - 設計時に確定した数値 / 閾値 / interval 等で 仕様 AC では明示されていない もの
+  - prototype 検証で実測した性能数値とその達成手段
+
+  → ユーザー確認: この案でよいですか? それとも別の記録形式を希望しますか?
+
+  ---
+  論点 B: Cross-spec integration テスト設計
+
+  ユーザー質問への回答案を 3 候補から推奨を提示:
+
+  候補
+
+  - (X) 各 spec design に責務分散: provider となる API contract の test は当該 spec design に記述、consumer 側 (例: Spec 6 が Spec 5 を呼ぶ) の
+  integration test は consumer spec design に記述
+  - (Y) Integration spec 独立: cross-spec integration test を「integration spec」として別 design ドキュメント
+  - (Z) ハイブリッド: 自 spec test は当該 design、3 spec 以上交差するシナリオは中心 spec の design でフロー全体の test 戦略を記述
+
+  推奨: (Z) ハイブリッド
+
+  理由:
+  - 2 spec 間の test (例: Spec 5 ↔ Spec 6) は consumer 側 design で記述 (case X) で十分
+  - 3 spec 以上交差するシナリオ (例: Hypothesis verify → approve → wiki/synthesis/ 昇格 = Spec 6 / Spec 5 / Spec 7 の triad) は中心 spec の design で
+   end-to-end フロー test を記述
+  - どの spec が中心になるかは設計時に判断 (例: ユーザー視点の起点となる spec が中心)
+
+  具体例 (Spec 6 design における Cross-spec integration test 戦略)
+
+  - Spec 6 design.md「テスト戦略」セクション:
+    - Unit test: 5 段階フロー各 step / scoring function / status 遷移
+    - Integration test (2 spec): Spec 5 Query API mock vs 実 API での動作差異
+    - End-to-end test (3 spec triad): hypothesize → verify → approve → wiki/synthesis/ 昇格フロー (Spec 6 / Spec 5 / Spec 7) を 1 つの test scenario
+  として記述、各 spec の mock 戦略 (例: Spec 7 8 段階対話を user input simulation で代替) も含める
+
+  → ユーザー確認: (Z) で進めてよいですか? それとも別案を希望しますか?
+
+  ---
+  論点 C: 設計レビュー方法論 (柔軟性、観点リスト)
+
+  ユーザー確定事項:
+  - ✅ 5 ラウンドに固執しない
+  - ✅ 既存仕様レビュー memory のうち、深掘り検討 / dominated 除外 / 選択肢提示 / 承認必須 は継承
+  - ✅ 仕様⇄設計の往復改版判断軸: 仕様 AC として読めるかどうか + ユーザー対話必須
+
+  設計レビュー観点 (12 項目、ラウンド数は spec ごとに調整)
+
+  設計レビューの「重点観点リスト」(網羅的にチェック、ラウンド分けは spec 性質で柔軟):
+
+  1. requirements 全 AC の網羅 (設計が AC を漏れなくカバーしているか)
+  2. アーキテクチャ整合性 (モジュール分割 / レイヤ / 依存グラフ)
+  3. データモデル / スキーマ詳細
+  4. API interface 具体化 (signature / error model / idempotency)
+  5. アルゴリズム検証 (計算量 / 数値安定性 / edge case)
+  6. 性能達成手段 (機能優先、prototype 測定で検証)
+  7. 失敗モード handler (rollback / retry / timeout 具体化)
+  8. セキュリティ / プライバシー具体化
+  9. 観測性 (ログ / メトリクス / 診断項目)
+  10. 依存選定 (library / version 制約)
+  11. テスト戦略 (unit / integration / cross-spec、論点 B 整合)
+  12. マイグレーション戦略 (v1 → v2 移行)
+
+  既存仕様 memory の継承 / 派生方針
+
+  - ✅ 継承可 (修正不要): feedback_deepdive_autoadopt / feedback_dominant_dominated_options / feedback_choice_presentation /
+  feedback_approval_required
+  - 🔄 派生新設 (設計向け): 仕様レビューの 5 ラウンド構成 (feedback_review_rounds.md) を base に、設計用 feedback_design_review.md を新設 — 観点 12
+  項目 + ラウンド固執しない方針 + 設計⇄仕様往復判断軸
+
+  設計レビュー特有の追加方針 (memory 候補)
+
+  新設候補 (3 件):
+
+  - feedback_design_review.md: 12 観点 + 柔軟ラウンド + 12 観点を spec 性質で重点配分 (例: 規範 spec = アーキテクチャ薄い / 実装重 spec =
+  データモデル + アルゴリズム重視)
+  - feedback_design_spec_roundtrip.md: 仕様⇄設計往復判断軸 (仕様 AC として読めるか + ユーザー対話必須 + 仕様改版時は再 approve 経路)
+  - feedback_design_decisions_record.md: ADR 不採用、design.md 本文「設計決定事項」セクション + change log の二重記録方式 (論点 A 整合)
+
+  → ユーザー確認: 上記 3 件の memory 新設で進めてよいですか? それとも統合 / 分割の別案を希望しますか?
+
+  ---
+  論点要約 (3 つの確認事項)
+
+  - 論点 A (ADR 代替): 「design.md 本文 + change log」の二重記録方式 → OK?
+  - 論点 B (Cross-spec test): (Z) ハイブリッド (2 spec は consumer design、3+ spec triad は中心 spec design) → OK?
+  - 論点 C (memory 構成): 新設 3 件 (review / roundtrip / decisions_record) + 既存 4 件継承 → OK?
+
+  別案 / 修正があればご指示ください。
+```
+
+##### ❯ OK
+
+```
+⏺ memory に新設 3 件を保存します。
+⏺ memory 新設 3 件 + MEMORY.md index 更新を完了しました。
+
+  設計レビュー方法論 — memory 確定
+
+  新設 3 件 (設計フェーズ専用)
+
+  - feedback_design_review.md — 設計レビューの 12 観点 + 柔軟ラウンド構成 (規範 / 実装重 / interface 重で重点配分) + cross-spec test ハイブリッド方式
+   + ADR 不採用方針
+  - feedback_design_spec_roundtrip.md — 仕様⇄設計往復改版の判断軸 (仕様 AC として読めるかどうか + ユーザー対話必須) + 仕様改版時の再 approve 経路
+  - feedback_design_decisions_record.md — ADR 代替の二重記録方式 (design.md 本文「設計決定事項」セクション + change log の 1 行サマリ)
+
+  既存 4 memory は仕様 / 設計両フェーズで継承 (修正不要)
+
+  - feedback_deepdive_autoadopt.md
+  - feedback_dominant_dominated_options.md
+  - feedback_choice_presentation.md
+  - feedback_approval_required.md
+
+  仕様レビュー専用 1 memory (設計時は柔軟化)
+
+  - feedback_review_rounds.md — 仕様の 5 ラウンド + 第 5 ラウンド手順 (設計では feedback_design_review.md の柔軟ラウンドに移行)
+
+  MEMORY.md 階層化
+
+  - 「仕様レビュー / 修正適用ワークフロー (5 memory)」 と 「設計レビュー / 設計決定ワークフロー (3 memory、5 memory と併用)」 を分離
+  - project memory 3 件 (severity / exit code / call_claude timeout) はそのまま
+
+  確定した設計レビュー方針
+
+  - ラウンド数固執しない、12 観点を spec 性質で重点配分
+  - ADR は採用しない (design.md 本文 + change log に二重記録)
+  - 性能は prototype 測定、機能優先
+  - Failure scenario walkthrough は best effort
+  - Cross-spec integration test はハイブリッド (2 spec = consumer design / 3+ spec triad = 中心 spec design)
+  - 仕様⇄設計往復改版は「仕様 AC として読めるかどうか」 + ユーザー対話必須
+  - 仕様 / 設計の双方で深掘り検討 + 自動採択 / dominated 除外 / 選択肢提示 / 承認必須を継承
+
+  次セッション候補 (再掲)
+
+  - (1) drafts Adjacent Sync 一括処理 (D-1〜D-26、計 26 件)
+  - (2) design phase 移行 (/kiro-spec-design、Phase 1〜5 順次、本セッション確定の方法論で進行)
+  - (3) その他改善活動
+
+  design phase 移行の準備完了。次セッションで /kiro-spec-design 着手可能です。
+```
+
+##### ❯ ラウンド数には固執しないという意味は、5から12に増えてもかまわないということ。基本全ラウンドを行う
+
+```
+⏺ 認識を訂正します。「ラウンド数 5 → 12 に増やして全観点を網羅、基本全ラウンド実施」が正しい理解。前 memory は「spec
+  性質で観点を省略する」と誤読を招く記述だったため、修正します。
+⏺ MEMORY.md の index も整合させて更新します。
+⏺ 修正完了
+
+  設計レビュー方法論を「12 観点 = 12 ラウンド、基本全件実施」に訂正しました。
+
+  修正内容 (feedback_design_review.md)
+
+  - Why セクション末尾追記: 「設計フェーズはラウンド数を仕様の 5 から増やし、12 観点 = 12 ラウンドとして全ラウンドを基本実施する」
+  - 観点リスト前文: 「12 項目、網羅的にチェック、ラウンド分けは spec 性質で柔軟」 → 「基本全 12 ラウンドを網羅実施、省略しない」
+  - ラウンド構成セクション: spec 性質による「省略 / 重点配分」記述を削除し、「全 12 ラウンド実施が原則、spec 性質で変わるのは各ラウンドの深さ / 検出量のみ」に書き換え
+  - 5 step 必須手順を継承: 各ラウンド Step 1〜4 を明示、「該当なし」も明示的に確認してラウンドを跳ばさない
+  - テスト戦略 / マイグレーションの最低保証: 規模の小さい spec でも該当なし扱いせず必ずラウンド実施
+
+  MEMORY.md index 更新
+
+  - 「ラウンド数は spec 性質で柔軟」 → 「12 観点 = 12 ラウンドを基本全件網羅実施、省略しない。spec 性質で変わるのは深さのみ」に書き換え
+
+  確定した設計レビュー方針 (再掲)
+
+  - 基本全 12 ラウンド実施 (5 → 12 にラウンド数増加、省略しない)
+  - spec 性質で変わるのは各ラウンドの深さ / 検出量であって、ラウンドの有無ではない
+  - 各ラウンドで仕様レビュー同様の 5 step 必須手順 (Step 1 提示 → Step 2 ユーザー判断 → Step 3 詳細抽出 → Step 4 深掘り + 自動採択 / escalate)
+  - 「該当なし」は明示確認で次ラウンドへ (skip ではない)
+  - ADR 不採用、design.md 本文 + change log 二重記録
+  - 性能 prototype 測定、機能優先
+  - Failure scenario walkthrough は best effort
+  - Cross-spec integration test ハイブリッド方式
+  - 仕様⇄設計往復は「仕様 AC として読めるかどうか」+ ユーザー対話必須
+
+  design phase 移行準備完了。次セッションで /kiro-spec-design 着手可能です。
+```
 
