@@ -5946,13 +5946,1060 @@ When rw skill test <candidate-or-name> [--sample <file>] が呼び出された, 
 
 ## Spec 6 rwiki-v2-perspective-generation
 
+❯ TODO_NEXT_SESSION.md を読んでください。Spec 0 + Spec 1 + Spec 4 + Spec 7 + Spec 5 + Spec 2 + Spec 3 は approve 完了。残る最終 spec、Spec 6 (rwiki-v2-perspective-generation) の requirements レビューを 5 ラウンド構成で開始します。Spec 4 由来 (R1.8 / R1.9 / R13.3)、Spec 5 由来 (R14 / R14.4 / R21.7 / R8)、Spec 7 由来 (R13.7)、Spec 2 由来 (R15.4 / R15.5)、Spec 3 由来 (R10 dispatch 対象外)、W-1 (Spec 0 由来 rw discover)  を必ずチェック対象に含めてください。drafts §11.2 v0.7.10 決定 6-1 / 6-2 / 6-3 が確定済。深掘り検討 + 自動採択方針 + 第 5 ラウンドの 5 step 必須手順   + 厳しく再精査による最終ガードを厳守してください。Spec 6 の Requirement 一覧と要点を提示してください。
 
+```
+⏺ TODO_NEXT_SESSION.md を確認しました。Spec 6 の requirements.md / brief.md / spec.json を読み込みます。
 
+⏺ Spec 6 (rwiki-v2-perspective-generation) の requirements.md (391 行) と brief.md (88 行) と spec.json を読み込みました。本セッションは第 1 ラウンド(基本整合性) Step 1: Requirement 一覧 + 要点提示を行います。
 
+  ---
+  Spec 6 (perspective-generation) — Requirement 一覧 (15 件 / AC 計 131 件)
 
+  - R1: rw perspective <topic> 生成ロジック (10 AC) — handler cmd_perspective、Step 2 filter status IN (stable, core) AND confidence ≥ 0.4、--scope
+  global / --method hierarchical-summary / --save / Community-aware traversal、[INFERENCE] 不使用
+  - R2: rw hypothesize <topic> 生成ロジック (10 AC) — handler cmd_hypothesize、Step 2 filter status IN (candidate, stable, core) AND confidence ≥
+  0.3、必ず review/hypothesis_candidates/ ファイル化、[INFERENCE] 必須、frontmatter §5.9.1 準拠、status 初期 draft
+  - R3: 固定 skill perspective_gen / hypothesis_gen の load 規約と Spec 3 dispatch 対象外 (7 AC) — Spec 2 lifecycle 参加、固定 skill
+  直接呼出、status≠active で ERROR + fallback 不可、subprocess timeout 必須
+  - R4: 5 段階処理フロー (Perspective / Hypothesize 共通、8 AC) — Step 1 seed 正規化 → Step 2 N-hop traverse (depth default 2) → Step 3 top-M 選定 →
+  Step 4 本文 Read + evidence 参照 → Step 5 統合分析 + 出力 + edge reinforcement、Usage signal 4 種別 (Direct / Support / Retrieval / Co-activation)
+  - R5: 候補選定 scoring (7 AC) — Perspective 0.6c + 0.3r + 0.1n、Hypothesis 0.5n + 0.3c + 0.2bp、recency exp(-days/half_life)、novelty 1 -
+  same_raw/total、bridge_potential = find_missing_bridges 由来、top_m default 20、config 注入
+  - R6: L2 Ledger 成熟度別 fallback (7 AC) — 極貧 (stable+core < 10 → WARN)、疎 (stable 比率 < 20% → INFO)、通常 (50% 超 → full quality)、毎回再計算
+  (cache せず)
+  - R7: Hypothesis 7 状態管理 (9 AC) — draft / verified / confirmed / refuted / promoted / evolved /
+  archived、状態遷移ルール固定、物理削除しない、frontmatter のみで表現 (ディレクトリ移動なし)、Page status / Edge status と独立した第 3 軸
+  - R8: Verify workflow 半自動 4 段階 (rw verify <hypothesis-id>、11 AC) — Step 1 LLM 候補抽出 N=5 → Step 2 user 個別評価 (4 択 + --add-evidence) →
+  Step 3 LLM 集約判定 (supporting≥2 ∧ refuting=0 → confirmed 等) → Step 4 frontmatter verification_attempts append + edge_events 記録 +
+  record_decision 必須記録、subprocess timeout 必須
+  - R9: rw approve <hypothesis-id> (8 AC) — status confirmed 事前 check、Spec 7 cmd_promote_to_synthesis 8 段階対話呼出、promoted
+  遷移、successor_wiki: 記録、--auto 不可
+  - R10: Maintenance autonomous trigger 6 種 surface (10 AC) — (a) reject queue ≥ 10 / (b) Decay edges ≥ 20 (未 usage > 7 日) / (c) Typed-edge 整備率
+   < 2.0 / (d) Dangling ≥ 5 / (e) Audit ≥ 14 日 / (f) 未 approve synthesis ≥ 5、surface のみ自動実行せず、💡 マーカー、/dismiss /mute maintenance
+  受付、--mode autonomous toggle
+  - R11: Spec 5 Query API 14 種への依存契約 (8 AC) — L2 ledger 直接読まず、共通フィルタ (status_in / min_confidence / relation_types)、related: は
+  cache のみ、Hygiene lock 不要 (read-only)、性能目標依存
+  - R12: 出力先・対話ログ自動保存・L2 feedback (9 AC) — Perspective stdout default / --save で review/perspectives/、Hypothesis 必ず
+  review/hypothesis_candidates/、rw chat ログ → raw/llm_logs/chat-sessions/、interactive_synthesis ログ → raw/llm_logs/interactive/、atomic 更新
+  - R13: Configuration (8 AC) — graph.perspective.* / graph.hypothesis.* / graph.verify.* / chat.autonomous.maintenance_triggers.*
+  の全項目所管、ハードコード禁止、cache せず、scoring weights 合計 ≠ 1.0 で WARN
+  - R14: Coordination 責務分離 (Spec 1 / 2 / 3 / 4 / 5 / 7、7 AC) — 各 spec との境界明示
+  - R15: Foundation 規範への準拠と文書品質 (12 AC) — 13 中核原則・Hypothesis status 7 種・Page status / Edge status 所管外・§2.10 Evidence
+  chain・§2.13 Curation Provenance・日本語・表最小限
 
+  ---
+  第 1 ラウンド Step 1 — 即座に検出した coordination 観点の懸念 (要 Step 2 でユーザー判断)
 
+  致命級候補 (深掘り検討予定)
 
+  - 致-A 候補: Query API 種数 14 → 15 不整合 (Spec 5 由来)
+    - Spec 5 は前セッション (Spec 5 approve) で resolve_entity 追加により 15 種 に拡張済 (Spec 4 にも Adjacent Sync 5 箇所適用済、TODO L240-243 /
+  L290-293 確認)
+    - Spec 6 requirements.md は 14 種 のまま (L7 Project Description / L17 Introduction / L274 R11 タイトル / L280 R11.1 / L281 R11.2 列挙 14 個)
+    - R11.2 列挙には resolve_entity が含まれていない (Step 1 seed 正規化に必須の API)
+    - 「Step 1 seed 正規化」を実装する場合、resolve_entity(name_or_alias) → Entity を呼ぶのが自然だが、現状 R4.1 / R11.2 は曖昧 (entities.yaml 参照系
+   API としか記述なし)
+  - 致-B 候補: rw discover への言及完全欠落 (W-1 Spec 0 由来 coordination 未対応)
+    - TODO_NEXT_SESSION.md L417 / L527 で「W-1 (Spec 0 由来 rw discover 生成ロジック実装責務)」が Spec 6 起票時の必須チェック項目として明記
+    - 現 Spec 6 requirements.md には rw discover への言及が一切ない (4 コマンド = rw perspective / rw hypothesize / rw verify / rw approve のみ)
+    - rw discover の所管が Spec 4 (CLI dispatch) と Spec 6 (生成ロジック) のどちらか曖昧なまま、Spec 6 が「自分の所管ではない」と暗黙に declare
+  すべきか、第 5 のコマンドとして R0 や R1 に追加すべきか escalate 案件
+
+  重要級候補 (深掘り検討予定)
+
+  - 重-A 候補: decision_type の整合性 (Spec 5 R11.2 22 種化との整合)
+    - R8.7 「decision_type: hypothesis_verify」 vs Spec 5 R11.6 では hypothesis_verify_confirmed / hypothesis_verify_refuted の 2 種 (per Spec 5
+  R11.2 22 種化 + Skill 起源 4 種、Spec 2 セッション L130 / L168)
+    - R9.5 「decision_type: synthesis_approve」は OK (1 種で正しい)
+    - R8.7 を 2 種に分離する必要あり
+  - 重-B 候補: 対話ログ append 単位 trigger 未規定 (Spec 2 R15.5 由来 coordination 未対応)
+    - Spec 2 R15.5 は「対話ログ保存タイミングと append 単位の trigger は Spec 6 が規定」と Spec 2 起票時に確定 (TODO L184 / Spec 2 design 持ち越し
+  L211)
+    - 現 R12.4 / R12.5 は「セッション起動時に自動保存」のみで append 単位 (per Turn / batch / 終了時) 未規定
+    - design phase 持ち越しでも可、本 spec 起票時に明示宣言が必要
+  - 重-C 候補: rw approve vs rw query promote の名称整合性 (Spec 4 R3.3 由来)
+    - R9.8 で「Spec 4 R3.3 の rw query promote」と注記しているが、本 spec の主名称は rw approve <hypothesis-id>
+    - Spec 4 が CLI dispatch を所管するため、Spec 4 R3.3 で実際に rw query promote という名称が使われているか確認必要
+    - もし Spec 4 R3.3 が rw approve <hypothesis-id> 名称を採用していれば R9.8 の注記が時代遅れ、逆なら本 spec 全体で名称統一が必要
+
+  軽微候補 (深掘り検討予定)
+
+  - 軽-α 候補: R10.1 (b) 「未 usage > 7 日」の閾値出典明示
+    - R13.4 decay_warn_days（default 7）として config 化はされているが、Spec 5 R7 (Hygiene Decay 規則) との整合 (default 値 = 7 日が Spec 5
+  と一致しているか) 確認必要
+  - 軽-β 候補: Spec 5 R8 Usage signal 4 種別 (Direct / Support / Retrieval / Co-activation) の R4.6 言及
+    - R4.6 では 4 種を列挙しているが、used_in_save_perspective (R12.6) / human_verification_support (R8.6) との対応関係 (どの event が Direct /
+  Support になるか) が暗黙
+    - design 持ち越しで可だが、Step 5 で「Direct or Support」と明示表現できるか確認
+
+  ---
+  ユーザー判断要請 (Step 2)
+
+  以下のいずれかを選んでください:
+
+  1. 「全部読む」: Claude が R1-R15 を順次精読し、第 1 ラウンドで内部矛盾・参照漏れ・既知 coordination 要求の反映状況を全件チェック
+  2. 「致-A / 致-B のみ深掘り」: Query API 14→15 不整合と rw discover 欠落の 2 件のみ深掘り → 修正案提示 → 自動採択 / escalate 判断、その後 Step 4 でEdit 適用
+  3. 「致-A / 致-B / 重-A / 重-B / 重-C / 軽-α / 軽-β を順次深掘り」: 上記検出 7件全件を深掘り検討、各々に対し致命的デメリットなしなら自動採択、escalate 条件該当なら選択肢提示
+
+  注: 第 1 ラウンドの 4 step を最低回した後、第 2-5 ラウンド + 厳しく再精査が続きます (前 spec 同様)。
+```
+
+##### ❯ 1
+
+```
+⏺ 第 1 ラウンドを開始します。まず上流 spec の coordination 要求を verify するため、関連 spec の該当箇所を並列で読み込みます。
+⏺ 第 1 ラウンド Step 3 (R1-R15 精読 + 上流 7 spec 該当箇所 verify) を完了しました。検出した懸念を深掘り検討し、自動採択 / escalate判断と修正方針を提示します。
+
+  ---
+  第 1 ラウンド Step 4 — 検出した修正候補 (致命 3 件 + 重要 5 件 + 軽微 3 件)
+
+  致命級 3 件 (全件自動採択候補)
+
+  致-1: Query API 14 種 → 15 種未更新 + resolve_entity 列挙漏れ
+
+  - 検出箇所: L7 (Project Description) / L17 (Introduction) / L274 (R11 タイトル) / L280 (R11.1) / L281 (R11.2 列挙 14 個)
+  - 背景: Spec 5 R14 (line 32 / 53 / 358-373) は 15 種、resolve_entity(name_or_alias) → Entity を 11 番目として明示済 (前セッション Spec
+   5 approve 時に追加、Spec 4 にも Adjacent Sync 5 箇所適用済)
+  - 影響: Step 1 seed 正規化 (R4.1) で「entities.yaml 参照系 API」と曖昧、本来 resolve_entity(name_or_alias) → Entity を明示すべき。Spec
+   5 R14 が resolve_entity を「Spec 6 perspective / hypothesize の seed 正規化」用 API として明示しているため、Spec 6 R4.1 / R11.2
+  の更新は必須
+  - 深掘り検討: 致命的デメリットなし、Spec 5 既決事項との整合のため即修正
+  - 判定: 自動採択
+  - 修正案: 「14 種」→「15 種」全 5 箇所、R11.2 列挙に resolve_entity 追加、R4.1 に resolve_entity 明示
+
+  致-2: rw discover 完全欠落 (W-1 Spec 0 由来 coordination 未対応)
+
+  - 検出箇所: requirements.md / brief.md 全体に discover への言及 0 件
+  - 背景: Spec 0 R6.2 「L1 発見コマンドの代表として rw chat / rw perspective / rw hypothesize / rw discover を例示し、rw discover がR9.1 の discover task に対応する L1 発見コマンドであることを明示する」 + Spec 0 R9.1 / R7.5 (用語集) / Spec 4 L34, L54, L66, L226, L253 で「Spec 6 が prompt 設計と内部生成ロジックを所管」と明記
+  - 影響: Spec 6 が「最後の spec」として全 8 spec approve を完了予定であり、rw discover 所管 spec が宙に浮く。Spec 4 R3 (CLI dispatch)は rw discover の引数 parse のみ所管、Spec 6 の handler が存在しないと実装不能
+  - 深掘り検討: 致命的デメリットなし、Spec 0 / Spec 4 既決事項との整合のため即修正必須。問題は構造化方法
+  - escalate 条件該当: SSoT 判定要 (R 番号配置の選択肢あり)
+  - 修正案 escalate:
+    - (A) 案 (推奨): 新 R を追加 (例: R2 と R3 の間に新 R = rw discover <topic> 生成ロジック、Requirement 数 15 → 16)。rw perspective /rw hypothesize / rw discover が L1 発見コマンドとして並列、Verify (R8) / Approve (R9) は別系統
+    - (B) 案: R1 (rw perspective) を拡張して rw discover を「rw perspective と類似だが scope 広い variant」として吸収 (R1 内で AC 追加)
+    - dominated 案 (除外): rw discover を単に Spec 4 所管とする案 → Spec 0 R6.2 / Spec 4 L66 と直接矛盾、却下
+  - トレードオフ:
+    - (A): 構造的に明快、rw discover が独自フローを持つ場合に拡張容易、但し Requirement 数増加 (15 → 16) と既存 R 番号が後ろ倒し (R3-R15
+   → R4-R16)
+    - (B): Requirement 数維持、但し rw discover の独自要件 (もしあれば) を表現しにくい
+    - drafts §7.2 Spec 6 / Foundation R9.1 で rw discover の意味的位置付けを確認したいが、既知範囲では「L1 発見コマンドの一種、topic起点で関連知識を発見」とのみ記述 → (A) 案が安全
+
+  致-3: R10.2 で trigger (e) Audit overdue を Spec 5 と誤帰属
+
+  - 検出箇所: R10.2「Spec 5（L2 診断: a / b / c / d / e）/ Spec 7（L3 診断: f）」
+  - 背景: Spec 5 R21.7 (line 525-528) は 4 種 (a/b/c/d = reject queue / decay / typed-edge ratio / dangling) のみ。Spec 7 R13.7
+  (line 262) が L3 診断 5 項目 (未 approve / audit 未実行 / deprecated chain / tag vocabulary / 未解決 follow-up) を計算 API として提供
+  - 影響: (e) Audit 未実行 ≥ 14 日 の計算実装は Spec 7 R13.7 (b) が所管。Spec 6 R10.2 が誤って Spec 5 と帰属させると、design phase で
+  API 呼出先を間違う
+  - 深掘り検討: 致命的デメリットなし、Spec 7 既決事項との整合のため即修正
+  - 判定: 自動採択
+  - 修正案: R10.2 を「Spec 5（L2 診断: a / b / c / d）/ Spec 7（L3 診断: e / f）」に修正
+
+  ---
+  重要級 5 件 (深掘り検討 → 自動採択 / escalate 判断)
+
+  重-1: 対話ログ append 単位 trigger 未規定 (Spec 2 R15.5 / Spec 4 R1.8 由来 coordination 未対応)
+
+  - 検出: Spec 2 R15.5 (line 287) + Spec 4 R1.8 (line 84) が「append 単位 / flush 単位の trigger は Spec 6 が規定」と明示。現 Spec 6
+  R12.4 / R12.5 は「セッション起動時に自動保存」のみで append 単位 (per Turn / N 秒間隔 / 終了時 / batch) 未規定
+  - 深掘り検討: 致命的デメリットなし。但し具体値 (per Turn vs N 秒間隔等) は design phase で確定するのが妥当
+  - 判定: 自動採択 (R12 に新 AC として「append 単位 trigger を per Turn (1 対話 turn ごと append) として固定、内部 buffer 化と flush
+  戦略の詳細は design phase」と規定)
+  - 代替案: 「design phase 持ち越し」のみ宣言 → Spec 2 R15.5 の coordination が「Spec 6 が規定」と明示しているので、最低限の trigger
+  単位 (per Turn or per session 終了等) は本 requirements で確定すべき
+
+  重-2: R8.7 / R9.5 reasoning 入力規約が Spec 5 R11.6 と整合しない
+
+  - 検出: Spec 6 R8.7 末尾「reasoning 入力は hybrid 方式」→ Spec 5 R11.5 hybrid (chat auto-generate / --reason / default skip)
+  を参照。但し Spec 5 R11.6 では hypothesis_verify_confirmed / hypothesis_verify_refuted / synthesis_approve / retract は reasoning 必須
+   (skip 不可) = default skip 適用されない
+  - 深掘り検討: 致命的デメリットなし、明示化が安全
+  - 判定: 自動採択 (R8.7 / R9.5 で「reasoning 入力は chat session auto-generate or --reason flag のいずれか必須 (default skip 不可、Spec5 R11.6 と整合)」と明示)
+
+  重-3: rw approve <hypothesis-id> vs rw query promote の名称二重化
+
+  - 検出: Spec 6 R9 = rw approve <hypothesis-id> / Spec 4 R3.3 禁止リスト = rw query promote / Spec 7 R6.4 --auto 不可 =promote-to-synthesis。Spec 6 R9.8 注記「Spec 4 R3.3 の rw query promote」で 3 者を結びつけているが整理されていない
+  - 深掘り検討: 致命的デメリットなし。但し命名統一は spec 横断調整なので escalate 案件
+  - escalate 条件該当: SSoT 判定要 (3 spec 横断の命名統一 vs 共存)
+  - 修正案 escalate:
+    - (A) 案: rw approve <hypothesis-id> を Spec 6 主名称として固定し、Spec 4 R3.3 / Spec 7 R6.4 は「promote-to-synthesis 操作の各 specの表記」として共存。Spec 6 R9 内に三者関係 (Spec 6 = rw approve <hypothesis-id> (主名称) / Spec 4 = rw query promote (CLI dispatch 命名) / Spec 7 = cmd_promote_to_synthesis (handler 関数名)) を明示する coordination AC を追加
+    - (B) 案: Spec 6 名称を rw query promote <hypothesis-id> に統一 (Spec 4 R3.3 と一致) → Spec 6 R1 / R9 / R14 の名称 4箇所を修正、Spec 7 R5.1 / R6.1 / R6.4 / brief.md も波及
+    - dominated 案 (除外): 何もしない (現状維持) → 命名混乱が design phase で再燃するため却下
+  - トレードオフ:
+    - (A): 既存名称維持、明示的 coordination AC 追加で関係性が文書化、変更箇所最小
+    - (B): 命名統一で曖昧性消去、但し Spec 6 全体の rw approve 表記 (R9 + R1 / R14 等 4 箇所以上) を修正、Spec 4 / Spec 7への波及確認必要 (Adjacent Sync 候補増)
+
+  重-4: Maintenance trigger (e) Audit overdue 14 日の出典確認
+
+  - 検出: R10.1 (e) "Audit 未実行 ≥ 14 日" + R13.4 audit_overdue_days (default 14)。Spec 4 R8.6 / Spec 7 R13.7 では default値が明示されていない
+  - 深掘り検討: Spec 6 が config 所管 (R13.4) として 14 日を default 宣言するのは妥当 (Spec 6 R13 が「config 全項目を本 specが所管」と明示)。但し Spec 4 R8.6 の「config として持ち、デフォルト値を含む」との関係を coordination として明示
+  - 判定: 自動採択 (R13.4 に「Spec 4 R8.6 が要請する default 値の SSoT は本 spec」と明示)
+
+  重-5: R11.6 の lock 取得規約が Verify / Approve の write 操作と矛盾するか
+
+  - 検出: R11.6「本 spec は read-only 動作のため .rwiki/.hygiene.lock を取得しない」と明示。但し R8.7 (verify) / R9.5 (approve) / R12.6/ R12.7 で record_decision / edge_events.jsonl append 等の write を Spec 5 経由で実施
+  - 深掘り検討: 解釈は「Spec 6 直接 write はせず、Spec 5 API 内部で lock 処理」が正しい (Spec 4 R10.1 が rw graph hygiene / rw reject /rw extract-relations / rw edge promote / rw edge demote を lock 取得対象として列挙、record_decision API は append-only なので Spec 5内部で別 lock or lock 不要として処理)。但し R11.6 の「read-only 動作のため」表現が誤解を招く
+  - 判定: 自動採択 (R11.6 を「本 spec は L2 ledger を直接 write せず Spec 5 API 経由で操作するため、lock 取得は Spec 5
+  内部に委譲する」に修正)
+
+  ---
+  軽微 3 件 (深掘り検討 → 自動採択 or brief.md 持ち越し)
+
+  - 軽-α: Hypothesis ID 命名規則 (R2.9) → design phase 持ち越しのまま OK、ID 衝突 handling は B 観点 (第 4 ラウンド) で再検討
+  - 軽-β: Usage signal 4 種別 (R4.6) と used_in_save_perspective / human_verification_support event の対応関係が暗黙 → R4.6 / R12.6 /
+  R12.7 を相互参照する形で修正、または design phase 持ち越し
+  - 軽-γ: §5.9.2 Perspective 保存版 frontmatter traversed_depth: integer (R12.2) の SSoT 出典が Foundation §5.9 / Spec 1 のどちらか不明
+  → R12.2 末尾に「§5.9.2 SSoT 出典は Foundation §5.9 / Spec 1 で確定済」と注記、または design phase 持ち越し
+
+  ---
+  ユーザー判断要請 (Step 4 escalate 2 件)
+
+  致命級 3 件のうち 致-2 (rw discover) と重要級 重-3 (命名統一) が escalate 案件です。以下を確定してください:
+
+  Q1: 致-2 — rw discover の R 番号配置
+
+  - (A) 案 (推奨): 新 R を追加 (R3 として rw discover <topic> 生成ロジック、既存 R3-R15 → R4-R16 に番号繰り下げ、Requirement 数 15 → 16)
+  - (B) 案: R1 を拡張して rw discover を吸収 (Requirement 数維持、但し独自フロー表現しにくい)
+
+  Q2: 重-3 — rw approve vs rw query promote の名称統一
+
+  - (A) 案 (推奨): 既存名称 rw approve <hypothesis-id> を Spec 6 主名称として維持 + R9 内に三者関係明示 coordination AC 追加(変更箇所最小)
+  - (B) 案: Spec 6 名称を rw query promote <hypothesis-id> に統一 (Spec 4 と一致、Spec 6 全体の表記 4 箇所以上修正、Spec 7 / brief.md波及確認必要)
+
+  その他の致命級 致-1 / 致-3 と重要級 重-1 / 重-2 / 重-4 / 重-5 / 軽微 3 件は自動採択で進めてよろしいでしょうか。
+```
+
+##### ❯ 致-2, 重-3については、再度深掘り検証。他は自動採択でよい
+
+```
+⏺ 承知しました。致-2 と 重-3 を SSoT (drafts + Foundation + Scenario) と過去経緯を確認して再度深掘り検証します。
+
+⏺ drafts SSoT で深掘り検証した結果、両件とも前回提示した選択肢の前提を覆す重要な発見があります。
+
+  ---
+  致-2 再深掘り検証結果
+
+  決定的発見: drafts に「MVP は rw discover CLI なし」と明示
+
+  - drafts L1005 (用語集): 「Discovery | Perspective と Hypothesis が共通基盤とする内部探索アルゴリズム（L2 graph traverse）。MVP は単独 CLIなし、Phase 2 で rw discover 検討。」
+  - drafts L1094 (scenarios): 「- MVP: Discovery は内部機構のみ、独立 CLI (rw discover) は Phase 2 で検討」
+  - drafts L1307 / L1352 / L2702: rw discover を CLI 一覧表に列挙 (drafts 内部矛盾)
+  - Foundation R6.2 / R9.1 / Spec 4 L34, L66, L226: rw discover を L1 発見 CLI として規定 (Foundation / Spec 4 と drafts L1005 / L1094 が矛盾)
+
+  影響評価
+
+  - 前回提示した (A) 案 (新 R 追加 = MVP 内) / (B) 案 (R1 拡張) は drafts L1005 / L1094 と直接矛盾 → 両案とも却下
+  - drafts L1005 の定義「Discovery は Perspective / Hypothesis の内部探索アルゴリズム」は Spec 6 R4 (5 段階処理フロー) がまさに体現するもの → rw　discover 独立 CLI は MVP 不要
+
+  新提案: (C) 案 — MVP 外として明示化 + 上位文書 Adjacent Sync
+
+  - 修正案 (C):
+    - Spec 6 Boundary Context Out of scope に「rw discover 独立 CLI: drafts L1005 / L1094 と整合し MVP 範囲外、Discovery アルゴリズム本体は本 spec R4(5 段階処理フロー) として実装、独立 CLI は Phase 2 検討」を追加
+    - Spec 6 brief.md「Design phase 持ち越し項目」(or Constraints) に「Phase 2 で rw discover CLI 化を検討、その際 R4 5段階フローを共通基盤として再利用」を記録
+    - Adjacent Sync 候補:
+        - Foundation R6.2 / R9.1: 「rw discover」記述を「Phase 2 で検討」注記付きで Adjacent Sync (Foundation 改版相当、傘下 7 spec 精査必須)
+      - Spec 4 L34 / L66 / L226 / R8.3: rw discover 記述を「Phase 2 検討」or「Spec 6 R4 内部フロー」として Adjacent Sync
+  - dominated 案 (除外): drafts を改版して L1005 / L1094 を削除 → MVP 範囲拡大、scope creep、却下
+
+  第 5 ラウンドへの波及予告
+
+  - (C) 案採択時、Foundation を改版する場合は 第 5 ラウンドで Foundation 改版時の傘下 7 spec 全件精査 が必要 (memory feedback_review_rounds.mdの必須手順)
+  - 軽量化案: Foundation を改版せず、Spec 6 内で「Foundation R6.2 / R9.1 と drafts L1005 の解釈は本 spec R4 内部フロー実装で satisfy する」とcoordination AC で吸収
+
+  escalate 判定 (再)
+
+  - (C) 案は 範囲拡張ラベル に該当 (drafts / Foundation / Spec 4 の 3 文書への Adjacent Sync が必要)
+  - ユーザー判断要請が必要
+
+  ---
+  重-3 再深掘り検証結果
+
+  決定的発見: drafts SSoT は「2 CLI + 1 内部 handler」の三者構造を確定済
+
+  drafts での名称使用パターン (検出箇所網羅):
+
+  - rw approve <hypothesis-id> = Hypothesis 専用 昇格 CLI (Scenario 14 §3、Spec 6 主名称)
+    - drafts L1228 / L1254 / L1269-1270 / L1327 / L1356 / L1634 で一貫使用
+    - L1634: 「Hypothesis の rw approve フローは 実質的に Scenario 16 の特殊形」
+  - rw query promote <query_id> = Query 結果専用 昇格 CLI (Scenario 16 主要 use case、Spec 4 主名称)
+    - drafts L1349 / L1406 / L1553 で一貫使用
+  - promote-to-synthesis = 内部 handler 名 (Spec 7 主名称、両 CLI が呼び出す)
+    - drafts L1603 / L2197 / L2202 で一貫使用
+    - L2202: 「promote-to-synthesis: CLI 名は rw query promote（drafts §6.2 L1349 と整合）」 — これは Spec 4 視点のみ、Spec 6 視点では rw approveも同 handler を呼ぶ
+
+  Spec 7 R5.1 が両 operation を別個に列挙済 (前回見落とし)
+
+  - Spec 7 R5.1 (line 134): 「hypothesis approve（wiki/synthesis/ への promote）/ query promote」を 13 dangerous operation の一部として明示 → drafts
+  L1228 vs L1349 と整合、Spec 6 R9 と整合
+  - Spec 7 R6.1 13 種には promote-to-synthesis 1 種のみ (内部 handler 視点で統合)
+
+  真の問題: Spec 4 R3.3 禁止リストに rw approve <hypothesis-id> 不在
+
+  - Spec 4 R3.3 / R3.5 禁止リスト 5 種: rw retract / rw query promote / rw split / rw tag split / rw skill retract (rw approve <hypothesis-id> 不在)
+  - Spec 6 R9.8: 「rw approve <hypothesis-id> を --auto 不可コマンドとして扱う」と規定
+  - 不整合: Spec 4 が rw approve を --auto 受容と扱い、Spec 6 が --auto 拒否と規定 → CLI dispatch と handler が衝突
+
+  修正案 (深掘り後確定)
+
+  - (A) 案 (推奨確定): Spec 6 既存名称 rw approve <hypothesis-id> 維持 + R9 内に三者関係明示 coordination AC 追加 (drafts SSoT と完全整合):
+    - Spec 6 = rw approve <hypothesis-id> (Hypothesis 専用 CLI、L1 発見入口、drafts L1228 と整合)
+    - Spec 4 = rw query promote <query_id> (Query 専用 CLI、別操作、drafts L1349 と整合)
+    - Spec 7 = cmd_promote_to_synthesis(hypothesis_id or query_id, ...) (両 CLI が呼ぶ内部 handler、drafts L2197 / L2202 と整合)
+    - Spec 6 R9 内に「三者は同じ Spec 7 handler を共有するが、user-facing CLI は別 (Hypothesis 起点 vs Query 起点)」coordination AC を明示
+  - (B) 案 (却下確定): 名称統一 → drafts L1228 / L1269 / L1327 / L1356 / L1634 と直接矛盾、却下
+  - 必須 Adjacent Sync:
+    - Spec 4 R3.3 / R3.5 禁止リスト 5 種 → 6 種化: rw approve <hypothesis-id> を追加 (Hypothesis 専用 --auto 不可、Spec 6 R9.8 と整合)
+    - Spec 4 R3.5 line 111 dangerous op 5 種列挙: 同様に rw approve <hypothesis-id> を追加
+    - or Spec 4 R3.3 注記: 「rw approve <hypothesis-id> (Hypothesis 専用) は Spec 6 R9 で --auto 不可指定済、本 spec の review 層 dispatch (rw
+  approve [<path>]) とは別 operation」と明示
+
+  escalate 判定 (再)
+
+  - (A) 案は 文言確定済 (大筋確定、Spec 4 への Adjacent Sync 1 件追加で完了)
+  - 自動採択可能、但し Adjacent Sync の方法 (禁止リスト 6 種化 vs 注記追加) はユーザー判断推奨
+
+  ---
+  ユーザー判断要請 (再深掘り後)
+
+  Q1 (再): 致-2 — rw discover MVP 外明示の方法
+
+  - (C-1) 案: Foundation 改版 (R6.2 / R9.1 に「Phase 2 検討」注記) + Spec 4 改版 (rw discover 記述を Phase 2 化) — 第 5 ラウンドで Foundation 傘下 7spec 全件精査必須
+  - (C-2) 案 (軽量): Foundation / Spec 4 改版せず、Spec 6 内で「Foundation R6.2 / Spec 4 R8.3 等の rw discover 記述は本 spec R4 内部フロー実装でsatisfy、独立 CLI は Phase 2」と coordination AC で吸収。Adjacent Sync は Spec 6 単独完結
+  - (D) 案 (新): 致-2 を現状維持 (Spec 6 は rw discover に触れず drafts L1005 / L1094 が暗黙の指針として有効) → ただし design phase / 実装時に「Spec6 が rw discover 所管か？」議論が再燃するリスク
+
+  Q2 (再): 重-3 — Spec 4 R3.3 禁止リストへの rw approve <hypothesis-id> 追加方法
+
+  - (A-1) 案: Spec 4 R3.3 / R3.5 禁止リスト 5 種 → 6 種化 (rw approve <hypothesis-id> 追加、Spec 4 Adjacent Sync 1 件)
+  - (A-2) 案 (軽量): Spec 4 R3.3 に注記追加 (「rw approve <hypothesis-id> は Spec 6 R9 で --auto 不可指定、本 spec review 層 dispatch とは別operation」、Spec 4 Adjacent Sync 1 件)
+  - (A-3) 案: Spec 4 改版せず、Spec 6 R9 / R14.4 内で「Spec 4 R3.3 禁止リストには未列挙だが本 spec R9.8 で --auto 不可と確定」と明示 (Adjacent Syncなし、Spec 6 単独完結)
+
+  その他の致命級 致-1 / 致-3 と重要級 重-1 / 重-2 / 重-4 / 重-5 / 軽-α / 軽-β / 軽-γ は自動採択のまま進行確定でよいですか。
+```
+
+##### ❯ rw　discover 独立 CLIは機能を実現する上で必要か不要か
+
+```
+⏺ 機能的必要性を深掘り検討します。
+
+  ---
+  rw discover 独立 CLI の機能的必要性 — 分析
+
+  Discovery の機能定義 (drafts SSoT)
+
+  - drafts L1005: 「Discovery = Perspective と Hypothesis が共通基盤とする内部探索アルゴリズム (L2 graph traverse)」
+  - 即ち Discovery は 基盤アルゴリズム であって、独立した user-facing 機能ではない
+  - Spec 6 R4 (5 段階処理フロー: seed → N-hop traverse → top-M → 本文 → 統合分析) が Discovery アルゴリズムそのもの
+
+  既存 4 CLI で Discovery がカバーされているか検証
+
+  - rw perspective <topic> (R1): topic に対する視点提示 (支持・反論・補完・代替)
+  - rw perspective --scope global (R1.5): L2 全体集約 (主要 cluster / 主要人物 / 未検証仮説等の 大局俯瞰)
+  - rw perspective --method hierarchical-summary (R1.6): community 単位の要約
+  - rw perspective Community-aware traversal (R1.10): cluster 内 / 境界 bridge を区別して提示
+  - rw hypothesize <topic> (R2): missing bridges / candidate edges から仮説
+  - rw chat: LLM が自然言語意図を rw perspective / rw hypothesize に dispatch
+
+  rw discover 独自機能の探索
+
+  drafts L1352 の「rw discover [--focus <topic>] 関連性発見」が示唆する独自性:
+
+  - scope 指定なしの広域探索: 既に rw perspective --scope global でカバー
+  - structural 発見 (bridges / orphans / hubs): 既に rw perspective 内部で find_missing_bridges / get_orphans / get_hubs を呼出 (R11.2)
+  - community 俯瞰: 既に rw perspective --method hierarchical-summary でカバー
+  - --focus flag の意味: 「topic を緩く focus した広域探索」と解釈できるが、これは rw perspective <topic> と機能重複
+
+  結論: MVP では 不要
+
+  - 理由 1: Discovery アルゴリズム本体は Spec 6 R4 (5 段階フロー) として実装済、rw perspective / rw hypothesize から呼出可能
+  - 理由 2: 想定される独自機能 (広域探索 / structural 発見 / community 俯瞰) は既存 rw perspective の flag (--scope global / --method
+  hierarchical-summary) で全てカバー
+  - 理由 3: rw chat 経由なら LLM が「関連性を発見して」のような曖昧意図を rw perspective / rw hypothesize に dispatch、UX 上の不足なし
+  - 理由 4: drafts SSoT (L1005 / L1094) が「MVP は単独 CLI なし、Phase 2 検討」と既に判断済 (Spec 5/6 起票前 preparatory 議論で確定、drafts L2726)
+  - Phase 2 で検討すべき場合: 「Perspective とは異なる出力形式 (例: graph 可視化 / cluster map / topology summary)
+  で発見結果を提示したい」需要が顕在化した場合のみ独立 CLI 化
+
+  留保事項
+
+  - Foundation R6.2 / R9.1 で rw discover が L1 発見コマンドとして例示されているのは Phase 2 を見越した可塑性確保 (Foundation 改版済
+  2026-04-26、approve 時点で rw discover 規範化が行われた経緯あり)
+  - Spec 4 L34 / L226 / L253 / R8.3 で rw discover が CLI dispatch 対象として記述されているのは Phase 2 先行宣言 (Spec 4 approve 時点 2026-04-26)
+  - Foundation / Spec 4 の既存記述を残しても、Spec 6 が「MVP では R4 内部フローで satisfy、独立 CLI は Phase 2」と明示すれば矛盾は解消
+
+  ---
+  推奨修正方針 (再提案)
+
+  (C-2) 案を強く推奨 — Spec 6 単独完結 + Adjacent Sync 不要
+
+  - Spec 6 Boundary Context Out of scope に新項目追加:
+    - 「rw discover 独立 CLI: Discovery アルゴリズム本体は本 spec R4 5 段階処理フロー (seed → traverse → top-M → 本文 → 統合分析) として実装、rw
+  perspective / rw hypothesize 内部から呼出される。独立 CLI 化は MVP 範囲外、Phase 2 検討事項 (drafts L1005 / L1094 と整合)。Foundation R6.2 / R9.1 /Spec 4 L34 / R8.3 が rw discover を例示・dispatch 対象として記述するのは Phase 2 を見越した先行宣言であり、本 spec MVP 実装は R4 内部フローで satisfy する」
+  - Spec 6 brief.md Constraints に追記:
+    - 「rw discover 独立 CLI は Phase 2 検討事項。MVP は Discovery アルゴリズムを R4 内部フローとして実装し、rw perspective / rw hypothesize 経由で利用」
+  - Adjacent Sync 不要: Foundation / Spec 4 改版なし、Spec 6 が「先行宣言を MVP 内部フローで satisfy する」と明示することで全ての SSoT (Foundation / drafts / Spec 4) と整合
+
+  (C-2) のメリット
+
+  - 第 5 ラウンドでの Foundation 傘下 7 spec 全件精査が 不要 (Foundation 改版なし)
+  - Spec 4 / 他 spec への Adjacent Sync 不要
+  - drafts L1005 / L1094 の指針が Spec 6 で明示的に履行され、Phase 2 移行時の判断基盤も明文化
+
+  Phase 2 検討事項として brief.md に記録 (将来準備)
+
+  - 「Phase 2 で rw discover 独立 CLI 化を検討する場合、R4 5 段階フローを共通基盤として再利用、出力形式 (graph 可視化 / topology summary 等) と rw perspective との機能差別化を design phase で確定」
+
+  ---
+  ユーザー確認
+
+  - 致-2 は (C-2) 案で確定 してよいですか?
+  - 重-3 は (A-1 / A-2 / A-3) のいずれか確定が必要です。同様に深掘り推奨を補足すると、(A-2) 案 (Spec 4 R3.3 注記追加) が以下の理由で推奨:
+    - Spec 4 R3.3 禁止リスト「5 種」を「6 種」に変えると Spec 4 R3.5 line 111 / Spec 7 R6.4 とも食い違う (Spec 7 R6.4 = 5 種固定で　promote-to-synthesis を 1 種として扱う、Spec 6 rw approve も同 handler 経由)
+    - 注記方式なら「禁止リスト 5 種は内部 handler 視点で固定、CLI 視点では rw approve <hypothesis-id> も同 handler 経由で --auto　不可」と明示でき、整合性最大
+    - Spec 4 単独の Adjacent Sync 1 件で完了
+
+  確定後、致-1 / 致-3 / 重-1〜重-5 / 軽-α〜軽-γ + 致-2 (C-2) + 重-3 (A-2) を一括 Edit 適用 → spec.json は approve 段階で更新します。
+```
+
+##### ❯ 推奨案
+
+```
+⏺ 確定しました。致-2 (C-2) + 重-3 (A-2) + その他自動採択項目を一括 Edit 適用します。
+⏺ 第 1 ラウンド適用が完了しました。Task #1 を完了し、第 2 ラウンドを開始します。
+
+⏺ 第 1 ラウンド適用完了サマリ
+
+  致命級 3 件 + 重要級 5 件 + 軽微 2 件を Edit 適用しました (軽-α は design phase 持ち越し維持)。AC 数は R9 に新 AC 9 追加で 131 → 132件、Requirement 数は 15 件維持。
+```
+
+```
+  ---
+  第 2 ラウンド開始 — 上位文書照合 (roadmap / brief / drafts / Scenario)
+
+  第 1 ラウンドの検出 + 修正適用を踏まえ、上位文書との SSoT 整合を厳格照合します。並列で関連箇所を grep します。
+
+⏺ 第 2 ラウンド (上位文書照合) — 結果
+
+  drafts / roadmap / brief / Scenario 14 / 15 / 16 / 33 と Spec 6 (修正後) の SSoT 整合を厳格照合しました。
+
+  整合確認 (致命級なし)
+
+  - drafts §7.2 Spec 6 Boundary In scope (L2030-2080) と Spec 6 R1-R10 は完全整合 (Step 1-5 / filter 閾値 / Dual-level retrieval / Community-aware /
+  --scope global / --method hierarchical-summary / Hypothesis 7 状態管理)
+  - drafts §11.2 v0.7.10 決定 6-1 / 6-2 / 6-3 はすべて Spec 6 R3 / R14.3 / R8 / R5 で正しく反映済
+  - drafts §5.9.1 / §5.9.2 frontmatter 出典は R12.2 / R12.3 で参照済 (本セッション軽-γ で SSoT 出典追記済)
+  - drafts §7.2 Spec 6 Out of scope に rw discover が列挙されていない → Spec 6 が新規に Boundary Out of scope に明示することで drafts L1005 / L1094
+  と整合 (本セッション致-2 (C-2) 案で対応済)
+  - roadmap.md L41 / L80 で Spec 6 dependencies = 全前 spec が列挙、Spec 6 出典 SSoT (L11) も全 7 upstream spec を列挙 → 整合
+  - drafts L2197 注記 (Adjacent Sync 2026-04-26): "promote-to-synthesis → rw query promote の 2 ケースのみ" → Spec 6 主名称 rw approve
+  <hypothesis-id> が未列挙、本セッション重-3 (A-2) で Spec 4 R3.3 注記追加要請済 (Adjacent Sync 別件)
+
+  第 2 ラウンドで新規検出 (重要級 2 件 — drafts への波及、別セッション処理候補)
+
+  第 2-A (重要級、Adjacent Sync 候補): drafts §7.2 Spec 7 表注記に Spec 6 主名称 rw approve <hypothesis-id> が未列挙
+
+  - 検出: drafts L2197 直後の注記 (2026-04-26 Adjacent Sync 由来) は Spec 4 視点 (CLI ↔ 操作名対応) で「promote-to-synthesis → rw query promote の 2
+  ケースのみ」と書く。Spec 6 視点で rw approve <hypothesis-id> も同 cmd_promote_to_synthesis handler を経由する事実が drafts に記述されていない
+  - 深掘り検討: 致命的デメリットなし、drafts 注記の補完で済む。本セッション内処理 vs 別セッション処理の判断
+  - 判定: drafts D-25 (新) として Adjacent Sync TODO に追加 (drafts への波及は別セッション一括処理、本セッションでは TODO_NEXT_SESSION.md
+  更新時に記録)
+  - 修正案: drafts L2197 注記を「promote-to-synthesis の CLI 名は 2 系統: Spec 4 視点 = rw query promote <query_id> (Query 結果起点) / Spec 6 視点 =
+  rw approve <hypothesis-id> (Hypothesis 起点)、両 CLI が共有する内部 handler は cmd_promote_to_synthesis」に拡張
+
+  第 2-B (重要級、Adjacent Sync 候補): drafts 内部矛盾 — rw discover MVP 外と CLI 一覧表列挙の二重表記
+
+  - 検出: drafts L1005 / L1094 で「MVP は単独 CLI なし、Phase 2 検討」と明示、但し L1307 (discover task 表) / L1352 (rw discover [--focus <topic>]
+  CLI 一覧) / L2702 (v2 新規機能列) では rw discover を CLI として列挙
+  - 深掘り検討: drafts 内部矛盾、Spec 6 R Boundary Out of scope で吸収済 (本セッション致-2 (C-2)) のため Spec 6 自身は OK。drafts 改版は別件
+  - 判定: drafts D-26 (新) として Adjacent Sync TODO に追加 (別セッション一括処理)
+  - 修正案: drafts L1307 / L1352 / L2702 の rw discover 記述に「Phase 2 検討」注記追加、または MVP 範囲を明確化する見出し追加
+
+  第 2 ラウンド適用結果
+
+  - 本セッション内修正: なし (第 1 ラウンドで吸収済)
+  - drafts Adjacent Sync TODO 追加: D-25 / D-26 (別セッション処理、TODO_NEXT_SESSION.md 更新時に記録)
+
+  第 2 ラウンド完了、第 3 ラウンド (本質的観点) に進みます。
+
+⏺ 第 3 ラウンド (本質的観点) — 結果
+
+  全体俯瞰・文書内矛盾・概念定義の整合性をチェックしました。重要級 3 件 + 軽微 1 件を検出。
+
+  重要級 3 件 (全件自動採択候補)
+
+  第 3-A: R8.4 / R8.5 entry outcome 値域の不一致 (内部矛盾)
+
+  - R8.4 verify 判定値: confirmed / refuted / partial / verified (4 値)
+  - R8.5 entry の outcome 列挙: pending / confirmed / refuted / evolved (4 値)
+  - R7.3 / R7.5 status 遷移: verified / confirmed / refuted / evolved (4 値)
+  - 問題: 3 箇所で値域不一致。R8.4 の partial が R8.5 entry の outcome 列挙に存在しない、R8.5 の pending が他 R で未使用、R8.4 の verified (据置) が
+  outcome として明示されていない
+  - 判定: 自動採択 (R8.5 outcome 列挙を 5 値に統一: confirmed|refuted|partial|evolved|verified_pending、R8.4 で「不足 → outcome verified_pending を
+  entry に記録、status 据置 (verified のまま)」と明示)
+
+  第 3-B: R8.6 / R12.7 confirmed vs confirmed/refuted の範囲不一致 (内部矛盾)
+
+  - R8.6: 「confirmed または refuted で完了した」→ human_verification_support event 追記
+  - R12.7: 「confirmed で完了した」→ human_verification_support event 追記
+  - 問題: R12.7 が refuted を除外、R8.6 と矛盾。Foundation §1.3.5「失敗からも学ぶ」哲学にも照らせば refuted も L2 feedback すべき
+  - 判定: 自動採択 (R12.7 を R8.6 と整合させて「confirmed または refuted」に修正、delta 値は confirmed 時 = supporting_evidence_reinforcement_delta
+  (+0.28) / refuted 時 = 別 delta (Spec 5 と coordination、design phase で確定) と明示)
+
+  第 3-C: R15.1 で §2.8 Skill library 参照漏れ
+
+  - R15.1 現状: §2.1 / §2.9 / §2.10 / §2.11 / §2.12 / §2.13 の 6 原則を「設計前提」として参照
+  - 問題: 本 spec が固定 skill perspective_gen / hypothesis_gen を Skill library に参加させる (R3.4) のに、§2.8 Skill library を参照していない
+  - 判定: 自動採択 (R15.1 に §2.8 を追加、7 原則化)
+
+  軽微 1 件 (自動採択)
+
+  第 3-D: R10.1 (e) Audit 未実行の audit 種類限定が過剰特定
+
+  - R10.1 (e): 「最終 rw audit graph 実行から ≥ 14 日」と限定
+  - 問題: 致-3 で R10.2 trigger (e) を Spec 7 R13.7 (b) 所管と修正済。Spec 7 R13.7 (b) は L3 系含む audit 全種類を計算対象、rw audit graph (Spec 5系) のみでない
+  - 判定: 自動採択 (R10.1 (e) を「最終 rw audit * (種類問わず、Spec 7 R13.7 (b) と整合) 実行から ≥ 14 日」に修正)
+
+第 3 ラウンド適用 (Edit)
+⏺ 第 3 ラウンド適用完了。続いて第 4 ラウンドに進みます。
+
+⏺ 第 4 ラウンド (B 観点) — 結果
+
+  failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模 / 暗黙前提崩壊の 7 観点を体系的にチェックしました。
+
+  重要級 3 件 + 軽微 2 件 (全件自動採択候補)
+
+  第 4-A (failure mode、重要級): R8.7 / R9.5 record_decision 失敗時の rollback 規約未規定
+
+  - 検出: confirmed/refuted/synthesis_approve は必須記録 (Spec 5 R11.6) だが、record_decision API 失敗時 (Spec 5 内部 lock 取得失敗 / disk full / 等)の verify / approve 全体の rollback / abort 規約が未明示
+  - 判定: 自動採択 (R8.7 / R9.5 末尾に「record_decision 失敗時は verify / approve 全体を ERROR で abort、frontmatter 編集も atomic 更新でrollback、再実行可能な状態を維持」と明示)
+
+  第 4-B (failure mode、重要級): R4.1 Step 1 resolve_entity None 時の handling 未規定
+
+  - 検出: Spec 5 resolve_entity(name_or_alias) → Entity API が None / 例外を返す可能性 (entity 未登録)、Step 1 の fallback 規定なし
+  - 判定: 自動採択 (R4.1 末尾に「resolve_entity が None を返した場合 WARN severity + exit code 1 で停止、entity 抽出推奨メッセージ出力」と明示)
+
+  第 4-C (並行性、重要級): R12.8 atomic 更新の対象範囲が暗黙
+
+  - 検出: R12.8 「全 file 書込で atomic 更新」が Hypothesis frontmatter 編集 (verification_attempts append / successor_wiki: 記録 / status 遷移)
+  にも適用されるか明示なし。並行 verify 時 race condition 懸念
+  - 判定: 自動採択 (R12.8 末尾に「対象は対話ログ / Perspective 保存版 / Hypothesis 候補ファイルの新規作成 + Hypothesis frontmatter 編集 (verification_attempts / successor_wiki / status 遷移) を含む全 write 操作」と明示)
+
+  第 4-D (暗黙前提崩壊、軽微): origin_edges 削除時 (reject / deprecated) の human_verification_support event 追記 handling 未規定
+
+  - 検出: Hypothesis 生成時の edge が時間経過で reject / deprecated になった後、verify confirmed/refuted 時の event 追記がどうなるか未規定
+  - 判定: 自動採択 (R12.7 末尾に「origin_edges の edge が reject/deprecated 状態の場合は INFO で skip、verify 結果出力に記録、Spec 5 dangling edge　policy と整合」と明示)
+
+  第 4-E (規模、軽微): R8.2 Step 1 raw grep の大規模性能 (raw 10,000+ ファイル)
+
+  - 検出: Verify Step 1 で raw/**/*.md を grep + semantic similarity 検索する性能が大規模 (10,000+ ファイル) で問題化する可能性、incremental indexing戦略未規定
+  - 判定: 自動採択 (R8.2 末尾に「raw 10,000+ ファイル規模での incremental indexing 戦略は design phase で確定」と明示、design 持ち越し)
+
+  第 4 ラウンド適用 (Edit)
+⏺ 第 4 ラウンド適用完了。第 5 ラウンドに進みます。
+⏺ 第 5 ラウンド (波及精査、5 step 必須手順) — 開始
+
+  Step 1: 第 1-4 ラウンドの変更値リスト化
+
+  主要な変更値:
+  - (V1) 「Query API 14 種」→「15 種」+ resolve_entity 追加
+  - (V2) Boundary Out of scope に rw discover MVP 外明示 (新項目)
+  - (V3) R10.2 trigger 帰属 (a-d) Spec 5 / (e-f) Spec 7
+  - (V4) R12.4 / R12.5 append 単位 = per Turn
+  - (V5) R8.7 / R9.5 reasoning 必須 (default skip 不可)
+  - (V6) R9.9 新設 + Spec 4 R3.3 注記要請
+  - (V7) R8.5 outcome 列挙 4 値 → 5 値 (confirmed|refuted|partial|evolved|verified_pending)
+  - (V8) R12.7 「confirmed のみ」→「confirmed または refuted」 + refuted delta 設計
+  - (V9) R15.1 §2.8 Skill library 追加 (6 → 7 原則)
+  - (V10) R8.7 / R9.5 record_decision 失敗時 rollback
+  - (V11) R4.1 resolve_entity None 時 WARN + exit 1
+  - (V12) R12.8 atomic 更新対象 4 種明示
+  - (V13) R12.7 origin_edges reject/deprecated 時 INFO skip
+
+  Step 2: 網羅的 grep 検索
+
+⏺ 第 5 ラウンド (波及精査) — Step 2 grep 結果
+
+  致命級 1 件 + 重要級 2 件 + Adjacent Sync 4 件を検出。
+
+  致命級 1 件
+
+  第 5-A: Spec 6 R12.6 / R12.7 の event type 名が Spec 5 R10.1 11 種に存在しない
+
+  - 検出: Spec 5 R10.1 line 248-249 の event type 11 種列挙:
+    - 基本セット 8 種: created / reinforced(Direct|Support|Retrieval|Co-activation) / decayed / promoted / demoted / rejected / merged /contradiction_flagged
+    - 本 spec 追加 3 種: dangling_flagged / unreject / reassigned
+  - Spec 6 で参照: used_in_save_perspective (R12.6) / human_verification_support (R8.6 / R12.7) — Spec 5 R10.1 11 種に未定義
+  - drafts SSoT 確認: drafts §11.2 v0.7.4 / v0.7.8 で event type は reinforced(Direct|Support|Retrieval|Co-activation) の 1 type、Direct/Support はusage_signal 4 種別 (contribution weight)。Spec 6 が独自 event type 名を使用するのは Spec 5 R10.1 拡張可規約 (新 event type 追加は本 spec = Spec 5が所管) と矛盾
+  - 判定: 自動採択 (修正案 X = Spec 6 R8.6 / R12.6 / R12.7 の event type 名を reinforced(Direct) / reinforced(Support)に統一、used_in_save_perspective / human_verification_support は event 内の context attribute として記録、Spec 5 R10.1 11 種と完全整合)
+
+  重要級 2 件
+
+  第 5-B: Spec 6 brief.md L13 で「Query API 14 種」残存
+
+  - 検出: Spec 5 が提供する Query API 14 種（neighbor / path / bridge / community / global summary 等）の signature と返り値 schema が contract
+  として固定済
+  - 判定: 自動採択 (本セッション内で「15 種」に修正)
+
+  第 5-C: Spec 4 R16 review 層 dispatch 6 種に review/hypothesis_candidates/* 未列挙
+
+  - 検出: Spec 4 R16 (line 298) review 層 6 種:
+    - (a) review/synthesis_candidates/* / (b) review/vocabulary_candidates/* / (c) review/audit_candidates/* / (d) review/relation_candidates/* / (e)
+   review/decision-views/* / (f) wiki/.follow-ups/*
+  - review/hypothesis_candidates/* 未列挙: Spec 6 R9 rw approve <hypothesis-id> は id 指定 (path → id 解決) で Spec 7 cmd_promote_to_synthesis
+  を呼ぶ独立 CLI のため、Spec 4 R16 の path 指定 dispatch とは別系統。但し統合のため Adjacent Sync 候補
+  - 判定: escalate (Adjacent Sync の方法を確認、本セッション内 vs 別セッション)
+
+  Step 3: Foundation 改版有無
+
+  - 本セッションでの Foundation 改版: なし (致-2 (C-2) で Spec 6 単独完結方針)
+  - 傘下 7 spec の Foundation 由来精査は 不要
+
+  Step 4: Adjacent Sync TODO 整理 (D-N 通し番号、新規 4 件)
+
+  - D-25: drafts §7.2 Spec 7 表注記 (L2197) に Spec 6 主名称 rw approve <hypothesis-id> 追記 (drafts、軽微)
+  - D-26: drafts L1307 / L1352 / L2702 に「Phase 2 検討」注記追加 (rw discover 内部矛盾解消、drafts、軽微)
+  - D-27: Spec 4 R3.3 注記追加 (rw approve <hypothesis-id> を Spec 6 R9 で --auto 不可指定済として明示) [重-3 (A-2)]
+  - D-28: Spec 4 R16 review 層 dispatch 拡張 (review/hypothesis_candidates/* の扱いを「Spec 6 R9 rw approve <hypothesis-id> 経由で id 指定 + Spec 7 8
+   段階対話、path 指定の rw approve [<path>] は対象外」と注記) [第 5-C]
+
+  Step 5: 本セッション内同期 vs 別セッション処理判断
+
+  - 本セッション内修正 (確定):
+    - 第 5-A (Spec 6 R12.6 / R12.7 / R8.6 event type 統一) — Spec 6 自身の修正
+    - 第 5-B (brief.md L13 「14 種」→「15 種」) — Spec 6 自身の修正
+  - escalate (ユーザー判断要請):
+    - D-27 + D-28 (Spec 4 Adjacent Sync 2 件): 本セッション内処理 推奨 (Spec 6 approve と併せて実施、密接 coordination)
+    - D-25 + D-26 (drafts、軽微): 別セッション一括処理 推奨 (TODO_NEXT_SESSION.md 更新時に記録)
+
+  第 5 ラウンド適用 (Edit、本セッション内修正)
+⏺ 第 5 ラウンドのうち、本セッション内修正 (Spec 6 自身) を完了しました。続いて Adjacent Sync の処理判断についてユーザー確認が必要です。
+
+  ---
+  第 5 ラウンド完了報告 + ユーザー判断要請
+
+  Spec 6 自身の修正適用済 (本セッション内)
+
+  - 第 5-A (致命級): R8.6 / R12.6 / R12.7 の event type 名を Spec 5 R10.1 11 種の reinforced に統一、独自名は context attribute として記録 (Spec 5R10.1 拡張可規約と整合)
+  - 第 5-B (重要級): Spec 6 brief.md L13 「Query API 14 種」→「15 種 + resolve_entity 追記」
+
+  Adjacent Sync TODO (4 件) — ユーザー判断要請
+
+  Q3: D-27 + D-28 (Spec 4 Adjacent Sync 2 件) を本セッション内同期するか別セッション処理にするか
+
+  - (α) 案 (推奨): 本セッション内同期 — Spec 6 approve と併せて Spec 4 Adjacent Sync を実施。spec.json.updated_at 更新と change log 1 件追記で完了(Spec 6 R9 / R14.4 と密接 coordination、approve 同時の方が整合性高い)
+  - (β) 案: 別セッション処理 — TODO_NEXT_SESSION.md 更新時に記録し、別セッションで一括処理 (本セッションで Spec 6 単体に集中)
+
+  Q4: D-25 + D-26 (drafts 軽微 2 件) は別セッション処理で確定 (推奨確定)
+
+  - drafts への波及は計 28 件 (D-1 ~ D-28) が累積、別セッション一括処理が効率的
+  - TODO_NEXT_SESSION.md 更新時に D-25 / D-26 を追加記録 (本セッション末)
+
+  第 5 ラウンドステータス
+
+  - 致命級 1 件 + 重要級 2 件は本セッション内修正済
+  - Adjacent Sync 2 件 (D-27 / D-28) はユーザー判断待ち
+  - drafts Adjacent Sync 2 件 (D-25 / D-26) は別セッション処理確定
+
+  Q3 の回答を確認後、第 5 ラウンドを完了し、厳しく再精査 (最終ガード) に進みます。
+```
+
+##### ❯ 推奨案で実施
+
+```
+⏺ Spec 4 への Adjacent Sync (D-27 + D-28) を本セッション内で適用します。
+⏺ Spec 4 Adjacent Sync (D-27 + D-28) 完了。続いて第 5 ラウンドを完了し、厳しく再精査に進みます。
+⏺ 厳しく再精査 (最終ガード) — 連鎖更新漏れ検出
+
+  修正後の Boundary Context In scope に古い event 名が残存している可能性を確認します。
+⏺ L48 / L58 / L59 で古い event 名 (used_in_save_perspective / human_verification_support) と confirmed のみ表記が残存。連鎖修正します。
+⏺ Introduction L17 / Adjacent expectations L82 / R12 Objective L308 でも独自 event 名が残存。連鎖修正を完了させます。
+⏺ L302 (R11.6 括弧内) と L384 (R15.4) も独自 event 名表記が残っているので修正します。
+⏺ 厳しく再精査が完了しました。Task #6 を完了し、ユーザー承認を待ちます。
+
+⏺ ---
+  全 5 ラウンド + 厳しく再精査 (最終ガード) 完了サマリ
+
+  適用した修正 (全件自動採択 + escalate 確定)
+
+  - 第 1 ラウンド (基本整合性): 致命級 3 件 + 重要級 5 件 + 軽微 2 件
+  - 第 2 ラウンド (上位文書照合): 致命級 0 件、Adjacent Sync TODO 2 件 (D-25 / D-26、別セッション)
+  - 第 3 ラウンド (本質的観点): 重要級 3 件 + 軽微 1 件
+  - 第 4 ラウンド (B 観点): 重要級 3 件 + 軽微 2 件
+  - 第 5 ラウンド (波及精査): 致命級 1 件 + 重要級 2 件 + Adjacent Sync 4 件 (D-25 / D-26 別セッション、D-27 / D-28 本セッション内同期完了)
+  - 厳しく再精査 (最終ガード): event type 名統一に伴う連鎖更新漏れ 5 箇所修正 (Boundary Context In scope 3 箇所 + Out of scope 1 箇所、Introduction　L17 / Adjacent expectations L82 / R12 Objective L308 / R11.6 / R15.4)
+
+  数値メトリクス
+
+  - AC 数: 131 → 138 (+7、新 R9.9 三者命名関係 + 既存 AC 拡充)
+  - Requirement 数: 15 件維持 (致-2 (C-2) で rw discover を MVP 外明示で吸収、新 R 追加なし)
+  - Spec 4 Adjacent Sync: D-27 + D-28 適用済 (R3.3 注記 + R16.1 注記 + spec.json.updated_at 更新)
+  - Foundation 改版: なし (傘下 7 spec 精査不要)
+
+  残務 (ユーザー承認後の処理)
+
+  - Spec 6 spec.json を requirements-approved に更新 (本ファイル変更なし、ユーザー明示承認必須)
+  - TODO_NEXT_SESSION.md 更新 (D-25 / D-26 を drafts Adjacent Sync TODO に追加記録)
+  - 本セッション dev-log 追記
+  - Commit 作成 (Spec 6 修正 + Spec 4 Adjacent Sync + dev-log)
+
+  承認可否判断要請
+
+  memory feedback_approval_required.md に従い、spec.json 承認はユーザー明示承認必須です。以下を確認してください:
+
+  - Spec 6 requirements.md の修正内容を承認しますか?
+  - 承認可なら approve または「承認」とご回答ください。Claude が以下を実施します:
+    a. Spec 6 spec.json を requirements-approved に更新 (approvals.requirements.approved = true、phase = requirements-approved)
+    b. TODO_NEXT_SESSION.md 更新 (D-25 / D-26 追加 + 進捗 8/8 完了マーク)
+    c. dev-log 追記
+    d. Commit 作成 (Spec 6 + Spec 4 Adjacent Sync + dev-log の 3 commit を分けて)
+    e. push 可否を別途確認
+```
+
+##### ❯ 再度整合性を審査
+
+```
+⏺ 整合性を再審査します。連鎖更新漏れと AC 数の正確性を再チェック。
+⏺ 整合性審査結果
+
+  正確な AC 数を grep で集計した結果、修正必要箇所 2 件 を検出しました。
+
+  検出: 残存 2 件
+
+  検出 1: AC 数の誤記 (change log L437)
+
+  - 正確な AC 数: 132 件 (10+10+7+8+7+7+9+11+9+10+8+9+8+7+12)
+  - change log 記載: 「131 → 138 件 (+7)」 → 誤り (正解は 131 → 132 件 (+1))
+  - 原因: 「既存 AC 拡充」を AC 数増として誤計上していた。実際の AC 数増加は R9.9 新設の 1 件のみ (既存 AC 拡充は AC 数を変えない)
+
+  検出 2: R4.6 (L152) で古い独自 event 名表記が残存
+
+  - R4.6 現状: 「Requirement 12.6 の used_in_save_perspective event は Direct または Support のいずれか、Requirement 12.7 のhuman_verification_support event は Direct…」
+  - 問題: 第 5-A の修正方針 (event type は reinforced に統一、独自名は context attribute) と矛盾。「event」表記が古い独自 event type を示唆
+  - 修正案: context attribute として明示
+
+  修正適用
+⏺ 整合性審査を体系的に実施します。前回中断した第 2 巡 (R4.6 / AC 数誤記訂正) 以降の追加検証として、以下のカテゴリを体系的にチェックしました。
+
+  ---
+  整合性審査 結果 (3 巡完了後の最終確認)
+
+  カテゴリ 1: AC 数の精密集計 (grep ベース)
+
+  各 Requirement の最後の AC 番号を grep で集計した実測値:
+
+  - R1=10 / R2=10 / R3=7 / R4=8 / R5=7 / R6=7 / R7=9 / R8=11 / R9=9 / R10=10 / R11=8 / R12=9 / R13=8 / R14=7 / R15=12
+  - 合計: 132 件 (131 → 132、+1 = R9.9 新設のみ)
+  - change log の「138 件」誤記は 修正済 ✓
+
+  カテゴリ 2: event type 名 reinforced 統一の徹底チェック
+
+  grep -n "human_verification_support\|used_in_save_perspective" を最終実行した結果、独自 event 名表記の残存箇所:
+
+  - L17 (Introduction (l)) — context attribute 参照として OK ✓
+  - L48 (Boundary In scope Verify workflow) — context attribute 参照として OK ✓
+  - L58 / L59 (Boundary In scope L2 への feedback) — context attribute 参照として OK ✓
+  - L82 (Adjacent expectations Spec 5 coordination) — context attribute 参照として OK ✓
+  - L105 (R1.8) — context attribute 参照として OK ✓
+  - L152 (R4.6) — 第 3 巡で 修正済 ✓
+  - L231 (R8.6) — context attribute 参照として OK ✓
+  - L302 (R11.6) — 第 2 巡で 修正済 ✓
+  - L308 (R12 Objective) — 第 2 巡で 修正済 ✓
+  - L317-318 (R12.6 / R12.7) — context attribute 参照として OK ✓
+  - L384 (R15.4) — 第 2 巡で 修正済 ✓
+  - change log 内言及 — 履歴記述として OK ✓
+
+  → event type 名統一は完全達成 (修正計 5 + 第 3 巡 1 = 6 箇所)
+
+  カテゴリ 3: outcome / status 値域の対応関係 (R7 / R8.4 / R8.5)
+
+  - R7 status 7 種: draft / verified / confirmed / refuted / promoted / evolved / archived (Foundation R5.4 規範)
+  - R8.4 verify 判定値: confirmed / refuted / partial / verified (status 据置含む)
+  - R8.5 entry outcome 値域: confirmed | refuted | partial | evolved | verified_pending (5 値、第 3-A で統一済)
+  - R7.5 status 遷移: verified / confirmed / refuted / evolved (4 値、partial / verified_pending は status 据置 = no-op)
+
+  対応関係 (R8.5 entry の outcome → status 遷移):
+  - confirmed → verified → confirmed ✓
+  - refuted → verified → refuted ✓
+  - partial → verified 据置 (中間結果記録) ✓
+  - evolved → verified → evolved ✓
+  - verified_pending → verified 据置 (evidence 不足) ✓
+
+  → 整合 ✓
+
+  カテゴリ 4: Cross-reference の整合性
+
+  R 間 cross-reference を全件確認 (R4.6 → R12.6/R12.7、R8.6 → R7.5、R8.7 → R12.8、R9.5 → R12.8、R9.8 → R9.9 等):
+
+  - 全 cross-reference が修正後の文言と整合 ✓
+  - R9.9 新設に伴う他 R からの参照 (R14.4 等) も rw approve <hypothesis-id> 主名称で一貫 ✓
+  - R10.2 trigger 帰属修正 (Spec 5 a/b/c/d / Spec 7 e/f) と Boundary Out of scope L73 (修正済) 整合 ✓
+
+  カテゴリ 5: Spec 4 Adjacent Sync (D-27 / D-28) 適用結果確認
+
+  Searched for 3 patterns (ctrl+o to expand)
+
+⏺ カテゴリ 5 続き: 詳細結果
+
+  Spec 4 Adjacent Sync 適用結果 (D-27 / D-28):
+
+  - Spec 4 R3.3 (line 109) 注記追加済 ✓ (Spec 6 R9 rw approve <hypothesis-id> の --auto 不可特殊性明示)
+  - Spec 4 R16.1 (line 298) 注記追加済 ✓ (review/hypothesis_candidates/* の対象外明示)
+  - Spec 4 change log (line 317) 追記済 ✓ (D-27 + D-28)
+  - Spec 4 spec.json.updated_at = 2026-04-27T16:50:37+09:00 更新済 ✓
+
+  カテゴリ 6: 「14 種」表記の完全削除確認
+
+  - requirements.md: line 400 / 426 の change log 内履歴記述のみ (本文修正の経緯) ✓
+  - brief.md: 0 件 ✓
+  - 本文 (Project Description / Introduction / Boundary Context / Adjacent expectations / R1-R15 全件): 0 件 ✓
+
+  カテゴリ 7: rw discover 言及箇所の整合性
+
+  - requirements.md: 5 箇所
+    - L11 (Project Description 出典 SSoT) — drafts L1005 / L1094 引用 ✓
+    - L67 (Boundary Out of scope 第 1 項目) — MVP 外明示 + Phase 2 検討 ✓
+    - L401 (change log 致-2 適用記録) ✓
+    - L412 (change log D-26 記録) ✓
+  - brief.md: 0 件 (rw discover MVP 外明示の影響なし) ✓
+
+  → 全件 MVP 外明示の文脈で一貫 ✓
+
+  カテゴリ 8: outcome / status の R7-R8 対応関係 (再確認)
+
+  - R7.3 status 遷移 7 種 (Foundation R5.4) ✓
+  - R7.5 status 遷移先 4 値 (verified / confirmed / refuted / evolved) ✓
+  - R8.4 verify 判定値 4 種 (confirmed / refuted / partial / verified 据置) ✓
+  - R8.5 entry outcome 5 値 (confirmed | refuted | partial | evolved | verified_pending) ✓
+  - 各 outcome → status 対応 (R8.5 entry 内で明示済): partial → status 据置、verified_pending → status 据置 ✓
+
+  カテゴリ 9: 修正バンドル間の依存性 (rollback / atomic 更新 / B 観点)
+
+  - R8.7 / R9.5 record_decision 失敗時の rollback (第 4-A) ↔ R12.8 atomic 更新対象 4 種 (第 4-C) ↔ R7 status 遷移 → 整合 ✓
+    - rollback 仕組み: write-to-tmp → rename によるシングルファイル原子性で frontmatter 編集を atomically 適用、record_decision 失敗時 tmp 削除で
+  rollback
+  - R12.7 origin_edges reject/deprecated 時 INFO skip (第 4-D) ↔ R7.7 物理削除しない ↔ Spec 5 R6.7 dangling edge policy → 整合 ✓
+  - R4.1 resolve_entity None 時 WARN + exit 1 (第 4-B) ↔ R4.7 ランタイムエラー時 exit code 1 → 整合 ✓ (両方 exit code 1 で一致)
+
+  カテゴリ 10: Subject の整合性
+
+  各 Requirement の Subject 一覧:
+
+  - R1: the Perspective Generator
+  - R2: the Hypothesis Generator
+  - R3: the Spec 6 Perspective-Hypothesis Subsystem
+  - R4: the Spec 6 Perspective-Hypothesis Subsystem
+  - R5: the Spec 6 Perspective-Hypothesis Subsystem
+  - R6: the Spec 6 Perspective-Hypothesis Subsystem
+  - R7: the Spec 6 Perspective-Hypothesis Subsystem
+  - R8: the Verify Workflow
+  - R9: the Spec 6 Perspective-Hypothesis Subsystem
+  - R10: the Maintenance Autonomous Surface
+  - R11-R15: the Spec 6 Perspective-Hypothesis Subsystem
+
+  → 4 種類 (Perspective Generator / Hypothesis Generator / Verify Workflow / Maintenance Autonomous Surface / Spec 6 Subsystem 全般) で適切に役割分担
+   ✓ (Introduction L17 末尾の宣言と一致)
+
+  カテゴリ 11: 成果物 9 種類 (Introduction L19-29) と R 群の対応
+
+  - 成果物 9 種類すべてに対応する Requirement が存在: R1 / R2 / R8 / R9 / R3 / R7 / R10 / R5+R6+R11 / R13
+  - rw discover は成果物に含まれない (MVP 外明示と整合) ✓
+
+  カテゴリ 12: Adjacent expectations (8 項目) の coordination 網羅性
+
+  - Foundation 13 中核原則 / Foundation R5 Hypothesis status / Spec 6 ↔ Spec 5 / Spec 6 ↔ Spec 2 / Spec 6 ↔ Spec 3 / Spec 6 ↔ Spec 4 / Spec 6 ↔ Spec
+  7 / Spec 6 ↔ Spec 1 / v1 継承 → 全 spec coordination 網羅 ✓
+
+  ---
+  整合性審査 最終判定
+
+  - 致命級不整合: 0 件
+  - 重要級不整合: 0 件
+  - 軽微不整合: 0 件
+  - 追加修正必要事項: なし
+
+  第 1-5 ラウンド + 厳しく再精査 + 整合性審査 (3 巡) を全完了。Spec 6 requirements.md は 完全整合状態 に到達しました。
+
+  統計 (確定版)
+
+  - AC 数: 131 → 132 件 (+1、R9.9 新設のみ)
+  - Requirement 数: 15 件維持
+  - 修正バンドル: 致命級 4 件 + 重要級 13 件 + 軽微 5 件 + 連鎖更新漏れ 8 箇所 + 整合性審査追加 2 件 = 計 32 件
+  - Adjacent Sync 適用: Spec 4 (D-27 + D-28、本セッション内同期完了)
+  - Adjacent Sync TODO: drafts D-25 + D-26 (別セッション処理)
+
+  Task #7 承認待ち
+
+  ユーザー明示承認をいただけたら以下を実行:
+
+  1. Spec 6 spec.json を requirements-approved に更新
+  2. TODO_NEXT_SESSION.md 更新 (進捗 8/8 完了 + D-25 / D-26 追加)
+  3. dev-log 追記
+  4. Commit 作成 (Spec 6 / Spec 4 Adjacent Sync / dev-log)
+  5. Push 可否確認 (別途)
+
+  approve または「承認」とご回答ください。
+```
+
+##### ❯ Spec 6で他スペックへの干渉はあるか？
+
+```
+⏺ Spec 6 → 他 spec への干渉 / coordination 整理
+
+  干渉の度合いに応じて 4 カテゴリに分類:
+
+  A. 本セッション内で Adjacent Sync 同期済 (1 spec、計 2 箇所)
+
+  Spec 4 (cli-mode-unification) — D-27 + D-28、本セッション内同期完了 (再 approval 不要):
+
+  - D-27: R3.3 注記追加 (L109) — 「rw approve <hypothesis-id> は禁止リスト 5 種未列挙だが Spec 6 R9.8 / R9.9 で --auto 不可指定済」
+  - D-28: R16.1 注記追加 (L298) — 「review/hypothesis_candidates/* は本 spec の path 指定 dispatch 対象外、Spec 6 R9 rw approve <hypothesis-id> (id
+  指定) 経由で Spec 7 8 段階対話」
+  - spec.json.updated_at = 2026-04-27T16:50:37+09:00 更新済
+  - change log line 317 追記済
+
+  B. drafts への Adjacent Sync TODO (別セッション一括処理、2 件)
+
+  drafts は requirements / design / tasks の 3 層に対する SSoT 出典管理 markdown であり、Spec 同様の strict approval は不要だが整合性は維持する。
+
+  - D-25 (drafts §7.2 Spec 7 表注記 L2197 拡張): 「promote-to-synthesis の CLI 名は 2 系統 — Spec 4 視点 rw query promote <query_id> / Spec 6 視点 rw
+   approve <hypothesis-id>、両者が共有する内部 handler は cmd_promote_to_synthesis」
+  - D-26 (drafts L1307 / L1352 / L2702 内部矛盾解消): rw discover を CLI 一覧表に列挙する 3 箇所に「Phase 2 検討」注記追加 (drafts L1005 / L1094 の
+  MVP 外明示と整合化)
+
+  C. design phase 持ち越し coordination (将来発火、3 件)
+
+  design phase で他 spec 改版を伴う coordination が発生する可能性:
+
+  - Spec 5 への refuting_evidence_reinforcement_delta 新設要請 (R12.7 / R8.6 関連): refuted 時の edge reinforcement delta 値を Spec 5 Hygiene config
+  に新設する coordination。design phase で Spec 5 と詳細協議
+  - Spec 4 R1.8 との対話ログ実装 coordination (R12.4 / R12.5 関連): 本 spec が per Turn append trigger を SSoT として確定、Spec 4 R1.8 が実装側として
+   buffer flush 戦略 design 時に追従
+  - Spec 5 R10.1 拡張可規約による event type 文書化 (R12.6 / R12.7 関連): 本 spec が reinforced event の context attribute (usage_context /
+  verification_type / verify_outcome) を定義、Spec 5 design phase で context attribute schema を Spec 5 が文書化
+
+  D. 既存規定で satisfy (干渉なし、参照のみ、5 spec)
+
+  本 spec が 既存規定をそのまま参照 し、他 spec への変更を要請しない (read-only coordination):
+
+  - Spec 0 (foundation): Hypothesis status 7 種 (R5.4) / 13 中核原則のうち §2.1 / §2.8 / §2.9 / §2.10 / §2.11 / §2.12 / §2.13 → R15.1 で参照
+  (Foundation 改版なし、(C-2) 案で Spec 6 単独完結)
+  - Spec 1 (classification): §5.9.1 / §5.9.2 frontmatter スキーマ宣言 / R10 (related: cache) → R12.2 / R12.3 で読み書き側として参照のみ
+  - Spec 2 (skill-library): R15.5 対話ログ append 単位 trigger 要請 → Spec 6 R12.4 で「per Turn」として履行 (Spec 2 への変更不要、SSoT
+  確定の責務分担)
+  - Spec 3 (prompt-dispatch): R10 で「Spec 6 は dispatch 対象外」既確定 → Spec 6 R3.1-R3.3 で固定 skill 直接呼出を再確認、Spec 3 への変更なし
+  - Spec 7 (lifecycle-management): R6.1 13 種 / R6.4 --auto 不可 5 種 / R13.7 L3 診断 5 項目 / cmd_promote_to_synthesis handler → R9.3 / R9.8 / R10.2
+   で呼出側として参照、Spec 7 への変更不要
+
+  整理サマリ
+
+  - 本セッション内 Adjacent Sync 実施: Spec 4 のみ (1 spec、2 箇所)
+  - 別セッション処理: drafts (2 件)
+  - 将来 design phase: Spec 5 / Spec 4 と coordination (3 件)
+  - 干渉なし (参照のみ): Spec 0 / Spec 1 / Spec 2 / Spec 3 / Spec 7 (5 spec)
+  - Foundation 改版: なし (致-2 で (C-2) 案採択、傘下 7 spec 全件精査も不要)
+
+  → 本 spec の他 spec への干渉は Spec 4 への 2 箇所注記のみ に限定 (本セッション内同期完了済)。drafts 軽微 + design phase 持ち越しを除けば、Spec 6approve は他 spec の再 approval を一切要求しません。
+```
+
+##### ❯ 承認
+
+````
+⏺ 承認を受領しました。Task #7 を実行します。
+⏺ Spec 6 approve 完了。続いて TODO_NEXT_SESSION.md と dev-log を更新します。
+⏺ 変更 6 ファイル確認。前セッション踏襲で 3 commit (Spec 6 approve / Spec 4 Adjacent Sync / dev-log) を作成します。
+
+## 2026-04-27 (続き) — Spec 6 (rwiki-v2-perspective-generation) requirements approve 完了 (最終 spec、全 8/8 完了)
+
+### サマリ
+
+- **対象**: Spec 6 (perspective-generation) — Rwiki v2 MVP の最終 spec、本丸 (Trust + Graph + Perspective + Hypothesis 四位一体の Perspective + Hypothesis 担当)
+- **5 ラウンド構成 + 厳しく再精査 + 整合性審査 (3 巡)** を実施、深掘り検討 + 自動採択方針継承
+- **進捗**: ✅✅✅✅✅✅✅✅ (8/8 完了、Rwiki v2 全 8 spec の requirements approve 完成)
+
+### 適用した修正バンドル (計 32 件)
+
+#### 第 1 ラウンド (基本整合性、致 3 + 重 5 + 軽 2)
+
+- **致-1**: Query API 14 → 15 種 + `resolve_entity` 追加 (Project Description / Introduction 出典 / Boundary Context / Adjacent expectations Spec 5 coordination / R4.1 / R11 タイトル / R11.1 / R11.2 / R14.1 を 5 箇所統一)
+- **致-2 ((C-2) 案)**: `rw discover` 独立 CLI MVP 外明示 (Boundary Context Out of scope に新項目、drafts L1005 / L1094 と整合、Foundation / Spec 4 Adjacent Sync 不要、Spec 6 単独完結)
+- **致-3**: R10.2 Maintenance autonomous trigger 帰属修正 (Spec 5 a/b/c/d / Spec 7 e/f に分離、Spec 5 R21.7 Hygiene autonomous 4 trigger / Spec 7 R13.7 L3 診断 5 項目と整合)
+- **重-1**: 対話ログ append 単位 trigger 規定 (R12.4 / R12.5 で per Turn 固定、Spec 2 R15.5 由来 coordination 履行)
+- **重-2**: R8.7 / R9.5 reasoning 必須明示 (default skip 不可、Spec 5 R11.6 整合)
+- **重-3 ((A-2) 案)**: 三者命名関係明示 (新 R9.9 — `rw approve <hypothesis-id>` Hypothesis CLI / `rw query promote <query_id>` Query CLI / `cmd_promote_to_synthesis` 内部 handler、drafts SSoT 整合)
+- **重-4**: R13.4 audit_overdue_days SSoT 明示 (Spec 4 R8.6 / Spec 5 R21.7 / Spec 7 R13.7 整合)
+- **重-5**: R11.6 lock 取得規約明確化 (Spec 5 内部委譲、本 spec は L2 ledger 直接 write しない)
+- **軽-β**: Usage signal 4 種別と event 対応関係明示 (R4.6)
+- **軽-γ**: §5.9.1 / §5.9.2 SSoT 出典注記 (R12.2 / R12.3)
+
+#### 第 2 ラウンド (上位文書照合): drafts D-25 / D-26 別セッション TODO 検出
+
+#### 第 3 ラウンド (本質的観点、重 3 + 軽 1)
+
+- **第 3-A**: R8.4 / R8.5 outcome 値域不一致解消 (5 値統一 = `confirmed | refuted | partial | evolved | verified_pending`、各 outcome と Hypothesis status 対応関係明示)
+- **第 3-B**: R8.6 / R12.7 confirmed/refuted 範囲不一致解消 (R12.7 を「confirmed のみ」→「confirmed または refuted」に拡張、Foundation §1.3.5「失敗からも学ぶ」整合、refuted delta は design phase で Spec 5 と coordination)
+- **第 3-C**: R15.1 §2.8 Skill library 参照漏れ修正 (6 → 7 原則化)
+- **第 3-D**: R10.1 (e) audit 種類限定の過剰特定除去 (`rw audit graph` → `rw audit *` 種類問わず)
+
+#### 第 4 ラウンド (B 観点 = failure mode / 並行 / 規模 / 暗黙前提崩壊、重 3 + 軽 2)
+
+- **第 4-A**: record_decision 失敗時 rollback 規約 (R8.7 / R9.5、frontmatter 編集も atomic 更新で rollback)
+- **第 4-B**: Step 1 resolve_entity None 時 handling (R4.1、WARN + exit code 1)
+- **第 4-C**: R12.8 atomic 更新対象 4 種明示 (対話ログ append / Perspective 保存版 / Hypothesis 候補 / Hypothesis frontmatter 編集)
+- **第 4-D**: origin_edges reject/deprecated 時 INFO skip (R12.7、Spec 5 dangling edge policy 整合)
+- **第 4-E**: Verify Step 1 raw 大規模性能 design 持ち越し (R8.2、10,000+ ファイル対応)
+
+#### 第 5 ラウンド (波及精査、致 1 + 重 2 + Adjacent Sync 4 件)
+
+- **第 5-A (致命級)**: event type 名 Spec 5 R10.1 11 種との不整合解消 (`used_in_save_perspective` / `human_verification_support` 独自名 → `reinforced` event + context attribute に統一、Spec 5 R10.1 拡張可規約と整合)
+- **第 5-B (重要級)**: Spec 6 brief.md L13 「Query API 14 種」→「15 種 + `resolve_entity` 追記」修正
+- **第 5-C (重要級)**: Spec 4 R16 review 層 dispatch 6 種に `review/hypothesis_candidates/*` 未列挙 → Adjacent Sync (D-28、本セッション内同期完了)
+
+#### 厳しく再精査 (最終ガード、3 巡)
+
+- **第 1 巡**: Boundary Context In scope L48 / L57-58 / Out of scope L72 の 3 箇所連鎖更新漏れ修正
+- **第 2 巡**: Introduction L17 (l) / Adjacent expectations L82 / R12 Objective L308 / R11.6 / R15.4 の 5 箇所追加連鎖更新漏れ修正
+- **第 3 巡 (整合性審査ユーザー指示)**: AC 数誤記訂正 (138 → 132、R9.9 新設の +1 のみが正確) + R4.6 (L152) の独自 event 名表記を context attribute に統一
+
+### Adjacent Sync 適用 (Spec 4 — 本セッション内同期完了)
+
+- **D-27**: Spec 4 R3.3 line 109 注記追加 (`rw approve <hypothesis-id>` を Spec 6 R9 で `--auto` 不可指定済として明示、本 spec の review 層 dispatch `rw approve [<path>]` とは別 operation)
+- **D-28**: Spec 4 R16.1 line 298 注記追加 (`review/hypothesis_candidates/*` を path 指定 dispatch 対象外として明示、Spec 6 R9 `rw approve <hypothesis-id>` 経由で id 指定 + Spec 7 8 段階対話)
+- Spec 4 spec.json.updated_at = 2026-04-27T16:50:37+09:00 更新済
+- Spec 4 change log line 317 追記済 (Adjacent Spec Synchronization 運用ルール準拠、再 approval 不要)
+
+### Adjacent Sync TODO (drafts、別セッション一括処理、追加 2 件)
+
+- **D-25**: drafts §7.2 Spec 7 表注記 L2197 拡張 (`promote-to-synthesis` の CLI 名 2 系統明示 — Spec 4 視点 + Spec 6 視点)
+- **D-26**: drafts L1307 / L1352 / L2702 内部矛盾解消 (`rw discover` の「Phase 2 検討」注記追加、L1005 / L1094 と整合化)
+
+### 数値メトリクス (確定)
+
+- **AC 数**: 131 → **132 件 (+1、R9.9 新設のみ)**
+- **Requirement 数**: 15 件維持 (新 R 追加なし、致-2 (C-2) で `rw discover` MVP 外明示で吸収)
+- **AC 内訳**: R1=10 / R2=10 / R3=7 / R4=8 / R5=7 / R6=7 / R7=9 / R8=11 / R9=9 / R10=10 / R11=8 / R12=9 / R13=8 / R14=7 / R15=12
+
+### 干渉範囲 (本 spec → 他 spec)
+
+- **本セッション内 Adjacent Sync 同期**: Spec 4 のみ (1 spec、2 箇所、本 spec approve と同時 commit 予定)
+- **drafts 別セッション処理**: 2 件 (D-25 / D-26、TODO_NEXT_SESSION.md 記録)
+- **design phase 持ち越し coordination**: Spec 5 への refuting_evidence_reinforcement_delta 新設要請 / Spec 4 R1.8 対話ログ実装 coordination / Spec 5 event context attribute 文書化
+- **干渉なし (参照のみ)**: Spec 0 / Spec 1 / Spec 2 / Spec 3 / Spec 7 (5 spec、既存規定で satisfy)
+- **Foundation 改版**: なし ((C-2) 案で Spec 6 単独完結、傘下 7 spec 全件精査も不要)
+
+### 進捗サマリ (全 8 spec の Rwiki v2 requirements approve 完成)
+
+```
+✅ Spec 0 (foundation)              — 2026-04-26 approve
+✅ Spec 1 (classification)          — 2026-04-26 approve
+✅ Spec 4 (cli-mode-unification)    — 2026-04-26 approve (本セッションで 4 度目の Adjacent Sync)
+✅ Spec 7 (lifecycle-management)    — 2026-04-26 approve
+✅ Spec 5 (knowledge-graph)         — 2026-04-27 approve
+✅ Spec 2 (skill-library)           — 2026-04-27 approve
+✅ Spec 3 (prompt-dispatch)         — 2026-04-27 approve
+✅ Spec 6 (perspective-generation)  — 2026-04-27 approve (本セッション、最終 spec)
+```
+
+→ Rwiki v2 全 8 spec の requirements 確定、design phase へ移行可能な状態に到達。
+````
 
 
 
@@ -5966,4 +7013,7 @@ When rw skill test <candidate-or-name> [--sample <file>] が呼び出された, 
 
 - 仕様間の依存関係をチェック
 
+
+
+---
 
