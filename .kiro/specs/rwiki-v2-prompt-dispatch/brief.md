@@ -21,15 +21,16 @@ distill タスクで複数 skill が候補になる場合（例: paper_summary v
 
 ## Approach
 
-優先順位: 明示 `--skill` → frontmatter `type:` → categories.yml の default → LLM 毎回判定（コンテンツを読んで推論）。LLM 判断は精度優先、結果と明示指定の食い違いは user に confirm。skill 欠如時は `generic_summary` fallback。
+優先順位: 明示 `--skill` → frontmatter `type:` → categories.yml の default → `applicable_input_paths` glob match → LLM 毎回判定（コンテンツを読んで推論）。LLM 判断は精度優先、結果と明示指定の食い違いは user に confirm。skill 欠如時は `generic_summary` fallback。
 
 ## Scope
 
 - **In**:
-  - スキル選択の優先順位（明示 → `type:` → カテゴリ default → LLM 判断）
+  - スキル選択の優先順位（明示 → `type:` → カテゴリ default → `applicable_input_paths` glob match → LLM 判断）
   - LLM 毎回判定方式
   - スキル欠如時の `generic_summary` fallback
   - `.rwiki/vocabulary/categories.yml` のカテゴリ → default skill マッピング
+  - `applicable_input_paths` glob match による L1 raw 入力 path 系統 dispatch（Spec 2 R3.2 由来 coordination、L3 wiki content category と独立した別系統 dispatch hint）
 - **Out**:
   - Skill 内容自体（Spec 2）
   - Perspective / Hypothesis の skill 選択（Spec 6 は固定 skill 呼出、dispatch 対象外）

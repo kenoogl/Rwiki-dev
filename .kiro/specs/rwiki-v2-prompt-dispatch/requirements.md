@@ -14,7 +14,7 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 
 本 requirements は、Rwiki v2 の Spec 3 として distill タスクの **スキル選択（dispatch）メカニズム** を、user / operator から観測可能な振る舞いとして定義する。読者は Spec 3 の実装者と、本 spec の dispatch を呼び出す Spec 4（cli-mode-unification、`rw distill` CLI）/ Spec 6（perspective-generation、本 spec の対象外確認）/ Spec 2（skill-library、本 spec が解釈する skill メタデータの提供元）の起票者である。
 
-本 spec が SSoT として固定するのは、(1) 4 段階優先順位の判断順序とその個別実行条件、(2) LLM 毎回判定の振る舞い契約、(3) `type:` / 明示指定と LLM 推論の不一致時のコンセンサス確認手順、(4) skill 欠如時の `generic_summary` fallback 規約、(5) 解決済み skill 名と input file の組を呼び出し側（Spec 4）に返却する内部契約、(6) 上位 spec（Spec 1 / Spec 2）との coordination 契約である。
+本 spec が SSoT として固定するのは、(1) 5 段階優先順位（明示 `--skill` → frontmatter `type:` → `categories.yml` の `default_skill` → `applicable_input_paths` glob match → LLM 毎回判定）の判断順序とその個別実行条件、(2) LLM 毎回判定の振る舞い契約、(3) `type:` / 明示指定と LLM 推論の不一致時のコンセンサス確認手順、(4) skill 欠如時の `generic_summary` fallback 規約、(5) 解決済み skill 名と input file の組を呼び出し側（Spec 4）に返却する内部契約、(6) 上位 spec（Spec 1 / Spec 2）との coordination 契約である。
 
 本 spec が想定する subject は次の 2 種類である。
 
@@ -26,13 +26,14 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 ## Boundary Context
 
 - **In scope**:
-  - distill タスク（`rw distill`）起動時のスキル選択 4 段階優先順位の判断ロジック（明示 `--skill` → frontmatter `type:` → `categories.yml` の `default_skill` → LLM 毎回判定）
+  - distill タスク（`rw distill`）起動時のスキル選択 5 段階優先順位の判断ロジック（明示 `--skill` → frontmatter `type:` → `categories.yml` の `default_skill` → `applicable_input_paths` glob match → LLM 毎回判定）
   - LLM 毎回判定方式の振る舞い契約（毎回コンテンツを読み込み、cache せず推論、精度優先）
   - 明示 `--skill` 指定時の最優先扱いと、LLM 推論結果との食い違い検出 + ユーザー確認フロー
   - frontmatter `type:` 値が存在する場合の LLM 推論結果とのコンセンサス確認手順
   - 解決された skill 名が `AGENTS/skills/` に存在しない、または `status` が `active` でない場合の `generic_summary` fallback 規約
   - `categories.yml` の inline `default_skill` field を読み取る契約（Spec 1 ↔ Spec 3 coordination で確定済の inline 方式）
-  - `AGENTS/skills/*.md` frontmatter `applicable_categories` を解釈し、LLM 推論時のヒントおよび整合 check に用いる契約（Spec 2 ↔ Spec 3 coordination）
+  - `AGENTS/skills/*.md` frontmatter `applicable_categories` を解釈し、LLM 推論時のヒントおよび整合 check に用いる契約（Spec 2 ↔ Spec 3 coordination、L3 wiki content category 系統 dispatch hint）
+  - `AGENTS/skills/*.md` frontmatter `applicable_input_paths` を解釈し、Requirement 1 段階 3.5 の path glob match dispatch および LLM 推論時のヒントとして用いる契約（Spec 2 ↔ Spec 3 coordination で 2 系統 dispatch logic として確定、L1 raw 入力 path 系統 dispatch hint、extended glob 互換）
   - dispatch 結果として返却される (skill_name, input_file, dispatch_reason) の内部契約（Spec 4 が呼び出して使用する）
   - LLM CLI 呼び出しの subprocess timeout 設定の必須化（roadmap.md「v1 から継承する技術決定」継承）
   - 本 spec が `rw distill` 以外の自然言語意図解釈（`rw chat` 内で「これを蒸留して」等）から呼び出される場合も、同一 dispatch ロジックを共有する規約
@@ -58,19 +59,21 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 
 ## Requirements
 
-### Requirement 1: スキル選択 4 段階優先順位の規定
+### Requirement 1: スキル選択 5 段階優先順位の規定
 
-**Objective:** As a Spec 4 起票者および distill タスク利用者, I want スキル選択が 4 段階の固定優先順位（明示 `--skill` → frontmatter `type:` → `categories.yml` の `default_skill` → LLM 毎回判定）で決定される, so that distill 起動時に常に予測可能な順序で skill が解決され、明示意図がある場合は必ず尊重される。
+**Objective:** As a Spec 4 起票者および distill タスク利用者, I want スキル選択が 5 段階の固定優先順位（明示 `--skill` → frontmatter `type:` → `categories.yml` の `default_skill` → `applicable_input_paths` glob match → LLM 毎回判定）で決定される, so that distill 起動時に常に予測可能な順序で skill が解決され、明示意図がある場合は必ず尊重され、L1 raw 入力対象 skill が path から deterministic に dispatch される。
 
 #### Acceptance Criteria
 
-1. The Skill Dispatcher shall スキル選択を以下 4 段階の優先順位で評価することを規定する：(1) 明示 `--skill <name>` 指定 → (2) 入力ファイルの frontmatter `type:` 値からの推定 → (3) 入力ファイルが配置された categories（`.rwiki/vocabulary/categories.yml` のカテゴリエントリ）の `default_skill` field → (4) LLM 毎回判定。
+1. The Skill Dispatcher shall スキル選択を以下 5 段階の優先順位で評価することを規定する：(1) 明示 `--skill <name>` 指定 → (2) 入力ファイルの frontmatter `type:` 値からの推定 → (3) 入力ファイルが配置された categories（`.rwiki/vocabulary/categories.yml` のカテゴリエントリ）の `default_skill` field → (3.5) 入力ファイル path に対する `AGENTS/skills/*.md` の `applicable_input_paths` glob match（Spec 2 Requirement 3.2 で定義された L1 raw 入力 path glob 一覧、extended glob 互換）→ (4) LLM 毎回判定。
 2. While 上位段階で候補が確定可能な場合, the Skill Dispatcher shall 下位段階を **評価しない**（短絡評価）。ただし Requirement 3 / Requirement 4 のコンセンサス確認が必要な場合は、その範囲で例外的に LLM 推論を併走させる。
 3. When 段階 1 で `--skill <name>` が指定された, the Skill Dispatcher shall 当該 skill を最優先候補として扱い、Requirement 3 のコンセンサス確認のみ追加で実行することを規定する。
 4. When 段階 2 で frontmatter `type:` 値が存在する, the Skill Dispatcher shall 当該 `type:` 値から派生する skill 候補を確定し、Requirement 4 のコンセンサス確認を経て決定することを規定する。
 5. When 段階 3 で入力ファイルが属する category の `default_skill` が `categories.yml` に登録されている, the Skill Dispatcher shall 当該 `default_skill` を候補として確定することを規定する。
-6. When 段階 1〜3 のいずれでも候補が確定しない, the Skill Dispatcher shall 段階 4 の LLM 毎回判定に進むことを規定する。
-7. The Skill Dispatcher shall 各段階で確定した候補に対し、Requirement 6 の skill 存在確認（`AGENTS/skills/<name>.md` 存在 + `status: active`）を実施し、不存在 / 非 active の場合は Requirement 6 の `generic_summary` fallback に降格することを規定する。
+6. When 段階 3.5 で入力ファイル path が `AGENTS/skills/*.md` の `applicable_input_paths` glob と match する skill が **唯一** に絞れる, the Skill Dispatcher shall 当該 skill を候補として確定することを規定する。path match の評価対象は frontmatter `status: active` の skill のみとし（段階 3.5 候補絞り込み時に非 active skill を予め除外することで、Requirement 6.1 の dispatch 実行直前 check と整合させ、無駄な path match 計算を回避する）、path match は extended glob 互換（POSIX glob `*` / `?` / `[...]` + `**` recursive match、Spec 2 Requirement 3.2 と整合）として評価する。段階 3.5 で確定した候補は段階 1 / 2 のコンセンサス確認対象外（配置から自然に決まる deterministic dispatch、段階 3 と同じ扱い）とする。
+7. While 段階 3.5 で複数 skill が `applicable_input_paths` glob match する, the Skill Dispatcher shall 曖昧性回避のため段階 3.5 をスキップして段階 4 の LLM 毎回判定に進むことを規定し、WARN severity で「path match 複数該当のため LLM 推論にエスカレート」を呼び出し側（Spec 4）に通知することを規定する。
+8. When 段階 1〜3.5 のいずれでも候補が確定しない, the Skill Dispatcher shall 段階 4 の LLM 毎回判定に進むことを規定する。
+9. The Skill Dispatcher shall 各段階で確定した候補に対し、Requirement 6 の skill 存在確認（`AGENTS/skills/<name>.md` 存在 + `status: active`）を実施し、不存在 / 非 active の場合は Requirement 6 の `generic_summary` fallback に降格することを規定する。
 
 ### Requirement 2: LLM 毎回判定方式の振る舞い契約
 
@@ -80,7 +83,7 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 
 1. When 段階 4（LLM 毎回判定）が発火する, the LLM Skill Inferencer shall 入力ファイルのコンテンツ全体（または LLM CLI が許容する最大長まで）を **その都度** 読み込み、Spec 2 が提供する skill カタログを参照対象として推論を行うことを規定する。
 2. The LLM Skill Inferencer shall 推論結果として「推奨 skill 名」「推論根拠の簡潔な説明（人間可読）」「信頼度（任意、推論器が出力可能な場合）」を内部に保持し、Skill Dispatcher に返却することを規定する。
-3. The LLM Skill Inferencer shall 推論時に Spec 2 が SSoT として提供する各 skill の frontmatter `applicable_categories` を **入力ヒント** として LLM プロンプトに含めることを規定する。
+3. The LLM Skill Inferencer shall 推論時に Spec 2 が SSoT として提供する各 skill の frontmatter `applicable_categories` および `applicable_input_paths`（Spec 2 Requirement 3.2 で定義された optional field 2 種、L3 wiki content category 系統と L1 raw 入力 path 系統）を **入力ヒント** として LLM プロンプトに含めることを規定する。
 4. The LLM Skill Inferencer shall 推論結果を **cache しない** ことを規定する（同一ファイルを再 distill する場合も毎回推論を再実行する。精度優先のため）。
 5. While LLM CLI を呼び出す場合, the LLM Skill Inferencer shall subprocess timeout を必須設定とすることを規定する（roadmap.md「v1 から継承する技術決定」、`call_claude()` ハングリスク回避）。timeout のデフォルト値は本 spec の design phase で確定する。
 6. If LLM CLI 呼び出しが timeout / 異常終了 / 推論失敗で結果を返せない, then the Skill Dispatcher shall Requirement 6 の `generic_summary` fallback に降格し、ERROR severity ではなく WARN severity でその旨を呼び出し側（Spec 4）に通知することを規定する。
@@ -111,6 +114,7 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 4. While ユーザーが対話を許容しない実行モードで起動された場合, the Skill Dispatcher shall コンセンサス不一致時に LLM 推論結果を採用する（精度優先方針、frontmatter `type:` はあくまで「ヒント」であり権威ではない）ことを規定し、WARN severity で「`type:` と不一致のため LLM 推論を採用」を通知することを規定する。
 5. The Skill Dispatcher shall frontmatter `type:` 値を skill 候補に変換する具体的マッピング（`type:` 値 → skill 名）を、Spec 1 の `categories.yml` `recommended_type` と Spec 2 の `applicable_categories` の整合表から導出することを規定する。マッピング表自体は本 spec の design phase で確定する。
 6. If frontmatter `type:` 値が Spec 1 / Spec 2 のいずれの整合表にも該当しない（許可値外）, then the Skill Dispatcher shall 段階 2 をスキップして段階 3（`categories.yml` の `default_skill`）に降格することを規定し、INFO severity で「`type:` 値 unknown のため次段階に降格」を通知することを規定する。
+7. If 入力ファイルの frontmatter 自体が YAML として parse できない（部分破損・syntax error 等）, then the Skill Dispatcher shall 段階 2 をスキップして段階 3 以降に進むことを規定し、WARN severity で「frontmatter parse 失敗のため `type:` ヒントを利用不可、後続段階で dispatch 継続」を呼び出し側（Spec 4）に通知することを規定する。本規定は dispatch の継続性を優先し、frontmatter 整合性の根本検知は Spec 1 lint task（Spec 1 Requirement 9 系）に委譲する二重防御として位置付ける。
 
 ### Requirement 5: `categories.yml` の `default_skill` 読み取り契約
 
@@ -125,14 +129,15 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 5. The Skill Dispatcher shall `categories.yml` を **cache せず** 起動毎に最新を反映することを規定する（Spec 1 Requirement 9.3 と整合、vocabulary 変更が即座に dispatch に反映されるため）。
 6. If `categories.yml` がそもそも配置されていない, then the Skill Dispatcher shall 段階 3 をスキップして段階 4 に進むことを規定し、INFO severity で「vocabulary 未初期化」を通知することを規定する（Spec 1 Requirement 9.4 と整合）。
 7. The Skill Dispatcher shall `categories.yml` の `default_skill` 値が `AGENTS/skills/` に存在する skill 名であることの整合 check を Spec 1 の lint task に委譲し（Spec 1 Requirement 11.3 と整合）、本 spec の dispatch 実行時には不存在を Requirement 6 の `generic_summary` fallback で扱うことを規定する。
+8. If `categories.yml` が YAML として parse できない（部分破損・syntax error 等）, then the Skill Dispatcher shall 段階 3 をスキップして段階 3.5 以降に進むことを規定し、WARN severity で「`categories.yml` parse 失敗のため category default を利用不可、後続段階で dispatch 継続」を呼び出し側（Spec 4）に通知することを規定する。本規定は Spec 1 Requirement 9.7 の lint task partial broken handling 原則（「parse 不可は当該 vocabulary 関連検査のみ ERROR で fail、他検査は継続」）と整合的に、本 spec の dispatch では当該段階のみスキップして dispatch 継続を優先し、`categories.yml` の根本修復は Spec 1 lint task / vocabulary 編集（Spec 1 Requirement 8）に委譲する二重防御として位置付ける。
 
 ### Requirement 6: skill 欠如時の `generic_summary` fallback 規約
 
-**Objective:** As a distill タスク利用者, I want 4 段階のいずれかで解決された skill が `AGENTS/skills/` に install されていない / `status` が `active` でない場合に、`generic_summary` skill が確実に fallback として呼ばれる, so that 任意の入力ファイルに対して distill が必ず実行可能で、skill 不存在を理由に distill が破綻することを防げる。
+**Objective:** As a distill タスク利用者, I want 5 段階のいずれかで解決された skill が `AGENTS/skills/` に install されていない / `status` が `active` でない場合に、`generic_summary` skill が確実に fallback として呼ばれる, so that 任意の入力ファイルに対して distill が必ず実行可能で、skill 不存在を理由に distill が破綻することを防げる。
 
 #### Acceptance Criteria
 
-1. The Skill Dispatcher shall 4 段階のいずれかで解決された skill 候補に対して、`AGENTS/skills/<name>.md` の存在および frontmatter `status: active` を **dispatch 実行直前** に check することを規定する。
+1. The Skill Dispatcher shall 5 段階のいずれかで解決された skill 候補に対して、`AGENTS/skills/<name>.md` の存在および frontmatter `status: active` を **dispatch 実行直前** に check することを規定する。
 2. If 解決済み skill が `AGENTS/skills/` に存在しない（未 install / install 後に削除）, then the Skill Dispatcher shall `generic_summary` skill を fallback として採用することを規定する。
 3. If 解決済み skill の frontmatter `status` が `active` 以外（`deprecated` / `retracted` / `archived`）, then the Skill Dispatcher shall `generic_summary` skill を fallback として採用することを規定する。
 4. While `generic_summary` fallback が発動する場合, the Skill Dispatcher shall WARN severity で「(元の解決 skill 名) が利用不可のため generic_summary に fallback」を呼び出し側（Spec 4）に通知することを規定する。
@@ -147,13 +152,13 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 #### Acceptance Criteria
 
 1. The Skill Dispatcher shall dispatch 完了時に返却する結果オブジェクトの必須フィールドとして以下を規定する。
-   - `skill_name`: 解決された skill 名（snake_case 文字列、Spec 2 の skill カタログに存在する名前または `generic_summary`）
+   - `skill_name`: 解決された skill 名（snake_case 文字列、Spec 2 の skill カタログに存在する名前または `generic_summary`、`aborted` 時は空文字列または明示的な sentinel 値、Requirement 7.3 と整合）
    - `input_file`: distill 対象ファイルの絶対 path
    - `dispatch_reason`: dispatch 経緯（以下 Requirement 7.2 の enumeration 値）
-   - `severity`: 通知 severity（CRITICAL / ERROR / WARN / INFO のいずれか、Foundation Requirement 11 / roadmap.md と整合）
-   - `notes`: 人間可読な補足メッセージ（コンセンサス不一致の詳細、fallback 理由等）
-2. The Skill Dispatcher shall `dispatch_reason` の値域を以下の enumeration として規定する：`explicit_match`（段階 1 で明示指定 + LLM コンセンサス成立）/ `explicit_user_chosen`（段階 1 不一致 + ユーザーが明示採用）/ `explicit_llm_chosen`（段階 1 不一致 + ユーザーが LLM 採用）/ `type_match`（段階 2 で `type:` + LLM コンセンサス成立）/ `type_user_chosen`（段階 2 不一致 + ユーザーが `type:` 採用）/ `type_llm_chosen`（段階 2 不一致 + ユーザーが LLM 採用 / `--auto` 時の自動 LLM 採用）/ `category_default`（段階 3 で `categories.yml` `default_skill` 採用）/ `llm_inference`（段階 4 で LLM 推論採用）/ `fallback_generic_summary`（Requirement 6 fallback 発動）/ `aborted`（コンセンサス確認でユーザーが abort 選択）。
-3. While `aborted` を返却する場合, the Skill Dispatcher shall `skill_name` を空文字列または明示的な sentinel 値とし、Spec 4 が distill 実行を起動しない契約を提供することを規定する（exit code 2 / 0 のいずれを返すかは Spec 4 所管）。
+   - `severity`: 通知 severity（CRITICAL / ERROR / WARN / INFO のいずれか、Foundation Requirement 11 / roadmap.md と整合、複数通知発生時は最重 severity を採用、Requirement 11.4 と整合）
+   - `notes`: 人間可読な補足メッセージ（コンセンサス不一致の詳細、fallback 理由、aborted 時の経緯等を集約、Requirement 11.4 と整合）
+2. The Skill Dispatcher shall `dispatch_reason` の値域を以下の enumeration として規定する：`explicit_match`（段階 1 で明示指定 + LLM コンセンサス成立）/ `explicit_user_chosen`（段階 1 不一致 + ユーザーが明示採用）/ `explicit_llm_chosen`（段階 1 不一致 + ユーザーが LLM 採用）/ `type_match`（段階 2 で `type:` + LLM コンセンサス成立）/ `type_user_chosen`（段階 2 不一致 + ユーザーが `type:` 採用）/ `type_llm_chosen`（段階 2 不一致 + ユーザーが LLM 採用 / `--auto` 時の自動 LLM 採用）/ `category_default`（段階 3 で `categories.yml` `default_skill` 採用）/ `path_match`（段階 3.5 で `applicable_input_paths` glob match による唯一 skill 確定、Requirement 1.6 と整合）/ `llm_inference`（段階 4 で LLM 推論採用）/ `fallback_generic_summary`（Requirement 6 fallback 発動）/ `aborted`（コンセンサス確認でユーザーが abort 選択）。
+3. While `aborted` を返却する場合, the Skill Dispatcher shall `skill_name` を空文字列または明示的な sentinel 値とし、Spec 4 が distill 実行を起動しない契約を提供することを規定する（exit code 2 / 0 のいずれを返すかは Spec 4 所管）。aborted 時の `severity` は **INFO**（ユーザー選択による正常な abort、dispatch 失敗ではなく user intent の表明として扱う、Foundation Requirement 11 の severity 4 水準内に収め、Requirement 11.2 INFO 列挙と整合）とし、`notes` には abort 時のコンセンサス確認段階（段階 1 / 段階 2）と提示された候補（明示指定 / `type:` 由来 / LLM 推論結果）を集約することを規定する。
 4. The Skill Dispatcher shall 返却オブジェクトの構造（フィールド名・型・enumeration 値域）を本 spec の design phase で具体的データ構造として固定し、Spec 4 が当該構造を入力 contract として `rw distill` を実装する責務分離を明示する。
 5. If 本 spec が dispatch 結果オブジェクトの構造を変更する必要が生じた, then the Skill Dispatcher shall 変更を Spec 4 と先行合意した上でしか反映できない手順（roadmap.md「Adjacent Spec Synchronization」運用ルール）を本 requirements に参照点として残すことを規定する。
 
@@ -165,9 +170,9 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 
 1. The Skill Dispatcher shall frontmatter 推奨フィールドに `type:` を含めることが Spec 1 Requirement 2 / Requirement 11.1 で確定済みであることを認知し、本 spec は `type:` field を distill dispatch の hint として **読み取る側** として参照することを明示する（Requirement 4 と整合）。
 2. The Skill Dispatcher shall `categories.yml` の default skill mapping 方式が **inline `default_skill` field** として Spec 1 Requirement 7.2 / Requirement 11.2 で確定済みであることを認知し、本 spec は当該 field を **読み取る側** として参照することを明示する（Requirement 5 と整合）。
-3. The Skill Dispatcher shall 本 spec の dispatch 優先順位（明示 → `type:` → `default_skill` → LLM）の **判断ロジック自体** が Spec 1 ではなく本 spec の所管であることを Spec 1 Requirement 11.4 と整合する形で明示する。
+3. The Skill Dispatcher shall 本 spec の dispatch 優先順位（明示 → `type:` → `default_skill` → `applicable_input_paths` glob match → LLM）の **判断ロジック自体** が Spec 1 ではなく本 spec の所管であることを Spec 1 Requirement 11.4 と整合する形で明示する（Spec 1 R11.4 は 4 段階記述だが、本 spec が段階 3.5 を追加した 5 段階化は Spec 2 R3.2 由来の coordination であり、Spec 1 R11.4 への Adjacent Sync を別途実施する手順を残す）。
 4. If 将来 Spec 1 の frontmatter `type:` 値域 / `categories.yml` `default_skill` 方式に変更が必要となった, then the Skill Dispatcher shall 本 spec ではなく **Spec 1 を先に改版する手順**（roadmap.md「Adjacent Spec Synchronization」運用ルール）を参照点として残すことを規定する。
-5. The Skill Dispatcher shall Spec 1 と本 spec の境界を「Spec 1 = field 宣言と vocabulary 定義」「Spec 3 = field 値の解釈と判断ロジック」として明文化し、`type:` 値 → skill 名のマッピング表（Requirement 4.5）が Spec 1 / Spec 2 双方の整合表から導出される派生情報であることを明示する。
+5. The Skill Dispatcher shall Spec 1 と本 spec の境界を「Spec 1 = field 宣言と vocabulary 定義」「Spec 3 = field 値の解釈と判断ロジック」として明文化し、`type:` 値 → skill 名のマッピング表（Requirement 4.5）が Spec 1 Requirement 11.3（`type:` 値の許可集合 = `categories.yml.recommended_type` + Spec 2 `applicable_categories` 整合）と Spec 2 Requirement 3.2（skill frontmatter `applicable_categories`）双方の整合表から導出される派生情報であることを明示する。
 
 ### Requirement 9: Spec 2 ↔ Spec 3 coordination 契約
 
@@ -177,10 +182,13 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 
 1. The Skill Dispatcher shall Spec 2 が SSoT として固定する skill カタログ（initial 15 種：知識生成 12 種 / Graph 抽出 2 種 / lint 支援 1 種）のうち、distill 向け **知識生成 12 種** を本 spec の dispatch 候補集合として参照することを規定する（Spec 2 Requirement 4 と整合）。
 2. The Skill Dispatcher shall `generic_summary` skill が Spec 2 Requirement 4.1 / Requirement 4.4 で `origin: standard` 配布対象として固定されていることを認知し、本 spec の Requirement 6 fallback がこの固定を前提とすることを明示する。
-3. The Skill Dispatcher shall 各 skill frontmatter `applicable_categories`（Spec 2 Requirement 3.2 で optional フィールドとして定義）を、(a) LLM 推論時の入力ヒント（Requirement 2.3）、(b) `type:` 値からの skill 候補導出時の整合 check 材料、として参照することを規定する。
-4. While Spec 2 の `applicable_categories` field が `null` または空配列である skill, the Skill Dispatcher shall 当該 skill を「全カテゴリで利用可能」として扱うことを規定する。
-5. If Spec 2 が新規 standard skill を追加した（initial 15 種から増えた）, then the Skill Dispatcher shall `categories.yml` の `default_skill` および `applicable_categories` の整合再 check 必要性を本 spec の design phase で扱う旨を明示し、本 requirements の dispatch ロジック自体は再変更不要であることを規定する。
-6. The Skill Dispatcher shall Graph 抽出 skill（`entity_extraction` / `relation_extraction`）と lint 支援 skill（`frontmatter_completion`）が distill dispatch の **対象外** であり、本 spec の dispatch 候補集合に含めないことを規定する（Spec 2 Requirement 5 / Requirement 6 と整合、これらは Spec 4 の `rw extract-relations` / `rw lint --fix` が直接呼ぶ）。
+3. The Skill Dispatcher shall 各 skill frontmatter `applicable_categories`（Spec 2 Requirement 3.2 で optional フィールドとして定義、L3 wiki content category 系統の dispatch hint）を、(a) LLM 推論時の入力ヒント（Requirement 2.3）、(b) `type:` 値からの skill 候補導出時の整合 check 材料、として参照することを規定する。
+4. The Skill Dispatcher shall 各 skill frontmatter `applicable_input_paths`（Spec 2 Requirement 3.2 で optional フィールドとして定義、L1 raw 入力 path glob 系統の dispatch hint、extended glob 互換）を、(a) Requirement 1 段階 3.5 における入力 path glob match dispatch の判定対象、(b) LLM 推論時の入力ヒント（Requirement 2.3）として参照することを規定する。本 spec の dispatch 実行時に当該 glob と入力 path の match 計算を行い（Spec 2 Requirement 3.2 が本 spec の所管として明記する「実 path の存在検証」）、Spec 2 は path 形式の構文妥当性のみを Skill Validator で検査することを認知する。
+5. While Spec 2 の `applicable_categories` field が `null` または空配列である skill, the Skill Dispatcher shall 当該 skill を「全カテゴリで利用可能」として扱うことを規定する。
+6. While Spec 2 の `applicable_input_paths` field が `null` または空配列である skill, the Skill Dispatcher shall 当該 skill が Requirement 1 段階 3.5 の path match 評価対象に含まれない（path match 候補から除外）ことを規定する。L1 raw 入力 path 系統の dispatch hint を持たない skill は path 起点では deterministic dispatch されないため、当該 skill は段階 1 / 2 / 3 / 4 のいずれかで選択される。
+7. If Spec 2 が新規 standard skill を追加した（initial 15 種から増えた）, then the Skill Dispatcher shall `categories.yml` の `default_skill` および `applicable_categories` / `applicable_input_paths` の整合再 check 必要性を本 spec の design phase で扱う旨を明示し、本 requirements の dispatch ロジック自体は再変更不要であることを規定する。
+8. The Skill Dispatcher shall Graph 抽出 skill（`entity_extraction` / `relation_extraction`）と lint 支援 skill（`frontmatter_completion`）が distill dispatch の **対象外** であり、本 spec の dispatch 候補集合に含めないことを規定する（Spec 2 Requirement 5 / Requirement 6 と整合、これらは Spec 4 の `rw extract-relations` / `rw lint --fix` が直接呼ぶ）。
+9. The Skill Dispatcher shall `AGENTS/skills/*.md` を **cache せず** dispatch 実行毎に最新を読み込むことを規定する（Spec 1 Requirement 9.3 / 本 spec Requirement 5.5 の vocabulary cache 規定と整合、skill install / deprecate / archive 等の lifecycle 変更が即座に dispatch に反映されるため）。これは Requirement 1 段階 3.5 の path match 候補絞り込み、Requirement 2 LLM 推論時の skill カタログ参照、Requirement 6.1 の dispatch 実行直前 check の各場面で適用される。性能上の cache 必要性は本 spec の design phase で扱い、要件レベルでは整合性優先を固定する。
 
 ### Requirement 10: Perspective / Hypothesis dispatch 対象外の規定
 
@@ -192,7 +200,7 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 2. The Skill Dispatcher shall `rw perspective` / `rw hypothesize` の独立 CLI（Spec 6 / Spec 4 所管）から本 spec の dispatch が呼ばれない契約を規定する。
 3. The Skill Dispatcher shall Spec 6 が固定 skill `perspective_gen` / `hypothesis_gen` を直接呼ぶ実装を採用することを認知し、これらの skill 選択に `--skill <name>` 指定や frontmatter `type:` 解釈が **不要** であることを明示する（SSoT §7.2 1971-1973 行と整合）。
 4. If 将来 Perspective / Hypothesis に複数 skill 候補が生まれ dispatch が必要になった, then the Skill Dispatcher shall 本 spec の dispatch を再利用するか、Spec 6 内部に独自 dispatch を持つかの判断を新規 spec 改版で扱う手順（roadmap.md「Adjacent Spec Synchronization」運用ルール）を参照点として残すことを規定する。
-5. The Skill Dispatcher shall Graph 抽出 skill（Spec 4 の `rw extract-relations` 経由）と lint 支援 skill（Spec 4 の `rw lint --fix` 経由）も同様に本 spec の dispatch 対象外であることを Requirement 9.6 と重複しない範囲で再確認する。
+5. The Skill Dispatcher shall Graph 抽出 skill（Spec 4 の `rw extract-relations` 経由）と lint 支援 skill（Spec 4 の `rw lint --fix` 経由）も同様に本 spec の dispatch 対象外であることを Requirement 9.8 と重複しない範囲で再確認する。
 
 ### Requirement 11: 通知 severity と exit code の整合
 
@@ -203,8 +211,8 @@ Rwiki v2 の distill タスクは、L1 raw を L2 / review 候補に蒸留する
 1. The Skill Dispatcher shall 通知 severity を CRITICAL / ERROR / WARN / INFO の 4 水準として規定し、roadmap.md「v1 から継承する技術決定」の severity-unification 結果を継承することを明示する。
 2. The Skill Dispatcher shall 各 Requirement で発火する通知の severity を以下のとおり規定する。
    - **ERROR**: Requirement 6.5（fallback skill `generic_summary` 自体も不在）
-   - **WARN**: Requirement 2.6（LLM CLI 失敗で fallback）/ Requirement 3.4（`--auto` 時 LLM 不一致を明示採用）/ Requirement 4.4（`--auto` 時 LLM 採用）/ Requirement 6.4（`generic_summary` fallback 発動）
-   - **INFO**: Requirement 3.5（LLM 併走推論失敗で明示そのまま採用）/ Requirement 4.6（`type:` 値 unknown で次段階降格）/ Requirement 5.4（`default_skill` 未設定で次段階降格）/ Requirement 5.6（`categories.yml` 未配置で次段階降格）
+   - **WARN**: Requirement 1.7（段階 3.5 path match 複数該当で LLM 推論にエスカレート）/ Requirement 2.6（LLM CLI 失敗で fallback）/ Requirement 3.4（`--auto` 時 LLM 不一致を明示採用）/ Requirement 4.4（`--auto` 時 LLM 採用）/ Requirement 4.7（frontmatter parse 失敗で段階 2 スキップ）/ Requirement 5.8（`categories.yml` parse 失敗で段階 3 スキップ）/ Requirement 6.4（`generic_summary` fallback 発動）
+   - **INFO**: Requirement 3.5（LLM 併走推論失敗で明示そのまま採用）/ Requirement 4.6（`type:` 値 unknown で次段階降格）/ Requirement 5.4（`default_skill` 未設定で次段階降格）/ Requirement 5.6（`categories.yml` 未配置で次段階降格）/ Requirement 7.3（aborted 時のユーザー選択による正常な abort、dispatch 失敗ではなく user intent 表明）
    - **CRITICAL**: 本 spec の dispatch 範囲では発火しない（Foundation Requirement 11 と整合、CRITICAL は L2 ledger 破損等の不可逆事象に予約）
 3. The Skill Dispatcher shall 通知 severity と exit code 0/1/2 分離（PASS / runtime error / FAIL 検出）の対応関係 を Spec 4 所管とし、本 spec は severity を返却するに留めることを規定する。
 4. While 通知が複数発生した場合（例: Requirement 5 段階 3 で `default_skill` 未設定 INFO + Requirement 4 で `type:` 不一致 WARN）, the Skill Dispatcher shall 全ての通知を `notes` フィールドに集約し、最終 severity は最も重い severity を採用することを規定する。
