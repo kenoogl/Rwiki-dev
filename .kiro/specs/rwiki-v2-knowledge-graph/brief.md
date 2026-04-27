@@ -9,7 +9,7 @@
 ## Current State
 
 - consolidated-spec §2.12 に Evidence-backed Candidate Graph の原則（Evidence 必須 / Reject-only / 6 係数 confidence 計算 / 3 段階 status / Hygiene 5 ルール）が整理済
-- §7.2 Spec 5 に Ledger 基盤 / Entity 抽出 / Relation 抽出 / Hygiene / Usage signal 4 種別 / Competition 3 レベル / Decision log / Query API 14 種が詳細化済
+- §7.2 Spec 5 に Ledger 基盤 / Entity 抽出 / Relation 抽出 / Hygiene / Usage signal 4 種別 / Competition 3 レベル / Decision log / Query API 15 種が詳細化済
 - v0.7.10 で 6 決定が確定（normalize_frontmatter API、cache invalidation 戦略等）
 - networkx ≥ 3.0 を新規依存に追加方針
 
@@ -49,7 +49,7 @@ P0-P4 の 5 phase で段階実装（MVP は P0+P1+P2）:
   - Decision log（§2.13 Curation Provenance、selective recording）
   - Reject workflow（reject_queue/ → rejected_edges.jsonl、unreject 復元）
   - Entity ショートカット field の正規化（normalize_frontmatter API）
-  - Graph query API 14 種
+  - Graph query API 15 種
   - Community detection（networkx Leiden/Louvain）
   - Graph audit（対称性 / 循環 / 孤立 / 参照整合性 / confidence 分布）
   - Rebuild / sync（増分 / full / stale detection）
@@ -106,3 +106,16 @@ P0-P4 の 5 phase で段階実装（MVP は P0+P1+P2）:
 - **Spec 5 ↔ Spec 7**: Page deprecation → Edge demotion の interaction flow
 - **Spec 5 ↔ Spec 4**: `.rwiki/.hygiene.lock` Concurrency strategy
 - **Spec 5 ↔ Spec 6**: Query API の signature と返り値 schema が contract
+
+## Design phase 持ち越し項目（第 1-4 ラウンドレビュー由来）
+
+第 1 ラウンド（基本整合性 + coordination 反映、致命級 5 件 + 重要級 3 件、すべて requirements に反映済み）。
+第 2 ラウンド（roadmap/brief/drafts 厳格照合、第 2-A pre_reject_confidence 必須化を requirements + Foundation Adjacent Sync で反映済み）。
+第 3 ラウンド（本質的観点、致命級 1 件 + 重要級 2 件、すべて requirements に反映済み）。
+第 4 ラウンド（B 観点 = failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模、重要級 3 件は requirements に反映、軽微 3 件は本セクションに記録）:
+
+- **第 4-A**: `decision_log` の privacy mode（`gitignore: true`）切替時の意味の明示。過去 git history を含むか、未来分のみ git 管理外か、運用パターンを design phase で確定（ただし default は「`gitignore` に追加されるが過去 git history はそのまま残る、未来分のみ git 管理外」が現実的、明示要）
+- **第 4-B**: edge_id の hash 衝突時の handling（`source+type+target` hash で edge_id 決定、Requirement 4.4 / 13.4 / 13.6 と整合、衝突は実用上ないが衝突検出時の挙動 = ERROR で abort or 衝突解決アルゴリズム = を design phase で確定）
+- **第 4-E**: 大規模 Vault（edges > 5,000）での Reinforcement per-day cap 接触問題の対処戦略（Requirement 7.7 / 20.2 で per-event 0.1 / per-day 0.2 上限を規定、Vault 規模拡大時に一部 edge のみが reinforced され他は cap で skip される現象の運用上の影響と緩和策 = community 単位 / 直近 N 日更新分の部分 Hygiene 推奨 = を design phase で詳細化、Requirement 21.6 と整合）
+
+第 5 ラウンド（C 観点 = 他 spec 波及）と第 6 ラウンド（D 観点 = drafts 整合）は本ファイル更新時点で進行中、結果は requirements 末尾 `_change log_` に追記される。
