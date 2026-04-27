@@ -14,6 +14,8 @@
 
 [Spec 3 rwiki-v2-prompt-dispatch](##Spec 3 rwiki-v2-prompt-dispatch)
 
+[Spec 6 rwiki-v2-perspective-generation](##Spec 6 rwiki-v2-perspective-generation)
+
 
 
 [レビュー方法について再検討](##レビュー方法について再検討)
@@ -5942,7 +5944,7 @@ When rw skill test <candidate-or-name> [--sample <file>] が呼び出された, 
 
 
 
-
+## Spec 6 rwiki-v2-perspective-generation
 
 
 
