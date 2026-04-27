@@ -1165,15 +1165,575 @@
   - 案 B: 観点 4 は「API contract は十分具体化、CLI 詳細は Spec 4 委譲」で軽微 1-2 件のみ追記、次ラウンドへ
 ```
 
+##### ❯ A
 
+```
+⏺ 第 4 ラウンド修正適用 5 件 (全件自動採択)。次のラウンドへ。
 
+  第 5 ラウンド: アルゴリズム検証 (観点 5)
 
+  memory feedback_design_review.md 規定: 実装重 spec で観点 5 が深く厚くなる。前回レビューで Levenshtein 近似採用根拠がユーザー対話を経ていない
+  (escalate 候補)。
 
+  Step 1: 要点提示
 
+  Spec 1 のアルゴリズム該当箇所:
 
+  - NFC normalization (決定 1-3): unicodedata.normalize('NFC', s) O(N)
+  - Levenshtein 距離による suggestion (決定 1-6): difflib.SequenceMatcher で算出、距離 ≤ 2 の canonical 候補上位 3 件
+  - vocabulary load: 3 YAML × 1K-10K entries × yaml.safe_load O(N)
+  - frontmatter parse: 1 ファイル単位で yaml.safe_load O(N)
+  - scan / lint: pathlib.Path.rglob で markdown 走査 O(F × 平均サイズ)
+  - 重複検出 (R6.2): canonical / aliases の unique 検査、O(N) hash set
 
+  潜在的検出候補:
 
+  - 軽-5-1 候補: difflib.SequenceMatcher は Levenshtein 距離ではない — design.md L145 / 決定 1-6 で「Levenshtein
+  距離」と記述、difflib.SequenceMatcher は Ratcliff/Obershelp アルゴリズム (LCS 系)。Levenshtein 距離との差異 (transposition /
+  連続削除の評価が異なる)。前回レビューで escalate 候補として指摘あり、未対応
+  - 軽-5-2 候補: NFC normalization の境界条件 — vocabulary 登録時に NFC 正規化、入力 (frontmatter tags:) も比較時に NFC 正規化が必要。design
+  内では「入力は NFC normalization」「lint G5 で全角半角混在を WARN」とあるが、比較時の NFC 適用順序 (登録 normalize / 入力 normalize / 比較)
+  が明記なし
+  - 軽-5-3 候補: 重複検出のスコープ — R6.2 「canonical ↔ aliases 間も重複不可」は明示、ただし tags.yml 内 vs categories.yml 内 vs entity_types.yml
+  内の クロス YAML 重複 は規範化なし (例: tag canonical = category name = entity_type name の場合の動作)
+  - 軽-5-4 候補: suggestion の決定性 — difflib.SequenceMatcher の ratio() は安定だが、距離 ≤ 2 で同じ ratio の候補が複数ある場合の順序 (上位 3 件)
+  は決定的か? 安定 sort 規範を明示すべき
+  - 軽-5-5 候補: edge case 網羅 — 空 tag (tags: [""]) / 1 文字 tag / 数字のみ tag / Unicode 結合文字 (NFD 由来) / surrogate pair / 異常に長い tag
+  (1KB+) — fail-soft で何を return するか
+  - 軽-5-6 候補: pathlib.rglob の隠しファイル / シンボリックリンク扱い — .git/ / .rwiki/cache/ 等の隠しディレクトリ / シンボリックリンクの follow
+  規範なし
 
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 5 ラウンドの進め方をどうしますか？
+
+  - 案 A: 6 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended、軽-5-1 の Levenshtein/SequenceMatcher 不一致は
+  escalate 候補)
+  - 案 B: 軽-5-1 のみ単独 escalate、他 5 件は自動採択で同 turn 適用、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  6 候補の判断:
+
+  - 軽-5-1 (Levenshtein vs SequenceMatcher): escalate (アルゴリズム不一致、決定 1-6 訂正必要)
+  - 軽-5-2 (NFC 比較順序): 自動採択 (情報追加)
+  - 軽-5-3 (クロス YAML 重複): 自動採択 (別 namespace で衝突許容を明記)
+  - 軽-5-4 (suggestion 決定性): 自動採択 (安定 sort 規範)
+  - 軽-5-5 (edge case 網羅): 自動採択 (input length 制約 / Unicode 結合文字)
+  - 軽-5-6 (rglob 隠しファイル): 自動採択 (skip pattern 規範)
+
+  軽-5-2 〜 5-6 を Edit で適用してから軽-5-1 を escalate します。
+⏺ 軽-5-2 / 5-3 / 5-4 / 5-5 / 5-6 適用済。軽-5-1 を escalate します。
+
+  軽-5-1 escalate: Levenshtein 距離 vs SequenceMatcher アルゴリズム不一致
+
+  design.md L145 / 決定 1-6 で「Levenshtein 距離 ≤ 2」と記述、実装 difflib.SequenceMatcher は Ratcliff/Obershelp アルゴリズム (LCS系)。両者は数学的に異なるアルゴリズムで、距離 vs 類似度 ratio で表現も異なります。
+
+  【選択肢あり】どう訂正しますか？
+
+  - 案 A: difflib.SequenceMatcher.ratio() ≥ 0.8 採用 + 記述を「Ratcliff/Obershelp 類似度」に訂正 — 既存依存維持 (新規 library なし)、本 spec内で具体閾値確定 (Recommended)
+  - 案 B: 「文字列類似度 (近似アルゴリズム)」と曖昧表記 + 具体実装 (アルゴリズム選択 / 閾値) を Phase 2 Spec 4 design 委譲 — boundary clarification、本 spec は規範 level に留める
+```
+
+##### ❯ A
+
+```
+⏺ Levenshtein 残存は 訂正経緯記述内のみ (意図的に残す)。第 5 ラウンド修正適用 6 件完了 (5 件自動採択 + 1 件 escalate 案 A 採択)。次のラウンドへ。
+
+  第 6 ラウンド: 性能達成手段 (観点 6)
+
+  Step 1: 要点提示
+
+  design.md L988-1003 の Performance & Scalability:
+
+  - v2 MVP 想定規模: vocabulary 1,000 タグ + 50 カテゴリ + 5 entity_types / vault 1,000 wiki + 1,000 raw / rw tag scan / rw lint < 5 秒 (cache なし)
+  - 大規模 vault (Phase 2): 10K+ ページ + 5K+ タグ → mtime ベース cache (決定 1-8)、cache hit 時 < 5 秒維持
+  - 性能達成手段: 機能優先 (correctness)、prototype 測定で検証
+
+  潜在的検出候補:
+
+  - 軽-6-1 候補: 「< 5 秒」根拠未明示 — Spec 0 で同様指摘あり、Spec 1 でも target 根拠 (CI 統合許容時間 / human review wait acceptance) 記述推奨
+  - 軽-6-2 候補: vocabulary load の頻度 — R9.3「起動時に毎回 load、cache せず最新反映 (v2 MVP)」明示済、ただし rw tag scan / rw lint が同一 process
+  内で複数回呼ばれる場合の vocabulary load 重複は? (process 内 cache の必要性)
+  - 軽-6-3 候補: difflib.SequenceMatcher の計算量 — N tag × M canonical で O(N×M×L²) (L = 文字列長)。1K tag + 1K canonical で 1M 比較 × L²。L = 30
+  として 9億回ペア処理、5 秒以内? 現実的か未検証
+  - 軽-6-4 候補: vocabulary 操作 lock 競合の性能影響 — .hygiene.lock 取得失敗時 (R8.14) の wait / retry / timeout の規範未定 (Spec 4 委譲だが、本
+  spec 性能 target に影響)
+  - 軽-6-5 候補: suggestion 生成の早期打ち切り (early termination) — 1K canonical 全件比較せず、candidate 上位 3 件確定したら早期打ち切りすべき
+  (heap-based top-k)。性能対策として明示推奨
+  - 軽-6-6 候補: 大規模 vault Phase 2 cache の invalidation 規範 — mtime ベース cache の整合性 (vocabulary YAML 変更時の invalidation) は決定 1-8
+  で言及あり、cache key / invalidation trigger / partial rebuild 等の詳細は未確定 (Phase 2 委譲)
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 6 ラウンドの進め方をどうしますか？
+
+  - 案 A: 6 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 主要 3 件 (target 根拠 / suggestion 早期打ち切り / cache invalidation) のみ自動採択、他 3 件は「該当なし / Phase 2 委譲既述」で次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  6 候補すべて自動採択 (boundary clarification + 性能規範強化):
+
+  - 軽-6-1: target 根拠 (CI 統合許容時間)
+  - 軽-6-2: process 内 vocabulary load 1 回完結 を明示
+  - 軽-6-3: suggestion は未登録 tag (典型 ~10 件) × 1K canonical で軽量、計算量見積を明示
+  - 軽-6-4: lock 取得失敗時 retry / timeout は Spec 4 委譲、本 spec target は lock acquired 状態前提
+  - 軽-6-5: suggestion 生成の早期打ち切り (heapq.nlargest ベース top-k)
+  - 軽-6-6: cache invalidation 規範 (cache key / trigger / partial rebuild) Phase 2 委譲明記
+
+  修正適用します。
+⏺ 第 6 ラウンド修正適用 1 件 (6 候補統合)。次のラウンドへ。
+
+  第 7 ラウンド: 失敗モード handler (観点 7)
+
+  実装重 spec で観点 7 が深く厚くなる想定。
+
+  Step 1: 要点提示
+
+  design.md L928-944 の Error Handling:
+
+  - vocabulary YAML parse failure → 該当検査のみ ERROR、他継続 (R9.7、fail-soft)
+  - vocabulary 整合性 ERROR (重複登録) → 関連検査 skip + WARN (R9.8、誤検出回避)
+  - frontmatter parse failure → Frontmatter(parse_error=...) 返却 + lint ERROR (G2、fail-soft)
+  - YAML injection / path traversal → CLI 引数検査で ERROR (G3 / G4)
+  - lock 取得失敗 → ERROR + retry guidance (Spec 4 確定)
+  - 誤 approve 復旧 → git revert + decision_log 補正 (B-14、決定 1-7)
+  - tag merge rollback → git revert + decision_log 補正 (B-13、決定 1-7)
+  - 既存 markdown migration → v2 MVP では不要 (フルスクラッチ)
+
+  潜在的検出候補:
+
+  - 軽-7-1 候補: subprocess timeout 失敗時の handling 未具体化 — R8.12 で「LLM CLI subprocess timeout 必須」だが、timeout 発生時の error response
+  (exit code / message / partial output 廃棄 vs 保持) の規範未明示。Spec 4 委譲だが boundary 明示推奨
+  - 軽-7-2 候補: vocabulary YAML 部分破損 (一部 entry のみ malformed) — R9.7「該当 vocabulary 検査のみ ERROR」は file 全体 parse failure 想定、entry
+  単位の部分破損 (例: tags.yml の 50 entry 中 3 entry が schema 違反) の handling は? 部分有効化 vs 全体 ERROR
+  - 軽-7-3 候補: rw tag merge 中断 (例: 8 段階対話中の Ctrl+C / network 断 / lock 解放失敗) の handling — review buffer 生成中 / lock
+  取得済での中断時の cleanup 規範未明示。.hygiene.lock の自動解放 (process 終了時) は Spec 4 委譲
+  - 軽-7-4 候補: 影響 markdown ファイル群の一括更新 (Flow 1) 中の partial failure — 例: 100 ファイル中 50 ファイル更新後 disk full / permission
+  denied → rollback 規範? all-or-nothing の transaction guarantee? Spec 4 rw approve 拡張所管
+  - 軽-7-5 候補: decision_log 記録失敗時の handling — R8.13 で Spec 5 record_decision() 呼出を規定、Spec 5 が record_decision を実装する際に失敗
+  (disk full / 権限) した場合、本 spec 操作 (vocabulary 更新) は成功扱い? rollback?
+  - 軽-7-6 候補: lint 結果 JSON 出力時の disk full / permission denied — JSON output が write できない場合、stdout fallback / 終了 code は?
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 7 ラウンドの進め方をどうしますか？
+
+  - 案 A: 6 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended、軽-7-4 / 7-5 が transaction 規範で escalate 候補)
+  - 案 B: 主要 4 件 (timeout / 部分破損 / 中断 cleanup / partial failure) のみ自動採択、他 2 件は Phase 2 Spec 4 委譲、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  6 候補:
+
+  - 軽-7-1 (subprocess timeout 失敗): 自動採択 (Phase 2 Spec 4 委譲明記)
+  - 軽-7-2 (vocabulary YAML 部分破損): 自動採択 (entry 単位 fail-soft)
+  - 軽-7-3 (rw tag merge 中断 cleanup): 自動採択 (review buffer 残置 + lock 自動解放)
+  - 軽-7-4 + 7-5 (一括更新の transaction guarantee): escalate (規範 layer 判断、本 spec で確定 vs Spec 4 委譲)
+  - 軽-7-6 (lint JSON 出力 disk full): 自動採択 (stdout fallback + stderr warning)
+
+  軽-7-1 / 7-2 / 7-3 / 7-6 を Edit で適用してから軽-7-4 + 7-5 を escalate します。
+⏺ 軽-7-4 + 7-5 統合を escalate します。
+
+  軽-7-4 + 7-5 escalate: vocabulary 操作の transaction guarantee
+
+  Flow 1 (rw tag merge approve): tags.yml 更新 + 影響 markdown 一括更新 + decision_log.jsonl 記録 の 3 操作のうち、後段で失敗 (disk full / permission
+   / 権限) した場合の規範:
+
+  - file system レベルの atomic transaction は不可能 (案 X = dominated)
+  - 合理的選択肢:
+
+  【SSoT 判定要】transaction guarantee の規範をどう確定しますか？
+
+  - 案 A: Spec 1 で「Eventual Consistency + 各々独立 retry」規範を確定 — vocabulary YAML 更新 = 正本確定、markdown 一括更新失敗 = lint で stale 検出
+  + retry guidance、decision_log 記録失敗 = stderr WARN + 後追い retry。Spec 4 / Spec 5 への明確な coordination 申し送り (Recommended、本 spec
+  所管範囲内で規範確定)
+  - 案 B: Spec 1 では transaction guarantee を扱わず、Phase 2 Spec 4 (rw approve 拡張) design 着手時に規範化 — boundary clarification、本 spec は
+  Coordination 4 (R4.9) で再委譲済として位置付け
+```
+
+##### ❯ A
+
+```
+⏺ 第 7 ラウンド修正適用 5 件完了 (4 件自動採択 + 1 件 escalate 統合 → 案 A 採択)。次のラウンドへ。
+
+  第 8 ラウンド: セキュリティ / プライバシー (観点 8)
+
+  Step 1: 要点提示
+
+  design.md L979-985 の Security Considerations:
+
+  - YAML injection (B-5): vocabulary YAML 制御文字 (: / [ / & / * / << 等) 含む input は ERROR
+  - path traversal (B-6): rw tag register <tag> 引数 sanitize、../ / 絶対 path / null byte → ERROR
+  - vocabulary entry の curation provenance (決定 1-15): §2.10 evidence chain 直接適用対象外、§2.13 で代替
+  - Privacy: vocabulary YAML は git commit される public、個人情報含めない (人間 curator 責任)
+  - 整合性: git commit hash で改版 trail、決定 1-7 で rollback + decision_log 補正
+
+  潜在的検出候補:
+
+  - 軽-8-1 候補: B-5 YAML injection の検査範囲 — 「vocabulary YAML への自動追記時」と明示、ただし rw tag merge canonical aliases... のような CLI 引数
+   経由の input も YAML control char 検査対象に含むべき。design.md L497 で rw tag register 引数 sanitize 言及あるが、merge / split / rename /
+  deprecate の引数も同等の sanitize 必要
+  - 軽-8-2 候補: yaml.safe_load 必須の明示 — Spec 0 で同様指摘、Spec 1 でも yaml block parse / vocabulary YAML load で yaml.safe_load
+  使用が暗黙前提。明示推奨
+  - 軽-8-3 候補: vocabulary YAML の ownership / 権限 — vocabulary YAML が git commit される public ファイル、ただし file system 上の write 権限制御
+  (例: 複数ユーザーの vault 共有時の vocabulary 編集権限) は規範対象外? Spec 4 委譲?
+  - 軽-8-4 候補: frontmatter の sensitive data リスク — vocabulary YAML は public、frontmatter (type: / entity_type: / tags: 等) も lint
+  対象、frontmatter に個人情報が混入した場合の検出機構 (例: メールアドレス pattern / ID pattern) は本 spec 規範対象? Spec 4 audit task 委譲?
+  - 軽-8-5 候補: subprocess 経由 LLM CLI への secret leak — rw tag merge 8 段階対話で LLM CLI subprocess 呼出時、vocabulary content (canonical /
+  aliases / description) を LLM に送る。public vocabulary は問題なし、ただし frontmatter 由来 sensitive data (source: URL に token 含む等) を LLM
+  に送る場合のリスク?
+  - 軽-8-6 候補: vocabulary 操作の audit trail 完全性 — 決定 1-7 で「git revert + decision_log 補正」確定、ただし decision_log 自体が改ざん可能な
+  append-only ファイル (.jsonl)、tampering 検出 (例: hash chain) は本 spec 対象? Spec 5 委譲?
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 8 ラウンドの進め方をどうしますか？
+
+  - 案 A: 6 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 主要 3 件 (YAML injection 範囲 / safe_load 明示 / sensitive data 境界) のみ自動採択、他 3 件は Phase 2 / 3 委譲、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  6 候補すべて自動採択 (boundary clarification + security 規範強化):
+
+  - 軽-8-1: YAML injection 検査を全 write 系サブコマンド (merge / split / rename / deprecate / register) に拡張
+  - 軽-8-2: yaml.safe_load 必須を明示 (Spec 0 整合)
+  - 軽-8-3: file system permission は Spec 4 / OS layer 委譲明記
+  - 軽-8-4: frontmatter sensitive data (個人情報 pattern) 検出は Spec 4 audit task 委譲明記
+  - 軽-8-5: subprocess LLM CLI への secret leak は Spec 4 / Spec 6 audit 委譲明記
+  - 軽-8-6: decision_log tampering 検出は Spec 5 所管委譲明記
+
+  修正適用します。
+⏺ 第 8 ラウンド修正適用 1 件 (6 候補統合)。次のラウンドへ。
+
+  第 9 ラウンド: 観測性 (観点 9)
+
+  Step 1: 要点提示
+
+  design.md L946-949 の Monitoring:
+
+  - lint 結果: JSON / human-readable 両形式 (R9.5)、CI 統合
+  - rw tag scan: severity 規約に従って vocabulary 違反一覧 (R8.2)
+  - decision_log: vocabulary 操作の curation provenance (R8.13、Spec 5 所管 decision_log.jsonl)
+
+  潜在的検出候補:
+
+  - 軽-9-1 候補: lint output の trace 観測性 — JSON 出力の lint_run_id (uuid) を含むが、実行履歴の保全方法 (timestamp / 所要時間 / 検出件数推移)
+  は明示なし。Spec 4 委譲事項
+  - 軽-9-2 候補: rw tag scan の statistics 出力 — R8.3 で stats <tag>
+  サブコマンドが「全タグまたは指定タグの出現件数・最終使用日・使用ページ数集計」を出力、ただし時系列推移 (週次 / 月次 trend) や非使用 tag 通知
+  (long-tail tag detection) は規範外
+  - 軽-9-3 候補: vocabulary 操作の audit log — decision_log.jsonl で curation provenance 保全、ただし日次 / 週次の vocabulary 編集 summary (X 個
+  merge / Y 個 deprecate / Z 個 register) は Spec 5 rw decision recent 所管? 本 spec で boundary 明示推奨
+  - 軽-9-4 候補: lint failure rate trend — CI 統合時の lint failure rate trend (例: 1 ヶ月 ERROR 数推移) は本 spec 規範対象? Phase 2 Spec 4 委譲?
+  - 軽-9-5 候補: vocabulary 整合性 dashboard — vocabulary 健全性指標 (deprecated tag 比率 / orphan canonical / unused category) の集約 view は本
+  spec? Spec 5 dashboard 所管?
+  - 軽-9-6 候補: rw tag scan の null state 観測 — vocabulary 未初期化 (<vault>/.rwiki/vocabulary/ 未配置) の状態通知。R9.4 で「検査 skip +
+  INFO」と確定済、本 spec で十分
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 9 ラウンドの進め方をどうしますか？
+
+  - 案 A: 6 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 主要 3 件 (trace 観測性 / audit log boundary / dashboard 委譲) のみ自動採択、他 3 件は規範対象外、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 第 9 ラウンド修正適用 1 件 (5 候補統合)。次のラウンドへ。
+
+  第 10 ラウンド: 依存選定 (観点 10)
+
+  Step 1: 要点提示
+
+  design.md L137-148 の Technology Stack:
+
+  - CLI Runtime: Python 3.10+ (steering tech.md)
+  - YAML Parsing: pyyaml (Python 標準環境、新規依存なし)
+  - Concurrency Lock: .rwiki/.hygiene.lock (Spec 4 提供)
+  - Cache (Phase 2): sqlite3 (Python 標準)
+
+  requirements R11 依存規範:
+
+  - Python 3.10+ / Git / LLM CLI / Markdown エディタ
+  - 依存は sqlite3 (標準) + networkx >= 3.0 (Spec 5)
+  - 依存禁止: v1 spec / 実装
+
+  潜在的検出候補:
+
+  - 軽-10-1 候補: pyyaml の version 制約未明示 — Spec 0 と同様、yaml.safe_load は PyYAML 3.13+ で利用可能。version 制約 (pyyaml >= 5.1 等) を本 spec
+  で確定するか、Phase 2 Spec 4 委譲か
+  - 軽-10-2 候補: pyyaml は Python 標準ではない — 「Python 標準環境」と表記しているが、pyyaml は標準ライブラリではなく requirements.txt /
+  pyproject.toml で declare 必要。記述精度の問題
+  - 軽-10-3 候補: 依存禁止規律の整合 — design.md L69「v1 spec / 実装への参照」を依存禁止と明示、本 spec 実装で v1 rw_tag.py / rw_lint.py
+  への暗黙参照は前提として禁止 (research.md L89 で「v1-archive に rw_tag.py / rw_lint.py 等専用 module は存在せず、フルスクラッチ前提と整合」確認済)
+  - 軽-10-4 候補: upstream Spec 0 への依存形式 — Foundation 引用 (R13、決定 1-1) は markdown ファイル参照のみ、Python module として import
+  しない。Spec 0 と同様の boundary 規律明示推奨
+  - 軽-10-5 候補: Spec 4 / Spec 5 への coordination dependency の形式 — Spec 4 .hygiene.lock API / Spec 5 record_decision() API は Python module の
+  import 形式で依存? subprocess 呼出形式? 規範未明示
+  - 軽-10-6 候補: Phase 2 cache の sqlite3 利用範囲 — sqlite3 は Python 標準だが、cache schema / migration / corruption recovery は Phase 2 Spec 4 /
+  別途 design 着手時に確定
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 10 ラウンドの進め方をどうしますか？
+
+  - 案 A: 6 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended、軽-10-5 が API 依存形式で escalate 候補)
+  - 案 B: 主要 3 件 (pyyaml 標準誤記 / version 制約 / API 依存形式) のみ自動採択、他は次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  6 候補:
+
+  - 軽-10-1 (pyyaml version 制約): 自動採択 (Phase 2 Spec 4 委譲明記、>= 5.1 想定)
+  - 軽-10-2 (pyyaml は Python 標準ではない): 自動採択 (誤記是正)
+  - 軽-10-3 (依存禁止規律): 修正不要 (L69 で既に明示)
+  - 軽-10-4 (upstream Spec 0 参照形式): 自動採択 (markdown 参照のみ、Python import なし)
+  - 軽-10-5 (Spec 4 / Spec 5 API 依存形式): 自動採択 (Python module import 形式と明示、本 spec で確定可能で escalate 不要)
+  - 軽-10-6 (Phase 2 cache sqlite3 詳細): 自動採択 (Phase 2 Spec 4 委譲明記)
+
+  修正適用します。
+⏺ 第 10 ラウンド修正適用 1 件 (5 候補統合)。次のラウンドへ。
+
+  第 11 ラウンド: テスト戦略 (観点 11)
+
+  memory 規定: 観点 11 は規模の小さい spec でも該当なし扱いせず、実装重 spec では特に深く実施。
+
+  Step 1: 要点提示
+
+  design.md L953-976 の Testing Strategy:
+
+  - Unit Tests: frontmatter parse / vocabulary YAML 3 種 / lint 8 検査 / rw tag * 13 サブコマンド (mock LLM CLI)
+  - Integration Tests: rw lint 統合 / rw tag merge → review → rw approve → tags.yml 更新 + markdown 一括 + decision_log / normalize_frontmatter Spec
+  5 連携 / .hygiene.lock
+  - Cross-spec Integration Tests (consumer 側): Spec 4 / Spec 5 / Spec 7 design 内に記述
+  - 大規模 vault test (Phase 2): 10K+ ページ + 1K+ タグでの performance test
+
+  潜在的検出候補:
+
+  - 軽-11-1 候補: Unit Test の coverage target 未明示 — 「frontmatter parse 各種」「lint 8 検査項目」と記述、ただし測定可能な coverage target (例:
+  80%+ / branch coverage) は未確定。Phase 2 Spec 4 委譲事項
+  - 軽-11-2 候補: rw tag * 13 サブコマンドの個別 test — 「mock LLM CLI」明記、ただし subprocess timeout test / lock 取得失敗 test / YAML injection
+  sanitize test / idempotency test (本ラウンド追加分) の test 観点が網羅されているか?
+  - 軽-11-3 候補: NFC normalization の boundary test — 全角半角混在 / NFD 入力 / surrogate pair / 異常長 input — テスト観点として明示推奨
+  - 軽-11-4 候補: Levenshtein → SequenceMatcher 訂正に伴う test 影響 — 第 5 ラウンドで訂正、test 設計で「ratio ≥ 0.8」の閾値妥当性検証 test
+  を含めるか?
+  - 軽-11-5 候補: Cross-spec Integration Test の hub spec 判定 — 本 spec は Spec 1、consumer (Spec 4 / Spec 5 / Spec 7) 側に記述する規律。一方、Spec
+  1 自身が consumer になる cross-spec test (例: Spec 0 Foundation との整合性) は本 spec design に書くか? ハイブリッド方式の判定基準明示
+  - 軽-11-6 候補: regression test — vocabulary YAML schema 変更時の既存 markdown への影響 (frontmatter schema 拡張 / mapping table 改版時) を検出する
+   regression suite は本 spec? Phase 2 委譲?
+  - 軽-11-7 候補: transaction guarantee の Integration Test — 第 7 ラウンドで「Eventual Consistency + 各々独立 retry」規範確定、partial failure
+  シナリオ (markdown 一括更新中の disk full / decision_log 失敗) の Integration Test が必要
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 11 ラウンドの進め方をどうしますか？
+
+  - 案 A: 7 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 主要 4 件 (test 観点網羅 / NFC boundary / transaction Integration / regression) のみ自動採択、他 3 件は Phase 2 委譲、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  7 候補すべて自動採択 (test 規範強化):
+
+  修正適用します。
+⏺ 第 11 ラウンド修正適用 1 件 (7 候補統合)。次のラウンドへ。
+
+  第 12 ラウンド: マイグレーション戦略 (観点 12)
+
+  memory 規定: 観点 12 は規模の小さい spec でも該当なし扱いせず必ず実施。
+
+  Step 1: 要点提示
+
+  design.md L1006-1027 の Migration Strategy:
+
+  - v2 はフルスクラッチ (v1 から継承する frontmatter / vocabulary なし)、初期 migration 不要
+  - v2 → v2.1 で frontmatter スキーマ拡張する場合の flowchart (本-11、Phase 2)
+  - Phase breakdown / Rollback triggers / Validation checkpoints
+
+  潜在的検出候補:
+
+  - 軽-12-1 候補: 本セッション内 3 件の実質変更経路 (決定 1-4 / 1-13 / 1-16) の migration — design.md L1145 で「別 commit で改版 PR
+  を起票予定」と記述、これは本 design approve 後の連鎖 migration として位置付け、Migration Strategy section にも明示推奨
+  - 軽-12-2 候補: vocabulary YAML 3 種の初期化 migration — rw init で初期化 (R6.6) と記述あるが、初期 vocabulary entry (推奨 6 カテゴリ / 初期
+  entity_type 2 種等) を seed する規範は本 spec? Phase 2 Spec 4 委譲?
+  - 軽-12-3 候補: vocabulary YAML schema 拡張 migration — entity_types.yml.directory_name (決定 1-9) のような任意 field 追加は後方互換、ただし強制
+  field 追加 (例: 将来 tags.yml.canonical_kind 必須化) の migration は本-11 で言及済、詳細未確定
+  - 軽-12-4 候補: 既存 markdown frontmatter migration tool — v2 → v2.1 で frontmatter 必須 field 追加時、既存 markdown を一括 migration する script
+  は Spec 7 連携、本 spec で boundary 明示推奨
+  - 軽-12-5 候補: vocabulary YAML rename migration の rollback 規範 — 決定 1-4 で successor → successor_tag rename、rollback 時の規範 (rename 前
+  commit に戻す + decision_log 補正) は決定 1-7 と同経路、明示推奨
+  - 軽-12-6 候補: Phase 名整合 — design 内で「Phase 2 Spec 4」「Phase 3 Spec 5」と記述、dev-log Phase 番号 (Phase 1 = Spec 0+1 / Phase 2 = Spec 4+7 /
+   Phase 3 = Spec 5+2 / Phase 4 = Spec 3 / Phase 5 = Spec 6) との整合確認
+
+  Step 2: ユーザー判断
+
+  【選択肢あり】第 12 ラウンドの進め方をどうしますか？
+
+  - 案 A: 6 候補を Step 3 で詳細抽出 → Step 4 で深掘り + 自動採択 / escalate 判断 (Recommended)
+  - 案 B: 主要 3 件 (3 件実質変更経路 / 初期化 seed / Phase 名整合) のみ自動採択、他 3 件は Phase 2 / 7 委譲、次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4: 詳細抽出 + 深掘り判断
+
+  6 候補すべて自動採択 (情報追加 + boundary clarification):
+
+  修正適用します。
+⏺ 第 12 ラウンド修正適用 1 件 (6 候補統合)。12 ラウンド完了。
+
+  厳しく再精査 (最終ガード)
+
+  連鎖更新漏れ精査します。
+⏺ 連鎖更新漏れ: Levenshtein 残存は決定 1-6 訂正経緯記述内のみ (意図的に残す)。Python 標準誤記訂正完了。要件側への波及: 既存の決定 1-4 / 1-13 / 1-16のみ (本ラウンドで新規追加なし)。
+
+  change log に修正サマリを追記します。
+  
+⏺ Spec 1 design ラウンド 4-12 やり直し完了サマリ
+
+  修正適用: 計 11 件
+  - R4: 5 件 (全件自動採択)
+  - R5: 6 件 (5 件自動採択 + 1 件 escalate → 案 A: Levenshtein → Ratcliff/Obershelp 訂正)
+  - R6: 6 件 (全件自動採択、6 候補統合 1 件)
+  - R7: 5 件 (4 件自動採択 + 1 件 escalate → 案 A: Eventual Consistency 規範確定)
+  - R8: 6 件 (全件自動採択、6 候補統合 1 件)
+  - R9: 5 件 (全件自動採択、5 候補統合 1 件)
+  - R10: 5 件 (全件自動採択、5 候補統合 1 件)
+  - R11: 7 件 (全件自動採択、7 候補統合 1 件)
+  - R12: 6 件 (全件自動採択、6 候補統合 1 件)
+
+  escalate 確定: 2 件 (両件案 A 採択)
+  - R5: アルゴリズム訂正 (Levenshtein → Ratcliff/Obershelp ratio ≥ 0.8)
+  - R7: Transaction guarantee 規範 (Eventual Consistency)
+
+  requirements.md 改版: 本ラウンドで新規確定した決定はなし、前回確定の決定 1-4 / 1-13 / 1-16 のみ実質変更経路維持
+
+  spec.json phase: design-approved 維持 (本やり直しは Adjacent Sync 経路として位置付け、design 内整合性向上)
+
+  次のアクション確認
+
+  memory feedback_approval_required.md 規律により commit はユーザー明示承認必要。
+
+  【選択肢あり】次のアクションをどうしますか？
+
+  - 案 A: Spec 1 修正を単独 commit + Phase 1 やり直し全体を origin/main へ push (Recommended、Spec 0 commit 4da85d7 と統合して Phase 1 やり直し全体を remote 同期)
+  - 案 B: Spec 1 修正を単独 commit のみ、push は次セッションへ (履歴 split、push 判断を保留)
+```
+
+##### ❯ A
+
+```
+  本セッション総括
+
+  完了タスク 3 件:
+
+  1. memory に skip 防止策を新規追加 + 既存 memory 強化
+    - 新規: feedback_no_round_batching.md (ラウンド一括処理禁止)
+    - 強化: feedback_design_review.md に skip 防止規律追記
+    - MEMORY.md インデックス更新
+  2. Spec 0 (rwiki-v2-foundation) design ラウンド 4-12 個別やり直し → commit (4da85d7)
+    - 修正 10 件 (9 自動採択 + 1 escalate「3 ヶ月閾値削除」)
+  3. Spec 1 (rwiki-v2-classification) design ラウンド 4-12 個別やり直し → commit (a73e3f6)
+    - 修正 11 件 (9 自動採択 + 2 escalate「Levenshtein 訂正 + Eventual Consistency 規範」)
+
+  push 状況: 4da85d7 / ac27130 / a73e3f6 を origin/main へ同期済
+
+  残作業:
+  - dev-log-3.md は本セッションの議論ログを継続追記中、uncommitted のまま (次セッション末で commit 推奨)
+  - Phase 2 (Spec 4 / Spec 7 並列) design に着手可能、batching 防止策は memory として反映済で次回以降適用
+```
+
+##### ❯ レビューの進め方について再考。現在は、例えば、第 12 ラウンド: マイグレーション戦略 (観点 12)⇒Step 1: 要点提示⇒潜在的検出候補:⇒Step 2: ユーザー判断で進め方をどうするかを尋ねてくる。大抵、案 Aと案 Bであるが、このA/Bだと選択の余地はなく案 Aになる。しかし、A案は深掘り + 自動採択 / escalate 判断で、事実上escalate 判断はなく、自動採択で議論の余地がない。LLMが深掘りして、十分な根拠で推奨案を出しているのならユーザ判断は必要ないが、本当にescalate 判断はないのか。
+
+```
+⏺ ユーザー指摘は的確で、現状フローには 2 つの構造的問題があります。
+
+  現状フローの問題点
+
+  問題 1: Step 2 が「進め方の二択」で形骸化
+  - 現状: 案 A (詳細抽出 → 自動採択 / escalate) vs 案 B (該当なし / 軽微のみ)
+  - 案 B は memory feedback_no_round_batching.md 規定「『該当なし』判定でも Step 1 提示 + Step 2 ユーザー確認」と矛盾しない範囲だが、9
+  ラウンドで毎回案 A 採択になり実質一択
+  - ユーザー判断機会としての意味が薄い
+
+  問題 2: 「自動採択」基準が LLM 主観で、escalate 漏れが見えない
+  - memory feedback_deepdive_autoadopt.md は「致命的デメリットなしなら自動採択」と規定、致命性判定は LLM 主観
+  - ユーザーから見ると「LLM 単独判断」が並ぶだけで、escalate 判断の妥当性チェックなし
+  - 本来 escalate すべき案件が「致命的でない」と判定されて素通りするリスク
+
+  改善方向の選択肢
+
+  【選択肢あり】レビューフロー再設計をどうしますか？
+
+  - 案 X: Step 1 で各検出候補に LLM 判断根拠 + 自動/escalate ラベル併記 + Step 2 を「LLM 判断への異論あり/なし」に再定義 —
+  異論なしなら現状フロー、異論ありならユーザー指定で個別介入。Step 1 情報量増 + Step 2 反転介入機会の両方を獲得 (Recommended)
+  - 案 Y: Step 2 のみ再定義 (異論あり/なし) — Step 1 は現状維持、ユーザーは判断根拠が見えないまま「異論ありますか？」と問われる (案 X の
+  subset、情報不足)
+  - 案 Z: 自動採択判定基準を厳格化 (「軽微な内部矛盾解消 / 純粋な誤記」のみ自動採択、それ以外はすべて escalate) — escalate
+  件数増、ユーザー判断機会増だが選択肢提示の負荷も増 (案 X と異なる方向の解決)
+
+  memory への反映と適用範囲の判断は、選択した案が決まってから提示します (Phase 2 以降からか / Spec 0 / Spec 1 にも遡及か)。
+```
+
+##### ❯ 案 Xを試行してみよう
+
+```
+⏺ 案 X を memory に反映します。試行段階であることを明示します。
+⏺ MEMORY.md にインデックス追加します。
+⏺ memory 反映完了。
+
+  memory 反映サマリ
+
+  新規 memory: feedback_review_step_redesign.md (試行段階)
+
+  Step 1 新構造:
+  - 各検出候補に 3 要素併記: 検出内容 / LLM 判断根拠 / [自動採択推奨] or [escalate 推奨] ラベル
+
+  Step 2 新構造:
+  - 「LLM 判断への異論ある候補はあるか?」を問う
+  - 案 A: 異論なし (LLM 判断通り進める) / 案 B: 異論あり (どの候補? どう変える?) / 案 C: 該当なし扱い
+
+  LLM ラベル付与の厳格化:
+  - 内部矛盾解消 / 誤記是正 / boundary clarification / 軽微情報追加 → [自動採択推奨]
+  - 規範範囲判断 / 要件改版 / 複数選択肢 trade-off / dominated 除外後も合理的選択肢 2 件以上 → [escalate 推奨]
+  - 判定迷う場合は [escalate 推奨] 寄せ (false negative より false positive 安全)
+
+  試行範囲: Phase 2 (Spec 4 / Spec 7) 以降の design レビューに適用、Spec 0 / Spec 1 への遡及不要
+
+  評価タイミング: Phase 2 完了後に escalate 件数 / ユーザー反転介入頻度 / 所要時間を評価、本格採用 or 再調整判断
+
+  次セッションで Phase 2 design に着手する際、本 memory に従って Step 1-2 を実行します。
+```
 
 
 
