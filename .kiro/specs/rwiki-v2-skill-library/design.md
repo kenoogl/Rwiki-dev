@@ -876,11 +876,23 @@ paper_summary skill を使うのが適切です。実行しますか？
 
 ## Performance & Scalability
 
+### Target Metrics (推測値、MVP 規模で実装時に実測検証予定)
+
+| 操作 | 規模 | 目標時間 | 根拠 |
+|------|------|----------|------|
+| `list_skills` | 15 種 (standard) | < 100ms | frontmatter parse 15 回 + 8 section detection 15 回、PyYAML overhead 2-5ms/件 |
+| `list_skills` | 100 種 (Phase 2 想定) | < 700ms | 線形スケール、現状 single-thread で問題なし |
+| `validate_skill_file` (4 種一括) | 単一 skill | < 50ms | re scan + PyYAML parse + path scan 4 種、各 < 15ms |
+| `install_skill_generator` (atomic 5 step) | 単一 skill | < 200ms | validation 50ms + os.rename + macOS F_FULLFSYNC +30-50ms |
+| concurrent skill operation | MVP single-thread | シリアル化 | Spec 4 G5 LockHelper、Phase 2 で threading.Lock 二重 lock (Spec 5 Decision 5-20 同パターン) |
+
+### Notes
+
 - **Skill catalog load**: 15 種全件 load 想定で < 100ms 以内 (frontmatter parse 15 回 + 8 section detection 15 回)、PyYAML / re 標準 module 利用で overhead 極小
 - **Validation 4 種**: 単一 skill ファイル < 50ms、4 validation の独立性により並列化可能 (Phase 2 拡張余地、現状 single-thread)
 - **Atomic install**: < 200ms 想定 (validation + os.rename + fsync)、macOS F_FULLFSYNC で +30-50ms
 - **Concurrent skill operation**: MVP は single-thread 前提、Spec 4 G5 LockHelper でシリアル化。Phase 2 で `threading.Lock` 二重 lock 検討 (Spec 5 Decision 5-20 同パターン)
-- **Standard skill 15 種固定**: skill 数増加時の `list_skills` overhead は線形、100 件規模まで問題なし。Phase 2 で skill 100+ 規模時の cache 検討 (Spec 5 R8 sqlite cache 同パターン適用余地)
+- **Standard skill 15 種固定**: skill 数増加時の `list_skills` overhead は線形、100 件規模まで問題なし。Phase 2 で skill 100+ 規模時の cache 検討 (Spec 5 R14.7 SQLite cache ベース高速 traverse 同パターン適用余地、本 spec では derived cache `.rwiki/cache/skill_index.sqlite` 等の Phase 2 拡張余地)
 
 ## Migration Strategy
 
@@ -932,7 +944,7 @@ flowchart TD
 - **Skill version up** (R1.5 / R3.1): 同名 skill の v1 → v2 改版手順、Phase 2 以降 (現状は新規 skill 名で install を基本方針)
 - **AGENTS hash 検知** (Spec 4 決定 4-10): `rw skill verify` で skill ファイルの hash / signing / verification、Phase 2 以降 Spec 2 design で再検討
 - **Windows サポート** (Decision 2-4 / 2-5、Spec 5 Decision 5-3 同パターン): atomic operation + lock の POSIX 限定解除、Foundation / roadmap.md 改版必要、Phase 4 持ち越し候補
-- **Skill 100+ 規模時の cache** (現状 single-thread + 15 種で問題なし): Spec 5 R8 sqlite cache 同パターン適用余地、Phase 3 以降
+- **Skill 100+ 規模時の cache** (現状 single-thread + 15 種で問題なし): Spec 5 R14.7 SQLite cache ベース高速 traverse 同パターン適用余地、Phase 3 以降
 
 ## Supporting References
 
@@ -972,3 +984,6 @@ _change log_
   - **R5-2 dry-run failure 4 種 retry_recommended 値域明示**: Layer 3 Service Interface DryRunFailure dataclass に値域コメント追加 (timeout=True / crash=False / output_error=False / dry_run_internal_error=False)、Spec 4 G3 caller / ユーザーへの retry recommendation 一貫化
   - **R5-3 global failure (process kill / disk full / OOM) walkthrough 言及**: Error Handling section に追記、本 spec の write 操作は atomic install + lock で保護、Spec 5 Decision 5-4 + Foundation Eventual Consistency 規範 (Spec 4 重-厳-4 / 重-厳-6 同パターン) に従う旨明示
   - **R5-4 R15.4 ERROR 発火タイミング責務集約**: Layer 2 validate_references Implementation Notes に「install 時のみ check、skill load / dispatch 時は check しない」明示、責務分散解消
+- 2026-04-28: Round 6 review 反映 (性能 trade-off、重要 2 件解消):
+  - **R6-1 性能数値の根拠 / 規模変動表 不在**: Performance & Scalability section に Spec 5 design 同パターンの Target Metrics 表追加 (5 操作 × 規模 × 目標時間 × 根拠)、推測値 / MVP 規模で実装時実測検証予定の旨明示、規模変動 (15 種 standard / 100 種 Phase 2 想定) を明示
+  - **R6-2 Spec 5 R8 sqlite cache の R 番号誤引用**: Spec 5 R8 = Usage signal 4 種別 (sqlite cache とは無関係)、sqlite cache の規定箇所は Spec 5 R14.7 (SQLite cache ベース高速 traverse) のため引用 R 番号を訂正、本 spec の Phase 2 拡張余地として `.rwiki/cache/skill_index.sqlite` 等を例示。本質的観点 (e) 単純誤記 grep 強制発動による発見
