@@ -1635,3 +1635,208 @@ TODO_NEXT_SESSION.md を読んでください。Spec 5 (rwiki-v2-knowledge-graph
   セッション継続準備が整いました。次セッション開始時に TODO_NEXT_SESSION.md を読み返してください。
 ```
 
+##### ❯ Spec5の設計について、本質的に厳しくレビューしてください
+
+```
+⏺ 「本質的に厳しく」レビューします。Round 1-10 では検出されなかった、より深い設計理念整合 / 数値安定性 / Spec 間 contracts 完全性 / brief持ち越し項目の解消状況を点検します。まず brief.md を確認します。
+
+⏺ Spec 7 の Page lifecycle 5 種 (active / deprecated / retracted / archived / merged + split) に対する edge action mapping を確認します。
+
+⏺ 「本質的に厳しく」のレビューを実施しました。Spec 7 cmd_archive (R2.4 = Page→Edge orchestration 行わない、archived は履歴扱い) + cmd_split (関連
+  edges reassign は user 個別判断、edge_reassign 利用) を確認、Page lifecycle 5 種 + split + reactivate + promote_to_synthesis 全 7 状態 ↔ edge action 3 種 mapping は Spec 7 所管として整合しています。
+
+  [本質的厳しいレビュー結果] 9 大本質観点 + 5 件補強候補
+
+  確認結果 (本質的整合性、検出なし 9 軸)
+
+  1. Curated GraphRAG 3 軸 (人間中心 + Hygiene 自己進化 + Reject-only filter): 全実装 ✓
+  2. §2.12 Evidence-backed Candidate Graph 本質: Evidence chain 逆追跡 + Evidence-less ceiling 0.3 + 6 係数加重 ✓
+  3. §2.13 Curation Provenance: decision_log selective recording 5 trigger + reasoning hybrid 3 方式 + selective privacy ✓
+  4. L1↔L2↔L3 相互作用: extract-relations / normalize_frontmatter / Flow 5 L3 sync / dangling 4 段階 degrade すべて整合 ✓
+  5. Page lifecycle 7 種 ↔ edge action 3 種 mapping (Spec 7 所管): active=不要 / deprecated→demote / retracted→reject / archived=不要 (Spec 7 R2.4) /
+   merged→reassign / split→reassign (user 判断) / reactivate=Spec 7 cmd_reactivate 内 / promote_to_synthesis=cmd_promote 内、全網羅 ✓
+  6. Spec 4 / 6 / 7 contracts: edge API 3 種 + Query API 15 種 + lock 契約、Round 1-9 修正後に完全整合 ✓
+  7. brief 持ち越し項目 (第 4-A / 4-B / 4-E): Decision 5-9 / 5-10 / 5-11 で全件解消 ✓
+  8. Concurrency single-user serialized: hygiene.lock + Phase 2 thread-safety 移行手順 (Decision 5-20) ✓
+  9. Migration P0-P4 段階: MVP=P0+P1+P2、P3=v0.8 候補、P4=on demand、Spec 間 dependency 整合 ✓
+
+  ---
+  検出案件 (本質的補強候補 5 件、すべて自動採択候補 = escalate 必須条件 5 種非該当)
+
+  軽-11-1 [自動採択候補]: edge_id sha256 12 hex (48 bit) の Birthday paradox numerical 規模感 不明示
+
+  - 検出内容: Decision 5-10 で「edge_id = source+type+target hash で冪等性 + 衝突時 ERROR abort」確定だが、12 hex (48 bit) の妥当性が numerical
+  規模感で議論されていない
+  - Birthday paradox 計算 (P ≈ N² / (2 × 2⁴⁸) = N² / 5.6×10¹⁴):
+    - MVP 想定 5,000 edges → P ≈ 4.5×10⁻⁸ (= 4500 万分の 1)、安全
+    - 100,000 edges (Phase 3) → P ≈ 1.8×10⁻⁵ (= 5.6 万分の 1)、低 risk
+    - 1,000,000 edges (将来) → P ≈ 1.8×10⁻³ (= 0.18%)、運用 risk
+    - 16,000,000 edges → P ≈ 50%、確実衝突
+  - 修正案: Decision 5-10 に numerical 規模感計算 + Phase 3 拡張時に 16 hex (64 bit) へ拡張する閾値 (例: 100,000 edges 超過時 / 衝突 N 件検出時)
+  を明示
+
+  軽-11-2 [自動採択候補]: 6 係数加重式の係数値根拠 (なぜ evidence 0.35 / human 0.05?) 不明示
+
+  - 検出内容: Decision 5-6 で「6 係数加重 + evidence-less ceiling + 係数値 config 注入」確定だが、初期値 0.35 / 0.20 / 0.15 / 0.15 / 0.10 / 0.05
+  の根拠 (なぜこの値?) が design / Decision 内で明示されていない
+  - 本質的根拠の推察 (§2.12 SSoT 由来):
+    - evidence 0.35 = 最重視 (trust chain の根幹)
+    - explicitness 0.20 = extraction_mode 4 値の確実性反映
+    - source 0.15 / graph_consistency 0.15 = 信頼度ヒューリスティック
+    - recurrence 0.10 = 再出現頻度
+    - human_feedback 0.05 = MVP 段階で feedback ループ未確立のため低め (将来 phase で重み増加余地)
+  - 修正案: Decision 5-6 に係数値根拠の 1 段落を追記
+
+  軽-11-3 [自動採択候補]: Hygiene 5 ルール固定実行順序の論理的根拠 不明示
+
+  - 検出内容: Decision 5-8 で「Decay → Reinforcement → Competition → Contradiction → Merging 固定」確定、design
+  L932「後段ルールが前段の結果に依存するため」のみ簡潔記述
+  - 本質的根拠:
+    - Decay first: 時間経過分を確定後に Reinforcement で正しい現時点 confidence を計算
+    - Reinforcement: usage signal 反映、Competition の confidence ranking 前提
+    - Competition L1: 同一 node pair の重複 edges 整理 (winner/runner-up/loser 確定)
+    - Contradiction: Competition 後の状態で矛盾検出 (winner edges 同士の矛盾)
+    - Merging: Contradiction で flagged 後の類似 edges 統合 (P3)
+  - 修正案: Decision 5-8 に各 step 間の前提依存関係を 5 行で明示
+
+  軽-11-4 [自動採択候補]: Hygiene 進化則の数学的安定性議論 不明示
+
+  - 検出内容: design L759 / Decision 5-9 で進化則 + 暴走防止 3 制約確定だが、数値安定性 (収束性 / 振動 / fixed point) の議論が design
+  内で明示されていない
+  - 本質的議論:
+    - per-event 0.1 / per-day 0.2 上限で 線形上限 確保
+    - sqrt(confidence) フィードバック緩和で 高 confidence edge の自己強化抑制 (フィードバックループ抑制)
+    - independence_factor で同 session 内 spam 防止
+    - time_weight (time_decay_half_life_days) で古い event の影響減衰
+    - これらの組合せで confidence ∈ [0.0, 1.0] の bounded space で安定 (oscillation 抑制)
+  - 修正案: Performance & Scalability or Decision 5-9 に「進化則安定性」を 1 段落補強 (formal proof は不要、定性的議論で十分)
+
+  軽-11-5 [自動採択候補]: External 更新 (git pull で L2 ledger 変更) 時の sqlite cache invalidation strategy 不明示
+
+  - 検出内容: Decision 5-2 で「schema_version 不一致時 drop+rebuild」確定だが、git pull 後の partial 変更 (1 line append、数 line 追加 等) で cache
+  rebuild するか / 増分 update するかが design 内で明示されていない
+  - 本質的問題:
+    - JSONL append-only なら新規 edge は edge_id を sqlite UPSERT で増分対応可能
+    - reject (rejected_edges.jsonl 移動) は status 更新で対応
+    - Hygiene 後の confidence 変更は edge_events.jsonl 経由で再計算可能
+    - schema 変更は drop+rebuild
+    - 設計判断: git pull 検出時の戦略 (full rebuild / 増分 update / file mtime 比較) を確定する必要
+  - 修正案: Decision 5-2 / Performance & Scalability に「git pull 後の cache invalidation = JSONL file mtime 比較 + 変更 line range の増分 update +
+  schema_version 不一致時のみ drop+rebuild」を明示
+
+  ---
+  dominated 判定 (本質的レビューで escalate に格上げする選択肢の dominated)
+
+  これら 5 件はすべて 設計内吸収範囲の補強 で、本 spec の設計を変更しません (Decision 5-1 〜 5-20 の internal 補強)。escalate 必須条件 5 種:
+  1. 複数の合理的選択肢 → 全 5 件で唯一案 (補強文追加)、X1 のみ
+  2. 規範範囲判断 → 全 5 件で本 spec design 内吸収、Foundation 改版不要
+  3. 設計決定間矛盾 → 既存 Decision の補強、矛盾なし
+  4. API / 実装の不整合 → API 変更なし
+  5. failure mode 選択肢 → 該当なし
+
+  → 5 件すべて escalate 必須条件 5 種非該当、自動採択候補
+
+  ---
+  本質的レビューの結論
+
+  - 設計は本質的に整合済: 9 大本質観点で検出ゼロ、Round 1-10 で 13 件の表面的不整合解消後、深層の設計理念 / Spec 間 contracts / Brief 持ち越し /
+  Migration / Concurrency すべて整合
+  - 5 件の補強余地: 設計内吸収範囲の文書補強 (numerical 根拠 / 安定性議論 / 順序根拠 / 係数根拠 / cache invalidation 戦略)、すべて自動採択候補
+
+  ---
+  user 判断 (3 択):
+
+  - 案 A 5 件すべて補強適用 = 軽-11-1 〜 軽-11-5 を Edit 適用 (Decision 5-2 / 5-6 / 5-8 / 5-9 / 5-10 + Performance & Scalability に補強文追加)
+  - 案 B 一部のみ補強適用 = どの軽-11-X を適用するか指定
+  - 案 C 補強不要、現状で承認可能 = design は本質的に整合済、approve 進行可能
+
+  なお案 A / B 適用後でも本質的設計変更なし (Decision 5-1 〜 5-20 の内部補強のみ)、approve 状態への進行に影響なし。
+```
+
+##### ❯ A
+
+```
+⏺ 5 件すべての補強を適用します。Decision 5-2 / 5-6 / 5-8 / 5-9 / 5-10 の現状を確認して順次 Edit します。
+⏺ 軽-11-1 (Decision 5-10 Birthday paradox numerical) を Edit。
+⏺ 軽-11-2 (Decision 5-6 係数値根拠) を Edit。
+⏺ 軽-11-3 (Decision 5-8 順序根拠) を Edit。
+⏺ 軽-11-4 (Decision 5-9 進化則安定性議論) を Edit。
+⏺ 軽-11-5 (Decision 5-2 cache invalidation strategy) を Edit。
+⏺ change log + research.md に Round 11 (本質的厳しいレビュー) を追記。
+  本質的厳しいレビュー完了サマリ
+
+  検出と補強適用 (軽微 5 件、すべて自動採択)
+
+  ┌─────────┬────────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │   ID    │       対象 Decision        │                                              補強内容                                              │
+  ├─────────┼────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 軽-11-1 │ 5-10 (edge_id 衝突)        │ Birthday paradox numerical 規模感 (5,000 edges P≈10⁻⁸ / 1M edges P≈10⁻³) + Phase 3 拡張閾値 16 hex │
+  ├─────────┼────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 軽-11-2 │ 5-6 (6 係数)               │ 係数値根拠 (evidence 0.35 最重視 〜 human 0.05 最小、§2.12 SSoT 由来)                              │
+  ├─────────┼────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 軽-11-3 │ 5-8 (Hygiene 5 ルール順序) │ 5 step 依存連鎖の論理的根拠                                                                        │
+  ├─────────┼────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 軽-11-4 │ 5-9 (進化則安定性)         │ bounded space + 5 制約による bounded oscillation 議論                                              │
+  ├─────────┼────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ 軽-11-5 │ 5-2 (cache migration)      │ git pull 後の cache invalidation 戦略 (mtime + 増分 update + fallback)                             │
+  └─────────┴────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  本質的整合性 9 大観点 (検出ゼロ)
+
+  1. Curated GraphRAG 3 軸 (人間中心 / Hygiene 自己進化 / Reject-only filter)
+  2. §2.12 Evidence-backed Candidate Graph
+  3. §2.13 Curation Provenance
+  4. L1↔L2↔L3 相互作用
+  5. Page lifecycle 7 種 ↔ edge action 3 種 mapping (Spec 7 cmd_archive R2.4 履歴扱い / cmd_split user 個別判断 + edge_reassign 整合)
+  6. Spec 4/6/7 contracts (Round 1-9 修正後完全整合)
+  7. brief 持ち越し 3 件 (Decision 5-9 / 5-10 / 5-11 で全件解消済)
+  8. Concurrency single-user serialized + Phase 2 thread-safety 移行手順
+  9. Migration P0-P4 段階
+
+  累計修正状況 (Round 1-10 + 本質的レビュー)
+
+  - Round 1-10: 重要級 7 件 + 軽微 6 件 (commit a652183)
+  - 本質的厳しいレビュー: 軽微 5 件 (commit f531187)
+  - 計 18 件 Edit 適用、本質的設計変更なし、Decision 5-1 〜 5-20 内部補強のみ
+  - spec.json.approvals.design.approved=false 維持 (approve 待ち継続)
+
+  設計の本質的整合性は確認済、approve 進行可能な状態です。次は user 判断で approve / 別タスクへ進めます。
+```
+
+##### ❯ 設計書を承認
+
+```
+⏺ 設計書承認を実行します。spec.json の approvals.design.approved=true + phase=design-approved 変更 + design.md change log に approve 確定 entry追加。
+⏺ design.md change log に approve 確定 entry を追加。
+  確定した design phase 内容
+
+  - 設計判断 20 件: Decision 5-1 〜 5-20 (ADR 代替二重記録)
+  - 14 セクション標準: Overview / Goals / Non-Goals / Boundary Commitments 4 サブセクション / Architecture / File Structure / System Flows /
+  Requirements Traceability / Components and Interfaces / Data Models / Error Handling / Security / Performance & Scalability / Testing Strategy /
+  Migration Strategy
+  - 9 Layer × 23 module DAG: 各 module ≤ 1500 行 budget + 後方互換 re-export 禁止
+  - Boundary 4 サブセクション: This Spec Owns 19 / Out of Boundary 10 / Allowed Dependencies 内外 / Revalidation Triggers 10
+  - Migration P0-P4: MVP=P0+P1+P2 / P3=v0.8 候補 / P4=on demand
+  - 持ち越し Adjacent Sync 残 1 項目: hygiene.lock thread-safety (Decision 5-20、Phase 2 移行手順 4 step 確定)
+  - Phase 2/3 拡張余地 2 件: get_shortest_path Dijkstra weighted / Windows サポート
+
+  累計修正状況 (3 セッション分)
+
+  - design 生成 (commit b9295f7 + e58c650 dev-log): 約 1700 行
+  - Round 1-10 review (commit a652183): 重要級 7 件 + 軽微 6 件
+  - 本質的厳しいレビュー (commit f531187): 軽微 5 件補強
+  - approve 確定 (commit abea6f3): visible action 確定
+
+  design phase 全体進捗
+
+  ✅✅⬜⬜✅✅⬜✅
+  5/8 完了 = Spec 0 / 1 / 4 / 5 / 7、残り 3 = Spec 2 (Phase 3 後半) / Spec 3 (Phase 4) / Spec 6 (Phase 5)
+
+  次タスク候補
+
+  - Spec 2 design 生成 (Phase 3 後半、/kiro-spec-design rwiki-v2-skill-library)
+  - Spec 5 tasks 生成 (/kiro-spec-tasks rwiki-v2-knowledge-graph、本 spec の implementation phase 準備)
+
+  ご指示をお伺いします。
+```
+
