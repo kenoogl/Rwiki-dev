@@ -325,7 +325,7 @@
 
 - **Risk 1**: Skill 1 module 集約への将来回帰 (Phase 2 で機能追加時に 3 sub-module → 1 module に巻き戻すリスク) — Mitigation: design に「3 sub-module 分割の理由」を明示記録、各 module の責務性質 (静的 / 純粋 / 動的) を boundary 説明
 - **Risk 2**: Custom skill 7 段階対話 generator の StageEvent 類似実装が Spec 4 8 段階対話と微妙に乖離 (event field の意味的差) — Mitigation: 本 spec で `SkillStageEvent` を独自定義、Spec 4 `StageEvent` と意図的に分離 (流用しないことを明示)
-- **Risk 3**: 対話ログ markdown フォーマット (Decision 2-6 / 2-7) の Adjacent Sync 失敗 (drafts §11.0 / Scenario 25 / Spec 4 R1.8 line 65 の連鎖更新漏れ) — Mitigation: design Migration Strategy section に Adjacent Sync 経路を明示記録 (sync 必須 3 件 + 部分必要 1 件 + 推奨 1 件、Round 0 訂正版)、approve 時に Spec 4 / drafts への反映を同時実施
+- **Risk 3**: 対話ログ markdown フォーマット (Decision 2-6 / 2-7) の Adjacent Sync 失敗 (drafts §5.6 / §11.0 / Scenario 25 / Spec 4 R1.8 line 65 の連鎖更新漏れ) — Mitigation: design Migration Strategy section に Adjacent Sync 経路を明示記録 (sync 必須 4 件 + 部分必要 1 件 + 推奨 1 件、Round 0 訂正版 + Round 4 で §5.6 追加)、approve 時に Spec 4 / drafts への反映を同時実施
 - **Risk 4**: Atomic install operation の OS 依存 (POSIX 限定、Windows 非対応) — Mitigation: Spec 5 Decision 5-3 と同パターン、Windows サポートは Phase 2/3 拡張余地として明示記録 (Foundation / roadmap.md 改版が必要)
 - **Risk 5**: `applicable_categories` 値域 (Spec 1 categories.yml 参照) の categories.yml 編集中 race condition — Mitigation: skill install 時の参照整合性 check は read-only (lock 不要)、categories.yml の編集中に skill install 実行で WARN severity 報告 + 参照失敗時の retry 推奨
 

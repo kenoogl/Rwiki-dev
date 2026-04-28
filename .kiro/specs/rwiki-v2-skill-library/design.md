@@ -234,7 +234,7 @@ tests/
 
 ### Modified Files
 
-- `.kiro/drafts/rwiki-v2-consolidated-spec.md` (Adjacent Sync 経由): §5.7 candidate status 値域を 3 → 2 値 (`draft` / `validated`) に変更 (R12.1) / §11.0 + Scenario 25 (line 2598 / 2606) のファイル名 prefix 表記 `interactive-<skill>-<ts>.md` を subdirectory 表記 `interactive/<skill_name>/<ts>-<session-id>.md` に統一 (Decision 2-7、§3.2 line 783-786 は既に subdirectory 区別記載済) / §11.2 `frontmatter_completion` 出力欄を `review/lint_proposals/` 明示に更新 (Decision 2-9)
+- `.kiro/drafts/rwiki-v2-consolidated-spec.md` (Adjacent Sync 経由): §5.6 Skill ファイル frontmatter に任意 3 field (`applicable_input_paths` / `dialogue_guide` / `auto_save_dialogue`) 追加 (R3.2 / R15.3、design 11 field 化と整合、Round 4 検出) / §5.7 candidate status 値域を 3 → 2 値 (`draft` / `validated`) に変更 (R12.1) / §11.0 + Scenario 25 (line 2598 / 2606) のファイル名 prefix 表記 `interactive-<skill>-<ts>.md` を subdirectory 表記 `interactive/<skill_name>/<ts>-<session-id>.md` に統一 (Decision 2-7、§3.2 line 783-786 は既に subdirectory 区別記載済) / §11.2 `frontmatter_completion` 出力欄を `review/lint_proposals/` 明示に更新 (Decision 2-9)
 - `.kiro/specs/rwiki-v2-cli-mode-unification/design.md` (Adjacent Sync): line 65 「HTML 差分マーカー attribute 詳細 (I-3) = Phase 2/3 Spec 2 / Spec 7 design 委譲 (決定 4-8)」を「Spec 2 Decision 2-8 で MVP attribute (`target` + `reason`) 確定済 (Phase 2 拡張余地 = `merge_strategy` / `confidence` / `evidence_id` は据え置き)」に参照点更新 (Decision 2-8)。frontmatter schema delegation (line 1284 既存 boundary 区別記述) は本 spec を SSoT として既に参照済のため改版不要 (Decision 2-6 / 2-7 の delegation 自体は line 1284 で成立、本 spec design Decision 2-6 / 2-7 確定により Spec 4 側追加改版なし)
 - `.kiro/steering/structure.md` (Adjacent Sync): review/ 層構造表に `lint_proposals/` 追加 (Decision 2-9)、raw/llm_logs/ 構造に 3 区別明示 (Decision 2-7、drafts §3.2 と整合させる)
 
@@ -663,7 +663,7 @@ def handle_dry_run_failure(
 ### Domain Model
 
 - **Skill** (aggregate root): `AGENTS/skills/<name>.md` 単一 markdown ファイル、frontmatter 11 field + 8 section + 任意拡張 section (Examples / Notes / Changelog)
-- **`update_mode: both` skill の振る舞い (R10.3)**: 新規生成 (`review/synthesis_candidates/`) と既存拡張 (差分マーカー出力) の両方を出力可能、各候補ファイルの frontmatter `update_type` (Spec 1 所管、値域: `create` / `extension` / `refactor` / `deprecation-reference`) で識別する。本 spec は `update_mode` 値域 (`create` / `extend` / `both`) のみ所管、`update_type` 値域は Spec 1 frontmatter スキーマ所管
+  - **`update_mode: both` skill の振る舞い (R10.3)**: 新規生成 (`review/synthesis_candidates/`) と既存拡張 (差分マーカー出力) の両方を出力可能、各候補ファイルの frontmatter `update_type` (Spec 1 所管、値域: `create` / `extension` / `refactor` / `deprecation-reference`) で識別する。本 spec は `update_mode` 値域 (`create` / `extend` / `both`) のみ所管、`update_type` 値域は Spec 1 frontmatter スキーマ所管
 - **Skill Candidate** (entity): `review/skill_candidates/<name>.md`、frontmatter 4 field + 8 section ドラフト
 - **Standard Skill Manifest** (value object): STANDARD_SKILLS tuple 15 件 (frozen)
 - **Dialogue Log** (entity、本 spec が schema を所管、保存実装は Spec 4): `raw/llm_logs/{chat-sessions, interactive/<skill>, manual}/<timestamp>-<session_id>.md`
@@ -787,7 +787,7 @@ paper_summary skill を使うのが適切です。実行しますか？
 - **Skill ファイル read schema**: PyYAML parse + body string (8 section detection)、SkillFile dataclass で表現
 - **Extraction output schema**: JSON 配列、Spec 5 が input contract として validation (R5.5 責務分離)
 - **Dialogue Log frontmatter schema**: 5 必須 field + Turn 内部 schema (Decision 2-6 / 2-7)、Spec 4 R1.8 が input contract として保存実装
-- **Cross-Service Data Management**: 本 spec は data 永続化を Spec 5 (decision_log) と Spec 4 (対話ログ) に委譲、本 spec の write 操作は AGENTS/skills/ + review/skill_candidates/ + review/lint_proposals/ のみ (3 ディレクトリ)
+- **Cross-Service Data Management**: 本 spec は data 永続化を Spec 5 (decision_log) と Spec 4 (対話ログ) に委譲、本 spec の write 操作は AGENTS/skills/ (本体 `<name>.md` + atomic install 一時ファイル `.tmp_<name>.md`、Decision 2-4) + review/skill_candidates/ + review/lint_proposals/ のみ (3 ディレクトリ)
 
 ## Error Handling
 
@@ -899,7 +899,8 @@ flowchart TD
 
 ### 持ち越し Adjacent Sync
 
-- **Adjacent Sync 必須 3 件** (本 spec design approve 時または implementation 着手前、2026-04-28 Round 0 訂正版):
+- **Adjacent Sync 必須 4 件** (本 spec design approve 時または implementation 着手前、2026-04-28 Round 4 で §5.6 追加):
+  - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §5.6 Skill ファイル frontmatter に任意 3 field (`applicable_input_paths` / `dialogue_guide` / `auto_save_dialogue`) 追加 (R3.2 / R15.3、design 11 field 化と整合、Round 4 で検出された Adjacent Sync 漏れ解消)
   - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §5.7 candidate status 値域 3 → 2 値 (R12.1、本 design Decision 2-1 / R12.1 連携)
   - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §11.0 + Scenario 25 (line 2598 / 2606) のファイル名 prefix 表記 `interactive-<skill>-<ts>.md` を subdirectory 表記に統一 (Decision 2-7)。§3.2 line 783-786 は既に 3 subdirectory 記載済のため改版不要、§2.11 (「ユーザー primary interface は発見」原則) は対象外 (誤記訂正)
   - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §11.2 `frontmatter_completion` 出力欄を `review/lint_proposals/` 明示に更新 (Decision 2-9)
@@ -949,3 +950,7 @@ _change log_
   - **R3-2 test_skill_generator name 経由対応 (R7.4)**: Layer 3 Implementation Notes に「caller (Spec 4) 側で candidate path / skill 名を Path 型に解決してから本 generator に渡す」coordination 規約明示
   - **R3-3 install_skill_generator Generator type と R9.4 confirm 整合性破綻**: Generator type を `Generator[SkillStageEvent, None, Path]` → `Generator[SkillStageEvent, str, Path]` に修正、send 型 None → str で 'yes' / 'no' 文字列受領可能化 (Round 1 反映と整合)
   - **R3-4 session_id 形式の Spec 2 内部矛盾 + Spec 4 design 文書乖離**: Spec 2 design 内例を Spec 4 決定 4-13 と統一 (`<timestamp>-<8 hex>` → `<YYYYMMDD-HHMMSS>-<uuid4-4hex>`、4 hex)、注記追加で「session_id 形式 SSoT は Spec 4 design 決定 4-13、本 spec は dialogue log frontmatter スキーマ規約 SSoT」明示
+- 2026-04-28: Round 4 review 反映 (Domain Model placement 1 件 + Adjacent Sync 漏れ 1 件 + cosmetic 1 件解消):
+  - **R4-1 Domain Model R10.3 説明文 placement 不整合 (Round 1 反映で発生)**: Skill aggregate root の sub-bullet として位置付け (indentation +2)、Domain Model リスト「概念分類」「説明文」「概念分類」混在を解消 (Spec 0 R2 重-厳-3 同型 variant)
+  - **R4-2 drafts §5.6 Skill frontmatter Adjacent Sync 漏れ**: Modified Files / 持ち越し Adjacent Sync を「必須 3 件」→「必須 4 件」に拡張、§5.6 に任意 3 field (`applicable_input_paths` / `dialogue_guide` / `auto_save_dialogue`) 追加 (R3.2 / R15.3、design 11 field 化と整合)。research.md Risk 3 + TODO_NEXT_SESSION.md も同期更新
+  - **R4-3 Cross-Service Data Management atomic tmp 言及**: write 操作の AGENTS/skills/ 表記に「本体 `<name>.md` + atomic install 一時ファイル `.tmp_<name>.md` (Decision 2-4)」追記、cosmetic 完全化
