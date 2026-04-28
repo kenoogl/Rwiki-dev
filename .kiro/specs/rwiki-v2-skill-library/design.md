@@ -517,6 +517,7 @@ def validate_skill_file(skill_path: Path, vault_path: Path) -> SkillSeverityRepo
 **Implementation Notes**
 - Integration: Layer 3 SkillAuthoringWorkflow から `test` / `install` の段階で呼出。Spec 7 cmd_skill_install から間接的に呼出 (Layer 3 経由)
 - Validation: 4 種すべて独立に test 可能 (test_skill_validator.py で 4 種別 unit test)
+- **R15.4 必須記載欠落 ERROR の発火タイミング**: install 時の `validate_references` 内で check (skill load 時 `load_skill` / dispatch 時 Spec 3 では check しない)、責務集約で重複 check 回避 (Decision 2-10 の機械的判定基準 = `interactive: true` または `auto_save_dialogue: true`)
 - Risks: PyYAML parse エラー時に詳細位置情報が取れない場合 ERROR detail に「YAML 全体 parse 失敗、frontmatter 末尾 `---` 検査推奨」と提示。`applicable_input_paths` の extended glob 構文妥当性 check は `glob.glob` の例外捕捉で代替 (実 path 存在確認は dispatch 時 Spec 3 所管、本 spec は構文妥当性のみ R3.2)
 
 ### Layer 3: SkillAuthoringWorkflow (7 段階対話 + dry-run + atomic install)
@@ -582,6 +583,11 @@ class DryRunFailure:
   failure_kind: Literal['timeout', 'crash', 'output_error', 'dry_run_internal_error']
   failure_detail: str
   retry_recommended: bool
+  # retry_recommended 値域 (failure_kind 別):
+  #   timeout = True (LLM CLI 一時的問題、再試行で解消可能性高)
+  #   crash = False (LLM CLI 自体の問題、再試行で解消困難、ユーザー調査推奨)
+  #   output_error = False (skill prompt の構造的問題、skill 修正必要)
+  #   dry_run_internal_error = False (本 spec 内部例外、bug report 対象)
 
 def handle_dry_run_failure(
   exception: Exception,
@@ -799,10 +805,17 @@ paper_summary skill を使うのが適切です。実行しますか？
 
 - **Validation 4 種 ERROR** (User Errors 相当): 8 section 欠落 / YAML parse 失敗 / 値域違反 / 名前衝突 / 参照不整合 → install 拒否 + 失敗種別と該当箇所 report (R9.2)
 - **dry-run failure 4 種 ERROR** (Decision 2-12): timeout / crash / output_error / dry_run_internal_error → `dry_run_passed: false` 維持 + DryRunFailure dataclass で `failure_kind` + `failure_detail` + `retry_recommended` 提示
-- **Atomic install 失敗** (System Errors 相当): tmp ディレクトリ書込失敗 / atomic rename 失敗 / fsync 失敗 → tmp 削除 + candidate 残置 + ERROR report (R9.6)
+- **Atomic install 失敗** (System Errors 相当、Decision 2-4 5 step 別 rollback、R9.6):
+  - **Step 1 (tmp copy) 失敗**: tmp 生成失敗 + candidate 残置 + ERROR
+  - **Step 2 (4 validation) ERROR 1 件以上**: tmp 削除 + candidate 残置 + ERROR (R9.2)
+  - **Step 3 (os.rename) 失敗**: tmp 削除 + candidate 残置 + ERROR (rename 不成立、AGENTS/skills/ 未配置)
+  - **Step 4 (fsync) 失敗** (atomic rename 成功後): AGENTS/skills/<name>.md 配置済 = install 完了扱い、fsync 失敗は WARN (OS crash 時のファイル消失リスクあり、Spec 5 Decision 5-4 同パターン)
+  - **Step 5a (candidate 削除) 失敗**: AGENTS/skills/<name>.md 配置済 = install 成功、candidate 残存は WARN (再 install 時の名前衝突 ERROR、ユーザー手動削除推奨)
+  - **Step 5b (record_decision skill_install) 失敗**: AGENTS/skills/<name>.md 配置済 = install 成功、Spec 5 decision_log 記録なしは WARN (Spec 5 が独立、本 spec install 成功は変わらず)
 - **Lock acquire 失敗** (Concurrency Errors): Hygiene batch 同時実行 → fail-fast WARN + 再試行推奨 (Spec 5 Decision 5-3 同パターン)
 - **`applicable_categories` WARN** (categories.yml 未登録値): 許可値外で WARN severity 報告、Spec 1 categories.yml 拡張に追従可能 (R3.2)
 - **R15.4 必須記載欠落** (Logic Errors): interactive=true or auto_save_dialogue=true skill が Output / Input section に対話ログ frontmatter スキーマ参照点を欠落 → ERROR severity (Decision 2-10)
+- **Global failure (process kill / disk full / OOM)**: 本 spec の write 操作は atomic install (Decision 2-4) + lock 取得 (Decision 2-5) で保護、partial state は上記 Step 別 rollback で明示処理。Spec 5 Decision 5-4 + Foundation Eventual Consistency 規範 (Spec 4 重-厳-4 turn atomic write / 重-厳-6 session 中断時の broken state 不発生 同パターン) に従い、process kill / OOM 発生時も AGENTS/skills/ 配下に partial / corrupted ファイルが残らないことを保証
 
 ### Monitoring
 
@@ -954,3 +967,8 @@ _change log_
   - **R4-1 Domain Model R10.3 説明文 placement 不整合 (Round 1 反映で発生)**: Skill aggregate root の sub-bullet として位置付け (indentation +2)、Domain Model リスト「概念分類」「説明文」「概念分類」混在を解消 (Spec 0 R2 重-厳-3 同型 variant)
   - **R4-2 drafts §5.6 Skill frontmatter Adjacent Sync 漏れ**: Modified Files / 持ち越し Adjacent Sync を「必須 3 件」→「必須 4 件」に拡張、§5.6 に任意 3 field (`applicable_input_paths` / `dialogue_guide` / `auto_save_dialogue`) 追加 (R3.2 / R15.3、design 11 field 化と整合)。research.md Risk 3 + TODO_NEXT_SESSION.md も同期更新
   - **R4-3 Cross-Service Data Management atomic tmp 言及**: write 操作の AGENTS/skills/ 表記に「本体 `<name>.md` + atomic install 一時ファイル `.tmp_<name>.md` (Decision 2-4)」追記、cosmetic 完全化
+- 2026-04-28: Round 5 review 反映 (Failure walkthrough、Spec 5 Decision 5-4 同パターン + Spec 4 Eventual Consistency 規範拡張で 4 件解消):
+  - **R5-1 atomic install Step 別 rollback 明示不完全**: Error Handling の「Atomic install 失敗」項を 5 step 別細分化 (Step 1 tmp copy / Step 2 4 validation / Step 3 os.rename / Step 4 fsync / Step 5a candidate 削除 / Step 5b record_decision)、Step 4 fsync 成功後の partial state (atomic rename 既成立) を WARN 扱い、Step 5a/5b 失敗時の install 完了扱いを明示
+  - **R5-2 dry-run failure 4 種 retry_recommended 値域明示**: Layer 3 Service Interface DryRunFailure dataclass に値域コメント追加 (timeout=True / crash=False / output_error=False / dry_run_internal_error=False)、Spec 4 G3 caller / ユーザーへの retry recommendation 一貫化
+  - **R5-3 global failure (process kill / disk full / OOM) walkthrough 言及**: Error Handling section に追記、本 spec の write 操作は atomic install + lock で保護、Spec 5 Decision 5-4 + Foundation Eventual Consistency 規範 (Spec 4 重-厳-4 / 重-厳-6 同パターン) に従う旨明示
+  - **R5-4 R15.4 ERROR 発火タイミング責務集約**: Layer 2 validate_references Implementation Notes に「install 時のみ check、skill load / dispatch 時は check しない」明示、責務分散解消
