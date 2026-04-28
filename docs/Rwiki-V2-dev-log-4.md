@@ -2922,6 +2922,38 @@
 ##### ❯ はい
 
 ```
+  Spec 1 design approve やり直しセッション 全完了
 
+  最終状態:
+  - main = origin/main (2 commits push 済、0a16b46..13175ad)
+  - Spec 1 design approve 状態確定 (spec.json approvals.design.approved: true)
+  - 連鎖 migration 4 改版経路 (R6.1 / R4.7 / R9.1 統合 / R5.2 統合) 確定 (次セッションで R 改版 + 再 approve PR 起票予定、または Phase 3 並行進行)
+  - memory 改訂 (feedback_dominant_dominated_options.md 厳密化規律追加) で LLM の self-confirmation 偏向抑制
+
+  Phase 1 design approve 完全完了: Spec 0 やり直し済 + Spec 1 やり直し済 + Spec 4 完了 = design phase 3/8。
+
+  次セッション: TODO_NEXT_SESSION.md 参照、Phase 3 (Spec 5 / Spec 2 並列) 着手 or 連鎖 migration 改版 commit のいずれか。
+
+⏺ 了解しました。TODO_NEXT_SESSION.md を Spec 4 design やり直し方針に更新します。
+⏺ TODO_NEXT_SESSION.md を Spec 4 design やり直し方針に更新しました (.gitignore 対象 = local-only、commit 不要)。
+
+  次セッション準備完了
+
+  次セッション開始時のアクション:
+  1. TODO_NEXT_SESSION.md 自動読み込み (テンプレートに従い Spec 4 やり直し開始メッセージを use)
+  2. Spec 4 spec.json approvals.design.approved: true → false 取り消し commit (visible action、user 明示承認必須、Spec 0/Spec 1 取り消し commit
+  2217c6f と同手法)
+  3. やり直しラウンド 1 から開始
+
+  Spec 4 で意識的に発掘すべき同型問題 (Spec 0/Spec 1 やり直しで発見):
+  - subprocess shell injection 防止規律 (Spec 4 は CLI runtime + LLM CLI subprocess 中心、最も該当しやすい)
+  - 検査項目数 / サブコマンド数 表記の単純誤記 grep (Spec 4 全 60+ サブコマンド)
+  - 規範範囲先取り (設計決定 4-X が requirements R 範囲を先取りしていないか)
+  - 文書記述 vs 実装不整合 (API signature / アルゴリズム名 / yaml schema)
+  - 規範前提曖昧化 (transaction guarantee / Adjacent Sync vs 実質変更経路の判定軸)
+
+  新規適用: dominated 判定厳密化規律 (本セッション改訂、合理的成立条件 1 文以上 + numerical 規模感 + 暗黙前提明示) を Spec 4 全 escalate案件で必須適用。
+
+  本セッション完了。次セッションでお会いしましょう。
 ```
 
