@@ -10,6 +10,8 @@
 
 [Rwiki V2の開発-4](Rwiki-V2-dev-log-4.md)
 
+[Rwiki V2の開発-6](Rwiki-V2-dev-log-6.md)
+
 
 
 [Spec 5 rwiki-v2-knowledge-graph](##Spec 5 rwiki-v2-knowledge-graph)
