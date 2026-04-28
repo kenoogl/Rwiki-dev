@@ -1145,9 +1145,14 @@ status: active | deprecated | retracted | archived   # default: active
 interactive: true | false             # 対話型スキルか
 update_mode: create | extend | both   # 新規のみ / 既存拡張可 / 両対応
 handles_deprecated: true | false      # deprecated ページを evidence に使うか
-applicable_categories:                # 推奨カテゴリ（optional）
+applicable_categories:                # 推奨カテゴリ（optional、L3 wiki content category dispatch hint）
   - papers/local
   - papers/zotero
+applicable_input_paths:               # L1 raw 入力 path glob（optional、Spec 3 dispatch hint、Spec 2 R3.2）
+  - raw/llm_logs/**
+  - raw/incoming/**
+dialogue_guide: string                # 対話ガイド prompt（optional、interactive=true 時、Spec 2 R15.3）
+auto_save_dialogue: true | false      # 対話ログ自動保存制御（optional、Spec 2 R15.3）
 ```
 
 ### 5.7 Skill candidate（`review/skill_candidates/*.md`）
@@ -1155,7 +1160,7 @@ applicable_categories:                # 推奨カテゴリ（optional）
 ```yaml
 name: string
 base: string | null     # --base で指定した既存スキル名
-status: draft | approved | validated
+status: draft | validated   # Spec 2 R12.1 で 2 値に絞り込み（旧 3 値 draft/approved/validated → approved 値は dry_run_passed flag が独立軸で担うため重複として除外）
 dry_run_passed: true | false
 ```
 
@@ -2595,7 +2600,7 @@ Claude: 「整理」の意図を確認させてください。候補:
 | 出力の性質 | content（wiki 候補） | pattern（決定・理由） |
 
 **連携ポイント（対話の二次利用）**:
-- Scenario 15 の対話ログは `raw/llm_logs/interactive-<skill>-<timestamp>.md` に**自動保存**される
+- Scenario 15 の対話ログは `raw/llm_logs/interactive/<skill>/<timestamp>-<session-id>.md` に**自動保存**される（Spec 2 Decision 2-7、subdirectory 3 区別形式に統一、§3.2 Vault 構造と整合）
 - そのログは後日 Scenario 25 の `llm_log_extract` で再処理可能
 - **同じ対話を 2 つの観点から再利用**: 即時は content-centric、後日は process-centric
 
@@ -2603,7 +2608,7 @@ Claude: 「整理」の意図を確認させてください。候補:
 
 **Spec 2 への影響**:
 - Skill 一覧に `llm_log_extract` を明記（既に記載済）
-- Interactive skill の対話ログ自動保存規約を追加（命名: `raw/llm_logs/interactive-<skill>-<ts>.md`）
+- Interactive skill の対話ログ自動保存規約を追加（命名: `raw/llm_logs/interactive/<skill>/<ts>-<session-id>.md`、Spec 2 Decision 2-7、subdirectory 3 区別形式）
 
 ---
 
@@ -2670,7 +2675,7 @@ Claude: 「整理」の意図を確認させてください。候補:
 
 | Skill | 用途 | 出力 |
 |-------|-----|------|
-| `frontmatter_completion` | 不足 frontmatter 補完提案 | review via `rw lint --fix` |
+| `frontmatter_completion` | 不足 frontmatter 補完提案 | `review/lint_proposals/<original_filename>-completion.md`（Spec 2 Decision 2-9、新設、synthesis_candidates と意味分離。`<original_filename>` は path separator を `__` に置換して flat 配置）|
 
 ### 11.3 v1 → v2 命名対応表（開発期参照資料）
 
@@ -2713,6 +2718,7 @@ Claude: 「整理」の意図を確認させてください。候補:
 
 | 日付 | 変更 | 備考 |
 |------|------|------|
+| 2026-04-28 | Draft v0.7.13 (Spec 2 design approve に伴う Adjacent Sync 必須 4 件) | **Spec 2 design (`rwiki-v2-skill-library`) approve 後の Adjacent Sync 反映**:<br>• **§5.6 Skill ファイル frontmatter** に任意 3 field 追加 (`applicable_input_paths` / `dialogue_guide` / `auto_save_dialogue`、Spec 2 R3.2 / R15.3、design 11 field 化と整合)<br>• **§5.7 Skill candidate frontmatter** の `status` 値域を 3 値 (`draft / approved / validated`) → 2 値 (`draft / validated`) に絞り込み (Spec 2 R12.1、`approved` 値は `dry_run_passed` flag が独立軸で担うため重複として除外)<br>• **§11.0 Scenario 25 (line 2603 / 2611)** のファイル名 prefix 表記 `raw/llm_logs/interactive-<skill>-<ts>.md` を subdirectory 表記 `raw/llm_logs/interactive/<skill>/<ts>-<session-id>.md` に統一 (Spec 2 Decision 2-7、§3.2 Vault 構造と整合)<br>• **§11.2 Lint 支援 skills** 表で `frontmatter_completion` の出力欄を「review via `rw lint --fix`」→ `review/lint_proposals/<original_filename>-completion.md` 明示に更新 (Spec 2 Decision 2-9、新設、synthesis_candidates と意味分離) |
 | 2026-04-24 | Draft v0.1 作成 | シナリオ 7, 8, 11, 12, 17, 19, 20 + 基盤原則まで統合 |
 | 2026-04-24 | Draft v0.2 | 想定ツール明示、LLM CLI 抽象化、Obsidian 汎用化、Paradigm C 自己完結化、Hypothesis generation を中核価値に追加、Dataview plugin 追記 |
 | 2026-04-24 | Draft v0.3 | Spec 5（command-naming）を Spec 4（cli-mode-unification）に統合、後続 Spec を繰り上げ（旧 6→5, 旧 7→6, 旧 8→7）。v1→v2 命名対応表を Spec 4 に取り込み |
