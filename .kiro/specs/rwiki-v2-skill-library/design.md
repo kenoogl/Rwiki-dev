@@ -381,6 +381,8 @@ sequenceDiagram
 | DiffMarkerAttribute | Data Models | HTML 差分マーカー attribute MVP | 10.4 | Spec 7 lifecycle merge (P1 future) | State |
 | SkillCandidateFrontmatter | Data Models | review/skill_candidates/ frontmatter 4 field | 12 | Layer 3 status 遷移 (P0) | State |
 
+> **Data Models の表現規約**: Data Models 4 件のうち、外部 spec への API contract (本 spec が SSoT、Spec 5 / Spec 4 / Spec 6 が consumer として interface 利用) として独立した責務を持つ ExtractionOutputSchema は本 section 内に独立 Component sub-section (Responsibilities & Constraints / Dependencies / Contracts / API Contract / Implementation Notes) を持つ。一方、value object / entity の schema (DialogueLogFrontmatter / DiffMarkerAttribute / SkillCandidateFrontmatter) は静的 schema 定義のみで動的責務を持たないため、Logical Data Model section の表 (line 661-) で field / 値域 / 用途を表現する。Component 表中で「Data Models」と一律列挙されるが、表現粒度は責務性質に応じて差別化する。
+
 ### Layer 1: SkillLibrary (catalog)
 
 #### Component: SkillLibrary
@@ -398,6 +400,7 @@ sequenceDiagram
 - サブディレクトリ配置不可 (R1.1)、`AGENTS/skills/<name>.md` 単一階層
 
 **Dependencies**
+- Inbound: Layer 2 SkillValidator (P0、catalog 読込) / Layer 3 SkillAuthoringWorkflow (P0、path 解決) / Spec 4 CLI dispatch (P0、`rw skill list / show` 直接呼出) / Spec 5 ExtractionOutputSchema reader (P0、抽出 skill output schema 参照) / Spec 7 cmd_skill_install (P0、validation 前段 path 解決)
 - Outbound: rw_utils.parse_frontmatter (P0)
 - External: PyYAML (P0)
 
@@ -612,6 +615,11 @@ def handle_dry_run_failure(
 - schema 自体は本 spec が SSoT、Spec 5 が validation 実装 + ledger 永続化 (R5.5、責務分離)
 - schema 変更時は Spec 5 先行合意必須 (R5.6、Adjacent Spec Synchronization 運用ルール)
 - Failure Conditions section に「schema validation 不通過時は当該 entity / edge を candidate に採用せず ERROR で報告」必須記載 (R5.7)
+
+**Dependencies**
+- Inbound: Spec 5 R3.5 entity validation (P0) / Spec 5 R4.5 relation validation (P0) / Spec 5 R19.2 ledger 永続化 (P0)
+- Outbound: なし (Data Models = 静的 schema、外部依存なし)
+- External: なし
 
 **Contracts**: API [x] / State [ ]
 
@@ -929,3 +937,7 @@ _change log_
   - **R9.4 install dangerous_op 中 + 1-stage confirm**: Layer 3 Implementation Notes に「`install_skill_generator` は validation 通過後 install 直前に confirm event 1 件 yield、Spec 4 G3 caller の send() 入力で進行分岐、UX 実装は Spec 4 所管」追記
   - **R10.3 update_mode: both + update_type**: Data Models Domain Model に「`both` skill 振る舞い + `update_type` 値域 (`create` / `extension` / `refactor` / `deprecation-reference`) は Spec 1 所管」追記、Diff Marker value object と Layer 2 validate_references の対 check 対象を `extend` または `both` に拡張
   - **R11.4 standard skill 編集後 origin 維持 + reinstall coordination**: Layer 1 Implementation Notes に「`load_skill` は編集後も `frontmatter.origin` を `standard` 維持、自動切替なし」追記、Out of Boundary に「`rw init --reinstall` 等再配布挙動は Spec 4 所管」追記
+- 2026-04-28: Round 2 review 反映 (Spec 0 R2 重-厳-3 同型 = Components/sub-section 欠落 2 件再発 + 表現不均一 1 件解消):
+  - **R2-1 Layer 1 SkillLibrary Inbound Dependencies 欠落**: Layer 1 Dependencies sub-section に Inbound (Layer 2 / Layer 3 / Spec 4 CLI / Spec 5 ExtractionOutputSchema reader / Spec 7 cmd_skill_install の 5 系統) 追記、Layer 2/3 と構造均一化
+  - **R2-2 ExtractionOutputSchema Dependencies sub-section 全体欠落**: ExtractionOutputSchema Component sub-section に Dependencies 追加 (Inbound = Spec 5 R3.5 / R4.5 / R19.2、Outbound = なし、External = なし)、Layer 1/2/3 と構造均一化
+  - **R2-3 Data Models 表現規約明示**: Components 表直後に注記追加 (API contract = ExtractionOutputSchema は独立 Component sub-section、value object / entity schema = 残 3 件は Logical Data Model 表で表現、表現粒度差別化を明示)
