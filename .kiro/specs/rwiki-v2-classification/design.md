@@ -890,7 +890,7 @@ related:
     edge_id: e_001            # optional
 update_history:
   - date: 2026-04-27
-    type: extension          # synthesis 起源: extension / refactor、lifecycle 起源: deprecation / merge / split / archive (R3.6)
+    type: extension          # synthesis 起源: extension / refactor、lifecycle 起源: deprecation / retract / archive / merge / split / reactivate / promote_to_synthesis (R3.6、Spec 7 design Decision 7-3 で 7 値確定 Adjacent Sync from commit `b45bdc3`)
     summary: "..."
     evidence: raw/papers/local/brunton-2024.md
 ```
@@ -1409,5 +1409,7 @@ requirements.md 改版: なし
 - 2026-04-28: Spec 1 やり直しラウンド 10 (マイグレーション戦略) — 新方式 4 重検査 + Step 1b-v 自動深掘り 5 切り口 + 厳しく検証 default + negative 視点強制発動 適用、計 2 件適用 (要件改版なし、design 内修正のみ、**Phase 1 R7 escalate Eventual Consistency 同型問題 = 規範前提曖昧化検出**):
   - **軽-10-1** (自動採択、design 内修正): vocabulary YAML 3 種の初期化 migration の `categories.yml` 推奨 6 カテゴリ seed 記述「決定 1-1 整合」 → 「R1.1 / R7.1 整合」に訂正 (決定 1-1 は Foundation 引用形式、推奨 6 カテゴリは requirements 整合)
   - **重-10-1** (escalate 確証手順、design 内修正): vocabulary YAML schema 拡張 migration L1195-1196 を Adjacent Sync vs 実質変更経路の判定軸明確化形式に書き換え。「**Adjacent Sync 範囲** (文言整合のみ、要件改版を伴わない) の例」+「**実質変更経路** (要件改版 + 再 approve 必須) の例 (a) 後方互換 + 規範範囲先取り = 決定 1-9 重-1-2 で R5.2 改版経路化 / (b) 後方非互換 = 将来必須 field 追加」+「**判定軸: 規範範囲拡張の有無**」を明示。Phase 1 R7 escalate Eventual Consistency と同型問題 (規範前提曖昧化解消)、決定 1-9 directory_name 追加が「Adjacent Sync 範囲」と「実質変更経路」の二重表記矛盾 (重-1-2 R5.2 改版確定済) を解消
+
+- 2026-04-28 (Adjacent Sync from Spec 7 design approve commit `b45bdc3`): `update_history.type` example コメント (line 892) に lifecycle 起源値域を 4 値 → 7 値に拡張 (`deprecation / merge / split / archive` → `deprecation / retract / archive / merge / split / reactivate / promote_to_synthesis`、Spec 7 design Decision 7-3 確定値). 実質コメント整合のみ、Spec 1 R3.6 schema 自体に変更なし、再 approval 不要 (Adjacent Spec Synchronization 運用ルール準拠).
 
 requirements.md 改版: なし
