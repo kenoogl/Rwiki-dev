@@ -6368,3 +6368,95 @@ TODO_NEXT_SESSION.md を読んでください。持ち越し Adjacent Sync 3 項
   本セッション完了。次セッションで Spec 5 design 生成に着手できる状態です。
 ```
 
+##### ❯ TODO_NEXT_SESSION.md を読んでください。持ち越し Adjacent Sync 3 項目完了済 (commit 252be70、push 済)。次は Phase 3 前半 = Spec 5(rwiki-v2-knowledge-graph) design 生成 + 10 ラウンドレビューに進みます (/kiro-spec-design rwiki-v2-knowledge-graph)。
+
+```
+⏺ TODO_NEXT_SESSION.md を読みました。状況を確認します。
+
+  - 完了: Adjacent Sync 3 項目 (commit 252be70、push 済) — Spec 7 R12.7 6→7 種拡張 + Spec 5 R11.6/R11.2 改版
+  - 次のアクション: Phase 3 前半 = Spec 5 (rwiki-v2-knowledge-graph) design 生成 + 10 ラウンドレビュー
+  - 特徴: 最重要・最大規模 spec、内部 P0-P4 段階実装、MVP は P0+P1+P2
+  - 持ち越し残 2 項目 (Spec 5 design 内で実施): hygiene.lock 物理実装の thread-safety 確認 + (Spec 6 design 着手時) cmd_approve_hypothesis coordination 明示
+
+  Spec 5 design 生成 + 10 ラウンドレビューを /kiro-spec-design rwiki-v2-knowledge-graph で着手します。memory 改訂版 (自動承認廃止 + 厳しく検証 default + Step 1b-v 自動深掘り + dominated 厳密化規律) を厳格適用します。
+
+⏺ Skill(kiro-spec-design)
+  ⎿  Successfully loaded skill · 8 tools allowed
+
+⏺ Spec 5 (rwiki-v2-knowledge-graph) design 生成を開始します。Step 1: Context 収集から並列で着手します。
+
+⏺ タスク進捗を track するため TaskCreate を load します。並列で残りの requirements と他の context 文書も読みます。
+⏺ まず spec 本体 + template + rules を並列読み込みします。
+⏺ steering 4 件 + 既存 design 例 (Spec 7 = 直近 + 隣接) を並列読みします。
+⏺ steering 全件読了。既存 4 design の pattern 把握 + drafts §2.12 / §2.13 / §5.10 / §7.2 SSoT 詳細 + 外部 research を並列 subagent で実施します。
+⏺ Subagent 3 件の出力を全て取得しました。Discovery + Synthesis を完了させます。
+⏺ Discovery + Synthesis 完了。design.md draft を一括 Write します。Spec 7 (1754 行) を pattern として 9 layer / 14 section / 設計決定 5-1 〜 5-N + change log 構成。
+⏺ design.md draft 完成。Step 5 Review Gate を実行します。
+⏺ Mechanical check 実施: requirements traceability OK / Boundary OK / File Structure Plan OK / orphan 無し。ただし Mermaid label に design-principles.md 禁止の / () * 多数 (strict-mode で render fail リスク)。第 1 修復 pass で Mermaid を sanitize。
+⏺ Migration Strategy flowchart の "/" を sanitize:
+⏺ Flow 2 sequence の "/" を sanitize: Review Gate pass (1 修復 pass 内、Mermaid sanitize で完了)。Step 6 で spec.json + research.md を書きます。
+⏺ design.md / research.md / spec.json の write 完了。Step 6 まで完了し、design phase Step 1-6 (Discovery → Synthesis → Draft → Review Gate → Finalize) が pass しました。
+  ---
+  生成結果サマリ
+
+  design.md (.kiro/specs/rwiki-v2-knowledge-graph/design.md、約 1700 行):
+
+  - 9 Layer × 23 module DAG (Layer 1 Ledger Foundation → Layer 9 Edge API)、各 module ≤ 1500 行 budget、Spec 7 Decision 7-21 同型問題回避のため Layer 4 Hygiene を機能別 3 sub-module 分割 (4a Hygiene 5 rules core / 4b advanced / 4c UsageSignal + LockManager)
+  - 14 セクション標準 (Overview / Goals / Non-Goals / Boundary Commitments / Architecture / File Structure Plan / System Flows 5 個 / Requirements Traceability R1-R23 全 197 AC / Components and Interfaces / Data Models / Error Handling / Security / Performance / Testing Strategy / Migration Strategy / 設計決定事項 / change log)
+  - 設計決定 5-1 〜 5-20 (ADR 代替、本文「設計決定事項」+ change log 二重記録):
+    - 5-1 networkx pin >= 3.0, < 3.5 (Python 3.10 互換維持)
+    - 5-5 Louvain 採択 (Leiden は Phase 3 拡張余地、依存違反のため)
+    - 5-15 Edge API 3 種 timeout + partial failure 伝搬 (Spec 7 R12.8 coordination)
+    - 5-20 hygiene.lock thread-safety = 持ち越し Adjacent Sync 残 1 項目を確定 (MVP single-thread fcntl + Phase 2 multi-thread で threading.Lock 二重 lock)
+  - Mermaid 5 個 (Architecture Pattern Map / Module DAG + Flow 1-5)、design-principles.md 制約 (/ () * 禁止) に沿って sanitize 済
+
+  research.md (.kiro/specs/rwiki-v2-knowledge-graph/research.md):
+
+  - Discovery + Synthesis 永続化 (8 topic = 既存 4 design pattern / SSoT drafts §2.6-§2.13 / networkx 3.x / sqlite WAL / fcntl.flock / atomic rename / GraphRAG / event sourcing envelope)
+  - Architecture Pattern Evaluation 4 候補 / Build vs Adopt 11 件 / Generalization 4 件 / Simplification 5 件 / Risks & Mitigations 7 件
+
+  spec.json: phase: design-generated、approvals.design.generated: true / approved: false、updated_at: 2026-04-28T18:00:00+09:00
+
+  ---
+  持ち越し Adjacent Sync 残 1 項目: 完了
+
+  Spec 7 design Round 5 軽-5-3 由来: hygiene.lock 物理実装の thread-safety を Decision 5-20 + Migration Strategy で確定:
+
+  - MVP (P0-P2): fcntl.flock(LOCK_EX | LOCK_NB) 単独で OK (single-thread 前提)
+  - Phase 2 (Spec 7 orchestrate_edge_ops 並列化想定時): threading.Lock (outer) + fcntl.flock (inner) 二重 lock 必須 + lock file に thread_id 追加
+  - Phase 2 移行時 implementation 手順 4 step を Migration Strategy に明示
+
+  ---
+  次のアクション = 10 ラウンドレビュー Round 1 開始確認
+
+  memory 改訂版を厳格適用します:
+
+  - feedback_review_step_redesign.md: 自動承認モード廃止 + 厳しく検証 default + Step 1b-v 5 切り口の 5 番目 negative 視点 強制発動 + 各ラウンドで必ず Step 2 user 判断を経る
+  - feedback_design_review.md: 10 ラウンド構成 (R1 requirements 全 AC 網羅 / R2 アーキ整合 / R3 データモデル / R4 API / R5 アルゴリズム+性能 / R6 失敗+観測 / R7 セキュ / R8 依存 / R9 テスト / R10 マイグレ)
+  - feedback_no_round_batching.md: 1 ラウンド = 1 turn 以上、batching 禁止
+  - feedback_dominant_dominated_options.md: dominated 判定厳密化規律 (合理的成立条件 1 文以上 + numerical 規模感 + 暗黙前提明示)
+  - feedback_review_judgment_patterns.md: dev-log 23 パターンチェックリスト
+
+  Round 1 (R1 requirements 全 AC 網羅) を 1 turn で実施します。Step 1a (軽微検出) + Step 1b (4 重検査) + Step 1b-v 自動深掘り 5 切り口 (5 番目 negative 視点強制発動) + 本質的観点 5 種 (a-e) 強制発動。検出結果は Step 2 で user 判断を仰ぐ形で escalate します。
+
+  Round 1 を開始してよいですか? 進める場合 Round 1 開始 等で指示を、別アクション (例: design.md の特定箇所を先に確認 / dev-log 4 への本セッション追記を先 / TODO 整理) があればそれを指定してください。
+```
+
+##### ❯ /session-cont
+
+```
+⏺ 現在の git status / diff を並列確認してから、TODO_NEXT_SESSION.md 更新 + commit + push を実施します。
+⏺ dev-log-4 の modified 内容を確認 (前セッション完了後の追記か、本セッション分か):
+⏺ dev-log-4 の追記は本セッションのログとして既に追加されている (84 行)。これも別 commit で残します。
+
+  戦略:
+  1. Commit 1: Spec 5 design 生成 (design.md + research.md + spec.json)
+  2. Commit 2: dev-log-4 本セッション分追記
+  3. TODO_NEXT_SESSION.md 更新
+  4. Commit 3: TODO_NEXT_SESSION.md 更新を commit
+  5. push
+
+  まず TODO_NEXT_SESSION.md を次セッション用に更新:
+⏺ Commit を順次実施 (Spec 5 design 生成 → dev-log 追記 → TODO 更新):
+```
+
