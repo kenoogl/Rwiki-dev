@@ -824,6 +824,9 @@ paper_summary skill を使うのが適切です。実行しますか？
 ### Monitoring
 
 - 各 validation / lifecycle 操作の severity 集計を Foundation severity infra に共通記録、`logs/skill_<operation>_latest.json` 構造化ログ (Foundation R11 + steering structure.md)
+- 全 module で Severity 4 水準 (CRITICAL / ERROR / WARN / INFO) を継承 (Foundation R11)
+- exit code 0/1/2 分離 (PASS / runtime error / FAIL 検出) を継承 (Spec 5 / Spec 4 / Foundation 同パターン)
+- skill_install 操作の trace ID = `decision_id` 兼用 (decision_log.jsonl で追跡、Spec 5 record_decision API 経由、R12.4)、事後 trace 可能性を保証
 - dry-run failure 統計 (timeout / crash / output_error の件数推移) は Phase 2 で対話ログ frontmatter 拡張連携 (Spec 4 design 申し送り、本 spec は schema のみ)
 
 ## Testing Strategy
@@ -996,3 +999,6 @@ _change log_
   - **R7-1 R13.8 → Spec 4 coordination 要求引用不足**: Layer 3 Implementation Notes に R13.8 引用追加 (Spec 1 R8.14 / Spec 5 R17 と同パターン明示)
   - **R7-3 Layer 2 単独呼出時の lock 規約曖昧**: Layer 2 Implementation Notes に「Layer 2 は通常 Layer 3 経由 lock 取得済、単独呼出 (test 用途) は read-only のため lock 不要」明示
   - **R7-4 list_skills TOCTOU 規約明示**: Layer 1 Implementation Notes に「read-only かつ lock 不要のため、write 操作 (install / rw init) との TOCTOU 問題は理論的に発生、MVP single-thread で実害なし、Phase 2 multi-thread 化時再評価 (Spec 5 Decision 5-20 同パターン)」追記
+- 2026-04-28: Round 8 review 反映 (観測性、重要 2 件解消、Spec 5 design 同パターン整合):
+  - **R8-1 Severity 4 水準 + exit code 0/1/2 分離継承 Monitoring 明示なし**: Monitoring section に「全 module で Severity 4 水準継承 (Foundation R11) + exit code 0/1/2 分離継承 (Spec 5 / Spec 4 / Foundation 同パターン)」追記
+  - **R8-2 decision_id を trace ID 兼用 Monitoring 明示なし**: Monitoring section に「skill_install 操作の trace ID = `decision_id` 兼用 (decision_log.jsonl で追跡、Spec 5 record_decision API 経由、R12.4)、事後 trace 可能性を保証」追記、Spec 5 design Monitoring 同パターンに整合化
