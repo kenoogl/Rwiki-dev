@@ -62,7 +62,7 @@
 - **対話ログ frontmatter スキーマと markdown フォーマット詳細**: `type: dialogue_log` / `session_id` / `started_at` / `ended_at` / `turns` 等の field 定義 / turn 単位 markdown 構造 — Spec 2 所管 (本 spec は保存実装と保存先 path 規約 + session_id 形式 = 決定 4-13 のみ)
 - **autonomous trigger 6 種の閾値計算実装**: reject queue 件数 / decay edges 件数 / typed-edge 整備率 / dangling evidence / audit 未実行期間 / 未 approve 件数 — Spec 5 (L2) / Spec 7 (L3) 所管 (本 spec は閾値設定 config + surface UX のみ)
 - **AGENTS 自動ロード時の改ざん検知 (B-4)**: hash / signing / verification — MVP 範囲外、Phase 2 以降 Spec 2 design で再検討 (決定 4-10)
-- **HTML 差分マーカー attribute 詳細 (I-3)**: `<ins>` / `<del>` / class 等の attribute schema — Phase 2/3 Spec 2 / Spec 7 design 委譲 (決定 4-8)
+- **HTML 差分マーカー attribute 詳細 (I-3)**: Spec 2 Decision 2-8 で MVP attribute (`target` + `reason`) 確定済 (Phase 2 拡張余地 = `merge_strategy` / `confidence` / `evidence_id` は据え置き、決定 4-8 委譲経路は Spec 2 design で MVP 解消)
 - **検証 4 種の規範 schema 本体**: 章節アンカー存在 / SSoT 章番号整合 / 用語集引用 link 切れ / frontmatter schema 妥当性 — Spec 0 所管 (本 spec は `rw doctor foundation` / `rw doctor classification` 実装のみ、決定 4-2)
 - **L1 raw / L3 wiki の subdirectory 規約**: `raw/incoming/` / `raw/llm_logs/` / `wiki/concepts/` 等 — steering structure.md / Spec 1 所管
 
@@ -2054,3 +2054,6 @@ _change log_
   6. lock 取得タイミング (state hash 比較 logic、race window 解消) = stage 8 開始時 `acquire_lock(scope='page_lifecycle')` + state hash 再計算 + 段階 7 終了時 hash と比較 (Spec 7 design Decision 7-6/7-7 確定、本 spec G5 LockHelper line 1046 で `'page_lifecycle'` scope 追加対応 + line 2028 と整合).
   7. 8 段階対話 user input wait signal pattern = generator が `yield WaitForUserInput(prompt)` event 発火、本 spec G3 wrapper が `.send(user_input)` で再開、CLI-level timeout は subprocess wall-clock のみ対象 (Spec 7 design Decision 7-5 確定、本 spec Performance & Scalability line 1701-1708 / line 2029 と整合).
   8. Spec 7 module 正式名 = **6 module DAG** (Layer 4a `rw_page_lifecycle.py` ≤ 1000 行 + Layer 4b `rw_skill_lifecycle.py` ≤ 400 行 + Layer 4c `rw_followup_handlers.py` ≤ 200 行 + Layer 3 `rw_lifecycle_orchestrator.py` ≤ 800 行 + Layer 2 `rw_followup_registry.py` ≤ 600 行 + Layer 1 `rw_lifecycle_diagnostics.py` ≤ 500 行) (Spec 7 design Decision 7-21 確定 = Round 2 review で Layer 4 が ≤ 1500 行制約 ~33% 超過する問題を解消、本 spec Module DAG line 206 / Directory Structure line 250 で 3 sub-module 反映が必要).
+
+- 2026-04-28 (Adjacent Sync from Spec 2 design approve commit `7ca0adc`): Spec 2 (rwiki-v2-skill-library) design approve に伴う部分必要 Adjacent Sync 1 件適用 (本 spec line 65 のみ、line 1284 frontmatter delegation は本 spec が Spec 2 を SSoT 参照済のため改版不要):
+  - **line 65 「HTML 差分マーカー attribute 詳細 (I-3)」記述の参照点更新**: 「Phase 2/3 Spec 2 / Spec 7 design 委譲 (決定 4-8)」→「Spec 2 Decision 2-8 で MVP attribute (`target` + `reason`) 確定済 (Phase 2 拡張余地 = `merge_strategy` / `confidence` / `evidence_id` は据え置き、決定 4-8 委譲経路は Spec 2 design で MVP 解消)」。本 spec の決定 4-8 委譲先 (Spec 2) で MVP 確定 = `target` + `reason` 2 attribute 必須 (両者欠落時 ERROR) として Spec 2 が SSoT 化、本 spec implementation 時に当該 schema を参照する coordination 経路が確立。Spec 7 lifecycle merge 仕様 (`merge_strategy`) との Phase 2 拡張余地は Spec 2 design Decision 2-8 follow-up に保留。
