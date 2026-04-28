@@ -2118,7 +2118,13 @@ flowchart LR
 - **Selected**: 案 1
 - **Rationale**: cache を destroy + rebuild で済む単純さ、追加依存なし、JSONL SSoT 原則と整合
 - **Trade-offs**: schema 変更時に rebuild コスト発生 (10,000 edges で数秒程度、許容)
-- **Follow-up**: 100,000 edges 規模で rebuild コストが問題化したら incremental rebuild を検討 (Phase 3)
+- **External 更新 (git pull) 後の cache invalidation 戦略**:
+  - **schema_version 不一致時**: 即 drop + rebuild from JSONL (Decision 5-2 主戦略)
+  - **schema 互換 + JSONL append-only 変更** (新規 edge 追加 / status 変更 / event 追加): file mtime 比較で変更検出 → **増分 update** (`incremental_update()` API、Layer 7 SqliteCache、edge_id PRIMARY KEY で UPSERT、削除は status=rejected で論理削除)
+  - **検出方式**: CLI 起動時に `.rwiki/graph/edges.jsonl` の mtime と `.rwiki/cache/graph.sqlite` の `last_synced_mtime` 比較、不一致なら git log で変更 line range 特定 → 該当 edge_id のみ UPSERT
+  - **fallback**: mtime 比較不能 / git log 解析失敗時は full rebuild (drop + rebuild from JSONL、安全な代替経路)
+  - **Phase 3 拡張**: 100,000 edges 規模で full rebuild コストが秒級に達する場合 incremental rebuild を最適化 (例: edge_events.jsonl の最終 N 件のみ反映)
+- **Follow-up**: 100,000 edges 規模で rebuild コストが問題化したら incremental rebuild を検討 (Phase 3)、git pull workflow 整備時に external 更新検出ロジックを `cache_invalidation_strategy()` として API 化
 
 ### Decision 5-3: fcntl.flock + fail-fast (LOCK_NB) + MVP single-thread 前提 + POSIX 限定
 
@@ -2158,7 +2164,14 @@ flowchart LR
 - **Context**: §2.12 SSoT との完全整合
 - **Selected**: `0.35 × evidence + 0.20 × explicitness + 0.15 × source_reliability + 0.15 × graph_consistency + 0.10 × recurrence + 0.05 × human_feedback` + `evidence_score == 0` で confidence ≤ 0.3 強制クランプ + 係数値を `.rwiki/config.yml` から注入 (ハードコード禁止)
 - **Rationale**: §2.12 「Evidence-backed」原則を数式レベルで担保、係数調整を config 編集のみで完結
-- **Follow-up**: 係数比率の経験的見直しは v0.8 以降
+- **係数値の根拠** (§2.12 SSoT 由来、Curated GraphRAG 設計理念整合):
+  - **evidence 0.35 (最大)**: trust chain の根幹、§2.12 核心ルール 1「Evidence なし → confidence ≤ 0.3」と整合、最重視
+  - **explicitness 0.20**: extraction_mode 4 値 (`explicit=1.0 / paraphrase=0.75 / inferred=0.5 / co_occurrence=0.25`) の確実性反映、抽出方法の信頼度を直接 confidence に乗せる
+  - **source_reliability 0.15 / graph_consistency 0.15**: 信頼度ヒューリスティック (論文 vs 個人メモ / 既存 graph との矛盾度)、中程度の重み
+  - **recurrence 0.10**: 複数 source での再出現頻度、補助的な信頼度補強
+  - **human_feedback 0.05 (最小)**: MVP 段階で feedback ループ未確立 (decision_log 蓄積初期) のため低め、v0.8 以降の経験的見直しで増加余地あり
+  - 合計 = 1.0 (正規化済)、運用調整は config 注入で完結
+- **Follow-up**: 係数比率の経験的見直しは v0.8 以降 (decision_log 蓄積後の human_feedback 重み増加検討)
 
 ### Decision 5-7: Edge lifecycle 4 段階 dangling degrade (Requirement 6.7)
 
@@ -2172,6 +2185,12 @@ flowchart LR
 - **Context**: ルール間の依存 (後段ルールが前段の結果に依存)
 - **Selected**: Decay → Reinforcement → Competition → Contradiction tracking → Edge Merging 固定順序 + `.rwiki/.hygiene.tx.tmp/` 一時領域 + 全 step 成功で commit + crash 後 tmp 残留 cleanup + WARN stderr
 - **Rationale**: ルール間依存崩壊防止 + 途中 crash 時の整合性保持
+- **5 ルール順序の論理的根拠** (各 step が前段の結果を前提とする依存連鎖):
+  1. **Decay first**: 時間経過分の confidence 減衰を確定 → 次段 Reinforcement で「現時点」の正しい confidence を起点に強化計算
+  2. **Reinforcement**: usage signal 反映で confidence 強化 → 次段 Competition の confidence ranking が正確な「最新の relative ordering」を持つ
+  3. **Competition L1**: 同一 node pair の重複 edges を winner/runner-up/loser に整理 → 次段 Contradiction が winner edges 同士の矛盾を検出可能 (loser まで含めると noise 増加)
+  4. **Contradiction tracking** (P2): Competition 後の整理済 graph 上で矛盾検出 (両 edge を保持し `contradiction_with:` 相互参照、削除しない)
+  5. **Edge Merging** (P3): Contradiction で flagged 後の類似 edges を統合 (L2 edge 単位)、Contradiction 検出済の edges は merge 対象外として保護
 - **Follow-up**: Phase 3 で community 単位の partial Hygiene を `--scope` で導入 (Requirement 21.6)
 
 ### Decision 5-9: Reinforcement 暴走防止 3 制約 + Vault 規模拡大時の部分 Hygiene 推奨
@@ -2179,15 +2198,29 @@ flowchart LR
 - **Context**: brief.md 第 4-E 持ち越し (大規模 Vault per-day cap 接触問題)
 - **Selected**: per-event 0.1 / per-day 0.2 / `independence_factor` 頭打ち の 3 制約 + Vault edges > 5,000 で `--scope=community:<id>` / `--scope=since:7d` 推奨 (Phase 3 実装)
 - **Rationale**: cap 接触での skip は仕様通り、scope 制限で個別 edge 強化機会を確保
-- **Follow-up**: Phase 3 で `--scope` 実装 (Requirement 21.6)
+- **進化則の数値安定性** (`confidence_next = confidence_current + α × usage_signal + β × recurrence - γ × decay - δ × contradiction`、Requirement 5.6):
+  - **bounded space**: confidence ∈ [0.0, 1.0] の有限区間で計算、上限 / 下限クランプで発散防止
+  - **線形上限制約**: per-event 0.1 / per-day 0.2 で Reinforcement の急増を抑制 (1 event で 10% 超増加なし、1 日で 20% 超増加なし)
+  - **sqrt(confidence) フィードバック緩和**: usage_signal 計算時に `sqrt(confidence)` 乗算で **高 confidence edge の自己強化抑制** (例: confidence=0.9 → 強化倍率 0.95、confidence=0.3 → 強化倍率 0.55、低 confidence edge 優先強化)、フィードバックループ抑制
+  - **independence_factor**: 同一 session 内既強化済 edge は強化倍率 0 に近づける (spam 防止、session 単位の独立性確保)
+  - **time_weight 半減期 30 日**: 古い event の影響減衰 (`time_decay_half_life_days` default 30)、長期的な過去依存を抑制
+  - **収束性**: 上記 4 制約の組合せで confidence は **bounded oscillation** (短期的振動はあり得るが [0, 1] 区間内、運用上問題なし)、長期的には Hygiene 周期実行 + Decay で平均回帰、**fixed point の formal proof は本 spec 範囲外** (Phase 3 prototype 検証で経験的妥当性確認)
+- **Follow-up**: Phase 3 で `--scope` 実装 (Requirement 21.6)、prototype で長期 oscillation / 収束 patterns を計測し係数調整余地を再検討
 
 ### Decision 5-10: edge_id = source+type+target hash で冪等性 + 衝突時 ERROR abort
 
 - **Context**: brief.md 第 4-B 持ち越し (hash 衝突 handling)
 - **Selected**: `edge_id = sha256(source + "|" + type + "|" + target)[:12]` + 衝突検出時 ERROR severity で abort (実用上稀)
 - **Rationale**: 12 hex 文字で 16^12 ≈ 2.8 × 10^14 通り、Vault 規模 (edges 5,000-10,000) で衝突確率実質ゼロ
-- **Trade-offs**: 衝突解決アルゴリズム未実装
-- **Follow-up**: 衝突発生事例があれば再検討 (極稀のため将来対応)
+- **Birthday paradox numerical 規模感** (P ≈ N² / (2 × 2⁴⁸) ≈ N² / 5.6×10¹⁴):
+  - **5,000 edges (MVP 想定)**: P ≈ 4.5×10⁻⁸ (= 4500 万分の 1)、安全
+  - **100,000 edges (Phase 3 規模)**: P ≈ 1.8×10⁻⁵ (= 5.6 万分の 1)、低 risk
+  - **1,000,000 edges (将来 Vault)**: P ≈ 1.8×10⁻³ (= 0.18%)、運用 risk 顕在化
+  - **16,000,000 edges**: P ≈ 50% (Birthday paradox 分水嶺、実質運用不可)
+- **Trade-offs**: 衝突解決アルゴリズム未実装、12 hex (48 bit) は MVP / Phase 3 範囲では充分だが 1M edges 超で運用 risk
+- **Follow-up**: 
+  - 衝突発生事例があれば再検討 (極稀のため将来対応)
+  - **Phase 3 拡張閾値**: edges 数 ≥ 100,000 到達時または衝突 1 件以上検出時に **16 hex (64 bit、`[:16]`)** に拡張検討。16 hex = 2^64 ≈ 1.8×10¹⁹、1M edges で P ≈ 5.4×10⁻⁸、4 billion edges まで安全
 
 ### Decision 5-11: Decision log selective recording 5 trigger + reasoning hybrid 3 方式 + privacy 切替時の意味確定
 
@@ -2299,3 +2332,9 @@ _change log_
   - **軽-8-1 (規範前提曖昧化)**: `fcntl` が POSIX 限定 (Python `fcntl` module は Windows で ImportError raise) であるにもかかわらず、design 内で OS サポート規範前提が明示されていなかった問題を解消。Allowed Dependencies に「OS サポート (規範前提) = macOS / Linux のみ (POSIX)、Windows 非対応」を追加、Decision 5-3 のタイトル + Context + Alternatives + Rationale + Trade-offs + Follow-up すべてに POSIX 限定 + Windows サポート Phase 2/3 拡張余地を明示、Migration Strategy に新節「Phase 2/3 拡張余地: Windows サポート」を追加 (案 A portalocker / 案 B 自前 OS 分岐 / 案 C Phase 4 持ち越し の 3 選択肢、Foundation / roadmap.md 改版前提)。Spec 1 R7 escalate (Eventual Consistency 規範化) と同型問題を解消。
 - 2026-04-28 (Round 9 レビュー反映): 重要級 1 件を Edit 適用。
   - **重-9-1 (構造的不均一)**: Testing Strategy Unit Tests entry で 3 module test 言及が欠落していた問題を解消 (File Structure Plan には 23 test 1:1 列挙だが Testing Strategy entry は 20 module のみ言及)。Layer 1 entry に `rw_vocabulary` (cache せず毎回最新 + 4 field validation) + `rw_atomic_io` (atomic write 5 step + sanitization helper 3 種、Round 7 由来) を追加、Layer 7 entry に `rw_query_advanced` (global summary + hierarchical summary + find_contradictory_decisions、P2 on-demand) を追加。23 module ↔ 23 test 1:1 整合確保、TDD 規律 (期待入出力先書き) で全 module 検証可能。Spec 0 R2 重-厳-3 (Components sub-section 欠落) + Round 1 重-1-1 (Service Interface 欠落) と本質同形 = 構造的不均一の連鎖再発を防止。
+- 2026-04-28 (本質的厳しいレビュー反映): user 指示「本質的に厳しくレビュー」に応じた追加検査で、本質的整合性 9 大観点 (Curated GraphRAG 3 軸 / §2.12 / §2.13 / L1↔L2↔L3 / Page lifecycle 7 種 ↔ edge action mapping / Spec 4/6/7 contracts / brief 持ち越し / Concurrency / Migration) すべて整合確認 + **軽微 5 件補強適用** (すべて自動採択、設計内吸収範囲、本質的設計変更なし)。
+  - **軽-11-1 (Decision 5-10 補強)**: edge_id sha256 12 hex (48 bit) の Birthday paradox **numerical 規模感計算** を追加 (5,000 edges P≈10⁻⁸ / 100,000 edges P≈10⁻⁵ / 1M edges P≈10⁻³ / 16M edges P≈50%) + Phase 3 拡張閾値 (edges ≥ 100,000 到達時または衝突 1 件以上検出時に **16 hex (64 bit)** へ拡張、4B edges まで安全) を明示。
+  - **軽-11-2 (Decision 5-6 補強)**: 6 係数加重式の **係数値根拠** (evidence 0.35 = 最重視 / explicitness 0.20 = 抽出方法確実性 / source + graph_consistency 0.15 = ヒューリスティック / recurrence 0.10 = 再出現補強 / human_feedback 0.05 = MVP 段階 feedback ループ未確立で低め、v0.8 以降増加余地) を明示、合計 1.0 正規化済を確認。
+  - **軽-11-3 (Decision 5-8 補強)**: Hygiene 5 ルール固定実行順序の **論理的根拠** を 5 step 依存連鎖として明示 (Decay first 時間経過確定 → Reinforcement 強化 → Competition L1 整理 → Contradiction tracking 矛盾検出 → Edge Merging 統合)、各 step が前段結果を前提とする依存関係を明文化。
+  - **軽-11-4 (Decision 5-9 補強)**: Hygiene 進化則の **数値安定性議論** を追加 (bounded space [0,1] / 線形上限制約 / sqrt(confidence) フィードバック緩和 / independence_factor / time_weight 半減期 30 日 の 5 制約による bounded oscillation 確保、長期的収束は Hygiene 周期実行 + Decay 平均回帰、formal proof は本 spec 範囲外 = Phase 3 prototype 検証)。
+  - **軽-11-5 (Decision 5-2 補強)**: External 更新 (git pull) 後の **cache invalidation 戦略** を明示 (schema_version 不一致時 drop+rebuild / 互換 + JSONL append-only 変更時は file mtime 比較 + 増分 update / mtime 比較不能時は full rebuild fallback / Phase 3 拡張で incremental rebuild 最適化)。
