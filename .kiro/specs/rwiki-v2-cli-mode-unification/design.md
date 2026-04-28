@@ -15,7 +15,7 @@
 - `--auto` 許可/禁止リスト + 強制バイパス禁止規律を実装で機械的に強制
 - `rw doctor` 複合診断と `rw check <file>` 診断を schema_version 付き JSON 出力で提供 (CI 下流 consumer 対応)
 - `.rwiki/.hygiene.lock` 取得契約を CLI 側で所管 (vocabulary / skill / L2 Graph 変動操作の排他制御)
-- 設計決定 4-1〜4-19 を design.md 本文 + change log で二重記録 (ADR 不採用、Spec 0 決定 0-4 / Spec 1 決定 1-2 継承)
+- 設計決定 4-1〜4-21 を design.md 本文 + change log で二重記録 (ADR 不採用、Spec 0 決定 0-4 / Spec 1 決定 1-2 継承)
 - 16 Requirements 全 AC (約 130 件) を Components / Interface / Flow にマップし追跡可能にする
 
 ### Non-Goals
@@ -36,7 +36,7 @@
 - **対話型エントリ `rw chat`** 起動契約: LLM CLI subprocess 起動 + AGENTS 自動ロード + 内部 `rw <task>` 呼出環境 + Maintenance UX 利用可能化 + `--mode autonomous` / `/mode` トグル dispatch + 対話ログ自動保存実装と保存先 path 規約 (R1)
 - **各タスクの CLI 統一**: `rw lint` / `rw ingest` / `rw retag` / `rw distill` / `rw extend` / `rw merge` / `rw split` / `rw approve` (review 層 dispatch を所管、R16) / `rw unapprove` / `rw query {answer, extract, fix, promote}` / `rw perspective` / `rw hypothesize` / `rw discover` / `rw audit {links, structure, semantic, strategic, deprecated, tags, evidence, followups, graph}` の引数 parse + Hybrid 実行契約 + 結果整形 + exit code 制御 (R2, R5)
 - **実行モード 3 種**: Interactive (`rw chat`) / CLI 直接 (`rw <task> [args]`) / CLI Hybrid (内部 LLM CLI 呼出) を同じ `cmd_*` エンジン関数で実行する規約 (R2.3, R2.4)
-- **対話型 default + `--auto` フラグ可否ポリシー**: 許可リスト 9 種 (deprecate / archive / reactivate / merge wiki 慎重 / unapprove `--yes` / tag merge / tag rename / skill install / extract-relations / reject `<edge-id>`) + 禁止リスト 5 種 (retract / query promote / split / tag split / skill retract) + 強制バイパス禁止規律 (R3)
+- **対話型 default + `--auto` フラグ可否ポリシー**: 許可リスト 10 種 (deprecate / archive / reactivate / merge wiki 慎重 / unapprove `--yes` / tag merge / tag rename / skill install / extract-relations / reject `<edge-id>`) + 禁止リスト 5 種 (retract / query promote / split / tag split / skill retract) + 強制バイパス禁止規律 (R3)
 - **dangerous op の対話 confirm UI**: 8 段階対話 dispatch + 1-stage confirm 振り分け + Pre-flight `--dry-run` 第 0 ステップ実装 (R3.5, R3.6)
 - **L2 Graph Ledger 管理コマンド CLI dispatch**: `rw graph {rebuild, status, hygiene, neighbors, path, orphans, hubs, bridges, export}` 9 種 / `rw edge {show, promote, demote, history}` 4 種 / `rw reject` 3 形式 / `rw extract-relations` 4 形式 / `rw audit graph` の引数 parse + Spec 5 API 呼出 + 結果整形 + exit code 制御 (R9)
 - **Decision Log 管理コマンド CLI dispatch**: `rw decision {history, recent, stats, search, contradictions, render}` 6 種の引数 parse + Spec 5 API 呼出 + Tier 2 markdown timeline 生成機構呼出 + 結果整形 (R15)
@@ -50,6 +50,7 @@
 - **周辺 spec との責務分離 boundary**: Spec 1 / Spec 2 / Spec 3 / Spec 5 / Spec 6 / Spec 7 / Spec 0 との CLI dispatch ↔ 内部ロジック の境界明示 + coordination 申し送り (R13)
 - **文書品質と運用前提**: 日本語記述 / 表は最小限 / coordination 両方 spec 同期記載 (R14)
 - **設計決定事項二重記録**: design.md 本文「設計決定事項」セクション + change log の 1 行サマリ (Spec 0 決定 0-4 / Spec 1 決定 1-2 継承)
+- **drafts §6.2 Decision Log カテゴリ追記の Adjacent Sync 別 issue 起票責務 (R15.12 持ち越し)**: requirements 確定時点で `.kiro/drafts/rwiki-v2-consolidated-spec.md` v0.7.12 §6.2 に Decision Log カテゴリが未記載のため、本 spec implementation phase 着手時に「drafts §6.2 更新」の Adjacent Sync 別 issue / 別セッションを発行する責務を本 spec が持つ (R15.12)。drafts 改版手順は roadmap.md「Adjacent Spec Synchronization」運用ルールに従う
 
 ### Out of Boundary
 
@@ -208,12 +209,13 @@ L4 (最上位、L0-L3 依存):
 
 | Layer | Choice / Version | Role in Feature | Notes |
 |-------|------------------|-----------------|-------|
-| CLI Runtime | Python 3.10+ | `rw <task>` 全 60 コマンド + `rw chat` 対話エントリ | プロジェクト標準 (steering tech.md) |
+| CLI Runtime | Python 3.10+ | `rw <task>` 約 60 コマンド + `rw chat` 対話エントリ | プロジェクト標準 (steering tech.md)、実数値は implementation phase で具体 cmd_* 列挙時に確定 |
 | Argument Parsing | `argparse` (Python 標準) | 全 cmd_* 関数の引数 parse 統一 (決定 4-4) | v1 一部手製パーサ debt 解消 |
 | Subprocess | `subprocess` (Python 標準、`run` / `Popen`) | LLM CLI 起動 + `rw chat` subprocess 起動 | timeout 必須 (決定 4-5 で 2 階層) |
 | TOML Parsing | `tomllib` (Python 3.11+ 標準) または `tomli>=2.0,<3.0` (第三者、Python 3.10 用) | `<vault>/.rwiki/config.toml` 読込 (決定 4-6) | Python 3.10 サポートのため `tomli` fallback (version 制約 >=2.0,<3.0)、3.11+ では標準で依存ゼロ |
 | UUID Generation | `uuid` (Python 標準、`uuid4().hex[:4]`、CSPRNG ベース) | 対話ログ session_id 短縮 uuid (決定 4-13) | 新規依存なし、`uuid.uuid4()` は CSPRNG (cryptographically secure pseudo-random number generator) で予測不可、衝突確率 1/65536 は確率的 |
-| Path Operations | `pathlib` (Python 標準) | review 層 path 判別 / Vault 構造解決 / file walking / path traversal 防止 (`is_relative_to()` 検証) | 新規依存なし |
+| Path Operations | `pathlib` (Python 標準) | review 層 path 判別 / Vault 構造解決 / file walking / path traversal 防止 (`is_relative_to()` 検証) / glob 展開 (`rw retag <path-or-glob>` 等は `pathlib.Path.glob()` 経由) | 新規依存なし、glob は標準 `glob` module でも代替可能 (軽-7-1 / 軽-8-2 整合) |
+| Frontmatter Writing | 手書き string template (Python 標準) | 対話ログ frontmatter (`type: dialogue_log` / `session_id` / `started_at` / `ended_at` / `turns` 等 simple key: value 構造、Spec 2 schema 整合) を `init_session_log()` / `ended_at` 追記時に手書き string template で生成 | Spec 1 が採用する `pyyaml` は本 spec では不要 (frontmatter 構造が simple key: value のため、軽-8-1 整合)、Spec 2 schema 拡張時 (例: turn 構造化 events list、軽-8-1 補強) に `pyyaml` 採用検討 (Adjacent Sync) |
 | Concurrent Execution | `concurrent.futures` (Python 標準、`ThreadPoolExecutor(max_workers=4)`) | `rw doctor` 4 並行スキャン (L1 / L2 / L3 / Decision Log) | 新規依存なし、GIL 影響軽微 (subprocess / I/O bound 中心) |
 | Concurrency Lock | `.rwiki/.hygiene.lock` (Spec 5 物理実装) | vocabulary / skill / L2 変動操作の lock 取得 (決定 4-3) | Spec 5 design phase で詳細確定 |
 | Color Output | ANSI escape sequence (標準) | Severity colorize (CRITICAL=赤 / ERROR=橙 / WARN=黄 / INFO=青、決定 4-9) | `--no-color` flag / `RWIKI_NO_COLOR=1` 環境変数で抑止 (CI 環境)、**MVP は POSIX-like terminal のみ正式サポート** (Linux / macOS / Windows Terminal / WSL)、旧 Windows cmd.exe / PowerShell 5.x は colorize 抑止推奨、Phase 2 以降 `colorama` 第三者ライブラリ採用検討 |
@@ -255,7 +257,7 @@ L4 (最上位、L0-L3 依存):
 └── rw_prompt_engine.py       # 本 spec で v2 新規実装 (Spec 1 design phase では未列挙、v1-archive 同名 module のみ存在で参照不可) — call_claude(prompt, timeout) wrapper (≤ 600 行)、L1 layer (rw_utils のみ依存)
 
 <vault>/.rwiki/               # implementation phase で `rw init` が初期化
-├── config.toml              # `[maintenance].mute` / `mute_until` / autonomous trigger 閾値 (決定 4-6)
+├── config.toml              # `[maintenance].mute` (bool、永続のみ) / autonomous trigger 閾値 (決定 4-6)
 ├── .hygiene.lock            # 取得時のみ存在 (Spec 5 物理実装)
 └── ... (vocabulary/, graph/, cache/ 等は Spec 1 / Spec 5 所管)
 
@@ -406,7 +408,7 @@ sequenceDiagram
   Note over User,LLM: Layer 3 Autonomous R8
   User->>LLM: rw chat session 開始 or 進行中の閾値超過検知
   LLM->>Surfacer: get_autonomous_triggers
-  Surfacer->>Config: read mute / mute_until 決定 4-6
+  Surfacer->>Config: read mute 決定 4-6 永続のみ MVP
   alt mute = false
     Surfacer->>Spec5: check_l2_thresholds reject queue ≥10 / decay ≥20 / typed-edge <2.0
     Surfacer->>Spec7: check_l3_thresholds 未 approve ≥5 / audit ≥14 日 / Decision Log 矛盾候補
@@ -418,7 +420,7 @@ sequenceDiagram
     LLM->>Surfacer: mark_dismissed_for_session session_id
     User->>LLM: /mute maintenance
     LLM->>Surfacer: persist_mute Config write
-    Surfacer->>Config: write mute = true / mute_until = ISO8601
+    Surfacer->>Config: write mute = true 永続のみ MVP
   else mute = true
     Surfacer-->>LLM: 抑止 surface しない
   end
@@ -435,7 +437,7 @@ sequenceDiagram
 | Requirement | Summary | Components | Interfaces | Flows |
 |-------------|---------|------------|------------|-------|
 | 1.1-1.9 | `rw chat` 対話エントリ起動契約 | G1 (rw_chat.py / rw_cli.py) | `cmd_chat(args)` / `start_llm_subprocess()` / `load_agents()` / `init_session_log()` | Flow 1 |
-| 2.1-2.7 | 各タスク CLI 統一 + 3 モード共通 + Severity 4 | G2 (rw_cli.py / rw_dispatch.py) + G6 (rw_utils.py) | `cmd_*(args)` 全 60 種 / `format_severity_output()` / `compute_exit_code()` | — |
+| 2.1-2.7 | 各タスク CLI 統一 + 3 モード共通 + Severity 4 | G2 (rw_cli.py / rw_dispatch.py) + G6 (rw_utils.py) | `cmd_*(args)` 約 60 種 / `format_severity_output()` / `compute_exit_code()` | — |
 | 3.1-3.7 | 対話型 default + `--auto` 許可/禁止 | G3 (rw_policy.py) | `check_auto_allowed(cmd_name, args)` / `check_auto_bypass_attempt(args, env)` / `confirm_dangerous_op(op_name, severity)` | — |
 | 4.1-4.9 | `rw check` / `rw doctor` 診断 | G4 (rw_doctor.py) | `cmd_check(file)` / `cmd_doctor(args)` / `format_doctor_output(json, schema_version)` | — |
 | 5.1-5.8 | `rw follow-up *` / `rw init` / `rw retag` | G2 (rw_dispatch.py / rw_lifecycle_cli.py) | `cmd_follow_up_*()` / `cmd_init(path, reinstall_symlink)` / `cmd_retag(path_glob)` | — |
@@ -446,7 +448,7 @@ sequenceDiagram
 | 10.1-10.7 | `.hygiene.lock` 取得契約 | G5 (rw_lock.py) | `acquire_lock(scope)` / `release_lock()` / lock-required cmd_* gate | — |
 | 11.1-11.6 | v1 継承技術決定 (Severity 4 / exit 0/1/2 / timeout / module 分割 / symlink) | G6 (rw_utils.py / rw_prompt_engine.py) + 全 module | `compute_exit_code()` / `call_claude(prompt, timeout)` / `_install_rw_symlink()` | — |
 | 12.1-12.7 | Foundation 規範準拠 + SSoT 引用形式 | 全 module + design.md 引用 | — | — |
-| 13.1-13.9 | 周辺 spec 責務分離 boundary | 全 module + Boundary Commitments | Spec 1-7 API へ薄い wrapper として実装 | Flow 2 |
+| 13.1-13.9 | 周辺 spec 責務分離 boundary + `rw audit evidence` source: dedup logic 本 spec 所管 (R13.5) | 全 module + Boundary Commitments + G2 CommandDispatch (`cmd_audit_evidence`) | Spec 1-7 API へ薄い wrapper として実装 + DOI / arXiv / URL / paper title 正規化 | Flow 2 |
 | 14.1-14.5 | 文書品質 + coordination 両方 spec 同期 | design.md / change log | — | — |
 | 15.1-15.12 | Decision Log 管理コマンド CLI dispatch + 自動 record_decision 呼出 | G2 (rw_decision_cli.py) | `cmd_decision_*()` 6 種 / `auto_record_decision(operation, decision_type, ...)` | Flow 2 (record_decision 自動呼出) |
 | 16.1-16.10 | `rw approve` review 層 dispatch + 三者命名関係 + 暫定 skip + WARN | G2 (rw_dispatch.py) | `parse_approve_argument(arg)` / `dispatch_approve_path(path)` / 6 review 層 handler | Flow 2 |
@@ -458,11 +460,11 @@ sequenceDiagram
 | G1 ChatEntry | CLI / 対話 | `rw chat` 対話エントリ + Maintenance UX surface 起点 + 対話ログ自動保存 | 1.1-1.9 | rw_utils (P0), LLM CLI subprocess (P0), AGENTS (P1) | Service, Batch |
 | G1 ModeEngine | CLI / 共通 | 3 モード (Interactive / CLI 直接 / CLI Hybrid) を同じ cmd_* で実行 | 2.1-2.7 | rw_utils (P0) | Service |
 | G2 CommandDispatch | CLI / dispatch | 約 60 コマンド全 cmd_* + review 層 dispatch + L2 Graph wrapper + lifecycle CLI + decision CLI | 2.1-2.7, 5.1-5.8, 9.1-9.9, 13.1-13.9, 15.1-15.12, 16.1-16.10 | Spec 5 API (P0), Spec 7 API (P0), Spec 1 API (P0), Spec 6 API (P0), rw_policy (P0), rw_lock (P0) | Service, API |
-| G3 AutoPolicy | CLI / policy | `--auto` 許可/禁止リスト + 強制バイパス検出 + dangerous op confirm dispatch | 3.1-3.7 | rw_utils (P0) | Service |
+| G3 AutoPolicy | CLI / policy | `--auto` 許可/禁止リスト + 強制バイパス検出 + dangerous op confirm dispatch | 3.1-3.7 | rw_utils (P0), Spec 7 module (P0、`cmd_*` 8 段階対話 handler 呼出 = 5 種禁止リスト + `cmd_promote_to_synthesis`、line 1957 申し送り整合) | Service |
 | G4 Diagnostic | CLI / 診断 | `rw check` / `rw doctor` + JSON schema_version + CLI-level timeout | 4.1-4.9 | Spec 0 (P0), Spec 1 (P0), Spec 5 (P0), Spec 7 (P0), rw_utils (P0) | Service, API |
 | G4 MaintenanceUX | CLI / UX | data surfacer (構造化 JSON event 提供 + 閾値判定 + 計算 API 呼出) | 6.1-6.7, 7.1-7.7, 8.1-8.7 | Spec 5 (P0), Spec 7 (P0), Config (P1) | Service, Event |
 | G5 LockHelper | CLI / concurrency | `.hygiene.lock` 取得契約 helper (Spec 5 物理実装の wrapper) | 10.1-10.7 | Spec 5 物理 lock 実装 (P0) | Service |
-| G6 Utils | CLI / 共通 | Severity / exit code / timeout / argparse factory / status table format / colorize / config 読込 | 2.7, 11.1-11.6, 14.1-14.5 | (依存なし、最下層) | Service |
+| G6 Utils | CLI / 共通 | Severity / exit code / timeout / argparse factory / status table format / colorize / config 読込 + Foundation 規範 SSoT 引用形式 (横断、全 module で適用) | 2.7, 11.1-11.6, 12.1-12.7 (横断、全 module で適用), 14.1-14.5 | (依存なし、最下層) | Service |
 
 ### G1 ChatEntry
 
@@ -595,7 +597,7 @@ def cmd_<task>(args: argparse.Namespace) -> int:
 
 | Field | Detail |
 |-------|--------|
-| Intent | 約 60 コマンド全 cmd_* + review 層 dispatch + L2 Graph wrapper + lifecycle CLI + decision CLI を Spec 5/6/7/1 API への薄い wrapper として実装 |
+| Intent | 約 60 コマンド全 cmd_* + review 層 dispatch + L2 Graph wrapper + lifecycle CLI + decision CLI + `cmd_audit_evidence` source: dedup logic を Spec 5/6/7/1 API への薄い wrapper + audit task として実装 |
 | Requirements | 2.1, 2.2, 5.1-5.8, 9.1-9.9, 13.1-13.9, 15.1-15.12, 16.1-16.10 |
 
 **Responsibilities & Constraints**
@@ -605,6 +607,7 @@ def cmd_<task>(args: argparse.Namespace) -> int:
 - **L2 Graph 管理コマンド wrapper (R9)**: Spec 5 API への引数転送 + 結果整形 + exit code 制御、内部ロジックは Spec 5 委譲
 - **Decision Log CLI dispatch (R15)**: Spec 5 Decision Log API 4 種 (`record_decision()` / `get_decisions_for()` / `search_decisions()` / `find_contradictory_decisions()`) + Tier 2 markdown timeline 生成機構への wrapper (内部 API 名は Spec 5 design phase で確定)
 - **`record_decision()` 自動呼出責務**: `rw approve` / `rw reject` / `rw tag merge / split / rename / deprecate / register` / `rw deprecate` / `rw retract` / `rw archive` / `rw merge` / `rw split` / `rw query promote` の approve / 実行完了時に Spec 5 API 自動呼出 (R15.10)
+- **`cmd_audit_evidence` source: field dedup logic (R13.5、Spec 1 R5 由来 coordination)**: `rw audit evidence` は `wiki/**/*.md` の `source:` field を全件 scan し、同一 paper / DOI / URL / arXiv ID の表記揺れを検出して canonical 化提案を `review/audit_candidates/source-dedup-<timestamp>.md` に生成する。dedup アルゴリズム概念 = (a) **DOI 正規化**: `https://doi.org/`, `doi:`, 大文字小文字差を正規化し DOI prefix `10.NNNN/` 以降を抽出 / (b) **arXiv ID 抽出**: `arxiv:NNNN.NNNNN` / `arXiv:NNNN.NNNNN` / `https://arxiv.org/abs/NNNN.NNNNN` の 3 形式を `arxiv:NNNN.NNNNN` 形式に統一 / (c) **URL 正規化**: `http://` / `https://` 統一、trailing slash 除去、`?utm_*` query param 除去 / (d) **paper title fuzzy matching**: title field が同一 evidence で複数 source: 値持つ場合、Levenshtein distance < 5 を統合候補化 (Spec 1 R5 と同一アルゴリズム選択規律、Ratcliff/Obershelp は不採用 = Spec 1 R5 escalate 整合)。Spec 1 evidence frontmatter schema (`source:` field の値型 / 構造) は Spec 1 所管、本 spec は重複検出後の canonical 化提案出力フォーマットのみ所管。**dedup 実装規模**: 推定 200-400 行 (`rw_audit.py` 内、約 3-7% 増)、MVP scope 内
 - **subprocess timeout 必須** (R2.6 / R11.3): LLM CLI を呼び出す全 cmd_* で `call_claude(prompt, timeout=per_call_timeout)` 経由
 - **Severity 4 統一出力** (R2.7 / R11.1): `rw_utils.format_severity_output()` 経由
 
@@ -694,6 +697,34 @@ def auto_record_decision(
       - 本 wrapper は DecisionLogWriteError を catch せず re-raise (cmd_* top-level で exit 1)
       - 本 spec / Spec 1 / Spec 7 が新 op を実装する際、Spec 5 enum 拡張前に呼出すと DecisionLogWriteError 発生 → Phase 順序 (Spec 5 design 完了後に本 spec implementation 開始) で防止
     """
+
+def cmd_audit_evidence(args: argparse.Namespace) -> int:
+    """
+    rw audit evidence (R13.5、Spec 1 R5 由来 coordination、決定 4-20)。
+
+    Preconditions:
+      - <vault>/wiki/**/*.md が存在 (audit 対象 evidence frontmatter source: field 含む)
+      - Spec 1 evidence frontmatter schema (source: field 値型 / 構造) との整合 (Spec 1 design 確定後)
+
+    Postconditions:
+      - 同一 paper / DOI / URL / arXiv ID の表記揺れを検出
+      - canonical 化提案を <vault>/review/audit_candidates/source-dedup-<YYYYMMDD-HHMMSS>.md に生成
+      - 提案ファイルは review 層 dispatch (R16.4 = audit_candidates → 本 spec audit task) で approve 経路に乗る
+      - 検出件数 / 修正提案件数を Severity 4 統一出力で stdout / stderr に通知
+
+    Errors:
+      - <vault>/wiki/ ディレクトリ未存在 → exit 1 (ERROR + stderr 案内)
+      - source: field schema 不正 → WARN 出力 + skip (該当 evidence のみ)、全件 skip でも exit 0 (PASS、検出 0 件)
+      - paper title fuzzy matching の Levenshtein 計算 timeout → exit 1 (CLI-level timeout 発動、--timeout で override 可能)
+
+    Algorithm (決定 4-20、4 アルゴリズム):
+      (a) DOI 正規化: 'https://doi.org/' / 'doi:' / 大文字小文字差を正規化、'10.NNNN/' 以降を抽出
+      (b) arXiv ID 抽出: 'arxiv:NNNN.NNNNN' / 'arXiv:NNNN.NNNNN' / 'https://arxiv.org/abs/NNNN.NNNNN' を統一形式に
+      (c) URL 正規化: 'http://' / 'https://' 統一、trailing slash 除去、'?utm_*' query param 除去
+      (d) paper title fuzzy matching: Levenshtein distance < 5 を統合候補化 (Spec 1 R5 escalate と同一規律、Ratcliff/Obershelp 不採用)
+
+    Exit code: 0 = PASS (検出 0 件 / 修正提案 0 件) / 1 = runtime error / 2 = FAIL 検出 (修正提案 ≥ 1 件)
+    """
 ```
 
 ##### API Contract (Spec 5 / 6 / 7 / 1 への呼出)
@@ -729,7 +760,7 @@ def auto_record_decision(
 
 **Responsibilities & Constraints**
 
-- **`--auto` 許可リスト 9 種**: deprecate / archive / reactivate / merge wiki 慎重 / unapprove `--yes` / tag merge / tag rename / skill install / extract-relations / reject `<edge-id>` (R3.2)
+- **`--auto` 許可リスト 10 種**: deprecate / archive / reactivate / merge wiki 慎重 / unapprove `--yes` / tag merge / tag rename / skill install / extract-relations / reject `<edge-id>` (R3.2)
 - **`--auto` 禁止リスト 5 種**: retract / query promote / split / tag split / skill retract (R3.3)
 - **強制バイパス禁止規律** (決定 4-18): 環境変数 (`RWIKI_FORCE_AUTO=1` 等) / 引数 (`--force-auto` 等) / config (`force_auto: true`) いずれも検出 → exit 1 + INFO log 出力
 - **Maintenance UX 包括承認 bypass 禁止** (R7.5): 包括承認は dangerous op の `--auto` bypass として機能しない
@@ -938,7 +969,7 @@ def get_autonomous_triggers(vault: pathlib.Path) -> dict:
     """
     Layer 3 Autonomous 提案用 JSON event 生成 (R8)。
     閾値判定で triggered events のみ surface。
-    config から mute / mute_until を確認 (mute=true なら空 events)。
+    config から mute (bool、永続のみ MVP、決定 4-6) を確認 (mute=true なら空 events)。
 
     Returns: {
       type: 'autonomous_triggers',
@@ -954,11 +985,11 @@ def get_autonomous_triggers(vault: pathlib.Path) -> dict:
     }
     """
 
-def persist_mute(vault: pathlib.Path, mute_until: Optional[str] = None) -> None:
+def persist_mute(vault: pathlib.Path) -> None:
     """
-    /mute maintenance 永続化。
-    <vault>/.rwiki/config.toml の [maintenance].mute = true (mute_until は ISO 8601、None なら永続)。
-    決定 4-6 に従い vault scoped。
+    /mute maintenance 永続化 (R8.5、永続のみ MVP)。
+    <vault>/.rwiki/config.toml の [maintenance].mute = true を書込。
+    決定 4-6 に従い vault scoped。期間限定 mute は Phase 2 拡張 (決定 4-21)。
     """
 
 def mark_dismissed_for_session(session_id: str, trigger_id: str) -> None:
@@ -971,7 +1002,7 @@ def mark_dismissed_for_session(session_id: str, trigger_id: str) -> None:
 ##### Event Contract (LLM CLI 側 system prompt との連携)
 
 - **Published events**: `candidate_tasks` (R6) / `doctor_summary` (R7) / `autonomous_triggers` (R8)
-- **Subscribed events**: `dismiss <trigger_id>` / `mute_maintenance [<until>]` (LLM CLI 経由でユーザー入力)
+- **Subscribed events**: `dismiss <trigger_id>` / `mute_maintenance` (LLM CLI 経由でユーザー入力、永続のみ MVP、決定 4-21、期間限定 mute は Phase 2 拡張)
 - **Ordering / delivery guarantees**: synchronous (data surfacer は LLM CLI 単一 process 内で呼出される helper)
 
 **Implementation Notes**
@@ -1071,7 +1102,7 @@ def cmd_tag_merge(args):
 - **config 読込**: `<vault>/.rwiki/config.toml` を `tomllib` (Python 3.11+) または `tomli` (Python 3.10) で読込
 - **`rw` symlink 管理** (R11.5): `_install_rw_symlink(target_path, dev_root)` (v1 パターン継承)、`rw init <path> --reinstall-symlink` で symlink 再作成
 - **モジュール責務分割** (R11.4): 各 module ≤ 1500 行 / DAG 依存 / 修飾参照 (`rw_<module>.<symbol>`) / 後方互換 re-export 禁止 (v1 module-split 継承、決定 4-3)
-- **全 cmd_* help text 標準化規律** (Spec 1 本-22 整合): argparse subparser の help text format を全 60+ コマンドで統一 — (a) 1 行 description (動詞 + 目的) / (b) 引数説明 (各 positional / optional flag に 1 行) / (c) 例示 1-2 件 (consolidated-spec / scenarios のシナリオ整合) / (d) 用語は Foundation 用語集準拠 (例: 「edge」「page」「synthesis」「distill」等の用語表記統一)。Implementation phase で `rw_utils.format_subcommand_help(cmd_name, description, args, examples)` 等の helper で実装統一
+- **全 cmd_* help text 標準化規律** (Spec 1 本-22 整合): argparse subparser の help text format を約 60 コマンド全件で統一 — (a) 1 行 description (動詞 + 目的) / (b) 引数説明 (各 positional / optional flag に 1 行) / (c) 例示 1-2 件 (consolidated-spec / scenarios のシナリオ整合) / (d) 用語は Foundation 用語集準拠 (例: 「edge」「page」「synthesis」「distill」等の用語表記統一)。Implementation phase で `rw_utils.format_subcommand_help(cmd_name, description, args, examples)` 等の helper で実装統一
 
 **Dependencies**
 
@@ -1110,7 +1141,7 @@ def make_argparser_factory(common_flags: list[str]) -> argparse.ArgumentParser:
     共通 flag を含む parser を生成 (決定 4-4)。
 
     共通 flag 値域:
-      --auto      bool (action='store_true')、許可リスト 9 種でのみ有効、禁止リスト 5 種は exit 1 (R3.3)
+      --auto      bool (action='store_true')、許可リスト 10 種でのみ有効、禁止リスト 5 種は exit 1 (R3.3)
       --dry-run   bool (action='store_true')、重い dangerous op (deprecate/merge/split/archive/retract) のみで提供 (決定 4-7)
       --yes       bool (action='store_true')、`rw unapprove` で必須 (R3.2 / Spec 7 R6.7)
       --scope     str、Vault 配下の relative path 形式 (例: 'wiki/concepts/foo.md' / 'review/synthesis_candidates/')
@@ -1162,7 +1193,7 @@ def _install_rw_symlink(target_path: str, dev_root: str) -> dict[str, str]:
 - **Domain events**: SessionStarted / TurnAppended / SessionEnded
 - **Business rules / invariants**:
   - 対話ログ append-only (R1.8、Scenario 25 整合)
-  - 並行起動時 `session_id` 衝突しない (uuid4 4hex で 1/65536 衝突率、実質ゼロ)
+  - 並行起動時 `session_id` 衝突確率は誕生日問題で評価 (5+ セッション 0.019% / 100+ セッション 7% / 362 セッション 50%、詳細は決定 4-13)、Spec 4 MVP の個人 Memex / 小規模チーム想定では実用上問題なし
   - frontmatter スキーマ詳細は Spec 2 所管 (本 spec は保存実装と保存先 path 規約 + session_id 形式のみ)
 
 #### Maintenance Event
@@ -1188,7 +1219,7 @@ def _install_rw_symlink(target_path: str, dev_root: str) -> dict[str, str]:
 - **Business rules / invariants**:
   - 集合は constant、変更時は本 design 改版経路 (Revalidation Trigger)
   - bypass 試行検出は env / args / config の三方向監視 (決定 4-18)
-  - **Maintenance UX 包括承認は AutoPolicy.allowed_commands_in_bulk として bypass しない** (R7.5 整合、Layer 2 複合診断 orchestration の包括承認は dangerous op の `--auto` 自動付与として機能してはならない、許可リスト 9 種以外の dangerous op は包括承認下でも対話 confirm 必須)
+  - **Maintenance UX 包括承認は AutoPolicy.allowed_commands_in_bulk として bypass しない** (R7.5 整合、Layer 2 複合診断 orchestration の包括承認は dangerous op の `--auto` 自動付与として機能してはならない、許可リスト 10 種以外の dangerous op は包括承認下でも対話 confirm 必須)
 
 ### Logical Data Model
 
@@ -1198,8 +1229,7 @@ def _install_rw_symlink(target_path: str, dev_root: str) -> dict[str, str]:
 # Maintenance UX 設定 (決定 4-6)
 # 閾値デフォルト値の出典: drafts §2.11 / Scenario 33 §4.4 (R8.6 整合、reject_queue 10 / decay 20 / typed_edge 2.0 / dangling 5 / audit_not_run 14 日 / pending_approves 5 を Spec 4 デフォルトとして固定)
 [maintenance]
-mute = false                    # /mute maintenance で true (永続化)
-mute_until = ""                 # ISO 8601、空文字なら永続
+mute = false                    # /mute maintenance で true (永続化、R8.5 整合、永続のみ)
 # Autonomous trigger 閾値 (R8.6、Scenario 33 §4.4 出典)
 reject_queue_threshold = 10
 decay_progress_threshold = 20
@@ -1234,7 +1264,7 @@ session_id: 20260427-153000-a3f9 # 決定 4-13、timezone は Vault 運用環境
 started_at: 2026-04-27T15:30:00+09:00
 ended_at: 2026-04-27T16:45:23+09:00
 mode: interactive                # session 開始時の mode を保持 (interactive / autonomous、R1.9)。/mode トグル発生時は frontmatter は不変、turn 内に mode 切替を記録 (append-only 規約上、frontmatter 更新は ended_at 追記のみ)
-turns: 42                        # append-only で increment
+turns: 42                        # session 終了時に最終値追記 (turn 追記は markdown body 側、frontmatter は session 開始時生成 + 終了時 ended_at / turns update のみ)
 # 詳細スキーマは Spec 2 所管
 ---
 
@@ -1362,6 +1392,10 @@ turns: 42                        # append-only で increment
 - **Boundary Errors** (exit 1):
   - `rw approve <path>` で path が決定 4-16 dispatch table 外 (例: `review/decision-views/*` / `wiki/.follow-ups/*` / `review/hypothesis_candidates/*`) → ERROR + exit 1 + 案内 (R16.6 / R16.7 / R16.1 注記)
   - 対話必須コマンドが非 TTY 環境で `--auto` なし実行 → ERROR + exit 1 + 案内 (R3.4)
+- **Partial Completion** (R7.4 Maintenance UX halt-on-error、line 911 整合):
+  - Maintenance UX Layer 2 複合診断 orchestration 中、task N が非ゼロ exit (runtime error / FAIL 検出) で halt → WARN + stderr 通知 (「partial completion: task1 成功 / task2 FAIL / task3 未実行」) + 残置先行 task 副作用 (Eventual Consistency 規範拡張、rollback しない) + user に「`rw doctor` で状態確認推奨」案内
+  - 全体 exit code = halt 時点の task の exit code (runtime error は exit 1 / FAIL 検出は exit 2)、user 介入で skip / retry / continue 指示時は後続 task 実行
+  - Future enhancement (Phase 2/3): `rw maintenance recover --from <session_id>` 等の自動回復 CLI を実装可能、本 spec MVP では Eventual Consistency + 透明性 + `rw doctor` fallback で十分
 
 ### Monitoring
 
@@ -1448,7 +1482,9 @@ class LockRuntimeError(RwikiError):
 class MissingTimeoutError(RwikiError):
     """LLM CLI subprocess timeout 未設定検出 (R11.3 / 決定 4-5)。implementation 段階で防止、設計時 contract 違反。"""
 
-# 各 spec の API 呼出から re-raise (本 spec module 内では catch せず CLI top-level で exit code 制御)
+# 各 spec の API 呼出箇所で本 spec module が catch + re-raise (DAG 一方向依存維持、Spec 5 / 7 / 1 module は本 spec の Exception を import しない)
+# 実装 pattern: try-except <Spec5/7/1 内の Exception> as e: raise <本 spec 階層 Exception>(...) from e
+# CLI top-level (rw_cli.main()) で `try-except RwikiError` し exit 1 + Severity 4 stderr 出力に統一
 class DecisionLogWriteError(RwikiError):
     """Spec 5 record_decision() の書込失敗。exit 1 + stderr。"""
 
@@ -1478,13 +1514,14 @@ class DiagnosticReadError(RwikiError):
 - **`cmd_approve`**: 引数形式判定 (id vs path) / 6 review 層 routing / `record_decision()` 自動呼出 / decision-views / .follow-ups / hypothesis_candidates path → exit 1 + 案内
 - **`cmd_doctor`**: 4 並行スキャン (L1 / L2 / L3 / Decision Log) / `schema_version` 必須 / CLI-level timeout 発動 / Severity colorize
 - **`check_auto_bypass_attempt`**: env / args / config の 3 方向 bypass 試行検出 (`RWIKI_FORCE_AUTO=1` / `--force-auto` / config `force_auto: true`、検出順序 args → env → config の short-circuit)
-- **`confirm_dangerous_op` ConfirmResult enum 網羅** (軽-4-4 整合): 4 値 (CONFIRMED / ABORTED_USER / ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTY) の出力検証 + cmd_* 側 exit code 整合 (CONFIRMED → continue / ABORTED_* → exit 1 + 該当 stderr)
+- **`confirm_dangerous_op` ConfirmResult enum 網羅** (軽-4-4 / 重-厳-1 確証案 Y 整合): 5 値 (CONFIRMED_LIVE / CONFIRMED_DRY_RUN / ABORTED_USER / ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTY) の出力検証 + cmd_* 側 exit code 整合 (CONFIRMED_LIVE → continue / CONFIRMED_DRY_RUN → exit 0 + write スキップ (`if result == CONFIRMED_DRY_RUN: return 0` gate test) / ABORTED_* → exit 1 + 該当 stderr)
 - **`acquire_lock`**: 取得成功 / 失敗 (他プロセス保持中、`(False, LockInfo)` 返却) / runtime error / LockInfo の PID / operation / acquired_at field
 - **`get_autonomous_triggers`**: mute=true なら空 events / 閾値判定で triggered events のみ / 各 trigger の {trigger_id, count, period, threshold, basis} 4 要素網羅 (R8.3 整合)
 - **`_compute_exit_code`**: PASS / FAIL / runtime error の三状態組合せ網羅 (Spec 1 / Spec 0 と整合)、検出概念のないコマンド (`rw ingest` 等) は exit 0/1 のみ
 - **`validate_path_within_vault`** (軽-8-2 path traversal 防止): Vault 内 path → resolved `Path` / Vault 外 path (`../../etc/passwd` 等) → `ValueError` raise / cmd_* 側で exit 1 + ERROR 出力
 - **`parse_approve_argument`**: id 形式 (例: `hyp_a3f9`、regex `^[a-z]+_[a-f0-9]+$` match) / path 形式 / 曖昧引数 → `ValueError`
 - **`init_session_log`**: 衝突回避 (file exists 時の uuid4 再生成、最大 3 回試行、3 連続衝突 → `SessionIdCollisionError`)
+- **`cmd_audit_evidence`** (R13.5 / 決定 4-20、本セッション軽-9-1 反映): DOI 正規化 / arXiv ID 抽出 / URL 正規化 / paper title fuzzy matching (Levenshtein < 5) の 4 アルゴリズム個別 test、canonical 化提案 markdown 出力 (`review/audit_candidates/source-dedup-<YYYYMMDD-HHMMSS>.md`) schema 検証、`--limit` 引数による fuzzy matching 対象制限 test (default 1000 件)、CLI-level timeout 発動 test、Vault 構造妥当性違反 (`<vault>/wiki/` 未存在) → exit 1 / source: schema 不正時の WARN + skip / 検出 0 件 = exit 0 / 修正提案 ≥ 1 件 = exit 2 の各 case
 
 ### Integration Tests
 
@@ -1563,6 +1600,7 @@ class DiagnosticReadError(RwikiError):
 
 - **Threat model**: ユーザー入力 path 引数 (`rw approve <path>` / `rw check <file>` / `rw init <path>` 等) で `../../../etc/passwd` 等の path traversal 攻撃
 - **Security control**: 全 path 引数を **`pathlib.Path.resolve()` で絶対パス化 → Vault root の `is_relative_to(vault_root)` 検証 → 違反時 ERROR + exit 1**。Implementation 規律として `rw_utils.validate_path_within_vault(path, vault_root) -> Path` helper を全 path 受領 cmd_* で gate 化、Vault 外 path は実行せず
+- **glob 引数の path traversal 検証** (R5.8 `rw retag <path-or-glob>` 等、軽-7-1 補強): glob 引数は `glob.glob()` / `pathlib.Path.glob()` 展開後の各 path に対して `validate_path_within_vault()` を 1 件ずつ適用、Vault 外 path は **skip + WARN 通知** (展開全体を fail させず、安全な path のみ処理続行)。glob pattern 自体の検証 (例: `../../**` パターンの拒絶) は path 展開前の `pathlib.PurePath` parse で `..` 含有を検出 → ERROR + exit 1 で gate
 
 ### TOML parse DoS 防止
 
@@ -1596,6 +1634,7 @@ class DiagnosticReadError(RwikiError):
 - **対話ログ append** (`raw/llm_logs/chat-sessions/<session_id>.md`、R1.8): `open(path, 'a')` + `fcntl.flock(f, fcntl.LOCK_EX)` で排他 lock 取得 → write → close (lock 自動解放)。session_id 物理分離 (決定 4-13) で並行起動セッションは別 file に書き込むため、本 lock は同 session 内の write race 防止のみ
 - **bypass_attempts.jsonl append** (G3 AutoPolicy 監査ログ): 同上の atomic append パターン (POSIX flock + O_APPEND)
 - **config.toml write** (G4 MaintenanceUX `persist_mute()`): `open(path, 'w')` + `fcntl.flock(f, fcntl.LOCK_EX)` で排他 lock + temp file 経由 → `os.rename()` で atomic rename (POSIX rename は atomic 保証)、partial write 防止
+- **`<vault>/logs/<command>_latest.json` write** (全 cmd_* 構造化ログ、line 1397): config.toml write と同パターン (`open(path, 'w')` + `fcntl.flock(f, fcntl.LOCK_EX)` + temp file 経由 → `os.rename()` で atomic rename)。並行起動 5+ セッション時に同 cmd 並行実行 → race window で log file 破損リスクを atomic rename で防止 (CI 監視ツールが parse する前提整合)
 - **Threat model**: 並行 process / multi-writer 同時 write による file 破損
 - **Security / robustness control**: OS-level atomic append (POSIX flock) で保証、`.hygiene.lock` のような取得失敗 case (待機なし exit 1) は発生しない、Spec 5 物理 lock 実装に影響なし
 - **Implementation 規律**: Python 標準 `fcntl` module 使用、新規依存なし。Windows 環境 (POSIX 非互換) は MVP 範囲外 (steering tech.md「LLM CLI 参照実装は Linux/macOS 想定」整合)、`msvcrt.locking` への対応は Phase 2 以降検討
@@ -1647,6 +1686,26 @@ class DiagnosticReadError(RwikiError):
 - **5+ セッションの想定根拠**: 個人 Memex ユーザーが複数エディタタブで Vault を編集する典型シナリオ — (a) Obsidian (閲覧) + ターミナル (`rw chat`) + IDE (markdown 編集) + 並行 batch script の 4 経路 + 余裕 1 = 5 / (b) チーム利用 (Phase 2 以降) で multi-user 同時編集の現実的上限
 - **Scaling approach**: lock 待機なし規約 (R10.2 整合) で再試行戦略はクライアント側責務 (本 spec design 持ち越し本-N、決定として記録不要 = 既要件範囲内)
 - **UX 影響**: lock 取得失敗時 stderr に PID + operation + acquired_at 情報を含める (G5 LockHelper 拡張済、軽-4-5 反映) でユーザーが手動で待機 / 別 vault 操作などの判断可能
+
+### `rw audit evidence` source: dedup 計算量見積り (R5 軽-5-1、決定 4-20 整合)
+
+- **N = 全 evidence 数 (例: 1K-10K)**, **M = 各 evidence の source: field 数 (平均 1-3)**
+- **DOI 正規化 / arXiv ID 抽出 / URL 正規化**: O(N×M) (各 source: field を 1 回 process、正規表現 match)、10K × 3 = 30K 演算 = ms オーダー
+- **paper title fuzzy matching (Levenshtein distance < 5)**: O(N²) worst case (全 evidence pair の title 比較)、10K evidence で 100M 比較 = 1-10 分オーダー (実装次第) — **大規模 vault (10K+ evidence) で hang リスクあり**
+- **Mitigation**:
+  - title prefix index による pruning (距離 5 以内なら先頭 10 文字以上一致が前提) で実用 O(N log N)、Phase 2 拡張として最適化検討
+  - MVP では `--limit <N>` 引数で title fuzzy matching 対象を制限 (default 1000 件)、超過時は WARN + 段階的処理を案内
+  - CLI-level timeout default 300 秒 (`rw doctor` と同等) で hang 防止、`--timeout` override 可能
+- **Phase 2 再検討トリガー**: evidence 数 5K 超 / 実測 fuzzy matching 60 秒超 / 検出件数 0 件で false negative 疑い時に title prefix index / SimHash 等の最適化を Phase 2 追加実装
+
+### 8 段階対話 interactive 中の CLI-level timeout 規約 (重-5-1 確証案 X1、Spec 7 coordination)
+
+- **規約**: CLI-level timeout (default 600 秒、`rw doctor` 等は 300 秒) は **subprocess (LLM CLI) 呼出 wall-clock のみ対象、user input 待ち時間は除外**
+- **適用対象**: 8 段階対話 (5 種禁止リスト + `cmd_promote_to_synthesis`) の各段階で user 確認待ちが発生するため、user input 待ち中に CLI-level timeout が発動すると UX 悪化 (例: 段階 7 差分プレビュー表示で 1 時間放置 → 突然 abort)
+- **Implementation pattern**: subprocess.Popen の `wait(timeout=cli_timeout)` は subprocess 呼出のみに適用 / user input は `input()` または別 thread で別管理 / signal.alarm() は subprocess 呼出 wait 中のみ active
+- **CI 環境整合**: subprocess (LLM CLI) hang 検出は維持 (subprocess wait のみ timeout 適用)、CI で 8 段階対話を `--auto` 許可リストで実行する場合は user input 待ちが発生しないため CLI-level timeout 通常適用
+- **Spec 7 coordination**: 本 spec G3 AutoPolicy `confirm_dangerous_op()` の wall-clock 動作 (user input 待ちで timeout suspend) を Spec 7 design phase coordination 申し送りに含める、Spec 7 8 段階対話 handler は user input wait state を明示的に signal (本 spec 側で timeout suspend 判定可能)
+- **不採用案 (X2)**: CLI-level timeout を wall-clock 全体対象 + ユーザーが対話的 dangerous op 利用時に毎回 `--timeout 0` 指定 → UX 負担過大、user input 待ちで abort 発生で dominated
 
 ### 大規模 Decision Log の計算量見積り
 
@@ -1744,21 +1803,10 @@ graph LR
 ### Rollback 規範
 
 - **本 spec 実装の全体 rollback**: git revert + Spec 4 implementation 削除 (`<dev-repo>/scripts/rw_*.py` 削除) で v2 実装を未着手状態に復元
-- **設計決定の rollback**: 設計決定 4-1〜4-19 のいずれかを変更する場合、design.md 改版経路 (Revalidation Trigger 適用) で再 approve
+- **設計決定の rollback**: 設計決定 4-1〜4-21 のいずれかを変更する場合、design.md 改版経路 (Revalidation Trigger 適用) で再 approve
 - **部分 rollback** (実装段階での bug fix / 設計変更):
   - **(a) 単一 cmd_* バグ**: 該当 cmd_* の signature を `cmd_<name>(args) -> int: print('not yet implemented', file=sys.stderr); return 1` に置換 + git commit (他 cmd_* / module は維持)
   - **(b) 設計決定変更**: 該当 module 全体 rollback + 設計決定 4-N の deprecated 化 (change log で「決定 4-N は決定 4-(N+1) に置換」と記載) + 新設計決定 4-(N+1) 追加
-- **Spec 1 R6.1 / R4.7 / R9.1 改版経路 (Spec 1 決定 1-4 / 1-13 / 1-16)** の rollback: Spec 1 design.md change log に記録済、本 spec implementation phase の CLI dispatch 側 (`rw approve` / `rw tag *` / `rw lint` 結果整形) は `successor_tag` 形式のみ参照 (決定 4-19)、rollback 時は Spec 1 側の vocabulary API / lint 検査項目改版が必須 (本 spec は Spec 1 API への薄い wrapper のため、Spec 1 改版に追従するのみ)
-
-### Phase 名整合 (Spec 1 R6.1 / R4.7 / R9.1 / Spec 6 R9 / Spec 7 dangerous op との整合)
-
-- 本 spec implementation phase は **Phase 5b** (roadmap.md 期間見積り表) で実施、Phase 3 (Spec 5 P0+P1+P2) / Phase 4 (Spec 3) / Phase 5a (Spec 6) 完了後
-- 設計時点の coordination: Spec 5 / Spec 6 / Spec 7 の内部 API 名は Phase 3-5 design 着手時に Adjacent Sync で確定、本 design は API 契約 (signature) のみ規定
-
-### Rollback 規範
-
-- **本 spec 実装の rollback**: git revert + Spec 4 implementation 削除 (`<dev-repo>/scripts/rw_*.py` 削除) で v2 実装を未着手状態に復元
-- **設計決定の rollback**: 設計決定 4-1〜4-19 のいずれかを変更する場合、design.md 改版経路 (Revalidation Trigger 適用) で再 approve
 - **Spec 1 R6.1 / R4.7 / R9.1 改版経路 (Spec 1 決定 1-4 / 1-13 / 1-16)** の rollback: Spec 1 design.md change log に記録済、本 spec implementation phase の CLI dispatch 側 (`rw approve` / `rw tag *` / `rw lint` 結果整形) は `successor_tag` 形式のみ参照 (決定 4-19)、rollback 時は Spec 1 側の vocabulary API / lint 検査項目改版が必須 (本 spec は Spec 1 API への薄い wrapper のため、Spec 1 改版に追従するのみ)
 
 ## 設計決定事項
@@ -1803,7 +1851,7 @@ graph LR
 ### 決定 4-6: I-1 `/mute maintenance` 永続化媒体 = `<vault>/.rwiki/config.toml` の `[maintenance]` セクション
 
 - **経緯**: requirements R8.5 で永続化媒体は本 spec の所管と固定済、具体先 design 持ち越し (brief.md I-1)。escalate 案件
-- **決定**: `<vault>/.rwiki/config.toml` の `[maintenance]` セクションに `mute = true` / `mute_until = <ISO 8601>` を保存。`~/.rwiki/global.toml` 案 (ユーザー global) は v2 で未導入の global config 概念を新規導入する追加コストのため不採択
+- **決定**: `<vault>/.rwiki/config.toml` の `[maintenance]` セクションに `mute = true` (bool) を保存、R8.5 文言「永続的」整合の永続のみ MVP サポート。`~/.rwiki/global.toml` 案 (ユーザー global) は v2 で未導入の global config 概念を新規導入する追加コストのため不採択。**期間限定 mute (例: 2 週間後自動再有効化) は Phase 2 拡張として決定 4-21 に分離** (R8.5 範囲外、軽-3-1 escalate 確証案 X1 採択、規範範囲先取り回避)
 - **影響**: `rw_maintenance.persist_mute()` 実装、Data Models で config schema 明示、vault 別運用ポリシー独立性
 
 ### 決定 4-7: B-7 dangerous op pre-flight `--dry-run` 提供範囲 (escalate 案件 → 厳しく再精査で再 escalate)
@@ -1838,7 +1886,7 @@ graph LR
 
 - **経緯**: 設計決定記録方式の継承
 - **決定**: design.md 本文「設計決定事項」セクション + change log の 1 行サマリ、ADR 独立ファイル不採用
-- **影響**: 本 design.md「設計決定事項」セクションに 4-1〜4-19 を記録、change log に 1 行サマリ
+- **影響**: 本 design.md「設計決定事項」セクションに 4-1〜4-21 を記録、change log に 1 行サマリ
 
 ### 決定 4-12: `rw doctor` JSON output `schema_version` 管理体系 = semantic versioning
 
@@ -1896,6 +1944,22 @@ graph LR
 - **経緯**: Spec 1 決定 1-4 で `tags.yml` field `successor` → `successor_tag` rename 確定、Spec 4 CLI dispatch 側の対応
 - **決定**: Spec 4 の CLI dispatch 側 (`rw approve` / `rw tag *` 経由 Spec 1 vocabulary API 呼出 / `rw lint` 結果整形) は `successor_tag` field 形式のみで入出力を扱う。`successor` 旧 field 検出時の lint WARN logic は **Spec 1 G5 lint 拡張として Spec 1 implementation phase で実装** (Spec 1 R9 boundary、本 spec は越境せず)
 - **影響**: 本 spec の CLI dispatch 側 (G2 CommandDispatch) は `successor_tag` のみ参照、旧 `successor` field の migration WARN 検査ロジックは Spec 1 所管 (Spec 1 implementation で `rw_lint_vocabulary.py` に追加)、Spec 4 は Spec 1 lint API を呼び出す薄い wrapper として動作
+
+### 決定 4-20: `cmd_audit_evidence` source: field dedup logic 本 spec 所管 (R13.5、Spec 1 R5 由来 coordination)
+
+- **経緯**: requirements R13.5 で「`rw audit evidence` は本 spec が CLI dispatch を所管しつつ、`source:` field の重複検出・canonical 化提案 (同一 paper / DOI / URL / arXiv ID の表記揺れ検出と統合提案) を本 spec の audit task として実装する」と明記。Spec 1 R5 由来 coordination 要求で Spec 1 が dedup ロジックを規定しないため本 spec が所管。design approve やり直しセッション (2026-04-28、本セッション R1 ラウンド) で初版 design.md 完全欠落を発見、escalate 対応で本決定追加
+- **決定**: `cmd_audit_evidence` 内に dedup logic を実装、アルゴリズム概念 = (a) DOI 正規化 / (b) arXiv ID 抽出統一 / (c) URL 正規化 (trailing slash / utm 除去) / (d) paper title fuzzy matching (Levenshtein distance < 5、Spec 1 R5 escalate と同一アルゴリズム選択規律で Ratcliff/Obershelp は不採用)。canonical 化提案は `review/audit_candidates/source-dedup-<timestamp>.md` に出力、approve 経路で Spec 1 vocabulary API 経由で frontmatter 統合
+- **不採用案**: (X2) Phase 2 委譲 = Spec 1 R5 由来 coordination で本 spec 所管と既明記、Phase 2 移行時に Spec 1 改版 + Adjacent Sync 経路発生のため境界整合の観点で X1 (本 spec MVP 内実装) 優位
+- **実装規模**: 推定 200-400 行 (`rw_audit.py` 内追加、MVP 全体推定 6000-9000 行に対し約 3-7% 増)、MVP scope 内
+- **影響**: G2 CommandDispatch の Responsibilities & Constraints に dedup logic 概念設計を明示 (本 spec 設計書本体に既追記)、Spec 1 evidence frontmatter schema (`source:` field 値型 / 構造) は Spec 1 所管で本 spec は重複検出後の canonical 化提案出力フォーマットのみ所管
+
+### 決定 4-21: `/mute maintenance` 期間限定 mute は Phase 2 拡張 (R8.5 範囲外、MVP 永続のみ)
+
+- **経緯**: design 初版で `[maintenance].mute_until = <ISO 8601>` field を `[maintenance]` セクションに導入し期間限定 mute (例: 2 週間後自動再有効化) UX をサポート、MVP 範囲。design approve やり直しセッション (2026-04-28、本セッション R3 ラウンド) で R8.5 文言「永続的」のみ要求 = 期間 mute は規範範囲外 (規範範囲先取り疑い) を発見、escalate 確証手順で X1 採択 = `mute_until` field 削除 + 永続のみ MVP に限定
+- **決定**: MVP は `mute = bool` (永続のみ) サポートに限定、`mute_until` field は削除。期間限定 mute UX (例: `/mute maintenance until 2026-05-15`) は Phase 2 拡張として保留
+- **Phase 2 拡張時の手順**: requirements R8 改版 (期間 mute AC 追加) + Spec 4 design Adjacent Sync で `[maintenance].mute_until = <ISO 8601>` field 復活 + `persist_mute(vault, mute_until=None)` signature 拡張 + Mermaid Flow 3 Layer 3 expire check 追加
+- **不採用案**: (X2) `mute_until` field 維持、design 決定として明示 (R8.5 拡張機能、MVP 内実装) → R8.5 文言「永続的」明示で X1 解釈優位、scope 拡大による implementation 負担増、Phase 2 拡張経路で対応可能のため X2 dominated
+- **影響**: design Data Models / G4 MaintenanceUX `persist_mute()` signature / Mermaid Flow 3 Layer 3 / 決定 4-6 で `mute_until` 言及を全削除、R8.5 文言整合化
 
 ## Coordination 申し送り一覧
 
@@ -1962,6 +2026,7 @@ graph LR
 - **8 段階対話の各段階 read-only/write 区別**: Spec 7 design phase で 8 段階対話 (Foundation §2.4) の段階 0-7 すべて read-only / 段階 8 のみ write の規約を確定。本 spec G3 AutoPolicy `confirm_dangerous_op()` は段階途中 ABORTED_USER 時に rollback 不要として実装 (本 spec Implementation Notes 反映済)
 - **8 段階対話の `--dry-run` read-only walkthrough mode** (決定 4-7、案 B 採択): 重い dangerous op (`rw deprecate` / `rw merge` / `rw split` / `rw archive` / `rw retract`) で `--dry-run` flag 指定時、段階 0-7 を全て read-only mode で walkthrough 実行 (各段階の質問 / 差分プレビュー / 依存グラフを表示するが user 回答 / 確認は不要、walkthrough のみ) + 段階 8 をスキップ。Spec 7 design phase で read-only mode の各段階 handler signature (例: `walkthrough_stage_N(args, dry_run=True) -> str`) を確定、本 spec G3 AutoPolicy は呼び出し wrapper
 - **8 段階対話の lock 取得タイミング (race window)** (軽-厳-2-2): lock 取得は **段階 8 開始時** (人間レビュー後の最終実行直前) を推奨、段階 1-7 (人間判断時間 数分〜数時間) も lock 保持すると他プロセスがブロック = UX 影響大。ただし段階 1-7 中に他プロセスが状態変更 → 段階 7 差分プレビューが古い状態 → 段階 8 approve が想定外遷移 race window が発生。**段階 8 開始時に lock 取得 → pre-flight 再確認 (state hash 比較等で段階 7 差分プレビュー時点と差異検出) → 差異なし時のみ commit、差異あれば user に再確認を促す** logic を Spec 7 design phase で確定 (race window 解消)
+- **8 段階対話 user input 待ち中の CLI-level timeout suspend** (R5 重-5-1 確証案 X1): 各段階で user 確認待ち (数分〜数時間) 中は CLI-level timeout を suspend (subprocess 呼出 wall-clock のみ timeout 対象、Performance & Scalability 「8 段階対話 interactive 中の CLI-level timeout 規約」整合)。Spec 7 8 段階対話 handler は user input wait state を明示的に signal (例: yield wait state event)、本 spec G3 AutoPolicy `confirm_dangerous_op()` 側で timeout suspend 判定可能 — Spec 7 design phase で signal pattern (callback / generator yield 等) を確定
 
 ---
 
@@ -1970,3 +2035,13 @@ _change log_
 - 2026-04-27: 初版生成 — 16 Requirements (約 130 AC) を G1-G6 6 sub-system にマップ、設計持ち越し I-1 / B-4 / B-7 / I-3 / 本-Q / 整-5 を design 内で確定 (決定 4-6 / 4-7 / 4-8 / 4-9 / 4-10)、Phase 2 design phase 着手 + 新 Step 1-2 構造試行段階。Light Discovery + Synthesis 3 lens 完了、research.md に投資ログ + 19 設計決定の trade-off 記録。requirements.md 改版なし (本 design 内吸収範囲)。
 - 2026-04-28: 致-厳-1 事後追認 — dev-log 学習 + 厳しく再精査で発見された「設計決定 7 件 LLM 単独採択」(4-6 / 4-9 / 4-10 / 4-12 / 4-14 / 4-15 / 4-16) を 5 観点深掘り検証で確証、user 一括承認 (現採択案維持で確定)。各決定とも dominated 除外で唯一案または 5 観点で他案を凌駕。
 - 2026-04-28: 厳-2-1 / 厳-7-1 反映 — 新方式 4 重検査で発見、決定 4-13 衝突確率記述精度訂正 (誕生日問題考慮) + R7.4 Maintenance UX halt 中断時 partial completion 状態取扱 = Eventual Consistency 拡張 (案 B 採択、Spec 1 軽-7-4 規範を orchestration へ展開)。
+- 2026-04-28 (design approve やり直し R1): 4 件適用 — 軽-1-1 (サブコマンド数表記「全 60 種」「全 60+」を「約 60」に統一、line 211 / 438 / 1074、自動採択) + 重-1-1 (許可リスト「9 種」誤記を「10 種」に訂正、列挙 10 件と整合、4 箇所 replace_all、escalate 確証手順) + 重-1-2 (`cmd_audit_evidence` source: dedup logic 完全欠落を解消、決定 4-20 追加 = DOI / arXiv / URL / paper title 正規化 4 アルゴリズム概念設計、G2 Responsibilities & Constraints + Traceability 反映、escalate 確証手順) + 重-1-3 (R15.12 drafts §6.2 持ち越し責務を Boundary Commitments / This Spec Owns に追記、escalate 確証手順)。Spec 0 / Spec 1 同型単純誤記再発防止規律遵守 + Spec 1 R5 由来 coordination 履行。
+- 2026-04-28 (design approve やり直し R2): 2 件適用 — 軽-2-1 (G6 Utils Req Coverage に「12.1-12.7 (横断、全 module で適用)」を追記、Components 表の R12 Foundation 規範準拠記載なし = 構造的不均一を解消、自動採択) + 重-2-1 (G3 AutoPolicy Key Dependencies に「Spec 7 module (P0、`cmd_*` 8 段階対話 handler 呼出 = 5 種禁止リスト + `cmd_promote_to_synthesis`)」を追加、line 1957 申し送りと整合化、文書記述 vs 実装不整合解消、escalate 確証手順)。Spec 0 R2 重-厳-3 / Spec 1 R2 軽-2-1/2 同型再発防止規律遵守。
+- 2026-04-28 (design approve やり直し R3): 3 件適用 — 軽-3-1 (`mute_until` ISO 8601 期間 mute サポートを R8.5 範囲外として削除、決定 4-21 追加 = Phase 2 拡張、決定 4-6 / Mermaid Flow 3 / persist_mute signature / Directory Structure 6 箇所一括整合、escalate 確証手順) + 軽-3-2 (Domain Model line 1167 衝突率記述「実質ゼロ」を決定 4-13 訂正 (誕生日問題) と整合、自動採択) + 軽-3-3 (frontmatter line 1239 turns コメント「append-only で increment」を「session 終了時に最終値追記」に訂正、line 1251 整合、自動採択)。Spec 0 R4 / Spec 1 R5 同型 (規範範囲先取り / 文書記述 vs 実装不整合) 同型再発防止規律遵守。
+- 2026-04-28 (design approve やり直し R4): 3 件適用 — 軽-4-1 (G4 MaintenanceUX Event Contract line 976 `mute_maintenance [<until>]` から `[<until>]` 削除、R3 X1 採択 (永続のみ MVP) 取りこぼし整合、自動採択) + 軽-4-2 (Exception 階層 boundary 整合性、本 spec が re-raise pattern (`try-except: raise from e`) で Spec 5/7/1 module は本 spec Exception import 不要を line 1452 注記強化、escalate 確証で X2 採択 = DAG 一方向依存維持 + 既存 design 整合) + 軽-4-3 (cmd_audit_evidence Service Interface signature 詳細追加、Preconditions / Postconditions / Errors / Algorithm 4 種 / exit code を G2 Service Interface section に明示、決定 4-20 整合、自動採択)。Spec 1 R7 同型 (規範前提曖昧化、boundary 整合) 再発防止規律遵守。
+- 2026-04-28 (design approve やり直し R5): 2 件適用 — 軽-5-1 (Performance & Scalability に「`rw audit evidence` source: dedup 計算量見積り」sub-section 追加、O(N×M) / O(N²) Levenshtein / Mitigation 3 種 / Phase 2 再検討トリガー、決定 4-20 R5 観点補強、自動採択) + 重-5-1 (Performance & Scalability に「8 段階対話 interactive 中の CLI-level timeout 規約」sub-section 追加 + Spec 7 申し送りに timeout suspend signal pattern coordination 追加、escalate 確証で X1 採択 = subprocess 呼出 wall-clock のみ timeout 対象 + user input 待ち除外 = UX 維持 + CI hang 検出維持)。Spec 1 R7 同型 (規範前提曖昧化) 再発防止規律遵守。
+- 2026-04-28 (design approve やり直し R6): 2 件適用 — 軽-6-1 (file I/O concurrency 規律 section に「`<vault>/logs/<command>_latest.json` write」項目追加、config.toml と同パターン atomic rename 規律 = 並行起動 5+ セッション時の race window 防止、自動採択) + 軽-6-2 (Error Categories and Responses に「Partial Completion (R7.4 Maintenance UX halt-on-error)」カテゴリ追加、line 911 と Error Handling section 整合化 = 構造的不均一解消、自動採択)。
+- 2026-04-28 (design approve やり直し R7): 1 件適用 — 軽-7-1 (Path traversal 防止 section に「glob 引数 (`rw retag <path-or-glob>` 等) の `glob.glob()` 展開後の各 path に `validate_path_within_vault()` 適用、Vault 外 skip + WARN + glob pattern 自体の `..` 含有検証」を追記、自動採択)。**Spec 0 R1 重-厳-4 / Spec 1 重-7-1 同型再発防止 (subprocess shell injection 防止規律) は本 spec 初版から完備済 (line 1592-1595)、TODO_NEXT_SESSION.md 予告の最重要規律 grep verify 達成**。
+- 2026-04-28 (design approve やり直し R8): 2 件適用 — 軽-8-1 (Tech Stack table に「Frontmatter Writing」項目追加 = 対話ログ frontmatter は simple key: value のため手書き string template で実装、pyyaml 不要、Spec 1 (pyyaml 採用) との依存差異確定、自動採択) + 軽-8-2 (Tech Stack table の「Path Operations」項目に glob 展開 (`pathlib.Path.glob()`) 用途追加、軽-7-1 と整合化、自動採択)。
+- 2026-04-28 (design approve やり直し R9): 2 件適用 — 軽-9-1 (Unit Tests に `cmd_audit_evidence` test 列挙追加 = 4 アルゴリズム個別 test / `--limit` / CLI-level timeout / 各 exit code case、R13.5 / 決定 4-20 整合、自動採択) + 重-9-1 (Testing Strategy line 1517 ConfirmResult enum 「4 値」記述を「5 値」訂正 = `CONFIRMED_LIVE / CONFIRMED_DRY_RUN / ABORTED_USER / ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTY`、重-厳-1 確証案 Y 段階的改修時の取りこぼしを解消、escalate 確証で X1 採択)。**Spec 0 R7-R10 重-厳-5 / Spec 1 重-4-1 / 重-5-1 / 本セッション R1 重-1-1 と同型単純誤記再発、本セッション 2 件目** = 段階的改修時の数値表記取りこぼしパターン、Step 1b-iii dev-log 23 パターン「単純誤記 grep」厳密適用で発見。
+- 2026-04-28 (design approve やり直し R10): 3 件適用 — 重-10-1 (設計決定範囲記述「4-1〜4-19」→「4-1〜4-21」を 4 箇所一括訂正 (line 18 / 1806 / 1820 / 1900)、本セッション追加 4-20 / 4-21 (cmd_audit_evidence dedup logic / mute_until Phase 2 拡張) を rollback 規範対象に整合化、escalate 確証で X1 採択) + 軽-10-2 (Migration Strategy 内重複セクション削除 = line 1812-1821「Phase 名整合 + Rollback 規範」短縮版を line 1791-1810 完全版に統合、構造的不均一解消、自動採択)。**Spec 0 R7-R10 / Spec 1 重-4-1 / 本セッション R1 重-1-1 / R9 重-9-1 と同型単純誤記再発、本セッション 3 件目** = 段階的改修時の数値表記取りこぼしパターン継続発生、Step 1b-iii「単純誤記 grep」厳密適用継続。
