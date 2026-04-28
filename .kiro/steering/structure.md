@@ -31,13 +31,17 @@ Git 管理: 全層 ✓（L2 cache `*.sqlite` `*.pkl` のみ gitignore）
 <vault>/
 ├── raw/                              # L1
 │   ├── incoming/                     # 未検証入力（gitignore）
-│   ├── llm_logs/{interactive,chat-sessions,manual}/
+│   ├── llm_logs/                     # 対話ログ 3 区別（Spec 2 Decision 2-7）
+│   │   ├── chat-sessions/            # rw chat 起源
+│   │   ├── interactive/<skill>/      # interactive: true skill 起源（skill 別 sub-subdirectory）
+│   │   └── manual/                   # 手動 import 起源
 │   └── （ingest 後カテゴリ展開: articles/papers/notes/code-snippets/...）
 ├── review/                           # L2 ↔ L3 buffer
 │   ├── synthesis_candidates/  query/
 │   ├── hypothesis_candidates/        # Spec 6
 │   ├── perspectives/                 # Spec 6
 │   ├── skill_candidates/             # Spec 2
+│   ├── lint_proposals/               # Spec 2 Decision 2-9（frontmatter_completion 出力先、synthesis_candidates と意味分離）
 │   ├── vocabulary_candidates/        # Spec 1
 │   ├── audit_candidates/
 │   ├── relation_candidates/          # Spec 5
