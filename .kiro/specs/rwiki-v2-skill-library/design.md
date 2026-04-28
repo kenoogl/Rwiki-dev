@@ -449,6 +449,7 @@ def show_skill(skill_name: str, vault_path: Path) -> SkillFile: ...
 - Integration: Spec 4 `rw skill list / show` の薄い wrapper として呼出。Spec 5 が抽出 skill output schema を read-only 参照する際の interface。Spec 7 cmd_skill_install validation 前段の path 解決
 - Validation: STANDARD_SKILLS tuple は frozen tuple (改ざん防止)、`rw init` 実行時に 15 件全件存在 check (R11.6 配布完整性)
 - **Standard skill 編集後の origin 維持 (R11.4)**: `load_skill` は `origin: standard` の skill ファイルがユーザー編集されても `frontmatter.origin` を `standard` のまま維持して読込、本 spec は編集検知や `origin` 自動切替 (`standard` → `custom`) を実装しない。再配布挙動 (`rw init --reinstall` 等) は Spec 4 所管 (Out of Boundary 末項参照)
+- **list_skills / show_skill TOCTOU 規約**: read-only かつ lock 不要のため、並行する write 操作 (`install` / `rw init`) との TOCTOU (Time Of Check Time Of Use) 問題は理論的に発生 (実行時刻によって結果に新 skill 含むか不確定)、MVP single-thread 前提で実害なし。Phase 2 multi-thread 化時に再評価 (Spec 5 Decision 5-20 同パターン)
 - Risks: `AGENTS/skills/` 不在 vault での `list_skills` 呼出 → 空 list 返却 + WARN severity (Spec 4 で UX wrapping)
 
 ### Layer 2: SkillValidator (4 種 validation)
@@ -518,6 +519,7 @@ def validate_skill_file(skill_path: Path, vault_path: Path) -> SkillSeverityRepo
 - Integration: Layer 3 SkillAuthoringWorkflow から `test` / `install` の段階で呼出。Spec 7 cmd_skill_install から間接的に呼出 (Layer 3 経由)
 - Validation: 4 種すべて独立に test 可能 (test_skill_validator.py で 4 種別 unit test)
 - **R15.4 必須記載欠落 ERROR の発火タイミング**: install 時の `validate_references` 内で check (skill load 時 `load_skill` / dispatch 時 Spec 3 では check しない)、責務集約で重複 check 回避 (Decision 2-10 の機械的判定基準 = `interactive: true` または `auto_save_dialogue: true`)
+- **Layer 2 単独呼出時の lock 規約**: Layer 2 SkillValidator は通常 Layer 3 SkillAuthoringWorkflow 経由で呼ばれ、Layer 3 が `acquire_lock('skill')` 取得済の状態で実行される。Layer 2 単独呼出 (test 用途) は read-only のため lock 取得不要 (skill ファイル read + AGENTS/skills/ scan + vocabulary read のみ、AGENTS/skills/ への write 操作なし)
 - Risks: PyYAML parse エラー時に詳細位置情報が取れない場合 ERROR detail に「YAML 全体 parse 失敗、frontmatter 末尾 `---` 検査推奨」と提示。`applicable_input_paths` の extended glob 構文妥当性 check は `glob.glob` の例外捕捉で代替 (実 path 存在確認は dispatch 時 Spec 3 所管、本 spec は構文妥当性のみ R3.2)
 
 ### Layer 3: SkillAuthoringWorkflow (7 段階対話 + dry-run + atomic install)
@@ -606,6 +608,8 @@ def handle_dry_run_failure(
 - **rw init standard skill 配布の dry-run skip (R8.4)**: `rw init` 経由の standard skill 配布は本 spec の `test_skill_generator` を経由せず、Spec 4 cmd_init が `STANDARD_SKILLS` tuple を参照して直接 `AGENTS/skills/` に配置する。dry-run 必須化 (R8.1) は `origin: custom` skill の install のみに適用、standard 配布は適用外 (Rwiki 配布側で品質保証済前提)
 - **install dangerous_op 中位置付け + 1-stage confirm (R9.4)**: `install_skill_generator` は validation 通過後も install step に進む前に confirm event を 1 件 yield する (`SkillStageEvent.event_type='prompt'`)、Spec 4 G3 caller の `send()` 入力 (`'yes'` / `'no'`) で install 進行を分岐する内部 logic を持つ。1-stage confirm の UX (prompt 文言 / accept-yes-no) 実装は Spec 4 G3 caller の責務 (`dangerous_op category: 中`、§8.4 / §2.5 Simple dangerous op 整合)、対話深度の正確な仕様は Spec 4 design 所管
 - **`rw skill test <candidate-or-name>` の 2 系統対応 (R7.4)**: `test_skill_generator` の `candidate_path: Path` 引数は **caller (Spec 4) 側で path 解決済前提**。caller は `rw skill test <arg>` の `<arg>` が candidate path (`review/skill_candidates/<name>.md`) か既 install 済 skill 名 (`AGENTS/skills/<name>.md` 経由解決) かを引数 parse 段階で判定し、Path 型に統一して本 generator に渡す coordination 規約を採る (本 spec は Path 受領のみ、name 経由解決は Spec 4 の責務)
+- **`rw init` 経由 standard skill 配布の lock 取得 (R8.4 + Decision 2-5 関連)**: cmd_init が `STANDARD_SKILLS` tuple を参照して AGENTS/skills/ に直接配置する際、Spec 4 cmd_init は `acquire_lock('skill')` を取得する coordination を要求する (本 spec の install_skill_generator を経由しないが、AGENTS/skills/ への write 操作のため、custom skill install / Hygiene batch との並行衝突を排他制御する必要)。1 度の `rw init` 実行は 15 種一括配置を 1 lock 取得単位として扱う (各 skill 別 lock 取得は不要、`rw init` 全体で 1 lock)
+- **R13.8 lock 取得 coordination 要求**: write 系 3 操作 (`draft` / `test` / `install`) + `rw init` 配布 (R8.4) で `.rwiki/.hygiene.lock` 取得を Spec 4 への coordination 要求として明示 (R13.8、Spec 1 R8.14 / Spec 5 R17 と同パターン、本 spec は規範範囲を明示し実装は Spec 4 G5 LockHelper に委譲)
 - Risks: lock acquire 失敗 (Hygiene batch 同時実行) → fail-fast WARN + 再試行推奨 (Spec 5 Decision 5-3 同パターン)。dry-run timeout は LLM CLI 一時的問題で再試行可能 (DryRunFailure.retry_recommended=true)、ユーザー判断で再 `rw skill test` 実行
 
 ### Component: ExtractionOutputSchema (Spec 5 への validation interface)
@@ -987,3 +991,8 @@ _change log_
 - 2026-04-28: Round 6 review 反映 (性能 trade-off、重要 2 件解消):
   - **R6-1 性能数値の根拠 / 規模変動表 不在**: Performance & Scalability section に Spec 5 design 同パターンの Target Metrics 表追加 (5 操作 × 規模 × 目標時間 × 根拠)、推測値 / MVP 規模で実装時実測検証予定の旨明示、規模変動 (15 種 standard / 100 種 Phase 2 想定) を明示
   - **R6-2 Spec 5 R8 sqlite cache の R 番号誤引用**: Spec 5 R8 = Usage signal 4 種別 (sqlite cache とは無関係)、sqlite cache の規定箇所は Spec 5 R14.7 (SQLite cache ベース高速 traverse) のため引用 R 番号を訂正、本 spec の Phase 2 拡張余地として `.rwiki/cache/skill_index.sqlite` 等を例示。本質的観点 (e) 単純誤記 grep 強制発動による発見
+- 2026-04-28: Round 7 review 反映 (Concurrency、重要 1 件 + 軽微 3 件解消):
+  - **R7-2 `rw init` 配布と custom install の concurrent 競合 言及不在**: Layer 3 Implementation Notes に「`rw init` 経由 standard 配布も `acquire_lock('skill')` 取得を Spec 4 cmd_init に coordination 要求、15 種一括配置を 1 lock 単位として扱う」追記、R8.4 / Decision 2-5 の隣接で参照点設置
+  - **R7-1 R13.8 → Spec 4 coordination 要求引用不足**: Layer 3 Implementation Notes に R13.8 引用追加 (Spec 1 R8.14 / Spec 5 R17 と同パターン明示)
+  - **R7-3 Layer 2 単独呼出時の lock 規約曖昧**: Layer 2 Implementation Notes に「Layer 2 は通常 Layer 3 経由 lock 取得済、単独呼出 (test 用途) は read-only のため lock 不要」明示
+  - **R7-4 list_skills TOCTOU 規約明示**: Layer 1 Implementation Notes に「read-only かつ lock 不要のため、write 操作 (install / rw init) との TOCTOU 問題は理論的に発生、MVP single-thread で実害なし、Phase 2 multi-thread 化時再評価 (Spec 5 Decision 5-20 同パターン)」追記
