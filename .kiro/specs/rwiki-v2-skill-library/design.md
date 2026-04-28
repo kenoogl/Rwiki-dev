@@ -835,19 +835,26 @@ paper_summary skill を使うのが適切です。実行しますか？
 
 - **Layer 1 SkillLibrary**: `load_skill` で 11 field + 8 section 取得、`list_skills` で status_filter 適用、`STANDARD_SKILLS` tuple immutability 確認、`AGENTS/skills/` 不在時 graceful degradation
 - **Layer 2 SkillValidator** (4 種別 unit test): `validate_8_sections` で 8 section 揃い / 1 件欠落 / Failure Conditions 「次のアクション」欠落のテスト、`validate_yaml_frontmatter` で必須 7 field / 値域違反 / 任意 4 field / extended glob 構文妥当性のテスト、`validate_name_collision` で AGENTS/skills/ 衝突検出、`validate_references` で vocabulary 参照 + 出力先 path + 他 skill 名 + 差分マーカー対 + R15.4 判定のテスト
+- **Layer 2 SkillValidator (差分マーカー対 check 拡張、R10.3)**: `update_mode: extend` に加えて `update_mode: both` skill 出力でも差分マーカー対 check を実行 (両 mode のテストケースで対 check 動作確認)
 - **Layer 3 SkillAuthoringWorkflow**: `draft_skill_generator` の 7 段階 yield、`test_skill_generator` の dry-run failure 4 種 (timeout / crash / output_error / dry_run_internal_error) 分類、`install_skill_generator` の atomic 5 step、`handle_dry_run_failure` の retry_recommended 判定
+- **Layer 3 SkillAuthoringWorkflow (dry-run failure retry_recommended 値域、R5-2)**: timeout=True / crash=False / output_error=False / dry_run_internal_error=False の値域を 4 種別 test ケースで確認
 
 ### Integration Tests
 
 - **Atomic install 5 step**: tmp copy → 4 validation → atomic rename → fsync → candidate 削除 の連動、ERROR 1 件発生時の rollback (tmp 削除 + candidate 残置)
+- **Atomic install Step 別 rollback (R5-1)**: Step 4 fsync 失敗 (atomic rename 成功後の WARN 扱い、AGENTS/skills/<name>.md 配置済) / Step 5a candidate 削除失敗 (WARN 扱い、install 成功) / Step 5b record_decision 失敗 (WARN 扱い、install 成功 + decision_log 記録なし) を mock で injection
 - **Lock 取得**: write 系 3 操作 (`draft` / `test` / `install`) で `acquire_lock('skill')` 必ず取得 + release、Hygiene batch 同時実行で fail-fast
+- **rw init 配布の lock 取得 (R7-2)**: cmd_init mock が `acquire_lock('skill')` を取得することを確認、Hygiene batch mock との並行実行で fail-fast 動作確認、15 種一括配置を 1 lock 単位として扱うことを assertion
 - **dry-run failure**: LLM CLI subprocess の timeout / crash / output_error を mock、`dry_run_passed: false` 維持確認
 - **Standard skill 15 種配布**: `rw init` 配布完整性 check (R11.6)、15 件全件存在 + 各 frontmatter `origin: standard`
+- **rw init standard skill 配布の dry-run skip (R8.4)**: cmd_init mock が STANDARD_SKILLS tuple 経由で直接 AGENTS/skills/ に配置、test_skill_generator を経由しないことを assertion で確認、`origin: custom` skill のみ dry-run 必須化される動作確認
 - **Spec 5 連携**: `entity_extraction` / `relation_extraction` 出力 JSON が Spec 5 R3.5 / R4.5 schema validation に通過
 
 ### E2E Tests
 
 - **Custom skill 作成 → dry-run → install 全 flow**: 7 段階対話完走、AGENTS/skills/ 配置、decision_log skill_install 記録 (Spec 5 record_decision 連携)
+- **install 直前 1-stage confirm (R9.4)**: install_skill_generator が confirm event を 1 件 yield、caller mock の send() 'yes' で install 進行 / 'no' で install 中止の分岐動作を E2E 確認
+- **update_mode: both skill の出力 (R10.3)**: 新規生成 (review/synthesis_candidates/ に candidate 出力) + 既存拡張 (差分マーカー出力) 両方を出力する skill の E2E test、各候補ファイル frontmatter `update_type` に正しい値が設定されることを確認
 - **dry-run 修正サイクル**: dry-run 失敗 → 修正 → 再 dry-run 成功 → install 成功
 - **Spec 7 cmd_skill_install 経由 install**: Spec 7 cmd_skill_install handler から本 spec install_skill_generator 呼出、atomic operation 完走
 - **frontmatter_completion → review/lint_proposals/**: lint FAIL trigger → frontmatter_completion 実行 → review/lint_proposals/<filename>-completion.md 生成
@@ -1002,3 +1009,8 @@ _change log_
 - 2026-04-28: Round 8 review 反映 (観測性、重要 2 件解消、Spec 5 design 同パターン整合):
   - **R8-1 Severity 4 水準 + exit code 0/1/2 分離継承 Monitoring 明示なし**: Monitoring section に「全 module で Severity 4 水準継承 (Foundation R11) + exit code 0/1/2 分離継承 (Spec 5 / Spec 4 / Foundation 同パターン)」追記
   - **R8-2 decision_id を trace ID 兼用 Monitoring 明示なし**: Monitoring section に「skill_install 操作の trace ID = `decision_id` 兼用 (decision_log.jsonl で追跡、Spec 5 record_decision API 経由、R12.4)、事後 trace 可能性を保証」追記、Spec 5 design Monitoring 同パターンに整合化
+- 2026-04-28: Round 9 review 反映 (テスト戦略、Round 1-8 追加内容の test cover 同期化 1 件解消):
+  - **R9-1 Round 1-8 追加内容の test cover 未反映**: Testing Strategy section の Unit / Integration / E2E に Round 改訂で追加した規範 / 動作の test injection を追記:
+    - Unit (R10.3 update_mode: both 差分マーカー対 check / R5-2 retry_recommended 値域 4 種別)
+    - Integration (R5-1 atomic install Step 4/5a/5b 失敗 mock / R7-2 rw init lock / R8.4 rw init dry-run skip)
+    - E2E (R9.4 install 直前 1-stage confirm caller send() 分岐 / R10.3 update_mode: both 両出力 update_type 値域)
