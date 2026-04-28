@@ -1,0 +1,823 @@
+feature_name: rwiki-v2-skill-library
+extracted_at: '2026-04-28'
+extracted_by: 'Phase 1 LLM (manual extraction following design_review_v2_full_spec.md prompt rules)'
+source_design: '.kiro/specs/rwiki-v2-skill-library/design.md (918 行)'
+source_requirements: '.kiro/specs/rwiki-v2-skill-library/requirements.md (311 行)'
+
+extraction_warnings: []
+
+design_units:
+  - id: design.skill_library
+    type: component
+    location: 'design.md:385'
+    parent_specs: ['1.1', '1.2', '1.3', '1.4', '4.1', '4.2', '4.3', '4.4', '5.1', '6.1', '11.1', '11.2', '11.3', '11.4', '11.5', '11.6', '13.1', '13.2']
+    components: ['SkillFile', 'STANDARD_SKILLS', 'load_skill', 'list_skills', 'show_skill']
+    responsibilities:
+      - 'AGENTS/skills/<snake_case>.md の path 解決と read-only load'
+      - 'STANDARD_SKILLS tuple 定数固定 (15 種、Decision 2-14)'
+      - 'list_skills / show_skill API 提供 (read-only、lock 不要)'
+      - 'skill_name = frontmatter name = ファイル名拡張子除く の不変条件 (R1.2 / R1.3)'
+      - 'サブディレクトリ配置不可 (R1.1)、AGENTS/skills/<name>.md 単一階層'
+    inputs:
+      - name: skill_name
+        type: str
+      - name: vault_path
+        type: Path
+      - name: status_filter
+        type: 'Optional[set[str]]'
+    outputs:
+      - name: SkillFile
+        type: dataclass
+      - name: skill_list
+        type: 'list[SkillFile]'
+    dependencies:
+      - kind: spec
+        target: 'Spec 0 Foundation rw_utils.parse_frontmatter'
+        criticality: P0
+      - kind: external
+        target: PyYAML
+        criticality: P0
+    failure_modes:
+      - 'AGENTS/skills/ 不在時 graceful degradation (空 list + WARN)'
+    state_change: false
+    rollback_defined: false
+    llm_judgment: false
+    llm_confidence_or_escalation: false
+    auto_approval: false
+    human_gate: false
+    tests:
+      - test_skill_library.py
+
+  - id: design.skill_validator
+    type: component
+    location: 'design.md:451'
+    parent_specs: ['1.3', '1.5', '2.3', '2.4', '3.3', '3.4', '9.1', '9.2', '9.3', '9.4', '9.5', '9.6', '10.5', '12.5', '15.4']
+    components: ['SkillSeverityIssue', 'SkillSeverityReport', 'validate_8_sections', 'validate_yaml_frontmatter', 'validate_name_collision', 'validate_references', 'validate_skill_file']
+    responsibilities:
+      - '4 種 validation を独立関数として実装 (8 section / YAML / 衝突 / 参照整合性)'
+      - '各 validation は (skill_path, severity_collector) -> None signature 統一'
+      - '一括実行関数 validate_skill_file が 4 種を順次呼出、SeverityCollector が全件報告を集約'
+      - 'ERROR 1 件以上で install 拒否 (R9.2)'
+      - '差分マーカー対 check (R10.5)、update_mode: extend skill のみ対象'
+      - 'R15.4 判定 = interactive: true または auto_save_dialogue: true skill が対話ログ frontmatter スキーマ参照点を必須記載'
+    inputs:
+      - name: skill_path
+        type: Path
+      - name: vault_path
+        type: Path
+      - name: report
+        type: SkillSeverityReport
+    outputs:
+      - name: SkillSeverityReport
+        type: dataclass
+    dependencies:
+      - kind: internal
+        target: design.skill_library
+        criticality: P0
+      - kind: spec
+        target: 'Spec 1 vocabulary (categories.yml + entity_types.yml)'
+        criticality: P0
+      - kind: external
+        target: PyYAML
+        criticality: P0
+      - kind: spec
+        target: 'Foundation severity (rw_severity)'
+        criticality: P0
+    failure_modes:
+      - 'PyYAML parse エラー時に詳細位置情報が取れない場合 ERROR detail で代替提示'
+      - 'applicable_categories 値が categories.yml 未登録 → WARN'
+      - 'extended glob 構文妥当性 check は glob.glob 例外捕捉で代替'
+    state_change: false
+    rollback_defined: false
+    llm_judgment: false
+    llm_confidence_or_escalation: false
+    auto_approval: false
+    human_gate: false
+    tests:
+      - test_skill_validator.py
+
+  - id: design.skill_authoring_workflow
+    type: component
+    location: 'design.md:519'
+    parent_specs: ['7.1', '7.2', '7.3', '7.4', '7.5', '7.6', '7.7', '8.1', '8.2', '8.3', '8.4', '9.6', '12.1', '12.2', '12.3', '12.4', '13.3', '13.4', '13.5', '13.8']
+    components: ['SkillStageEvent', 'DryRunFailure', 'draft_skill_generator', 'test_skill_generator', 'install_skill_generator', 'handle_dry_run_failure']
+    responsibilities:
+      - '3 つの generator function を提供: draft_skill_generator / test_skill_generator / install_skill_generator'
+      - '各 generator は SkillStageEvent を yield、Spec 4 G3 が caller として受領 + 対話 prompt 生成 + ユーザー入力 send'
+      - 'write 系 3 操作で acquire_lock(skill) 取得 (Spec 4 G5 LockHelper 経由、Decision 2-5)'
+      - 'dry-run failure 4 種 (timeout / crash / output_error / dry_run_internal_error) を handle_dry_run_failure で分類、全 ERROR severity 統一 (Decision 2-12)'
+      - 'Install operation atomic 5 step (Decision 2-4): tmp copy → 4 validation → atomic rename → fsync (macOS F_FULLFSYNC) → candidate 削除'
+      - 'dry_run_passed: false 時 install 拒否 (R8.1)、修正後 dry-run 再実行で dry_run_passed: false リセット (R8.3)'
+      - 'skill_install 完了時 Spec 5 record_decision(decision_type=skill_install) 呼出 (R12.4)'
+    inputs:
+      - name: name
+        type: str
+      - name: base
+        type: 'Optional[str]'
+      - name: candidate_path
+        type: Path
+      - name: sample_path
+        type: 'Optional[Path]'
+      - name: vault_path
+        type: Path
+    outputs:
+      - name: candidate_path
+        type: Path
+      - name: SkillSeverityReport
+        type: dataclass
+      - name: installed_path
+        type: Path
+      - name: SkillStageEvent
+        type: 'Generator yield'
+    dependencies:
+      - kind: internal
+        target: design.skill_validator
+        criticality: P0
+      - kind: internal
+        target: design.skill_library
+        criticality: P0
+      - kind: spec
+        target: 'Spec 4 G5 acquire_lock (.rwiki/.hygiene.lock)'
+        criticality: P0
+      - kind: spec
+        target: 'Spec 5 record_decision (decision_log.jsonl)'
+        criticality: P0
+      - kind: external
+        target: 'LLM CLI subprocess (Foundation R11 timeout 必須)'
+        criticality: P0
+      - kind: external
+        target: 'os.rename / fcntl / subprocess (Python 標準)'
+        criticality: P0
+    failure_modes:
+      - 'dry-run timeout (DryRunFailure.failure_kind=timeout、retry_recommended=true)'
+      - 'dry-run crash (failure_kind=crash)'
+      - 'dry-run output_error (failure_kind=output_error)'
+      - 'dry-run dry_run_internal_error (failure_kind=dry_run_internal_error)'
+      - 'lock acquire 失敗 (Hygiene batch 同時実行 → fail-fast WARN + 再試行推奨)'
+      - 'tmp ディレクトリ書込失敗 / atomic rename 失敗 / fsync 失敗 → tmp 削除 + candidate 残置 + ERROR'
+    state_change: true
+    rollback_defined: true
+    llm_judgment: true
+    llm_confidence_or_escalation: true
+    auto_approval: false
+    human_gate: true
+    tests:
+      - test_skill_authoring.py
+      - test_skill_install_atomic.py
+      - test_skill_lock.py
+
+  - id: design.extraction_output_schema
+    type: data_model
+    location: 'design.md:596'
+    parent_specs: ['5.1', '5.2', '5.3', '5.4', '5.5', '5.6', '5.7']
+    components: ['entity_extraction_schema', 'relation_extraction_schema']
+    responsibilities:
+      - 'entity_extraction 出力 schema = JSON 配列、各要素 = {name, canonical_path, entity_type, aliases, evidence_ids} (R5.2)'
+      - 'relation_extraction 出力 schema = JSON 配列、各要素 = {source, type, target, extraction_mode, evidence} (R5.3)'
+      - '出力先 = review/relation_candidates/ (R5.4、Spec 5 が永続化前段の human reject filter として使用)'
+      - 'schema 自体は本 spec が SSoT、Spec 5 が validation 実装 + ledger 永続化 (R5.5、責務分離)'
+      - 'schema 変更時は Spec 5 先行合意必須 (R5.6、Adjacent Spec Synchronization 運用ルール)'
+      - 'Failure Conditions section に schema validation 不通過時は当該 entity / edge を candidate に採用せず ERROR で報告 必須記載 (R5.7)'
+    inputs:
+      - name: source_text
+        type: 'markdown body'
+    outputs:
+      - name: entity_json_array
+        type: 'list[dict]'
+      - name: relation_json_array
+        type: 'list[dict]'
+    dependencies:
+      - kind: spec
+        target: 'Spec 5 R3.5 / R4.5 / R19.2 (validation contract)'
+        criticality: P0
+      - kind: spec
+        target: 'Spec 1 entity_types.yml (entity_type 値域)'
+        criticality: P0
+    failure_modes:
+      - 'schema validation 不通過時 ERROR (Failure Conditions section 記載必須)'
+    state_change: false
+    rollback_defined: false
+    llm_judgment: false
+    llm_confidence_or_escalation: false
+    auto_approval: false
+    human_gate: false
+    tests: []
+
+  - id: design.dialogue_log_frontmatter
+    type: data_model
+    location: 'design.md:702'
+    parent_specs: ['15.1', '15.3', '15.5']
+    components: ['dialogue_log_frontmatter_5_field', 'turn_internal_schema', 'directory_naming']
+    responsibilities:
+      - '対話ログ markdown ファイルの frontmatter 5 必須 field (type / session_id / started_at / ended_at / turns) を SSoT として固定'
+      - 'Turn 内部 schema (## Turn N - ISO 8601 見出し + **User:** / **Assistant:**) を SSoT として固定'
+      - 'ディレクトリ命名規則 3 区別 (chat-sessions / interactive/<skill>/ / manual) を SSoT として固定'
+      - 'Append-save 単位 = Turn 1 件 = 1 見出しブロック追記 (本 spec はスキーマ規約のみ、保存実装は Spec 4 R1.8)'
+    inputs: []
+    outputs:
+      - name: frontmatter_yaml
+        type: 'YAML dict'
+      - name: turn_markdown
+        type: 'markdown body'
+    dependencies:
+      - kind: spec
+        target: 'Spec 4 R1.8 (保存実装、保存先 path 規約)'
+        criticality: P0
+      - kind: spec
+        target: 'Spec 6 (対話 trigger)'
+        criticality: P0
+    failure_modes: []
+    state_change: false
+    rollback_defined: false
+    llm_judgment: false
+    llm_confidence_or_escalation: false
+    auto_approval: false
+    human_gate: false
+    tests: []
+
+  - id: design.diff_marker_attribute
+    type: data_model
+    location: 'design.md:750'
+    parent_specs: ['10.4']
+    components: ['diff_marker_target', 'diff_marker_reason']
+    responsibilities:
+      - 'HTML 差分マーカー attribute MVP = target (path 必須) + reason (string 必須) のみ確定'
+      - '開始マーカー (<!-- rw:extend:start ... -->) と終了マーカー (<!-- rw:extend:end -->) を必ず対で出力 (R10.4)'
+      - 'Phase 2 拡張余地 = merge_strategy / confidence / evidence_id (MVP では除外)'
+    inputs: []
+    outputs:
+      - name: html_diff_marker
+        type: 'HTML comment string'
+    dependencies:
+      - kind: spec
+        target: 'Spec 7 lifecycle merge (P1 future)'
+        criticality: P1
+    failure_modes:
+      - '開始マーカーまたは終了マーカー欠落 → dry-run 段階で ERROR severity (R10.5)'
+    state_change: false
+    rollback_defined: false
+    llm_judgment: false
+    llm_confidence_or_escalation: false
+    auto_approval: false
+    human_gate: false
+    tests: []
+
+  - id: design.skill_candidate_frontmatter
+    type: data_model
+    location: 'design.md:679'
+    parent_specs: ['12.1', '12.2', '12.3', '12.4', '12.5']
+    components: ['candidate_name', 'candidate_base', 'candidate_status', 'candidate_dry_run_passed']
+    responsibilities:
+      - 'review/skill_candidates/<name>.md frontmatter 必須 4 field (name / base / status / dry_run_passed) 規定'
+      - 'status 値域 = draft | validated の 2 値 (drafts §5.7 の approved 値は不採用、Adjacent Sync 要請、R12.1)'
+      - 'candidate 新規生成時 status: draft / dry_run_passed: false 初期値設定 (R12.2)'
+      - 'validation 全件通過時 status: validated 更新 (R12.3)'
+      - 'install 完了時 candidate ファイル削除、履歴は decision_log.jsonl の skill_install で保全 (R12.4)'
+    inputs: []
+    outputs:
+      - name: candidate_frontmatter_yaml
+        type: 'YAML dict'
+    dependencies:
+      - kind: internal
+        target: design.skill_authoring_workflow
+        criticality: P0
+    failure_modes:
+      - '必須 4 field のいずれかが欠落・型違反 → ERROR で install 候補から除外 (R12.5)'
+    state_change: false
+    rollback_defined: false
+    llm_judgment: false
+    llm_confidence_or_escalation: false
+    auto_approval: false
+    human_gate: false
+    tests: []
+
+requirements_index:
+  - id: '1.1'
+    summary: 'standard skill = AGENTS/skills/<skill_name>.md 単一ディレクトリ配置 (サブディレクトリなし)'
+    location: 'requirements.md:61'
+    constraint_kind: scope
+    constraint_text: 'standard skill を AGENTS/skills/<skill_name>.md という単一ディレクトリ配置とし、サブディレクトリによる分類を導入しない'
+  - id: '1.2'
+    summary: 'skill 名 = snake_case ASCII、frontmatter name とファイル名完全一致'
+    location: 'requirements.md:62'
+    constraint_kind: invariant
+    constraint_text: 'skill 名を snake_case の ASCII 文字列とし、frontmatter name フィールドとファイル名（拡張子除く）が完全一致することを規定する'
+  - id: '1.3'
+    summary: 'skill ファイル名と frontmatter name 不一致時 ERROR + 読み込み除外'
+    location: 'requirements.md:63'
+    constraint_kind: conservatism
+    constraint_text: 'skill ファイル名と frontmatter name が一致しない skill が存在する場合、ERROR severity で報告し、当該 skill を読み込み対象から除外する'
+  - id: '1.4'
+    summary: 'skill candidate = review/skill_candidates/<skill_name>.md 配置'
+    location: 'requirements.md:64'
+    constraint_kind: scope
+    constraint_text: 'skill candidate を review/skill_candidates/<skill_name>.md に配置し、install を経て初めて AGENTS/skills/ に移動される'
+  - id: '1.5'
+    summary: 'skill 名衝突時 ERROR + 上書き不可、改版時は新規 skill 名で install (version up は v2 MVP 外)'
+    location: 'requirements.md:65'
+    constraint_kind: conservatism
+    constraint_text: 'skill 名の衝突が検出される場合、ERROR severity で操作を拒否し、改名または改版時の対処（同名 skill の上書き install は不可、改版時は新規 skill 名で install することを基本方針）を求める'
+
+  - id: '2.1'
+    summary: '8 section 順保持 (Purpose / Execution Mode / Prerequisites / Input / Output / Processing Rules / Prohibited Actions / Failure Conditions)'
+    location: 'requirements.md:73'
+    constraint_kind: invariant
+    constraint_text: 'すべての skill ファイルが 8 section を見出し（## レベル）として順に保持する'
+  - id: '2.2'
+    summary: '各 section 役割定義 (Purpose / Execution Mode / Prerequisites / Input / Output / Processing Rules / Prohibited Actions / Failure Conditions)'
+    location: 'requirements.md:74'
+    constraint_kind: normal
+    constraint_text: '各 section の役割を以下のとおり定義する'
+  - id: '2.3'
+    summary: '8 section いずれか欠落 → ERROR + install 拒否'
+    location: 'requirements.md:83'
+    constraint_kind: conservatism
+    constraint_text: 'skill ファイルに 8 section のうち 1 つでも欠落している場合、ERROR severity で報告し、当該 skill の install を拒否する'
+  - id: '2.4'
+    summary: 'Failure Conditions section に「次のアクション」欄必須'
+    location: 'requirements.md:84'
+    constraint_kind: invariant
+    constraint_text: 'Failure Conditions section を記述する場合、各 failure に対する「次のアクション」欄（再試行可否、人間判断要否、candidate 廃棄の有無）を必須項目として規定する'
+  - id: '2.5'
+    summary: '8 section 以外の追加 section 任意許容、validation 対象は 8 section のみ'
+    location: 'requirements.md:85'
+    constraint_kind: scope
+    constraint_text: '8 section 以外の追加 section を任意で持つことを許容するが、validation 対象は 8 section のみである'
+
+  - id: '3.1'
+    summary: 'frontmatter 必須 7 field (name / origin / version / status / interactive / update_mode / handles_deprecated)'
+    location: 'requirements.md:93'
+    constraint_kind: normal
+    constraint_text: 'skill frontmatter の必須フィールドを以下のとおり規定する: name / origin / version / status / interactive / update_mode / handles_deprecated'
+  - id: '3.2'
+    summary: 'optional 4 field 許容 (applicable_categories / applicable_input_paths / dialogue_guide / auto_save_dialogue)、許可値外は WARN'
+    location: 'requirements.md:101'
+    constraint_kind: scope
+    constraint_text: 'optional フィールドとして applicable_categories / applicable_input_paths / dialogue_guide / auto_save_dialogue を許容、許可値外の値は WARN severity で報告'
+  - id: '3.3'
+    summary: 'YAML parse 不能 → ERROR + install/load 除外'
+    location: 'requirements.md:104'
+    constraint_kind: conservatism
+    constraint_text: 'frontmatter が YAML として parse できない場合、ERROR severity で報告し、当該 skill を install / load の対象から除外する'
+  - id: '3.4'
+    summary: 'origin / update_mode / status 値域違反 → ERROR'
+    location: 'requirements.md:105'
+    constraint_kind: conservatism
+    constraint_text: 'origin が standard / custom 以外、または update_mode が create / extend / both 以外、または status が定義 4 値以外である場合、ERROR severity で値域違反を報告'
+  - id: '3.5'
+    summary: 'install 時 status 必ず active、遷移は Spec 7 lifecycle のみ (本 spec で実装しない)'
+    location: 'requirements.md:106'
+    constraint_kind: scope
+    constraint_text: 'skill ファイルの初期 install 時の status を必ず active とし、deprecated / retracted / archived への遷移は Spec 7 lifecycle 操作のみが行える'
+  - id: '3.6'
+    summary: 'Skill ファイル update_history field を v2 MVP で適用しない (decision_log で集約)'
+    location: 'requirements.md:107'
+    constraint_kind: scope
+    constraint_text: 'Skill ファイルには update_history field を v2 MVP では適用しない。Skill lifecycle 履歴は decision_log.jsonl の Skill 起源 4 種で網羅'
+
+  - id: '4.1'
+    summary: '知識生成 12 種を origin: standard で初期配布 (paper_summary など)'
+    location: 'requirements.md:115'
+    constraint_kind: normal
+    constraint_text: '知識生成 skill として 12 種を origin: standard で初期配布する'
+  - id: '4.2'
+    summary: '12 種すべて R2 8 section + R3 frontmatter スキーマ完全に満たす'
+    location: 'requirements.md:128'
+    constraint_kind: invariant
+    constraint_text: '12 種の知識生成 skill それぞれが Requirement 2 の 8 section スキーマと Requirement 3 の frontmatter スキーマを完全に満たす'
+  - id: '4.3'
+    summary: '出力先 = review/synthesis_candidates/ 配下、target / update_type 取り扱いは Spec 1 所管'
+    location: 'requirements.md:129'
+    constraint_kind: scope
+    constraint_text: '知識生成 skill の出力先を review/synthesis_candidates/ 配下とし、各 candidate の target / update_type フィールドの取り扱いは Spec 1 所管'
+  - id: '4.4'
+    summary: 'generic_summary fallback + WARN マーカー (人間レビュー促す)'
+    location: 'requirements.md:130'
+    constraint_kind: conservatism
+    constraint_text: 'ある content の type が既存 11 種の専門 skill のいずれにも該当しない場合、generic_summary を fallback として提供し、生成出力に WARN マーカーを付与して人間レビューを促す'
+
+  - id: '5.1'
+    summary: 'Graph 抽出 2 種 (entity_extraction / relation_extraction) origin: standard 初期配布'
+    location: 'requirements.md:138'
+    constraint_kind: normal
+    constraint_text: 'Graph 抽出 skill として entity_extraction / relation_extraction を origin: standard で初期配布する'
+  - id: '5.2'
+    summary: 'entity_extraction 出力 schema = name / canonical_path / entity_type / aliases / evidence_ids'
+    location: 'requirements.md:141'
+    constraint_kind: normal
+    constraint_text: 'entity_extraction skill の出力 schema を name / canonical_path / entity_type / aliases / evidence_ids の JSON 配列として規定'
+  - id: '5.3'
+    summary: 'relation_extraction 出力 schema = source / type / target / extraction_mode / evidence'
+    location: 'requirements.md:142'
+    constraint_kind: normal
+    constraint_text: 'relation_extraction skill の出力 schema を source / type / target / extraction_mode / evidence の JSON 配列として規定'
+  - id: '5.4'
+    summary: 'Graph 抽出 skill 出力先 = review/relation_candidates/ (human reject filter 経由)'
+    location: 'requirements.md:143'
+    constraint_kind: scope
+    constraint_text: 'Graph 抽出 skill の出力先を review/relation_candidates/ 配下とし、Spec 5 が edges.jsonl / entities.yaml に永続化する前段の human reject filter を経由する'
+  - id: '5.5'
+    summary: 'Graph 抽出 skill 出力 schema を本 spec が SSoT として確定、Spec 5 が validation 実装 (責務分離)'
+    location: 'requirements.md:144'
+    constraint_kind: invariant
+    constraint_text: 'Graph 抽出 skill の出力 schema 自体（フィールド名・値域・必須性）を本 spec が SSoT として確定し、Spec 5 が当該 schema を入力 contract として validation 実装する責務分離'
+  - id: '5.6'
+    summary: 'schema 変更時 Spec 5 先行合意必須 (Adjacent Spec Synchronization 運用ルール)'
+    location: 'requirements.md:145'
+    constraint_kind: authority
+    constraint_text: '本 spec が Graph 抽出 skill の出力 schema を変更する必要が生じた場合、変更を Spec 5 と先行合意した上でしか反映できない手順を採る'
+  - id: '5.7'
+    summary: 'Failure Conditions に schema validation 不通過時 ERROR で報告 必須記載'
+    location: 'requirements.md:146'
+    constraint_kind: conservatism
+    constraint_text: 'Graph 抽出 skill の Failure Conditions section に schema validation 不通過時は当該 entity / edge を candidate に採用せず ERROR で報告する旨を必須記載'
+
+  - id: '6.1'
+    summary: 'lint 支援 1 種 frontmatter_completion を origin: standard 初期配布'
+    location: 'requirements.md:154'
+    constraint_kind: normal
+    constraint_text: 'lint 支援 skill として frontmatter_completion を origin: standard で初期配布する'
+  - id: '6.2'
+    summary: 'frontmatter_completion Input/Output section 規定'
+    location: 'requirements.md:155'
+    constraint_kind: normal
+    constraint_text: 'frontmatter_completion skill の Input section に lint FAIL となった markdown ファイルパスと FAIL 理由 を必須入力として規定し、Output section に補完提案 frontmatter（YAML 文字列）と確信度 を出力フォーマットとして規定する'
+  - id: '6.3'
+    summary: '採用判断 (採用 / 棄却 / 部分採用) は decision_log.jsonl 記録対象'
+    location: 'requirements.md:156'
+    constraint_kind: scope
+    constraint_text: 'frontmatter_completion の出力を採用する場合、採用判断（提案採用 / 棄却 / 部分採用）が decision_log.jsonl に記録される対象である'
+  - id: '6.4'
+    summary: 'frontmatter_completion を interactive: true として配布 (ユーザー対話採否前提)'
+    location: 'requirements.md:157'
+    constraint_kind: invariant
+    constraint_text: 'frontmatter_completion を interactive: true として配布し、ユーザー対話による採否判断を前提とする'
+
+  - id: '7.1'
+    summary: 'custom skill 作成 7 段階対話フロー (意図確認 / 情報収集 / 草案生成 / Validation / Dry-run / 修正ループ / Install)'
+    location: 'requirements.md:165'
+    constraint_kind: normal
+    constraint_text: 'custom skill 作成を 7 段階の対話フローとして規定する'
+  - id: '7.2'
+    summary: 'rw skill draft <name> 呼出時 candidate 新規生成、status: draft / dry_run_passed: false 初期値'
+    location: 'requirements.md:173'
+    constraint_kind: normal
+    constraint_text: 'rw skill draft <name> が呼び出された場合、review/skill_candidates/<name>.md を新規生成し、status: draft / dry_run_passed: false を frontmatter 初期値として設定'
+  - id: '7.3'
+    summary: 'rw skill draft <name> --base 既存 skill template 複製 + base 記録'
+    location: 'requirements.md:174'
+    constraint_kind: normal
+    constraint_text: 'rw skill draft <name> --base <existing_skill> が呼び出された場合、既存 skill の 8 section を template として candidate に複製し、base: <existing_skill> を frontmatter に記録'
+  - id: '7.4'
+    summary: 'rw skill test 成功時 dry_run_passed=true 更新、failure 4 種 (timeout/crash/output_error/internal) で ERROR + dry_run_passed=false 維持'
+    location: 'requirements.md:175'
+    constraint_kind: conservatism
+    constraint_text: 'rw skill test 呼出時、成功時に candidate frontmatter dry_run_passed を true に更新。LLM CLI timeout / crash / 出力 schema 違反 / その他 dry-run 内部例外で失敗した場合、dry_run_passed を false のまま維持し、ERROR severity で失敗種別と原因を report'
+  - id: '7.5'
+    summary: 'rw skill install <candidate> R9 install validation 全件通過時のみ移動 + origin=custom / status=active / version=1 確定'
+    location: 'requirements.md:176'
+    constraint_kind: invariant
+    constraint_text: 'rw skill install <candidate> 呼出時、Requirement 9 の install validation を全件通過した場合に限り candidate を AGENTS/skills/<name>.md に移動し、frontmatter origin を custom、status を active、version を 1 に確定'
+  - id: '7.6'
+    summary: 'install 時 dry_run_passed=false → ERROR install 拒否 (R8 dry-run 必須化を理由)'
+    location: 'requirements.md:177'
+    constraint_kind: conservatism
+    constraint_text: 'rw skill install 実行時に candidate の dry_run_passed が false である場合、ERROR severity で install を拒否し、Requirement 8 の dry-run 必須化を理由として提示'
+  - id: '7.7'
+    summary: 'custom skill サブカテゴリも同じ 7 段階フローで作成可能'
+    location: 'requirements.md:178'
+    constraint_kind: normal
+    constraint_text: 'custom skill のサブカテゴリ（Scenario 35 由来の reject 学習 skill 等）も同じ 7 段階フローで作成可能とする'
+
+  - id: '8.1'
+    summary: 'install 前 dry_run_passed=true 最低 1 回必須'
+    location: 'requirements.md:186'
+    constraint_kind: invariant
+    constraint_text: 'rw skill install <candidate> 実行前に、当該 candidate に対する rw skill test の成功実績（candidate frontmatter dry_run_passed: true）が最低 1 回存在することを必須要件として規定'
+  - id: '8.2'
+    summary: '最終修正以降 dry-run 未再実行 → install 拒否 + 再 dry-run 要求'
+    location: 'requirements.md:187'
+    constraint_kind: conservatism
+    constraint_text: 'candidate の最終修正以降に dry-run が再実行されていない場合、install を拒否し、再 dry-run を要求する'
+  - id: '8.3'
+    summary: '修正と同時に dry_run_passed=false reset (修正後の再 dry-run 強制)'
+    location: 'requirements.md:188'
+    constraint_kind: invariant
+    constraint_text: 'candidate ファイルが Validation 段階で修正される場合、修正と同時に frontmatter dry_run_passed を false にリセットする'
+  - id: '8.4'
+    summary: 'standard skill rw init 配布時には dry-run 必須化を適用しない (品質保証済前提)'
+    location: 'requirements.md:189'
+    constraint_kind: scope
+    constraint_text: 'standard skill（origin: standard）の rw init 配布時には dry-run 必須化を適用しない（Rwiki 配布側で品質保証済を前提とする）'
+
+  - id: '9.1'
+    summary: 'install 時 4 種 validation 全実行 (8 section / YAML / 衝突 / 参照整合性)'
+    location: 'requirements.md:197'
+    constraint_kind: invariant
+    constraint_text: 'install 時に 4 種 validation を全て実行する: (a) 8 section 完備 / (b) YAML 妥当 / (c) 名前衝突なし / (d) 参照整合性'
+  - id: '9.2'
+    summary: '4 種 validation いずれか 1 つでも失敗 → ERROR install 拒否 + 失敗種別と該当箇所 report'
+    location: 'requirements.md:202'
+    constraint_kind: conservatism
+    constraint_text: '4 種 validation のいずれか 1 つでも失敗した場合、ERROR severity で install を拒否し、失敗した validation 種別と該当箇所を report する'
+  - id: '9.3'
+    summary: 'validation 失敗時 candidate を review/skill_candidates/ 残置 + 修正後再 install 可能'
+    location: 'requirements.md:203'
+    constraint_kind: scope
+    constraint_text: 'validation 失敗時に candidate ファイルを review/skill_candidates/ に残置し、ユーザーが修正後に再 install を試行できる状態を保つ'
+  - id: '9.4'
+    summary: 'rw skill install を dangerous_op 中 (推奨対話) + install 直前 1-stage confirm'
+    location: 'requirements.md:204'
+    constraint_kind: authority
+    constraint_text: 'rw skill install を dangerous_op category: 中（推奨対話）として位置付け、validation 通過後も install 直前に 1-stage confirm を経る'
+  - id: '9.5'
+    summary: 'standard skill 配布 (rw init) 時にも同等 4 種 validation 実行'
+    location: 'requirements.md:205'
+    constraint_kind: scope
+    constraint_text: 'standard skill 配布（rw init）時にも同等の 4 種 validation を実行する（Rwiki 自体の配布パッケージ整合性検査として）'
+  - id: '9.6'
+    summary: 'install operation atomic 実行 + 中断時元の状態復帰'
+    location: 'requirements.md:206'
+    constraint_kind: invariant
+    constraint_text: 'install operation を atomic に実行することを規定し、process kill / disk full / OOM 等で操作中断された場合は元の状態（candidate 残置 / AGENTS/skills/ 未配置）に復帰することを保証'
+
+  - id: '10.1'
+    summary: 'update_mode: create skill = 新規 wiki / synthesis ページ生成のみ、既存ページ差分出力不可'
+    location: 'requirements.md:214'
+    constraint_kind: scope
+    constraint_text: 'update_mode: create の skill が新規 wiki / synthesis ページを review/synthesis_candidates/ に生成することのみを許容し、既存ページの差分出力を行わない'
+  - id: '10.2'
+    summary: 'update_mode: extend skill = 既存ページ差分を HTML コメント形式の差分マーカーで囲んで出力'
+    location: 'requirements.md:215'
+    constraint_kind: invariant
+    constraint_text: 'update_mode: extend の skill が既存 wiki ページに対する差分（追記 / 修正）を HTML コメント形式の差分マーカーで囲んで出力する'
+  - id: '10.3'
+    summary: 'update_mode: both skill = 新規生成 / 既存拡張両出力可能、frontmatter update_type で識別'
+    location: 'requirements.md:216'
+    constraint_kind: scope
+    constraint_text: 'update_mode: both の skill が新規生成と既存拡張の両方を出力可能とし、各候補ファイルの frontmatter update_type で create / extension / refactor / deprecation-reference 等を識別'
+  - id: '10.4'
+    summary: '差分マーカー = 開始 (rw:extend:start) + 終了 (rw:extend:end) 必ず対で出力'
+    location: 'requirements.md:217'
+    constraint_kind: invariant
+    constraint_text: 'update_mode: extend の skill が出力する差分マーカーを記述する場合、開始マーカー（<!-- rw:extend:start ... -->）と終了マーカー（<!-- rw:extend:end -->）を必ず対で出力する'
+  - id: '10.5'
+    summary: '開始/終了マーカー欠落 → dry-run 段階で ERROR + dry_run_passed=false 維持'
+    location: 'requirements.md:218'
+    constraint_kind: conservatism
+    constraint_text: 'update_mode: extend skill 出力に開始マーカーまたは終了マーカーが欠落している場合、dry-run 段階で ERROR severity で報告し、dry_run_passed を false のまま維持'
+
+  - id: '11.1'
+    summary: 'origin: standard skill を Rwiki 配布パッケージ同梱、rw init で AGENTS/skills/ 展開'
+    location: 'requirements.md:226'
+    constraint_kind: scope
+    constraint_text: 'origin: standard の skill を Rwiki 配布パッケージに同梱し、rw init 実行時に AGENTS/skills/ に展開する'
+  - id: '11.2'
+    summary: 'origin: custom skill を rw init 配布対象から除外、ユーザー rw skill draft/test/install 経由のみ追加'
+    location: 'requirements.md:227'
+    constraint_kind: scope
+    constraint_text: 'origin: custom の skill を rw init の配布対象から除外し、ユーザーが rw skill draft / test / install を経由してのみ追加できる'
+  - id: '11.3'
+    summary: 'standard skill 初期配布数 = 15 種 (知識生成 12 + Graph 抽出 2 + lint 支援 1) 固定'
+    location: 'requirements.md:228'
+    constraint_kind: invariant
+    constraint_text: 'standard skill の初期配布数を Requirement 4 / 5 / 6 の合計 15 種（知識生成 12 + Graph 抽出 2 + lint 支援 1）として固定'
+  - id: '11.4'
+    summary: 'standard skill ユーザー編集後も origin 維持 (custom に変更しない)'
+    location: 'requirements.md:229'
+    constraint_kind: invariant
+    constraint_text: 'standard skill が install 後にユーザーによってファイル編集された場合、当該 skill の origin を custom に変更することなく standard のまま保持し、ユーザー編集は次回 rw init --reinstall 等の挙動仕様で扱う'
+  - id: '11.5'
+    summary: 'skill export / import を v2 MVP 外として位置付け、振る舞い規定しない'
+    location: 'requirements.md:230'
+    constraint_kind: scope
+    constraint_text: 'skill export / import を v2 MVP 外として位置付け、本 requirements で当該機能の振る舞いを規定しない'
+  - id: '11.6'
+    summary: 'rw init 配布完了後 standard 15 種揃っているか配布完整性 check + 不在で ERROR'
+    location: 'requirements.md:231'
+    constraint_kind: conservatism
+    constraint_text: 'rw init 配布完了後に standard skill 15 種が AGENTS/skills/ に揃っていることを配布完整性 check として検証し、generic_summary を含む不在 skill があれば ERROR を発行する'
+
+  - id: '12.1'
+    summary: 'skill candidate frontmatter 必須 4 field (name / base / status [draft|validated] / dry_run_passed)、drafts §5.7 approved 値は不採用'
+    location: 'requirements.md:239'
+    constraint_kind: scope
+    constraint_text: 'review/skill_candidates/<name>.md frontmatter 必須フィールドを name / base / status / dry_run_passed として規定。status 値域は draft / validated の 2 値（drafts §5.7 が記述する approved 値は本 spec では採用しない）'
+  - id: '12.2'
+    summary: 'candidate 新規生成時 status: draft / dry_run_passed: false 初期値'
+    location: 'requirements.md:244'
+    constraint_kind: normal
+    constraint_text: 'candidate が新規生成される時、status: draft / dry_run_passed: false を初期値として設定'
+  - id: '12.3'
+    summary: 'validation 全件通過時 status: validated 更新'
+    location: 'requirements.md:245'
+    constraint_kind: normal
+    constraint_text: 'validation（Requirement 9 の (a) - (d)）が全件通過した時、candidate frontmatter status を validated に更新'
+  - id: '12.4'
+    summary: 'install 完了時 candidate ファイルを review/skill_candidates/ から削除 (履歴は decision_log.jsonl skill_install で保全)'
+    location: 'requirements.md:246'
+    constraint_kind: scope
+    constraint_text: 'candidate が install 完了によって AGENTS/skills/ に移動された時、当該 candidate ファイルを review/skill_candidates/ から削除する。履歴は decision_log.jsonl の decision_type: skill_install で保全'
+  - id: '12.5'
+    summary: 'candidate 必須 4 フィールド欠落・型違反 → ERROR install 候補から除外'
+    location: 'requirements.md:247'
+    constraint_kind: conservatism
+    constraint_text: 'candidate frontmatter の必須 4 フィールドのいずれかが欠落・型違反している場合、ERROR severity で当該 candidate を install 候補から除外'
+
+  - id: '13.1'
+    summary: 'rw skill list = 全 skill の name / origin / status / version 返す read-only 操作'
+    location: 'requirements.md:255'
+    constraint_kind: normal
+    constraint_text: 'rw skill list を「現存する全 skill の name / origin / status / version を返す」操作として規定'
+  - id: '13.2'
+    summary: 'rw skill show = 指定 skill の frontmatter + 8 section 本文返す read-only 操作'
+    location: 'requirements.md:256'
+    constraint_kind: normal
+    constraint_text: 'rw skill show <name> を「指定 skill の frontmatter 全フィールドと 8 section の本文を返す」操作として規定'
+  - id: '13.3'
+    summary: 'rw skill draft = R7.2 / R7.3 振る舞い'
+    location: 'requirements.md:257'
+    constraint_kind: normal
+    constraint_text: 'rw skill draft <name> [--base <skill>] を Requirement 7.2 / 7.3 の振る舞いとして規定'
+  - id: '13.4'
+    summary: 'rw skill test = R7.4 / R8 dry-run 振る舞い'
+    location: 'requirements.md:258'
+    constraint_kind: normal
+    constraint_text: 'rw skill test <candidate-or-name> [--sample <file>] を Requirement 7.4 / Requirement 8 の dry-run 振る舞いとして規定'
+  - id: '13.5'
+    summary: 'rw skill install = R7.5 / R9 validation + 配置振る舞い'
+    location: 'requirements.md:259'
+    constraint_kind: normal
+    constraint_text: 'rw skill install <candidate> を Requirement 7.5 / Requirement 9 の validation + 配置振る舞いとして規定'
+  - id: '13.6'
+    summary: 'rw skill deprecate / retract = Spec 7 lifecycle 所管、本 spec は subcommand 名認知のみ'
+    location: 'requirements.md:260'
+    constraint_kind: scope
+    constraint_text: 'rw skill deprecate <name> / rw skill retract <name> を Spec 7 lifecycle 所管とし、本 spec では当該 subcommand 名の存在のみを認知し振る舞いを規定しない'
+  - id: '13.7'
+    summary: 'rw skill 引数 parse / 出力整形 / exit code は Spec 4 所管、本 spec は内部の振る舞い契約のみ'
+    location: 'requirements.md:261'
+    constraint_kind: scope
+    constraint_text: 'rw skill 各 subcommand の引数 parse / 出力整形 / exit code を規定する場合、当該責務を Spec 4 所管とし、本 spec は内部の振る舞い契約のみを所管'
+  - id: '13.8'
+    summary: 'write 系 (draft / test / install) = .rwiki/.hygiene.lock 取得 (排他制御)、list / show は read-only 取得対象外'
+    location: 'requirements.md:262'
+    constraint_kind: invariant
+    constraint_text: 'write 系の rw skill 操作（rw skill draft / rw skill test / rw skill install）の実行時に Foundation Requirement 11.5 が規定する .rwiki/.hygiene.lock を取得することを Spec 4 への coordination 要求として明示。rw skill list / rw skill show は read-only 操作のため lock 取得対象外'
+
+  - id: '14.1'
+    summary: '用語使用を Spec 0 Foundation 用語集 5 分類と整合 (再定義禁止)'
+    location: 'requirements.md:270'
+    constraint_kind: invariant
+    constraint_text: '本 requirements の用語使用を Spec 0 Foundation の用語集 5 分類（特に Skill / Custom skill / Skill candidate / Review layer / Dry-run）と整合させ、独自の再定義・再命名を行わない'
+  - id: '14.2'
+    summary: '本 requirements を日本語で記述 (spec.json.language=ja 準拠)'
+    location: 'requirements.md:271'
+    constraint_kind: scope
+    constraint_text: '本 requirements を日本語で記述し、spec.json.language=ja および CLAUDE.md「All Markdown content written to project files MUST be written in the target language」要件に準拠'
+  - id: '14.3'
+    summary: '表形式は最小限、長文・解説は表外の箇条書きまたは段落'
+    location: 'requirements.md:272'
+    constraint_kind: scope
+    constraint_text: '本文中で表形式を用いる場合、表は最小限に留め、長文・解説は表外の箇条書きまたは段落で記述'
+  - id: '14.4'
+    summary: '各記述項目について SSoT 出典を辿れる参照点を残す'
+    location: 'requirements.md:273'
+    constraint_kind: invariant
+    constraint_text: '本 requirements の各記述項目について SSoT 出典（drafts/rwiki-v2-consolidated-spec.md v0.7.12 §2.8 / §5.6 / §5.7 / §7.2 Spec 2 / §11.2）を辿れるよう参照点を残す'
+  - id: '14.5'
+    summary: 'SSoT 改版時 spec.json.updated_at 更新と change log 追記で足りる'
+    location: 'requirements.md:274'
+    constraint_kind: scope
+    constraint_text: 'SSoT が改版された場合に本 requirements の更新が必要となる時、自身の更新が roadmap.md「Adjacent Spec Synchronization」運用ルールに従い、spec.json.updated_at 更新と markdown 末尾 change log への追記で足りる'
+  - id: '14.6'
+    summary: '15 個の Requirement の各々について design 段階で Boundary Commitments として境界再確認'
+    location: 'requirements.md:275'
+    constraint_kind: invariant
+    constraint_text: '本 requirements が定める 15 個の Requirement の各々について、design 段階で Boundary Commitments として境界が再確認されることを前提とする'
+
+  - id: '15.1'
+    summary: '対話ログ markdown ファイル frontmatter 必須 5 field 固定 (type / session_id / started_at / ended_at / turns)'
+    location: 'requirements.md:283'
+    constraint_kind: normal
+    constraint_text: '対話ログ markdown ファイル frontmatter 必須フィールドを以下 5 種として固定: type（固定値 dialogue_log）/ session_id / started_at / ended_at / turns'
+  - id: '15.2'
+    summary: '対話ログ markdown フォーマット詳細仕様を design phase 持ち越し、本 requirements は SSoT 出典への参照点のみ'
+    location: 'requirements.md:284'
+    constraint_kind: scope
+    constraint_text: '対話ログ markdown フォーマットの詳細仕様（Turn 表現の内部構造、auto-save の append 単位、speaker / content / timestamp 等の Turn 内部 schema、対話ログ保存先の命名規則とディレクトリ構造、frontmatter 任意フィールドの拡張規約）を design phase 持ち越し項目として位置付け'
+  - id: '15.3'
+    summary: 'Skill frontmatter 任意 2 種 (dialogue_guide / auto_save_dialogue) 許容、interactive: true skill が動的質問生成 + 対話ログ自動保存を制御'
+    location: 'requirements.md:285'
+    constraint_kind: normal
+    constraint_text: 'Skill frontmatter の任意フィールドとして dialogue_guide および auto_save_dialogue の 2 種を許容し、interactive: true の skill が動的質問生成および対話ログ自動保存を制御するためのメタデータであることを明示'
+  - id: '15.4'
+    summary: '対話ログを生成・依拠する skill = Output / Input section に対話ログ frontmatter スキーマ参照点を必須記載'
+    location: 'requirements.md:286'
+    constraint_kind: invariant
+    constraint_text: '対話ログを生成または依拠する skill（interactive_synthesis / frontmatter_completion / llm_log_extract 等）を扱う場合、当該 skill ファイルの Output section または Input section に対話ログ frontmatter スキーマへの参照点を必須記載'
+  - id: '15.5'
+    summary: '対話ログ frontmatter スキーマを本 spec が SSoT として確定、Spec 4 / Spec 6 が当該スキーマに従う責務分離'
+    location: 'requirements.md:287'
+    constraint_kind: invariant
+    constraint_text: '対話ログ frontmatter スキーマを本 spec が SSoT として確定し、Spec 4（Requirement 1.8 が定める保存実装と保存先 path 規約）/ Spec 6（保存タイミングと append 単位の trigger 起票時に確認）が当該スキーマに従う責務分離を明示。本スキーマを変更する必要が生じた場合は Adjacent Spec Synchronization 運用ルールに従い波及同期'
+
+cross_references:
+  - from: design.skill_library
+    to: '1.1'
+    relation: implements
+    location: 'design.md:355'
+  - from: design.skill_library
+    to: '4.1'
+    relation: implements
+    location: 'design.md:358'
+  - from: design.skill_library
+    to: '11.1'
+    relation: implements
+    location: 'design.md:365'
+  - from: design.skill_library
+    to: '13.1'
+    relation: implements
+    location: 'design.md:367'
+  - from: design.skill_validator
+    to: '2.3'
+    relation: implements
+    location: 'design.md:356'
+  - from: design.skill_validator
+    to: '3.3'
+    relation: implements
+    location: 'design.md:357'
+  - from: design.skill_validator
+    to: '9.1'
+    relation: implements
+    location: 'design.md:363'
+  - from: design.skill_validator
+    to: '10.5'
+    relation: implements
+    location: 'design.md:364'
+  - from: design.skill_validator
+    to: '15.4'
+    relation: implements
+    location: 'design.md:369'
+  - from: design.skill_authoring_workflow
+    to: '7.1'
+    relation: implements
+    location: 'design.md:361'
+  - from: design.skill_authoring_workflow
+    to: '8.1'
+    relation: implements
+    location: 'design.md:362'
+  - from: design.skill_authoring_workflow
+    to: '9.6'
+    relation: implements
+    location: 'design.md:363'
+  - from: design.skill_authoring_workflow
+    to: '12.1'
+    relation: implements
+    location: 'design.md:366'
+  - from: design.skill_authoring_workflow
+    to: '13.3'
+    relation: implements
+    location: 'design.md:367'
+  - from: design.skill_authoring_workflow
+    to: '13.8'
+    relation: implements
+    location: 'design.md:367'
+  - from: design.extraction_output_schema
+    to: '5.2'
+    relation: implements
+    location: 'design.md:359'
+  - from: design.extraction_output_schema
+    to: '5.3'
+    relation: implements
+    location: 'design.md:359'
+  - from: design.dialogue_log_frontmatter
+    to: '15.1'
+    relation: implements
+    location: 'design.md:369'
+  - from: design.dialogue_log_frontmatter
+    to: '15.5'
+    relation: implements
+    location: 'design.md:369'
+  - from: design.diff_marker_attribute
+    to: '10.4'
+    relation: implements
+    location: 'design.md:364'
+  - from: design.skill_candidate_frontmatter
+    to: '12.1'
+    relation: implements
+    location: 'design.md:366'
+  - from: design.skill_authoring_workflow
+    to: design.skill_validator
+    relation: depends_on
+    location: 'design.md:467'
+  - from: design.skill_authoring_workflow
+    to: design.skill_library
+    relation: depends_on
+    location: 'design.md:537'
+  - from: design.skill_validator
+    to: design.skill_library
+    relation: depends_on
+    location: 'design.md:468'
+
+tasks_index: []

@@ -1,0 +1,316 @@
+feature_name: rwiki-v2-skill-library
+phase: 2-E semantic drift detection
+detected_by: 'Phase 2-E LLM (manual judgement following design_review_v2_full_spec.md prompt rules)'
+total_pairs: 48
+drift_count: 0
+no_drift_count: 48
+note: |-
+  全 48 ペアについて constraint_text と design responsibilities / bool 値の対立構造を検査した結果、
+  drift は検出されなかった。多くのペアは design.md の本文または responsibilities 内に
+  該当 requirement の意図を明示記述しており (例: R5.6 authority "Spec 5 先行合意必須" は
+  design.extraction_output_schema responsibilities に明示)、constraint_text と design 経路の
+  対立構造は確認されなかった。
+
+  設計が requirement を委譲する parent_specs の場合 (例: R9.4 dangerous_op + 1-stage confirm が
+  design.skill_validator に紐付いているが、constraint_text に "Spec 4 所管" 明記)、
+  Phase 2-E ルール「明示記述に基づく判定、推測で drift を捏造しない」に従って no_drift と判定。
+
+  Phase 2-B (B-2 uncovered requirements) で 22 件の coverage 欠落が検出されており、これは
+  parent_specs granularity の design 改善余地として捉える。Phase 2-E (drift) と Phase 2-B
+  (coverage) は独立軸の検査。
+
+drift_findings:
+  - pair_id: '1.1::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'AGENTS/skills/<skill_name>.md という単一ディレクトリ配置'
+    excerpt_design: 'AGENTS/skills/<snake_case>.md 単一階層'
+    explanation: 'design responsibilities に同一規定が明示、対立構造なし'
+  - pair_id: '1.2::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'snake_case + frontmatter name 完全一致'
+    excerpt_design: 'skill_name = frontmatter name = ファイル名拡張子除く の不変条件'
+    explanation: 'invariant が responsibilities で明示、対立構造なし'
+  - pair_id: '1.3::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'ERROR severity で報告 + 読み込み除外'
+    excerpt_design: '責務分離: ERROR 報告は design.skill_validator が担当 (parent_specs 1.3 に skill_validator も含む)'
+    explanation: '責務分担を設計内で明示、対立なし'
+  - pair_id: '1.4::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'review/skill_candidates/<name>.md 配置'
+    excerpt_design: '責務分離: candidate 配置は design.skill_authoring_workflow が担当'
+    explanation: '責務分担を設計内で明示、対立なし'
+  - pair_id: '4.2::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '12 種が 8 section + frontmatter スキーマ完全に満たす'
+    excerpt_design: 'STANDARD_SKILLS tuple 定数固定 (15 種、validation は SkillValidator)'
+    explanation: '責務分離 (catalog vs validation) を設計内で明示、対立なし'
+  - pair_id: '4.3::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '出力先 review/synthesis_candidates/ 配下'
+    excerpt_design: '本 spec 責務外 (skill ファイル本体内の Output section に明示)'
+    explanation: '範囲規定を設計内で明示、対立なし'
+  - pair_id: '4.4::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'generic_summary fallback + WARN マーカー付与'
+    excerpt_design: 'fallback 振る舞いは Spec 3 dispatch 所管、本 spec は generic_summary 配布のみ'
+    explanation: '責務委譲を設計内で明示、対立なし'
+  - pair_id: '11.1::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'rw init で AGENTS/skills/ 展開'
+    excerpt_design: 'STANDARD_SKILLS tuple + Spec 4 cmd_init coordination で展開'
+    explanation: '対立構造なし'
+  - pair_id: '11.2::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'custom skill rw init 配布対象から除外'
+    excerpt_design: 'STANDARD_SKILLS tuple = standard 15 種固定、custom は authoring_workflow 経由のみ'
+    explanation: '対立構造なし'
+  - pair_id: '11.3::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'standard 15 種固定'
+    excerpt_design: 'STANDARD_SKILLS tuple 定数固定 (15 種、Decision 2-14)'
+    explanation: 'invariant が responsibilities で明示、対立構造なし'
+  - pair_id: '11.4::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'standard skill ユーザー編集後も origin: standard 維持'
+    excerpt_design: '本 spec は origin 値域固定のみ、編集行為は CLI 側 (Spec 4 所管)'
+    explanation: '責務委譲を設計内で明示、対立なし'
+  - pair_id: '11.5::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'skill export / import を v2 MVP 外'
+    excerpt_design: 'Non-Goals に明示 (Skill export / import — v2 MVP 外)'
+    explanation: 'scope 規定が Non-Goals で明示、対立構造なし'
+  - pair_id: '11.6::design.skill_library'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'rw init 配布完了後 15 種揃っているか配布完整性 check + 不在で ERROR'
+    excerpt_design: 'Implementation Notes: 15 件全件存在 check (R11.6 配布完整性)'
+    explanation: 'conservatism が Implementation Notes で明示、対立構造なし'
+
+  - pair_id: '1.3::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'ERROR severity で報告 + 読み込み除外'
+    excerpt_design: 'ERROR 1 件以上で install 拒否 (R9.2) + 4 種 validation を独立関数として実装'
+    explanation: 'conservatism が responsibilities で明示、対立構造なし'
+  - pair_id: '1.5::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '名前衝突 ERROR + 上書き不可'
+    excerpt_design: 'validate_name_collision (4 種 validation の (c))、衝突時 ERROR'
+    explanation: 'conservatism が Validation 4 種詳細で明示、対立構造なし'
+  - pair_id: '2.3::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '8 section 1 つでも欠落 ERROR + install 拒否'
+    excerpt_design: 'validate_8_sections + ERROR 1 件以上で install 拒否 (R9.2)'
+    explanation: 'conservatism が Validation 4 種詳細 (a) で明示、対立構造なし'
+  - pair_id: '2.4::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'Failure Conditions の「次のアクション」欄必須'
+    excerpt_design: 'Failure Conditions section 内に「次のアクション」欄存在 check (R2.4)、欠落で ERROR'
+    explanation: 'invariant が Validation 4 種詳細 (a) で明示、対立構造なし'
+  - pair_id: '3.3::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'YAML parse 不能 ERROR + 除外'
+    excerpt_design: 'PyYAML parse 成功 (validate_yaml_frontmatter)、parse 失敗で ERROR'
+    explanation: 'conservatism が Validation 4 種詳細 (b) で明示、対立構造なし'
+  - pair_id: '3.4::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '値域違反 ERROR'
+    excerpt_design: '値域 check (origin / update_mode / status / version)、違反で ERROR'
+    explanation: 'conservatism が Validation 4 種詳細 (b) で明示、対立構造なし'
+  - pair_id: '9.1::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '4 種 validation 全実行'
+    excerpt_design: '4 種 validation を独立関数として実装 + 一括実行関数 validate_skill_file が 4 種を順次呼出'
+    explanation: 'invariant が responsibilities で明示、対立構造なし'
+  - pair_id: '9.2::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '1 つでも失敗 ERROR install 拒否'
+    excerpt_design: 'ERROR 1 件以上で install 拒否 (R9.2)'
+    explanation: 'conservatism が responsibilities で明示、対立構造なし'
+  - pair_id: '9.3::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'validation 失敗時 candidate を review/skill_candidates/ 残置'
+    excerpt_design: '責務分離: 残置は SkillAuthoringWorkflow の役割 (atomic 5 step Step 失敗時 tmp 削除 + candidate 残置)'
+    explanation: '責務分担を設計内で明示、対立なし'
+  - pair_id: '9.4::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'dangerous_op category: 中（推奨対話）+ install 直前 1-stage confirm。対話深度の正確な仕様は Spec 4 所管'
+    excerpt_design: 'SkillValidator は validation 担当、1-stage confirm は Spec 4 G3 CLI dispatch 所管 (constraint_text 内に明示)'
+    explanation: 'authority 規定で「Spec 4 所管」明示、設計の責務委譲と整合'
+  - pair_id: '9.5::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'standard 配布時も同等 4 種 validation'
+    excerpt_design: 'rw init 実行時にも同等 4 種 validation 実行 (Implementation Notes)'
+    explanation: 'scope 規定が Implementation Notes で明示、対立構造なし'
+  - pair_id: '9.6::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'install operation atomic 実行 + 中断時復帰'
+    excerpt_design: '責務分離: atomic 実行は SkillAuthoringWorkflow (Install operation atomic 5 step)'
+    explanation: '責務分担を設計内で明示、対立なし'
+  - pair_id: '10.5::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '差分マーカー欠落で ERROR + dry_run_passed false 維持'
+    excerpt_design: '差分マーカー対 check (R10.5)、欠落で ERROR (Validation 4 種詳細 (d))'
+    explanation: 'conservatism が responsibilities で明示、対立構造なし'
+  - pair_id: '12.5::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'candidate frontmatter 必須 4 フィールド欠落・型違反 → ERROR install 候補から除外'
+    excerpt_design: 'SkillValidator validate_yaml_frontmatter は skill ファイル 11 field を対象、candidate 4 field 検査の明示記述は responsibilities にない (parent_specs に 12.5 紐付け)'
+    explanation: 'design.md 本文に candidate 専用 validation の明示記述なし。constraint と design 経路の意味的対立構造は present せず (推測禁止ルール適用)、no_drift と判定。design 改善余地として Phase 2-B uncovered 検出と独立に記録'
+  - pair_id: '15.4::design.skill_validator'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '対話ログを生成・依拠する skill = Output / Input section に対話ログ frontmatter スキーマ参照点を必須記載'
+    excerpt_design: 'R15.4 判定 = interactive: true または auto_save_dialogue: true skill が対話ログ frontmatter スキーマ参照点を必須記載 (Decision 2-10)'
+    explanation: 'invariant が responsibilities で明示、対立構造なし'
+
+  - pair_id: '7.4::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '成功時 dry_run_passed=true、failure 4 種で ERROR + dry_run_passed=false 維持'
+    excerpt_design: 'dry-run failure 4 種 (timeout / crash / output_error / dry_run_internal_error) を handle_dry_run_failure で分類、全 ERROR severity 統一'
+    explanation: 'conservatism が responsibilities で明示、対立構造なし'
+  - pair_id: '7.5::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'validation 全件通過時のみ移動 + origin/status/version 確定'
+    excerpt_design: 'install_skill_generator の atomic 5 step (validation 全件通過後 atomic rename)'
+    explanation: 'invariant が flow + responsibilities で明示、対立構造なし'
+  - pair_id: '7.6::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'dry_run_passed=false → ERROR install 拒否'
+    excerpt_design: 'dry_run_passed: false 時 install 拒否 (R8.1)'
+    explanation: 'conservatism が responsibilities で明示、対立構造なし'
+  - pair_id: '8.1::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'dry_run_passed=true 最低 1 回必須'
+    excerpt_design: 'dry_run_passed=false 時 install 拒否 (R8.1) + atomic 5 step Step 1 で dry_run_passed check'
+    explanation: 'invariant が flow + responsibilities で明示、対立構造なし'
+  - pair_id: '8.2::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '未再実行 → install 拒否 + 再 dry-run 要求'
+    excerpt_design: '修正後 dry-run 再実行で dry_run_passed: false リセット (R8.3)'
+    explanation: 'conservatism が responsibilities で明示、対立構造なし'
+  - pair_id: '8.3::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '修正と同時に dry_run_passed=false reset'
+    excerpt_design: '修正後 dry-run 再実行で dry_run_passed: false リセット (R8.3)'
+    explanation: 'invariant が responsibilities で明示、対立構造なし'
+  - pair_id: '8.4::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'standard skill rw init 配布時 dry-run 必須化適用しない'
+    excerpt_design: 'authoring_workflow は custom skill 7 段階対話を扱う、standard 配布は SkillLibrary catalog で扱う'
+    explanation: '責務分離を設計内で明示、対立なし'
+  - pair_id: '9.6::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'install operation atomic 実行 + 中断時復帰'
+    excerpt_design: 'Install operation atomic 5 step (Decision 2-4): tmp copy → 4 validation → atomic rename → fsync → candidate 削除'
+    explanation: 'invariant が responsibilities + flow 2 で明示、対立構造なし'
+  - pair_id: '12.1::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'candidate frontmatter 4 field、status 2 値 (draft / validated)'
+    excerpt_design: 'Flow 1: candidate 生成 + status: draft / dry_run_passed: false 設定 → validated 遷移'
+    explanation: 'scope が flow で明示、対立構造なし'
+  - pair_id: '12.4::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'install 完了時 candidate 削除 + decision_log 記録 (skill_install)'
+    excerpt_design: 'skill_install 完了時 Spec 5 record_decision(decision_type=skill_install) 呼出 (R12.4) + atomic step 5 で candidate 削除'
+    explanation: 'scope が responsibilities + flow で明示、対立構造なし'
+  - pair_id: '13.8::design.skill_authoring_workflow'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'write 系 (draft / test / install) で .rwiki/.hygiene.lock 取得'
+    excerpt_design: 'write 系 3 操作で acquire_lock(skill) 取得 (Spec 4 G5 LockHelper 経由、Decision 2-5)'
+    explanation: 'invariant が responsibilities + flow で明示、対立構造なし'
+
+  - pair_id: '5.4::design.extraction_output_schema'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '出力先 review/relation_candidates/ + human reject filter 経由'
+    excerpt_design: '出力先 = review/relation_candidates/ (R5.4、Spec 5 が永続化前段の human reject filter として使用)'
+    explanation: 'scope が responsibilities で明示、対立構造なし'
+  - pair_id: '5.5::design.extraction_output_schema'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'schema を本 spec が SSoT 確定 + Spec 5 validation 実装 (責務分離)'
+    excerpt_design: 'schema 自体は本 spec が SSoT、Spec 5 が validation 実装 + ledger 永続化 (R5.5、責務分離)'
+    explanation: 'invariant が responsibilities で明示、対立構造なし'
+  - pair_id: '5.6::design.extraction_output_schema'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'schema 変更時 Spec 5 先行合意必須'
+    excerpt_design: 'schema 変更時は Spec 5 先行合意必須 (R5.6、Adjacent Spec Synchronization 運用ルール)'
+    explanation: 'authority が responsibilities で明示、対立構造なし'
+  - pair_id: '5.7::design.extraction_output_schema'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'Failure Conditions に schema validation 不通過時 ERROR 報告 必須記載'
+    excerpt_design: 'Failure Conditions section に schema validation 不通過時は当該 entity / edge を candidate に採用せず ERROR で報告 必須記載 (R5.7)'
+    explanation: 'conservatism が responsibilities で明示、対立構造なし'
+
+  - pair_id: '15.5::design.dialogue_log_frontmatter'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '本 spec が SSoT 確定 + Spec 4 / Spec 6 が当該スキーマに従う責務分離'
+    excerpt_design: '対話ログ markdown ファイルの frontmatter 5 必須 field を SSoT として固定 + 保存実装は Spec 4 R1.8'
+    explanation: 'invariant が responsibilities で明示、対立構造なし'
+
+  - pair_id: '10.4::design.diff_marker_attribute'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '開始/終了マーカー必ず対で出力'
+    excerpt_design: '開始マーカー (<!-- rw:extend:start ... -->) と終了マーカー (<!-- rw:extend:end -->) を必ず対で出力 (R10.4)'
+    explanation: 'invariant が responsibilities で明示、対立構造なし'
+
+  - pair_id: '12.1::design.skill_candidate_frontmatter'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'candidate frontmatter 必須 4 field、status 2 値'
+    excerpt_design: 'review/skill_candidates/<name>.md frontmatter 必須 4 field 規定 + status 値域 = draft | validated の 2 値'
+    explanation: 'scope が responsibilities で明示、対立構造なし'
+  - pair_id: '12.4::design.skill_candidate_frontmatter'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: 'install 完了時 candidate 削除 + decision_log 記録'
+    excerpt_design: 'install 完了時 candidate ファイル削除、履歴は decision_log.jsonl の skill_install で保全 (R12.4)'
+    explanation: 'scope が responsibilities で明示、対立構造なし'
+  - pair_id: '12.5::design.skill_candidate_frontmatter'
+    drift_kind: no_drift
+    severity: INFO
+    excerpt_requirement: '必須 4 フィールド欠落・型違反 → ERROR install 候補から除外'
+    excerpt_design: '必須 4 field のいずれかが欠落・型違反 → ERROR で install 候補から除外 (R12.5)'
+    explanation: 'conservatism が responsibilities + failure_modes で明示、対立構造なし'

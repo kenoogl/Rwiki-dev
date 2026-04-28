@@ -1,0 +1,191 @@
+feature_name: rwiki-v2-skill-library
+generated_at: '2026-04-28T12:19:45+00:00'
+scores:
+  structural_score: 1.0
+  traceability_score: 0.8556
+  type_score: 1.0
+  risk_pattern_score: 0.8333
+  semantic_alignment_score: 1.0
+weights:
+  traceability: 0.3
+  risk_pattern: 0.25
+  structural: 0.2
+  type: 0.15
+  semantic: 0.1
+composite_score: 0.915
+risk_level: D
+human_review_required: true
+summary:
+  total_findings: 33
+  errors: 22
+  warnings: 11
+  info: 0
+  drift_pairs_checked: 48
+  drift_count: 0
+recommended_action: 人間判断必須、設計改版または requirements 改版を要検討
+findings:
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.2.1
+  detail: requirement 2.1 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.2.2
+  detail: requirement 2.2 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.2.5
+  detail: requirement 2.5 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.3.1
+  detail: requirement 3.1 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.3.2
+  detail: requirement 3.2 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.3.5
+  detail: requirement 3.5 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.3.6
+  detail: requirement 3.6 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.6.2
+  detail: requirement 6.2 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.6.3
+  detail: requirement 6.3 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.6.4
+  detail: requirement 6.4 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.10.1
+  detail: requirement 10.1 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.10.2
+  detail: requirement 10.2 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.10.3
+  detail: requirement 10.3 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.13.6
+  detail: requirement 13.6 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.13.7
+  detail: requirement 13.7 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.14.1
+  detail: requirement 14.1 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.14.2
+  detail: requirement 14.2 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.14.3
+  detail: requirement 14.3 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.14.4
+  detail: requirement 14.4 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.14.5
+  detail: requirement 14.5 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.14.6
+  detail: requirement 14.6 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-2
+  severity: ERROR
+  location: requirement.15.2
+  detail: requirement 15.2 が design_unit からの implemented_by を持たない (uncovered)
+- phase: B
+  check_id: B-3
+  severity: WARN
+  location: design.extraction_output_schema
+  detail: design_unit に test 紐付けなし (uncovered design)
+- phase: B
+  check_id: B-3
+  severity: WARN
+  location: design.dialogue_log_frontmatter
+  detail: design_unit に test 紐付けなし (uncovered design)
+- phase: B
+  check_id: B-3
+  severity: WARN
+  location: design.diff_marker_attribute
+  detail: design_unit に test 紐付けなし (uncovered design)
+- phase: B
+  check_id: B-3
+  severity: WARN
+  location: design.skill_candidate_frontmatter
+  detail: design_unit に test 紐付けなし (uncovered design)
+- phase: D
+  check_id: D-1
+  severity: WARN
+  location: design.skill_library
+  detail: responsibilities 配列長 5 (>= 3、責務過剰の可能性)
+- phase: D
+  check_id: D-1
+  severity: WARN
+  location: design.skill_validator
+  detail: responsibilities 配列長 6 (>= 3、責務過剰の可能性)
+- phase: D
+  check_id: D-1
+  severity: WARN
+  location: design.skill_authoring_workflow
+  detail: responsibilities 配列長 7 (>= 3、責務過剰の可能性)
+- phase: D
+  check_id: D-1
+  severity: WARN
+  location: design.extraction_output_schema
+  detail: responsibilities 配列長 6 (>= 3、責務過剰の可能性)
+- phase: D
+  check_id: D-1
+  severity: WARN
+  location: design.dialogue_log_frontmatter
+  detail: responsibilities 配列長 4 (>= 3、責務過剰の可能性)
+- phase: D
+  check_id: D-1
+  severity: WARN
+  location: design.diff_marker_attribute
+  detail: responsibilities 配列長 3 (>= 3、責務過剰の可能性)
+- phase: D
+  check_id: D-1
+  severity: WARN
+  location: design.skill_candidate_frontmatter
+  detail: responsibilities 配列長 5 (>= 3、責務過剰の可能性)
