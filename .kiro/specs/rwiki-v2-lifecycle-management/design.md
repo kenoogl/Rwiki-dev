@@ -45,7 +45,7 @@
 - **Skill lifecycle**: `cmd_skill_install` / `cmd_skill_deprecate` / `cmd_skill_retract` / `cmd_skill_archive` の handler ロジック (R11).
 - **Skill ファイル frontmatter `status` field の編集権** (軽-2-2 解消、Spec 2 R3.5 と整合): Skill ファイル frontmatter の `status` / `status_changed_at` / `status_reason` / `successor` / `merged_from` / `merged_into` / `merge_strategy` field の編集は本 spec lifecycle 操作のみが行う. SKILL.md 本文 / `name` / `description` / `allowed-tools` 等の Skill 内容関連 field の編集は **Spec 2 の所管** で本 spec は触れない.
 - **`update_history.type` lifecycle 起源 7 値の確定**: `deprecation` / `retract` / `archive` / `merge` / `split` / `reactivate` / `promote_to_synthesis` (R1.8、Decision 7-3).
-- **decision_log の `decision_type` Page lifecycle 起源 6 種 + Skill 起源 4 種 = 10 種の規定**: `page_deprecate` / `page_retract` / `page_archive` / `page_merge` / `page_split` / `page_promote_to_synthesis` + `skill_install` / `skill_deprecate` / `skill_retract` / `skill_archive` (R12.7).
+- **decision_log の `decision_type` Page lifecycle 起源 7 種 + Skill 起源 4 種 = 11 種の規定**: `page_deprecate` / `page_retract` / `page_archive` / `page_merge` / `page_split` / `page_reactivate` / `page_promote_to_synthesis` + `skill_install` / `skill_deprecate` / `skill_retract` / `skill_archive` (R12.7、Page 起源順序は R3.8 の `update_history.type` と整合).
 - **L3 診断 API**: `get_l3_diagnostics()` / `check_l3_thresholds()` の thread-safe 計算 API、5 診断項目 (R15).
 
 ### Out of Boundary
@@ -938,11 +938,11 @@ def orchestrate_edge_ops(
 
 | Field | Detail |
 |-------|--------|
-| Intent | 10 種 lifecycle decision_type の Spec 5 record_decision 呼出 wrapper |
+| Intent | 11 種 lifecycle decision_type の Spec 5 record_decision 呼出 wrapper |
 | Requirements | 12.7 |
 
 **Responsibilities & Constraints**
-- Page lifecycle 起源 6 種: page_deprecate / page_retract / page_archive / page_merge / page_split / page_promote_to_synthesis.
+- Page lifecycle 起源 7 種: page_deprecate / page_retract / page_archive / page_merge / page_split / page_reactivate / page_promote_to_synthesis (順序は R3.8 update_history.type と整合).
 - Skill 起源 4 種: skill_install / skill_deprecate / skill_retract / skill_archive.
 - reasoning 必須 condition 判定: `page_retract` (Spec 5 R11.6) / `page_promote_to_synthesis` (synthesis_approve 系) は default skip 不可.
 - partial_failure 集計時は outcome に partial_failure / successful_edge_ops / failed_edge_ops / followup_ids 4 field を含める (Spec 5 R11.16).
@@ -952,16 +952,15 @@ def orchestrate_edge_ops(
 ```python
 LIFECYCLE_DECISION_TYPES: set[str] = {
     'page_deprecate', 'page_retract', 'page_archive', 'page_merge',
-    'page_split', 'page_promote_to_synthesis',
+    'page_split', 'page_reactivate', 'page_promote_to_synthesis',
     'skill_install', 'skill_deprecate', 'skill_retract', 'skill_archive',
 }
 
 REASONING_REQUIRED_TYPES: set[str] = {
     'page_retract', 'page_promote_to_synthesis',
 }
-# 注 (重-1-2 解消): Spec 5 R11.6 が reasoning 必須として `'retract'` を列挙しているが、
-# 本 spec R12.7 命名規則に従い `'page_retract'` が正規名. Spec 5 R11.6 の `'retract'`
-# 表記を `'page_retract'` に改版する Adjacent Sync 経路を Migration Strategy に追加.
+# 注 (重-1-2 解消、Adjacent Sync 完了 2026-04-28): Spec 5 R11.6 が reasoning 必須として
+# `'retract'` を列挙していた問題は本 spec R12.7 命名規則に従い `'page_retract'` に改版済.
 
 def record_decision_for_lifecycle(
     decision_type: str,
@@ -1184,16 +1183,16 @@ evidence:
 
 **outcome field 構造**: 必須 10 field のうち `outcome` は dict 型、partial_failure 集計時の正規 schema は **Spec 5 R11.16 が確定** (`partial_failure: bool / successful_edge_ops: int / failed_edge_ops: int / followup_ids: list[str]` の 4 field を outcome 内 nested で記録、本 spec R3.7 / R3.8 / R12.8 と整合).
 
-**subject_refs 構造例 mapping** (重-3-4 解消、本 spec が 10 種それぞれの構造を確定):
+**subject_refs 構造例 mapping** (重-3-4 解消、本 spec が 11 種それぞれの構造を確定、行順序は R12.7 列挙順 = R3.8 update_history.type 順):
 
 | decision_type | subject_refs 構造例 | 意味 |
 |---------------|---------------------|------|
 | `page_deprecate` | `[target_page_path]` | 単一 page lifecycle 操作 |
 | `page_retract` | `[target_page_path]` | 単一 page lifecycle 操作、reasoning 必須 (Spec 5 R11.6) |
 | `page_archive` | `[target_page_path]` | 単一 page lifecycle 操作 |
-| `page_reactivate` | `[target_page_path]` | 単一 page lifecycle 操作 (※ R12.7 6 種に未列挙、Adjacent Sync で 7 種拡張予定、後述) |
 | `page_merge` | `[merged_from_paths..., merged_into_path]` | 複数 source + 単一 target (merged_from 配列順序保持、Spec 1 決定 1-10) |
 | `page_split` | `[source_page_path, target_paths...]` | 単一 source + 複数 target |
+| `page_reactivate` | `[target_page_path]` | 単一 page lifecycle 操作 (deprecated / archived → active 復帰、R10.2-10.3) |
 | `page_promote_to_synthesis` | `[candidate_path, target_synthesis_path]` | candidate (review/synthesis_candidates/ or hypothesis_candidates/) + target (wiki/synthesis/<slug>.md)、reasoning 必須 (Spec 5 R11.6 synthesis_approve 系) |
 | `skill_install` | `[target_skill_path]` | 単一 skill lifecycle 操作 (target = `AGENTS/skills/<name>.md`) |
 | `skill_deprecate` | `[target_skill_path]` | 単一 skill lifecycle 操作 |
@@ -1624,11 +1623,11 @@ v1 由来の AGENTS markdown 群 (`tVault/AGENTS/approve.md` / `audit.md` / `lin
   8. Spec 7 module 正式名 (3 sub-module: `rw_page_lifecycle.py` / `rw_skill_lifecycle.py` / `rw_followup_handlers.py`、Decision 7-21) → Spec 4 Module DAG line 206 / Directory Structure line 250
 - **Spec 1 design 連動更新項目** (**実施タイミング = 本 spec design approve 直後**、実質コメント整合のみ):
   - `update_history.type` example コメント (line 893) に lifecycle 起源 7 値追記 (Decision 7-3).
-- **Spec 5 requirements 連動更新項目** (重-1-2 解消、**実施タイミング = Spec 5 design 着手前**):
-  - Spec 5 R11.6 の reasoning 必須 4 種列挙のうち `'retract'` を `'page_retract'` に改版 (本 spec R12.7 命名規則と整合).
-- **本 spec requirements + Spec 5 requirements 連動更新項目** (重-3-4 解消、page_reactivate 欠落整合):
-  - **実施タイミング = 本 spec design approve 後 (本 spec requirements 改版) + Spec 5 design 着手前 (Spec 5 requirements 改版)** で順次実施.
-  - 本 spec R12.7 を 6 種 → 7 種拡張 (`page_reactivate` 追加)、Spec 5 R11.2 を 22 種 → 23 種拡張.
+- **Spec 5 requirements 連動更新項目** (重-1-2 解消、**Adjacent Sync 完了 2026-04-28**):
+  - Spec 5 R11.6 の reasoning 必須 4 種列挙のうち `'retract'` を `'page_retract'` に改版 (本 spec R12.7 命名規則と整合) — 完了.
+- **本 spec requirements + Spec 5 requirements 連動更新項目** (重-3-4 解消、page_reactivate 欠落整合、**Adjacent Sync 完了 2026-04-28**):
+  - 本 spec R12.7 を 6 種 → 7 種拡張 (`page_reactivate` 追加) — 完了.
+  - Spec 5 R11.2 を 22 種 → 23 種拡張 — 完了.
 - **Spec 6 design 連動更新項目** (重-1-1 解消、**実施タイミング = Spec 6 design 着手時**):
   - Spec 6 design に「`cmd_approve_hypothesis` 内で `args = argparse.Namespace(candidate_path=Path(f'review/hypothesis_candidates/{hyp_id}.md'), target_path=user_provided_target, merge_strategy=None, target_field=None, replace=False)` を construct して Spec 7 `cmd_promote_to_synthesis(args)` を呼出」coordination を明示.
 - **drafts §7.2 Spec 7 表 連動更新** (**実施タイミング = 本 spec design approve 直後**):
@@ -1751,4 +1750,5 @@ _change log_
 - 2026-04-28 (Round 8 review): R8 依存選定レビューで 3 件適用 (軽-8-1 / 軽-8-2 / 軽-8-3 自動採択、escalate 0 件). 軽-8-1 = Technology Stack table の PyYAML version 制約継承明示 (PyYAML ≥ 6.0、Spec 1 design.md 確定値、Spec 1 改版時 Adjacent Sync). 軽-8-2 = Architecture Integration に修飾参照規律詳細追加 (`import rw_<module>; rw_<module>.symbol(...)` 形式のみ許可、`from rw_<module> import <symbol>` 禁止、test の monkeypatch.setattr 整合性のため、Spec 0 structure.md L184-189 / Spec 4 決定 4-3 継承). 軽-8-3 = Migration Strategy に Phase 順序記述追加 (本 spec design 着手前提 = Spec 4 / 0 / 1 完了、本 spec implementation 着手前提 = Spec 5 完了、Spec 6 / Spec 2 implementation 着手前提 = 本 spec implementation 完了).
 - 2026-04-28 (Round 9 review): R9 テスト戦略レビューで 2 件適用 (軽-9-2 自動採択 + 重-9-1 escalate 確証). 軽-9-2 = Testing Strategy section に TDD 規律明示 (CLAUDE.md global 規律継承、failing test 先 → 失敗確認 commit → 実装 → pass 反復). 重-9-1 = Cross-spec test ハイブリッド方式準拠 (memory `feedback_design_review.md` 規律): 本 spec design に記述する cross-spec test を本 spec が consumer のもの (Spec 5 edge API 呼出) のみに限定、Spec 6 / Spec 2 が consumer の test は consumer design 所管 (Spec 6 design / Spec 2 design)、3+ spec triad は中心 spec 所管. 本 spec Integration Tests から「Spec 6 R9 → Spec 7 連携」test 項目を削除 (test 重複維持コスト + ハイブリッド方式違反解消).
 - 2026-04-28 (Round 10 review): R10 マイグレーション戦略レビューで 3 件適用 (軽-10-1 / 軽-10-2 自動採択 + 重-10-1 escalate 確証). 軽-10-1 = v1 AGENTS (tVault/AGENTS/*.md 13 種) との共存戦略明示 (本 spec の AGENTS/guides/ 11 種は sub-directory 配置で物理分離、v1 AGENTS は v2 でも継続使用、再編成は別 spec scope). 軽-10-2 = Adjacent Sync 経路 11 項目 (Spec 4 design 連動 8 項目 + Spec 1 / Spec 5 / Spec 6 / drafts §7.2 各 1 項目) に実施タイミング統一明示 (本 spec design approve 直後 / Spec X design 着手前 / Spec X design 着手時 のいずれか). 重-10-1 = `update_history.type` 値域拡張時の backward compatibility 規律追加 (新 type 値追加で既存 page invalid 化禁止 + parser 未知 type 値 INFO skip + type 値削除禁止 + 既存 vault page migration script 不要). dev-log パターン 12 (Adjacent spec との整合) 解消.
-- 2026-04-28 (Round 1-10 review 完了): 全 10 ラウンド (R1 requirements 全 AC 網羅 / R2 アーキテクチャ整合性 / R3 データモデル / R4 API interface / R5 アルゴリズム+性能 / R6 失敗 handler+観測性 / R7 セキュリティ / R8 依存選定 / R9 テスト戦略 / R10 マイグレーション戦略) を memory 改訂版方式 (4 重検査 + Step 1b-v 5 切り口 + 厳しく検証 5 種強制発動 + 自動承認モード廃止 + Step 2 user 判断必須) で網羅実施. 合計 30 件適用 (軽微 19 件自動採択 + escalate 確証 11 件) + 設計決定 1 件追加 (Decision 7-21 = Layer 4 sub-module 分割) + Adjacent Sync 経路 4 項目追加 (Spec 5 / Spec 6 連動 + R12.7 拡張). design.md 1500+ 行に拡充 (元 1425 行).
+- 2026-04-28 (Round 1-10 review 完了): 全 10 ラウンド (R1 requirements 全 AC 網羅 / R2 アーキテクチャ整合性 / R3 データモデル / R4 API interface / R5 アルゴリズム+性能 / R6 失敗 handler+観測性 / R7 セキュリティ / R8 依存選定 / R9 テスト戦略 / R10 マイグレーション戦略) を memory 改訂版方式 (4 重検査 + Step 1b-v 5 切り口 + 厳しく検証 5 種強制発動 + 自動承認モード廃止 + Step 2 user 判断必須) で網羅実施. 合計 30 件適用 (軽微 19 件自動採択 + escalate 確証 11 件) + 設計決定 1 件追加 (Decision 7-21 = Layer 4 sub-module 分割) + Adjacent Sync 経路 4 項目追加 (Spec 5 / Spec 6 連動 + R12.7 拡張).
+- 2026-04-28 (Adjacent Sync 適用、Spec 5 design 着手前): Round 1 重-1-2 + Round 3 重-3-4 由来の Adjacent Sync 3 項目を実施完了 — (1) 本 spec R12.7 を Page lifecycle 起源 6 → 7 種拡張 (`page_reactivate` 追加、挿入位置 = R3.8 update_history.type 順整合) — 本 spec requirements 改版のため再 approval 必要. (2) Spec 5 R11.6 の `'retract'` → `'page_retract'` 改版 (命名規則整合). (3) Spec 5 R11.2 を 22 → 23 種拡張 (`page_reactivate` 追加). 連動して本 design L48 (規定文 「6 種 + Skill 4 種 = 10 種」 → 「7 種 + Skill 4 種 = 11 種」) / L945 (Page lifecycle 起源列挙) / L953-957 (`LIFECYCLE_DECISION_TYPES` set literal) / L962-964 (Spec 5 R11.6 注記) / L1186-1196 (subject_refs mapping table 行順序 + `page_reactivate` 注記削除) / Migration Strategy 該当 (実施タイミング → 完了表記) を更新. design.md 1500+ 行に拡充 (元 1425 行).
