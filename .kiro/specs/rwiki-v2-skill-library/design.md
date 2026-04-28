@@ -946,6 +946,16 @@ flowchart TD
 - **Adjacent Sync 部分必要 1 件**: `.kiro/specs/rwiki-v2-cli-mode-unification/design.md` line 65 「Phase 2/3 Spec 2 / Spec 7 design 委譲」記述を「Spec 2 Decision 2-8 で MVP attribute (`target` + `reason`) 確定済」に参照点更新 (Decision 2-8)。frontmatter schema delegation (line 1284 既存 boundary 区別記述) は本 spec SSoT 参照が既に成立しているため改版不要
 - **Adjacent Sync 推奨 1 件**: `.kiro/steering/structure.md` review/ 層構造表に `lint_proposals/` 追加 (Decision 2-9)、raw/llm_logs/ 構造に 3 区別明示 (Decision 2-7、drafts §3.2 と整合)
 
+### Adjacent Sync 経路 (upstream / downstream Spec coordination)
+
+- **upstream Foundation (Spec 0)**: Severity 体系 (R11) + LLM CLI subprocess timeout 必須 (R11) + `.rwiki/.hygiene.lock` 規約 (R11.5) を本 spec が継承、Foundation 規範を逸脱しない
+- **upstream Spec 1 (classification)**: `categories.yml` (`applicable_categories` 値域参照) + `entity_types.yml` (entity_extraction 出力 schema 整合) を本 spec が読む。Spec 1 改版時は本 spec の `validate_yaml_frontmatter` (categories.yml 未登録値 WARN) と extraction skill 出力 schema が連動更新
+- **upstream Spec 4 (cli-mode-unification)**: G5 LockHelper (`acquire_lock('skill')` API) + 決定 4-13 (session_id 形式) を本 spec が利用。Spec 4 design 改版時は本 spec の lock 取得経路 (Decision 2-5) と dialogue log frontmatter 例 (Decision 2-6 / 2-7) が連動更新
+- **downstream Spec 3 (prompt-dispatch)**: 本 spec が `applicable_categories` / `applicable_input_paths` field を提供、Spec 3 が 5 段階優先順位 dispatch 構築
+- **downstream Spec 5 (knowledge-graph)**: 本 spec が ExtractionOutputSchema (entity_extraction / relation_extraction 出力 schema、R5.2 / R5.3) を SSoT として固定、Spec 5 が validation 実装 + ledger 永続化 (R5.5 / R5.6 責務分離)
+- **downstream Spec 6 (perspective-generation)**: 本 spec の 8 section + frontmatter 11 field 規約に従う perspective / hypothesis 生成 skill を Spec 6 が定義、prompt 内容は Spec 6 所管
+- **downstream Spec 7 (lifecycle-management)**: cmd_skill_install のみ本 spec の install_skill_generator を呼出 (R12.4 連携)、cmd_skill_deprecate / cmd_skill_retract / cmd_skill_archive は Spec 7 単独所管
+
 ### 依存順 / Implementation 着手前提
 
 - **本 spec implementation 着手前提**: Spec 0 (Foundation R11 / R11.5 / Severity infra) + Spec 1 (categories.yml + entity_types.yml) + Spec 4 (G5 LockHelper) implementation 完了
@@ -1014,3 +1024,5 @@ _change log_
     - Unit (R10.3 update_mode: both 差分マーカー対 check / R5-2 retry_recommended 値域 4 種別)
     - Integration (R5-1 atomic install Step 4/5a/5b 失敗 mock / R7-2 rw init lock / R8.4 rw init dry-run skip)
     - E2E (R9.4 install 直前 1-stage confirm caller send() 分岐 / R10.3 update_mode: both 両出力 update_type 値域)
+- 2026-04-28: Round 10 review 反映 (マイグレーション戦略、最終ラウンド、Spec 5 design 同パターン整合 1 件解消):
+  - **R10-1 Adjacent Sync 経路 sub-section の upstream / downstream 区別不在**: Migration Strategy section に Adjacent Sync 経路 sub-section を新設、upstream 3 種 (Foundation / Spec 1 / Spec 4) + downstream 4 種 (Spec 3 / Spec 5 / Spec 6 / Spec 7) の coordination 関係を明示。隣接 7 spec との関係を一覧化、Spec 5 design Migration Strategy 同パターンに整合化
