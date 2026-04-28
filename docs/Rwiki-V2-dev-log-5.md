@@ -2007,5 +2007,7 @@ TODO_NEXT_SESSION.md を読んでください。Spec 5 (rwiki-v2-knowledge-graph
 ⏺ コミット戦略 (TODO_NEXT_SESSION.md L174-184) に従い、design.md / research.md / spec.json の 3 ファイルのみを 1 commit にまとめます(Rwiki-V2-dev-log-5.md は user 並行作業中なので別、本 commit には含めません)。
 ```
 
+
+
 #####  
 
