@@ -62,6 +62,7 @@
 - Skill ファイル `update_history` field — **v2 MVP 外**、decision_log の Skill 起源 4 種で網羅
 - AGENTS 自動ロード時の改ざん検知 (hash / signing) — **v2 MVP 外**、Phase 2 以降 (Spec 4 決定 4-10)
 - Spec 7 lifecycle merge 仕様 (`merge_strategy` field、Spec 6 cmd_promote_to_synthesis 経由) — **Spec 7 所管**、本 spec の HTML 差分マーカー attribute は MVP `target` + `reason` のみ
+- `rw init --reinstall` 等の standard skill 編集後の再配布挙動仕様 — **Spec 4 所管** (R11.4、本 spec は `origin` 値域定義 + initial install 時の `standard` 設定 + 配布完整性 check (R11.6) のみ所管、編集検知や origin 自動切替は実装しない)
 
 ### Allowed Dependencies
 
@@ -444,6 +445,7 @@ def show_skill(skill_name: str, vault_path: Path) -> SkillFile: ...
 **Implementation Notes**
 - Integration: Spec 4 `rw skill list / show` の薄い wrapper として呼出。Spec 5 が抽出 skill output schema を read-only 参照する際の interface。Spec 7 cmd_skill_install validation 前段の path 解決
 - Validation: STANDARD_SKILLS tuple は frozen tuple (改ざん防止)、`rw init` 実行時に 15 件全件存在 check (R11.6 配布完整性)
+- **Standard skill 編集後の origin 維持 (R11.4)**: `load_skill` は `origin: standard` の skill ファイルがユーザー編集されても `frontmatter.origin` を `standard` のまま維持して読込、本 spec は編集検知や `origin` 自動切替 (`standard` → `custom`) を実装しない。再配布挙動 (`rw init --reinstall` 等) は Spec 4 所管 (Out of Boundary 末項参照)
 - Risks: `AGENTS/skills/` 不在 vault での `list_skills` 呼出 → 空 list 返却 + WARN severity (Spec 4 で UX wrapping)
 
 ### Layer 2: SkillValidator (4 種 validation)
@@ -507,7 +509,7 @@ def validate_skill_file(skill_path: Path, vault_path: Path) -> SkillSeverityRepo
 - **(a) validate_8_sections**: `re.findall(r'^## (Purpose|Execution Mode|Prerequisites|Input|Output|Processing Rules|Prohibited Actions|Failure Conditions)\s*$', body, re.MULTILINE)` で 8 件検出。1 件でも欠落で ERROR (R2.3)。Failure Conditions section 内に「次のアクション」欄存在 check (R2.4)、欠落で ERROR
 - **(b) validate_yaml_frontmatter**: PyYAML parse 成功 + 必須 7 field 揃い (R3.1) + 値域 check (`origin` ∈ {standard, custom}, `update_mode` ∈ {create, extend, both}, `status` ∈ {active, deprecated, retracted, archived}, `version` integer ≥ 1)。任意 4 field 値域 check (`applicable_categories` list[str] / `applicable_input_paths` list[str] + extended glob 構文妥当性 / `dialogue_guide` str / `auto_save_dialogue` bool、Decision 2-15)。違反で ERROR (R3.3 / R3.4)。`applicable_categories` 値が categories.yml 未登録なら WARN (R3.2)
 - **(c) validate_name_collision**: `AGENTS/skills/<name>.md` が既存しないこと + custom と standard の同名衝突なし。衝突時 ERROR + 改名 / 改版時の対処を推奨 (R1.5)
-- **(d) validate_references**: skill 内で参照される vocabulary (`entity_types.yml` 値) / 出力先 path (`review/<dir>/`) / 他 skill 名 が実在 or 将来配置先として明記された path であること。`update_mode: extend` skill のみ差分マーカー対 check (`<!-- rw:extend:start ... -->` / `<!-- rw:extend:end -->` 開始/終了対、`target` + `reason` attribute 存在)、欠落で ERROR (R10.5)。R15.4 対象 skill (interactive=true or auto_save_dialogue=true、Decision 2-10) は対話ログ frontmatter スキーマ参照点を Output / Input section に必須記載
+- **(d) validate_references**: skill 内で参照される vocabulary (`entity_types.yml` 値) / 出力先 path (`review/<dir>/`) / 他 skill 名 が実在 or 将来配置先として明記された path であること。`update_mode: extend` または `update_mode: both` skill が差分マーカー出力する場合に対 check (`<!-- rw:extend:start ... -->` / `<!-- rw:extend:end -->` 開始/終了対、`target` + `reason` attribute 存在)、欠落で ERROR (R10.3 / R10.5)。R15.4 対象 skill (interactive=true or auto_save_dialogue=true、Decision 2-10) は対話ログ frontmatter スキーマ参照点を Output / Input section に必須記載
 
 **Implementation Notes**
 - Integration: Layer 3 SkillAuthoringWorkflow から `test` / `install` の段階で呼出。Spec 7 cmd_skill_install から間接的に呼出 (Layer 3 経由)
@@ -591,6 +593,9 @@ def handle_dry_run_failure(
 **Implementation Notes**
 - Integration: Spec 4 G3 caller が generator を `next()` で進行、`send()` で対話入力供給。Spec 7 cmd_skill_install から install_skill_generator を呼出 (Spec 7 R3.5 / R13.6 と整合)
 - Validation: 7 段階対話の各段階で SkillStageEvent yield、Spec 4 G3 が UI 描画責務、本 spec は段階遷移 logic のみ
+- **サブカテゴリ skill の汎用性 (R7.7)**: `draft_skill_generator` は Scenario 35 由来の reject 学習 skill 等のサブカテゴリ skill も同 7 段階フローで生成可能、generator 実装は skill 種別を識別せず汎用 (frontmatter `applicable_categories` / `applicable_input_paths` の設定でサブカテゴリ差異を表現)
+- **rw init standard skill 配布の dry-run skip (R8.4)**: `rw init` 経由の standard skill 配布は本 spec の `test_skill_generator` を経由せず、Spec 4 cmd_init が `STANDARD_SKILLS` tuple を参照して直接 `AGENTS/skills/` に配置する。dry-run 必須化 (R8.1) は `origin: custom` skill の install のみに適用、standard 配布は適用外 (Rwiki 配布側で品質保証済前提)
+- **install dangerous_op 中位置付け + 1-stage confirm (R9.4)**: `install_skill_generator` は validation 通過後も install step に進む前に confirm event を 1 件 yield する (`SkillStageEvent.event_type='prompt'`)、Spec 4 G3 caller の `send()` 入力 (`'yes'` / `'no'`) で install 進行を分岐する内部 logic を持つ。1-stage confirm の UX (prompt 文言 / accept-yes-no) 実装は Spec 4 G3 caller の責務 (`dangerous_op category: 中`、§8.4 / §2.5 Simple dangerous op 整合)、対話深度の正確な仕様は Spec 4 design 所管
 - Risks: lock acquire 失敗 (Hygiene batch 同時実行) → fail-fast WARN + 再試行推奨 (Spec 5 Decision 5-3 同パターン)。dry-run timeout は LLM CLI 一時的問題で再試行可能 (DryRunFailure.retry_recommended=true)、ユーザー判断で再 `rw skill test` 実行
 
 ### Component: ExtractionOutputSchema (Spec 5 への validation interface)
@@ -649,11 +654,12 @@ def handle_dry_run_failure(
 ### Domain Model
 
 - **Skill** (aggregate root): `AGENTS/skills/<name>.md` 単一 markdown ファイル、frontmatter 11 field + 8 section + 任意拡張 section (Examples / Notes / Changelog)
+- **`update_mode: both` skill の振る舞い (R10.3)**: 新規生成 (`review/synthesis_candidates/`) と既存拡張 (差分マーカー出力) の両方を出力可能、各候補ファイルの frontmatter `update_type` (Spec 1 所管、値域: `create` / `extension` / `refactor` / `deprecation-reference`) で識別する。本 spec は `update_mode` 値域 (`create` / `extend` / `both`) のみ所管、`update_type` 値域は Spec 1 frontmatter スキーマ所管
 - **Skill Candidate** (entity): `review/skill_candidates/<name>.md`、frontmatter 4 field + 8 section ドラフト
 - **Standard Skill Manifest** (value object): STANDARD_SKILLS tuple 15 件 (frozen)
 - **Dialogue Log** (entity、本 spec が schema を所管、保存実装は Spec 4): `raw/llm_logs/{chat-sessions, interactive/<skill>, manual}/<timestamp>-<session_id>.md`
 - **Lint Proposal** (entity): `review/lint_proposals/<original_filename>-completion.md`、frontmatter `proposal_for` + 補完 frontmatter 本文
-- **Diff Marker** (value object): `<!-- rw:extend:start target="..." reason="..." -->` / `<!-- rw:extend:end -->` の対 (`update_mode: extend` skill 出力内)
+- **Diff Marker** (value object): `<!-- rw:extend:start target="..." reason="..." -->` / `<!-- rw:extend:end -->` の対 (`update_mode: extend` または `update_mode: both` skill 出力内、R10.3)
 - **Extraction Output** (value object): `review/relation_candidates/<source>-{entities,relations}.json` JSON 配列
 
 ### Logical Data Model
@@ -865,7 +871,7 @@ flowchart TD
 ```
 
 - **P0**: 8 section schema + frontmatter 11 field 確定 + Skill Validator 4 種実装 (要件: R1, R2, R3, R9, R10, R12, R14)
-- **P1**: Standard skill 15 種ファイル整備 + `rw init` 配布 (要件: R4, R5, R6, R11)
+- **P1**: Standard skill 15 種ファイル整備 + `rw init` 配布 (要件: R4, R5, R6, R11)。`rw init` 配布時の standard skill (`origin: standard`) は dry-run 必須化 (R8.1) を適用しない (R8.4、Rwiki 配布側で品質保証済前提)、Spec 4 cmd_init implementer は `STANDARD_SKILLS` tuple を参照して `test_skill_generator` を経由せず `AGENTS/skills/` に直接配置する coordination
 - **P2**: Custom skill 7 段階対話 + dry-run + atomic install + lock 取得 (要件: R7, R8, R9.6, R13)
 - **P2 + Spec 4 / Spec 5 / Spec 7 coordination**: 対話ログ frontmatter SSoT + extraction skill output validation interface + skill_install decision_log 連携 (要件: R15, R5.5, R12.4)
 - **P3 (v0.8 候補)**: AGENTS hash 検知 (`rw skill verify`) / Skill export/import (drafts §11.5) — MVP 範囲外、Adjacent Sync で本 spec 改版
@@ -916,3 +922,10 @@ flowchart TD
 _change log_
 
 - 2026-04-28: 初版生成 (Discovery + Synthesis 完了 + Decision 2-1 〜 2-15 + 14 セクション標準準拠 + 3 sub-module DAG + Boundary 4 サブセクション populate + 全 15 Requirement traceability)
+- 2026-04-28: Round 0 訂正 (Adjacent Sync 必須 4 件 → 必須 3 件 + 部分必要 1 件 + 推奨 1 件、§2.11 → §11.0 / Scenario 25 訂正 + Spec 4 sync を line 65 のみに絞り込み)
+- 2026-04-28: Round 1 review 反映 (本質的観点 b 構造的不均一 + c 文書 vs 実装不整合 + d 規範前提曖昧化 強制発動による重要級 5 件解消):
+  - **R7.7 サブカテゴリ skill 汎用性**: Layer 3 Implementation Notes に「`draft_skill_generator` は Scenario 35 由来 reject 学習 skill 等のサブカテゴリも同 7 段階フローで生成可能」追記
+  - **R8.4 rw init standard skill dry-run skip**: Layer 3 Implementation Notes + Migration Strategy P1 に「`rw init` 経由 standard 配布は test_skill_generator 経由せず STANDARD_SKILLS tuple 参照で直接配置、dry-run 必須化は custom skill のみ適用」追記
+  - **R9.4 install dangerous_op 中 + 1-stage confirm**: Layer 3 Implementation Notes に「`install_skill_generator` は validation 通過後 install 直前に confirm event 1 件 yield、Spec 4 G3 caller の send() 入力で進行分岐、UX 実装は Spec 4 所管」追記
+  - **R10.3 update_mode: both + update_type**: Data Models Domain Model に「`both` skill 振る舞い + `update_type` 値域 (`create` / `extension` / `refactor` / `deprecation-reference`) は Spec 1 所管」追記、Diff Marker value object と Layer 2 validate_references の対 check 対象を `extend` または `both` に拡張
+  - **R11.4 standard skill 編集後 origin 維持 + reinstall coordination**: Layer 1 Implementation Notes に「`load_skill` は編集後も `frontmatter.origin` を `standard` 維持、自動切替なし」追記、Out of Boundary に「`rw init --reinstall` 等再配布挙動は Spec 4 所管」追記
