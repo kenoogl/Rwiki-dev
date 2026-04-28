@@ -1026,3 +1026,4 @@ _change log_
     - E2E (R9.4 install 直前 1-stage confirm caller send() 分岐 / R10.3 update_mode: both 両出力 update_type 値域)
 - 2026-04-28: Round 10 review 反映 (マイグレーション戦略、最終ラウンド、Spec 5 design 同パターン整合 1 件解消):
   - **R10-1 Adjacent Sync 経路 sub-section の upstream / downstream 区別不在**: Migration Strategy section に Adjacent Sync 経路 sub-section を新設、upstream 3 種 (Foundation / Spec 1 / Spec 4) + downstream 4 種 (Spec 3 / Spec 5 / Spec 6 / Spec 7) の coordination 関係を明示。隣接 7 spec との関係を一覧化、Spec 5 design Migration Strategy 同パターンに整合化
+- 2026-04-28: design approve (10 ラウンドレビュー完走後、user 明示承認 = Round 10 完了直後 Option A 選択): spec.json `phase=design-approved` + `approvals.design.approved=true` 確定。Adjacent Sync 必須 4 件 + 部分必要 1 件 + 推奨 1 件を別 commit で順次適用予定 (drafts §5.6 / §5.7 / §11.0 + Scenario 25 / §11.2 / Spec 4 design line 65 / steering structure.md)
