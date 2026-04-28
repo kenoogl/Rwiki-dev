@@ -14,9 +14,11 @@
 
 [Spec 5 rwiki-v2-knowledge-graph](##Spec 5 rwiki-v2-knowledge-graph)
 
+[Spec 2 rwiki-v2-skill-library](##Spec 2 rwiki-v2-skill-library)
 
 
 
+[設計書レビュートライアル](##設計書レビュートライアル)
 
 
 
@@ -1839,4 +1841,171 @@ TODO_NEXT_SESSION.md を読んでください。Spec 5 (rwiki-v2-knowledge-graph
 
   ご指示をお伺いします。
 ```
+
+##### ❯ /session-cont
+
+```
+  session-cont サマリ
+
+  本セッション全 commit (push 済)
+
+  1. a652183: Round 1-10 design レビュー反映 (重要級 7 件 + 軽微 6 件)
+  2. 9dd2591: dev-log Phase 3 用 dev-log-5 新設 + 目次相互 link 整備
+  3. f531187: 本質的厳しいレビュー反映 (軽微 5 件補強、設計内吸収範囲)
+  4. abea6f3: Spec 5 design approve 確定 (approved=true + phase=design-approved)
+  5. f24e678: dev-log セッション議論ログ追記
+
+  現在の状態
+
+  - Spec 5 (rwiki-v2-knowledge-graph) design approve 確定 (Phase 3 前半完了)
+  - spec.json.approvals.design.approved=true + phase=design-approved
+  - 累計 18 件 Edit 適用済 (Round 1-10 = 13 件 + 本質的レビュー = 5 件)
+  - design phase 進捗: ✅✅⬜⬜✅✅⬜✅ (5/8 完了 = Spec 0/1/4/5/7)
+
+  次セッションのガイド
+
+  - 次タスク: Spec 2 (rwiki-v2-skill-library) design 生成 (Phase 3 後半完成、/kiro-spec-design rwiki-v2-skill-library)
+  - SSoT 照合済: roadmap.md L65 (Phase 3 後半 = Spec 2) + Spec 2 brief.md (Skill Library 概要) + Spec 2 spec.json
+  (phase=requirements-approved、design 未生成)
+  - TODO_NEXT_SESSION.md: 次セッション開始メッセージのテンプレート + Spec 2 design 生成時の重点観点 + 同型問題 4 種 (sub-section 欠落 / API signature
+   乖離 / 規範前提曖昧化 / Skill 1 module 集約 1500 行制約超過) を記載
+
+  次セッション開始メッセージ (テンプレート)
+
+  TODO_NEXT_SESSION.md を読んでください。Spec 5 design approve 確定済 (commit `abea6f3`)。次セッション = Spec 2 (rwiki-v2-skill-library) design 生成
+  (Phase 3 後半完成、`/kiro-spec-design rwiki-v2-skill-library`)。Skill Library = AGENTS/skills/ ディレクトリ + 8 section スキーマ + Skill
+  frontmatter 8 field + 初期スキル群 (知識生成 12 + Graph 抽出 2 + lint 1 = 15 種) + Custom skill 作成フロー + Dry-run 必須化。Spec 5 ↔ Spec 2
+  coordination = extraction skill 出力 validation interface (Spec 5 が固定、Spec 2 は出力 schema 提供)。memory 規律 (自動承認廃止 + 厳しく検証
+  default + Step 1b-v 5 切り口 + dominated 厳密化) を Spec 0/1/4/5/7 と同様に厳格適用、各ラウンド Step 2 user 判断必須、batching 禁止。
+
+  セッション継続準備完了です。
+```
+
+
+
+
+
+## Spec 2 rwiki-v2-skill-library
+
+##### ❯ TODO_NEXT_SESSION.md を読んでください。Spec 5 design approve 確定済 (commit `abea6f3`)。次セッション = Spec 2 (rwiki-v2-skill-library) design 生成 (Phase 3 後半完成、`/kiro-spec-design rwiki-v2-skill-library`)。Skill Library = AGENTS/skills/ ディレクトリ + 8 section スキーマ + Skill frontmatter 8 field + 初期スキル群 (知識生成 12 + Graph 抽出 2 + lint 1 = 15 種) + Custom skill 作成フロー + Dry-run 必須化。Spec 5 ↔ Spec 2  coordination = extraction skill 出力 validation interface (Spec 5 が固定、Spec 2 は出力 schema 提供)。memory 規律 (自動承認廃止 + 厳しく検証 default + Step 1b-v 5 切り口 + dominated 厳密化) を Spec 0/1/4/5/7 と同様に厳格適用、各ラウンド Step 2 user 判断必須、batching 禁止。
+
+```
+⏺ TODO_NEXT_SESSION.md を読みました。状況を把握。次タスクは Spec 2 (rwiki-v2-skill-library) design 生成 (Phase 3 後半完成)。
+
+  memory feedback_todo_ssot_verification.md 規律に従い、前 TODO の記述を鵜呑みにせず SSoT 照合から始めます。
+
+⏺ SSoT 照合完了:
+  - roadmap.md L65 = Phase 3 後半 = Spec 2 (skill-library: extraction skills 含む) ✅
+  - Spec 2 spec.json: phase=requirements-approved, design.generated=false ✅
+  - brief.md 確認: 8 section スキーマ / frontmatter 8 field / 初期スキル 15 種 / Coordination (Spec 5/4/3/7) / design phase 持ち越し 4 件 + 軽微整理 2 件
+  - TODO_NEXT_SESSION.md と SSoT 整合 (前 TODO 鵜呑みリスクなし)
+
+  /kiro-spec-design rwiki-v2-skill-library をスキル経由で起動します。memory 規律 (自動承認廃止 + 厳しく検証 default + Step 1b-v 5 切り口 + dominated 厳密化 + batching 禁止) を厳格適用、design 生成 → 10 ラウンドレビューは Step 2 user 判断必須で進めます。
+
+⏺ Skill(kiro-spec-design)
+  ⎿  Successfully loaded skill · 8 tools allowed
+
+⏺ Step 1: Gather Context を並列実行します。
+
+⏺ design 生成は大きな作業 (Spec 5 design は約 1700 行規模) なので進捗追跡に TaskCreate を導入します。まずスキーマを取得し、続けて必要な rule / template / 参考資料を並列読み込み。
+
+⏺ コンテキスト読み込み完了。Spec 2 は Complex Integration タイプ (Spec 5/4/7/1/3/6 と複数 coordination) と判定。design 生成のため task list を作成し、続けて discovery 段階で v1 AGENTS templates / Spec 5 design coordination / consolidated-spec の関連節を並列調査します。
+
+⏺ 主要 spec の coordination 把握完了。続いて出典 SSoT の consolidated-spec 関連節と、Spec 0 design の関連箇所を確認。
+
+⏺ Discovery 完了。要点を整理します。
+
+  主要 findings:
+  1. v1 task-based AGENTS (9 種) → v2 output-skill-based (15 種) への概念進化、8 section スキーマは v1 から承継
+  2. 3 subject 責務分離: Skill Library (静的 catalog) / Skill Authoring Workflow (動的 lifecycle) / Skill Validator (純粋 check)
+  3. 周辺 spec の boundary 確定済: Spec 5 (出力 schema 固定) / Spec 7 (lifecycle handler 委譲、本 spec は status 値域のみ) / Spec 4 (CLI dispatch
+  委譲、本 spec は契約のみ) / Spec 1 (vocabulary 別所管) / Spec 3 (dispatch logic 別所管) / Spec 6 (skill prompt 内容別所管)
+  4. Lock + Atomic = .rwiki/.hygiene.lock 取得 (Spec 4 G5 経由) + atomic rename (Spec 5 R7.11 / Foundation R11.5 同パターン)
+  5. design phase 持ち越し 5 項目 (対話ログ md フォーマット / frontmatter 任意 field 値域 / HTML 差分マーカー attribute / frontmatter_completion
+  出力先 / R15.4 判定基準) を本 design で解消必要
+  6. Module 数 simplification = TODO 同型問題回避のため、Skill validator/library/authoring を sub-module 分割候補
+
+⏺ Synthesis 完了。
+
+  1. Generalization (3 種類の共通構造):
+  - Validation pattern → Validator → severity + report interface 抽象化、各 validation 独立関数
+  - Lifecycle 共通化 → status field driven state machine (validated / dry_run_passed flag)
+  - Boundary 委譲 pattern → 本 spec = 内部契約のみ、外側 = 周辺 spec の委譲構造
+
+  2. Build vs Adopt (全項目 Adopt):
+  - PyYAML (Spec 1 と同じ) / fnmatch + glob.glob (Python 標準) / re で 8 section 抽出 / os.rename atomic (Spec 5 同パターン) / fcntl.flock (Spec 5
+  同パターン) / 既存 rw_utils.parse_frontmatter 共通利用 — すべて Adopt、新規 build なし
+
+  3. Simplification (主要決定 5 件):
+  - Module 分割 = 3 sub-module (Spec 5 Decision 5-17 / Spec 7 Decision 7-21 と同型): rw_skill_library.py (≤300行 catalog) / rw_skill_validator.py
+  (≤500行 4 validation) / rw_skill_authoring.py (≤700行 7 段階 workflow + dry-run)
+  - Custom skill 7 段階対話 = 独自 generator (Spec 4 8 段階対話 generator は流用しない、目的が異なる)
+  - 対話ログ markdown フォーマット = ## Turn N - ISO 8601 見出し形式 + frontmatter turns: 件数記録、append-save 単位 = Turn 単位
+  - frontmatter_completion 出力先 = review/lint_proposals/ 新設 (synthesis_candidates と意味分離)
+  - HTML 差分マーカー attribute = target (path 必須) + reason (string 必須) のみ MVP 確定、その他は Phase 2 拡張余地
+
+⏺ research.md を生成します。
+
+⏺ design.md draft を生成します。Spec 5 design (約 1700 行) と比べ、本 spec は機能スコープが小さい (3 sub-module / 15 skill / 4 validation 種)ため、約 1000 行規模を目標。
+
+⏺ design.md = 906 行、research.md = 348 行。Review Gate を実施します。
+⏺ Mechanical check の追加検証を実行します。
+⏺ Review Gate Mechanical Check で 1 件の orphan reference を検出: Requirements Traceability table 行 6.1-6.4 で Data Models FrontmatterCompletionOutput を参照しているが、Logical Data Model section に該当 entry が未記載。Lint Proposal の frontmatter schema 記述を追加します。
+⏺ Lint Proposal frontmatter schema entry を Logical Data Model に追加します (Dialogue Log frontmatter の前に挿入)。
+⏺ Requirements Traceability table の用語整合性を取ります。
+⏺ Review Gate 全項目通過。Final write 段階で spec.json を更新します。
+⏺ /kiro-spec-design rwiki-v2-skill-library 完了。
+
+  Status
+
+  - design.md 生成: .kiro/specs/rwiki-v2-skill-library/design.md (918 行、14 セクション標準準拠)
+  - research.md 生成: .kiro/specs/rwiki-v2-skill-library/research.md (348 行、Decision 2-1 〜 2-15 の 15 件設計判断)
+  - spec.json 更新: phase=design-generated + approvals.design.generated=true (approved=false 維持、user 明示承認後)
+
+  Discovery Type
+
+  Complex Integration (Spec 5 / 4 / 7 / 1 / 3 / 6 と多重 coordination、Skill 内容と CLI dispatch / Lifecycle / dispatch logic / vocabulary /
+  extraction schema の責務分離)
+
+  Key Findings
+
+  - 3 sub-module 分割 (Decision 2-1): rw_skill_library.py (≤300行 catalog) / rw_skill_validator.py (≤500行 4 validation) / rw_skill_authoring.py
+  (≤700行 7 段階 workflow + dry-run)。Spec 5 Decision 5-17 / Spec 7 Decision 7-21 同型問題回避
+  - design phase 持ち越し 5 項目すべて解消: 対話ログ markdown フォーマット (Decision 2-6 ## Turn N - ISO 8601 見出し + Turn append-save 単位) /
+  ディレクトリ命名 3 区別 (Decision 2-7) / HTML 差分マーカー attribute MVP (Decision 2-8 target + reason) / frontmatter_completion 出力先 (Decision
+  2-9 review/lint_proposals/ 新設) / R15.4 判定基準 (Decision 2-10 interactive: true または auto_save_dialogue: true)
+  - Atomic install + Lock = Spec 5 同パターン: 5 step atomic operation (Decision 2-4) + acquire_lock('skill') 経由 lock 取得 (Decision
+  2-5)、Foundation R11.5 / Spec 5 Decision 5-3/5-4 同パターン
+
+  Review Gate
+
+  Mechanical Check + Judgement-based Review すべて通過。Lint Proposal frontmatter の orphan reference 1 件を修正済 (LintProposalFrontmatter として
+  Logical Data Model に entry 追加)。
+
+  Adjacent Sync 必須 4 件 (design approve 時に user と要相談)
+
+  - .kiro/drafts/rwiki-v2-consolidated-spec.md §5.7 candidate status 値域 3 → 2 値 (R12.1)
+  - .kiro/drafts/rwiki-v2-consolidated-spec.md §2.11 ディレクトリ命名規則 3 区別統一 (Decision 2-7)
+  - .kiro/drafts/rwiki-v2-consolidated-spec.md §11.2 lint_proposals 出力先明示 (Decision 2-9)
+  - .kiro/specs/rwiki-v2-cli-mode-unification/design.md R1.8 対話ログ 5 必須 field + Turn 内部 schema 参照点 (Decision 2-6) + 決定 4-8 HTML
+  差分マーカー attribute MVP (Decision 2-8)
+
+  Next Action
+
+  memory 規律 (feedback_approval_required.md visible action 必須 + feedback_design_review.md 10 ラウンド構成 + feedback_no_round_batching.md batching
+   禁止 + feedback_review_step_redesign.md 自動承認廃止 + 厳しく検証 default + Step 1b-v 5 切り口 + feedback_review_judgment_patterns.md 23 パターン
+  + feedback_dominant_dominated_options.md 厳密化規律) に従い、10 ラウンドレビュー を 1 ラウンド = 1 turn 以上 + Step 2 user 判断必須 で進めます。
+
+  design.md を user 側で確認後、Round 1 (requirements 全 AC 網羅) から開始する準備ができました。Round 1 を開始してよいか、design 内容に対する user feedback があるか、ご指示ください。
+```
+
+##### ❯ ここでコミット
+
+```
+⏺ コミット作業を開始します。git 状態と過去 Spec 5 design 生成時のコミットスタイル (b9295f7) を並列確認。
+⏺ 過去の commit message style (Co-Authored-By 有無) を確認します。
+⏺ コミット戦略 (TODO_NEXT_SESSION.md L174-184) に従い、design.md / research.md / spec.json の 3 ファイルのみを 1 commit にまとめます(Rwiki-V2-dev-log-5.md は user 並行作業中なので別、本 commit には含めません)。
+```
+
+#####  
 
