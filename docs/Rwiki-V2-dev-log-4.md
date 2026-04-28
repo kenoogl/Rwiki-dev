@@ -12,6 +12,10 @@
 
 [Spec 1 rwiki-v2-classification (again)](##Spec 1 rwiki-v2-classification)
 
+[Spec 4 rwiki-v2-cli-mode-unification (again)](##Spec 4 rwiki-v2-cli-mode-unification (again))
+
+[Spec 7 rwiki-v2-lifecycle-management](##Spec 7 rwiki-v2-lifecycle-management)
+
 
 
 [自動承認の弊害](##自動承認の弊害)
@@ -2955,5 +2959,3051 @@
   新規適用: dominated 判定厳密化規律 (本セッション改訂、合理的成立条件 1 文以上 + numerical 規模感 + 暗黙前提明示) を Spec 4 全 escalate案件で必須適用。
 
   本セッション完了。次セッションでお会いしましょう。
+```
+
+
+
+## Spec 4 rwiki-v2-cli-mode-unification (again)
+
+##### ❯ TODO_NEXT_SESSION.mdを読み待機
+
+```
+⏺ TODO_NEXT_SESSION.md を読み込みました。待機します。
+
+  現在の状態サマリ:
+  - ブランチ main 同期済 (commit 13175ad)
+  - Spec 0 + Spec 1 design approve やり直し完了 (3/8)
+  - 次のアクション: Spec 4 (rwiki-v2-cli-mode-unification) design フェーズやり直し
+
+  Spec 4 着手前に必要な visible action (user 明示承認必須):
+  - Spec 4 spec.json approvals.design.approved: true → false 取り消し
+  - 取り消し commit (Spec 0 / Spec 1 と同手法)
+  - やり直しラウンド 1 から開始
+
+  適用する memory (改訂版厳格適用):
+  - feedback_review_step_redesign.md: 自動承認廃止 + 厳しく検証 default + negative 視点強制発動
+  - feedback_design_review.md: 10 ラウンド構成
+  - feedback_no_round_batching.md: 1 ラウンド = 1 turn 以上
+  - feedback_dominant_dominated_options.md (2026-04-28 改訂): dominated 判定厳密化規律
+
+  Spec 4 の特徴: interface 重 spec (CLI 統一規約 / 60+ サブコマンド / Severity 4 / subprocess 中心) → subprocess shell injection 防止規律の grep verify が最も該当しやすい spec。
+
+  ご指示をお待ちしています。
+```
+
+##### ❯ Spec 4 (rwiki-v2-cli-mode-unification) design フェーズやり直し
+
+```
+⏺ Spec 4 design フェーズやり直し開始します。まず現状確認と memory 復習を並列実行します。
+
+⏺ memory 復習完了。TaskCreate を読み込んで進捗管理を始めます。
+
+⏺ 進捗管理を準備しました (13 タスク登録)。
+
+  Spec 4 design フェーズやり直し開始 — Step 0: visible action 承認依頼
+
+  memory feedback_approval_required.md 規律に従い、以下 visible action は user 明示承認必須 のため、まず承認をお願いします。
+
+  提案する取り消し action (Spec 0 / Spec 1 と同手法)
+
+  1. spec.json 修正:
+  - phase: "design-approved" → "design"
+  - approvals.design.approved: true → false
+  - updated_at: 現在時刻 (2026-04-28T...+09:00)
+
+  2. commit (取り消し commit、design.md / research.md は保持):
+  - メッセージ: spec(phase-2): rwiki-v2-cli-mode-unification design approve 取り消し (Spec 0 取り消し commit 2217c6f と同手法)
+  - 対象: spec.json のみ
+  - design.md / research.md は前回 approve 済の内容を残し、やり直しラウンドで上書き
+
+  3. push は当面しない: やり直し全 10 ラウンド完了 + 再 approve commit までまとめて push 推奨 (Spec 0 / Spec 1 と同パターン)
+
+  Spec 4 着手前の状態確認 (read-only 完了済)
+
+  - spec.json: phase = "design-approved", approvals.design.approved = true, updated_at = 2026-04-28T20:00:00+09:00
+  - design.md: 1972 行 (前セッション完了時)
+  - requirements.md: 317 行 (approve 済)
+  - research.md: 378 行
+  - brief.md: 108 行
+
+  やり直し方針 (再確認、memory 改訂版厳格適用)
+
+  - 10 ラウンド構成 (12 → 10 統合済): R1 AC 網羅 / R2 アーキ整合 / R3 データモデル / R4 API interface / R5 アルゴリズム+性能 / R6 失敗+観測性 / R7
+  セキュリティ / R8 依存 / R9 テスト / R10 マイグレーション
+  - 1 ラウンド = 1 turn 以上 (batching 禁止、各ラウンド Step 2 user 判断必須)
+  - Step 1a/1b 分割 + 4 重検査 (二重逆算 + Phase 1 パターンマッチング + dev-log 23 パターン + 自己診断義務)
+  - Step 1b-v 自動深掘り 5 切り口、5 番目 negative 視点 skim 禁止 + 強制発動義務化
+  - 厳しく検証 default: 本質的観点 5 種 (a-e) を各ラウンド強制発動、検出ゼロでも明示記録
+  - dominated 判定厳密化 (3 規律): 合理的成立条件 1 文以上 + numerical 規模感 + 暗黙前提明示
+  - escalate 必須条件 5 種 に該当時は LLM 単独採択禁止、user 判断委譲
+  - Spec 4 特性: interface 重 spec → R4 / R9 が厚いラウンド、R7 subprocess shell injection 防止規律は最重要 (Spec 0 / Spec 1 同型再発防止 grep verify
+   必須)
+
+  ---
+  承認をお願いします:
+  - (A) この取り消し plan で進める (spec.json 編集 + commit)
+  - (B) 修正したい (例: メッセージ変更 / push も含める / その他)
+  - (C) 別案
+
+  ご指示をお願いします。
+```
+
+#####  ❯ A
+
+```
+⏺ 承認確認。spec.json 修正 + commit を実行します。
+⏺ dev-log-4.md は user が手動で本セッション会話を追記中。spec.json 修正 + commit は spec.json 単独で行います。
+⏺ visible action 完了 (commit e88ce49)。push は全 10 ラウンド + 再 approve 完了後にまとめて実施。
+
+  ---
+  R1: requirements 全 AC 網羅 レビュー (新方式適用)
+
+  R1 を始めるため、まず requirements.md の AC を全件抽出し、design.md がそれぞれカバーしているか検証します。Spec 4 は約 1972 行と大きいので、まずrequirements.md 全体と design.md の構造を把握します。
+⏺ requirements.md 全 16 Req / 推定 125 AC を把握。次に design.md の構造把握します。
+⏺ design.md の Requirements Traceability table 確認。AC 数とコンポーネント割当を verify します。
+⏺ AC 総数 126、各 R 数値も Traceability table と一致 (R11 = 6 AC = 11.1-11.6、R16 = 10 AC = 16.1-16.10)。次にサブコマンド数 grep 整合 + critical ACの覆い具合 verify。
+⏺ サブコマンド数表記は「約 60」「全 60 種」「全 60+」混在 (要 verify)。critical AC の覆い verify を grep で実施。
+⏺ 重要検出: line 39 で「許可リスト 9 種」と書いているが、実際の列挙は 10 件。requirements R3.2 も 10 件 列挙 → 単純誤記 (Spec 0 / Spec 1 同型再発)。
+
+  引き続き critical AC verify。
+⏺ R13.5 audit evidence dedup logic は design.md 完全に欠落 (重要級検出 2)。残りの critical AC verify を続ける。
+
+⏺ R1 検出整理完了。
+
+  ---
+  R1 (requirements 全 AC 網羅) レビュー結果
+
+  Step 1a/1b 4 重検査 + Step 1b-v 5 切り口 + 厳しく検証 5 種強制発動
+
+  [ラウンド 1 厳しく検証結果]
+
+  本質的観点 5 種:
+  - a) 規範範囲先取り検査: 検出 1 件 (重-1-2、規範範囲先取りの逆 = 範囲未対応)
+  - b) 構造的不均一検査: 検出なし (G1-G6 component 同形式)
+  - c) 文書記述 vs 実装不整合検査: 検出なし (API signature / 引数構造 整合)
+  - d) 規範前提曖昧化検査: 検出 1 件 (重-1-3、R15.12 drafts §6.2 持ち越し未反映)
+  - e) 単純誤記 grep 検査: 検出 2 件 (重-1-1 許可リスト 9 種 / 軽-1-1 サブコマンド数表記)
+
+  合計: 自動採択推奨 1 件 + escalate 推奨 3 件
+
+  ---
+  重-1-1: 許可リスト「9 種」誤記 (列挙は 10 件) [escalate 推奨]
+
+  - 検出: design.md line 39 (Boundary Commitments) + line 36 で「許可リスト 9 種 (deprecate / archive / reactivate / merge wiki 慎重 / unapprove
+  --yes / tag merge / tag rename / skill install / extract-relations / reject <edge-id>)」と記述。実列挙は 10 件。requirements R3.2 も 10件列挙明示。
+  - Step 1b-i 二重逆算: implementation 時「9 種が正?10 種が正?」判断不能 → escalate
+  - Step 1b-ii Phase 1 同型: Spec 0 R7-R10 重-厳-5 (approvals.requirements 誤記 2 箇所) / Spec 1 重-4-1 (13 → 12 サブコマンド単純誤記) と 同型再発
+  - Step 1b-iii dev-log 23 パターン: パターン「単純誤記 grep」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「9 種が正、列挙 1 件削除案」も技術的に成立 (例: rw merge の merge_strategy
+  確定済前提を別操作扱い等)。複数選択肢成立 → escalate 必須条件 1 (複数選択肢) 該当
+  - 修正案 X1 (推奨): 「許可リスト 10 種」に訂正 (列挙 10 件と整合、R3.2 と一致)
+  - dominated 判定厳密化: X2 = 「9 種、列挙 1 件削除」 → 合理的成立条件 = 「rw merge を allowlist から外す方針変更」、numerical 規模感 =N/A、暗黙前提 = 「R3.2 を改版する規範変更」 → R3.2 を改版する負担大、X1 dominated でない (確認必要)
+
+  ---
+  重-1-2: R13.5 rw audit evidence source: dedup logic 完全欠落 [escalate 推奨]
+
+  - 検出: requirements R13.5 「rw audit evidence は本 spec が CLI dispatch を所管しつつ、source: field の重複検出・canonical 化提案（同一 paper / DOI/ URL / arXiv ID の表記揺れ検出と統合提案）を本 spec の audit task として実装する」(Spec 1 R5 由来 coordination)。design.md で audit evidence のdedup / DOI / canonical / 重複検出 関連記述が 完全に grep ヒット 0 件。
+  - Step 1b-i 二重逆算: implementation 時、dedup logic の設計指針が design.md にない → 実装者が即興で設計 → R13.5 規範未対応のまま完成リスク
+  - Step 1b-ii Phase 1 同型: Spec 0 R4 escalate「3 ヶ月超 ERROR 昇格削除」(規範範囲先取り) の逆向き = 規範範囲未対応
+  - Step 1b-iii dev-log 23 パターン: パターン「規範範囲判断」 + 「責務境界 (Spec 1 R5 由来 coordination)」該当 → escalate 必須条件 2 (規範範囲判断)
+  該当
+  - Step 1b-iv 自己診断: 反転理由 = 「dedup は実装側で具体化、design では概念のみ規定」「Phase 2 委譲」案も成立 → escalate 必須条件 1 (複数選択肢)
+  該当
+  - 修正案 X1 (推奨): design.md「Components and Interfaces」G2 に cmd_audit_evidence 詳細を追加 (source: field 重複検出アルゴリズム概念 / canonical化提案 / DOI / arXiv ID 正規化形式 / Spec 1 evidence frontmatter 整合)
+  - dominated 判定厳密化: X2 = Phase 2 委譲 → 合理的成立条件 = 「MVP 範囲外として明示 + 決定 4-X で Phase 2 委譲記録」、numerical 規模感 = MVP開始時間短縮、暗黙前提 = 「R13.5 が MVP 範囲外への合意済」(現状未合意) → user 判断必須
+
+  ---
+  重-1-3: R15.12 drafts §6.2 持ち越し Boundary Commitments 未反映 [escalate 推奨]
+
+  - 検出: requirements R15.12 「drafts §6.2 に Decision Log カテゴリが未記載 → roadmap.md「Adjacent Spec Synchronization」に従い別 issue / 別セッションで実施 → 本 spec design phase の Boundary Commitments に持ち越す」と明示。design.md の Boundary Commitments セクション (This Spec Owns/ Out of Boundary / Allowed Dependencies / Revalidation Triggers) のいずれにも該当記載なし (drafts §6.2, 別 issue, 別セッション で grep ヒット 0件)。
+  - Step 1b-i 二重逆算: implementation phase で drafts §6.2 更新責務が忘却 → R15.12 持ち越しが消失リスク
+  - Step 1b-ii Phase 1 同型: Spec 0 / Spec 1 設計レビューで Boundary Commitments への AC 反映漏れ事例あり → 同型
+  - Step 1b-iii dev-log 23 パターン: パターン「規範前提曖昧化」 + 「責務境界」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「Coordination 申し送り に Spec 5 として記載すれば十分、Boundary Commitments には不要」案も成立 → escalate
+  必須条件 1 (複数選択肢) 該当
+  - 修正案 X1 (推奨): Boundary Commitments → This Spec Owns 末尾に「drafts §6.2 Decision Log カテゴリ追記の Adjacent Sync 別 issue 作成 = 本 spec implementation phase 着手時に発行 (R15.12 持ち越し)」を追記
+  - dominated 判定厳密化: X2 = 「Coordination 申し送り Spec 5 への追記のみで足りる」 → 合理的成立条件 = 「drafts は Spec 5 が改版する立場の SSoT
+  として扱う」、numerical 規模感 = N/A、暗黙前提 = 「Spec 5 が drafts 改版責務を引き受けることへの合意」(現状不明) → user 判断必須
+
+  ---
+  軽-1-1: サブコマンド数表記不統一 [自動採択推奨]
+
+  - 検出: 「約 60」(line 5/9/13/102) / 「全 60 種」(line 211/438) / 「全 60+」(line 1074) の混在表記
+  - Step 1b-i 二重逆算: 軽微、implementation 時に実数値で統一可能
+  - Step 1b-ii/iii: Phase 1 Spec 1 R5 軽 type 同型 = 単純誤記
+  - Step 1b-iv 自己診断: 反転理由 = 「実装で具体的に数えた数値で確定すれば良い」 → 反転理由なし、軽微で自動採択妥当
+  - Step 1b-v 5 切り口検査:
+    - (1) 本質的観点 (top-down): §2.7 エディタ責務分離 / Curated GraphRAG 中核原則と独立 → 反転理由なし
+    - (2) cross-document consistency: Foundation R9 / consolidated-spec §6 と数値整合は要確認、ただし Spec 4 内表記統一は本 spec 内整合の範疇
+    - (3) 仕様⇄実装突合: implementation phase で具体 cmd_* 列挙時に確定可能 → 反転理由なし
+    - (4) dev-log 23 パターン: パターン「単純誤記 grep / 複数表記の不統一」該当 (軽微 type)
+    - (5) 失敗 + Phase 1 アナロジー (negative 強制発動): 破綻シナリオ列挙 = 「数値混在で読者が実装範囲を誤解」程度、実害なし。Phase 1 アナロジー比較
+  = Spec 0 R4 (規範先取り) 非同型 / Spec 1 R5 (Levenshtein) は軽 type 同型だが軽微 / Spec 1 R7 (Eventual Consistency) 非同型 → 同型は軽 type
+  のみ、致命破綻シナリオなし、X1 == X2
+  - 修正案 X1 = X2 (推奨自動採択): 表記を「約 60 コマンド」(approximate表記) で統一 (実数値は implementation phase で確定、現段階では概数で十分)。具体的には line 211 / 438 の「全 60 種」を「約 60 種」に、line 1074 「全 60+」を「全 60+ コマンド」維持または「約 60 コマンド」に統一
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 1 検出件数]: 自動採択推奨 1 件 (軽-1-1) / escalate 推奨 3 件 (重-1-1 / 重-1-2 / 重-1-3)
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (重-1-1 / 重-1-2 / 重-1-3 = escalate 詳細議論 + 軽-1-1 = 自動採択 Edit 適用)
+  - 案 B 異論あり: どの候補をどう変える? (例: 「重-1-1 を自動採択に降格」「軽-1-1 を escalate 推奨に格上げ」「重-1-2 を Phase 2 委譲で自動採択」等)
+  - 案 C 該当なし扱いで次ラウンドへ
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ 承認確認。軽-1-1 自動採択 Edit 適用 + 重-1-1 / 重-1-2 / 重-1-3 escalate 確証手順を進めます。
+
+  軽-1-1 自動採択 Edit (サブコマンド数表記統一)
+  実数値は implementation phase で確定するため「約 60」(approximate) で統一。
+
+⏺ 軽-1-1 自動採択 Edit 完了 (3 箇所統一: line 211 / 438 / 1074)。
+
+  ---
+  重-1-1 escalate 確証手順 (5 観点深掘り)
+
+  「許可リスト 9 種誤記 vs 列挙 10 件」
+
+  ┌─────────────────────┬─────────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────┐
+  │        観点         │       案 X1 = 「10 種」に訂正 (列挙 10 件と整合)        │        案 X2 = 「9 種、列挙 1 件削除」(R3.2 改版経路)        │
+  ├─────────────────────┼─────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ (a) 実装難易度      │ line 39 のみ Edit、design.md 完結                       │ requirements R3.2 改版必要、Adjacent Sync + 再 approve       │
+  │                     │                                                         │ 経路発生                                                     │
+  ├─────────────────────┼─────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ (b) 設計理念整合    │ R3.2 文言と一致、boundary 違反なし                      │ R3.2 文言改版で Spec 7 dangerous op 表 / Spec 1 / Spec 2     │
+  │                     │                                                         │ 整合再確認必要                                               │
+  ├─────────────────────┼─────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ (c) 運用整合性      │ UX 影響なし、ドキュメント整合性向上                     │ 許可リストから 1 件削除 = 当該操作の --auto 不可化 = UX      │
+  │                     │                                                         │ 機能制限 (実用負担)                                          │
+  ├─────────────────────┼─────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ (d) boundary        │ 既存 R3.2 boundary 内、影響なし                         │ 削除候補の選定基準なし → 恣意的選定で boundary 拡大リスク    │
+  │ 違反リスク          │                                                         │                                                              │
+  ├─────────────────────┼─────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ (e) Phase 1 整合    │ Spec 0 R7-R10 重-厳-5 / Spec 1 重-4-1                   │ 規範改版経路、複数 spec 連鎖改版必要                         │
+  │                     │ 単純誤記訂正パターンと整合                              │                                                              │
+  └─────────────────────┴─────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────┘
+
+  dominated 判定厳密化:
+  - X1 推奨根拠: 実装容易 / R3.2 整合 / Phase 1 同型訂正パターン / boundary 安全 / UX 維持
+  - X2 dominated 根拠 (規律 1-3 適用):
+    - 規律 1 合理的成立条件: 「許可リスト 10 件のうち 1 件を --auto 不可化したい運用方針変更が発生した場合」のみ X2
+  合理。現状そのような方針変更要請なし。
+    - 規律 2 numerical 規模感: X2 採択時の負荷 = R3.2 改版 + Spec 7 / Spec 1 / Spec 2 整合再確認 = 4 spec 同期改版経路、X1 = 1 行 Edit
+    - 規律 3 暗黙前提: X1 採択は「列挙 10 件は正で数値 9 が誤記」前提、X2 採択は「数値 9 が正で列挙 1 件が冗長」前提。requirements R3.2 が 10
+  件を正として approve 済 (commit 時点) のため X1 前提が SSoT 整合
+  - 結論: X1 は X2 を dominate、X2 採択は規範改版経路発生で保留候補
+
+  重-1-1 推奨案 X1 + 確証根拠 5 点
+
+  - (1) 実装難易度低: design.md line 39 + Boundary Commitments line 36 の 2 箇所 Edit のみ
+  - (2) R3.2 整合: requirements approve 済の 10 件列挙と完全一致
+  - (3) Phase 1 同型訂正パターン: Spec 0 R7-R10 重-厳-5 / Spec 1 重-4-1 と同型解決
+  - (4) UX 維持: 許可リスト機能を変更せず UX 影響なし
+  - (5) boundary 整合: 既存 R3.2 boundary 内、Adjacent Sync 不要
+
+  重-1-1 却下案 X2 (9 種、列挙削除) の理由
+
+  - requirements R3.2 改版 + 4 spec 連鎖改版経路 (規律 2 numerical 過大)
+  - 削除候補の選定基準が不在 (規律 3 暗黙前提不成立)
+  - UX 機能制限の実用負担
+
+  ---
+  重-1-2 escalate 確証手順 (5 観点深掘り)
+
+  「R13.5 rw audit evidence source: dedup logic 完全欠落」
+
+  ┌───────────────────┬──────────────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────┐
+  │       観点        │      案 X1 = G2 component 詳細追記 (本 spec MVP 内実装)      │        案 X2 = MVP 範囲外 + Phase 2 委譲決定追加         │
+  ├───────────────────┼──────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────┤
+  │ (a) 実装難易度    │ dedup アルゴリズム概念設計 (DOI 正規化 / arXiv ID 抽出 /     │ MVP 範囲外明示、決定 4-X 追加                            │
+  │                   │ fuzzy matching)                                              │                                                          │
+  ├───────────────────┼──────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────┤
+  │ (b) 設計理念整合  │ R13.5 規範要求と整合、audit_candidates/* review 層と整合     │ MVP 機能制限、Spec 1 R5 由来 coordination 要求           │
+  │                   │                                                              │ unfulfilled                                              │
+  ├───────────────────┼──────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────┤
+  │ (c) 運用整合性    │ source: 重複検出 = ユーザーが arXiv / DOI                    │ 重複 source: 検出機能不在、運用で手動チェック必要        │
+  │                   │ 表記揺れを統合可能、citation hygiene 向上                    │                                                          │
+  ├───────────────────┼──────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────┤
+  │ (d) boundary      │ Spec 1 R5 由来 coordination で本 spec が dedup               │ MVP 範囲外指定で R13.5 要求を本 spec                     │
+  │ 違反リスク        │ ロジック所管と明記済、boundary 内                            │ が完全履行しないリスク                                   │
+  ├───────────────────┼──────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────┤
+  │ (e) Phase 1 整合  │ Spec 1 R5 escalate (Levenshtein → Ratcliff/Obershelp 訂正)   │ Spec 0 / Spec 1 で MVP 範囲外指定の前例あり (例: AGENTS  │
+  │                   │ と同型 = アルゴリズム選択責任                                │ hash 検知 = 決定 4-10)                                   │
+  └───────────────────┴──────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────┘
+
+  dominated 判定厳密化:
+  - X1 推奨根拠: R13.5 規範対応 / Spec 1 R5 由来 coordination 履行 / citation hygiene 向上
+  - X2 dominated 評価 (規律 1-3 適用):
+    - 規律 1 合理的成立条件: 「dedup アルゴリズム選定に research / prototype が必要で MVP scope 過大化する場合」「Spec 1 R5 由来 coordination
+  が現時点で blocking でない場合」のみ X2 合理。MVP scope 過大化判定は本 spec implementation 規模次第で要 user 判断
+    - 規律 2 numerical 規模感: dedup ロジック実装規模 = 推定 200-400 行 (DOI 正規化 + arXiv ID 抽出 + fuzzy matching、rw_audit.py 内追加)、MVP
+  全体推定 6000-9000 行に対し 3-7% 追加。MVP scope 過大化のリスク低
+    - 規律 3 暗黙前提: X1 採択は「Spec 1 R5 coordination が MVP 必須」前提、X2 採択は「Phase 2 まで Spec 1 R5 coordination が許容」前提。Spec 1 R5
+  (Spec 1 既 approve 済) は本 spec が dedup logic 所管と明記、Phase 2 委譲には Spec 1 改版が必要 (Adjacent Sync 経路)
+  - 結論: X1 がやや優位だが、X2 採択も MVP scope 判断次第で合理、user 判断必須 (X2 は Spec 1 R5 改版経路を伴うため MVP 内実装の方が境界整合)
+
+  重-1-2 推奨案 X1 + 確証根拠 5 点
+
+  - (1) R13.5 規範対応: Spec 1 R5 由来 coordination 完全履行、本 spec が「dedup ロジック所管」明文遵守
+  - (2) 実装規模 MVP scope 内: 推定 200-400 行 (rw_audit.py 内追加、約 3-7% 増)
+  - (3) citation hygiene 向上: source: 表記揺れ自動検出で運用負担軽減
+  - (4) boundary 整合: Spec 1 R5 由来 coordination で本 spec 所管と明記済、改版経路不要
+  - (5) Phase 1 同型訂正パターン: Spec 1 R5 escalate (アルゴリズム選択責任) と同型対応
+
+  重-1-2 却下案 X2 (Phase 2 委譲) の理由
+
+  - Spec 1 R5 改版 + Adjacent Sync 経路発生 (規律 1 合理的条件は MVP scope 判断次第、現状 unfulfilled)
+  - citation hygiene 機能の MVP 機能制限 (運用負担)
+  - Spec 1 既 approve 済の coordination 要求未対応リスク
+
+  ---
+  重-1-3 escalate 確証手順 (5 観点深掘り)
+
+  「R15.12 drafts §6.2 持ち越し Boundary Commitments 未反映」
+
+  ┌──────────────────┬────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────┐
+  │       観点       │ 案 X1 = Boundary Commitments / This Spec Owns 追記 │            案 X2 = Coordination 申し送り Spec 5 追記のみ            │
+  ├──────────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ (a) 実装難易度   │ Boundary Commitments 1 行追記                      │ Coordination 申し送り Spec 5 セクションに 1 行追記                  │
+  ├──────────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ (b) 設計理念整合 │ R15.12 文言「Boundary Commitments                  │ R15.12 文言と不整合、ただし機能的には等価                           │
+  │                  │ に持ち越す」と完全一致                             │                                                                     │
+  ├──────────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ (c) 運用整合性   │ implementation phase 着手時に Boundary Commitments │ Coordination 申し送りに記載、Spec 5 design phase で同期されるが     │
+  │                  │  確認 → drafts §6.2 別 issue 作成                  │ drafts §6.2 ownership は不明確のまま                                │
+  ├──────────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ (d) boundary     │ 本 spec 所管として明示、ownership 明確             │ drafts §6.2 改版 ownership 不明 (本 spec / Spec 5 / 別 issue        │
+  │ 違反リスク       │                                                    │ 起票者)                                                             │
+  ├──────────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │ (e) Phase 1 整合 │ Spec 0 / Spec 1 Boundary Commitments               │ 申し送り経由のみで持ち越し管理した前例なし                          │
+  │                  │ 反映パターンと整合                                 │                                                                     │
+  └──────────────────┴────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────┘
+
+  dominated 判定厳密化:
+  - X1 推奨根拠: R15.12 文言整合 / ownership 明確 / implementation phase で発火
+  - X2 dominated 評価 (規律 1-3 適用):
+    - 規律 1 合理的成立条件: 「drafts §6.2 改版を Spec 5 が責務として引き受ける合意がある場合」のみ X2 合理。現状 R15.12 は「本 spec が Boundary
+  Commitments で持ち越す」と明示、Spec 5 への ownership 移動の合意なし
+    - 規律 2 numerical 規模感: X1 = 1 行追記、X2 = 1 行追記、実装規模差なし
+    - 規律 3 暗黙前提: X1 採択は「本 spec が drafts §6.2 改版 trigger を持つ」前提、X2 採択は「Spec 5 が drafts §6.2 ownership
+  を引き受ける」前提。R15.12 は X1 前提を明示
+  - 結論: X1 は X2 を dominate、規律 1 合理的成立条件は現状不成立
+
+  重-1-3 推奨案 X1 + 確証根拠 5 点
+
+  - (1) R15.12 文言完全整合: 「Boundary Commitments に持ち越す」と一致
+  - (2) ownership 明確: 本 spec implementation phase 着手時に発火
+  - (3) 実装規模差なし: 1 行追記のみ (X2 と同規模)
+  - (4) Phase 1 同型整合: Spec 0 / Spec 1 Boundary Commitments 反映パターンと整合
+  - (5) drafts §6.2 改版 trigger 明示: 別 issue / 別セッション ownership が本 spec implementation phase に紐付き
+
+  重-1-3 却下案 X2 (Coordination 申し送り のみ) の理由
+
+  - R15.12 文言不整合 (規律 1 合理的成立条件不成立)
+  - drafts §6.2 ownership 不明 (Spec 5 への移動合意なし)
+  - Phase 1 持ち越し管理パターン (Boundary Commitments 反映) と非整合
+
+  ---
+  Step 2 (escalate 3 件 一括判断)
+
+  各 escalate 案件の推奨案 X1 を確証根拠 5 点 + 却下案理由付きで提示しました。
+
+  判断依頼 (2 択):
+
+  - 案 A 全件推奨で進める: 重-1-1 X1 (10 種訂正) / 重-1-2 X1 (G2 dedup logic 追記) / 重-1-3 X1 (Boundary Commitments 追記) を全件 Edit 適用
+  - 案 B 個別反転: いずれかを反転 (例: 重-1-2 を X2 = Phase 2 委譲、または別案で再深掘り)
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ 承認確認。3 件 escalate を Edit 適用します。
+  重-1-1 Edit: 「9 種」→「10 種」訂正
+  
+⏺ 重-1-3 Edit: R15.12 drafts §6.2 持ち越し Boundary Commitments 追記
+⏺ 重-1-2 Edit: G2 component に cmd_audit_evidence dedup logic 追記
+  G2 component の責務記述を確認してから追加場所を決定。
+⏺ G2 Requirements 行に R13.5 を追加する必要があります。
+⏺ Traceability table に R13.5 dedup logic 反映の必要も確認。
+⏺ 設計決定セクションに 決定 4-20 (audit evidence dedup) を追記。
+⏺ design.md change log を確認・更新。
+⏺ R1 完了。Edit 適用結果サマリ:
+
+  - 軽-1-1 自動採択: 「全 60 種」「全 60+ コマンド」→ 「約 60」 統一 (line 211 / 438 / 1074)
+  - 重-1-1 escalate: 「許可リスト 9 種」→「10 種」(4 箇所 replace_all、列挙 10 件と整合)
+  - 重-1-2 escalate: cmd_audit_evidence source: dedup logic 追記 (G2 Responsibilities + Traceability + 決定 4-20 + change log)
+  - 重-1-3 escalate: drafts §6.2 持ち越し責務を Boundary Commitments / This Spec Owns に追記
+
+  ---
+  R2: アーキテクチャ整合性 レビュー (新方式適用)
+
+⏺ R2 観点: モジュール分割 / レイヤ / 依存グラフが requirements と整合。
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ R2 アーキテクチャ整合性の検出整理。
+
+  ---
+  R2 (アーキテクチャ整合性) レビュー結果
+
+  Step 1a/1b 4 重検査 + Step 1b-v 5 切り口 + 厳しく検証 5 種強制発動
+
+  [ラウンド 2 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出なし
+  - b) 構造的不均一検査: 検出 1 件 (軽-2-1)
+  - c) 文書記述 vs 実装不整合検査: 検出 1 件 (重-2-1)
+  - d) 規範前提曖昧化検査: 検出なし
+  - e) 単純誤記 grep 検査: 検出なし
+
+  合計: 自動採択推奨 1 件 + escalate 推奨 1 件
+
+  ---
+  軽-2-1: G6 Utils Req Coverage に R12 (Foundation 規範準拠) 記載なし [自動採択推奨]
+
+  - 検出: Components 表 (line 458-465) で各 component の Req Coverage を見ると、G6 Utils = "2.7, 11.1-11.6, 14.1-14.5"。R12 (Foundation 規範準拠)
+  は横断責務だが Components 表のどの component にも記載なし。一方 R14 (文書品質) は G6 Utils に明示記載 → 構造的不均一。Traceability 表 line 448
+  では「全 module + design.md 引用」と扱っている。
+  - Step 1b-i 二重逆算: implementation phase で R12 担当 module が不明、Spec 5-7 起票者が引用元見落とすリスク
+  - Step 1b-ii Phase 1 同型: Spec 0 R2 重-厳-3 (Components §1/§6/§8/§9 sub-section 欠落、構造的不均一) と同型
+  - Step 1b-iii dev-log 23 パターン: 構造的不均一パターン該当
+  - Step 1b-iv 自己診断: 反転理由 = 「R12 は横断責務、Traceability 表で既に "全 module" と扱っているため Components 表記載は冗長」 →
+  軽微で自動採択妥当
+  - Step 1b-v 5 切り口:
+    - (1) 本質的観点: Curated GraphRAG 中核原則と独立、design 整合性のみ → 反転理由なし
+    - (2) cross-document consistency: Traceability 表 (横断) と Components 表 (component ごと) は別観点、両者で重複記載は冗長 → 反転理由なし
+    - (3) 仕様⇄実装突合: implementation で R12 は全 module 横断適用 → 反転理由なし
+    - (4) dev-log 23 パターン: 構造的不均一 (軽微 type)
+    - (5) 失敗 + Phase 1 アナロジー (negative 強制発動): 破綻シナリオ = R12 担当不明で読者混乱、Phase 1 アナロジー比較 = Spec 0 R2 重-厳-3 と同型
+  (構造的不均一 軽-中 type) → X1 == X2、致命破綻なし
+  - 修正案 X1 (推奨自動採択): G6 Utils Req Coverage に「12.1-12.7 (横断、全 module で SSoT 引用適用)」を追記
+  - dominated 判定: X2 = 「全 module Req Coverage に R12 追加」 → 合理的成立条件 = 「component-level の R12 追跡が運用必須」、numerical = 8
+  components × 1 行 = 冗長、暗黙前提 = 不成立。X2 dominated。
+
+  ---
+  重-2-1: G3 AutoPolicy Key Dependencies に Spec 7 module 明示なし [escalate 推奨]
+
+  - 検出: Components 表 line 461 で G3 AutoPolicy の Key Dependencies = "rw_utils (P0)" のみ。しかし design.md line 1957 (Spec 7 申し送り) で「5
+  種禁止リストの 8 段階対話 handler は Spec 7 所管、本 spec G3 AutoPolicy は CLI 引数 parse + Pre-flight + Spec 7 handler 呼出のみ」と明示。G3
+  AutoPolicy は Spec 7 module を呼ぶが Components 表に明示記載なし → 文書記述 vs 実装不整合。
+  - Step 1b-i 二重逆算: implementation 時、G3 AutoPolicy が Spec 7 module を import するか判断不能 → DAG 層検証不能 → escalate
+  - Step 1b-ii Phase 1 同型: Spec 1 R2 軽-2-1/2 (Architecture Integration 文言矛盾) と同型 = 文書記述 vs 実装不整合
+  - Step 1b-iii dev-log 23 パターン: パターン「文書記述 vs 実装不整合」「責務境界」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「dangerous op handler は Spec 7 module を G3 が直接 import せず、G2 CommandDispatch 経由で呼ぶ」案も成立 →
+  escalate 必須条件 1 (複数選択肢) 該当
+  - Step 1b-v 5 切り口:
+    - (1) 本質的観点: §2.4 Dangerous ops 8 段階規範整合性 → G3 AutoPolicy 責務範囲確定要
+    - (2) cross-document consistency: Spec 7 申し送り line 1957 と整合性確認、整合
+    - (3) 仕様⇄実装突合: G3 AutoPolicy が直接呼ぶか / G2 経由かで実装パターン分岐
+    - (4) dev-log 23 パターン: 文書記述 vs 実装不整合
+    - (5) 失敗 + Phase 1 アナロジー (negative 強制発動): 破綻シナリオ = implementation 時に G3 が Spec 7 を直接呼ぶ実装と Components 表記載差異が DAG
+   違反扱いに / Phase 1 比較 = Spec 1 R2 軽-2-1/2 同型
+  - 修正案 X1 (推奨): G3 AutoPolicy Key Dependencies に「Spec 7 module (P0、cmd_* 8 段階 handler 呼出)」を追加
+  - 修正案 X2 (代替): G3 AutoPolicy は Spec 7 module を直接 import せず、G2 CommandDispatch 経由で呼ぶ規約に固定。Components 表 G3 Key Dependencies
+  は変更不要
+
+  dominated 判定厳密化:
+  - X1 推奨根拠: Spec 7 申し送り line 1957 文言「G3 AutoPolicy が Spec 7 handler 呼出」と整合
+  - X2 代替評価 (規律 1-3 適用):
+    - 規律 1 合理的成立条件: 「DAG 層整合性を厳密に保ち、G3 (L2) が Spec 7 module を直接 import すると同層境界が複雑化する場合」 → 一応合理
+    - 規律 2 numerical 規模感: X1 = 1 行追加、X2 = G3 と Spec 7 間の indirection layer (G2 経由) 追加で関数呼出 hop 1 増加、overhead 軽微だが
+  boundary 整合性向上
+    - 規律 3 暗黙前提: X1 = 「G3 が Spec 7 module を直接 import 可能」、X2 = 「G3 は他 spec module を直接 import せず G2 経由」。design.md line 206
+  で「rw_dispatch.py (L3) が Spec 7 module を直接 import」と既に書かれている → X1 = 既存パターンと整合
+  - 結論: X1 が既存パターン整合で優位、ただし X2 も DAG 整合性観点で合理、user 判断必須
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 2 検出件数]: 自動採択推奨 1 件 (軽-2-1) / escalate 推奨 1 件 (重-2-1)
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (軽-2-1 = G6 Utils Req Coverage 追記 + 重-2-1 = G3 AutoPolicy Key Dependencies 追加 escalate 詳細議論で X1採択)
+  - 案 B 異論あり: 候補反転 (例: 重-2-1 を X2 = G2 経由 indirection に固定 / 軽-2-1 を escalate に格上げ等)
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ Edit 適用します。
+⏺ change log に R2 適用反映。
+⏺ R2 完了。
+
+  ---
+  R3: データモデル / スキーマ詳細 レビュー (新方式適用)
+
+⏺ R3 観点: envelope / schema_version / status mapping 等のスキーマ詳細。
+⏺ R3 データモデルレビュー検出整理。
+
+  ---
+  R3 (データモデル / スキーマ詳細) レビュー結果
+
+  Step 1b 4 重検査 + Step 1b-v + 厳しく検証 5 種強制発動
+
+  [ラウンド 3 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出 1 件 (軽-3-1)
+  - b) 構造的不均一検査: 検出なし
+  - c) 文書記述 vs 実装不整合検査: 検出 2 件 (軽-3-2, 軽-3-3)
+  - d) 規範前提曖昧化検査: 検出なし
+  - e) 単純誤記 grep 検査: 検出なし
+
+  合計: 自動採択推奨 2 件 + escalate 推奨 1 件
+
+  ---
+  軽-3-1: mute_until ISO 8601 期間 mute サポートが R8.5 範囲外 [escalate 推奨]
+
+  - 検出: design.md line 1204 で mute_until = "" # ISO 8601、空文字なら永続。R8.5 は「永続的」のみ要求、「期間限定 mute」(例: 2 週間後に自動再有効化)は requirements で明示要求なし。design で期間 mute 機能追加 = 規範範囲先取り疑い
+  - Step 1b-i 二重逆算: implementation phase で期間 mute UX (例: /mute maintenance until 2026-05-15) 仕様確定なし → 実装者が即興で UX 設計 → R8.5範囲外機能の実装責務不明
+  - Step 1b-ii Phase 1 同型: Spec 0 R4 escalate「3 ヶ月超 ERROR 昇格削除」(規範範囲先取り) と類似 = 範囲先取り (軽 type)
+  - Step 1b-iii dev-log 23 パターン: パターン「規範範囲判断 (requirements vs design boundary)」該当 → escalate 必須条件 2 (規範範囲判断) 該当
+  - Step 1b-iv 自己診断: 反転理由 = 「期間 mute は UX 拡張として MVP 内実装可、R8.5 が permissive scope を許容」案も成立 → escalate 必須条件 1
+  (複数選択肢) 該当
+  - 修正案 X1 (推奨): mute_until field 削除、mute = bool のみで永続 mute サポート (R8.5 範囲内)。期間 mute は Phase 2 拡張として決定 4-X 追加
+  - 修正案 X2 (代替): mute_until field 維持、design 決定として明示 (R8.5 拡張機能、MVP 内実装と決定 4-X 追加)
+
+  dominated 判定厳密化:
+  - X1 推奨根拠: R8.5 完全整合 / scope 単純化 / Phase 1 同型訂正パターン整合
+  - X2 代替評価:
+    - 規律 1 合理的成立条件: 「期間 mute UX が個人 Memex / 小規模チームで頻出ユースケース」前提でのみ合理。drafts §2.11 Scenario 33 で期間 mute
+  言及なし → 前提不成立
+    - 規律 2 numerical 規模感: X2 採択時の実装規模 = field 1 個 + UX 1 機能、X1 採択時は scope 削減
+    - 規律 3 暗黙前提: X2 = 「R8.5 が permissive scope を許容する解釈」、X1 = 「R8.5 が永続のみを規範要求」。R8.5 文言は「永続的」明示で X1 解釈優位
+  - 結論: X1 が R8.5 文言整合で優位、ただし X2 も UX 拡張観点で合理可能性、user 判断必須
+
+  ---
+  軽-3-2: line 1167 衝突率記述精度不整合 [自動採択推奨]
+
+  - 検出: line 1167 (Domain Model 対話ログ)「並行起動時 session_id 衝突しない (uuid4 4hex で 1/65536 衝突率、実質ゼロ)」と記載。決定 4-13 line 1855では精度訂正済 (「誕生日問題により 5+ セッション 0.019% / 100+ セッション 7% / 362 セッション 50%」)。line 1167 が古い表現で不整合 → 文書記述 vs
+  実装不整合
+  - Step 1b-i 二重逆算: 読者が Domain Model で「実質ゼロ」を見て安心、規模次第で衝突率 7% を見落とすリスク
+  - Step 1b-ii Phase 1 同型: Spec 1 R5 escalate (Levenshtein → Ratcliff/Obershelp 文書記述訂正) と同型
+  - Step 1b-iii: パターン「文書記述 vs 実装不整合」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「Domain Model section は概念レベル、詳細は決定 4-13 で参照可能」案。実装者は Domain Modelを信頼するため精度訂正必須
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし、escalate 必須条件 5 種非該当 → 自動採択推奨
+  - 修正案 X1 (推奨自動採択): line 1167 を「並行起動時 session_id 衝突確率は誕生日問題で評価、5+ セッション 0.019% / 100+ セッション 7% (決定 4-13詳細)、Spec 4 MVP の個人 Memex / 小規模チーム想定では実用上問題なし」に訂正
+
+  ---
+  軽-3-3: line 1239 turns increment コメント不整合 [自動採択推奨]
+
+  - 検出: line 1239「turns: 42 # append-only で increment」、line 1251「frontmatter は session 開始時に生成、ended_at / 最終 turns
+  値は終了時に追記」。frontmatter turns field の更新タイミング記述が 2 箇所で異なる → 文書記述 vs 実装不整合
+  - Step 1b-i 二重逆算: 「append-only で increment」を字面解釈 → 実装者が session 中に頻繁な frontmatter rewrite 実装 → append-only invariant 違反
+  - Step 1b-ii Phase 1 同型: Spec 1 R5 文書記述訂正と同型
+  - Step 1b-iii: パターン「文書記述 vs 実装不整合」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「文書記述微調整、実装に直接影響しない」 → 軽微で自動採択妥当
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし → 自動採択推奨
+  - 修正案 X1 (推奨自動採択): line 1239 コメントを「session 終了時に最終値追記 (line 1251 整合、turn 追記は markdown body)」に訂正
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 3 検出件数]: 自動採択推奨 2 件 (軽-3-2, 軽-3-3) / escalate 推奨 1 件 (軽-3-1)
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (軽-3-2 / 軽-3-3 自動採択 Edit + 軽-3-1 escalate 詳細議論で X1 採択)
+  - 案 B 異論あり: 候補反転 (例: 軽-3-1 を X2 = 期間 mute 維持、決定 4-X 追加 / 軽-3-2 を escalate に格上げ等)
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ Edit 適用します。
+
+  軽-3-2: line 1167 衝突率記述訂正
+⏺ 軽-3-3: line 1239 turns increment コメント訂正
+⏺ 軽-3-1 X1 採択: mute_until field 削除 + 決定 4-21 (Phase 2 拡張) 追加
+⏺ mute_until 全箇所を X1 整合に更新します。
+⏺ 順序訂正のため 4-20 と 4-21 を入れ替えます。
+⏺ change log に R3 反映。
+⏺ R3 完了。
+
+  ---
+  R4: API interface 具体化 レビュー (新方式適用、interface 重 spec 厚いラウンド)
+
+⏺ R4 観点: cmd_* 全 60+ サブコマンド signature / error model / idempotency。Spec 4 = interface 重 spec のため厚いラウンド。
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ R4 検出整理。
+
+  ---
+  R4 (API interface 具体化) レビュー結果
+
+  Step 1b 4 重検査 + Step 1b-v + 厳しく検証 5 種強制発動
+
+  [ラウンド 4 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出なし
+  - b) 構造的不均一検査: 検出 1 件 (軽-4-3)
+  - c) 文書記述 vs 実装不整合検査: 検出 1 件 (軽-4-1)
+  - d) 規範前提曖昧化検査: 検出 1 件 (軽-4-2)
+  - e) 単純誤記 grep 検査: 検出なし
+
+  合計: 自動採択推奨 2 件 + escalate 推奨 1 件
+
+  ---
+  軽-4-1: line 976 mute_maintenance [<until>] 残骸 (R3 X1 採択取りこぼし) [自動採択推奨]
+
+  - 検出: G4 MaintenanceUX Event Contract line 976 で「Subscribed events: dismiss <trigger_id> / mute_maintenance [<until>] (LLM CLI
+  経由でユーザー入力)」。R3 X1 採択 (mute_until 削除、永続のみ MVP) で [<until>] パラメータが残骸として残存 → 文書記述 vs 実装不整合
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし (R3 採択方針継承) → 自動採択推奨
+  - 修正案 X1 (推奨自動採択): line 976 を「mute_maintenance (LLM CLI 経由でユーザー入力、永続のみ MVP、決定 4-21)」に訂正
+
+  ---
+  軽-4-3: cmd_audit_evidence Service Interface signature 詳細未記載 [自動採択推奨]
+
+  - 検出: R1 重-1-2 escalate 採択で G2 Responsibilities & Constraints に cmd_audit_evidence source: dedup logic 詳細を追記 + 決定 4-20 追加。しかし
+  G2 Service Interface section (line 622-692) には cmd_audit_evidence signature 詳細が未記載 → 構造的不均一 (cmd_approve は signature
+  あり、cmd_audit_evidence なし)
+  - Step 1b-i 二重逆算: implementation 時、cmd_audit_evidence の Preconditions / Postconditions / Errors が判断不能
+  - Step 1b-iv 自己診断: 反転理由 = 「Service Interface 例は代表例で全 cmd 必要なし」案 → cmd_approve のみ代表例として記述する design ポリシーなら
+  OK、しかし R13.5 の dedup logic は重要機能のため signature 例を追加するのが望ましい
+  - 修正案 X1 (推奨自動採択): G2 Service Interface section に cmd_audit_evidence signature 例を追加 (Preconditions / Postconditions / Errors / 出力
+  path 規約)
+
+  ---
+  軽-4-2: Exception 階層の boundary 整合性曖昧化 [escalate 推奨]
+
+  - 検出: line 1433-1470 Exception 階層で DecisionLogWriteError(RwikiError) 等を本 spec 内独立定義。line 1452 「各 spec の API 呼出から re-raise (本spec module 内では catch せず CLI top-level で exit code 制御)」と記述。しかし、Spec 5 module が raise DecisionLogWriteError する場合、Spec 5 → 本spec の import = 循環依存リスク (line 227「Spec 5 module が Spec 4 module を import すること禁止」)。
+  - Step 1b-i 二重逆算: implementation 時、Spec 5 module 内 raise pattern が確定不能 → 本 spec 設計と矛盾するリスク
+  - Step 1b-ii Phase 1 同型: Spec 1 R7 escalate (transaction guarantee → Eventual Consistency 規範化、規範前提曖昧化) と同型 = 規範前提曖昧化
+  - Step 1b-iii dev-log 23 パターン: パターン「規範前提曖昧化」「責務境界」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「Exception 階層は本 spec の concrete pattern、Spec 5 / 7 / 1 が本 spec 階層 import するパターンも boundary
+  整合内」案 → Spec 5 / 7 / 1 が Spec 4 を import = 循環依存違反、要 escalate
+  - 修正案 X1 (代替): 共通 Exception 基底 (rw_errors.py または Foundation 共通 module) を新設、各 spec が独立に派生定義
+  - 修正案 X2 (推奨): 本 spec module が各 spec API 呼出箇所で try-except <Spec5/7/1 内の Exception> as e: raise <本 spec 階層 Exception>(...) from eで再投げ、Spec 5 / 7 / 1 module は本 spec の Exception を import せず independent
+
+  dominated 判定厳密化:
+  - X1 評価: 共通 module 新設 → boundary 拡大 / 新概念導入コスト
+    - 規律 1 合理的成立条件: 「Exception 階層が複数 spec で広範に共有される将来見込み」前提でのみ合理。現状 RwikiError 派生は本 spec のみ
+    - 規律 2 numerical 規模感: X1 = 共通 module ~50 行 + Foundation / common module 概念導入 / X2 = 本 spec 内 try-except ~20 箇所 raise from e
+    - 規律 3 暗黙前提: X1 = 「Foundation 共通 module 概念導入」、X2 = 「本 spec が wrapper として error catch + re-raise」
+  - X2 推奨根拠 (既存 design 整合):
+    - line 1452 「各 spec の API 呼出から re-raise」と完全整合
+    - 本 spec の薄い wrapper 設計 (CLI Dispatch Hub) と整合
+    - DAG 一方向依存 (本 spec → 各 spec) を維持、循環依存なし
+    - implementation pattern が Python 標準 (raise SomeError(...) from e)
+    - boundary 整合: 各 spec module が本 spec Exception を import 不要
+  - X1 dominated: scope 拡大、新概念導入コスト過大、現状 dependency 整合性で十分
+
+  軽-4-2 推奨案 X2 + 確証根拠 5 点
+
+  - (1) DAG 一方向依存維持: Spec 5 / 7 / 1 module は本 spec を import しない、循環依存なし
+  - (2) 既存 design 整合: line 1452 「各 spec の API 呼出から re-raise」と完全整合
+  - (3) 薄い wrapper 設計整合: CLI Dispatch Hub パターンと一致 (本 spec が exception 変換も担当)
+  - (4) Python 標準 pattern: try-except <SpecError>: raise <RwikiError>(...) from e は Python 推奨パターン
+  - (5) boundary 整合: 各 spec の Exception 定義は各 spec の責務、本 spec は wrapper 階層に変換のみ
+
+  軽-4-2 却下案 X1 (共通 Exception 基底新設) の理由
+
+  - 共通 module 新設で scope 拡大 (規律 1 合理的成立条件不成立、現状 RwikiError 派生は本 spec のみ)
+  - Foundation / common module 概念導入の追加コスト
+  - X2 で十分機能、X1 は YAGNI 違反
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 4 検出件数]: 自動採択推奨 2 件 (軽-4-1, 軽-4-3) / escalate 推奨 1 件 (軽-4-2)
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (軽-4-1 / 軽-4-3 自動採択 Edit + 軽-4-2 escalate 確証で X2 採択 = line 1452 注記強化)
+  - 案 B 異論あり: 候補反転 (例: 軽-4-2 を X1 = 共通 Exception 基底新設 / 軽-4-1 を escalate に格上げ等)
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ Edit 適用します。
+
+  軽-4-1: line 976 mute_maintenance 訂正
+⏺ 軽-4-3: G2 Service Interface に cmd_audit_evidence signature 追加
+⏺ 軽-4-2 X2 採択: line 1452 注記強化 (re-raise pattern 明示)
+⏺ change log に R4 反映。
+⏺ R4 完了。残り 6 ラウンド。
+
+  ---
+  R5: アルゴリズム + 性能達成手段 レビュー (新方式適用)
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+⏺ R5 検出整理。
+
+  ---
+  R5 (アルゴリズム + 性能達成手段) レビュー結果
+
+  Step 1b 4 重検査 + Step 1b-v + 厳しく検証 5 種強制発動
+
+  [ラウンド 5 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出なし
+  - b) 構造的不均一検査: 検出なし
+  - c) 文書記述 vs 実装不整合検査: 検出なし
+  - d) 規範前提曖昧化検査: 検出 1 件 (重-5-1)
+  - e) 単純誤記 grep 検査: 検出なし
+  - 観点固有 (アルゴリズム性能達成手段): 検出 1 件 (軽-5-1)
+
+  合計: 自動採択推奨 1 件 + escalate 推奨 1 件
+
+  ---
+  軽-5-1: cmd_audit_evidence dedup logic 計算量見積り未記載 [自動採択推奨]
+
+  - 検出: 決定 4-20 / G2 Service Interface で cmd_audit_evidence の dedup logic 4 アルゴリズム概念設計を追加、しかし計算量見積り (DOI / arXiv / URL
+  正規化 = O(N×M) / paper title fuzzy matching = O(N²) 等) が Performance & Scalability section に未記載 → R5 観点 (アルゴリズム + 性能) 不足
+  - Step 1b-i 二重逆算: implementation 時、dedup logic の大規模 vault 性能 (10K evidence 規模) で hang リスク判定不能
+  - Step 1b-iv 自己診断: 反転理由 = 「決定 4-20 で MVP 200-400 行規模、計算量明示は overkill」案 → 軽微で自動採択妥当
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし
+  - 修正案 X1 (推奨自動採択): Performance & Scalability section に「rw audit evidence source: dedup 計算量見積り」sub-section
+  を追加、各アルゴリズムの O(N×M) / O(N²) 等を明示、大規模 vault (10K+ evidence) の性能トリガー / Phase 2 最適化 (索引化 / fuzzy matching cache)
+  を記録
+
+  ---
+  重-5-1: 8 段階対話 interactive 中 user input 待ちと CLI-level timeout 境界未明示 [escalate 推奨]
+
+  - 検出: line 1659-1667 で CLI-level timeout 600 秒 / per-call 120 秒 / doctor 300 秒。しかし、8 段階対話 (5 種禁止リスト +
+  cmd_promote_to_synthesis) interactive 中の user 確認待ち (各段階で user input 数分〜数時間) と CLI-level timeout の境界規約が未明示。grep 結果 =
+  interactive.*timeout / wall-clock 関連記述ヒット 0 件 → 規範前提曖昧化
+  - Step 1b-i 二重逆算: 8 段階対話途中 (例: 段階 7 差分プレビュー表示で user 確認待ち) で 600 秒経過 → CLI-level timeout 発動 → ユーザーが abort
+  知らずに対話 → 突然 exit 1。UX 悪化
+  - Step 1b-ii Phase 1 同型: Spec 1 R7 escalate (transaction guarantee → Eventual Consistency 規範化、規範前提曖昧化) と同型 = 規範前提曖昧化
+  - Step 1b-iii dev-log 23 パターン: パターン「規範前提曖昧化」「timeout / race window」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「user input 待ちは subprocess.Popen の wait 内ではなく Python 側の input() 等で扱う、CLI-level timeout は
+  subprocess 呼出のみ対象」案も成立 → escalate 必須条件 1 (複数選択肢) 該当
+  - 修正案 X1 (推奨): design.md Performance & Scalability に「8 段階対話 interactive 中の timeout 規約」sub-section 追加、規約 = CLI-level timeout は
+   subprocess (LLM CLI) 呼出 wall-clock のみ対象、user input 待ち時間は除外。Implementation pattern = signal.alarm() または concurrent.futures で
+  subprocess wait のみに timeout 適用、user input は別 thread / interrupt handling
+  - 修正案 X2 (代替): CLI-level timeout を wall-clock 全体 (user input 待ち含む) 対象とし、対話的 dangerous op は CLI-level timeout を default 無制限
+   (--timeout 0 / config cli_level = 0) で起動推奨
+
+  dominated 判定厳密化:
+  - X1 推奨根拠: UX 維持 (user input 待ちで abort されない) / 8 段階対話の長時間放置許容
+  - X2 評価:
+    - 規律 1 合理的成立条件: 「CI 環境で hang 検出を厳密に行いたい」前提でのみ合理。CLI-level timeout 600 秒は user input 待ちに対しては短すぎ
+    - 規律 2 numerical 規模感: X2 採択時、対話的 dangerous op 利用時に毎回 --timeout 0 指定 = UX 負担、X1 = signal-based wait のみ timeout 適用 =
+  implementation 1 箇所
+    - 規律 3 暗黙前提: X1 = 「CLI-level timeout は subprocess 呼出のみ対象」、X2 = 「CLI-level timeout は wall-clock 全体対象、user 操作で
+  workaround」
+  - 結論: X1 が UX 観点で優位、X2 は user 負担過大で dominated
+
+  重-5-1 推奨案 X1 + 確証根拠 5 点
+
+  - (1) UX 維持: 8 段階対話途中の user input 待ち (数分〜数時間) で abort されない
+  - (2) CI 環境整合: subprocess (LLM CLI) 呼出の hang 検出は維持 (subprocess wait のみ timeout 適用)
+  - (3) Spec 7 申し送り整合: 8 段階対話 handler は user-driven 停止を許容 (line 1957 申し送り「8 段階対話 各段階 handler 実装」に整合)
+  - (4) Python 標準 pattern: subprocess.run/Popen の timeout は wall-clock の subprocess 呼出時間に適用、Python input() 等は別管理 (Python 3.x
+  標準動作)
+  - (5) boundary 整合: CLI-level timeout 適用範囲 (subprocess 呼出のみ) を design 内で明示、本 spec G3 AutoPolicy confirm_dangerous_op() の
+  wall-clock 動作を Spec 7 design phase coordination 申し送りに含める
+
+  重-5-1 却下案 X2 (CLI-level timeout を wall-clock 全体対象) の理由
+
+  - 8 段階対話の user input 待ち (数分〜数時間) で abort 発生 → UX 悪化 (規律 1 合理的成立条件は CI 環境のみ、対話 use case で不成立)
+  - ユーザーが毎回 --timeout 0 指定 = UX 負担過大
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 5 検出件数]: 自動採択推奨 1 件 (軽-5-1) / escalate 推奨 1 件 (重-5-1)
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (軽-5-1 自動採択 Edit + 重-5-1 escalate 確証で X1 採択 = subprocess 呼出のみ timeout 規約明示)
+  - 案 B 異論あり: 候補反転 (例: 重-5-1 を X2 = wall-clock 全体対象 / 軽-5-1 を escalate に格上げ等)
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ Edit 適用します。
+
+  軽-5-1: dedup logic 計算量見積り追加 + 重-5-1 X1: 8 段階対話 timeout 規約
+⏺ Spec 7 申し送りセクションに timeout suspend 規約追加。
+⏺ change log に R5 反映。
+⏺ R5 完了。
+
+  ---
+  R6: 失敗モード handler + 観測性 レビュー (新方式適用)
+⏺ R6 検出整理。
+
+  ---
+  R6 (失敗モード handler + 観測性) レビュー結果
+
+  Step 1b 4 重検査 + Step 1b-v + 厳しく検証 5 種強制発動
+
+  [ラウンド 6 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出なし
+  - b) 構造的不均一検査: 検出 1 件 (軽-6-2)
+  - c) 文書記述 vs 実装不整合検査: 検出 1 件 (軽-6-1)
+  - d) 規範前提曖昧化検査: 検出なし
+  - e) 単純誤記 grep 検査: 検出なし
+
+  合計: 自動採択推奨 2 件 + escalate 推奨 0 件
+
+  ---
+  軽-6-1: <vault>/logs/<command>_latest.json atomic write 規律未明示 [自動採択推奨]
+
+  - 検出: file I/O concurrency 規律 section (line 1623-1632) で対話ログ / bypass_attempts.jsonl / config.toml の write pattern を明示。しかし
+  <command>_latest.json (上書きパターン、line 1397 で記述) の atomic write 規律 (temp file + os.rename) が未明示。並行起動 5+ セッション時 (Performance Concurrency 規律) で同 cmd 並行実行時に race window 発生
+  - Step 1b-i 二重逆算: implementation 時、<command>_latest.json の write pattern 不明 → 単純上書き実装で並行 process 競合 → log file 破損
+  - Step 1b-iv 自己診断: 反転理由 = 「<command>_latest.json は単純上書きで OK、競合発生時の log 破損は許容」案 → CI 監視ツールが parseする場合は破損許容できない、軽微で自動採択妥当
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし
+  - 修正案 X1 (推奨自動採択): file I/O concurrency 規律 section に「<vault>/logs/<command>_latest.json write」項目を追加、config.toml write と同パターン (flock + temp file + os.rename) で atomic 保証
+
+  ---
+  軽-6-2: Error Categories and Responses に「Partial Completion」カテゴリ未列挙 [自動採択推奨]
+
+  - 検出: Error Categories and Responses (line 1377-1393) に User Errors / System Errors / Detection Errors / Boundary Errors の 4 カテゴリ。R7.4
+  (Maintenance UX halt-on-error デフォルト) の partial completion 状態取扱は line 911 で記述済だが Error Categories で 1 カテゴリとして未列挙 →
+  構造的不均一
+  - Step 1b-i 二重逆算: implementation 時、Maintenance UX halt 中断時の error 分類が Error Handling section から自明でない → R7.4 と Error Categories
+   の整合性確認のため line 911 まで読む必要
+  - Step 1b-iv 自己診断: 反転理由 = 「partial completion は line 911 で記述済、Error Categories では Detection Errors の 1 種として扱える」案 →
+  整合性向上のため明示記載が望ましい
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし
+  - 修正案 X1 (推奨自動採択): Error Categories and Responses に「Partial Completion (R7.4 halt-on-error)」カテゴリを追加、対応 = WARN + stderr 通知
+  (「partial completion: task1 成功 / task2 FAIL / task3 未実行」) + 各 task の独立 exit code 集約 + rw doctor 状態確認案内
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 6 検出件数]: 自動採択推奨 2 件 (軽-6-1, 軽-6-2) / escalate 推奨 0 件
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (軽-6-1 / 軽-6-2 自動採択 Edit)
+  - 案 B 異論あり: 候補反転 (例: 軽-6-1 / 軽-6-2 を escalate に格上げ等)
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ Edit 適用します。
+
+  軽-6-1: <command>_latest.json atomic write 規律追加
+⏺ 軽-6-2: Error Categories and Responses に Partial Completion 追加
+⏺ change log に R6 反映。
+⏺ R6 完了。
+
+  ---
+  R7: セキュリティ / プライバシー レビュー (新方式適用、Spec 4 最重要 R)
+
+⏺ Spec 4 最重要ラウンド: subprocess shell injection 防止規律 / path traversal / argparse type validator / shlex.quote 等。Spec 0 / Spec 1同型再発防止。
+⏺ R7 検出整理。
+
+  ---
+  R7 (セキュリティ / プライバシー) レビュー結果
+
+  Step 1b 4 重検査 + Step 1b-v + 厳しく検証 5 種強制発動
+
+  [ラウンド 7 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出なし
+  - b) 構造的不均一検査: 検出なし
+  - c) 文書記述 vs 実装不整合検査: 検出 1 件 (軽-7-1)
+  - d) 規範前提曖昧化検査: 検出なし
+  - e) 単純誤記 grep 検査: 検出なし
+
+  Spec 0 / Spec 1 同型 grep 検証結果 (TODO 予告):
+  - ✓ subprocess shell injection 防止 (line 1592-1595): list 形式必須 / shell=False default / shell=True 禁止 = 完備済 (Spec 0 R1 重-厳-4 / Spec 1 重-7-1 同型問題は本 spec 初版から適切に handle)
+
+  合計: 自動採択推奨 1 件 + escalate 推奨 0 件
+
+  ---
+  軽-7-1: rw retag <path-or-glob> glob 展開後の path traversal 検証規律明示不足 [自動採択推奨]
+
+  - 検出: line 1597-1600 で全 path 引数の validate_path_within_vault() gate 化規律あり。しかし rw retag <path-or-glob> glob 引数の glob.glob()
+  展開後の各 path に validation 適用が design 内で明示なし。glob 展開で意図しない Vault 外 path を含むリスク
+  - Step 1b-i 二重逆算: implementation 時、glob 展開結果の各 path に Vault root 検証を実施するか不明 → 実装漏れリスク
+  - Step 1b-iv 自己診断: 反転理由 = 「validate_path_within_vault() の "全 path 引数 gate 化" 規律で glob 展開後の path も含まれる暗黙了解」 →
+  明示性向上のため記述追加が望ましい
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし
+  - 修正案 X1 (推奨自動採択): Path traversal 防止 section に「glob 引数 (rw retag <path-or-glob> 等) は glob.glob() 展開後の各 path に対してvalidate_path_within_vault() 適用、Vault 外 path は skip + WARN」を追記
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 7 検出件数]: 自動採択推奨 1 件 (軽-7-1) / escalate 推奨 0 件
+
+  Spec 0 / Spec 1 同型問題は本 spec 初版から完備済 (subprocess shell injection 防止規律遵守、TODO 予告の最重要規律 grep verify 達成)。
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (軽-7-1 自動採択 Edit)
+  - 案 B 異論あり: 候補反転 (軽-7-1 を escalate に格上げ等)
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ Edit 適用します。
+⏺ change log に R7 反映。
+⏺ R7 完了。
+
+  ---
+  R8: 依存選定 レビュー (新方式適用)
+
+⏺ R8 観点: LLM CLI / yaml / pyyaml / Python 標準ライブラリ整合。Tech Stack table (line 209-221) は既確認、line 223-231 の依存形式の規範 + Allowed Dependencies (line 70-76) を verify。
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+⏺ R8 検出整理。
+
+  ---
+  R8 (依存選定) レビュー結果
+
+  Step 1b 4 重検査 + Step 1b-v + 厳しく検証 5 種強制発動
+
+  [ラウンド 8 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出なし
+  - b) 構造的不均一検査: 検出 1 件 (軽-8-2)
+  - c) 文書記述 vs 実装不整合検査: 検出なし
+  - d) 規範前提曖昧化検査: 検出 1 件 (軽-8-1)
+  - e) 単純誤記 grep 検査: 検出なし
+
+  合計: 自動採択推奨 2 件 + escalate 推奨 0 件
+
+  ---
+  軽-8-1: 対話ログ frontmatter yaml 書込み実装の依存決定未明示 [自動採択推奨]
+
+  - 検出: 対話ログ frontmatter (line 1258 yaml format) を本 spec G1 ChatEntry が write 実装。init_session_log() / ended_at 追記時に yaml format
+  生成必要。Tech Stack table (line 209-221) に yaml ライブラリ依存列挙なし、design 内で「pyyaml 採用」 / 「手書き string template」のどちらか未確定 →
+   規範前提曖昧化。Spec 1 は pyyaml 採用、本 spec の依存差異確定が必要
+  - Step 1b-iv 自己診断: 反転理由 = 「対話ログ frontmatter は simple key: value のみで手書き string template で十分、pyyaml 不要」案 →
+  採用妥当、ただし design 内で明示必要
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし
+  - 修正案 X1 (推奨自動採択): Tech Stack table に「Frontmatter Writing | 手書き string template (Python 標準) | 対話ログ frontmatter (type:
+  dialogue_log / session_id / started_at / ended_at / turns の simple key: value 構造、pyyaml 不要) | Spec 1 が採用する pyyaml は本 spec で不要
+  (frontmatter 構造が simple のため)、Spec 2 frontmatter schema 拡張時 (例: turn 構造化 events list) に pyyaml 採用検討 (Adjacent Sync)」を追加
+
+  ---
+  軽-8-2: Tech Stack table に glob Python 標準ライブラリ未列挙 [自動採択推奨]
+
+  - 検出: R7 軽-7-1 で rw retag <path-or-glob> glob 引数の path traversal 検証規律を追加。glob 実装は Python 標準 glob module / pathlib.Path.glob()
+  で対応可能だが Tech Stack table に列挙なし → 構造的不均一 (path 操作の pathlib は列挙あり、glob は未列挙)
+  - Step 1b-iv 自己診断: 反転理由 = 「pathlib.Path.glob() は pathlib 列挙の一部として暗黙了解」 → 明示性向上のため記述追加が望ましい
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし
+  - 修正案 X1 (推奨自動採択): Tech Stack table の「Path Operations」項目に「glob 展開 (rw retag <path-or-glob> 等、pathlib.Path.glob() 経由)」を追加
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 8 検出件数]: 自動採択推奨 2 件 (軽-8-1, 軽-8-2) / escalate 推奨 0 件
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (軽-8-1 / 軽-8-2 自動採択 Edit)
+  - 案 B 異論あり: 候補反転
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ Edit 適用します。
+⏺ change log に R8 反映。
+⏺ R8 完了。
+
+  ---
+  R9: テスト戦略 レビュー (新方式適用、interface 重 spec 厚いラウンド)
+⏺ R9 検出整理。
+
+  ---
+  R9 (テスト戦略) レビュー結果
+
+  Step 1b 4 重検査 + Step 1b-v + 厳しく検証 5 種強制発動
+
+  [ラウンド 9 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出なし
+  - b) 構造的不均一検査: 検出 1 件 (軽-9-1)
+  - c) 文書記述 vs 実装不整合検査: 検出 1 件 (重-9-1)
+  - d) 規範前提曖昧化検査: 検出なし
+  - e) 単純誤記 grep 検査: 検出 1 件 (重-9-1、(c) と重複検出)
+
+  合計: 自動採択推奨 1 件 + escalate 推奨 1 件
+
+  ---
+  重-9-1: ConfirmResult enum「4 値」記述、実際は 5 値 (Spec 0 / Spec 1 同型単純誤記再発) [escalate 推奨]
+
+  - 検出: line 1517 (Unit Tests) で「confirm_dangerous_op ConfirmResult enum 網羅 (軽-4-4 整合): 4 値 (CONFIRMED / ABORTED_USER /
+  ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTY)」と記載。実際の ConfirmResult enum (line 822-826) は 5 値:
+    - CONFIRMED_LIVE
+    - CONFIRMED_DRY_RUN (重-厳-1 確証案 Y で CONFIRMED を CONFIRMED_LIVE / CONFIRMED_DRY_RUN に分離)
+    - ABORTED_USER
+    - ABORTED_PREFLIGHT_FAIL
+    - ABORTED_NON_TTY
+
+  Spec 0 R7-R10 重-厳-5 / Spec 1 重-4-1 / 重-5-1 と同型単純誤記再発 (数値不整合パターン)。本セッション R1 重-1-1 で「許可リスト 9種」誤記訂正したばかり。
+
+  - Step 1b-i 二重逆算: implementation 時、ConfirmResult test が 4 値 / 5 値 のどちら基準か判断不能 → test coverage 漏れ
+  - Step 1b-ii Phase 1 同型: 上記 Spec 0 / Spec 1 / 本セッション R1 重-1-1 と同型 = 単純誤記 grep
+  - Step 1b-iii dev-log 23 パターン: パターン「単純誤記 grep」「文書記述 vs 実装不整合」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「test では CONFIRMED を 1 値として CONFIRMED_LIVE / CONFIRMED_DRY_RUN を別々にカウントしないルール」案 →
+  これは合理的でなく単純誤記
+  - 修正案 X1 (推奨): 「4 値」→「5 値」訂正、列挙を CONFIRMED_LIVE / CONFIRMED_DRY_RUN / ABORTED_USER / ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTYに更新
+  - dominated 判定: X2 = 実装側を 4 値に統一 (CONFIRMED_LIVE / CONFIRMED_DRY_RUN を 1 値に統合) → 重-厳-1 確証案 Y で分離した cmd_* 側 gate化規律と矛盾、X1 唯一案
+
+  重-9-1 推奨案 X1 + 確証根拠 5 点
+
+  - (1) 実 enum 定義 line 822-826 と整合 (5 値)
+  - (2) 重-厳-1 確証案 Y (CONFIRMED → CONFIRMED_LIVE / CONFIRMED_DRY_RUN 分離) の write 誤動作リスク防止規律と整合
+  - (3) Spec 0 R7-R10 重-厳-5 / Spec 1 重-4-1 / 本セッション R1 重-1-1 と同型訂正パターン整合
+  - (4) test coverage 完備 (5 値全件 unit test 化)
+  - (5) cmd_* 側 if result == CONFIRMED_DRY_RUN: return 0 gate 化 test 整合
+
+  重-9-1 却下案 X2 (4 値統合) の理由
+
+  - 重-厳-1 確証案 Y で確定済の 2 値分離規律と矛盾、write 誤動作リスク防止規律違反
+
+  ---
+  軽-9-1: cmd_audit_evidence Unit Tests 列挙未追加 [自動採択推奨]
+
+  - 検出: R1 重-1-2 で cmd_audit_evidence dedup logic 追加 + 決定 4-20 + Service Interface signature。しかし Unit Tests section (line 1511-1523) に
+  cmd_audit_evidence test 未列挙 → 構造的不均一 (cmd_chat / cmd_approve / cmd_doctor 等は列挙、cmd_audit_evidence なし)
+  - Step 1b-iv 自己診断: 反転理由 = 「Unit Tests は代表例列挙、全 cmd 列挙必要なし」案 → 重要機能 (R13.5 / 決定 4-20 dedup logic)のため明示が望ましい
+  - Step 1b-v 5 切り口: 5 切り口で反転理由なし
+  - 修正案 X1 (推奨自動採択): Unit Tests に「cmd_audit_evidence (R13.5 / 決定 4-20): DOI 正規化 / arXiv ID 抽出 / URL 正規化 / paper title fuzzy matching (Levenshtein < 5) の 4 アルゴリズム個別 test、canonical 化提案 markdown 出力 schema 検証、--limit 引数による fuzzy matching 対象制限 test、CLI-level timeout 発動 test、Vault 構造妥当性違反 / source: schema 不正時の WARN + skip / exit 1 の各 case」を追加
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 9 検出件数]: 自動採択推奨 1 件 (軽-9-1) / escalate 推奨 1 件 (重-9-1)
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (軽-9-1 自動採択 Edit + 重-9-1 escalate 確証で X1 採択 = 4→5 値訂正)
+  - 案 B 異論あり: 候補反転 (例: 重-9-1 を X2 = 実装 4 値統合 / 軽-9-1 を escalate に格上げ)
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ 重-9-1は本セッション R1 重-1-1 で「許可リスト 9種」誤記訂正したばかりとあるが、案Aになった経緯を詳しく説明。
+
+```
+⏺ 重-9-1 案 A 採択の経緯 詳細説明
+
+  1. 検出経路 (時系列)
+
+  R1 重-1-1 (本セッション冒頭):
+  - 検出: design.md line 39「許可リスト 9 種」と記述、実列挙は 10 件
+  - パターン: 単純誤記 (数値 vs 列挙の不整合)
+  - 訂正: 「9 種」→ 「10 種」(replace_all 4 箇所)
+  - 同型再発防止規律: Spec 0 R7-R10 重-厳-5 / Spec 1 重-4-1 / 重-5-1 と同型
+
+  R9 重-9-1 (本ラウンド):
+  - 検出: design.md line 1517 (Testing Strategy Unit Tests)「ConfirmResult enum 4 値 (CONFIRMED / ABORTED_USER / ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTY)」と記述
+  - 実 enum 定義 (line 822-826) は 5 値: CONFIRMED_LIVE / CONFIRMED_DRY_RUN / ABORTED_USER / ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTY
+  - パターン: R1 重-1-1 と同型の単純誤記 (数値 vs 列挙の不整合)
+
+  2. なぜ R9 で再発したか (根本原因分析)
+
+  design.md 初版作成時 (前セッション 2026-04-27)、ConfirmResult enum の値構成が 2 段階で確定:
+
+  - 初版: CONFIRMED (1 値) / 各 ABORTED_* 3 値 = 計 4 値
+  - 重-厳-1 確証案 Y 適用後 (前セッション 2026-04-28): CONFIRMED を CONFIRMED_LIVE / CONFIRMED_DRY_RUN の 2 値に分離 (cmd_* 側 if result ==
+  CONFIRMED_DRY_RUN: return 0 gate 化で write 誤動作リスク防止) = 計 5 値
+
+  初版 (4 値) 段階で書かれた Testing Strategy line 1517 が、重-厳-1 確証案 Y 適用 (5 値分離) 時に取りこぼされた = 段階的改修時の整合性漏れ。
+
+  これは R3 軽-3-1 (mute_until 削除時の 6 箇所一括整合作業) と同型の「段階的修正時の取りこぼし」パターン。
+
+  3. Step 1b 4 重検査結果 (R9 重-9-1 escalate 判定根拠)
+
+  - Step 1b-i 二重逆算検査: implementation 時、ConfirmResult test が 4 値 / 5 値 のどちら基準か判断不能 → test coverage 漏れリスク (CONFIRMED_DRY_RUN
+   の test 未実装で write 誤動作 regression 検出不能)
+  - Step 1b-ii Phase 1 同型パターンマッチング:
+    - Spec 0 R7-R10 重-厳-5 (approvals.requirements 誤記 2 箇所)
+    - Spec 1 重-4-1 (13 → 12 サブコマンド単純誤記)
+    - Spec 1 重-5-1 (8 → 12 検査項目)
+    - 本セッション R1 重-1-1 (許可リスト 9 → 10 種)
+    - = 計 4 件の同型パターン履歴、本セッションだけで 2 件目の同型再発
+  - Step 1b-iii dev-log 23 パターン: パターン「単純誤記 grep」「文書記述 vs 実装不整合」両方該当
+  - Step 1b-iv 自己診断義務: 反転理由 (auto → escalate へ反転) = 「test ルールで CONFIRMED_LIVE / CONFIRMED_DRY_RUN を 1
+  値統合カウント」案も理論上成立、ただし合理性なし (重-厳-1 確証案 Y の 2 値分離規律と矛盾)
+
+  4. X1 vs X2 dominated 判定厳密化 (規律 1-3 適用)
+
+  ┌────────────────────┬───────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────┐
+  │        観点        │    X1 = 「4 値」→「5 値」訂正     │        X2 = 実装 4 値統合 (CONFIRMED_LIVE / CONFIRMED_DRY_RUN を 1 値に戻す)        │
+  ├────────────────────┼───────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ 規律 1             │ 既存 enum 定義整合                │ 「test simplicity を最重視し、cmd_* 側 gate 化規律を見直す」前提でのみ合理          │
+  │ 合理的成立条件     │                                   │                                                                                     │
+  ├────────────────────┼───────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ 規律 2 numerical   │ 1 行 Edit (4 値 → 5 値、列挙更新) │ 重-厳-1 確証案 Y 取り消し + ConfirmResult enum 改版 + cmd_* 全件の result ==        │
+  │ 規模感             │                                   │ CONFIRMED_DRY_RUN gate 削除 = 広範な regression 改版                                │
+  ├────────────────────┼───────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ 規律 3 暗黙前提    │ 「重-厳-1 確証案 Y で確定済の 2   │ 「重-厳-1 確証案 Y を再検討、write 誤動作リスク防止より test simplicity             │
+  │                    │ 値分離規律維持」                  │ 優先」(現状合意なし)                                                                │
+  ├────────────────────┼───────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+  │ 結論               │ dominate                          │ dominated (規律 1 合理的成立条件不成立、numerical 過大)                             │
+  └────────────────────┴───────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────┘
+
+  5. X1 採択時の確証根拠 5 点
+
+  - (1) 実 enum 定義 (line 822-826) と整合: ConfirmResult が 5 値であることは確定済、Testing 記述のみ 4 値 = 文書側の単純誤記
+  - (2) 重-厳-1 確証案 Y との整合: 前セッションで確定した「CONFIRMED_LIVE / CONFIRMED_DRY_RUN 分離 + cmd_* 側 gate 化」write 誤動作リスク防止規律維持
+  - (3) Phase 1 同型訂正パターン整合: Spec 0 R7-R10 / Spec 1 重-4-1 / 本セッション R1 重-1-1 と同型訂正パターン (数値訂正)
+  - (4) test coverage 完備: 5 値全件 unit test 化で CONFIRMED_DRY_RUN regression 検出可能
+  - (5) cmd_ 側 gate test 整合*: implementation 時の if result == CONFIRMED_DRY_RUN: return 0 test と整合
+
+  6. 案 A 採択 = X1 採択の意味
+
+  - 訂正対象: design.md line 1517
+  - Before: 4 値 (CONFIRMED / ABORTED_USER / ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTY)
+  - After: 5 値 (CONFIRMED_LIVE / CONFIRMED_DRY_RUN / ABORTED_USER / ABORTED_PREFLIGHT_FAIL / ABORTED_NON_TTY)
+  - 影響範囲: design.md 1 行訂正のみ (cmd_* implementation / enum 定義は変更なし)
+
+  7. 同型再発の構造的問題 (本セッション 2 件目)
+
+  R1 重-1-1 と R9 重-9-1 は両方とも「設計改版 (許可リスト 10 種化 / ConfirmResult 5 値分離) 時の 数値表記取りこぼし」 =
+  段階的改修時の整合性漏れパターン。
+
+  学習: 設計改版時に「列挙数値 + 列挙内容」のペアを grep で機械的に整合性検査する規律を強化すべき (Step 1b-iii dev-log 23
+  パターンチェックリストの「単純誤記 grep」を厳密適用)。本セッション R9 で発見できたのは 4 重検査 + 5 切り口で counted。
+
+  ---
+  結論: 案 A 採択 = X1 (4→5 値訂正) で進めるのが規律に従った妥当な判断。ご懸念があれば反転 (案 B) もお受けします。Edit 適用してよろしいでしょうか?
+```
+
+##### ❯ 了解
+
+```
+⏺ Edit 適用します。
+
+  重-9-1 X1: ConfirmResult enum 4→5 値訂正
+⏺ 軽-9-1: cmd_audit_evidence Unit Tests 追加
+⏺ change log に R9 反映。
+
+⏺ R9 完了。残り 1 ラウンド (R10) + commit/push + dev-log 更新。
+
+  ---
+  R10: マイグレーション戦略 レビュー (新方式適用、最終ラウンド)
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ R10 検出整理。
+
+  ---
+  R10 (マイグレーション戦略) レビュー結果
+
+  Step 1b 4 重検査 + Step 1b-v + 厳しく検証 5 種強制発動
+
+  [ラウンド 10 厳しく検証結果]
+
+  - a) 規範範囲先取り検査: 検出なし
+  - b) 構造的不均一検査: 検出なし
+  - c) 文書記述 vs 実装不整合検査: 検出 1 件 (重-10-1)
+  - d) 規範前提曖昧化検査: 検出なし
+  - e) 単純誤記 grep 検査: 検出 1 件 (重-10-1、(c) と重複検出)
+
+  合計: 自動採択推奨 0 件 + escalate 推奨 1 件
+
+  ---
+  重-10-1: line 1806 設計決定範囲「4-1〜4-19」、本セッション追加 4-20 / 4-21 取りこぼし [escalate 推奨]
+
+  - 検出: line 1806 (Rollback 規範)「設計決定の rollback: 設計決定 4-1〜4-19 のいずれかを変更する場合、design.md 改版経路 (Revalidation Trigger 適用)
+   で再 approve」と記述。本セッションで決定 4-20 (R1 重-1-2 cmd_audit_evidence dedup logic) + 決定 4-21 (R3 軽-3-1 mute_until Phase 2 拡張) を追加済
+  → 「4-1〜4-21」に訂正必要
+
+  - 本セッション 3 件目の同型単純誤記再発:
+    - R1 重-1-1: 許可リスト「9 種」→ 10 種訂正 ✓
+    - R9 重-9-1: ConfirmResult enum「4 値」→ 5 値訂正 ✓
+    - R10 重-10-1: 決定範囲「4-1〜4-19」→「4-1〜4-21」訂正 ← 本検出
+    - = 段階的改修時の数値表記取りこぼしパターン継続発生
+  - Step 1b-i 二重逆算: implementation 時、新規追加された決定 4-20 / 4-21 が rollback 規範の対象範囲外と誤解されるリスク → 設計決定変更時の rollback
+  手順が一部決定で適用されない混乱
+  - Step 1b-ii Phase 1 同型: Spec 0 R7-R10 重-厳-5 / Spec 1 重-4-1 / 重-5-1 / 本セッション R1 重-1-1 / R9 重-9-1 と同型単純誤記
+  - Step 1b-iii dev-log 23 パターン: パターン「単純誤記 grep」「文書記述 vs 実装不整合」該当
+  - Step 1b-iv 自己診断: 反転理由 = 「rollback 規範は決定全体に対する規律で、4-1〜4-19 は当時の状況、後追い反映は不要」案 →
+  規範整合性のため本セッション追加分も含めるべき
+  - 修正案 X1 (推奨): 「設計決定 4-1〜4-21 のいずれかを変更する場合」に訂正
+  - dominated 判定: X2 = 「決定 4-20 / 4-21 撤回」案は dominated (本セッション escalate 確証 / 規範範囲未対応の解消と矛盾)、X1 唯一案
+
+  重-10-1 推奨案 X1 + 確証根拠 5 点
+
+  - (1) 本セッションで追加された決定 4-20 / 4-21 を rollback 規範対象に含む整合性確保
+  - (2) 設計決定 append-only 規律 (line 1808「決定 4-(N+1) 追加」) との整合
+  - (3) Spec 0 / Spec 1 / 本セッション R1 重-1-1 / R9 重-9-1 と同型訂正パターン整合 (本セッション 3 件目)
+  - (4) 段階的改修時の数値表記整合性検査の規律強化 (Step 1b-iii dev-log 23 パターン「単純誤記 grep」継続適用結果)
+  - (5) implementation phase 着手時の rollback 手順曖昧化リスク解消
+
+  重-10-1 却下案 X2 (決定 4-20 / 4-21 撤回) の理由
+
+  - 本セッション escalate 確証手順 (R1 重-1-2 / R3 軽-3-1) で X1 採択済の規範対応が無効化、規範範囲未対応再発
+  - 本セッション議論の整合性破綻
+
+  ---
+  Step 2: user 判断依頼
+
+  [ラウンド 10 検出件数]: 自動採択推奨 0 件 / escalate 推奨 1 件 (重-10-1)
+
+  本セッション 3 件目の同型単純誤記再発 (R1 重-1-1 / R9 重-9-1 / R10 重-10-1) = 段階的改修時の数値表記取りこぼしパターン。Step 1b-iii dev-log 23パターン「単純誤記 grep」厳密適用で継続発見可能。
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: LLM 判断通り進める (重-10-1 escalate 確証で X1 採択 = 「4-1〜4-19」→「4-1〜4-21」訂正)
+  - 案 B 異論あり: 候補反転 (重-10-1 を X2 = 決定 4-20 / 4-21 撤回 / 自動採択に降格等)
+  - 案 C 該当なし扱い
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ Edit 適用します。
+⏺ 3 箇所一括訂正します。重複した Rollback 規範記述も確認しておきます。
+⏺ Edit 適用中に追加検出を発見しました。
+  ---
+  R10 追加検出: 重複セクション (軽-10-2 ?)
+
+  検出: design.md line 1791-1810 と line 1812-1821 に Phase 名整合 + Rollback 規範の ほぼ完全重複セクション が存在。前 design 編集時の重複放置と推定:
+
+  - Line 1791-1810: 「Phase 名整合 (Spec 1 R6.1 / R4.7 / R9.1 / Spec 6 R9 / Spec 7 dangerous op との整合)」+ 「Rollback 規範」(完全版、Spec 1
+  implementation 着手前提条件 6 spec 列挙 + 部分 rollback)
+  - Line 1812-1821: 「Phase 名整合」(同タイトル) + 「Rollback 規範」(短縮版、内容ほぼ重複)
+
+  Step 1b 検査:
+  - 規律 b) 構造的不均一: 同一タイトル sub-section の重複 = 構造的不均一
+  - 規律 e) 単純誤記 grep: 重複放置 = 編集時の取りこぼし
+
+  修正案 X1: Line 1812-1821 の重複セクション削除 (line 1791-1810 の完全版を保持)
+
+  Step 1b-v 5 切り口: 5 切り口で反転理由なし、escalate 必須条件 5 種非該当 → 自動採択候補
+
+  ---
+  Step 2: user 判断依頼 (R10 軽-10-2 追加検出)
+
+  LLM 判断への異論ある候補は?
+
+  - 案 A 異論なし: 軽-10-2 自動採択 Edit (line 1812-1821 重複セクション削除、line 1791-1810 完全版保持)
+  - 案 B 異論あり: 反転 (escalate 級として詳細議論 / 別案で削除箇所変更等)
+  - 案 C 該当なし扱い (重複保持)
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ 重複セクション削除します。
+⏺ change log に R10 反映。
+⏺ 全 10 ラウンド完了。
+
+  ---
+  レビュー結果サマリ (全 10 ラウンド)
+
+  ┌────────────────────────┬──────────┬──────────┬──────┐
+  │        ラウンド        │ 自動採択 │ escalate │ 合計 │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R1 (AC 網羅)           │ 1        │ 3        │ 4    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R2 (アーキテクチャ)    │ 1        │ 1        │ 2    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R3 (データモデル)      │ 2        │ 1        │ 3    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R4 (API interface)     │ 2        │ 1        │ 3    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R5 (アルゴリズム+性能) │ 1        │ 1        │ 2    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R6 (失敗+観測性)       │ 2        │ 0        │ 2    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R7 (セキュリティ)      │ 1        │ 0        │ 1    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R8 (依存選定)          │ 2        │ 0        │ 2    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R9 (テスト戦略)        │ 1        │ 1        │ 2    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ R10 (マイグレーション) │ 1        │ 1        │ 2    │
+  ├────────────────────────┼──────────┼──────────┼──────┤
+  │ 合計                   │ 14       │ 9        │ 23   │
+  └────────────────────────┴──────────┴──────────┴──────┘
+
+  新規設計決定: 4-20 (cmd_audit_evidence dedup) / 4-21 (mute_until Phase 2 拡張)
+  Spec 0 / Spec 1 同型再発防止規律遵守: subprocess shell injection 防止 (R7) は本 spec 初版完備、単純誤記 grep パターン 3 件発見・訂正 (R1 / R9 / R10)
+
+  ---
+  次のステップ: Spec 4 design approve commit + push
+
+⏺ 提案 commit + push 内容 (visible action 承認依頼)
+
+  memory feedback_approval_required.md 規律に従い user 明示承認必須。
+
+  1. spec.json 更新:
+  - phase: "design" → "design-approved"
+  - approvals.design.approved: false → true
+  - updated_at: 現在時刻
+
+  2. commit (Spec 0 / Spec 1 と同手法):
+  - 対象: design.md + spec.json (research.md は本セッションで未更新、要追記すべき内容なら別議論)
+  - メッセージ案: design(spec-4): rwiki-v2-cli-mode-unification design approve やり直し - 新方式 4 重検査 + Step 1b-v 自動深掘り 5 切り口 + 厳しく検証 default + dominated 判定厳密化規律 適用、合計 23 件処理
+
+  3. push:
+  - やり直し全 10 ラウンド完了 + 再 approve commit までまとめて push
+
+  research.md 更新の要否確認
+
+  Spec 0 / Spec 1 やり直しでは「自動採択トレース」を research.md に追記していたケースあり。本セッションで追加する場合の判断:
+
+  - 本セッションは escalate 9 件 + 自動採択 14 件、各々 4 重検査 + 5 切り口を design.md change log と決定 4-20 / 4-21 で詳細記録済
+  - research.md「自動採択トレース」追記は Spec 1 やり直しでも実施されたが、design.md change log で十分整合性記録できているため省略可能
+
+  ---
+  承認をお願いします:
+
+  - (A) この plan で進める (commit + push、design.md + spec.json のみ commit)
+  - (B) research.md に「やり直しトレース」を追記してから commit
+  - (C) 別案
+
+  ご指示をお願いします。
+```
+
+##### ❯ A
+
+```
+⏺ ---
+  Spec 4 design approve やり直しセッション 完了報告
+
+  成果物 commit + push 済
+
+  - commit 4bc89f7 (push 済): design(spec-4): rwiki-v2-cli-mode-unification design approve やり直し - 新方式 4 重検査 + Step 1b-v 自動深掘り 5 切り口
+   + 厳しく検証 default + dominated 判定厳密化規律 適用、合計 23 件処理
+  - 取り消し commit e88ce49 + 再 approve commit 4bc89f7 の 2 commit 構成
+
+  全 10 ラウンド処理サマリ (合計 23 件)
+
+  ┌───────────────────┬──────────┬──────────┬────────────────────────────────────────────────────────────┐
+  │     ラウンド      │ 自動採択 │ escalate │                          主要検出                          │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R1 (AC 網羅)      │ 1        │ 3        │ 重-1-2 cmd_audit_evidence dedup logic 完全欠落 → 決定 4-20 │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R2 (アーキ)       │ 1        │ 1        │ 重-2-1 G3 AutoPolicy Spec 7 dependency                     │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R3 (データ)       │ 2        │ 1        │ 軽-3-1 mute_until 期間 mute 削除 → 決定 4-21               │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R4 (API)          │ 2        │ 1        │ 軽-4-2 Exception re-raise pattern 明示                     │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R5 (性能)         │ 1        │ 1        │ 重-5-1 8 段階対話 timeout suspend                          │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R6 (観測性)       │ 2        │ 0        │ 軽-6-1 atomic write / 軽-6-2 Partial Completion            │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R7 (セキュリティ) │ 1        │ 0        │ subprocess shell injection 完備済 (TODO 予告達成)          │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R8 (依存)         │ 2        │ 0        │ Tech Stack 整合                                            │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R9 (テスト)       │ 1        │ 1        │ 重-9-1 ConfirmResult 4→5 値訂正                            │
+  ├───────────────────┼──────────┼──────────┼────────────────────────────────────────────────────────────┤
+  │ R10 (マイグレ)    │ 1        │ 1        │ 重-10-1 決定範囲 4-19→4-21 + 重複セクション削除            │
+  └───────────────────┴──────────┴──────────┴────────────────────────────────────────────────────────────┘
+
+  新規設計決定
+
+  - 決定 4-20: cmd_audit_evidence source: dedup logic 本 spec 所管 (DOI / arXiv / URL / paper title 4 アルゴリズム)
+  - 決定 4-21: mute_until 削除 + 永続のみ MVP + Phase 2 拡張保留
+
+  本セッション学習 (memory に反映済規律の継続適用結果)
+
+  段階的改修時の数値表記取りこぼしパターンが本セッションだけで 3 件発見:
+  - R1 重-1-1: 「9 種」→ 10 種 (許可リスト)
+  - R9 重-9-1: 「4 値」→ 5 値 (ConfirmResult enum)
+  - R10 重-10-1: 「4-19」→ 4-21 (決定範囲、4 箇所一括)
+
+  → Step 1b-iii dev-log 23 パターン「単純誤記 grep」厳密適用継続が引き続き必要。
+
+  design phase 進捗
+
+  ✅✅⬜⬜✅⬜⬜⬜ (3/8 完了)
+  Phase 1: ✅ Spec 0 → ✅ Spec 1
+  Phase 2: ✅ Spec 4
+  Phase 3: ⬜ Spec 5 + ⬜ Spec 2 (次セッション着手)
+  Phase 4: ⬜ Spec 3
+  Phase 5: ⬜ Spec 6 + ⬜ Spec 7
+
+  次セッション着手候補 (TODO_NEXT_SESSION.md 反映済)
+
+  - (a) Phase 3 = Spec 5 + Spec 2 並列 design 着手 (推奨)
+  - (b) 連鎖 migration 4 改版経路の R 改版 commit + 再 approve PR
+  - (c) その他: research.md 自動採択トレース追記等
+
+  本セッション完了。お疲れさまでした。
+```
+
+##### ❯ 次はSpec5,2?以前はSpec7だったような気がしたが
+
+```
+⏺ 確認します。roadmap.md の Phase 順序を verify します。
+
+⏺ ご指摘の通りです。roadmap.md を確認して誤りを発見しました。お詫びします。
+
+  正しい Phase 順序 (roadmap.md L43-72 より)
+
+  Phase 1: Foundation
+    Spec 0 → Spec 1
+
+  Phase 2: L3 操作基盤
+    Spec 4 (cli-mode-unification) ← 完了
+      ↓
+    Spec 7 (lifecycle-management) ← 次セッション
+
+  Phase 3: L2 Graph Ledger（最重要・最大規模）
+    Spec 5 (knowledge-graph)
+      ↓
+    Spec 2 (skill-library)
+
+  Phase 4: Skill Dispatch
+    Spec 3
+
+  Phase 5: 本丸
+    Spec 6
+
+  順序理由 (L74-80):
+  - Spec 4 → 7 を Spec 5 より前: 「CLI 統一と Page lifecycle が揃えば Spec 5 の CLI entry 点が決まる」
+  - Spec 5 → 2: 「Spec 2 の extraction skill は Spec 5 の edges.jsonl / Query API に書き込む」
+
+  私の誤り
+
+  前 TODO_NEXT_SESSION.md (前セッション作成、L22) でも誤った順序が記載されていたため、私はそれを継承して再記述してしまいました。roadmap.md がSSoT、TODO_NEXT_SESSION.md が誤りでした。
+
+  訂正: 次セッションは Spec 7 (lifecycle-management)
+
+  TODO_NEXT_SESSION.md を訂正します。
+⏺ 進捗シンボル (Spec 0-7 の順) も訂正します。
+
+⏺ ---
+  訂正報告
+
+  ご指摘ありがとうございます。roadmap.md L43-72 が SSoT で、正しい順序は:
+
+  - Phase 2 後半 = Spec 7 (Spec 4 完了後の次は Spec 7) ← user 記憶通り
+  - Phase 3 = Spec 5 → Spec 2 (Spec 7 完了後)
+
+  前 TODO_NEXT_SESSION.md (前セッション作成) の Phase 順序記述が roadmap.md と不整合で、私はそれを継承して再記述してしまいました。Step 1b-iii dev-log
+   23 パターン「規範前提曖昧化」の同型問題 = SSoT 文書 (roadmap.md) との整合性を verify せず、前セッション TODO を信頼してしまった。
+
+  訂正済 TODO_NEXT_SESSION.md
+
+  - 次のアクション: Phase 2 後半 = Spec 7 (lifecycle-management) design 着手 (roadmap.md SSoT 順序)
+  - Spec 7 特徴記述追加 (位置付け / Coordination / 厚いラウンド / 本セッション完了の Spec 4 申し送り 7 項目を Spec 7 design 着手時に Adjacent Sync
+  で受領 等)
+  - 進捗シンボル: ✅✅⬜⬜✅⬜⬜⬜ (Spec 0/1/2/3/4/5/6/7 の順)
+  - 依存順: Phase 1 → Phase 2 後半 (Spec 4 → Spec 7) → Phase 3 (Spec 5 → Spec 2) → Phase 4 (Spec 3) → Phase 5 (Spec 6)
+
+  Spec 7 が次の理由 (roadmap L74-80)
+
+  - 「Spec 4 → 7 を Spec 5 より前: CLI 統一と Page lifecycle が揃えば Spec 5 の CLI entry 点が決まる」
+  - Spec 4 (本セッション完了) で確定した Spec 7 への申し送り 7 項目 (8 段階対話 handler / Page lifecycle 状態遷移 / L3 診断 API / HTML 差分マーカー /
+   read-only walkthrough / lock 取得タイミング / 本セッション R5 重-5-1 採択 = timeout suspend signal pattern) を Spec 7 design 着手時に Adjacent Sync で受領
+
+  ご指摘で正しい順序に訂正できました。お疲れさまでした。
+  
+⏺ memory に保存しました。
+
+  保存内容サマリ
+
+  - 新 memory: feedback_todo_ssot_verification.md (TODO 作成・更新時の SSoT 確認義務)
+  - MEMORY.md index: 新セクション「引き継ぎ文書 / TODO 作成規律」追加
+
+  規律の要旨
+
+  - TODO_NEXT_SESSION.md / dev-log / 引き継ぎ文書を更新する際は、前 TODO を鵜呑みせず必ず SSoT を 1 件以上 Read で照合
+  - 照合対象 SSoT:
+    - Phase 順序 / 次セッション着手対象 / 依存順 → roadmap.md
+    - requirements 範囲 / AC → 各 spec requirements.md
+    - 設計決定継承 / 申し送り → 各 spec design.md
+    - brief 持ち越し → 各 spec brief.md
+  - 不整合発見時は即時訂正 + 「TODO の不整合源」を memory に学習反映
+  - 一般化: dev-log / MEMORY.md index / session 完了/開始報告 等の引き継ぎ文書全般に適用
+
+  これで次セッション以降 TODO を更新する際、前 TODO の記述を信頼せず roadmap.md / steering 等の SSoT を必ず確認する規律が memoryに永続化されました。同型問題 (前 TODO の不整合伝播) 再発防止。
+```
+
+
+
+
+
+## Spec 7 rwiki-v2-lifecycle-management
+
+##### ❯ TODO_NEXT_SESSION.mdを読み待機
+
+```
+⏺ TODO_NEXT_SESSION.md を読み込みました。待機します。
+
+  現在の状態サマリ:
+  - ブランチ main 最新 commit 4bc89f7 (push 済)
+  - Spec 4 (rwiki-v2-cli-mode-unification) design approve やり直し完了 (合計 23 件)
+  - design phase 進捗: 3/8 完了 (Spec 0 + Spec 1 + Spec 4)
+
+  次のアクション 3 択:
+  - (a) Phase 2 後半 = Spec 7 (rwiki-v2-lifecycle-management) design 着手 (roadmap.md SSoT 順序推奨)
+  - (b) 連鎖 migration 4 改版経路の R 改版 commit + 再 approve PR 起票
+  - (c) その他 (research.md トレース追記、追加 review 等)
+
+  ご指示をお待ちします。
+```
+
+#####  ❯ Spec 7 design開始
+
+```
+⏺ Spec 7 の状態確認完了:
+  - spec.json: phase = requirements-approved (design 未生成)
+  - requirements.md: 291 行 approve 済 (2026-04-27)
+  - brief.md: 117 行 (Design phase 持ち越し項目 = R6.9 / R13.7 / R15.3 + F-1〜F-3 + 第 3 ラウンド 5 件 + 第 4 ラウンド 6 件)
+  - design.md / research.md: 未存在
+
+  roadmap.md SSoT 順序通り Phase 2 後半 (Spec 4 → Spec 7) で着手します。/kiro-spec-design skill を invoke します。
+  
+⏺ Skill(kiro-spec-design)
+  ⎿  Successfully loaded skill · 8 tools allowed
+
+⏺ Spec 7 design 開始。まず Step 1 (Gather Context) として必要な context を並列で読み込みます。
+
+  Read 1 file, listed 2 directories (ctrl+o to expand)
+
+⏺ 要件 16 件を把握。Spec 7 は Complex/New feature (Page lifecycle 5 状態 + dangerous op 13 種 + Page→Edge 相互作用) なので Full discoveryが必要。次に context (steering / template / design 規範) と先行 Spec 4 の coordination 申し送りを並列で読み込みます。
+⏺ Tasks を作成して進捗管理します。
+⏺ steering files (小) を直接読み、Spec 4 design (大、coordination 申し送り 7 項目抽出) と Spec 1 design (frontmatter schema 確認) は subagentで並列解析させます。
+⏺ 2 background agents launched (↓ to manage)
+   ├ Spec 4 design 申し送り 7 項目抽出
+   └ Spec 1 frontmatter schema 抽出
+
+⏺ subagent 並列稼働中。Spec 0 / Spec 5 / Spec 6 / Spec 2 / consolidated-spec の coordination 抽出も並列で別 subagent に投げます。
+⏺ Agent(Spec 0/5/6/2 + SSoT coordination 抽出)
+⏺ subagent 3 つ並列稼働中。待機しつつ、独立作業として AGENTS/guides ディレクトリ現状と v1-archive 参考の有無を確認します。
+⏺ 確認:
+  - tVault/AGENTS/guides/ は未存在 → Spec 7 で 11 種のガイド md を新規作成
+  - v1-archive/scripts には lifecycle 系実装なし → 完全新規実装
+  - consolidated-spec.md §7.2 Spec 7 該当箇所は line 2351 周辺、コマンド対応注記は line 2732 周辺3 つの subagent 完了通知を待機します。
+⏺ Agent "Spec 1 frontmatter schema 抽出" completed
+
+⏺ Spec 1 schema 抽出完了。連鎖 migration 4 改版経路 (R6.1 / R4.7 / R9.1) は完了済、R5.2 のみ未確定 (Spec 7 と無関係)。残り 2 つの subagentを待機します。
+⏺ Agent "Spec 4 design 申し送り 7 項目抽出" completed
+
+⏺ Spec 4 申し送り抽出完了。Spec 7 提供すべき handler signature 詳細 + Adjacent Sync 経路 8 項目を取得。残り 1 つの subagent (Spec 0/5/6/2 + SSoT)を待機します。
+
+⏺ Agent "Spec 0/5/6/2 + SSoT coordination 抽出" completed
+
+⏺ 全 3 subagent 完了。Discovery 完了 → Step 3 (Synthesis) に進みます。
+
+⏺ Synthesis 完了:
+  - 共通化採用: PageEdgeOrchestrator / Follow-up generator / decision_log helper / Backlink walker (BACKLINK_SCAN_PATHS 定数)
+  - 共通化見送り: LifecycleStateMachine class hierarchy (transition_map dict + helper で十分、過度な abstraction 回避)
+  - Generator yield pattern 採用: 8 段階対話 + walkthrough mode + user input wait signal を 1 つの generator API で統合 (Spec 4 申し送り 5/6/7 の
+  signal pattern 確定)
+  - Adopt: difflib (標準、HTML 差分) / hashlib (標準、state hash) / PyYAML (Spec 1 継承)
+  - Build: 8 段階対話 sequencer / state hash logic / Page→Edge orchestrator / Follow-up registry / L3 診断 API
+  - Follow-up id 採番: <YYYY-MM-DD>-<3 桁 seq> (人間可読 + git diff 可読、UUID 不採用)
+  - HTML 差分 attribute (申し送り 4 / 決定 4-8): class="rwiki-diff-add" / "rwiki-diff-del" / "rwiki-diff-context" のみ、data-attribute は MVP 不要
+  - state hash 対象: page lifecycle frontmatter + 関連 edges 数 + 関連 edges 最新 status
+
+⏺ Step 4 開始。先に research.md を書き、その上で design.md を書きます。research.md から着手します。
+⏺ Write(.kiro/specs/rwiki-v2-lifecycle-management/research.md)
+⏺ 全 3 subagent 完了。Discovery 完了 → Step 3 (Synthesis) に進みます。
+⏺ 全 3 subagent 完了。Discovery 完了 → Step 3 (Synthesis) に進みます。
+
+⏺ Synthesis 完了:
+  - 共通化採用: PageEdgeOrchestrator / Follow-up generator / decision_log helper / Backlink walker (BACKLINK_SCAN_PATHS 定数)
+  - 共通化見送り: LifecycleStateMachine class hierarchy (transition_map dict + helper で十分、過度な abstraction 回避)
+  - Generator yield pattern 採用: 8 段階対話 + walkthrough mode + user input wait signal を 1 つの generator API で統合 (Spec 4 申し送り 5/6/7 の
+  signal pattern 確定)
+  - Adopt: difflib (標準、HTML 差分) / hashlib (標準、state hash) / PyYAML (Spec 1 継承)
+  - Build: 8 段階対話 sequencer / state hash logic / Page→Edge orchestrator / Follow-up registry / L3 診断 API
+  - Follow-up id 採番: <YYYY-MM-DD>-<3 桁 seq> (人間可読 + git diff 可読、UUID 不採用)
+  - HTML 差分 attribute (申し送り 4 / 決定 4-8): class="rwiki-diff-add" / "rwiki-diff-del" / "rwiki-diff-context" のみ、data-attribute は MVP 不要
+  - state hash 対象: page lifecycle frontmatter + 関連 edges 数 + 関連 edges 最新 status
+
+⏺ Step 4 開始。先に research.md を書き、その上で design.md を書きます。research.md から着手します。
+⏺ research.md 完成 (20 設計決定 + 6 リスク + 9 references)。次に design.md draft を書きます。
+⏺ design.md draft 完成 (約 1100 行). Review Gate (mechanical + judgment) を実施します。
+
+⏺ Review Gate 実施結果:
+
+  Mechanical Checks:
+  - ✓ Boundary section populated: This Spec Owns (22 項目) / Out of Boundary (12 項目) / Allowed Dependencies (7 項目) / Revalidation Triggers (9項目)
+  - ✓ File Structure Plan populated: 4 module concrete paths + 11 guide markdown + Follow-up directory + Modified Files 6 項目
+  - ✓ Boundary ↔ file structure alignment: Layer 1-4 責務と File Structure Plan が一致
+  - ✓ No orphan components: 全 component が File Structure Plan に対応 file path
+  - ⚠ Requirements traceability: range 集約 (例 "1.1-1.8") のため grep では個別 ID 展開されないが、Components and Interfaces 各 block のRequirements: ... 行で個別 ID 列挙済 (寛容解釈で全 110 ID カバー、Spec 0/1/4 と同パターン)
+
+  Judgment Review:
+  - ✓ Requirements Coverage: 110 numeric ID 全件を component / decision / Document Contract / Error Handling のいずれかで履行
+  - ✓ Architecture Readiness: 4 module DAG + 17 cmd_* handler + 11 guide + edge API + state hash + lock タイミング + generator pattern 全明示
+  - ✓ Boundary Readiness: ownership seam 明確、Out of Boundary と Allowed Dependencies で seam 完備、Revalidation Triggers 9 項目
+  - ✓ Executability: 17 handler + orchestrator + follow-up + diagnostics + 11 guide で task 分解可能
+
+  brief 持ち越し項目 17 件の trace 確認:
+  - ✓ R6.9 / R13.7 / R15.3 → Decision 7-15 / 7-14 / Layer 1
+  - ✓ F-1 (component 命名) → Layer 4 handler / Doc-DangerousOps / Doc-OpGuides に分離
+  - ✓ F-2 (task_type 拡張余地) → Migration Strategy
+  - ✓ F-3 (Backlink 走査範囲) → Decision 7-17 BACKLINK_SCAN_PATHS
+  - ✓ 第 3-7〜3-11, 第 4-5〜4-10 = 11 件すべて Decision 7-N または該当 section に対応
+
+  Review Gate Pass (2 review pass 以内). Step 6 (spec.json 更新) に進みます。
+  
+⏺ Spec 7 design draft 生成完了。
+
+  完了サマリ
+
+  生成ファイル
+
+  - .kiro/specs/rwiki-v2-lifecycle-management/design.md (1425 行)
+  - .kiro/specs/rwiki-v2-lifecycle-management/research.md (454 行)
+  - .kiro/specs/rwiki-v2-lifecycle-management/spec.json (phase = design-generated)
+
+  Discovery 統合
+
+  - Spec 4 申し送り 7 項目 + Spec 4 design 内 Spec 7 引用 30+ 箇所
+  - Spec 1 frontmatter 9 field schema 継承 + update_history.type 委譲
+  - Spec 5 edge API 3 種 + record_decision API + decision_log 22 種 (本 spec 10 種所管)
+  - Spec 6 hypothesis approve flow + cmd_promote_to_synthesis 二重 entry
+  - Spec 2 skill lifecycle 委譲 + skill ファイル単一 .md 配置
+  - Foundation §2.3 / §2.4 / §2.5 / §2.10 / §2.12 / §2.13 規範 + R5/R11/R11.5/R12
+
+  設計決定 20 件 (Decision 7-1 〜 7-20)
+
+  - 7-5 が核心: 8 段階対話 + read-only walkthrough + user input wait signal の 3 用途を Python generator yield pattern で統合 (Spec 4 申し送り 5/6/7を 1 API で吸収)
+  - 7-6 / 7-7: 段階 8 開始時 lock 取得 + state hash pre-flight 比較 で race window 解消
+  - 7-8 / 7-9: orchestrate_edge_ops 共通関数 + workload 別 timeout (deprecate=5s / retract=10s / merge=30s)
+  - 7-15 / 7-16: Skill lifecycle 4 種対話階段 + Page と別関数 (update_history 適用差)
+
+  Architecture
+
+  - 4 module DAG: Layer 4 handler ≤ 1500 行 → Layer 3 orchestrator → Layer 2 follow-up registry → Layer 1 diagnostics ≤ 500 行
+  - 17 cmd_* handler (Page 13 + Skill 4) + 11 種 AGENTS guide markdown + 5 段 stateMachine + 8 種 StageEvent dataclass
+
+  Adjacent Sync 経路 (design approve 後の連鎖更新)
+
+  - Spec 4 design.md: 8 項目 (handler signature / Boundary / L3 診断 API / HTML diff / read-only mode / lock scope / timeout signal / module 名)
+  - Spec 1 design.md: 1 項目 (update_history.type example コメントに lifecycle 起源 7 値追記)
+  - drafts §7.2 Spec 7 表: 1 項目 (Skill 拡張 2 種 deprecate/archive 追加)
+
+  Review Gate
+
+  - Mechanical: Boundary / File Structure Plan / alignment / no orphan = pass
+  - Judgment: Coverage / Architecture / Boundary / Executability = pass
+  - 寛容解釈で 110 numeric ID 全 cover (range 集約方式、Spec 0/1/4 と同パターン)
+
+  次のアクションは TODO_NEXT_SESSION.md memory 規律に従い、ユーザーが厳格レビュー (10 ラウンド構成 + 1 ラウンド = 1 turn 以上 + 自動承認モード廃止 +　Step 1b-v 自動深掘り 5 切り口 + 本質的観点 5 種強制発動) を開始する形になります。design approve 待ち、commit / push は未実施。
+```
+
+##### ❯ 承認。レビューへ
+
+```
+⏺ レビューフェーズに移行します。まず memory の規律を確認します。
+
+⏺ memory 規律確認完了。設計レビュー 10 ラウンド構成 + Step 1a/1b 分割 + 4 重検査 + Step 1b-v 5 切り口 + 厳しく検証 default + 本質的観点 5 種強制発動 + escalate 必須条件 5 種を新方式 (2026-04-28 改訂版) で適用します。
+
+  ---
+  ラウンド 1: requirements 全 AC 網羅 (110 numeric ID の design 内 mapping)
+
+  Step 1a 軽微検出
+
+  軽-1-1: Requirements Traceability table が range 集約 ("1.1-1.8" 等) のみ、Components and Interfaces の Component blocks も一部 range 集約 (orchestrate_edge_ops: "3.1-3.9, 12.1-12.8" / FollowupTask: "7.1-7.8" / get_l3_diagnostics: "15.1-15.5" / Doc-DangerousOps: "4.1-4.7" / Doc-OpGuides: "5.1-5.7, 8.1-8.7" / cmd_skill_*: "11.1-11.6")
+  - 根拠: 寛容解釈で全 110 ID cover 可能、Spec 0/1/4 と同パターンで前例あり
+  - 自己診断 (反転理由): mechanical check で個別 grep が hit しない問題は将来のレビューア再検証時に「本当に全 ID cover か?」の verifyコストになる、個別 ID 列挙が望ましい意見も成立
+  - [自動採択推奨] (range は寛容解釈で機能、明示性向上の余地あり)
+
+  軽-1-2: Page 状態と挙動表 (5 status × 4 列、SSoT §7.2) が design.md 本文に再掲されていない、R2 該当 component 表は「Document Contract」のみ記載で実体表は無し
+  - 根拠: R2.1-R2.7 の具体的記述 (active=通常 / deprecated=警告注記 / retracted=強警告 / archived=履歴 / merged=誘導) が design.md 内で確認できないと、reviewer が「R2 の AC をどう履行するか」を本文だけで読めない
+  - 自己診断 (反転理由): SSoT §7.2 表を design に再掲すれば self-contained reviewer artifact 規律 (design-principles.md line 78) に沿う
+  - [escalate 推奨] (本質的観点 b 構造的不均一に該当、design.md 本文に Page 状態挙動表を追加するか SSoT 参照のみで済ますかの判断要)
+
+  Step 1b 構造的検出 (4 重検査 + 5 切り口深掘り適用)
+
+  重-1-1: cmd_promote_to_synthesis signature 不整合 (本 spec design vs Spec 6 R9.3 期待)
+  - 検出: design.md L862 で cmd_promote_to_synthesis(args: argparse.Namespace) -> Generator[...] と記述、しかし Spec 6 R9.3 / Spec 4 design line 365では cmd_promote_to_synthesis(hypothesis_id, target_path) を期待 (Spec 4 申し送り抽出結果より)
+  - Step 1b-i (production deploy 逆算): Spec 6 が hypothesis_id を直接 args.candidate_path に変換する責務を持つか、本 spec が変換を引き受けるか曖昧 → 実装者が困る
+  - Step 1b-iii (dev-log パターン): パターン 8「API Signature Bidirectional Check」該当
+  - Step 1b-iv (自己診断): 反転理由 = Spec 6 design phase でこの signature が変わる可能性、本 spec design phase で先に確定するなら明示的な mapping 規約が必要
+  - escalate 必須条件 4 (アルゴリズム / API / 実装の不整合) 該当
+  - [escalate 推奨]
+
+  重-1-2: record_decision reasoning 必須条件の命名規則ずれ可能性
+  - 検出: design.md L1101 で REASONING_REQUIRED_TYPES = {'page_retract', 'page_promote_to_synthesis'} と本 spec 命名規則 (page_*) で記述、しかし Spec
+   5 R11.6 は「hypothesis_verify_confirmed / hypothesis_verify_refuted / synthesis_approve / retract」の 4 つを reasoning 必須と規定、retract (Spec 5 命名) と page_retract (Spec 7 命名) が同一かどうか不明
+  - Step 1b-i (production deploy 逆算): record_decision API 呼出時に decision_type='page_retract' で reasoning が必須化されるか、'retract'に変換する責務があるか曖昧
+  - Step 1b-iii (dev-log パターン): パターン 11「規範前提の曖昧化」該当
+  - Step 1b-iv (自己診断): 反転理由 = Spec 5 R11.2 の 22 種列挙では page_retract が Spec 7 起源で記述あり、Spec 5 R11.6 の retract は本来 page_retract を指すべき (改版経路で文言整合化必要) 可能性
+  - escalate 必須条件 4 (実装不整合) 該当
+  - [escalate 推奨]
+
+  重-1-3: cmd_* handler block の詳細度構造的不均一
+  - 検出: design.md Components and Interfaces で cmd_deprecate のみ完全 block (Field 表 / Responsibilities & Constraints / Dependencies / Contracts / Service Interface / State Management / Implementation Notes 全部)、他 16 handler は簡略 block (Field 表 + Responsibilities + Service Interface のみ、State Management / Implementation Notes 欠落)
+  - Step 1b-iii (dev-log パターン): パターン (なし、構造的問題)
+  - Step 1b-iv (自己診断): 反転理由 = handler 17 種すべて完全 block にすると design.md が 2500 行超 (template 警告領域超過)、cmd_deprecate を full template + 他 handler は「cmd_deprecate と同パターン」参照で十分との見方も成立
+  - 本質的観点 b (構造的不均一) 該当
+  - [escalate 推奨]
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし (Decision 7-3 / 7-9 / 7-11 / 7-12 / 7-14 / 7-15 / 7-20 すべて requirements 委譲済または brief 持ち越し対応)
+  - b) 構造的不均一: 検出 1 件 (重-1-3)
+  - c) 文書記述 vs 実装不整合: 検出 1 件 (重-1-1)
+  - d) 規範前提曖昧化: 検出 1 件 (重-1-2)
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 1 検出サマリ
+
+  ┌────────┬────────────────────────────────────────────┬─────────────────┬─────────────────┐
+  │   ID   │                  検出内容                  │      判定       │    該当規律     │
+  ├────────┼────────────────────────────────────────────┼─────────────────┼─────────────────┤
+  │ 軽-1-1 │ Traceability range 集約 4 箇所             │ [自動採択推奨]  │ 明示性向上      │
+  ├────────┼────────────────────────────────────────────┼─────────────────┼─────────────────┤
+  │ 軽-1-2 │ Page 状態挙動表 design 本文未掲載          │ [escalate 推奨] │ 観点 b          │
+  ├────────┼────────────────────────────────────────────┼─────────────────┼─────────────────┤
+  │ 重-1-1 │ cmd_promote_to_synthesis signature 不整合  │ [escalate 推奨] │ escalate 必須 4 │
+  ├────────┼────────────────────────────────────────────┼─────────────────┼─────────────────┤
+  │ 重-1-2 │ record_decision reasoning 必須条件命名ずれ │ [escalate 推奨] │ escalate 必須 4 │
+  ├────────┼────────────────────────────────────────────┼─────────────────┼─────────────────┤
+  │ 重-1-3 │ cmd_* handler block 詳細度構造的不均一     │ [escalate 推奨] │ 観点 b          │
+  └────────┴────────────────────────────────────────────┴─────────────────┴─────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (LLM 判断通り、軽-1-1 自動採択 + 重-1-1/-1-2/-1-3 + 軽-1-2 を Step 3-4 で escalate 確証手順)
+  - 案 B: 異論あり (どの候補? どう変える? 自動 → escalate / escalate → 自動 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ Step 3-4 実行: 軽-1-1 を自動採択 (Edit 適用)、escalate 4 件を 5 観点深掘り + 推奨案確証で一括提示します。
+
+  まず軽-1-1 を Edit で適用します。
+⏺ [自動採択] 軽-1-1 (Components Block range 集約 6 箇所) → 個別 ID 列挙に展開済 (理由: 明示性向上、Spec 0/1/4 と同パターン)
+
+  ---
+  escalate 4 件 確証手順 (5 観点深掘り + 推奨案 + 却下理由)
+
+  軽-1-2: Page 状態挙動表 design 本文掲載
+
+  - X1: design.md 本文に Page 状態挙動表 (5 status × 4 列) を再掲 + SSoT §7.2 出典明示
+  - X2: 現状維持 (SSoT §7.2 参照のみ)
+  - 5 観点: a) +30 行 / b) self-contained reviewer artifact 規律遵守 → X1 / c) reviewer が design.md 単体で R2 履行確認可 → X1 / d) なし / e) Spec 4
+  design G3 で SSoT 表再掲 pattern あり → X1
+  - 推奨 X1 (X2 は SSoT 参照のみで重複回避だが、design-principles.md line 78 規律違反)
+
+  重-1-1: cmd_promote_to_synthesis signature 不整合
+
+  - X1: cmd_promote_to_synthesis(args: argparse.Namespace) -> Generator[...] 統一 + 「Spec 6 が args = argparse.Namespace(candidate_path=hyp_id, target_path=target_path) を construct する責務」を coordination として明示 (Spec 6 design 連携項目)
+  - X2: signature を (hypothesis_id: str, target_path: Optional[Path]) -> Generator[...] に変更 + Spec 4 G2 が adapter logic
+  - X3: 公開 API は X1 統一 + 内部 helper _promote_to_synthesis_core(hypothesis_id, target_path) を Spec 6 直接呼出可能化
+  - 5 観点: a) X1=Spec 6 側 +1 関数 / X2=Spec 4 側 +1 関数 / X3=2 entry point / b) Spec 4 cmd_* signature 統一規律と整合 → X1 / c) X2 は Spec 4
+  dispatch 経由でない / d) X3 は internal API export で boundary 緩和 / e) Spec 4 design L605-617 統一規律と整合 → X1
+  - 推奨 X1 (X2 = signature 統一違反 / X3 = boundary 緩和リスク)
+  - 連携: Spec 6 design 着手時に「Spec 6 が argparse.Namespace を construct」coordination を Spec 6 design に明記する Adjacent Sync 経路追加
+
+  重-1-2: record_decision reasoning 必須条件命名ずれ
+
+  - X1: 本 spec design の REASONING_REQUIRED_TYPES = {'page_retract', 'page_promote_to_synthesis'} を維持 + Spec 5 R11.6 の 'retract' を'page_retract' に改版する Adjacent Sync 経路を Spec 5 requirements に提案 (本 spec change log に記録)
+  - X2: 本 spec design に 'retract' (Spec 5 命名) も並記 (REASONING_REQUIRED_TYPES = {'page_retract', 'page_promote_to_synthesis', 'retract'})
+  - X3: 現状維持 (Spec 5 の retract は別 decision_type と仮定、命名規則ずれ放置)
+  - 5 観点: a) X1=Spec 5 design phase 連動、X2=1 値追加、X3=現状維持 / b) X1 = SSoT 単一化 / X2 = 重複防御 = boundary 越境 / X3 = 命名ずれ放置 / c) X3 は future bug リスク / d) X2 = 本 spec が Spec 5 命名保持 = boundary 越境 / e) Spec 1 R7 escalate (transaction guarantee → Eventual Consistency 規範化) と同型 → X1 が Phase 1 学習整合
+  - 推奨 X1 (X2 = boundary 越境 / X3 = 命名ずれ放置で future bug)
+  - 連携: 本 spec design change log に「Spec 5 R11.6 の retract → page_retract 改版を Adjacent Sync で要請」を記録
+
+  重-1-3: cmd_* handler block 詳細度構造的不均一
+
+  - X1: 全 17 handler を完全 block (Field 表 / Responsibilities / Dependencies / Contracts / Service Interface / State Management / Implementation Notes) で記述
+  - X2: cmd_deprecate を「page lifecycle handler の reference template」として完全 block 維持、他 16 handler は「cmd_deprecateと同パターン、差分は以下」形式で簡略 + 差分のみ記述
+  - X3: 現状維持 (cmd_deprecate のみ完全 block、他は最小限)
+  - 5 観点: a) X1 = +500 行で template 警告超過 (1925 行) / X2 = +50 行で template 内 / X3 = 現状維持 / b) X2 = DRY 原則 + template-pattern + 構造均一 / X1 = 完全均一だが冗長 / X3 = 不均一放置 / c) X2 = レビュー効率高 (template 1 つ + 差分のみ) / d) なし / e) Spec 4 design は cmd_* 60
+  種を summary + 重要 handler のみ完全 block pattern → X3 が Phase 1 整合だが本 spec は 17 種で完全均一化現実的
+  - 推奨 X2 (X1 = template 超過 / X3 = 構造不均一放置で reviewer 負担)
+  - 適用: cmd_deprecate template 維持 + 他 16 handler に「Pattern: cmd_deprecate と同 8 段階対話 generator pattern、差分は 」short note 追加
+
+  ---
+  判断要請: 軽-1-2 / 重-1-1 / 重-1-2 / 重-1-3 全件推奨案で進めるか?
+  - 案 A: 全件推奨で OK (X1 / X1 / X1 / X2 適用)
+  - 案 B: 個別反転 (項目 X / Y を反転、reasoning 指定)
+```
+
+##### ❯ A
+
+```
+⏺ 4 件の修正を適用します。
+
+  軽-1-2 X1 適用: Page 状態挙動表を Data Models section に追加 + Components 表の R2 行を更新。
+⏺ 重-1-1 X1 適用: cmd_promote_to_synthesis signature 統一 + Spec 6 coordination 明示。
+⏺ 重-1-2 X1 適用: REASONING_REQUIRED_TYPES 維持 + Spec 5 R11.6 改版 Adjacent Sync 経路を Migration Strategy に追加 + change log 記録。
+⏺ 重-1-3 X2 適用: cmd_deprecate を Reference Template として明示 + 他 16 handler に Pattern short note を追加。
+⏺ 最後に design.md change log に本ラウンドの変更を追記します。
+⏺ ラウンド 1 適用完了サマリ
+
+  ┌────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────────────┐
+  │   ID   │                                                    適用内容                                                    │        該当        │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────┤
+  │ 軽-1-1 │ Components Block range 集約 6 箇所を個別 ID 列挙に展開                                                         │ 明示性向上         │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────┤
+  │ 軽-1-2 │ Page Status Behavior Matrix (R2.1-R2.7、SSoT §7.2 表) を Data Models 追加                                      │ 観点 b 解消        │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────┤
+  │ 重-1-1 │ cmd_promote_to_synthesis signature 統一 + Spec 6/4 args construct 責務明示 + Adjacent Sync 経路追加 (Spec 6    │ escalate 必須 4    │
+  │        │ design 連動 1 項目)                                                                                            │ 解消               │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────┤
+  │ 重-1-2 │ REASONING_REQUIRED_TYPES 維持 + Spec 5 R11.6 改版 Adjacent Sync 経路追加 (Spec 5 requirements 連動 1 項目)     │ 観点 d 解消        │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────┤
+  │ 重-1-3 │ cmd_deprecate を Reference Template 明示 + 他 16 handler に Pattern short note 追加                            │ 観点 b 解消        │
+  └────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────────────┘
+
+  design.md change log に記録済。Adjacent Sync 経路は計 11 項目 (元 10 項目 + Spec 5 連動 1 + Spec 6 連動 1) に拡張。
+
+  ラウンド 2 (アーキテクチャ整合性 = モジュール分割 / レイヤ / 依存グラフが requirements と整合) に進みますか?
+```
+
+##### ❯ OK
+
+```
+⏺ ラウンド 2: アーキテクチャ整合性
+
+  Step 1a 軽微検出
+
+  軽-2-1: Layer 1 rw_lifecycle_diagnostics.py ≤ 500 行制約の妥当性
+  - 5 診断項目 (未 approve / audit age / deprecated chain 循環 / tag 重複 / 未解決 follow-up) + DiagnosticReadError + check_l3_thresholds 閾値判定 +
+  thread-safe wrapper
+  - 各項目 100 行 estimate × 5 = 500 行近接、deprecated chain 循環 detection (successor traverse) や tag 重複 (Spec 1 vocabulary 連携) で line
+  超過の可能性
+  - 自己診断 (反転理由): Phase 2 拡張余地として「必要に応じて line 制約緩和の Adjacent Sync 経路を残す」明示で十分
+  - [自動採択推奨] (Performance & Scalability section に Phase 2 拡張余地として記載)
+
+  軽-2-2: Skill ファイル frontmatter の field-level 責務分離 (status field 本 spec 編集可 vs 本文 Spec 2 所管) の Boundary Commitments 明示不足
+  - Boundary Commitments で「Skill 内容 (SKILL.md の本文 / metadata / allowed-tools)」は Spec 2 所管と明示済だが、frontmatter の status field を本
+  spec が編集することは暗黙
+  - Step 1b-iii: dev-log パターン 7「責務境界の明確性」該当
+  - 自己診断 (反転理由): Spec 2 R3.5「Spec 7 lifecycle 操作のみが行える」と明示されており、本 spec design でこれを reflection するだけで十分、軽微
+  - [自動採択推奨] (Boundary Commitments の This Spec Owns に 1 項目追加で明確化)
+
+  Step 1b 構造的検出 (5 切り口深掘り適用)
+
+  重-2-1: Layer 4 module rw_page_lifecycle.py ≤ 1500 行制約超過リスク
+  - 検出: 17 cmd_* handler + 8 種 StageEvent dataclass + PAGE_TRANSITIONS dict + check_transition + compute_state_hash + helper 多数
+  - numerical: handler 17 × ~100 行 = 1700 行 + helper 200-300 行 = 合計推定 ~2000 行 (制約 1500 を ~33% 超過)
+  - Step 1b-i (production deploy 逆算): 1500 行制約超過で Spec 4 決定 4-3 規律違反、implementation phase で module 分割を強いられる → 後方互換
+  re-export 禁止規律 (Spec 4 決定 4-3) と矛盾
+  - Step 1b-ii (Phase 1 escalate 実例): Spec 4 design 5 module 分割 (G1-G6) パターン、機能別分割の Phase 1 整合
+  - Step 1b-iii (dev-log パターン): パターン 7「責務境界の明確性」(Page と Skill 責務境界の曖昧化) 該当
+  - Step 1b-iv (自己診断): 反転理由 = 17 handler 集約は確かに大きい、Page / Skill / Follow-up で別 module に分割の方が boundary 明確
+  - Step 1b-v 5 切り口:
+    a. 本質的観点 (top-down): §2.6 / §2.10 規範遵守は module 分割でも対応可
+    b. 関連文書間矛盾 (lateral): Spec 4 決定 4-3 ≤ 1500 行制約と本 spec の整合性 → 17 handler 集約で超過確実
+    c. 仕様⇄実装突合 (vertical): cmd_* signature 統一規律と module 構造は独立、分割しても影響なし
+    d. dev-log 23 パターン (historical): パターン 7 該当
+    e. negative (失敗シナリオ): 1500 行制約超過 → implementation phase で後段 module 分割 → 後方互換 re-export 禁止規律違反リスク
+  - escalate 必須条件 (アーキテクチャ整合性違反) 該当
+  - [escalate 推奨]
+
+  重-2-1 確証手順 (5 観点深掘り + 推奨案確証)
+
+  - X1: 現状維持 (Layer 4 ≤ 1500 行制約遵守、17 handler 集約) — 合理的成立条件: handler 各々 < 90 行で実装可能、numerical: handler 平均 100 行
+  typical で達成困難
+  - X2: Layer 4 を 3 sub-module に分割: rw_page_lifecycle.py (Page handler 8 種 = cmd_deprecate / cmd_retract / cmd_archive / cmd_reactivate /
+  cmd_merge / cmd_split / cmd_unapprove / cmd_promote_to_synthesis) ≤ 1000 行 + rw_skill_lifecycle.py (Skill handler 4 種) ≤ 400 行 +
+  rw_followup_handlers.py (Follow-up CRUD handler 5 種、Layer 2 thin wrapper) ≤ 200 行
+  - X3: handler 17 種を完全均一化 (各 handler 短縮 < 80 行) で 1 module に集約 — 合理的成立条件: 8 段階対話 generator pattern を base class
+  で抽象化、handler 差分のみ実装、暗黙前提: base class で over-abstraction risk
+  - 5 観点:
+    - a 実装難易度: X1 = single module で集中、X2 = 3 module 分割で import 整理、X3 = base class refactoring 重い
+    - b 設計理念整合: X1 = Decision 7-4 (4 module 分割) と整合だが line 制約超過、X2 = 機能別 sub-divide で boundary 明確化、X3 = DRY 強化だが
+  over-abstraction
+    - c 運用整合性: X2 = 機能別 module 分離で reviewer が module 単位確認可、X1 = 検索容易だが 2000 行で navigation 困難、X3 = base class で読解負荷
+    - d boundary 違反リスク: X2 = Page / Skill / Follow-up 責務境界明確化、X1 / X3 = なし
+    - e Phase 1 整合: Spec 4 5 module 分割 (G1-G6) パターンと整合 → X2 が機能別分割で Phase 1 整合
+  - 推奨 X2 (Layer 4 を 3 sub-module 分割、Decision 7-4 を Decision 7-21 で拡張、4 module → 6 module DAG 化)
+  - 却下案理由: X1 = line 制約超過確実、X3 = over-abstraction risk + line 制約近接維持
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出 1 件 (重-2-1)
+  - c) 文書記述 vs 実装不整合: 検出 1 件 (軽-2-2)
+  - d) 規範前提曖昧化: 検出なし
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 2 検出サマリ
+
+  ┌────────┬────────────────────────────────────────┬───────────────────────────────────────────────┬───────────────────────┐
+  │   ID   │                検出内容                │                     判定                      │       該当規律        │
+  ├────────┼────────────────────────────────────────┼───────────────────────────────────────────────┼───────────────────────┤
+  │ 軽-2-1 │ Layer 1 ≤ 500 行制約妥当性             │ [自動採択推奨]                                │ Phase 2 拡張余地明示  │
+  ├────────┼────────────────────────────────────────┼───────────────────────────────────────────────┼───────────────────────┤
+  │ 軽-2-2 │ Skill frontmatter field-level 責務分離 │ [自動採択推奨]                                │ dev-log パターン 7    │
+  ├────────┼────────────────────────────────────────┼───────────────────────────────────────────────┼───────────────────────┤
+  │ 重-2-1 │ Layer 4 module ≤ 1500 行制約超過リスク │ [escalate 推奨] (推奨 X2 = 3 sub-module 分割) │ escalate 必須・観点 b │
+  └────────┴────────────────────────────────────────┴───────────────────────────────────────────────┴───────────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-2-1 / 軽-2-2 自動採択 + 重-2-1 推奨 X2 で 3 sub-module 分割適用)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / escalate → 自動 / X2 → X1 or X3 反転 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 3 件の修正を適用します。
+
+  軽-2-1 適用: Performance & Scalability に Layer 1 line 制約 Phase 2 拡張余地を明示。
+⏺ 軽-2-2 適用: Boundary Commitments に Skill frontmatter field-level 責務分離を追加。
+⏺ 重-2-1 X2 適用 (1/4): File Structure Plan を 6 module 構造に修正。
+⏺ 重-2-1 X2 適用 (2/4): Mermaid Architecture diagram の Layer 4 を 3 sub-module 化。
+⏺ 重-2-1 X2 適用 (3/4): Components 表 + Architecture Pattern Integration 文言更新。
+⏺ 重-2-1 X2 適用 (4/4): Decision 7-4 / 7-19 を更新 + Decision 7-21 新規追加 + change log 記録。
+⏺ ラウンド 2 適用完了サマリ
+
+  ┌────────┬───────────────────────────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────┐
+  │   ID   │                                             適用内容                                              │              該当               │
+  ├────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────┤
+  │ 軽-2-1 │ Layer 1 ≤ 500 行制約 Phase 2 拡張余地を Performance & Scalability に明示                          │ line 制約超過リスク mitigation  │
+  ├────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────┤
+  │ 軽-2-2 │ Skill ファイル frontmatter status field 編集権を Boundary Commitments に明示                      │ dev-log パターン 7 解消         │
+  ├────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────┤
+  │ 重-2-1 │ Layer 4 を機能別 3 sub-module 分割 (4a Page 8 種 / 4b Skill 4 種 / 4c Follow-up 5 種)、4 module → │ 観点 b 解消、Decision 7-21      │
+  │        │  6 module DAG 化                                                                                  │ 新規追加                        │
+  └────────┴───────────────────────────────────────────────────────────────────────────────────────────────────┴─────────────────────────────────┘
+
+  design.md 主要変更:
+  - File Structure Plan: 6 module 構造に修正
+  - Architecture Pattern & Boundary Map Mermaid: Layer 4 を 3 sub-module 化
+  - Components and Interfaces summary table: L4-Handler を L4a-PageHandler / L4b-SkillHandler / L4c-FollowupHandler に分割
+  - Architecture Integration 文言: 4 → 6 module DAG に更新
+  - Decision 7-4 (module 分割パターン): 4 → 6 module に修正
+  - Decision 7-19 (dependency direction): 6 module 化に伴う sibling import 例外規律明示
+  - Decision 7-21 新規追加 (Layer 4 sub-module 分割の理由)
+  - change log に Round 2 review 記録
+
+  Decision 数: 20 → 21、Adjacent Sync 経路: 11 → 11 (本 round で外部 Adjacent Sync なし、内部 module DAG 修正のみ)
+
+  ラウンド 3 (データモデル / スキーマ詳細 = 仕様で宣言された field / 値域が実装スキーマで具体化されているか) に進みますか?
+```
+
+##### ❯ OK
+
+```
+⏺ ラウンド 3: データモデル / スキーマ詳細
+
+  Step 1a 軽微検出
+
+  軽-3-1: Follow-up task frontmatter の type 厳密性 → 検出取り下げ (dataclass FollowupTask で type hint 完備、Layer 2 で fully defined).
+
+  軽-3-2: decision_log.jsonl record の outcome field の partial_failure 記録形式が design.md L1199 周辺の example のみで、Spec 5 R11.16
+  への参照リンクなし
+  - 自己診断 (反転理由): Spec 5 R11.16 で正規 schema 確定済、本 spec で再 specify は重複だが reviewer 参照点として 1 行追加で OK
+  - [自動採択推奨] (Logical Data Model decision_log section に Spec 5 R11.16 参照追記)
+
+  軽-3-3: Page lifecycle frontmatter update_history.evidence の relative path 形式 (raw/<...> 配下) が schema 表でなく example のみ提示
+  - 自己診断 (反転理由): Spec 1 design L409 で「raw/<...> 配下の relative path 文字列」と確定済、本 spec で 1 行追加で明示性向上
+  - [自動採択推奨] (Logical Data Model: Page lifecycle frontmatter section に注記追加)
+
+  Step 1b 構造的検出 (4 重検査 + Step 1b-v 5 切り口)
+
+  重-3-1 / 重-3-2 / 重-3-3: 各検証で取り下げ (state machine / merge_conflicts_resolved type / OrchestrationResult vs outcome field
+  整合性、いずれも整合確認済)
+
+  重-3-4: 各 decision_type 10 種の subject_refs 構造例 mapping table 不足
+  - 検出: design.md Components 表 (L595 周辺) で「10 種それぞれの subject_refs 構造例 mapping」と記述ありだが、具体的 table が design.md に欠落
+  - 各 cmd_* handler 内で「subject_refs を何で construct するか」が暗黙
+    - cmd_merge: [merged_from..., merged_into] (L1093 で明示)
+    - 他 9 種: design.md 内で構造例なし
+  - Step 1b-i (production deploy 逆算): implementation 時に各 handler が独自構造で subject_refs 渡す → decision_log analysis 時の inconsistency
+  - Step 1b-iii (dev-log パターン): パターン 9「Coordination Requirement Completeness」該当 (record_decision API 利用時の field-level 規約曖昧)
+  - Step 1b-iv (自己診断): 反転理由 = mapping table を Logical Data Model に追加することで implementation 時の解釈ぶれ防止 + decision_log analysis
+  consistency
+  - Step 1b-v 5 切り口:
+    a. 本質的観点 (top-down): §2.13 Curation Provenance の analysis 用途 → consistency 必須
+    b. 関連文書間矛盾 (lateral): Spec 5 R11.1 で subject_refs: list[str] 型 一般規定、本 spec が各 decision_type で構造確定する責務
+    c. 仕様⇄実装突合 (vertical): subject_refs construct logic が各 handler 内、具体 mapping 必要
+    d. dev-log 23 パターン (historical): パターン 9 該当
+    e. negative (失敗シナリオ): mapping 曖昧 → 各 handler 独自構造 → decision_log analysis 時 inconsistency
+  - escalate 必須条件 4 (実装不整合) 該当
+  - [escalate 推奨]
+
+  重-3-4 確証手順 (5 観点深掘り)
+
+  - X1: 10 種 decision_type の subject_refs 構造例 mapping table を Logical Data Model に追加 (design.md +30 行)
+    - page_deprecate / page_retract / page_archive: [target_page_path]
+    - page_merge: [merged_from_paths..., merged_into_path]
+    - page_split: [source_page_path, target_paths...]
+    - page_promote_to_synthesis: [candidate_path, target_synthesis_path]
+    - page_reactivate: [target_page_path] (※ Spec 5 R11.2 22 種列挙には未含、本 spec R12.7 で 6 種列挙のため Spec 5 Adjacent Sync 対象、後述)
+    - skill_install / skill_deprecate / skill_retract / skill_archive: [target_skill_path]
+  - X2: 現状維持 (各 handler 内で構造を判断、Spec 5 R11.1 list[str] のみ規定)
+    - 合理的成立条件: subject_refs を analysis 用途で集計しない場合は X2 で OK、暗黙前提: §2.13 Curation Provenance の analysis 用途を否定する場合
+    - dominated 判定: §2.13 で provenance analysis 用途明示、subject_refs consistency 必須 → X2 dominated
+  - X3: subject_refs を nested dict ({primary, secondary}) で type 強化
+    - 合理的成立条件: type safety 強化
+    - 暗黙前提: Spec 5 R11.1 list[str] 型変更必要
+    - dominated 判定: Spec 5 schema 違反 → X3 真の dominated
+  - 5 観点 (X1 vs X2):
+    - a 実装難易度: X1 = mapping table 1 つ追加 (~30 行)、X2 = 現状維持
+    - b 設計理念整合: X1 = §2.13 Curation Provenance analysis consistency 重視、X2 = 個別自由
+    - c 運用整合性: X1 = implementation 解釈ぶれ防止、X2 = inconsistency リスク
+    - d boundary 違反リスク: なし
+    - e Phase 1 整合: Spec 5 R11.1 が list[str] 一般規定、本 spec が各 decision_type mapping 確定する責務 → X1 が Phase 1 整合
+  - 推奨 X1 (X2 は decision_log analysis consistency 損失、X3 は Spec 5 schema 違反)
+  - 補足: 本確証で発見、page_reactivate は本 spec R12.7 で 6 種に未列挙 (R12.7 = page_deprecate / page_retract / page_archive / page_merge /
+  page_split / page_promote_to_synthesis)、しかし Decision 7-3 の lifecycle 起源 type 7 値 + Spec 4 design L685-690 auto_record_decision
+  decision_type 列挙で page_reactivate 含まれる → R12.7 を 6 種 → 7 種に拡張する Adjacent Sync 必要 (Spec 5 R11.2 22 種にも追加で 23 種化)。これは別
+  escalate 案件として ラウンド後半で検出 or Round 別ラウンドで扱う
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出なし
+  - c) 文書記述 vs 実装不整合: 検出 1 件 (重-3-4)
+  - d) 規範前提曖昧化: 検出なし
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 3 検出サマリ
+
+  ┌────────┬───────────────────────────────────────────────────────────────────────────────────┬─────────────────────────┬───────────────────────┐
+  │   ID   │                                     検出内容                                      │          判定           │       該当規律        │
+  ├────────┼───────────────────────────────────────────────────────────────────────────────────┼─────────────────────────┼───────────────────────┤
+  │ 軽-3-2 │ decision_log outcome field の Spec 5 R11.16 参照追記                              │ [自動採択推奨]          │ 明示性向上            │
+  ├────────┼───────────────────────────────────────────────────────────────────────────────────┼─────────────────────────┼───────────────────────┤
+  │ 軽-3-3 │ update_history evidence relative path 形式の schema 表明示                        │ [自動採択推奨]          │ 明示性向上            │
+  ├────────┼───────────────────────────────────────────────────────────────────────────────────┼─────────────────────────┼───────────────────────┤
+  │ 重-3-4 │ 各 decision_type 10 種の subject_refs 構造例 mapping table 不足 + R12.7           │ [escalate 推奨] (推奨   │ escalate 必須 4・観点 │
+  │        │ page_reactivate 欠落                                                              │ X1)                     │  c                    │
+  └────────┴───────────────────────────────────────────────────────────────────────────────────┴─────────────────────────┴───────────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-3-2 / 軽-3-3 自動採択 + 重-3-4 推奨 X1 で mapping table 追加 + page_reactivate 関連 Adjacent Sync 経路追加)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / escalate → 自動 / X1 → X2 反転 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 3 件の修正を適用します。
+
+  軽-3-2 適用: decision_log outcome field の Spec 5 R11.16 参照追記。
+⏺ 軽-3-3 適用: update_history evidence relative path 形式の schema 表明示。
+⏺ 重-3-4 X1 適用 (1/3): subject_refs 構造例 mapping table を Logical Data Model に追加。
+⏺ 重-3-4 X1 適用 (2/3): R12.7 を 6 種 → 7 種拡張する Adjacent Sync 経路を Migration Strategy に追加。
+⏺ 重-3-4 X1 適用 (3/3): record_decision_for_lifecycle helper の docstring に subject_refs mapping 反映 + change log 記録。
+⏺ ラウンド 3 適用完了サマリ
+
+  ┌────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────────┐
+  │   ID   │                                                適用内容                                                 │           該当            │
+  ├────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 軽-3-2 │ decision_log outcome field の Spec 5 R11.16 参照を Logical Data Model に追記                            │ 明示性向上                │
+  ├────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 軽-3-3 │ update_history.evidence の raw/<...> 配下 relative path 形式固定を schema 表に明示                      │ §2.10 Evidence chain 整合 │
+  ├────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 重-3-4 │ subject_refs 構造例 mapping table (10 種) を Logical Data Model に追加 + record_decision_for_lifecycle  │ escalate 必須 4 / dev-log │
+  │        │ docstring に反映 + R12.7 6→7 種拡張 (page_reactivate 追加) Adjacent Sync 経路                           │  パターン 9 解消          │
+  └────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────┴───────────────────────────┘
+
+  design.md 主要変更:
+  - Logical Data Model: decision_log.jsonl record section に outcome field structure + subject_refs mapping table 追加
+  - Logical Data Model: Page lifecycle frontmatter section に evidence path 形式注記追加
+  - record_decision_for_lifecycle helper docstring に subject_refs mapping 参照追記
+  - Migration Strategy: 本 spec requirements + Spec 5 requirements 連動更新項目 1 件追加 (R12.7 6→7 種 + Spec 5 R11.2 22→23 種拡張)
+  - change log に Round 3 review 記録
+
+  Adjacent Sync 経路: 11 → 12 (本 round で本 spec requirements + Spec 5 requirements 連動 1 項目追加)
+
+  ラウンド 4 (API interface 具体化 = signature / error model / idempotency / pagination) に進みますか?
+```
+
+##### ❯ OK
+
+```
+⏺ ラウンド 4: API interface 具体化
+
+  Step 1a 軽微検出
+
+  軽-4-1: 各 Service Interface docstring の充実度 → 検出取り下げ (Pattern note で差分明示、cmd_deprecate Reference を読めば十分)
+
+  軽-4-2: Exception 階層の明示が分散 (LifecycleError / PageStateTransitionError / DiagnosticReadError / RecordDecisionError が 4
+  箇所に散在記述、統合表なし)
+  - 自己診断 (反転理由): reviewer が exception 一覧を 1 箇所で確認できないと implementation 時の caller catch 規約把握困難
+  - [自動採択推奨] (Error Handling section に Exception 階層表追加)
+
+  軽-4-3: cmd_followup_list docstring で date_range format (<YYYY-MM-DD>..<YYYY-MM-DD>) 不明示
+  - 自己診断 (反転理由): docstring 1 行追加で実装解釈ぶれ防止
+  - [自動採択推奨] (cmd_followup_list docstring 追記)
+
+  軽-4-4: cmd_deprecate Implementation Notes に R8.7 (blockquote 重複生成防止) / R9.4 (Backlink 重複追記防止) idempotency 規定の明示なし
+  - 自己診断 (反転理由): handler 内 helper (insert_blockquote / update_backlinks) で idempotency 実装される想定だが design.md 本文で暗黙、Reference
+  Template として明示すべき
+  - [自動採択推奨] (cmd_deprecate Implementation Notes に idempotency 規定追加)
+
+  Step 1b 構造的検出 (4 重検査 + Step 1b-v 5 切り口)
+
+  重-4-1: error model の Exception 階層 + raise condition + caller catch 規約の詳細不足
+  - 検出: design.md Error Handling section で Severity 4 + exit code 0/1/2 + atomic write + partial failure + rollback の規定あり、しかし各 Exception
+   class (4 種) の raise condition / caller catch 規約 mapping table が欠落
+  - 部分的に Layer 3 record_decision_for_lifecycle helper docstring で Raises: RecordDecisionError if reasoning required but None 明示、他 Exception
+  の規約は暗黙
+  - Step 1b-i (production deploy 逆算): implementation 時に caller (Spec 4 G2 / G3 / G5) が Exception を catch する規約曖昧 → exit code mapping
+  不一致リスク
+  - Step 1b-iii (dev-log パターン): パターン 4「実装不可能性 / 逆算」、パターン 9「Coordination Requirement Completeness」該当
+  - Step 1b-iv (自己診断): 反転理由 = Exception 階層 + raise condition + caller catch 規約を Error Handling section に table
+  化することで実装解釈ぶれ防止
+  - Step 1b-v 5 切り口:
+    a. 本質的観点 (top-down): §2.6 (Git + 層別履歴媒体) error 記録は git log と decision_log で履行 → caller catch 規約必須
+    b. 関連文書間矛盾 (lateral): Spec 4 G3 confirm_dangerous_op が ConfirmResult enum 5 値返却契約 → 本 spec Exception を ConfirmResult にどう
+  mapping するか曖昧
+    c. 仕様⇄実装突合 (vertical): Spec 4 cmd_*(args) -> int signature と本 spec Exception raise の整合 → caller (Spec 4 wrapper) が Exception を int
+  に変換する責務
+    d. dev-log 23 パターン (historical): パターン 4 / 9 該当
+    e. negative (失敗シナリオ): Exception 階層曖昧 → caller が catch 漏れで silent failure リスク
+  - escalate 必須条件 4 (実装不整合) 該当
+  - [escalate 推奨]
+
+  重-4-1 確証手順 (5 観点深掘り)
+
+  - X1: Error Handling section に Exception 階層 + raise condition + caller catch 規約 table 追加 (~40 行)
+    - 4 種 (LifecycleError base + PageStateTransitionError + DiagnosticReadError + RecordDecisionError) の raise condition / caller / exit code
+  mapping
+  - X2: 現状維持 (各 Exception の raise condition は handler 内で必要時に判断)
+    - 合理的成立条件: implementation judgment 自由度確保、暗黙前提: caller が exit code mapping を独自判断
+    - dominated 判定: implementation 解釈ぶれリスク高 → X2 dominated
+  - X3: Exception 階層を別 module (rw_lifecycle_errors.py) に分離
+    - 合理的成立条件: error class 大量時、暗黙前提: 4 種なら module 分離 over-engineering
+    - dominated 判定: 4 種なら handler module 内 inline 定義で十分 → X3 真の dominated
+  - 5 観点 (X1 vs X2):
+    - a 実装難易度: X1 = table 1 つ追加 (~40 行)、X2 = 現状維持
+    - b 設計理念整合: X1 = error model 明確化、X2 = 暗黙
+    - c 運用整合性: X1 = caller が catch 規約理解、X2 = handler ごと inconsistency
+    - d boundary 違反リスク: なし
+    - e Phase 1 整合: Spec 4 design で Exception 階層を Error Handling section に集約 pattern → X1 が Phase 1 整合
+  - 推奨 X1 (X2 は inconsistency リスク、X3 は over-engineering)
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出なし
+  - c) 文書記述 vs 実装不整合: 検出 1 件 (重-4-1)
+  - d) 規範前提曖昧化: 検出なし
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 4 検出サマリ
+
+  ┌────────┬──────────────────────────────────────────────────────────┬───────────────────────────┬───────────────────────────────────────┐
+  │   ID   │                         検出内容                         │           判定            │               該当規律                │
+  ├────────┼──────────────────────────────────────────────────────────┼───────────────────────────┼───────────────────────────────────────┤
+  │ 軽-4-2 │ Exception 階層 4 種が分散記述、統合表欠落                │ [自動採択推奨]            │ 明示性向上                            │
+  ├────────┼──────────────────────────────────────────────────────────┼───────────────────────────┼───────────────────────────────────────┤
+  │ 軽-4-3 │ cmd_followup_list date_range format 不明示               │ [自動採択推奨]            │ 明示性向上                            │
+  ├────────┼──────────────────────────────────────────────────────────┼───────────────────────────┼───────────────────────────────────────┤
+  │ 軽-4-4 │ cmd_deprecate に R8.7 / R9.4 idempotency 規定明示なし    │ [自動採択推奨]            │ 明示性向上                            │
+  ├────────┼──────────────────────────────────────────────────────────┼───────────────────────────┼───────────────────────────────────────┤
+  │ 重-4-1 │ Exception raise condition + caller catch 規約 table 欠落 │ [escalate 推奨] (推奨 X1) │ escalate 必須 4・dev-log パターン 4/9 │
+  └────────┴──────────────────────────────────────────────────────────┴───────────────────────────┴───────────────────────────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-4-2 / 軽-4-3 / 軽-4-4 自動採択 + 重-4-1 推奨 X1 で Exception 階層 + raise condition + caller catch 規約 table 追加)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / escalate → 自動 / X1 → X2 反転 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 4 件の修正を適用します。
+
+  軽-4-3 適用: cmd_followup_list docstring に date_range format 追記。
+⏺ 軽-4-4 適用: cmd_deprecate Implementation Notes に idempotency 規定追加。
+⏺ 軽-4-2 + 重-4-1 X1 適用: Error Handling section に Exception 階層 + raise condition + caller catch 規約 table を追加。
+⏺ ラウンド 4 適用完了サマリ
+┌────────┬────────────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────────────┐
+  │   ID   │                                          適用内容                                          │                  該当                  │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 軽-4-2 │ Exception 階層 4 種統合 table を Error Handling section に追加                             │ 明示性向上                             │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 軽-4-3 │ cmd_followup_list docstring に date_range format + 全 attribute 詳細追記                   │ 明示性向上                             │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 軽-4-4 │ cmd_deprecate Reference Template に idempotency 規定追加 (R8.7 / R9.4 / 冪等再実行)        │ 明示性向上                             │
+  ├────────┼────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────┤
+  │ 重-4-1 │ Exception raise location + raise condition + caller catch + caller action + exit code      │ escalate 必須 4・dev-log パターン 4/9  │
+  │        │ mapping table                                                                              │ 解消                                   │
+  └────────┴────────────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────────────┘
+
+  design.md 主要変更:
+  - Error Handling section: Exception 階層 + raise/catch 規約 table 追加 (軽-4-2 + 重-4-1 統合実装)
+  - cmd_deprecate Implementation Notes: Idempotency subsection 追加
+  - cmd_followup_list docstring: date_range format 追記
+  - change log に Round 4 review 記録
+
+  Adjacent Sync 経路: 12 (本 round で外部 Adjacent Sync なし、内部 Error Handling 強化のみ)
+
+  ラウンド 5 (アルゴリズム + 性能達成手段 = 計算量 / 数値安定性 / edge case 網羅 + prototype 測定 / SQLite index / cache / 並列化) に進みますか?
+```
+
+#####  ❯ OK
+
+```
+⏺ ラウンド 5: アルゴリズム + 性能達成手段
+
+  Step 1a 軽微検出
+
+  軽-5-1: 各 algorithm の Big O 計算量明示なし
+  - 例: compute_state_hash O(N_edges) / check_transition O(1) / orchestrate_edge_ops O(N_edges × T_edge_op) / Backlink 走査 O(M_pages × L_page) /
+  generate_followup_id O(K_followups_today)
+  - 自己診断 (反転理由): Performance & Scalability で部分記述済 (state hash < 100ms / 5 項目 < 60 秒)、Big O 明示で実装精緻化容易
+  - [自動採択推奨] (Performance & Scalability に Big O table 追加)
+
+  軽-5-2: cmd_promote_to_synthesis 4 case 自動判定アルゴリズムの edge case 不明示
+  - Decision 7-14 で 4 case 列挙、しかし: case 衝突 (target_path = 自分自身、循環依存) / target_path slug 重複 / 複数 case 該当時の優先順位 等が暗黙
+  - 自己診断 (反転理由): Decision 7-14 に edge case 列挙 + 優先順位明示で実装解釈ぶれ防止
+  - [自動採択推奨] (Decision 7-14 に edge case 注記追加)
+
+  軽-5-3: orchestrate_edge_ops の並列化 Phase 2 拡張余地明示なし
+  - 大規模 page (関連 edges > 50) で逐次呼出 = 50 × 5s = 250 秒、Spec 5 R12.4「同期 API、逐次呼出可能」明示で MVP は逐次維持
+  - 自己診断 (反転理由): Performance & Scalability で並列化 Phase 2 拡張余地 1 行追記で OK
+  - [自動採択推奨] (Performance & Scalability に並列化 Phase 2 余地追記)
+
+  Step 1b 構造的検出 (4 重検査 + Step 1b-v 5 切り口)
+
+  重-5-1: 大規模 vault (Pages > 1K) での handler 自体の timeout 規定が暗黙
+  - 検出: design.md Performance & Scalability で「MVP は naive 全走査、Phase 2 拡張で incremental cache 検討」と明示、しかし handler 自体の timeout
+  規定なし
+  - numerical: 大規模 vault 1K pages で deprecate handler 推定 = Backlink 走査 ~10 秒 + Page→Edge orchestration (edges ~50 × 5s) ~250 秒 = 計 260 秒,
+   merge handler は 2 set Backlink で ~520 秒
+  - Step 1b-i (production deploy 逆算): handler 30-520 秒で user 体感「遅い」、CI 環境で hung と誤認リスク
+  - Step 1b-iii (dev-log パターン): パターン 17「Timeout Resilience」該当
+  - Step 1b-iv (自己診断): handler timeout 明示 or CLI-level timeout 600 秒で吸収 + 目安時間明示で user expectation 整合
+  - Step 1b-v 5 切り口:
+    a. 本質的観点 (top-down): §2.4 Dangerous operations で「8 段階対話 + 人間レビュー」前提、handler 実行時間は意識される
+    b. 関連文書間矛盾 (lateral): Spec 4 CLI-level timeout default 600 秒 (Spec 4 R5 重-5-1 X1 採択) と本 spec handler 時間の整合
+    c. 仕様⇄実装突合 (vertical): Spec 4 申し送り 7「user input 待ち中の CLI-level timeout suspend」+ subprocess wall-clock のみ timeout 対象
+    d. dev-log 23 パターン (historical): パターン 17 該当
+    e. negative (失敗シナリオ): 大規模 vault で 600 秒超過 → CI hung → user 不満
+  - escalate 必須条件 5 (failure mode の選択肢、性能達成手段) 該当
+  - [escalate 推奨]
+
+  重-5-1 確証手順 (5 観点深掘り)
+
+  - X1: handler 自体の timeout を明示 (例: deprecate=60s / merge=120s / split=120s) + handler 内部で timeout 検出時 partial failure 集計 + follow-up
+  化
+    - 合理的成立条件: vault 規模に応じた timeout で user expectation 明確、暗黙前提: handler ごとに timeout 制御 logic を実装
+  - X2: handler timeout なし (Spec 4 CLI-level timeout 600 秒 default でカバー、Performance & Scalability に大規模 vault 目安時間明示)
+    - 合理的成立条件: Spec 4 CLI-level timeout 規定で十分 (260 秒 / 520 秒 < 600 秒)、handler ごとに timeout 規定は過剰、暗黙前提: 大規模 vault でも
+  600 秒以内完走可能
+  - X3: handler timeout を config.yml で一括設定可能
+    - 合理的成立条件: vault 規模に応じて user 調整可、暗黙前提: config 編集 UX overhead
+    - dominated 判定: X2 で十分、config 編集 UX 不要 → X3 dominated
+  - 5 観点 (X1 vs X2):
+    - a 実装難易度: X1 = handler 内 timeout 制御 (各 cmd_* に追加)、X2 = CLI-level 依存 (実装変更なし)
+    - b 設計理念整合: X1 = handler ごとの workload 反映、X2 = simplicity + Spec 4 CLI-level timeout 統一
+    - c 運用整合性: X1 = user feedback 明確 (handler 単位の timeout)、X2 = user が CLI-level で個別調整 (--timeout flag 経由 or config)
+    - d boundary 違反リスク: X1 = handler 内に timeout logic 増 / X2 = Spec 4 CLI-level timeout に依存 (boundary 問題なし、Spec 4 G3 が制御)
+    - e Phase 1 整合: Spec 4 design では handler timeout 個別明示せず CLI-level timeout default 300/600 秒で運用 → X2 が Phase 1 整合
+  - 推奨 X2 (CLI-level timeout 600 秒で十分、Performance & Scalability で大規模 vault 目安時間明示で user expectation 整合)
+  - 却下案理由: X1 = handler timeout 個別実装で over-engineering、Spec 4 統一 timeout 規律違反、X3 = X2 で十分、config 編集 UX 不要
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出なし
+  - c) 文書記述 vs 実装不整合: 検出なし
+  - d) 規範前提曖昧化: 検出 1 件 (重-5-1)
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 5 検出サマリ
+
+  ┌────────┬─────────────────────────────────────────────────────────┬───────────────────────────┬──────────────────────────────────────┐
+  │   ID   │                        検出内容                         │           判定            │               該当規律               │
+  ├────────┼─────────────────────────────────────────────────────────┼───────────────────────────┼──────────────────────────────────────┤
+  │ 軽-5-1 │ 各 algorithm の Big O 明示なし                          │ [自動採択推奨]            │ 明示性向上                           │
+  ├────────┼─────────────────────────────────────────────────────────┼───────────────────────────┼──────────────────────────────────────┤
+  │ 軽-5-2 │ cmd_promote_to_synthesis 4 case の edge case 列挙不明示 │ [自動採択推奨]            │ 明示性向上                           │
+  ├────────┼─────────────────────────────────────────────────────────┼───────────────────────────┼──────────────────────────────────────┤
+  │ 軽-5-3 │ orchestrate_edge_ops 並列化 Phase 2 余地不明示          │ [自動採択推奨]            │ 明示性向上                           │
+  ├────────┼─────────────────────────────────────────────────────────┼───────────────────────────┼──────────────────────────────────────┤
+  │ 重-5-1 │ 大規模 vault での handler timeout 規定暗黙              │ [escalate 推奨] (推奨 X2) │ escalate 必須 5・dev-log パターン 17 │
+  └────────┴─────────────────────────────────────────────────────────┴───────────────────────────┴──────────────────────────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-5-1 / 軽-5-2 / 軽-5-3 自動採択 + 重-5-1 推奨 X2 で CLI-level timeout 600 秒依存 + 大規模 vault 目安時間明示)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / escalate → 自動 / X2 → X1 反転 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 4 件の修正を適用します。
+
+  軽-5-1 + 軽-5-3 + 重-5-1 X2 適用: Performance & Scalability section に Big O table + 並列化 Phase 2 余地 + 大規模 vault handler 目安時間追加。
+  
+⏺ ラウンド 5 適用完了サマリ
+
+  ┌────────┬─────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────┐
+  │   ID   │                                        適用内容                                         │                   該当                    │
+  ├────────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+  │ 軽-5-1 │ 計算量 Big O 一覧 table 追加 (9 algorithm)                                              │ 明示性向上                                │
+  ├────────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+  │ 軽-5-2 │ Decision 7-14 に edge case 規定追加 (5 ケース)                                          │ 明示性向上                                │
+  ├────────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+  │ 軽-5-3 │ orchestrate_edge_ops 並列化 Phase 2 拡張余地明示 (Spec 5 thread-safety + Adjacent Sync) │ 明示性向上                                │
+  ├────────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────┤
+  │ 重-5-1 │ 大規模 vault handler 目安実行時間 table (handler timeout なし、CLI-level 600s 依存)     │ escalate 必須 5・dev-log パターン 17 解消 │
+  └────────┴─────────────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────┘
+
+  design.md 主要変更:
+  - Performance & Scalability section: Big O 一覧 + 大規模 vault handler 目安時間 + 並列化 Phase 2 余地の 3 sub-section 追加 (~70 行)
+  - Decision 7-14: edge case 5 規定追加
+  - change log に Round 5 review 記録
+
+  ancillary 発見: cmd_merge / cmd_split は edges 多数 page (> 50) で 600 秒超過リスク、MVP は「edges < 20/page で運用」運用ルール + Phase 2
+  並列化で対応. 本制限を tasks.md 生成時に implementation 注意事項として継承予定。
+
+  ラウンド 6 (失敗モード handler + 観測性 = rollback / retry / timeout の具体的実装パターン + ログフォーマット / メトリクス収集点 / トレース ID / 診断 dump) に進みますか?
+```
+
+##### ❯ OK
+
+```
+⏺ ラウンド 6: 失敗モード handler + 観測性
+
+  Step 1a 軽微検出
+
+  軽-6-1: output JSON schema example が cmd_retract のみ → 検出取り下げ (cmd_retract が Reference Template として機能、各 handler の specific field
+  差分は Pattern note でカバー)
+
+  軽-6-2: トレース ID / メトリクス収集点の規定不足
+  - 現状: structured JSON output (logs/<command>_latest.json) のみ規定
+  - トレース ID (1 dangerous op 全体の unique id) と メトリクス収集点 (各 stage elapsed_seconds、edge API call 統計) が暗黙
+  - 自己診断 (反転理由): decision_log の decision_id をトレース ID として再利用可、メトリクス収集は Phase 2 拡張余地として明示で十分
+  - [自動採択推奨] (Monitoring section に decision_id をトレース ID 兼用 + メトリクス収集 Phase 2 余地明示)
+
+  軽-6-3: atomic write 実装パターン不明示
+  - design.md「stage 8 内の atomic write 失敗時 = git stash / reset で commit 前の state に復帰」のみ
+  - 具体実装 (tempfile + os.rename / fsync / git index staging 等) が暗黙
+  - 自己診断 (反転理由): implementation 解釈ぶれ防止のため 1 行追記
+  - [自動採択推奨] (Error Strategy に atomic write 実装パターン明示)
+
+  Step 1b 構造的検出 (4 重検査 + Step 1b-v 5 切り口)
+
+  重-6-1: rollback strategy の matrix が 6 mode に散在記述、Error Handling に統合 table なし
+  - 検出: rollback 規定が複数箇所に分散
+    - R3.4: edge API 失敗時 → frontmatter status 維持、failed edge ops を follow-up 化 (rollback なし)
+    - R3.7: rollback 不能 partial failure → decision_log 記録 + follow-up 化
+    - R3.8: 部分的失敗時 exit 1 + JSON partial_failure: true
+    - R3.9: lock 取得失敗時 exit 1 + lock_acquisition_failed: true
+    - R9.5: Backlink 一部失敗 → follow-up 化 / 全失敗 (≥ 95%) → ERROR rollback (Decision 7-18)
+    - Spec 6 R9.5: record_decision 失敗時 → stage 8 全体 rollback
+  - 各失敗 mode で rollback 有無 + scope (frontmatter / blockquote / Backlink / edges / decision_log) が混在記述
+  - Step 1b-i (production deploy 逆算): handler 内の rollback logic 構築時、各失敗 mode で何を rollback / 維持するか散在 → 解釈ぶれ
+  - Step 1b-iii (dev-log パターン): パターン 13「State Observation Integrity」/ 14「Atomicity & Crash Safety」/ 15「Failure Mode Exhaustiveness」該当
+  - Step 1b-iv (自己診断): 反転理由 = Rollback Strategy Matrix を Error Handling section に table 化で実装解釈ぶれ防止
+  - Step 1b-v 5 切り口:
+    a. 本質的観点 (top-down): §2.6 trust chain 維持 → rollback scope 明確必須
+    b. 関連文書間矛盾 (lateral): Spec 5 R18.7/R18.8 timeout 失敗 vs 本 spec rollback strategy の整合性
+    c. 仕様⇄実装突合 (vertical): handler 内 try/except + git stash/reset logic
+    d. dev-log 23 パターン (historical): パターン 13 / 14 / 15 該当
+    e. negative (失敗シナリオ): rollback scope 曖昧 → 部分的成功状態永続化 → trust chain 破綻
+  - escalate 必須条件 5 (failure mode の選択肢) 該当
+  - [escalate 推奨]
+
+  重-6-1 確証手順 (5 観点深掘り)
+
+  - X1: Error Handling section に Rollback Strategy Matrix table 追加 (~50 行)
+    - 失敗 mode 6 種 × rollback scope (frontmatter / blockquote / Backlink / edges / decision_log) の完全網羅
+    - 各 mode で「rollback / 維持 / decision_log 記録 / follow-up 化」を 1 行で明示
+  - X2: 現状維持 (rollback 規定散在)
+    - 合理的成立条件: implementer が各 R を漏れなく参照、暗黙前提: implementer の参照漏れなし
+    - dominated 判定: 6 mode 散在で実装解釈ぶれリスク高 → X2 dominated
+  - X3: Rollback Strategy を Sequence diagram で視覚化
+    - 合理的成立条件: visual reviewer 重視、暗黙前提: 6 mode の Mermaid 表現は冗長
+    - dominated 判定: table 形式で十分、diagram 読解負荷増 → X3 dominated
+  - 5 観点 (X1):
+    - a 実装難易度: X1 = table 1 つ追加 (~50 行)、X2 = 現状維持
+    - b 設計理念整合: X1 = §2.6 trust chain rollback scope 明確化
+    - c 運用整合性: X1 = handler 実装時に matrix 1 つ参照で十分
+    - d boundary 違反リスク: なし
+    - e Phase 1 整合: Spec 4 design では Error Handling section に table 化 pattern → X1 が Phase 1 整合
+  - 推奨 X1 (X2 = 散在で解釈ぶれ、X3 = diagram 読解負荷増)
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出なし
+  - c) 文書記述 vs 実装不整合: 検出 1 件 (重-6-1)
+  - d) 規範前提曖昧化: 検出なし
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 6 検出サマリ
+
+  ┌────────┬─────────────────────────────────────────────────────────┬───────────────────────────┬────────────────────────────────────────────┐
+  │   ID   │                        検出内容                         │           判定            │                  該当規律                  │
+  ├────────┼─────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────┤
+  │ 軽-6-2 │ トレース ID / メトリクス収集点規定不足                  │ [自動採択推奨]            │ 明示性向上                                 │
+  ├────────┼─────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────┤
+  │ 軽-6-3 │ atomic write 実装パターン不明示                         │ [自動採択推奨]            │ 明示性向上                                 │
+  ├────────┼─────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────────────┤
+  │ 重-6-1 │ Rollback Strategy Matrix 散在 (6 mode)、統合 table 欠落 │ [escalate 推奨] (推奨 X1) │ escalate 必須 5・dev-log パターン 13/14/15 │
+  └────────┴─────────────────────────────────────────────────────────┴───────────────────────────┴────────────────────────────────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-6-2 / 軽-6-3 自動採択 + 重-6-1 推奨 X1 で Rollback Strategy Matrix table 追加)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / escalate → 自動 / X1 → X2 反転 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 3 件の修正を適用します。
+
+  軽-6-3 適用: Error Strategy に atomic write 実装パターン明示。
+⏺ 軽-6-2 適用: Monitoring section に decision_id トレース ID 兼用 + メトリクス収集 Phase 2 余地明示。
+⏺ 重-6-1 X1 適用: Rollback Strategy Matrix table を Error Handling section に追加。
+⏺ change log 記録。
+⏺ ラウンド 6 適用完了サマリ
+
+  ┌────────┬──────────────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────┐
+  │   ID   │                                       適用内容                                       │                     該当                     │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────┤
+  │ 軽-6-2 │ Monitoring に decision_id をトレース ID 兼用 + メトリクス収集 Phase 2 拡張余地明示   │ 明示性向上                                   │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────┤
+  │ 軽-6-3 │ Error Strategy に atomic write 実装パターン明示 (tempfile + os.rename + fsync + git  │ 明示性向上                                   │
+  │        │ commit)                                                                              │                                              │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────┤
+  │ 重-6-1 │ Rollback Strategy Matrix table 追加 (9 失敗 mode × rollback scope 完全網羅 + 擬似    │ escalate 必須 5・dev-log パターン 13/14/15   │
+  │        │ code)                                                                                │ 解消                                         │
+  └────────┴──────────────────────────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────┘
+
+  design.md 主要変更:
+  - Error Handling section: Rollback Strategy Matrix table 追加 (~70 行、9 mode 完全網羅 + handler 実装擬似 code)
+  - Error Strategy: atomic write 実装パターン詳細化
+  - Monitoring: decision_id をトレース ID 兼用 + メトリクス収集 Phase 2 余地
+  - change log に Round 6 review 記録
+
+  ラウンド 7 (セキュリティ / プライバシー具体化 = sanitize / encryption / log redaction / git ignore) に進みますか?
+```
+
+##### ❯ OK
+
+```
+⏺ ラウンド 7: セキュリティ / プライバシー具体化
+
+  Step 1a 軽微検出
+
+  軽-7-1: subprocess shell injection 防止規律 → 検出取り下げ (Security Considerations で「LLM CLI 呼出時は shell=False 固定、引数 list
+  形式」明示済、Spec 0/1/4 と整合完備)
+
+  軽-7-2: log redaction / decision_log selective privacy の継承明示
+  - decision_log reasoning field に user 入力 (内部プロジェクト名 / 個人名) 混入の可能性
+  - Spec 5 R11.13「selective privacy」で decision_log.gitignore config / per-decision private: flag 規定あり、本 spec design で継承明示なし
+  - 自己診断 (反転理由): 1 行追記で明示性向上
+  - [自動採択推奨] (Security Considerations に Spec 5 R11.13 継承明示)
+
+  軽-7-3: wiki/.follow-ups/.archived/ の git 管理規定不明示
+  - Follow-up Section L1132 周辺で wiki/.follow-ups/ git 管理対象明示済 (R7.1)
+  - .archived/<year>/<id>.md (90 日 retention auto-archive) も git 管理対象か暗黙
+  - 自己診断 (反転理由): archive 後も git log で trace 可能なら git 管理推奨
+  - [自動採択推奨] (FollowupTask + CRUD Section に .archived/ git 管理対象明示)
+
+  Step 1b 構造的検出 (4 重検査 + Step 1b-v 5 切り口)
+
+  重-7-1: 引数 sanitization の共通実装パターン不明示
+  - 検出: design.md Security Considerations で「target path: 絶対 path 拒否 + path traversal (../) 拒否」と方針あり、しかし共通 sanitization helper
+  signature が未定義 → handler 17 種で個別実装になり inconsistency / 漏れリスク
+  - Step 1b-i (production deploy 逆算): 各 handler 独自 sanitization → path traversal 漏れリスク (例: cmd_merge で targets 配列の各 path を validate
+  漏れ)
+  - Step 1b-iii (dev-log パターン): Spec 0 R1 / Spec 1 R7 / Spec 4 R7 で同型 escalate (subprocess shell injection 防止規律) あり、本 spec
+  も同パターン適用
+  - Step 1b-iv (自己診断): 反転理由 = 共通 sanitization helper 定義で実装解釈ぶれ防止 + inconsistency 回避
+  - Step 1b-v 5 切り口:
+    a. 本質的観点 (top-down): §2.10 Evidence chain の trust 維持には input validation 必須
+    b. 関連文書間矛盾 (lateral): Spec 4 G6 Utils に sanitization helper 集約 vs 本 spec 内集約の boundary 判断
+    c. 仕様⇄実装突合 (vertical): handler 17 種で path / reason / merge_strategy 引数共通の input validation pattern
+    d. dev-log 23 パターン (historical): Spec 0/1/4 同型 escalate
+    e. negative (失敗シナリオ): individual sanitization → CVE 級脆弱性 (path traversal で ~/.ssh/id_rsa 読込)
+  - escalate 必須条件 (security pattern の選択肢) 該当
+  - [escalate 推奨]
+
+  重-7-1 確証手順 (5 観点深掘り)
+
+  - X1: Security Considerations に共通 sanitization helper signature 定義追加 (Layer 4a 共有 helper、sanitize_target_path(path: str, vault: Path) ->
+  Path / sanitize_reason_text(text: str) -> str / sanitize_merge_strategy(strategy: str) -> str)
+    - 各 handler が共通 helper を呼出 (DRY 原則)
+    - 合理的成立条件: handler 17 種で input validation 共通化必須
+  - X2: 各 handler 内で individual sanitization logic 実装
+    - 合理的成立条件: handler ごとの引数 schema 差異
+    - dominated 判定: 17 handler 個別実装で漏れリスク高 → X2 dominated
+  - X3: Spec 4 G6 Utils に sanitization helper を集約、本 spec は呼出側
+    - 合理的成立条件: argument sanitization は Spec 4 CLI フレーム所管
+    - 暗黙前提: Spec 4 G6 Utils に sanitization 追加責務、Spec 4 design 改版必要
+    - 自己診断: handler 17 種の input validation は本 spec scope (handler の事前検査責務)、Spec 4 G6 = generic utility のみ
+  - 5 観点 (X1 vs X3):
+    - a 実装難易度: X1 = 本 spec Layer 4a 共有 helper 1 つ追加、X3 = Spec 4 G6 で実装 + 本 spec 呼出 (Adjacent Sync 必要)
+    - b 設計理念整合: X1 = handler 共通化、X3 = Spec 4 CLI フレームに集約 (boundary 厳密)
+    - c 運用整合性: X1 = handler 内で sanitization 完結、X3 = Spec 4 呼出経由
+    - d boundary 違反リスク: X1 = handler 内 sanitization は本 spec scope、X3 = Spec 4 G6 に追加責務 = 越境
+    - e Phase 1 整合: Spec 4 design G6 Utils Req Coverage に R7 含むが、handler input validation までは含まない (subprocess shell injection 防止のみ)
+   → X1 が Phase 1 整合
+  - 推奨 X1 (本 spec Layer 4a 共有 helper、handler input validation は handler 責務)
+  - 却下案理由: X2 = inconsistency リスク、X3 = boundary 越境
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出なし
+  - c) 文書記述 vs 実装不整合: 検出 1 件 (重-7-1)
+  - d) 規範前提曖昧化: 検出なし
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 7 検出サマリ
+
+  ┌────────┬──────────────────────────────────────────────────────────┬───────────────────────────┬────────────────────────────────┐
+  │   ID   │                         検出内容                         │           判定            │            該当規律            │
+  ├────────┼──────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────┤
+  │ 軽-7-2 │ log redaction (Spec 5 R11.13 selective privacy) 継承明示 │ [自動採択推奨]            │ 明示性向上                     │
+  ├────────┼──────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────┤
+  │ 軽-7-3 │ wiki/.follow-ups/.archived/ git 管理対象明示             │ [自動採択推奨]            │ 明示性向上                     │
+  ├────────┼──────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────┤
+  │ 重-7-1 │ 共通 sanitization helper signature 定義不足              │ [escalate 推奨] (推奨 X1) │ escalate 必須・Spec 0/1/4 同型 │
+  └────────┴──────────────────────────────────────────────────────────┴───────────────────────────┴────────────────────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-7-2 / 軽-7-3 自動採択 + 重-7-1 推奨 X1 で Layer 4a 共有 sanitization helper 追加)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / escalate → 自動 / X1 → X3 反転 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 3 件の修正を適用します。
+
+  軽-7-2 + 重-7-1 X1 適用: Security Considerations に selective privacy 継承明示 + 共通 sanitization helper signature 定義追加。
+⏺ 軽-7-3 適用: FollowupTask + CRUD section に .archived/ git 管理対象明示。
+⏺ change log 記録。
+⏺ ラウンド 7 適用完了サマリ
+
+  ┌────────┬──────────────────────────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────┐
+  │   ID   │                                             適用内容                                             │               該当               │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────┤
+  │ 軽-7-2 │ Security Considerations に decision_log selective privacy 継承 (Spec 5 R11.13 / Foundation R12)  │ 明示性向上                       │
+  │        │ 明示                                                                                             │                                  │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────┤
+  │ 軽-7-3 │ wiki/.follow-ups/.archived/ git 管理対象明示                                                     │ §2.6 整合                        │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────┤
+  │ 重-7-1 │ Layer 4a 共有 sanitization helper 4 種 signature 定義 + Pre-flight 実施規律                      │ escalate 必須・Spec 0/1/4        │
+  │        │                                                                                                  │ 同型解消                         │
+  └────────┴──────────────────────────────────────────────────────────────────────────────────────────────────┴──────────────────────────────────┘
+
+  design.md 主要変更:
+  - Security Considerations: 共通 sanitization helper 4 種 (path / reason / merge_strategy / glob) signature 定義 + decision_log selective privacy 継承明示
+  - FollowupTask + CRUD section: .archived/ git 管理対象明示
+  - change log に Round 7 review 記録
+
+  ラウンド 8 (依存選定 = library / version 制約 / v1 継承との整合) に進みますか?
+```
+
+##### ❯ OK
+
+```
+⏺ ラウンド 8: 依存選定
+
+  Step 1a 軽微検出
+
+  軽-8-1: Technology Stack table の PyYAML version 制約不明示
+  - 現状: PyYAML を「Spec 1 で確定」と参照のみ、本 spec design で version 制約 (例: PyYAML ≥ 6.0) 不明示
+  - 自己診断 (反転理由): Spec 1 design で PyYAML version 確定済なら本 spec も継承明示で reviewer 参照負担軽減
+  - [自動採択推奨] (Technology Stack table に PyYAML version 制約継承明示)
+
+  軽-8-2: 修飾参照規律 (Spec 0 structure.md L184-189 / Spec 4 決定 4-3 継承) の詳細不明示
+  - Architecture Integration で「修飾参照」言及のみ、詳細未明示
+  - 自己診断 (反転理由): from module import symbol 禁止規律は test の monkeypatch.setattr 整合性に重要、1 行明示で実装解釈ぶれ防止
+  - [自動採択推奨] (Architecture Integration に修飾参照規律詳細追加)
+
+  軽-8-3: Phase 順序 (Spec 5 design 完了 → 本 spec implementation 着手) の design 内明示不足
+  - 本 spec implementation 着手前提: Spec 5 R18.1 edge API 3 種 + R11 record_decision API + R17 hygiene.lock 物理実装が確定済
+  - design.md Migration Strategy で Adjacent Sync 経路は明示、Phase 順序は不明示
+  - 自己診断 (反転理由): Migration Strategy に 1 行追記で reviewer / implementer の Phase 把握容易
+  - [自動採択推奨] (Migration Strategy に Phase 順序記述追加)
+
+  Step 1b 構造的検出 (4 重検査 + Step 1b-v 5 切り口)
+
+  重-8-1 / 重-8-2 / 重-8-3: 各検証で取り下げ
+  - v1 継承確認: v1 に deprecate / retract / archive / merge 実装なし、本 spec 完全新規実装、Existing Architecture Analysis で明示済 → 取り下げ
+  - Generator yield pattern Python 互換: PEP 342 + PEP 380 (Python 3.3+ 導入)、Foundation R11 Python 3.10+ で十分対応 → 取り下げ
+  - Spec 5 依存方向と Phase 順序: 軽-8-3 に降格、Migration Strategy への 1 行追記で十分 → 重-8-3 取り下げ
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出なし
+  - c) 文書記述 vs 実装不整合: 検出なし
+  - d) 規範前提曖昧化: 検出なし
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 8 検出サマリ
+
+  ┌────────┬─────────────────────────────────────────────────┬────────────────┬──────────────────────────┐
+  │   ID   │                    検出内容                     │      判定      │         該当規律         │
+  ├────────┼─────────────────────────────────────────────────┼────────────────┼──────────────────────────┤
+  │ 軽-8-1 │ Technology Stack に PyYAML version 制約継承明示 │ [自動採択推奨] │ 明示性向上               │
+  ├────────┼─────────────────────────────────────────────────┼────────────────┼──────────────────────────┤
+  │ 軽-8-2 │ Architecture Integration に修飾参照規律詳細追加 │ [自動採択推奨] │ Spec 4 決定 4-3 継承明示 │
+  ├────────┼─────────────────────────────────────────────────┼────────────────┼──────────────────────────┤
+  │ 軽-8-3 │ Migration Strategy に Phase 順序記述追加        │ [自動採択推奨] │ 明示性向上               │
+  └────────┴─────────────────────────────────────────────────┴────────────────┴──────────────────────────┘
+
+  依存選定観点では escalate 0 件 (本 spec は標準ライブラリのみ、追加依存なし、v1 継承なし、Phase
+  順序明確)。本ラウンドは軽微検出のみで「該当なし」級ラウンド、batching 禁止規律遵守のため Step 2 user 判断機会確保。
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-8-1 / 軽-8-2 / 軽-8-3 自動採択)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ (軽 3 件も適用しない)
+```
+
+##### ❯ A
+
+```
+⏺ 3 件の修正を適用します。
+
+  軽-8-1 適用: Technology Stack に PyYAML version 制約継承明示。
+⏺ 軽-8-2 適用: Architecture Integration に修飾参照規律詳細追加。
+⏺ 軽-8-3 適用: Migration Strategy に Phase 順序記述追加。
+⏺ change log 記録。
+⏺ ラウンド 8 適用完了サマリ
+
+  ┌────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬──────────────────┐
+  │   ID   │                                                     適用内容                                                     │       該当       │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────┤
+  │ 軽-8-1 │ Technology Stack に PyYAML ≥ 6.0 version 制約継承明示 + Spec 1 改版時 Adjacent Sync                              │ 明示性向上       │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────┤
+  │ 軽-8-2 │ Architecture Integration に修飾参照規律詳細追加 (import rw_<module> 形式、from import 禁止)                      │ Spec 0/4         │
+  │        │                                                                                                                  │ 継承明示         │
+  ├────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────┤
+  │ 軽-8-3 │ Migration Strategy に Phase 順序追加 (本 spec implementation 前提 = Spec 5 完了 / Spec 6・2 implementation 前提  │ 明示性向上       │
+  │        │ = 本 spec 完了)                                                                                                  │                  │
+  └────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴──────────────────┘
+
+  design.md 主要変更:
+  - Technology Stack table: PyYAML version 継承明示
+  - Architecture Integration: 修飾参照規律詳細
+  - Migration Strategy: Phase 順序 sub-section 追加 + Adjacent Sync 経路 sub-section header 化
+  - change log に Round 8 review 記録
+
+  ラウンド 9 (テスト戦略 = unit / integration / cross-spec) に進みますか?
+```
+
+##### ❯ OK
+
+```
+⏺ ラウンド 9: テスト戦略
+
+  Step 1a 軽微検出
+
+  軽-9-1: Test category の test item 数 → 検出取り下げ (Unit 5 / Integration 5 / E2E 1 (本 spec scope 外) / Performance 3 はいずれも template
+  推奨範囲内)
+
+  軽-9-2: TDD 規律 (CLAUDE.md global 規律) の design.md Testing Strategy 内明示なし
+  - CLAUDE.md「期待入出力からテストを先に書く → 失敗確認 → コミット → 実装 → 通過まで反復、実装中はテストを変更しない」
+  - 自己診断 (反転理由): TDD 規律明示で implementation 時の test pattern 明確化
+  - [自動採択推奨] (Testing Strategy section に TDD 規律明示)
+
+  軽-9-3: 8 段階対話 generator pattern の test pattern 例示 → 検出取り下げ (Unit Tests 項目で next() / .send() / .close() / state hash mismatch /
+  lock 取得失敗の 5 scenario 明示済)
+
+  Step 1b 構造的検出 (4 重検査 + Step 1b-v 5 切り口)
+
+  重-9-1: Cross-spec test 設計のハイブリッド方式準拠不足
+  - memory feedback_design_review.md「Cross-spec integration テスト設計はハイブリッド方式: 2 spec 間 test は consumer design に記述、3+ spec triad
+  は中心 spec design で end-to-end フロー記述」
+  - 本 spec の cross-spec test 責務分担:
+    - 本 spec ↔ Spec 5 (edge API): 本 spec が consumer → 本 spec design に記述 (現状 Integration Tests で明示済 ✓)
+    - 本 spec ↔ Spec 4 (handler dispatch): Spec 4 が consumer → Spec 4 design 所管、本 spec は不要
+    - 本 spec ↔ Spec 6 (cmd_promote_to_synthesis): Spec 6 が consumer → Spec 6 design 所管、本 spec は test interface 提供のみ
+    - 本 spec ↔ Spec 2 (skill lifecycle 委譲): Spec 2 が consumer → Spec 2 design 所管、本 spec は test interface 提供のみ
+    - 3+ spec triad (Spec 6/5/7 hypothesis approve flow): 中心 = Spec 6 → Spec 6 design 所管
+  - 検出: 本 spec design Integration Tests に「Spec 6 R9 → Spec 7 cmd_promote_to_synthesis 連携」項目あり、これは Spec 6 が consumer なので本 spec
+  ではなく Spec 6 design 所管、本 spec design に書くと重複維持コスト + ハイブリッド方式違反
+  - Step 1b-i (production deploy 逆算): 本 spec implementation phase で Spec 6 連携 test を本 spec test として作成すると、Spec 6 implementation
+  完了後の更新責務曖昧 → 重複/不整合リスク
+  - Step 1b-iii (dev-log パターン): パターン (なし)、memory 規律違反
+  - Step 1b-iv (自己診断): 反転理由 = ハイブリッド方式厳格準拠で test 責務分離明確化
+  - Step 1b-v 5 切り口:
+    a. 本質的観点: memory feedback_design_review.md ハイブリッド方式規律
+    b. 関連文書間矛盾: Spec 6 design 着手時の test 重複リスク
+    c. 仕様⇄実装突合: cross-spec test 維持責務曖昧
+    d. dev-log 23 パターン: 該当なし (memory 規律違反)
+    e. negative: 双方 design に同 test 記述 → 維持時に同期コスト + 不整合リスク
+  - escalate 必須条件 (test 戦略の選択肢) 該当
+  - [escalate 推奨]
+
+  重-9-1 確証手順 (5 観点深掘り)
+
+  - X1: 本 spec Integration Tests から「Spec 6 R9 → Spec 7 連携」test 項目削除 + 「Spec 6 / Spec 2 が consumer の test は consumer design 所管、本
+  spec は test interface 提供のみ」明示
+  - X2: 現状維持 (本 spec Integration Tests に「Spec 6 R9 → Spec 7 連携」test 項目化)
+    - 合理的成立条件: 双方 design に同 test 記述許容
+    - dominated 判定: ハイブリッド方式違反 + 重複維持コスト → X2 dominated
+  - X3: 本 spec design に「ハイブリッド方式準拠」明示 + Integration Tests 項目維持 (移行猶予)
+    - 合理的成立条件: Spec 6 design 着手前の暫定記述、移行注記
+    - 暗黙前提: 移行コスト + 双方 design 整合性管理
+  - 5 観点 (X1 vs X3):
+    - a 実装難易度: X1 = test 項目 1 つ削除 + 1 行明示、X3 = 維持 + 移行注記
+    - b 設計理念整合: X1 = ハイブリッド方式厳格、X3 = 段階移行
+    - c 運用整合性: X1 = Spec 6 design 着手時依存なし、X3 = 移行作業
+    - d boundary 違反リスク: X1 = test 責務明確化、X3 = boundary 暫定混在
+    - e Phase 1 整合: Spec 0 / 1 / 4 design でハイブリッド方式準拠 → X1 が Phase 1 整合
+  - 推奨 X1 (ハイブリッド方式厳格準拠)
+  - 却下案理由: X2 = 重複維持コスト、X3 = 段階移行で boundary 暫定混在
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出なし
+  - c) 文書記述 vs 実装不整合: 検出なし
+  - d) 規範前提曖昧化: 検出 1 件 (重-9-1)
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 9 検出サマリ
+
+  ┌────────┬────────────────────────────────────────────────────────────────────────────┬─────────────────────────┬──────────────────────────────┐
+  │   ID   │                                  検出内容                                  │          判定           │           該当規律           │
+  ├────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ 軽-9-2 │ TDD 規律 (CLAUDE.md global) の design 内明示なし                           │ [自動採択推奨]          │ 明示性向上                   │
+  ├────────┼────────────────────────────────────────────────────────────────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ 重-9-1 │ Cross-spec test ハイブリッド方式準拠不足 (Spec 6 連携 test を本 spec       │ [escalate 推奨] (推奨   │ escalate 必須・memory        │
+  │        │ に重複記述)                                                                │ X1)                     │ 規律違反                     │
+  └────────┴────────────────────────────────────────────────────────────────────────────┴─────────────────────────┴──────────────────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-9-2 自動採択 + 重-9-1 推奨 X1 で Spec 6 連携 test 項目削除 + ハイブリッド方式準拠明示)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / escalate → 自動 / X1 → X3 反転 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 2 件の修正を適用します。
+
+  重-9-1 X1 + 軽-9-2 適用: Testing Strategy section にハイブリッド方式準拠明示 + Spec 6 連携 test 項目削除 + TDD 規律明示。
+⏺ change log 記録。
+⏺ ラウンド 9 適用完了サマリ
+
+  ┌────────┬──────────────────────────────────────────────────────────────────────┬────────────────────────────────────┐
+  │   ID   │                               適用内容                               │                該当                │
+  ├────────┼──────────────────────────────────────────────────────────────────────┼────────────────────────────────────┤
+  │ 軽-9-2 │ Testing Strategy section に TDD 規律明示 (CLAUDE.md global 規律継承) │ 明示性向上                         │
+  ├────────┼──────────────────────────────────────────────────────────────────────┼────────────────────────────────────┤
+  │ 重-9-1 │ Cross-spec test ハイブリッド方式準拠 + Spec 6 連携 test 項目削除     │ escalate 必須・memory 規律違反解消 │
+  └────────┴──────────────────────────────────────────────────────────────────────┴────────────────────────────────────┘
+
+  design.md 主要変更:
+  - Testing Strategy section: TDD 規律 + Cross-spec test ハイブリッド方式 sub-section 追加
+  - Integration Tests: 「Spec 6 R9 → Spec 7 連携」test 項目削除 (Spec 6 design 所管へ移管、本 spec は test interface 提供のみ)
+  - change log に Round 9 review 記録
+
+  ラウンド 10 (マイグレーション戦略 = v1 → v2 移行 / ledger フォーマット変更時の migration script) に進みますか?
+```
+
+##### ❯ OK
+
+```
+⏺ ラウンド 10: マイグレーション戦略
+
+  Step 1a 軽微検出
+
+  軽-10-1: v1 AGENTS (tVault/AGENTS/approve.md / audit.md / lint.md 等 13 種) との共存戦略明示なし
+  - 本 spec は AGENTS/guides/ 11 種を新規追加、既存 v1 AGENTS *.md は v2 でも使われ続けるか不明
+  - 自己診断 (反転理由): 共存戦略明示で migration 戦略明確化
+  - [自動採択推奨] (Migration Strategy に v1 AGENTS 共存戦略 1 行追記)
+
+  軽-10-2: Adjacent Sync 経路 11 項目の実施タイミング統一明示不足
+  - 一部項目 (Spec 5 R11.6 / Spec 6 design 連動 / R12.7 拡張) は実施タイミング明示済、Spec 4 design 連動 8 項目はタイミング不明示
+  - 自己診断 (反転理由): 全項目実施タイミング統一で reviewer / implementer 把握容易
+  - [自動採択推奨] (各項目に実施タイミング明示)
+
+  Step 1b 構造的検出 (4 重検査 + Step 1b-v 5 切り口)
+
+  重-10-1: ledger フォーマット変更時の backward compatibility 規律暗黙
+  - 本 spec は L3 wiki frontmatter (Spec 1 schema) 編集のみ、L2 ledger 編集なし
+  - ただし update_history.type lifecycle 起源 7 値 (Decision 7-3) を将来拡張する場合、既存 wiki page の update_history field との backward
+  compatibility 規定なし
+  - 例: 新 type 値 soft_deprecate 追加 → 既存 wiki page の update_history.type には未存在値、parser エラーリスク
+  - Spec 1 R3.6 で type 値域は example 列挙のみ、許可値リストの正本は所管 spec (本 spec)
+  - Step 1b-i (production deploy 逆算): 将来 type 値追加時に既存 wiki page (vault 1K+ pages) の parse error / lint error リスク
+  - Step 1b-iii (dev-log パターン): パターン 12「Adjacent spec との整合 (過剰拘束)」該当
+  - Step 1b-iv (自己診断): 反転理由 = backward compatibility 規律明示で将来拡張時の既存 page 安全性確保
+  - Step 1b-v 5 切り口:
+    a. 本質的観点 (top-down): §2.6 Git + 層別履歴媒体、既存 wiki page も version 管理対象
+    b. 関連文書間矛盾 (lateral): Spec 1 R3.6 schema vs 本 spec lifecycle 起源 7 値拡張の整合
+    c. 仕様⇄実装突合 (vertical): parser logic で「未知 type 値」遭遇時の動作 (skip / WARN / ERROR) 不明
+    d. dev-log 23 パターン: パターン 12 該当
+    e. negative (失敗シナリオ): 新 type 追加 → 既存 page parse failure → vault 全体 lint NG → user 大規模手動修正
+  - escalate 必須条件 (規範範囲判断) 該当
+  - [escalate 推奨]
+
+  重-10-1 確証手順 (5 観点深掘り)
+
+  - X1: Migration Strategy section に backward compatibility 規律追加 (update_history.type 値域拡張時 = 既存 type 値は許可セットの subset 維持、新
+  type 追加で既存 page invalid 化しない、parser は未知 type 値遭遇時 INFO severity で skip)
+  - X2: 現状維持 (backward compatibility 規律なし、ad-hoc 対応)
+    - 合理的成立条件: 将来拡張時に都度判断、暗黙前提: implementer が backward compatibility 意識
+    - dominated 判定: 既存 vault 1K+ pages で互換性破壊時の影響大 → X2 dominated
+  - X3: 既存 type 値の deprecation 規律追加 (新 type 値追加 + 既存 type 値 deprecate marking)
+    - 合理的成立条件: type 値の lifecycle 管理必要
+    - 暗黙前提: type 値自体の lifecycle = schema migration とは別問題、本 spec scope 外
+    - dominated 判定: over-engineering → X3 dominated
+  - 5 観点 (X1):
+    - a 実装難易度: X1 = 規律 1-2 行追記、X2 = 現状維持
+    - b 設計理念整合: X1 = backward compatibility 重視
+    - c 運用整合性: X1 = 既存 page 安全、X2 = 拡張時影響リスク
+    - d boundary 違反リスク: なし
+    - e Phase 1 整合: Spec 1 design でも schema 拡張時 Adjacent Sync 規律あり、本 spec で同パターン継承
+  - 推奨 X1 (X2 = 既存 page 互換性破壊リスク、X3 = over-engineering)
+
+  厳しく検証 5 種強制発動結果
+
+  - a) 規範範囲先取り: 検出なし
+  - b) 構造的不均一: 検出なし
+  - c) 文書記述 vs 実装不整合: 検出なし
+  - d) 規範前提曖昧化: 検出 1 件 (重-10-1)
+  - e) 単純誤記 grep: 検出なし
+
+  Step 2 ラウンド 10 検出サマリ
+
+  ┌─────────┬──────────────────────────────────────────────────────────────────┬───────────────────────────┬────────────────────────────────────┐
+  │   ID    │                             検出内容                             │           判定            │              該当規律              │
+  ├─────────┼──────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────┤
+  │ 軽-10-1 │ v1 AGENTS との共存戦略明示なし                                   │ [自動採択推奨]            │ 明示性向上                         │
+  ├─────────┼──────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────┤
+  │ 軽-10-2 │ Adjacent Sync 各項目に実施タイミング統一明示                     │ [自動採択推奨]            │ 明示性向上                         │
+  ├─────────┼──────────────────────────────────────────────────────────────────┼───────────────────────────┼────────────────────────────────────┤
+  │ 重-10-1 │ update_history.type 値域拡張時の backward compatibility 規律暗黙 │ [escalate 推奨] (推奨 X1) │ escalate 必須・dev-log パターン 12 │
+  └─────────┴──────────────────────────────────────────────────────────────────┴───────────────────────────┴────────────────────────────────────┘
+
+  LLM 判断への異論ある候補は?
+  - 案 A: 異論なし (軽-10-1 / 軽-10-2 自動採択 + 重-10-1 推奨 X1 で backward compatibility 規律追加)
+  - 案 B: 異論あり (どの候補? 自動 → escalate / escalate → 自動 / X1 → X3 反転 / 修正不要 / 再深掘り)
+  - 案 C: 該当なし扱いで次ラウンドへ
+```
+
+##### ❯ A
+
+```
+⏺ 3 件の修正を適用します。
+  軽-10-1 + 重-10-1 X1 適用: Migration Strategy に v1 AGENTS 共存戦略 + backward compatibility 規律追加。
+⏺ 軽-10-2 適用: Adjacent Sync 各項目に実施タイミング統一明示。
+⏺ change log 記録 + 全 10 ラウンド完了。
+⏺ ラウンド 10 適用完了サマリ + 全 10 ラウンドレビュー完了
+
+  Round 10 適用
+
+  ┌─────────┬───────────────────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────┐
+  │   ID    │                                             適用内容                                              │              該当              │
+  ├─────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │ 軽-10-1 │ v1 AGENTS との共存戦略明示 (sub-directory 物理分離、再編成は別 spec)                              │ 明示性向上                     │
+  ├─────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │ 軽-10-2 │ Adjacent Sync 経路 11 項目に実施タイミング統一明示                                                │ 明示性向上                     │
+  ├─────────┼───────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────┤
+  │ 重-10-1 │ update_history.type 値域拡張時の backward compatibility 規律 (parser 未知 type INFO skip + type   │ escalate 必須・dev-log         │
+  │         │ 削除禁止 + migration script 不要)                                                                 │ パターン 12 解消               │
+  └─────────┴───────────────────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────┘
+
+  ---
+  全 10 ラウンドレビュー完了総括
+
+  - 適用件数合計: 30 件 (軽微自動採択 19 件 + escalate 確証 11 件)
+  - 設計決定: 20 → 21 (Decision 7-21 = Layer 4 sub-module 分割を Round 2 で追加)
+  - Adjacent Sync 経路: 11 → 15 (Round 1 で Spec 6 連動 1 + Spec 5 連動 1 / Round 3 で R12.7 拡張 1 / Round 1 で本 spec requirements 連動 1 追加)
+  - design.md 行数: 1425 → 1754 行 (+329 行、約 23% 増)
+  - research.md 行数: 454 行 (variant なし、設計決定 7-21 は design.md 内のみ追記、research.md には反映していない点が次回確認事項)
+
+  各ラウンド成果
+
+  ┌───────┬────────────────────────┬──────┬──────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Round │          観点          │ 適用 │                                               主要改善                                               │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R1    │ requirements 全 AC     │ 5    │ Page 状態挙動表追加 / cmd_promote_to_synthesis signature 統一 / decision_type 命名整合 / Reference   │
+  │       │ 網羅                   │      │ Template 化                                                                                          │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R2    │ アーキテクチャ整合性   │ 3    │ Layer 4 を 3 sub-module 分割 (Decision 7-21) / 4 → 6 module DAG 化                                   │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R3    │ データモデル           │ 3    │ subject_refs 構造例 mapping table 10 種 / page_reactivate 命名整合                                   │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R4    │ API interface          │ 4    │ Exception 階層 + raise/catch 規約 table / idempotency 規定                                           │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R5    │ アルゴリズム+性能      │ 4    │ Big O table 9 種 / 大規模 vault handler 目安時間 / Phase 2 並列化余地                                │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R6    │ 失敗 handler+観測性    │ 3    │ Rollback Strategy Matrix table 9 mode / atomic write 実装パターン                                    │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R7    │ セキュリティ           │ 3    │ sanitization helper 4 種 signature / decision_log selective privacy 継承                             │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R8    │ 依存選定               │ 3    │ PyYAML version 継承 / 修飾参照規律 / Phase 順序                                                      │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R9    │ テスト戦略             │ 2    │ TDD 規律 / Cross-spec test ハイブリッド方式準拠                                                      │
+  ├───────┼────────────────────────┼──────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ R10   │ マイグレーション       │ 3    │ v1 AGENTS 共存 / Adjacent Sync タイミング / backward compatibility 規律                              │
+  └───────┴────────────────────────┴──────┴──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  残課題
+
+  - research.md に Decision 7-21 (Layer 4 sub-module 分割、Round 2 由来) を反映する必要あり (design.md と research.md の整合)
+  - spec.json は依然 phase=design-generated, approved=false、user approve 待ち
+
+  design.md / research.md / spec.json は user approve 待ち、commit / push 未実施。次のアクションは: (a) research.md 整合更新、(b) user 最終 approve、(c) commit + push のいずれか?
+```
+
+##### ❯ a
+
+```
+⏺ research.md を design.md (Round 1-10 review 後) と整合更新します。
+⏺ Architecture Pattern Evaluation table に Layer 4 sub-module 分割評価を追加。
+⏺ Decision 7-21 を Design Decisions section に追加。
+⏺ change log に Round 1-10 review 完了を記録。
+⏺ research.md 整合更新完了
+
+  ┌─────────────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │              項目               │                                                    変更                                                    │
+  ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Summary > Key Findings          │ Round 2 由来項目追加 (6 module DAG / Decision 7-21 言及)                                                   │
+  ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Architecture Pattern Evaluation │ Layer 4 sub-module 分割関連 3 行追加 (採用案 + 不採用案 2 種)                                              │
+  │  table                          │                                                                                                            │
+  ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Design Decisions                │ Decision 7-21 新規追加 (Layer 4 機能別 3 sub-module 分割、Context / Alternatives / Selected / Rationale /  │
+  │                                 │ Trade-offs / Follow-up 完備)                                                                               │
+  ├─────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ change log                      │ Round 1-10 review 完了記録 (合計 30 件適用 + Decision 7-21 追加 + Adjacent Sync 4 項目追加)                │
+  └─────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  research.md: 454 → 474 行 (+20 行)。design.md (1754 行) と Decision 7-21 整合確認済。
+
+  ---
+  Spec 7 design レビューフェーズ全完了
+
+  ファイル状態
+
+  - .kiro/specs/rwiki-v2-lifecycle-management/design.md (1754 行)
+  - .kiro/specs/rwiki-v2-lifecycle-management/research.md (474 行)
+  - .kiro/specs/rwiki-v2-lifecycle-management/spec.json (phase=design-generated, approved=false)
+
+  レビュー成果総括
+
+  - 全 10 ラウンド memory 改訂版方式 (4 重検査 + Step 1b-v 5 切り口 + 厳しく検証 5 種強制発動 + 自動承認モード廃止) で網羅実施
+  - 合計 30 件適用 (軽微自動採択 19 + escalate 確証 11)
+  - 設計決定 20 → 21 (Decision 7-21 = Layer 4 sub-module 分割)
+  - Adjacent Sync 経路 11 → 15 項目
+
+  次のアクション (3 択)
+
+  - (a) user 最終 approve → spec.json approved=true 更新 + commit + push (Spec 4 design 連動更新 + drafts §7.2 表更新を Adjacent Sync で同 commit /別 commit のいずれか確定要)
+  - (b) Adjacent Sync 経路 11 項目を design approve 直前に分割 commit で実施 (Spec 4 design 連動 8 + Spec 1 design comment 整合 1 + drafts §7.2 表 1 / Spec 5 / Spec 6 連動は別 spec design 着手時に持ち越し)
+  - (c) その他指示
+```
+
+##### ❯ a
+
+```
+⏺ spec.json approve 更新を実施します。
+⏺ spec.json approved=true 更新完了 (phase = design-approved)。
+
+  commit + push 戦略を確認します。Adjacent Sync 経路 10 項目 (Spec 4 design 連動 8 + Spec 1 design comment 整合 1 + drafts §7.2 表 1) は「本 spec design approve 直後実施」と Migration Strategy で確定済。残り 5 項目は「Spec X design 着手前/着手時」(Spec 5 R11.6 / Spec 5 R11.2 / 本 spec R12.7 / Spec 6 design 連動) で別セッション送り。
+
+  commit 戦略選択肢:
+  - (i) 本 commit に本 spec design のみ (design.md / research.md / spec.json) → push → Adjacent Sync 経路 10 項目は別 commit (本セッション内 or 別セッション)
+  - (ii) 本 commit に本 spec design + Adjacent Sync 経路 10 項目を一括 (Spec 4 design / Spec 1 design / drafts §7.2 表を同 commit で改版) → push
+  - (iii) 本セッション内で 2 commit 分割実施: (1) 本 spec design 単体 commit + push, (2) Adjacent Sync 経路 10 項目 commit + push
+
+  過去 Spec 0/1/4 セッションでは (iii) パターン (spec ごとに分割 commit) が標準と推察。ご指示ください。
+```
+
+##### ❯ (iii)
+
+```
+⏺ (iii) 採用。まず git status を確認して現状把握。
+⏺ git status 確認完了。Commit 1 (本 spec design 単体) を実施します。
+⏺ Commit 1 完了 (b45bdc3、push 済)。次に Commit 2 (Adjacent Sync 経路 10 項目) を実施します。Spec 4 / Spec 1 design + drafts §7.2 表の現状確認。
+⏺ Adjacent Sync 経路 10 項目を実施します。まず Spec 4 design.md に change log entry 追加 + Directory Structure line 反映。
+⏺ Spec 4 spec.json updated_at 更新。
+⏺ Spec 1 design.md L892 lifecycle 起源 4 → 7 値拡張。
+⏺ Spec 1 design.md change log + spec.json updated_at 更新。
+⏺ 全作業完了
+
+  Commit 履歴
+
+  - b45bdc3 (Commit 1): Spec 7 design approve (design.md 1754 行 + research.md 474 行 + spec.json approved=true)
+  - 2140848 (Commit 2): Adjacent Sync 経路 10 項目反映 (Spec 4 design change log + Spec 1 design comment + drafts §7.2 表)
+
+  両 commit push 済 (origin/main 同期完了)。
+
+  最終状態
+
+  - 本 spec: phase=design-approved, approved=true, ready_for_implementation=false (tasks 未生成)
+  - Spec 4 spec.json: updated_at 更新 (Adjacent Sync marker)
+  - Spec 1 spec.json: updated_at 更新 (Adjacent Sync marker)
+  - drafts §7.2 表: 13 種 → 15 種 (Skill lifecycle 拡張 2 種追加)
+
+  Spec 7 design レビュー総括
+
+  - 全 10 ラウンド memory 改訂版方式で網羅実施
+  - 合計 30 件適用 (軽微自動採択 19 + escalate 確証 11)
+  - 設計決定 20 → 21 (Decision 7-21 = Layer 4 sub-module 分割、Round 2 由来)
+  - Adjacent Sync 経路 11 → 15 (本 commit で 10 項目を物理反映 + 5 項目は別 spec design 着手時に持ち越し)
+  - design.md 1425 → 1754 行 (+329 行、約 23% 増)
+
+  別セッション持ち越し項目
+
+  - 残り 5 項目 Adjacent Sync (Spec 5 R11.6 / Spec 5 R11.2 / 本 spec R12.7 拡張 / Spec 6 design 連動): Spec 5 / Spec 6 design 着手時に実施
+  - dev-log 追記 (docs/Rwiki-V2-dev-log-4.md): 別 commit / 別セッション扱い (modified 残留中)
+  - TODO_NEXT_SESSION.md 更新
+
+  design phase 進捗: ✅✅⬜⬜✅⬜⬜✅ (4/8 完了 — Spec 0 / 1 / 4 / 7、Phase 2 完了)
+```
+
+```
+⏺ TODO_NEXT_SESSION.md 更新完了。SSoT 照合 (roadmap.md / Spec 5 spec.json / 残り 4 spec ディレクトリ確認) で次のアクションを Phase 3 前半 = Spec 5design 着手と確定。
+
+  主要更新内容:
+  - Phase 2 完了 (Spec 4 + Spec 7) を明記、commit b45bdc3 + 2140848 push 済
+  - 設計決定 21 件 / Adjacent Sync 経路 15 項目を反映
+  - 持ち越し Adjacent Sync 5 項目 を Spec 5 design 着手前 / Spec 5 design 着手時 / Spec 6 design 着手時 に分類して明示 (本 spec R12.7 6→7 種 + Spec 5
+   R11.6 / R11.2 改版 + hygiene.lock thread-safety + Spec 6 args construct coordination)
+  - design phase 進捗: ✅✅⬜⬜✅⬜⬜✅ (4/8 完了 — Spec 0/1/4/7)
+  - Spec 5 特徴 (P0-P4 段階実装、最重要・最大規模、設計レビューの厚いラウンド = R3/R5/R6/R8) を明記
+
+  commit 戦略 2 択:
+  - (i) TODO_NEXT_SESSION.md 単体 commit + push (3 個目 commit)
+  - (ii) TODO_NEXT_SESSION.md + docs/Rwiki-V2-dev-log-4.md (前セッション残り modified) を 2 file 合わせて commit + push
+
+  ご指示ください。
 ```
 
