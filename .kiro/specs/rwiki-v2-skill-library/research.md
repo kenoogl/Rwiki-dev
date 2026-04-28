@@ -53,12 +53,12 @@
   - `.kiro/specs/rwiki-v2-cli-mode-unification/design.md` 決定 4-13 (session_id 形式 = `<timestamp>-<8 hex>`)
   - Spec 0 §2.7 エディタ責務分離原則 (人間可読 + 機械可読の両立)
 - **Findings**:
-  - drafts §2.11 では subdirectory 形式 (`interactive/`) と ファイル名形式 (`interactive-<skill>-<timestamp>.md`) が混在、design phase で一意化が必要
+  - drafts §3.2 (line 783-786) は subdirectory 形式 (`interactive/`, `chat-sessions/`, `manual/`) で記載済、一方 §11.0 + Scenario 25 (line 2598, 2606) はファイル名 prefix 形式 (`interactive-<skill>-<ts>.md`) で記述、表記揺れあり (§2.11 はディレクトリ命名規則を含まないため本 Topic 対象外、Round 0 訂正)
   - Turn 内部 schema の選択肢は (A) Markdown 見出し構造 (`## Turn N - ISO 8601` + `**User:** / **Assistant:**`) / (B) 自由形式 + frontmatter のみ機械可読 / (C) frontmatter 内 `turns:` 配列 + 本文補助記述 の 3 案
   - Spec 4 G1 ChatEntry 実装は `init_session_log()` + `ended_at` 追記 (decision 4-13) で保存実装を所管、本 spec はスキーマ規約のみ
 - **Implications**:
   - **Decision 2-6** で案 A (Markdown 見出し構造 + frontmatter 件数記録) 採用 → 人間可読維持 + Turn append-save 単位明確化 + 機械側は Turn 件数のみ参照
-  - **Decision 2-7** でディレクトリ命名規則を 3 区別に統一 (`chat-sessions/` = rw chat / `interactive/<skill_name>/` = interactive skill 起源 / `manual/` = 手動 import) → drafts §2.11 表記揺れ解消、Adjacent Sync 経由で drafts §2.11 / Spec 4 R1.8 へ反映
+  - **Decision 2-7** でディレクトリ命名規則を 3 区別に統一 (`chat-sessions/` = rw chat / `interactive/<skill_name>/` = interactive skill 起源 / `manual/` = 手動 import) → drafts §11.0 + Scenario 25 表記揺れ解消、Adjacent Sync 経由で drafts §11.0 / Scenario 25 / Spec 4 R1.8 line 65 へ反映 (drafts §3.2 は既に subdirectory 表記済、Spec 4 line 1284 は既に SSoT 参照済のため当該 2 箇所は改版不要)
 
 ### Topic 4: HTML 差分マーカー attribute (Spec 4 決定 4-8 委譲)
 
@@ -218,15 +218,15 @@
 
 ### Decision 2-7: 対話ログディレクトリ命名規則 = 3 区別
 
-- **Context**: design phase 持ち越し 1 項目 (R15.2)、drafts §2.11 表記揺れ (`chat-sessions/` / `interactive-<skill>/` / `manual/`) の一意化
+- **Context**: design phase 持ち越し 1 項目 (R15.2)。drafts §3.2 (line 783-786) は subdirectory 形式で既に記載済、一方 §11.0 + Scenario 25 (line 2598, 2606) はファイル名 prefix 形式 (`interactive-<skill>-<ts>.md`) で記述されており、両者間で表記揺れあり、design phase で一意化が必要 (2026-04-28 Round 0 訂正: 当初参照していた §2.11 はディレクトリ命名規則を含まず、実際の sync 対象は §11.0 / Scenario 25)
 - **Alternatives Considered**:
   1. ファイル名 prefix 区別 (`chat-<id>.md` / `interactive-<skill>-<id>.md` / `manual-<id>.md`) — 検索性低
   2. subdirectory 区別 (`raw/llm_logs/{chat-sessions, interactive, manual}/`)
   3. 単一ディレクトリ + frontmatter `mode` field 区別 — 物理分離なし
-- **Selected Approach**: subdirectory 3 区別。`raw/llm_logs/chat-sessions/<timestamp>-<session-id>.md` (rw chat 起源) / `raw/llm_logs/interactive/<skill_name>/<timestamp>-<session-id>.md` (interactive skill 起源、skill 別 sub-subdirectory) / `raw/llm_logs/manual/<timestamp>-<session-id>.md` (手動 import 起源)
-- **Rationale**: drafts §2.11 表記揺れ解消、interactive skill 起源は skill 名で更に分類 (skill 別の log 集約が容易)、Spec 4 G1 ChatEntry 実装で path 解決が単純化
+- **Selected Approach**: subdirectory 3 区別 (drafts §3.2 既存表記と整合)。`raw/llm_logs/chat-sessions/<timestamp>-<session-id>.md` (rw chat 起源) / `raw/llm_logs/interactive/<skill_name>/<timestamp>-<session-id>.md` (interactive skill 起源、skill 別 sub-subdirectory) / `raw/llm_logs/manual/<timestamp>-<session-id>.md` (手動 import 起源)
+- **Rationale**: drafts §11.0 / Scenario 25 表記揺れ解消、§3.2 既存 subdirectory 形式と整合、interactive skill 起源は skill 名で更に分類 (skill 別の log 集約が容易)、Spec 4 G1 ChatEntry 実装で path 解決が単純化
 - **Trade-offs**: ディレクトリ階層 +1、glob match 表現がやや複雑化 (`raw/llm_logs/**/*.md`) — 検索性 / 管理性のメリットが上回る
-- **Follow-up**: Adjacent Sync 経路 = drafts §2.11 改版 + Spec 4 R1.8 改版 (本 spec design 由来 coordination)
+- **Follow-up**: Adjacent Sync 経路 = drafts §11.0 / Scenario 25 改版 (line 2598 / 2606 のファイル名 prefix 表記を subdirectory 表記に書換) + Spec 4 design line 65 改版 (HTML 差分マーカー attribute は Decision 2-8 でカバー、ディレクトリ命名は line 1284 で既に Spec 2 SSoT 参照済のため line 1284 改版は不要)
 
 ### Decision 2-8: HTML 差分マーカー attribute = `target` + `reason` MVP
 
@@ -325,7 +325,7 @@
 
 - **Risk 1**: Skill 1 module 集約への将来回帰 (Phase 2 で機能追加時に 3 sub-module → 1 module に巻き戻すリスク) — Mitigation: design に「3 sub-module 分割の理由」を明示記録、各 module の責務性質 (静的 / 純粋 / 動的) を boundary 説明
 - **Risk 2**: Custom skill 7 段階対話 generator の StageEvent 類似実装が Spec 4 8 段階対話と微妙に乖離 (event field の意味的差) — Mitigation: 本 spec で `SkillStageEvent` を独自定義、Spec 4 `StageEvent` と意図的に分離 (流用しないことを明示)
-- **Risk 3**: 対話ログ markdown フォーマット (Decision 2-6 / 2-7) の Adjacent Sync 失敗 (drafts §2.11 / Spec 4 R1.8 の連鎖更新漏れ) — Mitigation: design Migration Strategy section に Adjacent Sync 経路を明示記録、approve 時に Spec 4 / drafts への反映を同時実施
+- **Risk 3**: 対話ログ markdown フォーマット (Decision 2-6 / 2-7) の Adjacent Sync 失敗 (drafts §11.0 / Scenario 25 / Spec 4 R1.8 line 65 の連鎖更新漏れ) — Mitigation: design Migration Strategy section に Adjacent Sync 経路を明示記録 (sync 必須 3 件 + 部分必要 1 件 + 推奨 1 件、Round 0 訂正版)、approve 時に Spec 4 / drafts への反映を同時実施
 - **Risk 4**: Atomic install operation の OS 依存 (POSIX 限定、Windows 非対応) — Mitigation: Spec 5 Decision 5-3 と同パターン、Windows サポートは Phase 2/3 拡張余地として明示記録 (Foundation / roadmap.md 改版が必要)
 - **Risk 5**: `applicable_categories` 値域 (Spec 1 categories.yml 参照) の categories.yml 編集中 race condition — Mitigation: skill install 時の参照整合性 check は read-only (lock 不要)、categories.yml の編集中に skill install 実行で WARN severity 報告 + 参照失敗時の retry 推奨
 

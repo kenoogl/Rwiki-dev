@@ -233,9 +233,9 @@ tests/
 
 ### Modified Files
 
-- `.kiro/drafts/rwiki-v2-consolidated-spec.md` (Adjacent Sync 経由): §5.7 candidate status 値域を 3 → 2 値 (`draft` / `validated`) に変更 (R12.1) / §2.11 ディレクトリ命名規則 3 区別に統一 (Decision 2-7) / §11.2 lint_proposals 出力先明示 (Decision 2-9)
-- `.kiro/specs/rwiki-v2-cli-mode-unification/design.md` (Adjacent Sync): R1.8 対話ログ frontmatter 5 必須 field と Turn 内部 schema を本 spec へ参照点設置 (Decision 2-6) / 決定 4-8 HTML 差分マーカー attribute = 本 spec で MVP 確定 (`target` + `reason`、Decision 2-8)
-- `.kiro/steering/structure.md` (Adjacent Sync): review/ 層構造表に `lint_proposals/` 追加 (Decision 2-9)、raw/llm_logs/ 構造に 3 区別明示 (Decision 2-7)
+- `.kiro/drafts/rwiki-v2-consolidated-spec.md` (Adjacent Sync 経由): §5.7 candidate status 値域を 3 → 2 値 (`draft` / `validated`) に変更 (R12.1) / §11.0 + Scenario 25 (line 2598 / 2606) のファイル名 prefix 表記 `interactive-<skill>-<ts>.md` を subdirectory 表記 `interactive/<skill_name>/<ts>-<session-id>.md` に統一 (Decision 2-7、§3.2 line 783-786 は既に subdirectory 区別記載済) / §11.2 `frontmatter_completion` 出力欄を `review/lint_proposals/` 明示に更新 (Decision 2-9)
+- `.kiro/specs/rwiki-v2-cli-mode-unification/design.md` (Adjacent Sync): line 65 「HTML 差分マーカー attribute 詳細 (I-3) = Phase 2/3 Spec 2 / Spec 7 design 委譲 (決定 4-8)」を「Spec 2 Decision 2-8 で MVP attribute (`target` + `reason`) 確定済 (Phase 2 拡張余地 = `merge_strategy` / `confidence` / `evidence_id` は据え置き)」に参照点更新 (Decision 2-8)。frontmatter schema delegation (line 1284 既存 boundary 区別記述) は本 spec を SSoT として既に参照済のため改版不要 (Decision 2-6 / 2-7 の delegation 自体は line 1284 で成立、本 spec design Decision 2-6 / 2-7 確定により Spec 4 側追加改版なし)
+- `.kiro/steering/structure.md` (Adjacent Sync): review/ 層構造表に `lint_proposals/` 追加 (Decision 2-9)、raw/llm_logs/ 構造に 3 区別明示 (Decision 2-7、drafts §3.2 と整合させる)
 
 > 各 file は単一責務を保持。Layer 3 が atomic install operation の 5 step を所管、validation 4 種は Layer 2 で独立関数化、catalog read-only は Layer 1 に集約。
 
@@ -882,12 +882,12 @@ flowchart TD
 
 ### 持ち越し Adjacent Sync
 
-- **Adjacent Sync 必須 4 件** (本 spec design approve 時または implementation 着手前):
-  - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §5.7 candidate status 値域 3 → 2 値 (R12.1、本 design Decision 2-1 連携)
-  - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §2.11 ディレクトリ命名規則 3 区別統一 (Decision 2-7)
-  - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §11.2 lint_proposals 出力先明示 (Decision 2-9)
-  - `.kiro/specs/rwiki-v2-cli-mode-unification/design.md` R1.8 対話ログ frontmatter 5 必須 field + Turn 内部 schema 参照点 (Decision 2-6) + 決定 4-8 HTML 差分マーカー attribute MVP (Decision 2-8)
-- **Adjacent Sync 推奨 1 件**: `.kiro/steering/structure.md` review/ 層構造表に `lint_proposals/` 追加 (Decision 2-9)、raw/llm_logs/ 構造に 3 区別明示 (Decision 2-7)
+- **Adjacent Sync 必須 3 件** (本 spec design approve 時または implementation 着手前、2026-04-28 Round 0 訂正版):
+  - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §5.7 candidate status 値域 3 → 2 値 (R12.1、本 design Decision 2-1 / R12.1 連携)
+  - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §11.0 + Scenario 25 (line 2598 / 2606) のファイル名 prefix 表記 `interactive-<skill>-<ts>.md` を subdirectory 表記に統一 (Decision 2-7)。§3.2 line 783-786 は既に 3 subdirectory 記載済のため改版不要、§2.11 (「ユーザー primary interface は発見」原則) は対象外 (誤記訂正)
+  - `.kiro/drafts/rwiki-v2-consolidated-spec.md` §11.2 `frontmatter_completion` 出力欄を `review/lint_proposals/` 明示に更新 (Decision 2-9)
+- **Adjacent Sync 部分必要 1 件**: `.kiro/specs/rwiki-v2-cli-mode-unification/design.md` line 65 「Phase 2/3 Spec 2 / Spec 7 design 委譲」記述を「Spec 2 Decision 2-8 で MVP attribute (`target` + `reason`) 確定済」に参照点更新 (Decision 2-8)。frontmatter schema delegation (line 1284 既存 boundary 区別記述) は本 spec SSoT 参照が既に成立しているため改版不要
+- **Adjacent Sync 推奨 1 件**: `.kiro/steering/structure.md` review/ 層構造表に `lint_proposals/` 追加 (Decision 2-9)、raw/llm_logs/ 構造に 3 区別明示 (Decision 2-7、drafts §3.2 と整合)
 
 ### 依存順 / Implementation 着手前提
 
