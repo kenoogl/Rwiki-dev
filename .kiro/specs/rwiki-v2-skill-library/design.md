@@ -462,8 +462,8 @@ def show_skill(skill_name: str, vault_path: Path) -> SkillFile: ...
 
 **Responsibilities & Constraints**
 - 4 種 validation を独立関数として実装 ((a) 8 section / (b) YAML / (c) 衝突 / (d) 参照整合性)
-- 各 validation は `(skill_path: Path, severity_collector: SeverityCollector) -> None` signature 統一
-- 一括実行関数 `validate_skill_file` が 4 種を順次呼出、SeverityCollector が全件報告を集約
+- 各 validation は signature 統一: (a)(b) は `(skill_path: Path, report: SkillSeverityReport) -> None` (2 引数)、(c)(d) は `(skill_path: Path, vault_path: Path, report: SkillSeverityReport) -> None` (3 引数、vault_path は AGENTS/skills/ scan + .rwiki/vocabulary/ 参照に必要)。SeverityCollector 役割を `SkillSeverityReport` dataclass で一元化 (本 spec では SeverityCollector 抽象は導入せず、SkillSeverityReport が collector + 結果コンテナを兼ねる)
+- 一括実行関数 `validate_skill_file` が 4 種を順次呼出、`SkillSeverityReport` が全件報告を集約
 - ERROR 1 件以上で install 拒否 (R9.2)
 - 差分マーカー対 check (R10.5)、`update_mode: extend` skill のみ対象
 - R15.4 判定 = `interactive: true` または `auto_save_dialogue: true` の skill が対話ログ frontmatter スキーマ参照点 (Output / Input section) を必須記載 (Decision 2-10)
@@ -574,8 +574,8 @@ def test_skill_generator(
 def install_skill_generator(
   candidate_path: Path,
   vault_path: Path,
-) -> Generator[SkillStageEvent, None, Path]:
-  """7 段階のうち 4-5-7 (Validation + Dry-run check + Atomic Install) を実施、AGENTS/skills/<name>.md path を return"""
+) -> Generator[SkillStageEvent, str, Path]:
+  """7 段階のうち 4-5-7 (Validation + Dry-run check + 1-stage confirm + Atomic Install) を実施、AGENTS/skills/<name>.md path を return。caller の send() 入力で confirm 段階 ('yes' / 'no') を分岐 (R9.4、Round 1 反映)"""
 
 @dataclass
 class DryRunFailure:
@@ -599,6 +599,7 @@ def handle_dry_run_failure(
 - **サブカテゴリ skill の汎用性 (R7.7)**: `draft_skill_generator` は Scenario 35 由来の reject 学習 skill 等のサブカテゴリ skill も同 7 段階フローで生成可能、generator 実装は skill 種別を識別せず汎用 (frontmatter `applicable_categories` / `applicable_input_paths` の設定でサブカテゴリ差異を表現)
 - **rw init standard skill 配布の dry-run skip (R8.4)**: `rw init` 経由の standard skill 配布は本 spec の `test_skill_generator` を経由せず、Spec 4 cmd_init が `STANDARD_SKILLS` tuple を参照して直接 `AGENTS/skills/` に配置する。dry-run 必須化 (R8.1) は `origin: custom` skill の install のみに適用、standard 配布は適用外 (Rwiki 配布側で品質保証済前提)
 - **install dangerous_op 中位置付け + 1-stage confirm (R9.4)**: `install_skill_generator` は validation 通過後も install step に進む前に confirm event を 1 件 yield する (`SkillStageEvent.event_type='prompt'`)、Spec 4 G3 caller の `send()` 入力 (`'yes'` / `'no'`) で install 進行を分岐する内部 logic を持つ。1-stage confirm の UX (prompt 文言 / accept-yes-no) 実装は Spec 4 G3 caller の責務 (`dangerous_op category: 中`、§8.4 / §2.5 Simple dangerous op 整合)、対話深度の正確な仕様は Spec 4 design 所管
+- **`rw skill test <candidate-or-name>` の 2 系統対応 (R7.4)**: `test_skill_generator` の `candidate_path: Path` 引数は **caller (Spec 4) 側で path 解決済前提**。caller は `rw skill test <arg>` の `<arg>` が candidate path (`review/skill_candidates/<name>.md`) か既 install 済 skill 名 (`AGENTS/skills/<name>.md` 経由解決) かを引数 parse 段階で判定し、Path 型に統一して本 generator に渡す coordination 規約を採る (本 spec は Path 受領のみ、name 経由解決は Spec 4 の責務)
 - Risks: lock acquire 失敗 (Hygiene batch 同時実行) → fail-fast WARN + 再試行推奨 (Spec 5 Decision 5-3 同パターン)。dry-run timeout は LLM CLI 一時的問題で再試行可能 (DryRunFailure.retry_recommended=true)、ユーザー判断で再 `rw skill test` 実行
 
 ### Component: ExtractionOutputSchema (Spec 5 への validation interface)
@@ -718,7 +719,7 @@ def handle_dry_run_failure(
 | Field | 種別 | 必須 | 値域 | 用途 |
 |-------|------|------|------|------|
 | `type` | string | 必須 | 固定値 `dialogue_log` | 対話ログ識別 |
-| `session_id` | string | 必須 | `<timestamp>-<8 hex>` (Spec 4 決定 4-13) | session 一意識別 |
+| `session_id` | string | 必須 | `<YYYYMMDD-HHMMSS>-<uuid4-4hex>` (Spec 4 決定 4-13、`uuid.uuid4().hex[:4]` で生成、4 hex 短縮 uuid) | session 一意識別 |
 | `started_at` | string | 必須 | ISO 8601 | 開始時刻 |
 | `ended_at` | string | 任意 | ISO 8601 (進行中は省略可) | 終了時刻 |
 | `turns` | integer | 必須 | ≥ 0 | 対話ターン数 |
@@ -728,7 +729,7 @@ def handle_dry_run_failure(
 ```markdown
 ---
 type: dialogue_log
-session_id: 20260428T153000-a1b2c3d4
+session_id: 20260428-153000-a3f9
 started_at: 2026-04-28T15:30:00+09:00
 ended_at: 2026-04-28T16:15:00+09:00
 turns: 3
@@ -752,6 +753,8 @@ paper_summary skill を使うのが適切です。実行しますか？
 ```
 
 > Append-save 単位 = Turn 1 件 = 1 見出しブロック追記。`turns:` 件数は Turn 増加時に Spec 4 G1 ChatEntry が更新 (本 spec はスキーマ規約のみ、保存実装は Spec 4 R1.8)。
+
+> **session_id 形式の SSoT 委譲**: `session_id` 形式 (timestamp `YYYYMMDD-HHMMSS` + uuid hex 桁数 4) は **Spec 4 design 決定 4-13 が SSoT** (本 spec は dialogue log frontmatter スキーマ規約 SSoT、session_id 形式は Spec 4 write-side invariants として委譲)。本 spec design 内の例 (上記 `session_id: 20260428-153000-a3f9`) は Spec 4 example と統一。
 
 #### Dialogue Log ディレクトリ命名規則 (Decision 2-7)
 
@@ -941,3 +944,8 @@ _change log_
   - **R2-1 Layer 1 SkillLibrary Inbound Dependencies 欠落**: Layer 1 Dependencies sub-section に Inbound (Layer 2 / Layer 3 / Spec 4 CLI / Spec 5 ExtractionOutputSchema reader / Spec 7 cmd_skill_install の 5 系統) 追記、Layer 2/3 と構造均一化
   - **R2-2 ExtractionOutputSchema Dependencies sub-section 全体欠落**: ExtractionOutputSchema Component sub-section に Dependencies 追加 (Inbound = Spec 5 R3.5 / R4.5 / R19.2、Outbound = なし、External = なし)、Layer 1/2/3 と構造均一化
   - **R2-3 Data Models 表現規約明示**: Components 表直後に注記追加 (API contract = ExtractionOutputSchema は独立 Component sub-section、value object / entity schema = 残 3 件は Logical Data Model 表で表現、表現粒度差別化を明示)
+- 2026-04-28: Round 3 review 反映 (Spec 1 R5 同型 = API signature の文書 vs 実装乖離、Spec 5 で 5 回再発の典型再発 4 件解消):
+  - **R3-1 validation 関数 signature 統一の文書 vs 実装乖離**: Layer 2 Responsibilities & Constraints の文言を実装と整合 ((a)(b) は 2 引数 / (c)(d) は 3 引数 + vault_path、SeverityCollector 抽象は導入せず `SkillSeverityReport` で一元化)
+  - **R3-2 test_skill_generator name 経由対応 (R7.4)**: Layer 3 Implementation Notes に「caller (Spec 4) 側で candidate path / skill 名を Path 型に解決してから本 generator に渡す」coordination 規約明示
+  - **R3-3 install_skill_generator Generator type と R9.4 confirm 整合性破綻**: Generator type を `Generator[SkillStageEvent, None, Path]` → `Generator[SkillStageEvent, str, Path]` に修正、send 型 None → str で 'yes' / 'no' 文字列受領可能化 (Round 1 反映と整合)
+  - **R3-4 session_id 形式の Spec 2 内部矛盾 + Spec 4 design 文書乖離**: Spec 2 design 内例を Spec 4 決定 4-13 と統一 (`<timestamp>-<8 hex>` → `<YYYYMMDD-HHMMSS>-<uuid4-4hex>`、4 hex)、注記追加で「session_id 形式 SSoT は Spec 4 design 決定 4-13、本 spec は dialogue log frontmatter スキーマ規約 SSoT」明示
