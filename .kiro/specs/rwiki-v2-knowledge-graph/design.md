@@ -89,6 +89,7 @@
 - **Python 標準ライブラリ**: `sqlite3` / `fcntl` / `os` / `json` / `yaml (PyYAML)` / `pathlib` / `datetime` / `uuid` / `hashlib` / `threading` / `subprocess` / `signal` / `platform`
 - **subprocess 経由依存**: LLM CLI (`claude` / その他、Spec 3 が抽象層を提供) を Entity 抽出 / Relation 抽出で呼出 (timeout 必須)
 - **PyYAML**: vocabulary parser に既存依存を継承
+- **OS サポート (規範前提)**: **macOS / Linux のみ** (POSIX、`fcntl.flock()` 利用)、Windows 非対応。Python `fcntl` module は POSIX のみで Windows では `import fcntl` が ImportError raise、本 spec MVP は POSIX 環境前提。Windows サポートは Phase 2/3 拡張余地として `portalocker` (cross-platform、ただし roadmap.md「Constraints: 追加依存は networkx ≥ 3.0 のみ」違反のため Foundation / roadmap.md 改版必要) または `msvcrt.locking()` (Windows 標準ライブラリ) 採用を別 spec で検討
 
 ### Revalidation Triggers
 
@@ -192,6 +193,7 @@ graph TB
 **Architecture Integration**:
 
 - **Selected pattern**: **Layered architecture (9 layer DAG)**。Spec 4 (CLI dispatch hub) と Spec 7 (Page lifecycle orchestration、6 module DAG) の同型 pattern を踏襲。各 layer は下位 layer のみに依存、上向き / 同層内 cyclic 依存禁止。Layer 1 が物理 storage に唯一接続し、Layer 2-9 は Layer 1 経由でのみ I/O する。
+- **Layer 番号と依存方向の解釈** (規範明示): Layer 番号 (1-9) は **機能 grouping** (1 storage → 2 lifecycle → 3 extraction → 4 hygiene → 5 decision → 6 reject → 7 query → 8 audit → 9 edge api) を表し、依存方向の SSoT ではない。**「上向き禁止」規範は DAG-based** で適用され、依存方向は Architecture Pattern & Boundary Map / Module DAG mermaid を SSoT とする。具体的には Layer 5 (Decision Log) は Hygiene (L4) / Reject (L6) / Edge API (L9) から呼出される **共通基盤** として機能し、`L4 → L5` 依存 (number 上向き) も DAG-based 規範では合法。新 layer 追加時は number ではなく DAG 上の依存関係で「上向き禁止」を判定する。
 - **Domain boundaries**: 各 layer は単一責務 (Single Responsibility) を持つ。Hygiene (L4) は **5 rules sub-module 分割** (Spec 7 Decision 7-21 同型問題回避、後述 Module DAG 参照)。
 - **Existing patterns preserved**: structure.md Import Organization (`import rw_<module>` のみ、`from import` 禁止) / モジュール責務分割 (≤ 1500 行) / JSONL append-only / derived cache gitignore。
 - **New components rationale**: L2 Graph Ledger 自体が v2 新規層であり、9 layer すべて新規実装。L4 Hygiene の sub-module 分割は handler 5 種 + UsageSignal + LockManager 集約が単一 module で 1500 行制約を超える ~2000 行 estimate のため、機能別分割が clean。
@@ -206,7 +208,7 @@ graph LR
     subgraph L1["Layer 1 Ledger"]
         rw_ledger_store[rw_ledger_store 800 lines]
         rw_vocabulary[rw_vocabulary 300 lines]
-        rw_atomic_io[rw_atomic_io 250 lines]
+        rw_atomic_io[rw_atomic_io 350 lines]
     end
     subgraph L2["Layer 2 Lifecycle"]
         rw_confidence[rw_confidence 400 lines]
@@ -300,7 +302,7 @@ graph LR
 scripts/
 ├── rw_ledger_store.py          # Layer 1: Ledger 7 ファイル CRUD (≤ 800 行)
 ├── rw_vocabulary.py            # Layer 1: relations.yml / entity_types.yml loader (≤ 300 行)
-├── rw_atomic_io.py             # Layer 1: atomic write 5 step pattern + JSONL reader (≤ 250 行)
+├── rw_atomic_io.py             # Layer 1: atomic write 5 step pattern + JSONL reader + sanitization helper 3 種 (≤ 350 行)
 ├── rw_confidence.py            # Layer 2: 6 係数 confidence scorer + ceiling (≤ 400 行)
 ├── rw_edge_lifecycle.py        # Layer 2: 6 status 自動進化 + Dangling 4 段階 degrade (≤ 500 行)
 ├── rw_entity_extract.py        # Layer 3: LLM Entity 抽出 + 正規化 (≤ 600 行)
@@ -716,8 +718,8 @@ def get_range(relation_type: str) -> Optional[str]: ...
 
 | Field | Detail |
 |-------|--------|
-| Intent | `write-to-tmp → fsync → os.replace → parent dir fsync` の 5 step pattern + macOS F_FULLFSYNC + JSONL corrupt-tolerant reader |
-| Requirements | 1.8, 7.4 |
+| Intent | `write-to-tmp → fsync → os.replace → parent dir fsync` の 5 step pattern + macOS F_FULLFSYNC + JSONL corrupt-tolerant reader + sanitization helper 3 種 (Layer 1 集約、全 Layer から下向き import で DAG 規律維持) |
+| Requirements | 1.8, 7.4, Security (subprocess shell injection / path traversal) |
 
 **Responsibilities & Constraints**:
 
@@ -727,6 +729,7 @@ def get_range(relation_type: str) -> Optional[str]: ...
 - JSONL append: `open(path, 'a')` + 1 line = 1 record + 末尾必ず `\n` + flush + fsync + flock 排他
 - 1 record は可能な限り 4096 bytes 以下 (POSIX append atomic 境界、PIPE_BUF Linux: 4096 / macOS: 512)
 - Reader: `read_jsonl(path)` で各行 `try: json.loads(line) except: log warn + skip` パターン (末尾 1 行 corrupt 許容、それ以前 corrupt は CRITICAL)
+- **Sanitization helper 3 種 (Security Considerations 集約)**: `sanitize_subprocess_args()` / `sanitize_page_path()` / `sanitize_edge_id()` を本 module に集約配置、Layer 3 (Extraction) / Layer 9 (Edge API) / Layer 4 (Hygiene) すべてから下向き import (Spec 7 Round 7 重-7-1 sanitization helper 集約パターンと同形、Layer 構造別)
 
 ##### Service Interface
 
@@ -739,6 +742,19 @@ def append_jsonl(path: Path, record: dict) -> None:
 
 def read_jsonl(path: Path, tolerate_tail_corruption: bool = True) -> Iterator[dict]:
     """JSONL を逐次読込、末尾 1 行 corrupt は warn + skip。"""
+
+# Sanitization helper (Layer 1 集約、全 Layer から下向き import)
+def sanitize_subprocess_args(args: list[str]) -> list[str]:
+    """LLM CLI subprocess 起動引数を sanitize (shell=False 前提、引数 list 形式)。
+    Raises: ValueError (NULL 文字 / 制御文字 / 過剰長 detect 時)。"""
+
+def sanitize_page_path(input_path: str, vault_root: Path) -> Path:
+    """page_path を `vault_root` 配下に収まる正規化 Path として返す。
+    Raises: PathTraversalError (vault_root 外側参照 / シンボリックリンク経由脱出 detect 時)。"""
+
+def sanitize_edge_id(input_id: str) -> str:
+    """edge_id を hex 12 文字 ([0-9a-f]{12}) regex で検証。
+    Raises: PathTraversalError (regex 不整合時)。"""
 ```
 
 ### Layer 2: Confidence + Lifecycle
@@ -974,6 +990,29 @@ class HygieneResult:
 - Competition L2 (P3): 類似 node pair (embedding 距離ベース)、`enable_level_2` フラグ (default false、Requirement 9.2)
 - Competition L3 (P3): semantic tradeoff / contradiction、`enable_level_3` フラグ (default false)、両 edge 残し `contradiction_with:` 相互参照 (Requirement 9.3)
 - L2 `similarity_threshold` (default 0.85、Requirement 9.5)
+
+##### Service Interface
+
+```python
+def track_contradiction(edge_a_id: str, edge_b_id: str, reason: str) -> None:
+    """矛盾検出 edges を contradiction_with: で相互参照、両 edge を保持 (P2)。
+    `contradiction_flagged` event を edge_events.jsonl に追記。
+    Raises: EdgeNotFoundError"""
+
+def merge_similar_edges(edge_ids: list[str], merged_into_id: str) -> int:
+    """類似・重複 edges を 1 つに統合 (P3、L2 edge 単位)。
+    `merged` event を追記、merged_into 以外は status=deprecated に降格。
+    Returns: 統合件数。"""
+
+def detect_competition_l2(node_pairs: list[tuple[str, str]]) -> list[dict]:
+    """embedding 距離ベースで類似 node pair の重複 edges を検出 (P3、enable_level_2=true 時のみ)。
+    Returns: [{winner_edge_id, runner_up_edge_id, similarity}, ...]"""
+
+def detect_competition_l3(edge_a_id: str, edge_b_id: str) -> Optional[dict]:
+    """semantic tradeoff / contradiction を検出 (P3、enable_level_3=true 時のみ)。
+    両 edge を残し contradiction_with: で相互参照する判定。
+    Returns: {flagged: bool, reason: str} or None。"""
+```
 
 #### UsageSignal + LockManager (`rw_hygiene_signal`)
 
@@ -1215,6 +1254,8 @@ def auto_batch_to_queue() -> int:
 
 ##### Service Interface
 
+`CommonFilter` (R14.2) は **Edge / Node / Community / Summary を返す 8 API** (`get_neighbors` / `get_shortest_path` / `get_orphans` / `get_hubs` / `find_missing_bridges` / `get_communities` / `get_global_summary` / `get_hierarchical_summary`) で `filter: Optional[CommonFilter] = None` として共通提供 (None 時は default = `status_in=['stable','core']` / `min_confidence=0.0` / `relation_types=None`)。**decision-domain API** (`search_decisions` / `find_contradictory_decisions` / `record_decision` / `get_decisions_for`) は decision 固有軸 (`decision_type` / `actor` / 期間 / keyword 等) の filter を `filter: dict` または個別引数で受付け、`CommonFilter` (edge status / confidence / relation) は適用範囲外 = 2 軸 filter 分離。`get_edge_history(edge_id)` は単一 edge 履歴のため filter 不要、`normalize_frontmatter` / `resolve_entity` は変換 / 名前解決 API のため filter 不要。
+
 ```python
 # P0
 def get_edge_history(edge_id: str) -> list[dict]: ...
@@ -1225,21 +1266,21 @@ def record_decision(...) -> str: ...
 def get_decisions_for(subject_ref: str) -> list[dict]: ...
 
 # P1
-def get_neighbors(node: str, depth: int, filter: CommonFilter) -> list[dict]:
+def get_neighbors(node: str, depth: int, filter: Optional[CommonFilter] = None) -> list[dict]:
     """N-hop 近傍取得。depth=2 で 100-500 edges 規模 ≤ 100ms。"""
-def get_shortest_path(from_node: str, to_node: str, filter: CommonFilter) -> list[dict]: ...
-def get_orphans() -> list[dict]:
-    """孤立 node (in_degree = out_degree = 0)。"""
-def get_hubs(top_n: int) -> list[dict]:
-    """中心性 top N (degree / pagerank、networkx 内蔵)。"""
-def find_missing_bridges(cluster_a: list, cluster_b: list, top_n: int) -> list[tuple]:
-    """2 cluster 間候補 edge (Adamic-Adar、networkx nx.adamic_adar_index() 採用)。"""
+def get_shortest_path(from_node: str, to_node: str, filter: Optional[CommonFilter] = None) -> list[dict]: ...
+def get_orphans(filter: Optional[CommonFilter] = None) -> list[dict]:
+    """孤立 node (in_degree = out_degree = 0)。filter で edge status / confidence / relation_types で絞り込んだ後の孤立判定。"""
+def get_hubs(top_n: int, filter: Optional[CommonFilter] = None) -> list[dict]:
+    """中心性 top N (degree / pagerank、networkx 内蔵)。filter で対象 edges を限定して中心性計算。"""
+def find_missing_bridges(cluster_a: list, cluster_b: list, top_n: int, filter: Optional[CommonFilter] = None) -> list[tuple]:
+    """2 cluster 間候補 edge (Adamic-Adar、networkx nx.adamic_adar_index() 採用)。filter で計算対象 edges を限定。"""
 def search_decisions(query: str, filter: dict) -> list[dict]: ...
 
 # P2
-def get_communities(algorithm: str = 'louvain') -> list[dict]: ...
-def get_global_summary(scope: str, method: str) -> dict: ...
-def get_hierarchical_summary(community_id: str) -> dict: ...
+def get_communities(algorithm: str = 'louvain', filter: Optional[CommonFilter] = None) -> list[dict]: ...
+def get_global_summary(scope: str, method: str, filter: Optional[CommonFilter] = None) -> dict: ...
+def get_hierarchical_summary(community_id: str, filter: Optional[CommonFilter] = None) -> dict: ...
 def find_contradictory_decisions() -> list[tuple[dict, dict]]: ...
 
 @dataclass
@@ -1265,6 +1306,25 @@ class CommonFilter:
 - schema migration 実装しない: cache に `schema_version` table を持ち、起動時に期待 version 不一致なら **drop + rebuild from JSONL** (cache が gitignore な derived だから単純で安全)
 - cache 自体は gitignore (Requirement 1.6)
 
+##### Service Interface
+
+```python
+def init_cache(db_path: Path = Path('.rwiki/cache/graph.sqlite')) -> sqlite3.Connection:
+    """sqlite cache を起動時初期化。WAL mode + synchronous=NORMAL を発行、schema_version 不一致時は drop+rebuild。
+    Returns: connection (caller responsible for close、connection-per-thread)。"""
+
+def rebuild_from_jsonl(db_path: Path, edges_path: Path, entities_path: Path) -> None:
+    """JSONL ledger 全体から sqlite cache を再生成 (full rebuild、Requirement 16.4)。
+    nodes / edges / community_memberships / decisions テーブルを drop + rebuild + index 再作成。"""
+
+def incremental_update(db_path: Path, changed_edges: list[dict]) -> None:
+    """変更分のみを sqlite cache に反映 (増分 rebuild、Requirement 16.3)。
+    edge_id PRIMARY KEY で UPSERT、削除は status=rejected で論理削除。"""
+
+def get_connection(db_path: Path) -> sqlite3.Connection:
+    """connection-per-thread の connection を返す (check_same_thread=True 維持)。"""
+```
+
 #### CommunityDetector + MissingBridge (`rw_query_community`)
 
 | Field | Detail |
@@ -1285,6 +1345,30 @@ class CommonFilter:
 - networkx ≥ 3.0 新規追加依存 (Requirement 15.6)、ただし pin は `>= 3.0, < 3.5` (Python 3.10 互換維持、Decision 5-1)
 - Missing bridge: networkx 内蔵 `nx.adamic_adar_index()` 採用 (依存ゼロで MVP 最適)
 
+##### Service Interface
+
+```python
+def detect_communities(
+    algorithm: str = 'louvain',
+    resolution: float = 1.0,
+    seed: int = 42,
+) -> list[dict]:
+    """networkx Louvain で community detection、disconnected community は post-process で再分割。
+    Returns: [{community_id: int, members: list[str], size: int}, ...] (Requirement 15.5、Spec 6 / Spec 4 から呼出)。"""
+
+def post_process_disconnected(communities: list[dict], graph: 'nx.Graph') -> list[dict]:
+    """各 community の subgraph に networkx.connected_components() を適用、disconnected component を別 community として再分割。
+    Louvain の disconnected community 問題への mitigation。"""
+
+def find_missing_bridges(
+    cluster_a: list[str],
+    cluster_b: list[str],
+    top_n: int = 10,
+) -> list[tuple[str, str, float]]:
+    """networkx nx.adamic_adar_index() で 2 cluster 間の候補 edge を score 上位 top_n 件返す。
+    Returns: [(node_a, node_b, score), ...]"""
+```
+
 #### QueryAdvanced (`rw_query_advanced`)
 
 | Field | Detail |
@@ -1297,6 +1381,24 @@ class CommonFilter:
 - global summary: 大局 scope の集約 (P2、cache 利用 + Hygiene batch 無効化)
 - hierarchical summary: community 単位 on-demand 要約 (P2、cache 利用)
 - find_contradictory_decisions: 過去 decisions 間の矛盾候補検出 (P2)
+
+##### Service Interface
+
+```python
+def get_global_summary(scope: str = 'all', method: str = 'pagerank') -> dict:
+    """大局 scope の集約 (top hubs + central communities + bridge candidates) を返す (P2、Requirement 14.1)。
+    cache 利用、Hygiene batch のタイミングで無効化 (Requirement 14.6)。
+    Returns: {top_hubs: list, central_communities: list, bridge_candidates: list, ...}"""
+
+def get_hierarchical_summary(community_id: int) -> dict:
+    """community 単位の on-demand 要約 (community 内 entity / 主要 edges / typed-edge 比率) を返す (P2、Requirement 14.1)。
+    cache 利用 + on-demand 計算。
+    Returns: {community_id: int, entity_count: int, top_edges: list, typed_ratio: float, ...}"""
+
+def find_contradictory_decisions() -> list[tuple[dict, dict]]:
+    """過去 decisions 間で同一 subject に対する反対方向の decision pair を検出 (P2、Requirement 11.13)。
+    Returns: [(decision_a, decision_b), ...]"""
+```
 
 ### Layer 8: Audit + Rebuild + L3 sync + Diagnostics
 
@@ -1318,6 +1420,27 @@ class CommonFilter:
   - **events 整合性**: rejected 済 edge への reinforcement 等の異常検出
 - 結果を JSON / human-readable 両形式出力 (CI から下流 consumer 可 parse、Requirement 16.2)
 
+##### Service Interface
+
+```python
+def audit_graph(
+    output_format: str = 'json',  # 'json' | 'human'
+    include: Optional[list[str]] = None,  # None=全 6 検査、subset 指定可
+) -> AuditReport:
+    """6 検査項目を実行、結果を JSON / human-readable で出力 (Requirement 16.1, 16.2)。
+    Raises: AuditExecutionError"""
+
+@dataclass
+class AuditReport:
+    symmetry_violations: list[dict]       # inverse: / symmetric: 違反 edges
+    cycles: list[list[str]]               # 検出された cycle の node 列
+    orphan_nodes: list[str]               # 孤立 node (in=out=0)
+    dangling_refs: dict                   # {dangling_evidence_ids: list, missing_entities: list}
+    confidence_distribution: dict         # {histogram: list, outliers: list}
+    events_inconsistencies: list[dict]    # rejected 済 edge への reinforcement 等
+    summary: dict                         # CI 用集計
+```
+
 #### GraphRebuilder (`rw_rebuild`)
 
 | Field | Detail |
@@ -1331,6 +1454,23 @@ class CommonFilter:
 - full rebuild (`rw graph rebuild`): `edges.jsonl` 全体から sqlite 再生成 (Requirement 16.4)
 - stale detection: CLI 起動時に `stale_pages.txt` ≥ 20 件で警告 (Requirement 16.5)
 - schema 変更時は drop + rebuild from JSONL (Decision 5-2)
+
+##### Service Interface
+
+```python
+def incremental_rebuild(changed_edges: list[dict]) -> int:
+    """変更分のみを sqlite cache に反映 (ingest / approve 後、Requirement 16.3)。
+    Returns: 反映 edge 件数。"""
+
+def full_rebuild() -> int:
+    """edges.jsonl 全体から sqlite cache を再生成 (Requirement 16.4、`rw graph rebuild` 経由)。
+    drop + rebuild from JSONL pattern (Decision 5-2)。
+    Returns: 再生成 edge 件数。"""
+
+def detect_stale_pages(warn_threshold: int = 20) -> tuple[int, bool]:
+    """CLI 起動時に stale_pages.txt の蓄積件数チェック (Requirement 16.5)。
+    Returns: (件数, 警告必要 bool = 件数 >= warn_threshold)。"""
+```
 
 #### L3RelatedSyncer (`rw_related_sync`)
 
@@ -1348,6 +1488,29 @@ class CommonFilter:
   4. **Manual sync**: `rw graph rebuild --sync-related` で即座実行
   5. **整合性レベル**: L3 `related:` は eventual consistency、正本は L2 ledger
 - フォーマット: `page_path \t timestamp \t event_summary` (タブ区切り、Requirement 16.7)
+
+##### Service Interface
+
+```python
+def mark_stale(page_paths: list[str], event_summary: str) -> None:
+    """影響 L3 page path を `.rwiki/cache/stale_pages.txt` に append-only 追加 (Step 1、Requirement 16.6)。
+    フォーマット: `page_path \t timestamp \t event_summary` (Requirement 16.7)。"""
+
+def batch_sync_related() -> SyncResult:
+    """stale_pages.txt 読込 → 該当 page の `related:` を再計算 → frontmatter 更新 → stale list クリア (Step 2)。
+    stable / core typed edges のうち shortcut 由来 typed edges を除外 (Spec 1 R5.5 / R10.1 完全分離方針)。
+    Hygiene batch の最終 step として呼出される。"""
+
+def manual_sync_related() -> SyncResult:
+    """`rw graph rebuild --sync-related` 経由で即座実行 (Step 4、Requirement 16.6)。"""
+
+@dataclass
+class SyncResult:
+    pages_synced: int
+    edges_processed: int
+    shortcut_edges_excluded: int
+    duration_sec: float
+```
 
 #### DiagnosticsCalculator (`rw_diagnostics`)
 
@@ -1419,12 +1582,14 @@ def check_autonomous_triggers() -> list[str]:
 
 ##### Service Interface
 
+`EDGE_API_TIMEOUT_DEFAULTS` の dict key は **Spec 7 が呼出時に渡す page-action 名** (deprecate / retract / merge / reassign) で、本 spec の edge API 関数名 (`edge_demote` / `edge_reject` / `edge_reassign`) とは命名軸が異なる (page action ⇄ edge action mapping を表現)。Spec 7 側が page-action → edge\_\* 関数の mapping logic を実装し、本 spec は dict 規約のみを Spec 7 contracts と整合させる立場 (Spec 7 design L913-917 と同形式)。
+
 ```python
 EDGE_API_TIMEOUT_DEFAULTS: dict[str, float] = {
-    'deprecate': 5.0,
-    'retract':   10.0,
-    'merge':     30.0,
-    'reassign':  30.0,
+    'deprecate': 5.0,   # edge_demote
+    'retract':   10.0,  # edge_reject
+    'merge':     30.0,  # edge_reassign
+    'reassign':  30.0,  # edge_reassign (alias)
 }
 
 def edge_demote(
@@ -1498,13 +1663,15 @@ def edge_reassign(
 entities:
   sindy:
     canonical_path: wiki/methods/sindy.md
-    entity_type: method
+    entity_type: entity-tool             # Spec 1 R5.3 初期 entity_type、entity_types.yml.name 由来
     aliases: ["Sparse Identification of Nonlinear Dynamics", "SINDy"]
   brunton:
     canonical_path: wiki/entities/people/brunton.md
-    entity_type: entity-person
+    entity_type: entity-person           # Spec 1 R5.3 初期 entity_type
     aliases: ["Steven Brunton", "S. Brunton"]
 ```
+
+> Note: `entity_type:` 値は **`entity_types.yml.name` のみ参照** (Spec 1 R7.2)、`type:` (`categories.yml.recommended_type` 由来、例 `method` / `paper` 等) とは **直交分離** (Spec 1 R2.7)。本 spec は entity_types.yml の値配置を所管 (R2.3)、宣言は Spec 1 所管。
 
 ##### `.rwiki/graph/edges.jsonl` (Requirement 1.4)
 
@@ -1562,6 +1729,8 @@ candidate edge を `<edge_id>.json` として配置:
 
 {"schema_version":1,"decision_id":"<uuid v4>","ts":"2026-04-28T15:00:00+00:00","decision_type":"page_merge","actor":"user","subject_refs":["wiki/methods/sindy.md","wiki/methods/sindy-pi.md","wiki/methods/sindy.md"],"reasoning":"SINDy-PI は SINDy の拡張、別ページ不要","alternatives_considered":["keep_separate"],"outcome":{"action":"merged","partial_failure":true,"successful_edge_ops":12,"failed_edge_ops":2,"followup_ids":["fu_001","fu_002"]},"context_ref":"raw/llm_logs/chat-sessions/2026-04-28T14-30Z-def456.md#L120-180","evidence_ids":[],"private":false}
 ```
+
+> Note: `private:` field は R11.7 由来の **任意 field** (default `false`)、上記 example では明示記載しているが実装上は無記載 = `false` として解釈。R11.1 の 10 field 必須に含まれず、selective privacy mode (`config.decision_log.gitignore: true` または per-decision `private: true`) でのみ意味を持つ。
 
 #### Wide-Column Store (sqlite WAL)
 
@@ -1630,8 +1799,8 @@ relations:
   similar_approach_to:
     inverse: similar_approach_to     # symmetric の場合 self
     symmetric: true
-    domain: method
-    range: method
+    domain: entity-tool              # entity_types.yml.name 由来 (Spec 1 R5.3)、`type:` 値ではない
+    range: entity-tool
   authored:
     inverse: authored_by
     symmetric: false
@@ -1644,6 +1813,8 @@ relations:
     range: entity-person
   # ... canonical 12 + 抽象 8 + Entity 固有 10+ セット
 ```
+
+> Note: `domain:` / `range:` 値は **`entity_types.yml.name`** を参照 (Spec 1 R7.2 と整合)、`null` (`~`) は any。`method` / `paper` 等の **`type:` 値** (Spec 1 categories.yml.recommended_type 由来) は別 field 軸であり、`domain:` / `range:` への混在は禁止 (Spec 1 R2.7 直交分離)。
 
 ##### `.rwiki/vocabulary/entity_types.yml` (Requirement 2.3、Spec 1 が宣言したスキーマに沿った値配置)
 
@@ -1684,14 +1855,15 @@ entity_types:
 
 ### Error Strategy
 
-本 spec は append-only ledger + transaction-safe Hygiene + partial failure 伝搬 を前提とした 4 階層 exception 体系を持つ。
+本 spec は append-only ledger + transaction-safe Hygiene + partial failure 伝搬 を前提とした 5 階層 exception 体系を持つ。
 
 | 階層 | Exception 名 | trigger | 上位伝搬 / catch 規約 |
 |------|--------------|---------|----------------------|
 | L1 ledger 基盤 | `LedgerStoreError` | atomic write 失敗 / schema 違反 / file I/O 障害 | 全 layer から呼出側へ raise、CLI で exit 1 |
 | L4 Hygiene transaction | `TransactionRollbackError` | 5 ルール途中 crash / tmp 領域問題 | hygiene_run() で catch + restore + exit 1 |
-| L9 Edge API | `EdgeAPIError` / `TimeoutError` | edge 操作失敗 / timeout 到達 | Spec 7 orchestrate_edge_ops に raise、partial failure 計上 |
+| L5 Decision Log | `RecordDecisionError` | reasoning 必須対象 4 種 (`hypothesis_verify_confirmed` / `hypothesis_verify_refuted` / `synthesis_approve` / `page_retract`) で `reasoning` が None / 空文字 (R11.6) | 呼出側に raise + ERROR severity + reasoning 入力要求、record_decision を invoke 不可 |
 | L7 Query | `QuerySchemaError` | filter 引数違反 | 呼出側に raise、CLI で exit 1 |
+| L9 Edge API | `EdgeAPIError` / `TimeoutError` | edge 操作失敗 / timeout 到達 | Spec 7 orchestrate_edge_ops に raise、partial failure 計上 |
 
 ### Error Categories and Responses
 
@@ -1710,6 +1882,7 @@ entity_types:
 **Business Logic Errors (422)**:
 
 - **State conflicts**: edge_id 重複 (hash 衝突、実用上稀) → ERROR で abort、衝突解決アルゴリズムは将来検討 (brief.md 第 4-B 持ち越し、Decision 5-10)
+- **Reasoning required**: `RecordDecisionError` (R11.6 reasoning 必須対象 4 種 = `hypothesis_verify_confirmed` / `hypothesis_verify_refuted` / `synthesis_approve` / `page_retract` で `reasoning` が None / 空文字) → ERROR + reasoning 入力要求、record_decision を invoke 不可 (Layer 5 DecisionLogStore L1094 docstring 整合)
 - **Configuration 未設定**: config 未配置 → INFO 通知 + default 値で動作 (Requirement 20.8)
 
 ### Rollback Strategy
@@ -1743,14 +1916,14 @@ entity_types:
 
 - **LLM CLI invocation** (Layer 3 EntityExtractor / RelationExtractor): subprocess 起動時に `shell=False` 必須、引数を list 形式で渡す。LLM CLI path を `.rwiki/config.yml` から注入、user 入力を直接 shell に渡さない
 - **Subprocess timeout 必須** (Foundation R11 継承): `timeout=` 引数を必ず渡す (default は config 経由)
-- **Per-spec sanitization helper 集約**: Layer 4 sub-module の `rw_hygiene_signal` に共通 `sanitize_subprocess_args()` を配置 (Spec 7 Decision 7-19 同型問題回避)
+- **Sanitization helper 集約位置 = Layer 1** (`rw_atomic_io` 拡張): `sanitize_subprocess_args()` / `sanitize_page_path()` / `sanitize_edge_id()` の 3 helper を Layer 1 に集約配置、Layer 3 (Extraction) / Layer 9 (Edge API) / Layer 4 (Hygiene) すべてから **下向き import** で DAG 規律維持。**Spec 7 Round 7 重-7-1 (sanitization helper 集約パターン) と同形** だが Layer 構造が異なるため集約位置が別 (Spec 7 = Layer 4a 内 handler + helper 共配置 = sibling import / 本 spec = Layer 1 集約 = 全 Layer 下向き import、いずれも handler 17 種 inconsistency 回避という本質を共有)
 
 ### Path traversal 防止
 
-- **page_path / edge_id / new_endpoint 入力 sanitize** (Layer 9 edge_api / Layer 3 normalize):
-  - `page_path` は `Path(vault_root) / Path(input).resolve()` で正規化、`vault_root` 配下に収まることを `relative_to()` で検証
-  - `edge_id` は hex 12 文字 ([0-9a-f]{12}) regex 限定
-  - 違反時 `PathTraversalError` raise、ERROR severity
+- **page_path / edge_id / new_endpoint 入力 sanitize** (Layer 9 edge_api / Layer 3 normalize、Layer 1 `rw_atomic_io` の sanitize helper 経由):
+  - `sanitize_page_path(input, vault_root)`: `Path(vault_root) / Path(input).resolve()` で正規化、`vault_root` 配下に収まることを `relative_to()` で検証、違反時 `PathTraversalError` raise
+  - `sanitize_edge_id(input)`: hex 12 文字 (`[0-9a-f]{12}`) regex 限定、違反時 `PathTraversalError` raise
+  - すべて ERROR severity、Layer 1 集約で Layer 3 / Layer 9 から下向き import (DAG 規律維持)
 - **`.rwiki/.hygiene.lock` 配置**: `.rwiki/` 配下固定、user 入力で path 変更不可
 
 ### decision_log selective privacy
@@ -1787,7 +1960,7 @@ entity_types:
 | Hygiene Reinforcement | O(events × log E) | event log + edge lookup | events = `edge_events.jsonl` 件数 |
 | Competition L1 | O(E + V) | 同一 node pair group by | V = node 数 |
 | `get_neighbors(depth=k)` | O(d^k) | sqlite cache + index | d = avg degree |
-| `get_shortest_path` | O(V + E) | networkx Dijkstra | unweighted |
+| `get_shortest_path` | O(V + E) | networkx `nx.shortest_path(G, source, target, weight=None)` = BFS (unweighted) | 意味論 = 最短ホップ数経路 (MVP)、Phase 2/3 拡張余地: weight=str で Dijkstra (`O((V+E) log V)`) で confidence 重み付き経路 |
 | Community detection (Louvain) | O(E log V) | networkx 内蔵 | seed 固定 (default 42) |
 | Adamic-Adar (missing bridge) | O(V × avg_degree²) | networkx `nx.adamic_adar_index()` | |
 | L3 `related:` sync | O(stale_pages × edges_per_page) | batch process | |
@@ -1813,13 +1986,13 @@ entity_types:
 
 ### Unit Tests (各 Layer 別、TDD で先に書く)
 
-- **Layer 1**: `LedgerStore` の append-only / atomic rename / corruption-tolerant reader / config loader (`test_rw_ledger_store.py`)
+- **Layer 1**: `LedgerStore` の append-only / atomic rename / corruption-tolerant reader / config loader (`test_rw_ledger_store.py`) / `VocabularyLoader` の relations.yml + entity_types.yml load + cache せず毎回最新 + 4 field validation (`test_rw_vocabulary.py`) / `AtomicWriter` の 5 step pattern + macOS F_FULLFSYNC + sanitization helper 3 種 (sanitize_subprocess_args / sanitize_page_path / sanitize_edge_id、Round 7 由来) (`test_rw_atomic_io.py`)
 - **Layer 2**: `ConfidenceScorer` の 6 係数加重和 + evidence-less ceiling 強制 / `EdgeLifecycle` の 3 段階閾値判定 + Dangling 4 段階 degrade (`test_rw_confidence.py` / `test_rw_edge_lifecycle.py`)
 - **Layer 3**: `EntityExtractor` の skill schema validation / `RelationExtractor` の per-page continue-on-error / `EntityNormalizer` の冪等性 + 双方向 edge 自動生成 (`test_rw_entity_extract.py` / `test_rw_relation_extract.py` / `test_rw_normalize.py`)
 - **Layer 4**: `HygieneCore` の 5 ルール固定実行順序 / `HygieneAdvanced` の Contradiction tracking / `UsageSignal` の 4 種別計算 / `LockManager` の fcntl.flock fail-fast (`test_rw_hygiene_*.py`)
 - **Layer 5**: `DecisionLogStore` の 23 種 decision_type validation / selective recording trigger 5 条件 / reasoning 必須 4 種 enforcement / `IntegrityChecker` の 4 診断項目 (`test_rw_decision_log.py` / `test_rw_decision_view.py`)
 - **Layer 6**: `RejectWorkflow` の 8 field 必須 / unreject 復元 5 step + `pre_reject_confidence` クランプ計算 (`test_rw_reject_workflow.py`)
-- **Layer 7**: `QueryEngine` の 15 種 API + 共通 filter / `SqliteCache` の WAL + drop+rebuild migration / `CommunityDetector` の Louvain + post-process / `MissingBridge` の Adamic-Adar (`test_rw_query_*.py`)
+- **Layer 7**: `QueryEngine` の 15 種 API + 共通 filter / `SqliteCache` の WAL + drop+rebuild migration / `CommunityDetector` の Louvain + post-process / `MissingBridge` の Adamic-Adar / `QueryAdvanced` の global summary + hierarchical summary + find_contradictory_decisions (P2 on-demand) (`test_rw_query_*.py` = test_rw_query_engine / test_rw_query_cache / test_rw_query_community / test_rw_query_advanced)
 - **Layer 8**: `GraphAuditor` の 6 検査項目 / `Rebuilder` の stale detection / `RelatedSyncer` の shortcut 除外 / `DiagnosticsCalculator` の autonomous trigger 4 条件 (`test_rw_audit.py` / `test_rw_rebuild.py` / `test_rw_related_sync.py` / `test_rw_diagnostics.py`)
 - **Layer 9**: `EdgeAPI` 3 種の timeout 必須 + partial failure 伝搬 + 内部状態 atomic rename (`test_rw_edge_api.py`)
 
@@ -1873,6 +2046,8 @@ flowchart LR
 
 ### v1 から継承する技術決定
 
+- Python 3.10+ — Foundation R11 / roadmap.md「v1 から継承する技術決定」経由 (R23.7 と整合)
+- git 必須 — Foundation R11 / roadmap.md「v1 から継承する技術決定」経由 (R23.7 と整合)
 - Severity 4 水準 (CRITICAL / ERROR / WARN / INFO) — Foundation R11 経由
 - exit code 0/1/2 分離 (PASS / runtime error / FAIL 検出) — Foundation R11 経由
 - LLM CLI subprocess timeout 必須 — Foundation R11 経由
@@ -1884,6 +2059,22 @@ flowchart LR
 ### v2 新規依存
 
 - `networkx >= 3.0, < 3.5` (Python 3.10 互換維持、3.5+ は Python 3.11+ 強制のため本 spec 単独で決定不可、Decision 5-1)
+
+### Phase 2/3 拡張余地: get_shortest_path weighted variant
+
+- **MVP (P0-P2) 採択**: BFS (unweighted、networkx `nx.shortest_path(G, source, target, weight=None)`)、意味論 = 最短ホップ数経路、Big O = O(V + E)
+- **Phase 2/3 拡張余地**: Spec 6 perspective が "最高信頼度経路" (curation 信頼度の高い edges を辿る経路) を要求する場合、Dijkstra weighted variant (`weight='confidence'` で 1/confidence 距離) を追加実装。Big O = O((V + E) log V)、性能目標は prototype 計測後再検討
+- **API 拡張時**: `get_shortest_path(from_node, to_node, filter, weight: Optional[str] = None)` で signature 拡張、weight=None で BFS / weight='confidence' で Dijkstra weighted。Adjacent Sync で Spec 6 contract 更新が必要
+
+### Phase 2/3 拡張余地: Windows サポート (POSIX 限定からの拡張)
+
+- **MVP (P0-P2) 動作モデル**: **macOS / Linux のみ** (POSIX、`fcntl.flock()` 利用)、Windows 非対応 = Python `fcntl` module は POSIX 限定 (`import fcntl` が Windows で ImportError raise)
+- **Phase 2/3 拡張時の選択肢**:
+  - **案 A (推奨)**: `portalocker` (cross-platform、PyPI 1k+ stars、POSIX `fcntl.flock` + Windows `msvcrt.locking()` を統一 API でラップ) 採用、ただし roadmap.md「Constraints: 追加依存は networkx ≥ 3.0 のみ」違反のため **Foundation / roadmap.md 改版必須**
+  - **案 B**: 自前 OS 分岐実装 (`platform.system() == 'Windows'` で `msvcrt.locking()` / `os.open(O_EXCL)` 等)、追加依存ゼロだが race condition 設計が複雑
+  - **案 C**: Windows サポートを Phase 4 以降に持ち越し (MVP / Phase 2/3 範囲外として明示)
+- **判断軸**: Windows ユーザーからの requirement が顕在化した時点で別 spec として起票、Foundation / roadmap.md の OS サポート規範を先に確定 (本 spec 単独で決定不可)
+- **本 spec の現規範前提**: POSIX 環境前提を Allowed Dependencies + Decision 5-3 で明示済、Windows ユーザーは別途 OS 切替が必要
 
 ### 持ち越し Adjacent Sync 残 1 項目: hygiene.lock thread-safety (Decision 5-20)
 
@@ -1929,17 +2120,18 @@ flowchart LR
 - **Trade-offs**: schema 変更時に rebuild コスト発生 (10,000 edges で数秒程度、許容)
 - **Follow-up**: 100,000 edges 規模で rebuild コストが問題化したら incremental rebuild を検討 (Phase 3)
 
-### Decision 5-3: fcntl.flock + fail-fast (LOCK_NB) + MVP single-thread 前提
+### Decision 5-3: fcntl.flock + fail-fast (LOCK_NB) + MVP single-thread 前提 + POSIX 限定
 
-- **Context**: `.rwiki/.hygiene.lock` 物理実装、Single-user serialized 前提
+- **Context**: `.rwiki/.hygiene.lock` 物理実装、Single-user serialized 前提、**OS サポート = macOS / Linux のみ (POSIX)** = Python `fcntl` module は POSIX 限定 (Windows では ImportError raise) のため Windows 非対応を MVP 規範前提として確定
 - **Alternatives**:
-  1. `fcntl.flock(LOCK_EX | LOCK_NB)` + 即 fail (BlockingIOError raise)
-  2. `fcntl.flock(LOCK_EX)` + blocking
-  3. PID file + 自前 lock 機構
+  1. `fcntl.flock(LOCK_EX | LOCK_NB)` + 即 fail (BlockingIOError raise) [POSIX 限定]
+  2. `fcntl.flock(LOCK_EX)` + blocking [POSIX 限定]
+  3. PID file + 自前 lock 機構 [cross-platform だが race condition 設計が複雑]
+  4. `portalocker` (cross-platform 外部依存) で Windows サポート [roadmap.md「Constraints: 追加依存は networkx ≥ 3.0 のみ」違反 → Foundation / roadmap.md 改版必要]
 - **Selected**: 案 1
-- **Rationale**: single-user serialized 前提では blocking より fail-fast が UX 良 (「another instance running」即表示)、stale lock 検出は kernel 任せ
-- **Trade-offs**: timeout-based wait 不可、複数 process 並行起動時に user 操作必要
-- **Follow-up**: Phase 2 multi-thread 化時は threading.Lock 二重 lock 追加 (Decision 5-20)
+- **Rationale**: single-user serialized 前提では blocking より fail-fast が UX 良 (「another instance running」即表示)、stale lock 検出は kernel 任せ、Windows サポートは MVP 範囲外として Phase 2/3 拡張余地に持ち越し
+- **Trade-offs**: timeout-based wait 不可、複数 process 並行起動時に user 操作必要、**Windows ユーザー利用不可** (MVP 範囲外として明示)
+- **Follow-up**: Phase 2 multi-thread 化時は threading.Lock 二重 lock 追加 (Decision 5-20)、Windows サポートは Foundation / roadmap.md 改版 + `portalocker` 追加依存承認後に別 spec で追加検討
 
 ### Decision 5-4: Atomic rename 5 step pattern + macOS F_FULLFSYNC
 
@@ -2082,4 +2274,28 @@ flowchart LR
 
 _change log_
 
-- 2026-04-28: 初版生成 (Spec 5 design 全 9 layer + 23 module + 14 section + 設計決定 5-1 〜 5-20、Discovery + Synthesis 完了、外部技術 research 反映: networkx 3.0-3.4 pin / Louvain MVP / sqlite WAL + drop+rebuild / fcntl.flock fail-fast + 多重 lock Phase 2 / atomic rename 5 step + macOS F_FULLFSYNC / Adamic-Adar missing bridge / event sourcing forward-compatible envelope (schema_version + UUID v4 + ISO 8601))。持ち越し Adjacent Sync 残 1 項目 (hygiene.lock thread-safety) を Decision 5-20 + Migration Strategy で確定。MVP 範囲 P0+P1+P2、P3 (Competition L2/L3 + Edge Merging) v0.8 候補、P4 (External Graph DB export) 要件発生時のみ。requirements.md 全 23 Requirement 197 個の Acceptance Criteria 全件を Components and Interfaces 9 layer + Requirements Traceability table で網羅。
+- 2026-04-28: 初版生成 (Spec 5 design 全 9 layer + 23 module + 14 section + 設計決定 5-1 〜 5-20、Discovery + Synthesis 完了、外部技術 research 反映: networkx 3.0-3.4 pin / Louvain MVP / sqlite WAL + drop+rebuild / fcntl.flock fail-fast + 多重 lock Phase 2 / atomic rename 5 step + macOS F_FULLFSYNC / Adamic-Adar missing bridge / event sourcing forward-compatible envelope (schema_version + UUID v4 + ISO 8601))。持ち越し Adjacent Sync 残 1 項目 (hygiene.lock thread-safety) を Decision 5-20 + Migration Strategy で確定。MVP 範囲 P0+P1+P2、P3 (Competition L2/L3 + Edge Merging) v0.8 候補、P4 (External Graph DB export) 要件発生時のみ。requirements.md 全 23 Requirement 180 個の Acceptance Criteria 全件を Components and Interfaces 9 layer + Requirements Traceability table で網羅。
+- 2026-04-28 (Round 1 レビュー反映): 重要級 2 件 + 軽微 1 件を Edit 適用。
+  - **重-1-1 (構造的不均一)**: Service Interface section 7 module 欠落を修正、`rw_hygiene_advanced` / `rw_query_cache` / `rw_query_community` / `rw_query_advanced` / `rw_audit` / `rw_rebuild` / `rw_related_sync` に Service Interface (Python signature + docstring) を追加。Spec 0 R2 重-厳-3「Components sub-section 欠落」と同型問題を解消、Spec 7 design (主 reference) の慣行と整合。
+  - **重-1-2 (文書記述 vs 実装不整合)**: `EDGE_API_TIMEOUT_DEFAULTS` dict に inline コメント annotation (`# edge_demote` / `# edge_reject` / `# edge_reassign` / `# edge_reassign (alias)`) を追加、Spec 7 design L913-917 と同形式。dict key (page-action 名) と本 spec の edge\_\* 関数名の対応を明示、page-action → edge\_\* mapping logic は Spec 7 側所管である旨を明示。Spec 1 R5 escalate (Levenshtein → Ratcliff/Obershelp、API name の文書 vs 実装乖離) と同型問題を解消。
+  - **軽-1-5 (単純誤記)**: Migration Strategy「v1 から継承する技術決定」list に `Python 3.10+` / `git 必須` 2 項目を追加、R23.7 と整合。
+- 2026-04-28 (Round 2 レビュー反映): 重要級 1 件を Edit 適用。
+  - **重-2-1 (規範前提曖昧化)**: Architecture Integration の「上向き / 同層内 cyclic 依存禁止」規範に対する解釈軸 (Layer 番号順 vs DAG 順) が design 内で不明示だった問題を解消。Layer 番号 = 機能 grouping、依存方向 = DAG-based、Decision Log (L5) は共通基盤として上位 Layer (L4 Hygiene / L6 Reject / L9 Edge API) から呼出される旨を明示文として L194 付近に追加。Spec 1 R7 escalate (Eventual Consistency 規範化、規範前提曖昧化) と同型問題を解消。
+  - **軽-2-2 取り下げ**: Architecture Pattern & Boundary Map mermaid に `L4Hygiene --> L5Decision` arrow が L177 に既存 (検出誤り)、修正不要。
+- 2026-04-28 (Round 3 レビュー反映): 重要級 1 件 + 軽微 1 件を Edit 適用。
+  - **重-3-1 (文書記述 vs 実装不整合)**: Data Models example の値命名違反を修正。entities.yaml example で `entity_type: method` → `entity_type: entity-tool`、relations.yml example で `domain: method` / `range: method` → `domain: entity-tool` / `range: entity-tool`。Spec 1 R2.7 (`type:` ⇄ `entity_type:` 直交分離) / R5.3 (初期 entity_type = entity-person / entity-tool) / R7.2 (`entity_type:` 値は entity_types.yml.name 由来) と整合させ、`method` / `paper` 等の `type:` 値 (categories.yml.recommended_type 由来) を `domain:` / `range:` に混在させない旨を Note 文として明示。Spec 1 R5 escalate (Levenshtein → Ratcliff/Obershelp、API name / 値命名の文書 vs 実装乖離) と同型問題を解消。
+  - **軽-3-2 (規範前提曖昧化)**: decision_log.jsonl example の `private:` field の必須/任意 status を Note 文として明示 (R11.7 由来の任意 field、default `false`、R11.1 の 10 field 必須に含まれない、selective privacy mode でのみ意味を持つ)。
+  - **軽-3-3 取り下げ**: sqlite と JSONL の役割分担明示は L1265-1266 + Decision 5-2 で既に必要十分、修正不要。
+- 2026-04-28 (Round 4 レビュー反映): 重要級 1 件 + 軽微 1 件を Edit 適用。
+  - **重-4-1 (文書記述 vs 実装不整合)**: R14.2「全 API 共通で提供」規定に対し、design L1242-1267 で 8 Edge-domain API (`get_orphans` / `get_hubs` / `find_missing_bridges` / `get_communities` / `get_global_summary` / `get_hierarchical_summary` + 既存 `get_neighbors` / `get_shortest_path`) に CommonFilter 引数が不整合だった問題を解消。全 8 Edge-domain API に `filter: Optional[CommonFilter] = None` を追加 (None 時は default = stable+core / min_confidence=0.0 / relation_types=None)。decision-domain API (`search_decisions` / `find_contradictory_decisions` / `record_decision` / `get_decisions_for`) は decision 固有軸の filter (decision_type / actor / 期間) を受付け、CommonFilter は適用範囲外 = 2 軸 filter 分離を Note 文として明示。Spec 1 R5 escalate (Levenshtein → Ratcliff/Obershelp、API signature の文書 vs 実装乖離) と同型問題を解消。
+  - **軽-4-3 (例外列挙漏れ)**: Error Categories の "Business Logic Errors (422)" に `RecordDecisionError` (R11.6 reasoning 必須対象 4 種で空 reasoning → raise、Layer 5 DecisionLogStore L1094 docstring 整合) を追加。
+- 2026-04-28 (Round 5 レビュー反映): 軽微 1 件 (escalate 寄せ判定) を Edit 適用。
+  - **軽-5-1 (文書記述 vs 実装不整合 + 複数選択肢 trade-off)**: Big O 表で `get_shortest_path` を "Dijkstra unweighted" → "**BFS** (networkx `nx.shortest_path(G, source, target, weight=None)`)" に訂正、意味論 = 最短ホップ数経路 (MVP) を明示。Spec 1 R5 escalate (Levenshtein → Ratcliff/Obershelp、アルゴリズム名訂正) と同型問題を解消。Migration Strategy に Phase 2/3 拡張余地として Dijkstra weighted variant (`weight='confidence'` で 1/confidence 距離、最高信頼度経路) を新節として追加 (Spec 6 perspective が要求する場合 prototype 計測後に判断)。
+- 2026-04-28 (Round 6 レビュー反映): 重要級 1 件を Edit 適用。
+  - **重-6-1 (構造的不均一)**: Error Strategy「4 階層 exception 体系」表に Layer 5 (Decision Log) 行が欠落、`RecordDecisionError` (Round 4 で Business Logic Errors にのみ追加) が Layer 別表に未記載で構造的不均一だった問題を解消。表に L5 行 (RecordDecisionError / R11.6 reasoning 必須対象 4 種で空 reasoning → 呼出側に raise + ERROR + reasoning 入力要求) を追加し、本文の「**4 階層** exception 体系」を「**5 階層** exception 体系」に訂正 (実際の Layer 別 exception 階層 = L1, L4, L5, L7, L9 の 5 種)。Spec 0 R2 重-厳-3 (Components sub-section 欠落) と同型問題を解消。
+- 2026-04-28 (Round 7 レビュー反映): 重要級 1 件を Edit 適用。
+  - **重-7-1 (文書記述 vs 実装不整合 + DAG 違反)**: Security Considerations の sanitize_subprocess_args() 集約位置を Layer 4c (`rw_hygiene_signal`) → **Layer 1 (`rw_atomic_io` 拡張)** に変更、Layer 3 / Layer 9 / Layer 4 すべてから下向き import で DAG 規律維持 (Round 2 で確定した Layer 4 → Layer 5 例外 1 つに留め、規範弱体化を防止)。Spec 7 参照を「**Spec 7 Decision 7-19**」(= cyclic import 禁止 + 6 module DAG) → 「**Spec 7 Round 7 重-7-1** (sanitization helper 集約パターン、Layer 構造別: Spec 7 = Layer 4a 内 sibling 共配置 / 本 spec = Layer 1 集約)」に訂正。sanitize helper 3 種 (`sanitize_subprocess_args` / `sanitize_page_path` / `sanitize_edge_id`) を `rw_atomic_io` の Service Interface に追加、Module DAG / File Structure Plan で `rw_atomic_io` line budget を 250 → 350 行に拡張。Spec 1 R5 escalate (Levenshtein → Ratcliff/Obershelp、参照名訂正) と同型問題を解消。
+- 2026-04-28 (Round 8 レビュー反映): 軽微 1 件 (自動採択) を Edit 適用。
+  - **軽-8-1 (規範前提曖昧化)**: `fcntl` が POSIX 限定 (Python `fcntl` module は Windows で ImportError raise) であるにもかかわらず、design 内で OS サポート規範前提が明示されていなかった問題を解消。Allowed Dependencies に「OS サポート (規範前提) = macOS / Linux のみ (POSIX)、Windows 非対応」を追加、Decision 5-3 のタイトル + Context + Alternatives + Rationale + Trade-offs + Follow-up すべてに POSIX 限定 + Windows サポート Phase 2/3 拡張余地を明示、Migration Strategy に新節「Phase 2/3 拡張余地: Windows サポート」を追加 (案 A portalocker / 案 B 自前 OS 分岐 / 案 C Phase 4 持ち越し の 3 選択肢、Foundation / roadmap.md 改版前提)。Spec 1 R7 escalate (Eventual Consistency 規範化) と同型問題を解消。
+- 2026-04-28 (Round 9 レビュー反映): 重要級 1 件を Edit 適用。
+  - **重-9-1 (構造的不均一)**: Testing Strategy Unit Tests entry で 3 module test 言及が欠落していた問題を解消 (File Structure Plan には 23 test 1:1 列挙だが Testing Strategy entry は 20 module のみ言及)。Layer 1 entry に `rw_vocabulary` (cache せず毎回最新 + 4 field validation) + `rw_atomic_io` (atomic write 5 step + sanitization helper 3 種、Round 7 由来) を追加、Layer 7 entry に `rw_query_advanced` (global summary + hierarchical summary + find_contradictory_decisions、P2 on-demand) を追加。23 module ↔ 23 test 1:1 整合確保、TDD 規律 (期待入出力先書き) で全 module 検証可能。Spec 0 R2 重-厳-3 (Components sub-section 欠落) + Round 1 重-1-1 (Service Interface 欠落) と本質同形 = 構造的不均一の連鎖再発を防止。
