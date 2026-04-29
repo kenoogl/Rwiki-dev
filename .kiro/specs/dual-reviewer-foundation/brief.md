@@ -1,6 +1,6 @@
 # Brief: dual-reviewer-foundation
 
-> 出典: `.kiro/drafts/dual-reviewer-draft.md` v0.2 §2.1 / §2.7 / §2.9 / §2.10.3 / §3 / §4
+> 出典: `.kiro/drafts/dual-reviewer-draft.md` v0.3 §2.1 / §2.7 / §2.9 / §2.10.3 / §3 / §4
 
 ## Problem
 
@@ -8,10 +8,10 @@ dual-reviewer (LLM 設計レビュー方法論 v3 一般化 package) を Layer 1
 
 ## Current State
 
-- ドラフト v0.2 §2.1 で Layer 1 framework 骨組み確定 (Step A/B/C 構造 + bias 抑制 quota + pattern schema + 介入 framework)
-- ドラフト v0.2 §2.9 で 23 事例 retrofit 仕様確定 (`seed_patterns.yaml`、Rwiki 由来、固有名詞付きで OK)
-- ドラフト v0.2 §2.6 で Chappy P0 採用 3 件確定、うち `fatal_patterns.yaml` 8 種固定確定
-- ドラフト v0.2 §2.10.3 で B-1.0 拡張 schema (`miss_type` / `difference_type` / `trigger_state`) の 3 要素確定
+- ドラフト v0.3 §2.1 で Layer 1 framework 骨組み確定 (Step A/B/C 構造 + bias 抑制 quota + pattern schema + 介入 framework)
+- ドラフト v0.3 §2.9 で 23 事例 retrofit 仕様確定 (`seed_patterns.yaml`、Rwiki 由来、固有名詞付きで OK)
+- ドラフト v0.3 §2.6 で Chappy P0 採用 3 件確定、うち `fatal_patterns.yaml` 8 種固定確定
+- ドラフト v0.3 §2.10.3 で B-1.0 拡張 schema (`miss_type` / `difference_type` / `trigger_state`) の 3 要素確定
 - 実装は未着手 = 全要素を本 spec で実装する
 
 ## Desired Outcome

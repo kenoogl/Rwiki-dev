@@ -1,6 +1,6 @@
 # Brief: dual-reviewer-design-review
 
-> 出典: `.kiro/drafts/dual-reviewer-draft.md` v0.2 §2.1 / §2.3 / §2.6 / §2.7 / §2.10 / §3 / §4
+> 出典: `.kiro/drafts/dual-reviewer-draft.md` v0.3 §2.1 / §2.3 / §2.6 / §2.7 / §2.10 / §3 / §4
 
 ## Problem
 
@@ -8,10 +8,10 @@ dual-reviewer の主機能 = 設計 phase の 10 ラウンド review を adversa
 
 ## Current State
 
-- ドラフト v0.2 §2.1 で Layer 2 design extension 仕様確定 (10 ラウンド + Phase 1 escalate 3 メタパターン)
-- ドラフト v0.2 §2.6 で Chappy P0 3 件採用確定 (`fatal_patterns.yaml` 強制照合 / `impact_score` 3 軸 / forced divergence prompt)
-- ドラフト v0.2 §2.7 で Quota 設計確定 (event-triggered 介入の核)
-- ドラフト v0.2 §2.10.3 で B-1.0 拡張 schema 3 要素確定 (`miss_type` / `difference_type` / `trigger_state`)
+- ドラフト v0.3 §2.1 で Layer 2 design extension 仕様確定 (10 ラウンド + Phase 1 escalate 3 メタパターン)
+- ドラフト v0.3 §2.6 で Chappy P0 3 件採用確定 (`fatal_patterns.yaml` 強制照合 / `impact_score` 3 軸 / forced divergence prompt)
+- ドラフト v0.3 §2.7 で Quota 設計確定 (event-triggered 介入の核)
+- ドラフト v0.3 §2.10.3 で B-1.0 拡張 schema 3 要素確定 (`miss_type` / `difference_type` / `trigger_state`)
 - `dual-reviewer-foundation` spec で共通 schema + Layer 1 framework + seed/fatal patterns yaml 整備予定
 - `dr-design` / `dr-log` skill は未実装
 
@@ -43,7 +43,7 @@ dual-reviewer の主 review 機能が稼働可能な状態:
   - B-1.0 拡張 schema 3 要素実装 (`miss_type` / `difference_type` / `trigger_state` の LLM 自己ラベリング prompt + JSONL 記録)
   - Step 1a/1b 分離 + Step 1b-v 自動深掘り 5 切り口
   - escalate 必須条件 5 種 + Phase 1 escalate 3 メタパターン
-  - bias 抑制 quota (Layer 1 base 5 種 = formal challenge / 検出漏れ / Phase 1 同型探索 / `fatal_patterns.yaml` 強制照合 / forced divergence は `dual-reviewer-foundation` で定義、Layer 2 design extension で追加 = 厳しく検証 5 種 / escalate 必須条件 5 種。本 spec は継承 + Layer 2 拡張部の発動実装、draft v0.2 §2.7)
+  - bias 抑制 quota (Layer 1 base 5 種 = formal challenge / 検出漏れ / Phase 1 同型探索 / `fatal_patterns.yaml` 強制照合 / forced divergence は `dual-reviewer-foundation` で定義、Layer 2 design extension で追加 = 厳しく検証 5 種 / escalate 必須条件 5 種。本 spec は継承 + Layer 2 拡張部の発動実装、draft v0.3 §2.7)
 - **Out**:
   - foundation (別 spec、Layer 1 framework + 共通 schema + seed/fatal patterns yaml)
   - dogfeeding 適用 (別 spec、Spec 6 への適用 + 対照実験)
@@ -86,5 +86,5 @@ dual-reviewer の主 review 機能が稼働可能な状態:
 - Phase A scope = Rwiki repo 内 prototype 段階、Phase B 独立 fork は本 spec 対象外
 - subagent 構成 = 単純 dual のみ (Opus + Sonnet)、Claude family rotation / multi-vendor は B-1.x / B-2 で別途
 - log schema は B-1.0 minimum (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 enum object 各 applied | skipped の 2 値 enum)、B-1.x 自由記述 3 要素は scope 外
-- forced divergence prompt の最終文言は本 spec の design phase で確定、ドラフト v0.2 §2.10.3 の素案を base
+- forced divergence prompt の最終文言は本 spec の design phase で確定、ドラフト v0.3 §2.6 の素案を base
 - 並列処理は B-1.0 では実装せず単純逐次運用 (並列 + 整合性 Round 6 task は B-1.x 以降)
