@@ -28,7 +28,7 @@ dual-reviewer の主 review 機能が稼働可能な状態:
 
 - `dr-design` skill = Layer 2 design extension 実装 + 10 ラウンド orchestration + adversarial subagent dispatch (Claude Code Agent tool、`primary_model` = Opus / `adversarial_model` = Sonnet) + Chappy P0 全機能 (`fatal_patterns.yaml` 強制照合 quota + forced divergence prompt template) + Step 1a/1b 分離 (軽微 / 構造的) + Step 1b-v 自動深掘り 5 切り口 + escalate 必須条件 5 種
 - forced divergence prompt 文言素案: "Identify one tacit premise of the primary reviewer's reasoning, replace it with a plausible alternative premise, and evaluate whether the same conclusion still holds." (本 spec design phase で最終確定)
-- `dr-log` skill = JSONL 構造化記録 + `impact_score` 3 軸 schema (severity / fix_cost / downstream_effect) + B-1.0 拡張 schema (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 boolean) + foundation 提供の共通 schema を validate に使用
+- `dr-log` skill = JSONL 構造化記録 + `impact_score` 3 軸 schema (severity / fix_cost / downstream_effect) + B-1.0 拡張 schema (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 enum object 各 applied | skipped の 2 値 enum) + foundation 提供の共通 schema を validate に使用
 - subagent dispatch = Claude Code Agent tool で primary (Opus) と adversarial (Sonnet) を `model` parameter で切替、API コール不要 (subagent 構成段階 B-1)
 
 ## Scope
@@ -43,7 +43,7 @@ dual-reviewer の主 review 機能が稼働可能な状態:
   - B-1.0 拡張 schema 3 要素実装 (`miss_type` / `difference_type` / `trigger_state` の LLM 自己ラベリング prompt + JSONL 記録)
   - Step 1a/1b 分離 + Step 1b-v 自動深掘り 5 切り口
   - escalate 必須条件 5 種 + Phase 1 escalate 3 メタパターン
-  - bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索 / 厳しく検証 5 種)
+  - bias 抑制 quota (Layer 1 base 5 種 = formal challenge / 検出漏れ / Phase 1 同型探索 / `fatal_patterns.yaml` 強制照合 / forced divergence は `dual-reviewer-foundation` で定義、Layer 2 design extension で追加 = 厳しく検証 5 種 / escalate 必須条件 5 種。本 spec は継承 + Layer 2 拡張部の発動実装、draft v0.2 §2.7)
 - **Out**:
   - foundation (別 spec、Layer 1 framework + 共通 schema + seed/fatal patterns yaml)
   - dogfeeding 適用 (別 spec、Spec 6 への適用 + 対照実験)
@@ -73,7 +73,7 @@ dual-reviewer の主 review 機能が稼働可能な状態:
 
 ## Upstream / Downstream
 
-- **Upstream**: `dual-reviewer-foundation` (Layer 1 framework + 共通 JSON schema + `seed_patterns.yaml` + `fatal_patterns.yaml` に依存)
+- **Upstream**: `dual-reviewer-foundation` (Layer 1 framework + 共通 JSON schema + `seed_patterns.yaml` + `seed_patterns_examples.md` + `fatal_patterns.yaml` + `dr-init` skill (`.claude/skills/dr-init/SKILL.md` 形式) に依存)
 - **Downstream**: `dual-reviewer-dogfeeding` (本 spec 完成後に Spec 6 適用 + 対照実験)
 
 ## Existing Spec Touchpoints
@@ -85,6 +85,6 @@ dual-reviewer の主 review 機能が稼働可能な状態:
 
 - Phase A scope = Rwiki repo 内 prototype 段階、Phase B 独立 fork は本 spec 対象外
 - subagent 構成 = 単純 dual のみ (Opus + Sonnet)、Claude family rotation / multi-vendor は B-1.x / B-2 で別途
-- log schema は B-1.0 minimum (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 boolean)、B-1.x 自由記述 3 要素は scope 外
+- log schema は B-1.0 minimum (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 enum object 各 applied | skipped の 2 値 enum)、B-1.x 自由記述 3 要素は scope 外
 - forced divergence prompt の最終文言は本 spec の design phase で確定、ドラフト v0.2 §2.10.3 の素案を base
 - 並列処理は B-1.0 では実装せず単純逐次運用 (並列 + 整合性 Round 6 task は B-1.x 以降)

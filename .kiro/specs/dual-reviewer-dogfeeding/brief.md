@@ -73,7 +73,7 @@ A-2 完了 (= Phase A 終端) 状態:
 
 ## Upstream / Downstream
 
-- **Upstream**: `dual-reviewer-foundation`, `dual-reviewer-design-review`, `rwiki-v2-perspective-generation` (Spec 6 design 用、本 spec と並走)
+- **Upstream**: `dual-reviewer-foundation` (Layer 1 framework + 共通 JSON schema + `seed_patterns.yaml` + `seed_patterns_examples.md` + `fatal_patterns.yaml` + `dr-init` skill (`.claude/skills/dr-init/SKILL.md` 形式) を design-review 経由で利用), `dual-reviewer-design-review` (`dr-design` + `dr-log` skill prototype を直接利用), `rwiki-v2-perspective-generation` (Spec 6 design 用、本 spec と並走)
 - **Downstream**: Phase B-1.0 release prep (本 spec 完了 = A-2 終端 = Phase A 終端後)
 
 ## Existing Spec Touchpoints

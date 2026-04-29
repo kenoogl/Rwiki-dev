@@ -1,6 +1,6 @@
 # dual-reviewer 仕様検討ドラフト
 
-_v0.2 / 2026-04-29 / Chappy review 反映 + Phase A 細分化 + 論文化軸 + 拡張ログ schema 追加_
+_v0.3 / 2026-04-29 / dual-reviewer-foundation requirements 5 ラウンドレビュー (V3 adversarial subagent 統合) 反映 = 固有名詞ゼロ削除 + trigger_state 表記精度 + 3 spec 分割反映_
 
 dual-reviewer (設計レビュー方法論 v3 一般化 package) の仕様検討ドラフト。spec 策定 (A-0、`/kiro-spec-init` 〜 `tasks.md` approve) における参照点として、これまでの議論で確定した内容を集約。
 
@@ -177,7 +177,7 @@ Chappy 11 課題 + 優先度 P0-P3 を再検討、以下を確定:
 
 ### 2.9 23 事例 + collective learning network (memory §5)
 
-- **23 事例** (Rwiki dev-log 由来) = `seed_patterns.yaml` (固有名詞ゼロ + `origin: rwiki-v2-dev-log`) として package 同梱、immutable initial knowledge
+- **23 事例** (Rwiki dev-log 由来) = `seed_patterns.yaml` (Rwiki 固有名詞付きで OK、`origin: rwiki-v2-dev-log`) として package 同梱、immutable initial knowledge (generalization は Phase B-1.0 release prep の責務)
 - **具体例**: 別 markdown (`seed_patterns_examples.md`、人間可読、同梱)
 - **transfer 戦略**: 16 representative を subagent prompt embed + 全 archive は別 grep
 - **`terminology.yaml`**: Phase A 蓄積開始 (review_methodology 用語 30-50 entries)、Phase B 以降で seed 化
@@ -235,7 +235,7 @@ dual-reviewer は **二重の位置付け** で進める:
 
 論文 figure 2 候補: difference_type 分布 + forced divergence (Chappy P0) 効果評価 = 「どの difference_type が forced divergence で増えたか」。
 
-**要素 3: `trigger_state`** (review_case ごとのフラグ、3 軸 boolean) **← 論文核心**:
+**要素 3: `trigger_state`** (review_case ごとのフラグ、3 軸 enum object 各 applied | skipped の 2 値 enum) **← 論文核心**:
 
 - `negative_check: applied | skipped` — Step 1b-v Negative 視点 5 切り口が発動したか
 - `escalate_check: applied | skipped` — escalate 必須条件 5 種を確認したか
@@ -277,17 +277,20 @@ dual-reviewer は **二重の位置付け** で進める:
 
 ### 3.1 Phase A 細分化 (A-0/A-1/A-2)
 
-#### A-0 (spec 策定)
+#### A-0 (spec 策定、3 spec 分割)
 
-- 配置: `.kiro/specs/dual-reviewer/`
-- 内容:
-  1. `/kiro-spec-init dual-reviewer` で `brief.md` + `spec.json` 生成
-  2. `requirements.md` 策定 (memory §1-13 + Chappy P0 3 件を AC 化)
-  3. `design.md` 策定 (memory §1-13 確定事項を design 詳細化)
-  4. `tasks.md` 策定 (B-1.0 minimum 3 skills + Chappy P0 + 23 事例 retrofit の task 化)
-- 終端条件: `tasks.md` approve
+- 配置: `.kiro/specs/dual-reviewer-foundation/` + `.kiro/specs/dual-reviewer-design-review/` + `.kiro/specs/dual-reviewer-dogfeeding/` (TODO_NEXT_SESSION.md 確定事項 1 で 3 spec 分割確定、依存階層: foundation → design-review → dogfeeding)
+- 内容 (3 spec 並走):
+  1. 各 spec で `/kiro-spec-init {feature}` で `brief.md` + `spec.json` 生成 (T 案 = kiro-discovery skip + 手動 brief.md、roadmap 汚染回避)
+  2. 各 spec の `requirements.md` 策定 (memory §1-14 + Chappy P0 3 件を AC 化)
+  3. 各 spec の `design.md` 策定 (memory §1-14 確定事項を design 詳細化)
+  4. 各 spec の `tasks.md` 策定:
+     - foundation = Layer 1 framework + dr-init skill + 共通 JSON schema + seed/fatal patterns yaml
+     - design-review = dr-design + dr-log skill (Layer 2 design extension + Chappy P0 全機能 + B-1.0 拡張 schema)
+     - dogfeeding = Spec 6 適用 + 対照実験 (single vs dual)
+- 終端条件: 3 spec すべての `tasks.md` approve
 - 期間目安: 数日 〜 1 週間
-- Spec 6 = 触らない (ペンディング維持)
+- Spec 6 = A-0 中は触らない (A-2 dogfeeding で再開、ペンディング維持)
 
 #### A-1 (prototype 実装)
 
@@ -422,7 +425,7 @@ dual-reviewer は二重位置付け (プロダクト主 + 研究副産物、§2.
 
 - `miss_type` (finding ラベル、6 種 enum)
 - `difference_type` (adversarial 拾い分のラベル、6 種 enum)
-- `trigger_state` (review_case フラグ、3 軸 boolean: `negative_check` / `escalate_check` / `alternative_considered`)
+- `trigger_state` (review_case フラグ、3 軸 enum object 各 applied | skipped の 2 値 enum: `negative_check` / `escalate_check` / `alternative_considered`)
 
 実装コスト = 極低 (enum 定義 + LLM prompt 1 行)。impact_score 3 軸 (Chappy P0、結果の質軸) と直交 (拡張 schema = 失敗構造観測軸)。
 
@@ -476,3 +479,7 @@ _本ドラフト v0.2 = A-0 開始時点の参照点。A-0 進行中に `design.
   - §3.1 A-2 修正: 対照実験 (single vs dual 全 Round 2 倍) 追記
   - §3.5 新規: 8 月までの論文化ロードマップ (Phase 1 仕込み / Phase 2 溜め / Phase 3 書き)
   - §4.6 新規: B-1.0 拡張ログ schema 同梱 (3 要素)
+- **v0.3** (2026-04-29 改訂): dual-reviewer-foundation requirements 5 ラウンドレビュー (V3 adversarial subagent 統合) で発見した cross-document 矛盾を解消。
+  - §2.9 修正 (致命級解消、subagent 独立発見): 「固有名詞ゼロ」削除 = §3.1 / §4.2 / brief.md / req AC 4.3「Rwiki 固有名詞付きで OK」と整合 (generalization は Phase B-1.0 release prep の責務であることを明示)
+  - §2.10.3 / §4.6 修正: trigger_state「3 軸 boolean」→「3 軸 enum object 各 applied | skipped の 2 値 enum」 = JSON Schema 表現精度向上
+  - §3.1 A-0 修正: 単一 `.kiro/specs/dual-reviewer/` 想定を 3 spec 分割 (foundation / design-review / dogfeeding) に更新 (TODO_NEXT_SESSION.md 確定事項 1 反映、依存階層 / 並走方針も明示)

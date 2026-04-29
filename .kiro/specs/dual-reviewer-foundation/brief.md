@@ -28,7 +28,7 @@ dual-reviewer の core 基盤が稼働可能な状態:
 
 - Layer 1 = Step A/B/C 構造 + bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索) + 中程度 granularity の pattern schema を skeleton 実装
 - `dr-init` = project bootstrap、`.dual-reviewer/config.yaml` 生成、Layer 3 (project 固有) の placeholder ディレクトリ生成
-- 共通 JSON schema = review_case / finding / impact_score 3 軸 (severity / fix_cost / downstream_effect) / B-1.0 拡張 schema (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 boolean) を JSON Schema で定義
+- 共通 JSON schema = review_case / finding / impact_score 3 軸 (severity / fix_cost / downstream_effect) / B-1.0 拡張 schema (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 enum object 各 applied | skipped の 2 値 enum) を JSON Schema で定義
 - `seed_patterns.yaml` = 23 事例 retrofit (`feedback_review_judgment_patterns.md` を yaml schema 化、Rwiki 固有名詞付きで OK、generalization は Phase B-1.0 release prep に統合 #3)
 - `fatal_patterns.yaml` = 8 種固定 (sandbox escape / data loss / privilege escalation / infinite retry / deadlock / path traversal / secret leakage / destructive migration)
 
@@ -39,6 +39,7 @@ dual-reviewer の core 基盤が稼働可能な状態:
   - `dr-init` skill (project bootstrap)
   - 共通 JSON schema (review_case / finding / impact_score / B-1.0 拡張 schema 3 要素)
   - `seed_patterns.yaml` (23 事例 retrofit、Rwiki 固有名詞付きで OK)
+  - `seed_patterns_examples.md` (人間可読、各 pattern の具体例)
   - `fatal_patterns.yaml` (致命級 8 種固定)
 - **Out**:
   - `dr-design` skill (`dual-reviewer-design-review` spec)
@@ -49,6 +50,11 @@ dual-reviewer の core 基盤が稼働可能な状態:
   - 並列処理 + 整合性 Round
   - multi-vendor / multi-subagent / hypothesis generator (B-2 以降)
   - B-1.x 拡張 schema (`decision_path` / `skipped_alternatives` / `bias_signal`)
+  - Spec 6 dogfeeding 適用 + 対照実験 (`dual-reviewer-dogfeeding` 担当)
+  - forced divergence prompt template (`dual-reviewer-design-review` 内 adversarial subagent prompt の責務)
+  - `impact_score` 生成・記録 logic (`dual-reviewer-design-review` 内 `dr-log` skill、本 spec は schema 定義のみ)
+  - generalization (固有名詞除去) / npm package 化 (Phase B-1.0 release prep)
+  - `--integrate-cc-sdd` flag 本格実装 (B-1.3 担当、B-1.0 では `dr-init` skill placeholder のみ)
 
 ## Boundary Candidates
 
