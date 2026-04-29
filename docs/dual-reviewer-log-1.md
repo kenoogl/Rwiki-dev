@@ -6,6 +6,8 @@
 
 [フィーチャー作成](##フィーチャー作成)
 
+[Requirements review](##Requirements review)
+
 [dual-reviewer-foundation](##dual-reviewer-foundation)
 
 [Round1](##Round1)
@@ -17,6 +19,26 @@
 [Round4](##Round4)
 
 [Round5](##Round5)
+
+[dual-reviewer-design-review](##dual-reviewer-design-review)
+
+[Round1](##Round1 - dr)
+
+[Round2](##Round2 - dr)
+
+[Round3](##Round3 - dr)
+
+[Round4](##Round4 - dr)
+
+[Round5](##Round5 - dr)
+
+
+
+
+
+
+
+[仕様の整合性をとる](##仕様の整合性をとる)
 
 
 
@@ -663,6 +685,10 @@
   - requirements レビュー方式 (memory feedback_review_rounds.md 5 ラウンドレビューに従うか)
   - Cross-spec 整合性確認のタイミング
 ```
+
+
+
+## Requirements review
 
 ## dual-reviewer-foundation
 
@@ -1637,14 +1663,788 @@
 
 ```
 ⏺ session-cont 実行。TODO_NEXT_SESSION.md を更新 → commit (TODO + dev-log) → push します。
+⏺ session-cont 完了
 
+  実行結果
+
+  - ✅ TODO_NEXT_SESSION.md 更新 (4th セッション末状態、.gitignore 対象 = ローカル運用)
+  - ✅ commit 1: 2f6479e spec(dual-reviewer-foundation): requirements V3 review 完走 (5 ラウンド) (本 session 中で実施済)
+  - ✅ commit 2: 4ace994 docs(log): dual-reviewer 開発ログ 1 (4th セッション追記) (本 turn で実施)
+  - ✅ push: origin/main 反映完了 (230b6b5..4ace994)
+  - ✅ working tree clean
+
+  ---
+  次セッション開始のガイド
+
+  開始時メッセージのテンプレート
+
+  ▎ TODO_NEXT_SESSION.md を読んでください。dual-reviewer-foundation requirements 5 ラウンド V3 review 完走 (計 36 件修正適用、致命級独立発見 2
+  ▎ 件)。次は foundation requirements approve または design-review requirements 段階開始。
+
+  開始時に最初に読む
+
+  1. TODO_NEXT_SESSION.md — 本セッションの進展サマリ + 次のアクション選択肢
+  2. .kiro/specs/dual-reviewer-foundation/requirements.md (V3 review 後の状態、approve 候補)
+  3. .kiro/drafts/dual-reviewer-draft.md v0.3 (cross-document 矛盾解消後の primary 参照点)
+  4. memory ~/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/feedback_design_review_v3_generalization_design.md §1-14
+  5. 3 spec の brief.md (foundation / design-review / dogfeeding) — 必要に応じて
+
+  最初のアクション (user と判断)
+
+  - option 1: dual-reviewer-foundation/spec.json approvals.requirements.approved = true 更新 + commit (foundation req 完了、design phase へ)
+  - option 2: /kiro-spec-requirements dual-reviewer-design-review で次 spec 着手 (foundation approve は別 turn、3 spec req 揃えてから一括 approve)
+
+  V3 試験運用 evidence 累計 (次セッション継続観察対象)
+
+  - 致命級独立発見: 3 件 (Spec 3 = 1 件 + 本セッション 2 件) = bias 共有疑念に対する決定的反証 evidence
+  - disagreement: 9 件
+  - Phase 1 同型 3 種全該当: 7 度
+  - 次セッションの design-review / dogfeeding requirements + 3 spec design phase で継続適用、統計蓄積
 ```
 
 
+
+## dual-reviewer-design-review
+
+##### ❯ TODO_NEXT_SESSION.mdを読む
+
+```
+⏺ TODO_NEXT_SESSION.md を読み終えました。状況把握のため、現在の git 状態と spec.json を並列で確認します。
+
+⏺ 状況把握完了。
+
+  現状サマリ
+  - 4th セッションの commit は完了 (4ace994 docs(log): dual-reviewer 開発ログ 1 (4th セッション追記) まで push 済)
+  - working tree: docs/dual-reviewer-log-1.md のみ modified
+    - 追加内容 = 前セッション末 session-cont の完了レポート + ## dual-reviewer-design-review セクションの骨組み (/kiro-spec-requirements
+  dual-reviewer-design-review の見出しのみ、コマンド出力なし)
+  - dual-reviewer-foundation/spec.json: phase: requirements-generated / approvals.requirements.generated: true, approved: false (TODO 記載通り)
+
+  次アクションの 2 択 (TODO テンプレより、feedback_approval_required.md 規律で user 判断必須)
+
+  1. option 1: dual-reviewer-foundation/spec.json の approvals.requirements.approved = true に更新 + commit (foundation req を先に approve、design
+  phase へ)
+  2. option 2: /kiro-spec-requirements dual-reviewer-design-review で次 spec 着手 (foundation approve は保留、3 spec req 揃えてから一括 approve)
+
+  dev-log に design-review の見出しスケルトンが残っているのは、前セッション末の session-cont 直後に option 2 着手準備が一部書かれた跡に見えますが、コマンド本体は未実行です。
+
+  どちらで進めますか？
+```
 
 ##### ❯ /kiro-spec-requirements dual-reviewer-design-review
 
 ```
+⏺ design-review requirements 生成に取りかかります。まず必要な context を並列で読み込みます。
+⏺ cross-spec context (foundation requirements + draft v0.3 + foundation brief + dogfeeding brief) を並列で読み込みます。
+⏺ context が揃いました。タイムスタンプ取得 + requirements draft 作成に進みます。
+⏺ requirements.md を draft します。Step 4 の review gate を通してから書き込みます。
+⏺ Step 4 (Review Gate) を実行します。mechanical checks → judgment review。
 
+  Mechanical checks:
+  - 全 Requirement に numeric ID (1-7) ✓
+  - 全 Requirement に EARS-format AC (When/If/While/Where/The) ✓
+  - 実装詳細排除: "Claude Code 内蔵 subagent dispatch" / "JSONL" / "JSON Schema" は scope 制約 / format spec として残存、tech 選定は "design phase
+  で確定" にdefer ✓
+
+  Judgment review:
+  - coverage: dr-design orchestration / adversarial dispatch / Layer 2 quota / Chappy P0 / dr-log / 自己ラベリング / contract = 7 領域網羅 ✓
+  - adjacent expectations: foundation 提供物 / dogfeeding 利用 / Spec 6 不適用 / Rwiki spec 独立 を Boundary Context で明示 ✓
+  - error cases: Req 1.6 / 2.4 / 5.4-5 / 7.7 で網羅 ✓
+  - 重複: dr-design / dr-log の SKILL.md 公開を Req 1.7 / 5.7 / 7.1-2 で 3 箇所言及 — Req 1/5 = skill identity、Req 7 = downstream contract =
+  意図的別レイヤー、保持 ✓
+  - 1 件 scope 判断あり (後述、single mode 切替の本 spec 含有) — judgment call として draft 反映済、user 確認対象
+
+  review gate pass。spec.json metadata 更新します。
+
+⏺ Generated Requirements Summary
+
+  dual-reviewer-design-review の requirements (Req 1-7、計 48 AC) を生成しました。
+
+  - Req 1: dr-design skill による 10 ラウンド orchestration (中庸統合版、各ラウンド Step A→B→C 順、累積結果維持)
+  - Req 2: adversarial subagent dispatch + single/dual mode 切替 (Claude Code 内蔵 Agent tool 経由、primary_model / adversarial_model config)
+  - Req 3: Layer 2 design phase 拡張 quota の発動 (Layer 1 5 種継承 + 厳しく検証 5 種 + escalate 必須条件 5 種 + Step 1a/1b + Step 1b-v + Phase 1 escalate 3 メタパターン)
+  - Req 4: Chappy P0 機能の組込発動 (fatal_patterns.yaml 強制照合 / forced divergence prompt / impact_score 3 軸生成)
+  - Req 5: dr-log skill による JSONL 構造化記録 (foundation 共通 schema 準拠、single+dual 同一 schema)
+  - Req 6: B-1.0 拡張 schema の LLM 自己ラベリング (miss_type / difference_type / trigger_state、single mode で difference_type skip)
+  - Req 7: Downstream spec (dogfeeding) 提供 contract (sample 1 round 通過確認 + skill 公開 + error 提供)
+
+  Document Status
+
+  - .kiro/specs/dual-reviewer-design-review/requirements.md 更新 (Boundary Context + Req 1-7)
+  - .kiro/specs/dual-reviewer-design-review/spec.json 更新 (phase: requirements-generated / approvals.requirements.generated: true、approved は user 明示承認待ち)
+
+  Review Gate
+
+  mechanical (numeric ID / EARS / 非実装言語) + judgment (coverage / adjacent / error / 重複) いずれも pass。
+
+  確認事項 (1 件)
+
+  【範囲拡張】single mode 切替の本 spec 含有: brief.md design-review In scope は明示せず、dogfeeding brief は "single 系統 = primary のみで 10
+  ラウンド + dr-log 同一 schema 記録" を要求。draft では Option A (dr-design に config flag 追加で実装) を採用。
+
+  - Option A (採用案、現 draft): design-review が single/dual 切替を提供 = dogfeeding は flag 渡すのみ
+  - Option B (代替): design-review は dual のみ、single 系統は dogfeeding 側で primary 直接起動
+
+  推奨 = A (10 ラウンド orchestration + Layer 2 quota + 自己ラベリングの再実装回避、比較妥当性確保)。Option B 採用なら Req 2 AC 5-6 / Req 5 AC 6 /
+  Req 6 AC 6 を削除。
+
+  Next Steps
+
+  1. 上記 single mode 判断の確認 (Option A 維持 or B に修正)
+  2. requirements 5 ラウンド V3 review (memory feedback_review_rounds.md + feedback_design_review_v3_generalization_design.md 規律) 着手 — foundation
+   と同方式
+  3. レビュー後 approve 判断 (3 spec 揃ってから一括 vs 個別、TODO 提起済の選択肢)
 ```
 
+##### ❯ 2
+
+## Round1 - dr
+
+```
+⏺ V3 5 ラウンド review を開始します。まず方法論 memory を refresh して Round 1 着手します。
+⏺ V3 5 ラウンド review 方法論の理解完了。Round 1 (基本整合性) を開始します。
+
+  Round 1 Step A: primary detection (Opus = 私)
+
+  まず私の独立検出:
+
+  致命級 1 件:
+  - Req 4 AC 1 + AC 6 で fatal_patterns.yaml 強制照合を「Layer 2 拡張 quota」と分類しているが、foundation Req 1 AC 2 + draft v0.3 §2.6 では「Layer 1 base quota の 1 種 (= 5 種のうち 1 つ、bias 抑制 quota と同列扱い)」と定義 → Layer 帰属矛盾。escalate 必須条件 3 (設計決定間の矛盾) 該当。
+
+  重要級 1 件:
+  - Req 7 AC 6 で config.yaml に「primary_model / adversarial_model / single/dual mode flag」と single/dual mode flag を新規 config field として要求。一方 foundation Req 2 AC 2 の config.yaml 雛形は primary_model / adversarial_model / language placeholder のみ。foundation 改版 vs 別 path (skill argument / 環境変数 / 別ファイル) の選択肢あり。escalate 必須条件 1 (複数選択肢 trade-off) + 2 (規範範囲判断、foundation 規範拡張要求) 該当。
+
+  Round 1 Step B: adversarial subagent dispatch (Sonnet)
+ Round 1 Step C: integration
+
+  primary (Opus) + adversarial subagent (Sonnet) の検出を統合します。
+
+  統合検出 (致命級 1 + 重要級 3 + 軽微 1)
+
+  致命級 1: Layer 帰属矛盾 (primary 検出 + subagent 補強)
+
+  問題: foundation Req 1 AC 2 では「Layer 1 = 5 種 quota の存在宣言 (formal challenge / 検出漏れ / Phase 1 同型探索 / fatal_patterns.yaml 強制照合 / forced divergence)、Layer 2 = 具体発動 logic + 拡張 quota」と整理。design-review では:
+  - Req 3 AC 1 = "Layer 1 framework が定義する 5 種を継承" ✓ 整合
+  - Req 4 AC 1 = "Layer 2 拡張 quota = Chappy P0 課題 6 採用" ✗ 矛盾 (fatal_patterns.yaml 強制照合は Layer 1 base)
+  - Req 4 AC 6 = "Layer 2 拡張の fatal_patterns.yaml 強制照合" ✗ 同矛盾
+
+  Phase 1 同型: Spec 0 R4 規範範囲先取り (該当)
+
+  escalate 必須条件: 3 (設計決定間の矛盾) 該当
+
+  推奨: 修正一意 (Layer 帰属を foundation 整合に揃える)
+  - Req 4 AC 1 末尾: "(Layer 2 拡張 quota = Chappy P0 課題 6 採用、ドラフト v0.3 §2.6 規範)" → "(foundation Layer 1 base quota の 1 種 = fatal_patterns.yaml 強制照合、具体発動 logic は Layer 2 design extension の責務、Chappy P0 課題 6 採用、ドラフト v0.3 §2.6 規範)"
+  - Req 4 AC 6: "Layer 1 base quota の forced divergence と Layer 2 拡張の fatal_patterns.yaml 強制照合" → "Layer 1 base quota の fatal_patterns.yaml 強制照合 と forced divergence"
+
+  重要級 1: config.yaml schema SSoT 問題 (primary 検出 + subagent 深掘り)
+
+  問題: design-review Req 7 AC 6 が config.yaml に "single/dual mode flag" 追加要求、しかし foundation Req 2 AC 2 雛形は primary_model / adversarial_model / language のみ。foundation が config.yaml 生成・管理で schema ownership 未規定。
+
+  dev-log 23 パターン: 7 (責務境界) + 9 (Coordination Completeness) + 23 (運用現実)
+
+  escalate 必須条件: 1 (複数選択肢 trade-off) + 2 (規範範囲判断 = foundation schema 拡張要求)
+
+  4 選択肢:
+  - Option A: foundation Req 2 AC 2 改版 (config.yaml schema 拡張) — foundation V3 reviewed approve 待ち状態を変更
+  - Option B: skill argument (/dr-design --mode=single|dual) — config.yaml 改版回避 + 起動時明示
+  - Option C: 環境変数 (DUAL_REVIEWER_MODE) — 永続性曖昧、shell 依存
+  - Option D: 別 config ファイル (.dual-reviewer/mode.yaml) — 別ファイル管理 overhead
+
+  確証根拠 (5 観点で B 推奨):
+  - (a) 実装難易度: A 中 (foundation 改版) / B 低 / C 低 / D 中
+  - (b) 設計理念: A = config SSoT、B = transient 設定で起動時明示、C/D = ad hoc
+  - (c) 運用整合性: B が dogfeeding 対照実験 (single+dual 切替実行) で運用容易 (config 書換不要)
+  - (d) boundary 違反リスク: A 高 (foundation 改版要) / B 低 / C/D 低-中
+  - (e) Phase 1 整合: A 採用なら今 (foundation V3 reviewed approve 前)、B/C/D は foundation 改版不要
+
+  dominated 除外: C (永続性課題)、D (別ファイル管理 overhead) は B に劣る
+
+  推奨 = B: skill argument で渡す (Req 7 AC 6 から "single/dual mode flag" を削除、Req 2 AC 5 に skill argument 経由で切替と明記)
+
+  重要級 2 (subagent 独立、finding-X-3): 自己ラベリング失敗時 skill ownership
+
+  問題: Req 6 AC 7 で "LLM 自己ラベリング失敗時の挙動を design phase で確定" としているが、dr-design (生成側) と dr-log (記録側)のどちらがエラーパス所管かが要件レベルで未明示
+
+  escalate 必須条件: 5 (failure mode の選択肢) 該当
+
+  推奨: defer to design phase は許容範囲だが、Req 6 AC 7 に最小限の bound を追加 = "ownership = dr-design (生成側で fallback、dr-log は受領値記録) とrecommend、詳細 logic は design phase で確定"
+
+  重要級 3 (subagent 独立、finding-X-4): fatal error 時 partial flush 要否
+
+  問題: Req 1 AC 6 "部分結果を保持しつつ" の partial state を dr-log 経由で JSONL flush するかが Req 5 AC 2 と整合不明
+
+  Phase 1 同型: Spec 1 R7 規範前提曖昧化 (該当 = atomicity / observability の規範前提 defer)
+
+  推奨: Req 1 AC 6 に "部分結果を保持 (in-memory + dr-log への partial flush 規定の選択は design phase で確定)" と明示拡充
+
+  軽微 1 (subagent 独立、finding-X-5): Req 4 AC 6 文言誤読防止
+
+  問題: "post-run measurement only" 記述が "強制照合の実行義務" との関係で実装者誤読リスク
+
+  推奨: 文言修正 (反転理由: 一意な明確化、自動採択候補) — "(pre-run target setting は Goodhart's Law 回避で禁止、各ラウンドの強制照合発動自体は structural requirement、post-run measurement only での記録は metrics 用途、ドラフト v0.3 §2.6 / §2.7 規範)"
+
+  Round 1 結果サマリ (review_case)
+
+  - finding 数: primary 検出 2 件 + subagent 独立追加 5 件 = 7 件 (重複統合後 = 致命級 1 / 重要級 3 / 軽微 1)
+  - disagreement: 0 件 (subagent agree on primary 致命級 + 重要級)
+  - subagent 致命級独立発見: 0 件 (subagent finding-X-1/X-2 = primary 検出の別観点補強、subagent 独立は X-3/X-4 = 重要級)
+  - forced divergence 効果: 別結論 1 件 (X-1 が primary 致命級の別観点として現れる)
+  - Phase 1 escalate 3 メタパターン: Spec 0 R4 + Spec 1 R7 = 2 種該当 (Spec 1 R5 非該当)
+  - trigger_state: negative_check applied / escalate_check applied / alternative_considered applied
+
+  Round 1 Step 2: user 判断機会確保
+
+  memory feedback_approval_required.md + feedback_review_step_redesign.md 規律 = 自動承認禁止。各 escalate 件に対して user 判断仰ぎます。
+
+  escalate 4 件 + 自動採択候補 1 件、各々 1 案推奨 (致命級 = 一意修正、重要級 1-3 = 推奨案 B / 微修正、軽微 = 文言修正)
+
+  判断選択肢:
+  - 案 A (推奨一括): 上記 4 件 escalate 全件推奨案で進める + 軽微 1 件自動採択 → 5 件 Edit 適用
+  - 案 B (個別反転): 「重要級 1 で Option A 採用」「重要級 2 を defer 維持」等、個別指定
+  - 案 C (異論あり): 別の修正方向を指示
+
+  どれで進めますか?
+```
+
+##### ❯ A
+
+```
+⏺ 案 A 採用。Round 1 修正 6 件を並列 Edit で適用します。
+⏺ Round 1 修正 6 件適用完了 (Req 1.6 / Req 2.5 / Req 4.1 / Req 4.6 / Req 6.7 / Req 7.6)。
+
+  Round 1 完了サマリ
+
+  - finding 7 件統合 → 修正 5 件 (致命級 1 + 重要級 3 + 軽微 1) 適用、disagreement 0 件
+  - subagent 致命級独立発見: 0 件 (Sonnet 検出 X-1/X-2 = primary 検出の別観点補強、X-3/X-4 = 重要級独立追加 = 致命度未満)
+  - Phase 1 escalate 3 メタパターン同型: Spec 0 R4 + Spec 1 R7 = 2/3 種該当
+  - trigger_state: 全 applied
+
+  Round 2 (上位文書照合: roadmap / brief / drafts) 着手準備
+
+  memory feedback_no_round_batching.md 規律 = 1 ラウンド 1 turn 以上 + 各ラウンドで Step 2 user 判断必須。Round 1 終了 → Round 2 着手の許可を確認します。
+
+  Round 2 観点 = 上位文書 (SSoT) との齟齬 = brief.md Scope.In/Out / draft v0.3 §2.1-§4 / foundation 既 approve 待ち req との照合。Round 1 と同方式(primary 検出 + adversarial subagent dispatch + 統合 + Step 2 user 判断)。
+
+  Round 2 進めますか?
+```
+
+##### ❯ GO
+
+## Round2 - dr
+
+```
+⏺ Round 2 Step A: primary detection (Opus)
+
+  draft v0.3 / brief.md / foundation requirements との SSoT 照合を実施。
+
+  重要級 1 件:
+  - Req 6.6 (single mode で difference_type skip) が draft v0.3 §3.1 A-2 + dogfeeding brief.md Approach と矛盾。draft / dogfeeding は 「single 系統でも miss_type / difference_type / trigger_state を同 schema で記録 (single でも自己ラベリング、dual との差を可視化、論文用途)」 を要求。私の AC は subagent 不在を理由に skip としたが、論文用途 (single の trigger failure 率 vs dual の比較で adversarial 効果定量化) には single でも difference_type 記録が必須。escalate 必須条件 4 (アルゴリズム / 実装の不整合 = 文書 vs 実装の不一致同型 = Spec 1 R5 同型) 該当。
+
+  軽微 3 件:
+  - prompt 言語 policy (draft §4.4 = 英語固定 1 本 + subagent 出力 ja auto-detect) が要件レベルで bound 不在 → Req 2 / Req 4 に AC 追加候補
+  - Step C integration 主体 (primary reviewer = Opus) が要件レベルで明示なし → Req 1.3 に補足候補
+  - 試験運用報告書 §8 への参照 = Introduction の primary 参照点に未掲載 → 補足候補 (defer 可能)
+
+  brief.md 側 stale (波及精査対象):
+  - brief.md Constraints "ドラフト v0.2 §2.10.3 の素案を base" は v0.3 では §2.6 に移動 → 第 5 ラウンドで brief.md 修正対象
+
+  Round 2 Step B: adversarial subagent dispatch (Sonnet)
+⏺ Round 2 Step C: integration
+
+  primary + adversarial subagent 統合検出。
+
+  Round 2 検出 (致命級 1 + 重要級 3 + 軽微 2 + 波及精査 2)
+
+  致命級 1: single/dual 対照実験設計的両立不能 (subagent 独立発見、5 番目 negative 視点で構成検出)
+
+  問題 (3 finding 複合):
+  - finding-X-3 + 重要級 1: Req 6.6「single mode で difference_type skip」 ↔ dogfeeding brief Approach「single でも difference_type 自己ラベリング、dual との差を可視化」矛盾
+  - finding-X-5: Req 2.5「config schema 拡張不要」 + Req 5.3「出力先 = config.yaml 決定」で 2 系統 JSONL 分離方法未規定
+  - foundation Req 3 AC 3.2 で difference_type 必須/optional 未定義 → schema validator が single 出力で absent / present 識別不能
+
+  Phase 1 同型: Spec 0 R4 (規範範囲先取り) + Spec 1 R5 (アルゴリズム不整合) + Spec 1 R7 (規範前提曖昧化) = 3 種全該当 (TODO 通り、Round 1 + 2 で累計達成)
+
+  escalate 必須条件: 1 (複数選択肢) + 4 (アルゴリズム不整合) + 5 (failure mode 選択肢) 該当
+
+  選択肢 (dominated 除外後):
+  - Option A: foundation Req 3 AC 3.2 で difference_type を 7 値 enum (既存 6 + not_applicable) に拡張 → foundation 改版
+  - Option B (推奨): foundation Req 3 AC 3.2 で difference_type を optional field 化 → single 時 absent、dogfeeding は absent/present の binary で識別、foundation 改版最小
+  - ~~Option C~~ (dominated): single で finding 生成せず review_case のみ → dogfeeding 比較不能
+  - ~~Option D~~ (dominated): null 値記録 → semantic 不明確
+
+  Option B 確証根拠 (5 観点):
+  - (a) 実装難易度: 低 (foundation AC 3.2 に optional 注記 1 文追加)
+  - (b) 設計理念整合: Phase A scope (単純 dual のみ) で柔軟性、enum 不変で B-1.0 release prep 安定
+  - (c) 運用整合性: absent/present binary で adversarial 効果定量化十分 (論文 figure 2 候補)
+  - (d) boundary 違反リスク: foundation 改版最小 (V3 reviewed approve 前の今が機会)
+  - (e) Phase 1 整合: foundation 規範最小改版で維持
+
+  Option B 修正案 (3 修正):
+  1. design-review Req 6.6: single mode で difference_type を absent (skip ではなく field 自体を出力 JSONL に含めない、foundation Req 3 AC 3.2 optional 化前提、ドラフト v0.3 §3.1 A-2 + dogfeeding brief 整合)
+  2. design-review Req 5.3: 2 系統 JSONL 出力先 path 分離方法を skill argument 経由で明示 (例: dev_log/single_${timestamp}.jsonl / dev_log/dual_${timestamp}.jsonl、具体 naming は design phase で確定)
+  3. design-review Req 2.5: 「config schema 拡張は不要」表現を「skill argument 経由切替で foundation config.yaml schema は不変前提、契約確認は design phase」に緩和
+  4. foundation Req 3 AC 3.2 改版 (波及): difference_type を optional field 化 (「single 実行時は absent 許容」追記) — 第 5 ラウンドで適用、user 別途承認必要
+
+  重要級 1 (finding-X-2): prompt 言語 policy bound 不在 (Spec 1 R7 完全同型)
+
+  修正: Req 4 に AC 追加 = 「primary prompt + adversarial subagent prompt は英語固定 1 本で構成、subagent 出力 (finding 説明) は document auto-detect (本 spec scope = ja)、ドラフト v0.3 §4.4 規範」
+
+  重要級 2 (finding-X-6): foundation review_case.integration_result populate 責務 AC 不在
+
+  修正: Req 5 AC に追加 = 「Step C (integration) で primary reviewer が integration_result を生成し、dr-log が review_case.integration_result field に populate する (foundation Req 3 AC 3.1 contract)」
+
+  重要級 3 (forced divergence): dr-design / dr-log 同 session 連携前提が暗黙
+
+  修正: Boundary Context Out に追加 = 「dr-design / dr-log の連携 = 同一 session 内 in-memory 渡し前提、cross-session resume は Phase A scope 外 (B-1.x 検討)、ドラフト v0.3 §3.1 A-1 整合」
+
+  軽微 1: Step C integration 主体 (primary reviewer = Opus) 明示
+
+  修正: Req 1.3 補足 = "Step A → Step B → Step C の順 (primary detection → adversarial review → primary reviewer による integration)"
+
+  軽微 2: 試験運用報告書 §8 参照
+
+  修正: Introduction primary 参照点に追加 = 試験運用報告書 = .kiro/methodology/dogfeeding/spec-3/round_5-10_subagent_adversarial.md §1-8
+
+  波及精査対象 (第 5 ラウンドで処理):
+
+  - finding-X-1: brief.md (本 spec) Current State 冒頭が「ドラフト v0.2」参照 stale → brief.md 修正 (v0.2 → v0.3 + 内容反映)
+  - 致命級修正 4 番目: foundation Req 3 AC 3.2 改版 = difference_type optional 化
+
+  Round 2 結果サマリ
+
+  - finding 統合 9 件 → 修正 5 件 (致命級 1 + 重要級 3 + 軽微 2) 適用候補 + 波及精査 2 件
+  - subagent 致命級独立発見 1 件 (5 番目 negative 視点で構成検出 = bias 共有反証 evidence 累計 4 件目)
+  - disagreement 0 件 (subagent agree on primary 4 件すべて)
+  - Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1 + 2 累計)
+  - trigger_state: 全 applied
+
+  Round 2 Step 2: user 判断
+
+  判断選択肢:
+  - 案 A (推奨一括): 致命級 Option B 採用 + 重要級 3 件 + 軽微 2 件 = 全件推奨採用。foundation Req 3 AC 3.2 改版は第 5 ラウンドで別途承認手続き
+  - 案 B (foundation 改版回避): 致命級 Option A (not_applicable enum 7 値拡張) 採用 + 他全件推奨。foundation 改版量増加 (overengineering 懸念)
+  - 案 C (個別反転 / 異論): 特定 finding に異論あり
+
+  どれで進めますか?
+```
+
+##### ❯ A
+
+```
+⏺ 案 A 採用。Round 2 修正 8 件を並列 Edit で適用します (foundation 改版は第 5 ラウンドで別途処理)。
+⏺ Round 2 修正 8 件適用完了 (Req 1.3 / Req 2.5 / Req 4.6+AC7 / Req 5.3+AC8 / Req 6.6 / Introduction / Boundary Context Out)。
+
+  Round 2 完了サマリ
+
+  - finding 統合 9 件 → 修正 8 件適用 + 波及精査 2 件 (第 5 ラウンドで処理)
+  - subagent 致命級独立発見 1 件 (5 番目 negative 視点で構成検出 = single/dual 対照実験設計的両立不能 = bias 共有反証 evidence 累計 4 件目)
+  - disagreement 0 件
+  - Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1 + 2 累計達成)
+  - trigger_state: 全 applied
+  - 波及精査対象: foundation Req 3 AC 3.2 改版 (difference_type optional 化) / brief.md v0.2 → v0.3 更新
+
+  Round 3 (本質的観点) 着手準備
+
+  Round 3 観点 = 異なる視点での全体俯瞰 / 文書内矛盾 / 概念定義の整合性 / Subject 一貫性 / Objective と AC の乖離 / 内部参照 enum 値の固定リスト欠落。primary 検出 + subagent dispatch + integration + Step 2 同方式。
+
+  Round 3 進めますか?
+```
+
+
+
+## Round3 - dr
+
+```
+⏺ Round 3 Step A: primary detection (Opus)
+
+  requirements.md (Round 1+2 修正後) を本質的観点で再俯瞰。
+
+  重要級 1 件:
+  - review_case と finding の JSONL 出力構造選択 (入れ子 vs フラット): foundation Req 3 AC 3.1 では review_case field に primary_findings / adversarial_findings 配列を含む = 入れ子解釈。一方 design-review Req 5.2 「review_case レコードと配下の finding レコード群を JSONL に append」 = 複数 line append のフラット解釈。JSONL 形式 (1 line = 1 record) では (X) 1 review_case = 1 JSONL line (入れ子) vs (Y) review_case + finding 別 line (フラット、外部キーで紐付け) の 2 案。escalate 必須条件 1 (複数選択肢) 該当、Spec 1 R7 同型の規範前提曖昧化候補。
+
+  軽微 3 件:
+  - Req 7.4 が "the dr-design + dr-log shall ..." の複合 Subject = EARS single Subject 規律違反
+  - Req 3.8 (quota 発動結果記録) と Req 4.6 (post-run measurement metrics) の関係 (包含 / 並列) が明示不足
+  - foundation Req 3 AC 3.2 finding origin field の値範囲 (primary / adversarial enum?) 未定義 → 波及精査対象 (foundation 責務)
+
+  Round 3 Step B: adversarial subagent dispatch (Sonnet)
+
+⏺ Agent(Round 3 adversarial review) Sonnet 4.6
+
+⏺ Round 3 Step C: integration
+
+  primary + subagent 検出を統合。
+
+  Round 3 検出 (重要級 4 + 軽微 1 + 波及精査 3)
+
+  Phase 1 escalate 3 メタパターン全該当 (累計 Round 1-3 で 3 種全件複数回検出)、dev-log 23 パターン 10 件該当。
+
+  重要級 1: review_case と finding の JSONL 出力構造 (入れ子 vs フラット) [primary 検出 + subagent agree]
+
+  問題: foundation Req 3 AC 3.1 review_case field に primary_findings / adversarial_findings 配列 = 入れ子解釈 vs design-review Req 5.2 「review_case
+   と配下 finding 群を append」 = フラット解釈の矛盾。Spec 1 R5 同型。
+
+  選択肢 (両者残存、escalate 必須条件 1 + 4):
+  - Option X (入れ子): 1 review_case = 1 JSONL line、内部に finding 配列含む。foundation 改版不要、JSONL 慣行外
+  - Option Y (フラット): review_case 単独 line + finding 独立 line / finding。JSONL 慣行 + 論文集計容易、foundation Req 3 AC 3.1 の primary_findings
+  値型「finding ID 配列」明確化必要 (波及精査対象)
+
+  推奨 = Y 確証根拠 (5 観点):
+  - (a) 実装難易度: Y 低 (JSONL 慣行)
+  - (b) 設計理念: Y は 1 line = 1 record で論文 figure 1-3 quantitative 集計容易
+  - (c) 運用整合性: Y は parse 容易 (line 独立処理)
+  - (d) boundary 違反: Y は foundation 改版 1 文 (波及精査)、X は実装側非標準慣行
+  - (e) Phase 1 整合: Y で foundation 構造の解釈を明確化
+
+  重要級 2 (subagent finding-R3-01): Req 1 Objective vs AC 乖離
+
+  問題: Objective「手動制御不要」を AC 1.5/1.6 が defer 多用で bound していない。Spec 0 R4 同型 (規範範囲先取り、逆方向)
+
+  修正: AC 1.5/1.6 に minimum bound 追加 (累積累計 default + resume best-effort = Phase A scope では手動 resume 許容)
+
+  重要級 3 (subagent finding-R3-03 + primary 軽微 1): Req 7 Subject 混在 + AC 7.5 重複
+
+  問題: AC 7.4 複合 Subject "dr-design + dr-log"、AC 7.5 が Req 5 AC 5.5 と内容重複かつ Subject が dr-log skill に切替
+
+  修正: AC 7.4 / 7.5 の Subject を dual-reviewer-design-review に統一 + AC 7.5 を sample 1 round 通過確認の evidence 要件として再表記
+
+  重要級 4 (subagent finding-R3-04): trigger_state semantic 揺れ
+
+  問題: foundation Req 3 AC 3.1「実行制御状態」 vs ドラフト v0.3 §2.10.3「観測フラグ (論文 evidence)」の二重解釈。Spec 1 R7 同型
+
+  修正: design-review Req 6.3 補足 = trigger_state は同一 data の両 semantic 包含 (実行制御状態 = data source / 論文化観測フラグ = 用途)
+  を明示。foundation 改版不要
+
+  軽微 1 (subagent finding-R3-05 + primary 軽微 2): Req 3.8 post-run measurement 文言誤読
+
+  修正: AC 3.8 末尾を "(post-run measurement = 記録 timing は post-run、発動自体は structural requirement として実行義務、Req 4 AC 4.6 整合)"
+  と明確化
+
+  波及精査対象 (第 5 ラウンドで処理):
+
+  - foundation Req 3 AC 3.2 difference_type optional 化 (Round 2 から継承)
+  - foundation Req 3 AC 3.2 origin field primary/adversarial enum 追加 (Round 3 R3-02)
+  - foundation Req 3 AC 3.1 primary_findings/adversarial_findings の "finding ID 配列" 明確化 (Round 3 重要級 1、Option Y 採用前提)
+
+  Round 3 結果サマリ
+
+  - finding 統合: primary 4 + subagent 独立 5 = 9 件 → 修正 5 件 + 波及精査 3 件
+  - subagent 致命級独立発見 0 件 (subagent 検出はすべて重要級〜軽微、致命級は Round 1-2 で集中)
+  - disagreement 0 件 (subagent agree on primary 4 件すべて)
+  - Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1-3 累計達成)
+  - trigger_state: 全 applied
+
+  Round 3 Step 2: user 判断
+
+  判断選択肢:
+  - 案 A (推奨一括): Option Y (フラット JSONL) 採用 + 重要級 4 件 + 軽微 1 件 = 全件推奨採用 (修正 5 件適用 + 波及精査 3 件は第 5 ラウンドで処理)
+  - 案 B (foundation 改版最小化): Option X (入れ子 JSONL) 採用 + 他全件推奨 (foundation 改版減 = 波及精査 1 件減、ただし JSONL 慣行外)
+  - 案 C (個別反転 / 異論)
+
+  どれで進めますか?
+```
+
+##### ❯ A
+
+```
+⏺ 案 A 採用。Round 3 修正 7 件を並列 Edit で適用します。
+⏺ Round 3 修正 7 件適用完了 (Req 1.5 / Req 1.6 / Req 3.8 / Req 5.2 / Req 6.3 / Req 7.4 / Req 7.5)。
+
+  Round 3 完了サマリ
+
+  - finding 統合 9 件 → 修正 7 件適用 + 波及精査 3 件 (第 5 ラウンドで処理)
+  - subagent 致命級独立発見 0 件 (集中検出は Round 1-2)
+  - disagreement 0 件
+  - Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1-3 累計 3 度達成)
+  - dev-log 23 パターン 10 件該当
+  - trigger_state: 全 applied
+  - 波及精査対象 (foundation 改版必要、第 5 ラウンドで処理): difference_type optional 化 / origin field enum 追加 / primary_findings 値型 finding ID
+  配列明確化
+
+  Round 4 (B 観点) 着手準備
+
+  Round 4 観点 = 暗黙前提崩壊時の動作仕様 = failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模 (memory feedback_review_rounds.md 規範)。
+
+  - crash recovery / partial failure / permission denied / disk full
+  - 大規模時の cap 接触 (例: 10 ラウンド × N 件 finding の上限)
+  - privacy mode / strict context 分離 / API key / secret leakage
+  - subagent dispatch failure / rate limit / timeout
+  - JSONL 書込 atomicity / 観測可能性
+
+  Round 1-3 でも一部 failure mode は既出 (Req 1.6 / Req 2.4 / Req 5.4) ですが、Round 4 で B 観点を体系的に再検査します。
+
+  Round 4 進めますか?
+```
+
+
+
+## Round4 - dr
+
+```
+⏺ Round 4 Step A: primary detection (Opus)
+
+  B 観点 (failure mode / 並行 / セキュリティ / 観測 / 可逆性 / 規模) で系統的検査。Round 1-3 で既出 (Req 1.6 / Req 2.4 / Req 5.4 / Req 6.7) を除く新規検出。
+
+  重要級 2 件:
+  - 重要級 1: foundation artifact load 失敗時の actionable error 不在: Req 1.1 で foundation 全要素 (Layer 1 framework / 共通 JSON schema / seed_patterns.yaml / fatal_patterns.yaml) load を要求のみ、失敗時の挙動 bound なし。Req 1.6 fatal error にfall through するが「artifact load 失敗」を具体 failure mode として明示なし。foundation 規範 Req 6.7 = "actionable error message (どの artifact が missing / malformed か)" の整合
+  - 重要級 2: resume 時 JSONL append 重複防止 / idempotency 未 bound: Req 1.6 resume best-effort (Round 3 修正済) + Req 5.2 JSONL append-only = 中断再起動時に同 round の finding が duplicate append されるリスク。post-run dedup 戦略 / append timestamp 識別子等の bound 不在
+
+  軽微 2 件:
+  - single + dual mode の 同時実行禁止 / 逐次実行前提 が要件レベル未明示 (Req 5.3 path 分離は実装、ただし同 timestamp 衝突可能性)
+  - subagent prompt injection (design 文書内 instruction 経由 hijack) = Phase A scope = 信頼できる input 前提なので defer OK、Boundary Context Constraints に明示候補
+
+  Round 4 Step B: adversarial subagent dispatch (Sonnet)
+ Round 4 Step C: integration
+
+  primary + subagent 検出統合。subagent から 致命級独立発見 1 件 (5 番目 negative 視点で構成) + 重要級多数。
+
+  Round 4 検出 (致命級 1 + 重要級 5 + 軽微 4 + 修正不要 1)
+
+  致命級 1 (subagent 独立発見、finding-R4-3 + 5 番目 negative 破綻シナリオ): Agent tool strict context 分離の実装可能性検証必須
+
+  問題: Req 2 AC 2.3「strict context 分離形式で subagent prompt に渡す」要件 + Req 2 AC 2.2「Claude Code 内蔵 subagent dispatch (Agent tool の model parameter 切替)」制約の 技術的両立可能性が未検証。Agent tool が parent session の context (history / tool results) に subagent
+  からアクセスできる場合、bias 共有抑制 (本 spec core objective) の根拠が崩れる。Spec 1 R5 同型 (アルゴリズム / 実装メカニズムの不整合)
+
+  5 番目 negative 破綻シナリオ: context 分離不在 → bias 共有 → forced divergence 効果無効 → trigger_state 信頼性失墜 → 論文 figure 3 が「LLM 自己診断信頼性問題」evidence になる → Phase B fork 永続 hold
+
+  escalate 必須条件: 4 (アルゴリズム不整合) + dev-log パターン 4 (実装不可能性) 該当
+
+  選択肢 (dominated 除外後):
+  - Option A (推奨): Req 2 AC 2.3 に "context 分離の実装可能性 = Agent tool context isolation 挙動の technical 検証は design phase 必須、検証失敗時の代替 dispatch 機構 (別 process spawn / 外部 API session isolation 等) は design phase で確定" を bound
+  - Option B: Boundary Context Constraints に依存事項として明示 (検証は推奨で必須化なし)
+  - ~~Option C~~ (dominated): 現状追認 (試験運用 evidence は disagreement 数のみ、技術検証ではない)
+
+  Option A 確証根拠: design phase で必ず technical risk flush + 代替策 bound + bias 共有抑制 core objective を要件レベルで保証
+
+  重要級 1 (primary + subagent 拡張): foundation artifact load 失敗 + load タイミング bound
+
+  修正: Req 1.1 に追加 = "load タイミング = skill 起動時の全 artifact load (Phase A 単純逐次運用)。失敗時 actionable error message (どの artifact が missing / malformed か = foundation Req 6 AC 6.7 整合) で起動中断 (fail-fast、Req 1.6 fatal error 経路と区別)"
+
+  重要級 2 (finding-R4-1): partial observability 保証の規範前提曖昧化
+
+  修正: Req 1.6 補足 = "(partial observability = best-effort、crash / OOM 等 severe failure 時は保証しない、Phase A scope 単純逐次運用前提)"
+
+  重要級 3 (finding-R4-2): atomic write vs append-only JSONL 矛盾 (Spec 1 R7 同型)
+
+  修正: Req 5.4 緩和 = "(atomic 書込 = temp file + rename 等 best-effort、SIGKILL / OOM 等 severe interrupt 時は guarantees なし、append-only との整合 = ラウンド境界 atomic batch flush で解決、design phase 確定)"
+
+  重要級 4 (primary 重要級 2 + subagent 拡張): resume 時 JSONL 重複防止
+
+  修正: Req 5 に新 AC 9 追加 = "When dr-design 中断後 resume または同一 session 内で再起動時, the dr-log skill shall JSONL 重複 record 防止戦略 (review_case ID + round 番号 dedup / post-run analyze 時 dedup 等の選択は design phase で確定) を実装する (cross-session resume は Boundary Context Out 整合)"
+
+  重要級 5 (primary 軽微 1 格上げ + subagent F 群該当): single/dual concurrent JSONL write lock
+
+  修正: Req 5 に新 AC 10 追加 = "While Phase A scope 範囲内, the dual-reviewer-design-review shall single mode JSONL と dual mode JSONL の concurrent write を前提しない (逐次実行のみ、対照実験は逐次 cost 倍、ドラフト v0.3 §3.1 A-2 規範)"
+
+  軽微 1 (finding-R4-4): LLM 自己ラベリング信頼性
+
+  修正: Req 6.3 補足 = "(trigger_state.skipped の意図的 skip vs 記録漏れ識別不能を含む、aggregate 統計信頼性確保 / 個別精度完全信頼不可、論文 limitation 節扱い、ドラフト v0.3 §2.10.3 規範)"
+
+  軽微 2 (finding-R4-5): config.yaml precondition
+
+  修正: Req 1 に新 AC 8 追加 = "If .dual-reviewer/config.yaml が missing / malformed (foundation dr-init skill 未実行 / config 破損等), then the dr-design skill shall 起動を中断し actionable error message を出力する (skill ordering precondition = dr-init → dr-design / dr-log)"
+
+  軽微 3 (finding-R4-6): quota 発動 vs 記録非対称
+
+  修正: Req 3.8 補足 = "(quota 発動は structural requirement で実行義務、記録は JSONL 書込成功時反映、書込失敗時の発動事実は metrics 不可扱い)"
+
+  軽微 4 (primary 軽微 2): subagent prompt injection (Phase A defer)
+
+  修正: Boundary Context Constraints に追加 = "subagent prompt injection 対策 (design 文書内悪意 instruction による hijack 防止) は Phase A scope では信頼できる input (Rwiki repo 内開発文書) 前提で defer、Phase B-2 以降厳密化"
+
+  修正不要 1: Spec 0 R4 軽微 (Req 5.3 naming convention 例)
+
+  "最終確定は design phase" と明示済、bound 内、修正不要
+
+  Round 4 結果サマリ
+
+  - finding 統合 10 件 → 修正候補 9 件 + 修正不要 1 件
+  - subagent 致命級独立発見 1 件 (finding-R4-3 + 5 番目 negative 破綻シナリオ複合 = bias 共有反証 evidence 累計 5 件目)
+  - disagreement 0 件 (subagent agree on primary 4 件すべて)
+  - Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1-4 累計 4 度達成)
+  - dev-log 23 パターン: E 群 13/14/15 + F 群 16/17 + A 群 1 + D 群 11 + H 群 22 + B 群 4 = 多数該当
+  - trigger_state: 全 applied
+
+  Round 4 Step 2: user 判断
+
+  判断選択肢:
+  - 案 A (推奨一括): 致命級 Option A (Agent tool 実装検証 design phase 必須 bound) + 重要級 5 + 軽微 4 = 修正 9 件全件推奨採用
+  - 案 B (致命級緩和): 致命級 Option B (Boundary Context のみ言及、AC bound なし) + 他全件推奨。要件 scope 拡大回避だが core objective 保証弱化
+  - 案 C (個別反転 / 異論)
+
+  どれで進めますか?
+```
+
+##### ❯ A
+
+```
+⏺ 案 A 採用。Round 4 修正 9 件を並列 Edit で適用します。
+⏺ Round 4 修正 9 件適用完了 (Req 1.1 / Req 1.6 / Req 1 AC 8 追加 / Req 2.3 / Req 3.8 / Req 5.4 / Req 5 AC 9+10 追加 / Req 6.3 / Boundary Context Out)。
+
+  Round 4 完了サマリ
+
+  - finding 統合 10 件 → 修正 9 件適用 + 修正不要 1 件
+  - subagent 致命級独立発見 1 件 (finding-R4-3 + 5 番目 negative 破綻シナリオ複合 = bias 共有反証 evidence 累計 5 件目、Round 1-4 で計 2 件)
+  - disagreement 0 件 (subagent agree on primary 4 件すべて、観点拡張あり)
+  - Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1-4 累計 4 度達成)
+  - dev-log 23 パターン: E 群 13/14/15 + F 群 16/17 + A 群 1 + D 群 11 + H 群 22 + B 群 4 = 多数該当
+  - trigger_state: 全 applied
+
+  Round 5 (波及精査) 着手準備
+
+  memory feedback_review_rounds.md 第 5 ラウンド = 修正適用後の最終ガード。3 観点統合 + 5 step 必須手順:
+
+  観点:
+  - (a) 隣接 spec への影響伝達 (foundation / dogfeeding / Spec 6)
+  - (b) drafts / scenarios 整合 (draft v0.3 / brief.md)
+  - (c) 連鎖更新漏れ精査 (Round 1-4 修正で生じた他 AC への波及不整合)
+
+  5 step 必須手順:
+  1. 変更値リスト化 (Round 1-4 修正 30 件)
+  2. 網羅的 grep 検索 (隣接 spec / drafts / 当該 spec 自身)
+  3. Foundation 改版時傘下精査必須 (foundation 3 件改版候補)
+  4. Adjacent Sync TODO 整理 (D-N 通し番号)
+  5. 本セッション内同期判断 (user 判断)
+
+  累積波及精査対象 (Round 1-4 由来):
+  - foundation Req 3 AC 3.2 difference_type optional 化 (Round 2)
+  - foundation Req 3 AC 3.2 origin field primary/adversarial enum 追加 (Round 3)
+  - foundation Req 3 AC 3.1 primary_findings/adversarial_findings の "finding ID 配列" 明確化 (Round 3、フラット JSONL 採用前提)
+  - design-review brief.md の v0.2 → v0.3 参照更新 (Round 2)
+
+  加えて Round 4 修正 9 件分の追加波及精査が必要。
+
+  Round 5 進めますか?
+```
+
+
+
+## Round5 - dr
+
+```
+⏺ Round 5 Step A: primary 網羅的 grep 検索
+
+  Round 1-4 の主要変更値を grep で隣接 spec / drafts / brief.md / 本 spec 自身に対して検索します。
+
+  Searched for 4 patterns (ctrl+o to expand)
+
+⏺ primary grep で大量 stale 参照 + 重要 SSoT 矛盾を検出。次に foundation 改版波及 + brief.md 整合を subagent に independent 検証させます。
+
+  Round 5 Step B: adversarial subagent dispatch (Sonnet)
+
+⏺ Agent(Round 5 adversarial review) Sonnet 4.6
+
+⏺ Round 5 Step C: integration
+
+  primary + subagent 統合。subagent 独立追加 5 件 (うち ERROR 2 件) + D-1〜D-8 全件独立支持。
+
+  Round 5 検出 (重要級多数 + 軽微)
+
+  Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1-5 累計 5 度達成)、dev-log G 群 19/20/21 + H 群 22 該当。
+
+  foundation 改版 3 件 (subagent finding-R5-01 で systemic 観点提起)
+
+  finding-R5-01 (ERROR、subagent 独立): foundation Req 3 AC 1 / AC 2 が type-less field 列挙のみ = D-1/D-2/D-3 の個別修正で十分か、全 field 型注記の systemic 修正かの選択肢。
+
+  dominated 除外後 2 案:
+  - Option α (推奨): D-1 + D-2 + D-3 の 3 件のみ foundation 改版 (intentional defer 解釈、必要箇所 bound)
+  - Option β: foundation Req 3 AC 1 + AC 2 の全 field 型注記 (systemic 完全性、scope 拡大)
+
+  Option α 確証根拠: requirements vs design phase boundary 維持 / 必要箇所のみ修正 / V3 reviewed approve 前タイミング適切
+
+  foundation 改版内容 (Option α 採用前提):
+
+  - D-1: foundation Req 3 AC 2 で difference_type を optional field 化 (single mode JSONL absent 許容)
+  - D-2: foundation Req 3 AC 2 で origin field 値範囲 = primary / adversarial の 2 値 enum 追加
+  - D-3: foundation Req 3 AC 1 で primary_findings / adversarial_findings の値型 = "finding ID 配列" 明確化 (フラット JSONL 採用前提)
+
+  Adjacent Sync (D-4 〜 D-8 + finding-R5-03 拡張)
+
+  stale v0.2 参照 21 箇所 + 内容更新:
+  - D-4: design-review/brief.md (出典 / Current State / Constraints の v0.2 → v0.3、Round 1-4 修正反映は次セッションで brief.md 大改訂可能、本 turn
+  は機械的更新)
+  - D-5: foundation/requirements.md v0.2 → v0.3 (5 箇所 stale、内容は v0.3 に既に整合)
+  - D-6: foundation/brief.md v0.2 → v0.3 (5 箇所 stale)
+  - D-7: dogfeeding/brief.md v0.2 → v0.3 (3 箇所) + L36 「single でも自己ラベリング」を「absent / present binary 識別」に内容反映 (subagent finding-R5-03 強化)
+  - D-8: dogfeeding/requirements.md v0.2 → v0.3 (1 箇所)
+
+  本 spec 内修正 (subagent 独立追加)
+
+  finding-R5-02 (ERROR): Req 3.8 末尾「Req 4 AC 4.6 整合」が Layer 1 base quota / Layer 2 拡張 quota の対象差を曖昧化
+  - 修正: Req 3.8 末尾を「(Layer 1 / Layer 2 双方とも post-run measurement 原則 = 発動は structural requirement で実行義務、記録は JSONL 書込成功時のみ反映)」に明示化
+
+  finding-R5-04 (ERROR): Req 1.1 「foundation Req 6 AC 6.7 整合」が主体・方向の異なるエラー処理 (foundation 提供 vs design-review 出力) を「整合」と表現
+  - 修正: Req 1.1 「foundation Req 6 AC 6.7 整合」を「foundation Req 6 AC 6.7 が提供する error message を利用」に精緻化
+
+  finding-R5-05 (WARN、defer 維持): foundation dev_log/ directory と 2 系統 JSONL 命名方式整合 = design phase で確定範囲、修正不要
+
+  Round 5 結果サマリ
+
+  - finding 統合 13 件 → 修正候補 10 件 (foundation 改版 3 + Adjacent Sync 5 + 本 spec 2) + 修正不要 1 件 (R5-05)
+  - subagent 独立追加 ERROR 2 件 (R5-02 / R5-04 = bias 共有反証 evidence 累計 6 件目以降)
+  - disagreement 0 件 (subagent agree on D-1〜D-8 全件 + systemic 観点拡張)
+  - Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1-5 累計 5 度達成)
+  - trigger_state: 全 applied
+
+  Round 5 Step 2: user 判断
+
+  memory feedback_review_rounds.md Foundation 改版時の傘下精査ルール = foundation 改版したら傘下 spec への影響精査必須。本 turn では design-review
+  (本 spec) は既に Round 2-3 で前提として反映済、dogfeeding は未生成のため生成時に取込で対応。
+
+  判断選択肢:
+  - 案 A (推奨一括): Option α (foundation 個別 3 件改版) + Adjacent Sync 全件 (stale 参照 21 箇所 + 内容更新 1 件) + 本 spec 内修正 2 件 = 本 turn
+  で全件適用 (10 修正)
+  - 案 B (foundation systemic): Option β (foundation 全 field 型注記、scope 拡大) + 他全件
+  - 案 C (個別反転 / 異論)
+
+  どれで進めますか?
+```
+
+##### ❯ A
+
+```
+⏺ 案 A 採用。Round 5 修正 10 件を 2 batch で適用します。
+
+  Batch 1 (並列、5 file の v0.2 → v0.3 一括置換):
+ Batch 2 (並列、foundation D-1/D-2/D-3 + 本 spec R5-02/R5-04 + brief 内容更新):
+
+⏺ Round 5 修正 11 件適用完了 (Batch 1 v0.2→v0.3 一括置換 5 file + Batch 2 個別修正 6 件)。
+
+  Round 5 完了サマリ + 5 ラウンド V3 review 完走
+
+  - Round 5 修正 11 件: foundation 改版 3 件 (D-1+D-2+D-3) + Adjacent Sync v0.2→v0.3 21 箇所 + 内容更新 2 件 (D-7 / design-review/brief.md L89 §2.10.3 → §2.6) + 本 spec 内修正 2 件 (R5-02 / R5-04)
+  - subagent 独立追加 ERROR 2 件 (R5-01 systemic 観点 / R5-04 整合表現)
+  - Phase 1 escalate 3 メタパターン全 3 種該当 (Round 1-5 累計 5 度達成)
+
+  V3 5 ラウンド review 完走サマリ (Round 1-5)
+
+  - 修正適用累計: 41 件 (R1=6 / R2=8 / R3=7 / R4=9 / R5=11)
+  - subagent 致命級独立発見 2 件: Round 2 (single/dual 対照実験設計的両立不能) + Round 4 (Agent tool strict context 分離実装可能性疑念) = bias 共有反証 evidence
+  - disagreement 0 件 (subagent agree on primary 全件)
+  - Phase 1 escalate 3 メタパターン全 3 種該当 5 度達成 (foundation V3 review = 5 度に並ぶ)
+  - subagent 累計 wall-clock: ~16.4 分 (foundation V3 = 7.0 分の約 2 倍、対象 spec の複雑度反映)
+
+  累積波及精査結果
+
+  - foundation 改版 3 件適用: Req 3 AC 1 (primary_findings/adversarial_findings = finding.id 配列) + Req 3 AC 2 (difference_type optional + origin enum 2 値)
+  - stale v0.2 参照 21 箇所 → v0.3 に統一 (5 file 一括置換)
+  - dogfeeding/brief.md L36 = absent/present binary 識別反映
+  - design-review/brief.md L89 = §2.10.3 → §2.6 (forced divergence 素案 section 修正)
+
+  次アクション選択肢 (user 判断必須、memory feedback_approval_required.md 規律)
+
+  - Option 1: design-review/spec.json approvals.requirements.approved = true で本 spec を approve (V3 review 完走 → approve 候補、foundation の Round 5 改版も含めた整合確保済)
+  - Option 2: dogfeeding requirements 着手 (/kiro-spec-requirements dual-reviewer-dogfeeding、TODO 通り「3 spec req 揃えてから一括 approve」方針)
+  - Option 3: 本セッション内容を commit + TODO_NEXT_SESSION.md 更新 (本 turn 終端)
+  - Option 4: 別の判断事項
+
+  どれで進めますか? (foundation 改版 = Round 5 適用済、別 user 承認手続きで approve 切替なら Option 1 と統合、軽微改版として approve 待ち継続なら現状維持)
+```
+
+
+
+
+
+
+
+## 仕様の整合性をとる
