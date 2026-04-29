@@ -400,3 +400,148 @@ Phase 1 で escalate された 3 事例と同型を意図的に探す:
 ---
 
 _本報告書は Spec 3 design 10 ラウンドレビューの試験運用 metrics + 方法論記録を集約。設計レビュー方法論 v3 の正式採用判断材料として、Phase 5b 以降の spec で継続適用し統計を蓄積する予定。_
+
+---
+
+## 8. dual-reviewer 一般化 design 議論 (本セッション継続、5 観点全クローズ)
+
+本 section は、試験運用 evidence 確立後に実施した「dual-reviewer の Rwiki 開発から独立 package への一般化」議論の確定事項を集約する。5 観点 (Layer 1 portable / Layer 2 メタパターン / phase 横断適用 / multi-project bias / subagent 再帰多重化) を順次議論し、すべての確定事項を以下に整理する。
+
+### 8.1 観点 1: Layer 1 portable package + 開発戦略
+
+| 項目 | 確定 |
+|------|------|
+| 名称 | dual-reviewer |
+| 配布 | npm package (`npx dual-reviewer@latest`) + GitHub repo (cc-sdd 同方式) |
+| skill 接頭辞 | `dr-` |
+| 多言語 | `--lang ja/en` 初期 (memory 言語選択)、prompt 英語固定、subagent 出力 = document auto-detect + memory 言語 fallback |
+| 開発戦略 | ハイブリッド = Phase A (Rwiki 内試験運用継続) → Phase B (Spec 6 approve 後独立 fork) → Phase C (Rwiki dogfooding) |
+| MVP | design phase 最初、すぐ tasks phase 追加 |
+| Skills 構造 | `dr-{requirements, design, tasks, impl}` (phase 別) + 共通 utility (`dr-init` / `dr-log` / `dr-extract` / `dr-validate` / `dr-update` / `dr-translate`) |
+| cc-sdd integration | 選択肢 3 ハイブリッド (独立 + cc-sdd integration optional、`--integrate-cc-sdd` flag) |
+| Layer 構造 | Layer 1 (phase 横断 framework) + Layer 2 (phase 別 extension) + Layer 3 (project 固有) |
+| Tier 比率 | post-run measurement only (bias 防止、target setting せず実測のみ JSONL 記録) |
+| Quota | event-triggered 介入の核、phase 別 extension で拡張可能 |
+| requirements quota | R-1 (user 意図確認) / R-2 (domain 不在 escalate) / R-3 (stakeholder mapping) / R-4 (scope creep 検出) initial set、運用調整 |
+| 用語抽象化 | primary reviewer / adversarial reviewer (model 名 = config 抽象化、`primary_model` / `adversarial_model` で将来 model 切替対応) |
+| section 見出し | bilingual 併記 (project 言語 + 英語ラベル) |
+| schema field | 構造ラベル英語固定、自由記述は project 言語 |
+| pattern 翻訳 | transfer 時 LLM 翻訳、terminology.yaml で用語 mapping |
+
+### 8.2 観点 2: continuous learning cycle (Run-Log-Analyze-Update)
+
+#### Cycle 構造
+
+```
+[Run] dual-reviewer 運用 (Layer 1 + Layer 2 + Layer 3)
+   ↓
+[Log] review session の log を JSONL 記録 (dr-log)
+   ↓
+[Analyze] 事後分析で Q1-Q5 必要情報を抽出 (dr-extract / dr-validate、subagent task)
+   ↓
+[Update] 抽出データを dual-reviewer に feedback (dr-update、PR 生成)
+   ↓ (loop back to Run)
+```
+
+| 項目 | 確定 |
+|------|------|
+| cycle 周期 | user 依存 (config 化なし、自動 trigger 機構が将来必要時に再検討) |
+| Update 形式 | ハイブリッド (subagent 提案 + 人間 PR review style apply) |
+| 23 事例の位置付け | yaml 化 (`seed_patterns.yaml`、固有名詞ゼロ + `origin: rwiki-v2-dev-log` で provenance) immutable initial seed として package 同梱 |
+| 具体例 archive | 別 markdown (`seed_patterns_examples.md`、人間可読、同梱) |
+| **domain tag** | **削除** (8 メタ群 + 中程度 granularity で domain 横断、domain 固有性は concrete レベルのみ) |
+| pattern transfer 戦略 | 案 C (16 representative を subagent prompt に embed + 全 archive は別 grep) |
+| terminology.yaml 蓄積 | Phase A (Rwiki Spec 6 中) で開始、~30-50 entries の seed 形成 |
+| Layer 1 機構 | dr-log / dr-extract / dr-validate / dr-update / dr-translate (Layer 1 共通、phase 非依存) |
+| collective learning network | Phase B-2 以降 contribution 機構整備、PR-based / dr-contribute CLI / 段階拡張 |
+| pattern schema (中程度 granularity 例) | 「規範前提が後続 phase に転嫁されている」「アルゴリズム名と実装ライブラリの数学的不一致」「requirements 範囲外の制約を design で確定」「Components 間で sub-section 構造が不均一」 |
+| メタ群 | 8 群 (A 内部矛盾 / B 実装不可能性 / C 責務境界 / D 規範範囲 / E failure / F concurrency / G SSoT / H 選択肢) + primary_group + secondary_groups 二層構造 |
+
+### 8.3 観点 3: 並列処理 + 整合性 Round (論点 b 完全展開)
+
+#### 並列実行構造
+
+```
+[並列実行] Round 1-10 を 10 並列、read-only snapshot mode で各 Round 起動
+   ↓ 各 Round 検出結果を JSON 集約
+[整合性 Round = primary reviewer (Opus) 逐次] 6 task 実施
+   ↓
+[派生 Round 再実行] 必要時のみ、上限 3 回
+   ↓ 収束 or 上限到達
+[修正適用] topological sort 順序で Edit、Tier 1 quota は user 仲裁
+   ↓ または完全逐次 fall back (5 trigger 条件いずれかで発動)
+```
+
+| 項目 | 確定 |
+|------|------|
+| dependency 検出方法 | 案 C: 整合性 Round で post-hoc 判定 (primary reviewer = Opus 担当) |
+| 並列度 | 完全並列 (10 Round 同時) + 派生 Round 再実行 |
+| 整合性 Round 6 task | (1) Deduplicate / (2) Detect dependencies / (3) Detect conflicts / (4) Topologically sort / (5) Predict derived issues / (6) Severity re-evaluation |
+| 派生 Round 件数上限 | なし (件数で制限する意味なし、同時並列再実行) |
+| 派生 Round 回数上限 | **3 回** (95%+ 収束、試験運用 evidence ベース) |
+| fall back trigger 5 条件 | (1) 派生上限 3 回到達 / (2) 整合性 Round 循環依存検出 / (3) 判定不能 case 30%+ / (4) user 手動切替 / (5) LLM 呼出 retry 失敗 |
+| fall back 挙動 | 並列成果保持 + 既適用 Edit 維持 + 残りを Round 1→10 逐次処理 |
+| wall-clock 見積り | 典型 50-100 分 (現状 v3 = 3-4 時間 → 2-4x 短縮)、fall back 発動時 90-150 分 |
+| token cost 増加 | 典型 +10-15%、worst case (fall back) +100-150% |
+
+### 8.4 観点 4: multi-project 適用時の bias 共有対策
+
+| リスク | 緩和策 |
+|--------|--------|
+| **A. 同モデル偏向 (training 由来)** | 完全 mitigation 不可、bias 抑制 quota で構造的対処、観点 5 (subagent 再帰多重化 + 多 vendor model) で深掘り |
+| **B. project 知識混入 (用語 / 言い回し)** | terminology.yaml で用語抽象化強化 (例: `spec` → `specification document`)、contribution review で project 固有用語 regex 自動検出 + maintainer rewrite |
+| **C. collective contribution noise** | maintainer review (quality gate)、Phase B-2 以降で詳細化 (重複 / 抽象度 / domain bias check) |
+| **D. multi-project user memory 混入** | core / seed = 共有 (project 別 memory directory に各々同一複製)、project layer = 完全分離、subagent prompt で「Reference ONLY this project's context」明示 |
+
+### 8.5 観点 5: subagent 再帰多重化
+
+#### 多重化の 3 構造案
+
+| 案 | 内容 | 偏向 mitigation | timing |
+|----|------|----------------|--------|
+| **A: 並列 multi-subagent** | primary が複数 adversarial を同時並列起動、整合性 Round で集約 (majority vote / dispute resolution) | 中-高 | Phase B-2 試験 |
+| B: 階層的 multi-subagent | adversarial 1 → adversarial 2 → ... 階層深さ = bias 抑制度に比例 | 最高 (ただし context 圧迫) | Phase B-3+ experimental |
+| **C: 多 vendor model rotation** | session ごとに adversarial model を rotation (Sonnet → Haiku → Opus 等) | 高 | C1 = Phase B-1 / C2 = Phase B-2 |
+
+#### 案 C の 2 段階実装
+
+| Case | 実装 | API コール | timing |
+|------|------|----------|--------|
+| **C1: Claude family 内 rotation** | Claude Code Agent tool の `model` parameter 切替 | **不要** (Claude Code 内完結) | Phase B-1 release |
+| **C2: Multi-vendor (GPT / Gemini / 他)** | Bash + Python SDK (`anthropic` / `openai` / `google-generativeai`) で外部 API コール | **必要** (API key 管理 + `.env` + git-secrets) | Phase B-2/B-3 |
+
+#### Phase B-1 → B-3 ロードマップ
+
+- **Phase B-1** (release 直後): 現行 v3 (単純 dual review) base + 案 C1 (Claude family rotation) opt-in、API コール不要
+- **Phase B-2** (~6-12 ヶ月後): 案 A (並列 multi-subagent) + 案 C2 (multi-vendor、API コール) opt-in 試験、`--multi-subagent N` / `--multi-vendor` flag
+- **Phase B-3** (~1-2 年後): 統計に基づき default 化、案 A + C2 組合せで bias diversity 最大化、案 B (階層的) は experimental
+
+#### dispute resolution
+
+- 多重化時の disagreement 解消 = `majority_vote` default、必要に応じて `escalate_to_user` (Tier 1 介入)
+
+### 8.6 5 観点全クローズ後の dual-reviewer 設計完成度
+
+| 設計領域 | 確定状態 |
+|---------|---------|
+| package 構造 | ✓ npm + GitHub repo + Skills 構造 + Layer 1/2/3 |
+| cc-sdd integration | ✓ 選択肢 3 ハイブリッド (独立 + integration optional) |
+| Run-Log-Analyze-Update cycle | ✓ 6 dr-* script 構成 |
+| 23 事例 yaml 化 + collective learning roadmap | ✓ Phase A → B-1 → B-2 → B-3 |
+| 並列処理 + 整合性 Round + fall back | ✓ 完全並列 + 6 task 整合性 + 3 回上限 + 5 trigger fall back |
+| multi-project bias 共有対策 | ✓ 4 リスク × 緩和策 |
+| subagent 再帰多重化 ロードマップ | ✓ 案 A / B / C1 / C2 段階展開 |
+| 用語抽象化 + 多言語 | ✓ primary/adversarial reviewer + `--lang` |
+| Quota 設計 (Tier 比率削除) | ✓ event-triggered のみ、bias 防止 |
+
+= **dual-reviewer 一般化 design は完全確定、Phase A 開始 + Phase B 独立 fork 準備完了**。
+
+### 8.7 残課題 (Phase A 以降で実施)
+
+1. **Spec 6 design で v3 試験運用継続**: 統計蓄積 (subagent 致命級発見率 / disagreement 率 / Phase 1 同型 hit rate)
+2. **JSONL 構造化記録 prototype 実装** (dr-log の minimum viable): Spec 6 design レビュー時に試行、Bash + Claude Code Agent tool で実装
+3. **23 事例 yaml retrofit prototype**: `seed_patterns.yaml` 形式への変換、Phase A の最初の作業
+4. **Phase B 独立 fork timing 判断基準の数値化**: Spec 6 完了時に 16 Round 累計 metrics で go/hold 判断
+5. **Phase B-1 npm publish 準備**: package.json / npx 起動 / Skills primitive integration
+6. **Phase B-2 multi-vendor API 統合準備**: OpenAI / Google API client 調査、API key 管理規律
+7. **terminology.yaml seed 形成**: Phase A で 30-50 review_methodology 用語蓄積
