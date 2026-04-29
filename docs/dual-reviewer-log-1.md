@@ -32,9 +32,17 @@
 
 [Round5](##Round5 - dr)
 
+[dual-reviewer-dogfeeding](##dual-reviewer-dogfeeding)
 
+[Round1](##Round1 - dog)
 
+[Round2](##Round2 - dog)
 
+[Round3](##Round3 - dog)
+
+[Round4](##Round4 - dog)
+
+[Round5](##Round5 - dog)
 
 
 
@@ -2442,6 +2450,46 @@
 ```
 
 
+
+## dual-reviewer-dogfeeding
+
+/kiro-spec-requirements dual-reviewer-dogfeeding
+
+
+
+
+
+## Round1-dog
+
+
+
+
+
+## Round2-dog
+
+
+
+
+
+
+
+## Round3-dog
+
+
+
+
+
+
+
+## Round4-dog
+
+
+
+
+
+
+
+## Round5-dog
 
 
 
