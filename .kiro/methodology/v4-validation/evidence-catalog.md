@@ -206,6 +206,7 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 - V4 protocol v0.3 final: `.kiro/methodology/v4-validation/v4-protocol.md`
 - canonical V4 source: `docs/過剰修正バイアス.md`
 - V4 redo broad 中間 evidence: `.kiro/methodology/v4-validation/comparison-report.md`
+- 論文化 data 取得計画 (checkbox tracker): `.kiro/methodology/v4-validation/data-acquisition-plan.md`
 - TODO 引き継ぎ: `TODO_NEXT_SESSION.md` (各セッション末更新、main)
 - dev-log: `docs/dual-reviewer-log-1.md` (1st-7th) + `docs/dual-reviewer-log-2.md` (8th 以降、user 管理)
 - archive branches:
@@ -221,3 +222,4 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 
 - **v0.1** (2026-04-30 11th セッション、本 file 初版): V3 baseline + V4 attempt 1 + V4 redo broad の所在を集約。V3 design phase artifact 3 file の main 削除と同 commit で起草、archive branch + tag による保全 location を明記。将来 evidence の placeholder § を整備。
 - **v0.2** (2026-04-30 11th セッション): §3.9 「11th セッション 3 req 整合性 audit gap-list」追加。main 統合後の 3 req 整合性 audit 結果を反映、主要 contract 整合 OK 確認 + soft gap 4 件 (G1-G4) + 対応 timing を track。
+- **v0.3** (2026-04-30 11th セッション): §6 関連 reference に `data-acquisition-plan.md` を追加 (論文化 data 取得計画 checkbox tracker、本 catalog と並走 file)。
