@@ -151,7 +151,7 @@ H1-H3 達成 = 暫定 V4 default 採用条件、H4 = 運用許容範囲確認。
 - baseline commit: `06fde00`
 - V3 evidence endpoint: tag `v3-evidence-foundation-7th-session` (commit `e6cab03`)
 - V3 適用 archive branch: `archive/v3-foundation-design-7th-session`
-- V4 protocol skeleton: `.kiro/methodology/v4-validation/v4-protocol-draft.md`
+- V4 protocol skeleton: `.kiro/methodology/v4-validation/v4-protocol.md`
 - V4 protocol source 議論: `docs/過剰修正バイアス.md` (user 提供)
 - V3 review 過程記録: `docs/dual-reviewer-log-1.md` (user 管理 dev-log)
 - V3 累計 evidence: `~/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/feedback_design_review_v3_adversarial_subagent.md`
