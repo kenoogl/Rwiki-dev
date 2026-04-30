@@ -122,6 +122,44 @@ _v0.1 / 2026-04-30 (11th セッション初日)_
 - 同時 cleanup (本 commit): V3 design phase artifact 3 file 削除
 - 関連 dev-log: `docs/dual-reviewer-log-2.md` (9th-10th + 11th)
 
+### 3.9 11th セッション 3 req 整合性 audit gap-list
+
+main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 req 整合性 audit を実施 (11th セッション)。Step 5 cross-spec review (10th、commit `29fe2c5`) で処理済の implications を verify、新規 + 残存 gap を以下に記録。
+
+**主要 contract 整合 OK (audit verified)**:
+- 3 subagent 構成 (V4 §1.2 option C) / 4 skills 責務分離 / Step A/B/C/D / 共通 schema 2 軸並列 / Adjacent expectations 双方向 / Phase A scope vs B-1.x demarcation / escalate mapping / dogfeeding 5 条件 / cross-spec reference 実存性
+
+**Soft gap 4 件 (cosmetic / 軽微 semantic、blocking なし)**:
+
+- **G1: `source` field naming overlap (semantic、design phase で対応)**
+  - foundation Req 3 AC2 で `finding.source` enum = `primary | adversarial`
+  - design-review Req 2 AC7 + dogfeeding Req 3 AC4 で `source: primary_self_estimate | judgment_subagent` を 修正必要性判定軸 context で使用
+  - 同名 field が 2 階層で別 enum = 実装混乱可能性
+  - 対応: design phase で `fix_decision.source` 等 nested field 名で disambiguate (foundation Req 3 AC6 consumer 拡張 mechanism 範囲内)
+
+- **G2: `judgment_reviewer` vs `judgment subagent` 用語揺れ (cosmetic、Step 5 T3 既知未対応)**
+  - foundation Req 7 AC1 = `judgment_reviewer` (role 抽象名)
+  - foundation Req 6 + 他 = "judgment subagent" (V4 protocol 用語)
+  - cosmetic 混在
+  - 対応: design phase で文言統一可、または並列容認
+
+- **G3: foundation install location 確定 timing (semantic、design phase で対応)**
+  - foundation Boundary Context = "A-1 prototype 実装時に確定"
+  - design-review Req 5 AC2 = "本 spec (design-review) の design phase で確定"
+  - A-1 = foundation/design-review design phase 含意なら整合、明示されていない
+  - 対応: foundation または design-review いずれかで「A-1 = design+impl phase」明示
+
+- **G4: relative path canonical form (cosmetic)**
+  - foundation `patterns/seed_patterns.yaml` 表記、design-review `./patterns/seed_patterns.yaml` 表記
+  - 意味的等価
+  - 対応: design phase で統一、または現状容認 (POSIX `./` 慣習)
+
+**対応 timing**:
+- G1 + G3: design phase で対応 (A-1 prototype 着手後、foundation または design-review design phase で fix)
+- G2 + G4: cosmetic、design phase 中の自然修正で吸収 OR Phase A 終端 (A-2 完了時) に最終 cleanup
+
+**判断**: 8 月 timeline 厳守 + design phase 実体化前に詳細修正は cost / value 不釣合のため、A-1 prototype 着手前の追加 req 修正は実施せず、本 gap-list で track して design phase で対応する。
+
 ---
 
 ## 4. 将来追加予定 (placeholder)
@@ -182,3 +220,4 @@ _v0.1 / 2026-04-30 (11th セッション初日)_
 ## 変更履歴
 
 - **v0.1** (2026-04-30 11th セッション、本 file 初版): V3 baseline + V4 attempt 1 + V4 redo broad の所在を集約。V3 design phase artifact 3 file の main 削除と同 commit で起草、archive branch + tag による保全 location を明記。将来 evidence の placeholder § を整備。
+- **v0.2** (2026-04-30 11th セッション): §3.9 「11th セッション 3 req 整合性 audit gap-list」追加。main 統合後の 3 req 整合性 audit 結果を反映、主要 contract 整合 OK 確認 + soft gap 4 件 (G1-G4) + 対応 timing を track。
