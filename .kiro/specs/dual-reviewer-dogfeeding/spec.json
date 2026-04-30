@@ -1,12 +1,12 @@
 {
   "feature_name": "dual-reviewer-dogfeeding",
   "created_at": "2026-04-29T13:07:55Z",
-  "updated_at": "2026-04-29T13:07:55Z",
+  "updated_at": "2026-04-30T00:00:00Z",
   "language": "ja",
-  "phase": "initialized",
+  "phase": "requirements-generated",
   "approvals": {
     "requirements": {
-      "generated": false,
+      "generated": true,
       "approved": false
     },
     "design": {
