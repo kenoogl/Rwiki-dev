@@ -1,6 +1,6 @@
 # Brief: dual-reviewer-foundation
 
-> 出典: `.kiro/drafts/dual-reviewer-draft.md` v0.3 §2.1 / §2.7 / §2.9 / §2.10.3 / §3 / §4
+> 出典: `.kiro/drafts/dual-reviewer-draft.md` v0.3 §2.1 / §2.7 / §2.9 / §2.10.3 / §3 / §4 (V4 protocol §1.2 整合 reflect)
 
 ## Problem
 
@@ -8,10 +8,10 @@ dual-reviewer (LLM 設計レビュー方法論 v3 一般化 package) を Layer 1
 
 ## Current State
 
-- ドラフト v0.3 §2.1 で Layer 1 framework 骨組み確定 (Step A/B/C 構造 + bias 抑制 quota + pattern schema + 介入 framework)
-- ドラフト v0.3 §2.9 で 23 事例 retrofit 仕様確定 (`seed_patterns.yaml`、Rwiki 由来、固有名詞付きで OK)
-- ドラフト v0.3 §2.6 で Chappy P0 採用 3 件確定、うち `fatal_patterns.yaml` 8 種固定確定
-- ドラフト v0.3 §2.10.3 で B-1.0 拡張 schema (`miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`) の 4 要素確定
+- ドラフト v0.2 §2.1 で Layer 1 framework 骨組み確定 (Step A/B/C 構造 + bias 抑制 quota + pattern schema + 介入 framework)
+- ドラフト v0.2 §2.9 で 23 事例 retrofit 仕様確定 (`seed_patterns.yaml`、Rwiki 由来、固有名詞付きで OK)
+- ドラフト v0.2 §2.6 で Chappy P0 採用 3 件確定、うち `fatal_patterns.yaml` 8 種固定確定
+- ドラフト v0.2 §2.10.3 で B-1.0 拡張 schema (`miss_type` / `difference_type` / `trigger_state`) の 3 要素確定
 - 実装は未着手 = 全要素を本 spec で実装する
 
 ## Desired Outcome
@@ -26,35 +26,32 @@ dual-reviewer の core 基盤が稼働可能な状態:
 
 ## Approach
 
-- Layer 1 = Step A/B/C 構造 + bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索) + 中程度 granularity の pattern schema を skeleton 実装
-- `dr-init` = project bootstrap、`.dual-reviewer/config.yaml` 生成、Layer 3 (project 固有) の placeholder ディレクトリ生成
-- 共通 JSON schema = review_case / finding / impact_score 3 軸 (severity / fix_cost / downstream_effect) / B-1.0 拡張 schema (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 enum object 各 applied | skipped の 2 値 enum / `phase1_meta_pattern` 3 値 enum + null = norm_range_preemption / doc_impl_inconsistency / norm_premise_ambiguity / null、cross-spec contract 補強 field) を JSON Schema で定義
+- Layer 1 = Step A/B/C/D 構造 (primary detection → adversarial review → judgment → integration、V4 protocol §1.2 整合) + bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索) + 中程度 granularity の pattern schema を skeleton 実装
+- `dr-init` = project bootstrap、`.dual-reviewer/config.yaml` 生成 (`primary_model` / `adversarial_model` / `judgment_model` / `lang` 4 field)、Layer 3 (project 固有) の placeholder ディレクトリ生成
+- 共通 JSON schema = 2 軸並列定義: (a) **失敗構造観測軸** = review_case / finding / impact_score 3 軸 (severity / fix_cost / downstream_effect) + B-1.0 拡張 schema (`miss_type` 6 enum / `difference_type` 6 enum / `trigger_state` 3 string enum field) (b) **修正必要性判定軸** = V4 §1.3 整合 (必要性 5-field = `requirement_link` / `ignored_impact` / `fix_cost` / `scope_expansion` / `uncertainty` + `fix_decision.label` (must_fix/should_fix/do_not_fix) + `recommended_action` (fix_now/leave_as_is/user_decision) + `override_reason`)
 - `seed_patterns.yaml` = 23 事例 retrofit (`feedback_review_judgment_patterns.md` を yaml schema 化、Rwiki 固有名詞付きで OK、generalization は Phase B-1.0 release prep に統合 #3)
 - `fatal_patterns.yaml` = 8 種固定 (sandbox escape / data loss / privilege escalation / infinite retry / deadlock / path traversal / secret leakage / destructive migration)
+- V4 §5.2 prompt template = judgment subagent dispatch 用 canonical 英語 prompt 全文を foundation install location 直下に portable artifact として配置 (downstream `dr-judgment` skill が import)
 
 ## Scope
 
 - **In**:
-  - Layer 1 framework (Step A/B/C + bias 抑制 quota + pattern schema)
-  - `dr-init` skill (project bootstrap)
-  - 共通 JSON schema (review_case / finding / impact_score / B-1.0 拡張 schema 4 要素 = `miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`)
+  - Layer 1 framework (Step A/B/C/D + bias 抑制 quota + pattern schema、V4 protocol §1.2 整合)
+  - `dr-init` skill (project bootstrap、4 skill 構成想定で `judgment_model` config field 含む)
+  - 共通 JSON schema 2 軸並列: (a) 失敗構造観測軸 (review_case / finding / impact_score 3 軸 + B-1.0 拡張 schema 3 要素) (b) 修正必要性判定軸 (V4 §1.3 必要性 5-field + `fix_decision.label` + `recommended_action` + `override_reason`)
   - `seed_patterns.yaml` (23 事例 retrofit、Rwiki 固有名詞付きで OK)
-  - `seed_patterns_examples.md` (人間可読、各 pattern の具体例)
   - `fatal_patterns.yaml` (致命級 8 種固定)
+  - V4 §5.2 prompt template (judgment subagent 用 canonical 英語 prompt 全文、foundation portable artifact、downstream `dr-judgment` import 元)
 - **Out**:
   - `dr-design` skill (`dual-reviewer-design-review` spec)
   - `dr-log` skill (`dual-reviewer-design-review` spec)
+  - `dr-judgment` skill (`dual-reviewer-design-review` spec、本 spec は V4 §5.2 prompt template の foundation portable artifact 配置のみ責務、skill 実装は別 spec)
   - Layer 2 phase extension (design / tasks / req / impl)
   - B-1.x skills (`dr-tasks` / `dr-requirements` / `dr-impl` / `dr-extract` / `dr-validate` / `dr-update` / `dr-translate`)
   - cycle automation (Run-Log-Analyze-Update)
   - 並列処理 + 整合性 Round
   - multi-vendor / multi-subagent / hypothesis generator (B-2 以降)
   - B-1.x 拡張 schema (`decision_path` / `skipped_alternatives` / `bias_signal`)
-  - Spec 6 dogfeeding 適用 + 対照実験 (`dual-reviewer-dogfeeding` 担当)
-  - forced divergence prompt template (`dual-reviewer-design-review` 内 adversarial subagent prompt の責務)
-  - `impact_score` 生成・記録 logic (`dual-reviewer-design-review` 内 `dr-log` skill、本 spec は schema 定義のみ)
-  - generalization (固有名詞除去) / npm package 化 (Phase B-1.0 release prep)
-  - `--integrate-cc-sdd` flag 本格実装 (B-1.3 担当、B-1.0 では `dr-init` skill placeholder のみ)
 
 ## Boundary Candidates
 
@@ -87,5 +84,6 @@ dual-reviewer の core 基盤が稼働可能な状態:
 - Phase A scope = Rwiki repo 内 prototype 段階、Phase B 独立 fork は本 spec 対象外
 - 配置: `scripts/dual_reviewer_prototype/` または `.kiro/specs/dual-reviewer/prototype/` (A-1 prototype 実装時に確定)
 - 23 事例 retrofit は Rwiki 固有名詞付きで OK (generalization は Phase B-1.0 release prep に統合、#3 採用)
-- B-1.0 minimum scope (3 skills の 1 つ = `dr-init`)、残り 7 skills は B-1.x 段階追加
+- B-1.0 minimum scope (4 skills の 1 つ = `dr-init`)、残り 6 skills は B-1.x 段階追加 (4 skills = `dr-init` + `dr-design` + `dr-log` + `dr-judgment`、V4 protocol §1.2 整合)
+- subagent 構成 = 3 役 (`primary_reviewer` Opus + `adversarial_reviewer` Sonnet + `judgment_reviewer` Sonnet、V4 §1.2 option C)
 - `terminology.yaml` seed entries 蓄積は A-2 dogfeeding 中、目標 30-50 は B-1.2 まで延伸

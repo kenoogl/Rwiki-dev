@@ -1,161 +1,137 @@
 # Requirements Document
 
-## Project Description (Input)
-
-dual-reviewer の主機能 = 設計 phase の 10 ラウンド review を adversarial subagent 構成で実行 + Chappy P0 機能 (`fatal_patterns.yaml` 強制照合 / forced divergence prompt / `impact_score`) 組込 + JSONL 構造化記録 (`impact_score` 3 軸 + B-1.0 拡張 schema 3 要素)。`dual-reviewer-foundation` の Layer 1 を活用しつつ Layer 2 design extension を実装し、Spec 6 dogfeeding で運用可能なレベルの prototype を構築する必要。
-
-ドラフト v0.3 (`.kiro/drafts/dual-reviewer-draft.md`) §2.1 で Layer 2 design extension 仕様確定 (10 ラウンド + Phase 1 escalate 3 メタパターン)、§2.6 で Chappy P0 3 件採用確定、§2.7 で Quota 設計確定、§2.10.3 で B-1.0 拡張 schema 3 要素確定。`dual-reviewer-foundation` spec で共通 schema + Layer 1 framework + seed/fatal patterns yaml 整備予定、`dr-design` / `dr-log` skill は未実装。
-
-本 spec は dual-reviewer の主 review 機能 = `dr-design` skill (10 ラウンド orchestration + adversarial subagent dispatch + Chappy P0 全機能) + `dr-log` skill (JSONL 構造化記録 + impact_score 3 軸 + B-1.0 拡張 schema) + Layer 2 design extension を実装し、Spec 6 dogfeeding (`dual-reviewer-dogfeeding` spec) に適用可能なレベル (sample 1 round 通過確認まで) で動作させる。Phase A scope = Rwiki repo 内 prototype 段階、subagent 構成 = 単純 dual のみ (Opus + Sonnet)。詳細は brief.md (`.kiro/specs/dual-reviewer-design-review/brief.md`) 参照。
-
 ## Introduction
 
-dual-reviewer-design-review は dual-reviewer (LLM 設計レビュー方法論 v3 一般化 package) の Layer 2 design extension および主 review 機能を提供する。`dual-reviewer-foundation` が提供する Layer 1 framework + 共通 JSON schema + `seed_patterns.yaml` + `fatal_patterns.yaml` + `dr-init` skill を活用し、`dr-design` skill (10 ラウンド orchestration + adversarial subagent dispatch + Chappy P0 全機能 + B-1.0 拡張 schema 自己ラベリング) と `dr-log` skill (JSONL 構造化記録) を実装する。`dual-reviewer-dogfeeding` (Spec 6 適用 + 対照実験) が依存する全要素を contract として公開する。Phase A scope (Rwiki repo 内 prototype 段階) で動作し、Phase B 独立 fork は本 spec の対象外。subagent 構成 = 単純 dual のみ (primary = Opus + adversarial = Sonnet)、Claude family rotation / multi-vendor / 並列 multi-subagent / hypothesis generator role 3 体構成は別 spec 担当。
+`dual-reviewer-design-review` は dual-reviewer (LLM 設計レビュー方法論 v3 一般化 package) の主 review 機能を提供する spec である。本 spec の成果物 = `dr-design` skill + `dr-log` skill + `dr-judgment` skill + Layer 2 design extension + forced_divergence prompt template (最終文言確定 = 本 spec design phase 責務)。これらが揃って初めて `dual-reviewer-dogfeeding` spec が Spec 6 (rwiki-v2-perspective-generation) design に dual-reviewer prototype を実適用 + 3 系統対照実験を実行できる。
 
-primary 参照点:
+Phase A scope = Rwiki repo 内 prototype 段階。B-1.0 minimum 4 skills (`dr-init` / `dr-design` / `dr-log` / `dr-judgment`、V4 protocol §1.2 option C 整合 = 3 subagent 構成) のうち本 spec は 3 skills (`dr-design` / `dr-log` / `dr-judgment`) を担当し、残 1 skill (`dr-init`) は `dual-reviewer-foundation` spec で実装される前提。
 
-- ドラフト v0.3 = `.kiro/drafts/dual-reviewer-draft.md` §2.1 / §2.3 / §2.6 / §2.7 / §2.10 / §3 / §4
-- memory = `~/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/feedback_design_review_v3_generalization_design.md` §1-14
-- design phase 10 ラウンド本質 = memory `feedback_design_review.md` (中庸統合版)
-- Step 1a/1b + 4 重検査 + Step 1b-v 自動深掘り = memory `feedback_review_step_redesign.md`
-- 致命級 anti-pattern + Chappy P0 = ドラフト v0.3 §2.6
-- 試験運用 evidence = `.kiro/methodology/dogfeeding/spec-3/round_5-10_subagent_adversarial.md` §1-8
+本 spec は V4 protocol v0.3 final (`.kiro/methodology/v4-validation/v4-protocol.md`) と整合する: 3 subagent 構成 (primary + adversarial + judgment) を skill orchestration に組込み、必要性 5-field schema + 5 条件判定ルール (V4 §1.4.1) + semi-mechanical mapping default 7 種 (V4 §1.4.2) + 3 ラベル分類 (must_fix / should_fix / do_not_fix、V4 §1.6) + recommended_action + override_reason を全 finding に必須付与し、forced_divergence (adversarial 担当、結論成立性試行) と修正否定試行 (judgment 担当、V4 §5.2 既存組込、修正 proposal 必要性否定) を役割分離する (判定 5-C 整合)。
 
 ## Boundary Context
 
-- **In scope**:
-  - `dr-design` skill (10 ラウンド orchestration + Layer 2 design extension)
-  - `dr-log` skill (JSONL 構造化記録、`dual-reviewer-foundation` 共通 JSON schema 準拠)
-  - Chappy P0 3 件全件実装:
-    - `fatal_patterns.yaml` 強制照合 quota の発動 logic
-    - forced divergence prompt template (adversarial subagent prompt の 1 行追加、文言は design phase で最終確定)
-    - `impact_score` 3 軸生成・記録 logic (post-run JSONL)
-  - B-1.0 拡張 schema 4 要素の LLM 自己ラベリング prompt + 記録 logic (`miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`)
-  - Layer 2 design phase 拡張 quota (Layer 1 5 種を継承 + 厳しく検証 5 種 + escalate 必須条件 5 種)
-  - Step 1a/1b 分離 (軽微 / 構造的) + Step 1b-v 自動深掘り (1 回目 5 観点 + 2 回目 5 切り口、2 回目 5 番目 negative 視点強制発動)
-  - Phase 1 escalate 3 メタパターン照合
-  - single mode (primary reviewer のみ) / dual mode (primary + adversarial) 切替 = `dual-reviewer-dogfeeding` 対照実験用
-- **Out of scope**:
-  - `dual-reviewer-foundation` 担当: Layer 1 framework + 共通 JSON schema + `seed_patterns.yaml` + `seed_patterns_examples.md` + `fatal_patterns.yaml` + `dr-init` skill
-  - `dual-reviewer-dogfeeding` 担当: Spec 6 (`rwiki-v2-perspective-generation`) への dual-reviewer 適用 + 対照実験 (single vs dual) + 比較 metric 抽出 + Phase B fork go/hold 判断
-  - tasks / requirements / implementation phase の review 実行 (B-1.x で別 spec)
-  - cycle automation (Run-Log-Analyze-Update、`dr-extract` / `dr-update`、B-1.2)
-  - multi-vendor support (GPT/Gemini/etc.、B-2 以降)
-  - 並列 multi-subagent + hypothesis generator role 3 体構成 (B-2 以降)
-  - 並列処理 + 整合性 Round 6 task の本格実装 (現状は単純 dual の逐次運用、本格実装は B-1.x 以降)
-  - B-1.x 拡張 schema 実装 (`decision_path` / `skipped_alternatives` / `bias_signal`)
-  - generalization (固有名詞除去) / npm package 化 (Phase B-1.0 release prep)
-  - 論文ドラフト執筆 (Phase 3 = 7-8月、別 effort)
-  - dr-design / dr-log の cross-session 連携 (本 spec 範囲では同一 session 内 in-memory 渡し前提、cross-session resume は B-1.x 以降検討、ドラフト v0.3 §3.1 A-1 規範)
-  - subagent prompt injection 対策 (design 文書内悪意 instruction による subagent hijack 防止) = Phase A scope では信頼できる input (Rwiki repo 内開発文書) 前提で defer、Phase B-2 multi-vendor 以降に厳密化
-- **Adjacent expectations**:
-  - `dual-reviewer-foundation` が以下の全要素を stable interface で公開していること: Layer 1 framework / 共通 JSON schema (`review_case` / `finding` / `impact_score` 3 軸 / `miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`) / `seed_patterns.yaml` / `seed_patterns_examples.md` / `fatal_patterns.yaml` / `dr-init` skill (`.claude/skills/dr-init/SKILL.md` 形式)
-  - `dual-reviewer-dogfeeding` が本 spec の `dr-design` / `dr-log` skill を Spec 6 design に適用し、両 skill が公開する artifact (skill SKILL.md + JSONL 出力 contract) のみを依存対象とする
-  - Spec 6 (`rwiki-v2-perspective-generation`) は本 spec が直接適用しない (適用は dogfeeding spec の責務)。本 spec は Spec 6 design 内容に依存しない
-  - Rwiki 既存 spec (Spec 0-7) と機能的に独立し cross-spec dependency を持たない。Phase A 期間中は Rwiki repo 内 prototype 配置のみで Rwiki spec を改変しない
+- **In scope** (本 spec で提供):
+  - `dr-design` skill (10 ラウンド orchestration + Layer 2 design extension + adversarial subagent dispatch + judgment subagent dispatch + Chappy P0 全機能 + V4 §1 機能 5 件 + Step 1a/1b/1b-v/1c 分離 + escalate 必須条件 5 種)
+  - `dr-log` skill (JSONL 構造化記録 + foundation 提供 共通 JSON schema 2 軸並列 validate)
+  - `dr-judgment` skill (V4 §5.2 prompt template 内蔵 + judgment subagent dispatch + 必要性 5-field 評価 + 5 条件判定ルール + semi-mechanical mapping default 7 種 + 3 ラベル分類 + recommended_action + override_reason 出力)
+  - Layer 2 design extension (10 ラウンド + Phase 1 escalate 3 メタパターン + design phase 固有 bias 抑制 quota)
+  - Foundation Integration (`dual-reviewer-foundation` 提供の Layer 1 framework / 共通 schema 2 軸並列 / seed_patterns.yaml / fatal_patterns.yaml / V4 §5.2 prompt template / override 階層 を import 規約に従い使用)
+  - forced_divergence prompt template (最終文言確定、英語固定、本 spec design phase 責務 = foundation Req 7 AC4 整合)
+  - Phase A Scope Constraints (3 役 subagent / 単純逐次運用 / B-1.0 minimum schema / sample 1 round 通過レベル / Phase B fork out of scope)
+
+- **Out of scope** (本 spec 対象外):
+  - foundation 自体 (`dual-reviewer-foundation` spec、Layer 1 framework + 共通 schema + seed/fatal patterns yaml + V4 §5.2 prompt template + dr-init skill の責務)
+  - dogfeeding 適用 (`dual-reviewer-dogfeeding` spec、Spec 6 への実適用 + 3 系統対照実験 = single + dual + dual+judgment)
+  - tasks / requirements / implementation phase の review extension (B-1.x で別 spec)
+  - cycle automation skills (`dr-extract` / `dr-update`、B-1.2 release lifecycle)
+  - multi-vendor support (GPT / Gemini 等、B-2 release lifecycle)
+  - hypothesis generator role 3 体構成 (Chappy 保留 1、B-2 以降)
+  - B-1.x 拡張 schema (`decision_path` / `skipped_alternatives` / `bias_signal`、自由記述 + 内省、A-2 後半 〜 Phase 3 で実装)
+  - 並列処理本格実装 + 整合性 Round 6 task (B-1.x 以降)
+  - Phase B 独立 fork (npm package 化 / GitHub repo 公開 / collective learning network)
+  - 全 10 ラウンド完走 + 対照実験 (`dual-reviewer-dogfeeding` spec 責務、本 spec の動作確認は sample 1 round 通過レベル)
+
+- **Adjacent expectations** (隣接 spec / 既存 system からの期待):
+  - `dual-reviewer-foundation` から以下を import する前提: (a) Layer 1 framework (Step A/B/C/D + bias 抑制 quota + pattern schema + override 階層 Layer 3 > Layer 2 > Layer 1) (b) 共通 JSON schema 2 軸並列 (失敗構造観測軸 3 要素 + 修正必要性判定軸 V4 §1.3 整合) (c) `./patterns/seed_patterns.yaml` 23 件 (d) `./patterns/fatal_patterns.yaml` 8 種固定 (e) V4 §5.2 judgment subagent prompt template (foundation portable artifact、`./prompts/judgment_subagent_prompt.txt`) (f) JSON Schema files (`./schemas/` directory)
+  - `dual-reviewer-dogfeeding` は本 spec の 3 skills (`dr-design` / `dr-log` / `dr-judgment`) + 本 spec design phase で確定する forced_divergence prompt template (Req 6 整合、英語固定) を Spec 6 design に適用 + 3 系統対照実験 (single + dual + dual+judgment) で運用する前提、本 spec は 3 skills + forced_divergence prompt template の動作可能性確認 (sample 1 round 通過) のみを責務とする
+  - 既存 Rwiki spec (Spec 0-7) とは機能的に独立、Spec 6 への実適用は本 spec ではなく `dual-reviewer-dogfeeding` spec で実施 (本 spec は適用 mechanism + skill 動作確認のみ提供)
 
 ## Requirements
 
-### Requirement 1: dr-design skill による 10 ラウンド orchestration
+### Requirement 1: dr-design Skill — 10 ラウンド orchestration + Layer 2 design extension + V4 §1 機能組込
 
-**Objective:** dual-reviewer 利用者として、`dr-design` skill 1 つで設計 review の 10 ラウンドを完走したい。これにより、Layer 2 design extension の中核 = 10 ラウンドの全件適用 + 各ラウンドの Step A/B/C 構造駆動が単一 skill で実現され、利用者が手動でラウンド進行を制御する必要がなくなる。
-
-#### Acceptance Criteria
-
-1. When `dr-design` skill が起動される, the dr-design skill shall `dual-reviewer-foundation` が公開する Layer 1 framework + 共通 JSON schema + `seed_patterns.yaml` + `fatal_patterns.yaml` を起動時に全件 import / load する (各ラウンド前 lazy load は scope 外、Phase A 単純逐次運用)。If 起動時 load に失敗, then the dr-design skill shall actionable error message (どの artifact が missing / malformed か、foundation Req 6 AC 6.7 が提供する error message を利用 = foundation 側責務 = error 提供 / 本 spec 責務 = error 出力 + 起動中断) を出力し起動を fail-fast 中断する (Req 1.6 fatal error 経路と区別)
-2. The dr-design skill shall 10 ラウンド (中庸統合版、ラウンド構成詳細は design phase で確定、memory `feedback_design_review.md` 規範) を全件実施する (適応的減少なし)
-3. While 各ラウンド実行中, the dr-design skill shall foundation Layer 1 framework が定義する Step A → Step B → Step C の順 (primary detection → adversarial review → primary reviewer による integration) で実行する
-4. When ラウンド完了時, the dr-design skill shall 当該ラウンドの finding 群を foundation 共通 JSON schema 準拠形式で `dr-log` skill に渡す
-5. The dr-design skill shall ラウンド間で前ラウンドの finding を継承し累積結果を維持する (累積累計を default 形式とし、ラウンド別分離 / その他形式は design phase で確定)
-6. If 10 ラウンドの途中で fatal error (subagent dispatch 失敗 / config 不正 / artifact load 失敗 等、具体 failure mode 列挙は design phase で確定) 発生, then the dr-design skill shall 部分結果を保持 (中断時点までの finding 群を dr-log 経由で JSONL に partial flush するか in-memory のみで保持するかの選択は design phase で確定、dogfeeding spec が partial 結果を観測可能であることは要件) しつつ actionable error message を出力し残ラウンドを中断する (中断後の resume は best-effort = Phase A scope では部分結果保持で OK、自動 resume は scope 外、design phase で具体方式確定。partial observability は best-effort = crash / OOM 等 severe failure 時は guarantees なし、Phase A scope 単純逐次運用前提)
-7. The dr-design skill shall `.claude/skills/dr-design/SKILL.md` 形式 (foundation `dr-init` と同形式) で公開され downstream spec から `/dr-design` で起動可能である
-8. If `.dual-reviewer/config.yaml` が missing / malformed (foundation `dr-init` skill 未実行 / config 破損等), then the dr-design skill shall 起動を中断し actionable error message (foundation `dr-init` 未実行 / config 修正の指示) を出力する (skill ordering precondition = `dr-init` → `dr-design` / `dr-log`)
-9. The dr-design skill shall 同一 review session 内の 10 ラウンドで input 文書 (review 対象 design.md) snapshot を session 開始時点に固定する (session 中の対象文書改訂は次 session 適用時の input として反映、`dual-reviewer-dogfeeding` Req 1 AC 1 (c) の cross-mode 同一 snapshot 要請と integration、ラウンド間で同一 input を保証することで 10 ラウンドの累積結果が同 spec 同 version review 結果として valid)
-
-### Requirement 2: adversarial subagent dispatch + single/dual mode 切替
-
-**Objective:** dual-reviewer 利用者として、primary reviewer (Opus) と adversarial reviewer (Sonnet) を独立に起動して bias 共有を構造的に抑制したい。また、`dual-reviewer-dogfeeding` 対照実験のため single mode (primary のみ) と dual mode (primary + adversarial) の切替が可能である必要がある。
+**Objective:** As a dual-reviewer 利用者 (design phase review を実行する spec author), I want `dr-design` skill が 10 ラウンド review を Step A (primary detection) → Step B (adversarial review) → Step C (judgment) → Step D (integration) の V4 §1.2 option C 構造で orchestration してほしい, so that Layer 1 framework が定義する review pipeline + V4 §1 全機能 5 件が design phase の実 review session で稼働する.
 
 #### Acceptance Criteria
 
-1. The dr-design skill shall primary reviewer (`primary_model`) と adversarial reviewer (`adversarial_model`) の 2 役を `.dual-reviewer/config.yaml` から決定する
-2. When Step B (adversarial review) を実行する, the dr-design skill shall Claude Code 内蔵 subagent dispatch (Agent tool の `model` parameter 切替) を使用し外部 API call は実行しない (Phase A 制約 = 単純 dual のみ、Claude family rotation / multi-vendor は B-1.x / B-2 で別途)
-3. While adversarial subagent 起動中, the dr-design skill shall primary reviewer の context (round 番号 / primary 検出 finding / 対象 design 文書) を strict context 分離形式で subagent prompt に渡す (multi-project 知識混入回避、ドラフト v0.3 §2.4 規範。strict context 分離の実装可能性 = Claude Code Agent tool の context isolation 挙動の technical 検証は design phase 必須、検証失敗時の代替 dispatch 機構 = 別 process spawn / 外部 API session isolation 等 = は design phase で確定。bias 共有抑制が本 spec の core objective であり、context 分離が技術的に保証されない場合は V3 試験運用 evidence の解釈再評価が必要)
-4. If adversarial subagent dispatch が失敗 (rate limit / model 不在 / timeout 等、具体 failure mode 列挙と判定基準は design phase で確定), then the dr-design skill shall actionable error message を出力し当該ラウンドの fall back 挙動 (primary reviewer のみで継続 vs ラウンド中断、選択は design phase で確定) を実行する
-5. Where 利用 context が single mode (adversarial subagent 無効) を要求する場合, the dr-design skill shall skill argument 経由 (具体 flag 名は design phase で確定、Phase A scope では foundation `config.yaml` schema は単純 dual 範囲で不変前提、最終 contract 確認は design phase で実施) で adversarial subagent dispatch を skip し primary reviewer 単独で 10 ラウンドを完走する (`dual-reviewer-dogfeeding` 対照実験用、ドラフト v0.3 §3.1 A-2 規範)
-6. While single mode 実行中, the dr-design skill shall dual mode と同一の Layer 2 quota (Step 1a/1b + Step 1b-v + Phase 1 escalate 3 メタパターン照合 + 厳しく検証 5 種 + escalate 必須条件 5 種 + `fatal_patterns.yaml` 強制照合) を発動する (forced divergence prompt は adversarial subagent 不在のため発動 skip = `trigger_state.alternative_considered: skipped` で記録)
+1. When user が design phase review を起動した場合, the dr-design skill shall foundation 提供の Layer 1 framework + 本 spec の Layer 2 design extension を import し、Round 1 から Round 10 までを Step A (primary detection) → Step B (adversarial review) → Step C (judgment) → Step D (integration) の V4 §1.2 option C 構造に従って sequential に実行する.
+2. The dr-design skill shall, 各ラウンドの Step A (primary detection) で primary_reviewer (= `config.yaml` `primary_model` で指定された model) を使用し、Step 1a (軽微検出) + Step 1b (構造的検出 5 重検査 = 二重逆算 / Phase 1 パターン / dev-log patterns 照合 [= foundation 提供 `seed_patterns.yaml` 23 件 (foundation Req 4 AC1 整合) + Layer 3 `extracted_patterns.yaml` 蓄積分 (Phase A 開始時は空、project cycle で蓄積)] / 自己診断 / 内部論理整合) + Step 1b-v (自動深掘り判定、5 観点 + 5 切り口 negative 視点) を実行する.
+3. The dr-design skill shall, 各ラウンドの Step B (adversarial review) で adversarial_reviewer subagent (= `config.yaml` `adversarial_model` で指定された model) を Claude Code Agent tool 経由で dispatch し、独立 Step 1b detection + forced_divergence prompt (Req 6 で確定する英語 prompt template、本 spec install location 直下から動的読み込み) + V4 §1.5 修正否定試行 prompt (英語固定 3 行、本 spec design phase で配置先を確定 = adversarial subagent dispatch 時 inline embed または `prompts/` 配下に別 txt として配置のいずれか、design phase で具体規約を確定) を実行する.
+4. The dr-design skill shall, 各ラウンドの Step C (judgment) で `dr-judgment` skill を起動し (Req 3 整合、起動 mechanism = Claude Code skill invocation system 経由 = SKILL.md を持つ skill として invoke、本 spec design phase で具体 invocation pattern を確定)、judgment_reviewer subagent dispatch + 必要性 5-field 評価 + 5 条件判定ルール + 3 ラベル分類 + recommended_action + override_reason 確定を実行する; dr-judgment skill からの judgment 出力 yaml は Req 3 AC8 規定の返却 mechanism (skill stdout 経由 default) で受領し、Step D integration の merge input として直接参照する.
+5. The dr-design skill shall, 各ラウンドの Step D (integration) で primary 検出 + adversarial 検出 + judgment subagent 出力 yaml を merge し、**user 提示用に** V4 §2.5 三ラベル提示方式 (must_fix bulk apply default / do_not_fix bulk skip default / should_fix individual review) で構造化する; ここでの「bulk apply / bulk skip default」は user が選択する操作 option を意味し、dr-design skill が自動で apply / skip を実行することを禁止する (V4 §2.5 user oversight 原則整合 = user 判断必須、自動実行は V4 設計核を破壊するため AC レベルで禁止).
+6. The dr-design skill shall, Layer 1 framework が定義する bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索 / 厳しく検証 5 種) を全ラウンドで event-triggered で発動し、Phase 1 escalate 3 メタパターン (規範範囲先取り / 構造的不均一 / 文書 vs 実装不整合) を Step 1b の 5 重検査内で必ず照合する.
+7. The dr-design skill shall, Chappy P0 全機能 (foundation 提供の `fatal_patterns.yaml` 8 種強制照合 quota + `impact_score` 3 軸付与 + forced_divergence prompt) を全ラウンドで実行する; ここで Layer 1 framework (foundation 責務) は data + facility を first-class facility として expose し (foundation Req 1 AC7 整合)、Layer 2 design extension (本 spec 責務) は当該 quota を design phase 実行時に invoke する (= provide vs execute の役割分離、foundation Req 5 AC5 整合 = matching logic は本 spec 責務).
+8. The dr-design skill shall, escalate 必須条件 5 種 (内部矛盾 / 実装不可能性 / 責務境界 / 規範範囲 / 複数選択肢 trade-off 等) を Step 1b-v 自動深掘り内 + Step 1c judgment 内で必ず適用し、`uncertainty=high` 等の trigger に応じて user 介入機会として escalate する.
+9. The dr-design skill shall, Round 1-10 を単純 sequential 運用 (Round 1 → Round 2 → ... → Round 10) で動作させ、並列処理本格実装 + 整合性 Round 6 task は本 spec scope 外とする (B-1.x 以降の別 spec で実装).
 
-### Requirement 3: Layer 2 design phase 拡張 quota の発動
+### Requirement 2: dr-log Skill — JSONL 構造化記録 + 共通 schema 2 軸並列 validate
 
-**Objective:** dual-reviewer 利用者として、foundation Layer 1 base quota に加え design phase 固有の拡張 quota (厳しく検証 5 種 / escalate 必須条件 5 種 / Step 1a/1b 分離 / Step 1b-v 自動深掘り / Phase 1 escalate 3 メタパターン) が各ラウンドで発動することで、設計レビューの bias 構造的抑制を Layer 1 base 以上に強化したい。
-
-#### Acceptance Criteria
-
-1. The dr-design skill shall foundation Layer 1 framework が定義する bias 抑制 quota 5 種 (formal challenge / 検出漏れ / Phase 1 同型探索 / `fatal_patterns.yaml` 強制照合 / forced divergence) を継承し各ラウンドで発動する
-2. The dr-design skill shall 厳しく検証 5 種 (本質的観点 5 種 = a 規範範囲先取り / b 構造的不均一 / c 文書 vs 実装不整合 / d 規範前提曖昧化 / e 単純誤記 grep、memory `feedback_review_step_redesign.md` 規範) を各ラウンドで default 発動する
-3. The dr-design skill shall escalate 必須条件 5 種 (具体的種別と発動 logic は design phase で確定、memory `feedback_review_step_redesign.md` 規範) を各ラウンドで照合する
-4. While Step 1a (軽微指摘) 段階, the dr-design skill shall 軽微 fix のみを記録する (構造的指摘との混在禁止)
-5. While Step 1b (構造的指摘) 段階, the dr-design skill shall 4 重検査 (二重逆算 + Phase 1 パターンマッチング + dev-log 23 パターン照合 (foundation `seed_patterns.yaml` 経由) + 自己診断義務、memory `feedback_review_step_redesign.md` 規範) を実行する
-6. When Step 1b で深掘り判定基準 (具体基準は design phase で確定) を満たす, the dr-design skill shall Step 1b-v 自動深掘りを発動する (1 回目 = 5 観点深掘り、2 回目 = 5 切り口深掘り、2 回目の 5 番目 = negative 視点 = skim 禁止 + 強制発動義務化、memory `feedback_review_step_redesign.md` 規範)
-7. If 各ラウンドで Phase 1 escalate 3 メタパターン (Spec 0 R4 / Spec 1 R5 / Spec 1 R7 の同型、ドラフト v0.3 §2.1 規範) を検出, then the dr-design skill shall escalate 必須として user 判断機会を確保する (人為的承認待機の具体形式 = blocking prompt / log 記録 + 後続 flag 等は design phase で確定)
-8. When Layer 2 拡張 quota の各 quota が発動された, the dr-design skill shall 発動結果 (検出 finding / skip 理由) を `dr-log` 経由で JSONL に記録する (post-run measurement = 記録 timing は post-run、Layer 1 / Layer 2 双方とも同原則 = 発動は structural requirement で実行義務 / 記録は JSONL 書込成功時のみ反映 / 書込失敗時の発動事実は metrics 不可扱い、Goodhart's Law 回避のため pre-run target setting は実装しない、ドラフト v0.3 §2.7 規範)
-
-### Requirement 4: Chappy P0 機能の組込発動
-
-**Objective:** dual-reviewer 利用者として、Chappy review で P0 採用された 3 機能 (`fatal_patterns.yaml` 強制照合 / forced divergence prompt / `impact_score` 3 軸) が design review 中に発動・記録され、致命級漏れと bias 共有疑念に対する構造的抑制が確保される。
+**Objective:** As a 論文化 + cycle 学習を行う maintainer, I want `dr-log` skill が全 review session の finding を foundation 提供の共通 JSON schema (2 軸並列) で validate しつつ JSONL 構造化記録してほしい, so that 失敗構造観測軸 (研究 metric) と修正必要性判定軸 (judgment 出力) の両方が後段 analyze (`dr-extract` 等、B-1.x 別 spec) で機械処理可能な形で蓄積される.
 
 #### Acceptance Criteria
 
-1. The dr-design skill shall foundation 同梱 `fatal_patterns.yaml` (致命級 8 種固定 = sandbox escape / data loss / privilege escalation / infinite retry / deadlock / path traversal / secret leakage / destructive migration) を各ラウンドで強制照合する (foundation Layer 1 base quota の 1 種 = `fatal_patterns.yaml` 強制照合、具体発動 logic は Layer 2 design extension の責務、Chappy P0 課題 6 採用、ドラフト v0.3 §2.6 規範)
-2. While Step B (adversarial subagent prompt) 構成中, the dr-design skill shall forced divergence prompt template (1 行、文言は design phase で最終確定、素案 = "primary reviewer の暗黙前提を 1 つ identify し、別の妥当な代替前提に置換した場合に同じ結論が成立するか評価せよ"、Chappy P0 課題 5 採用) を含めて adversarial subagent に渡す
-3. When 各 finding 生成時, the dr-design skill shall `impact_score` 3 軸 (severity / fix_cost / downstream_effect) を生成し finding に付与する (Chappy P0 課題 7 採用、ドラフト v0.3 §2.6 規範)
-4. The impact_score shall foundation 共通 JSON schema (severity = CRITICAL / ERROR / WARN / INFO の 4 値 enum、fix_cost / downstream_effect は有限値 enum) に準拠する
-5. If 強制照合で `fatal_patterns.yaml` 該当を検出, then the dr-design skill shall 当該 finding の severity を CRITICAL として `impact_score` に記録する
-6. The dr-design skill shall Layer 1 base quota の `fatal_patterns.yaml` 強制照合 と forced divergence をいずれも post-run measurement only で metrics 記録する (pre-run target setting は Goodhart's Law 回避で禁止、各ラウンドの強制照合発動自体は structural requirement として実行義務、ドラフト v0.3 §2.6 / §2.7 規範)
-7. The dr-design skill shall primary prompt + adversarial subagent prompt を英語固定 1 本で構成し、subagent 出力 (finding 説明) は対象 design 文書の言語 auto-detect で生成する (本 spec scope = ja document auto-detect、ドラフト v0.3 §4.4 規範)
+1. When the dr-design skill が finding を生成した場合, the dr-log skill shall 各 finding に対し foundation 提供の共通 schema (`review_case` / `finding` / `impact_score` 3 軸 + 失敗構造観測軸 3 要素 + 修正必要性判定軸 V4 §1.3 整合) で schema validate を実行し、validate 失敗時は fail-fast (non-zero exit signal + error report) する.
+2. The dr-log skill shall, foundation install location 直下の `schemas/` 相対 directory (foundation Req 3 AC10 整合) から JSON Schema files を動的に読み込み、validate に使用する (hardcode 禁止).
+3. The dr-log skill shall, 全 finding に対し finding state に応じて以下を付与する: (a) **`detected` state 全 finding 共通 (judgment subagent 起動前または起動なし運用)**: `impact_score` 3 軸 (`severity` 4 値 / `fix_cost` 3 値 / `downstream_effect` 3 値) + 失敗構造観測軸 (`miss_type` 6 enum / `difference_type` 6 enum / `trigger_state` 3 string enum field) を必須付与し、修正必要性判定軸 (必要性 5-field + `fix_decision.label` + `recommended_action` + `override_reason`) は省略可能とする (foundation Req 3 AC6 整合 = pre-judgment / detection-only state も schema validate 可能). (b) **`judged` state finding (judgment subagent 完了後)**: 上記 (a) の field 群に加え、修正必要性判定軸 (必要性 5-field + `fix_decision.label` + `recommended_action` + `override_reason` if any) を必須付与する (foundation Req 3 AC7 整合 = judged state では `fix_decision.label` required).
+4. The dr-log skill shall, JSONL 形式で append-only に dev-log JSONL location 配下に記録し、1 review session = 1 line + 1 review_case object を厳守する; 具体 JSONL append target path は foundation `dr-init` skill が生成する `config.yaml` の `dev_log_path` field (foundation Req 2 AC2 整合 = default `.dual-reviewer/dev_log.jsonl`) から動的に読み取る (hardcode 禁止).
+5. The dr-log skill shall, primary 自己ラベリング (`miss_type` / `trigger_state`) と adversarial 自己ラベリング (`difference_type`) を skill prompt template に組込み、各 finding 生成時に必ず 3 要素を付与する; LLM 自己診断の信頼性は aggregate 統計として意味あり、個別精度は完全信頼不可であることを log skill の責務範囲外として扱う.
+6. The dr-log skill shall, schema validate 失敗時の error report で finding ID + 違反 field + 期待 enum 値 + 実際の値 を stdout に enumeration し、user が修復可能な情報を提供する.
+7. The dr-log skill shall, judgment subagent を起動しない運用 (= `dual-reviewer-dogfeeding` spec 3 系統対照実験のうち single 系統 = primary のみ運用 / dual 系統 = primary + adversarial で judgment 起動なし運用) において、finding の state を `detected` として JSONL に記録し、修正必要性判定軸 (`fix_decision.label` / `recommended_action` / `override_reason`) を省略 (または primary 自己 estimate として `source: primary_self_estimate` を付与) した状態で schema validate 可能な状態を維持する; これにより 3 系統対照実験 (single + dual + dual+judgment) で同一 dr-log skill を共有でき、3 系統間で比較可能な JSONL log structure を提供する (foundation Req 3 AC6 整合).
 
-### Requirement 5: dr-log skill による JSONL 構造化記録
+### Requirement 3: dr-judgment Skill — V4 §5.2 prompt template 内蔵 + judgment subagent dispatch + 5 条件判定 + 3 ラベル分類
 
-**Objective:** dual-reviewer 利用者として、`dr-log` skill が review session の全 finding と review_case を JSONL 構造化形式で記録し、論文用 quantitative evidence (figure 1-3) と analyze cycle (Run-Log-Analyze-Update) の入力データを構築する。
-
-#### Acceptance Criteria
-
-1. The dr-log skill shall foundation 共通 JSON schema (`review_case` / `finding` / `impact_score` / `miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`) に準拠した JSONL output を生成する
-2. When `dr-design` 各ラウンド完了時, the dr-log skill shall ラウンド単位の `review_case` レコード (1 JSONL line) と配下の `finding` レコード群 (各 1 JSONL line / finding、フラット構造) を JSONL に append する (review_case の `primary_findings` / `adversarial_findings` field は finding ID 配列で紐付け、foundation Req 3 AC 3.1 の field 値型明確化は波及精査対象)
-3. The dr-log skill shall JSONL 出力先 path を Layer 3 (project 固有) ディレクトリ配下 (foundation `dr-init` skill が生成した `dev_log/` 等) として `.dual-reviewer/config.yaml` から決定し、`dual-reviewer-dogfeeding` 対照実験用に single mode / dual mode の 2 系統 JSONL を出力先 path で分離する (具体 naming convention 例: `dev_log/single_${timestamp}.jsonl` / `dev_log/dual_${timestamp}.jsonl`、最終確定は design phase、skill argument 経由 single/dual mode flag に対応)
-4. If JSONL 書込に失敗 (disk full / 権限不足 / 不正 path 等、具体 failure mode 列挙は design phase で確定), then the dr-log skill shall actionable error message を出力し partial 書込を残さない原則を best-effort で適用する (atomic 書込 = temp file + rename 等の方式は design phase で確定、SIGKILL / OOM 等 severe interrupt 時は guarantees なし、append-only JSONL との整合 = ラウンド境界 atomic batch flush で解決、SIGINT / SIGTERM 中断 signal 取扱は design phase で確定)
-5. The dr-log skill shall foundation 共通 JSON schema を validator (jsonschema 等、具体実装は design phase で確定) で出力前検証する (検証失敗時の挙動 = abort / warn-and-continue の選択は design phase で確定)
-6. The dr-log skill shall single mode と dual mode の両方で同一 schema の JSONL を生成する (`dual-reviewer-dogfeeding` 対照実験で両系統が比較可能、ドラフト v0.3 §3.1 A-2 規範)
-7. The dr-log skill shall `.claude/skills/dr-log/SKILL.md` 形式 (foundation `dr-init` と同形式) で公開され downstream spec から起動可能である
-8. When Step C (integration) で primary reviewer が integration 結果を生成する, the dr-log skill shall foundation Req 3 AC 3.1 の `review_case.integration_result` field に populate する (Step C output → dr-log への引渡 contract、foundation 共通 JSON schema 整合)
-9. When `dr-design` 中断後 resume または同一 session 内で再起動時, the dr-log skill shall JSONL 重複 record 防止戦略 (review_case ID + round 番号 dedup / append-only で post-run analyze 時 dedup 等の選択は design phase で確定) を実装する (cross-session resume は Boundary Context Out 整合)
-10. While Phase A scope 範囲内, the dr-log skill shall single mode JSONL と dual mode JSONL の concurrent write を前提しない (逐次実行のみ、`dual-reviewer-dogfeeding` 対照実験は逐次 cost 倍で運用、ドラフト v0.3 §3.1 A-2 規範)
-
-### Requirement 6: B-1.0 拡張 schema の LLM 自己ラベリング
-
-**Objective:** 論文化 evidence 取得目的で、各 finding と review_case に `miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern` を LLM が自己ラベリングし、JSONL に記録する。これにより論文 figure 1-3 (`miss_type` 分布 / `difference_type` 分布 / trigger 発動率) + Phase 1 同型 hit rate (`dual-reviewer-dogfeeding` Req 4 AC 3 経由) の quantitative data が蓄積される。
+**Objective:** As a Step 1c (修正必要性判定) を実行する dr-design skill から起動される subordinate skill, I want `dr-judgment` skill が V4 §5.2 prompt template を foundation portable artifact から動的に import + judgment subagent dispatch + 必要性 5-field 評価 + 5 条件判定ルール + 3 ラベル分類 + recommended_action + override_reason 出力を担当してほしい, so that judgment 評価基準が project / phase 横断で一貫し、修正否定試行 (judgment 用、V4 §1.5) と forced_divergence (adversarial 用、本 spec Req 6) の役割分離 (判定 5-C) が skill レベルで保証される.
 
 #### Acceptance Criteria
 
-1. When primary reviewer が finding を生成する, the dr-design skill shall finding に `miss_type` (foundation 定義 6 値 enum: implicit_assumption / boundary_leakage / spec_implementation_gap / failure_mode_missing / security_oversight / consistency_overconfidence) を LLM 自己ラベリングで付与する
-2. When adversarial subagent が独立追加した finding を生成する, the dr-design skill shall finding に `difference_type` (foundation 定義 6 値 enum: assumption_shift / perspective_divergence / constraint_activation / scope_expansion / adversarial_trigger / reasoning_depth) を LLM 自己ラベリングで付与する
-3. When 各ラウンド (review_case) 完了時, the dr-design skill shall `trigger_state` (foundation 定義 3 軸 enum object: negative_check / escalate_check / alternative_considered、各 applied | skipped の 2 値 enum) を LLM 自己診断で生成する (foundation Req 3 AC 3.1 で trigger_state = review_case の実行制御状態として定義、本 spec では同 data を論文化 figure 3 = trigger 発動率の観測フラグとしても使用、両 semantic は同一 data の異なる用途、ドラフト v0.3 §2.10.3 規範。LLM 自己ラベリング信頼性 = aggregate 統計信頼性は確保、`trigger_state.skipped` の意図的 skip vs 記録漏れ識別不能を含み個別精度は完全信頼不可、論文 limitation 節で扱う)
-4. The dr-design skill shall LLM 自己ラベリング prompt (各 enum 候補と判定基準) を primary prompt + adversarial subagent prompt の双方で同 schema で要請する
-5. The dr-log skill shall 上記 self-labeled enum を JSONL の対応 field に書き込む (foundation 共通 JSON schema 準拠)
-6. While single mode 実行中, the dr-design skill shall finding output JSONL から `difference_type` field を **absent** とする (foundation Req 3 AC 3.2 で `difference_type` を optional field 化することを前提、波及精査対象。`miss_type` + `trigger_state` は同 schema で自己ラベリングし、`trigger_state.alternative_considered: skipped` で adversarial 不在を記録、ドラフト v0.3 §3.1 A-2 + dogfeeding brief Approach 規範 = single でも自己ラベリング、dual との差を absent / present の binary 識別で可視化)
-7. The dr-design skill shall 自己ラベリング失敗 (enum 範囲外 / parse 失敗等) 時の fallback ownership を保持し dr-log に渡す前段で fallback 値付与を完了させる (dr-log skill 側は受領値を schema validate に通すのみ、default value / re-prompt / log warning の選択は design phase で確定。LLM 自己ラベリングの aggregate 統計信頼性は確保するが個別精度は完全信頼不可、ドラフト v0.3 §2.10.3 規範)
-8. When primary または adversarial reviewer が Phase 1 escalate 3 メタパターン (Spec 0 R4 / Spec 1 R5 / Spec 1 R7 同型) に該当する finding を生成する, the dr-design skill shall finding に `phase1_meta_pattern` (foundation Req 3 AC 3.10 定義 = norm_range_preemption / doc_impl_inconsistency / norm_premise_ambiguity の 3 値 enum) を LLM 自己ラベリングで付与する (escalate 検出 finding にのみ付与、その他 finding は absent / null、`dual-reviewer-dogfeeding` Req 4 AC 3 の Phase 1 同型 hit rate 抽出と連鎖、Req 3 AC 3.7 escalate 必須条件と integration)
+1. When the dr-design skill が Step 1c judgment を起動した場合, the dr-judgment skill shall foundation install location 直下の `prompts/judgment_subagent_prompt.txt` (foundation Req 6 AC1, AC9 整合) から V4 §5.2 prompt template 全文を動的に読み込み (hardcode 禁止)、judgment_reviewer subagent dispatch payload に embed する.
+2. The dr-judgment skill shall, dispatch payload に primary 検出全 issue list + adversarial 検出全 issue list + adversarial counter-evidence (V4 §1.5 修正否定試行出力) + 当該 spec の requirements.md 全文 + (design phase の場合) design.md 全文 + foundation Req 6 AC4 整合の semi-mechanical mapping default 7 種 を含める; ここで「adversarial 検出全 issue list」と「adversarial counter-evidence」は adversarial subagent が 1 回の dispatch で同一 yaml 出力の **別 section** として返却する (= 2 回 dispatch は scope 外、single dispatch で 2 役割の output を分離 section で返す形式).
+3. The dr-judgment skill shall, judgment_reviewer subagent (= `config.yaml` `judgment_model` で指定された model) を Claude Code Agent tool 経由で dispatch する.
+4. The dr-judgment skill shall, judgment subagent 出力を V4 §1.6 yaml format で受領し、各 issue に対し `fix_decision.label` (must_fix | should_fix | do_not_fix) + 必要性 5-field (`requirement_link` / `ignored_impact` / `fix_cost` / `scope_expansion` / `uncertainty`) + `recommended_action` (fix_now | leave_as_is | user_decision) + `override_reason` (semi-mechanical mapping default override 時) が付与されていることを foundation 提供 schema で validate する.
+5. The dr-judgment skill shall, 5 条件判定ルール (V4 §1.4.1 = critical impact / requirement_link+ignored_impact / scope_expansion / fix_cost vs ignored_impact / uncertainty) を順次評価し、最強条件で `fix_decision.label` を確定するよう judgment subagent prompt 内で明示する; ここで V4 §1.4.1 の `escalate` outcome (= uncertainty=high 等の trigger に応じる user 介入要請) は foundation `fix_decision.label` 3 値 enum (`must_fix` / `should_fix` / `do_not_fix`、foundation Req 3 AC5 整合) との整合のため `should_fix` + `recommended_action: user_decision` の組合せにマッピングして JSONL 記録する (= `escalate` を独立 label 値として schema 拡張せず、既存 3 値 + recommended_action で表現する; foundation 側で `fix_decision.label` enum に `escalate` を 4 値目として追加する判断は本 spec 範囲外で Step 5 cross-spec review で別途検討する).
+6. The dr-judgment skill shall, semi-mechanical mapping default 7 種 (V4 §1.4.2) を judgment subagent prompt 内に保持し、subagent が default を override した場合は `override_reason` field に理由文字列を必須記録するよう prompt 内で明示する.
+7. The dr-judgment skill shall, 修正否定試行 prompt (V4 §5.2 内既存組込、judgment 用) を judgment subagent prompt の必要性評価 step に保持し、Step 1c で primary 提案 fix の必要性否定を judgment subagent が実施できる状態を維持する; これは Step B (adversarial 担当) の forced_divergence (= 結論成立性試行、本 spec Req 6) とは役割分離される (判定 5-C 整合).
+8. The dr-judgment skill shall, judgment subagent 出力 yaml を dr-design skill (Step D integration) に返却する; 返却 mechanism は judgment subagent 出力 yaml block を skill stdout に書き出し、dr-design skill が呼び出しコンテキストで stdout を直接読み取る方式を default とする (代替として一時ファイル path を引数で渡す方式も許容、本 spec design phase で具体 mechanism を確定); 返却された yaml により dr-log skill が JSONL 構造化記録 (修正必要性判定軸、`judged` state finding) として該当 finding に必須付与する状態を保証する.
 
-### Requirement 7: Downstream spec 提供 contract
+### Requirement 4: Layer 2 Design Extension — 10 ラウンド + Phase 1 escalate 3 メタパターン + design phase 固有 bias 抑制 quota
 
-**Objective:** `dual-reviewer-dogfeeding` 開発者として、本 spec が提供する全要素 (`dr-design` skill / `dr-log` skill / Chappy P0 全機能 / B-1.0 拡張 schema 自己ラベリング機能 / single+dual mode 切替) を一貫した interface で利用したい。これにより dogfeeding spec が依存解決を機械的に行え、本 spec の internal 実装詳細を知らずに済む。
+**Objective:** As a Layer 1 framework に design phase 固有の規範を追加する maintainer, I want Layer 2 design extension が foundation Layer 1 contract (foundation Req 1 AC5 整合) に従って attach し、10 ラウンド + Phase 1 escalate 3 メタパターン + design phase 固有 bias 抑制 quota を Layer 1 framework を改変せず追加してほしい, so that design phase review が Layer 1 base に固有の構造化規範を適用できる.
 
 #### Acceptance Criteria
 
-1. The dual-reviewer-design-review shall `dr-design` skill を `.claude/skills/dr-design/SKILL.md` 形式で公開する
-2. The dual-reviewer-design-review shall `dr-log` skill を `.claude/skills/dr-log/SKILL.md` 形式で公開する
-3. The dual-reviewer-design-review shall sample design 文書 1 件に対する 1 ラウンド通過確認 (sample 入力と通過判定基準は design phase で確定) を完了し、prototype 動作 evidence を残す
-4. While sample 1 round 通過確認実行中, the dual-reviewer-design-review shall primary + adversarial の dual-reviewer 構成 + Chappy P0 3 件 (`fatal_patterns.yaml` 強制照合 / forced divergence prompt / `impact_score` 3 軸) + B-1.0 拡張 schema 自己ラベリング (`miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`) + JSONL 記録を全て発動する
-5. When sample 1 round 完走時, the dual-reviewer-design-review shall sample 出力 JSONL が foundation 共通 JSON schema validator で検証 pass することを示す (Req 5 AC 5.5 で規定する dr-log skill の動作要件を sample 1 round 通過確認の evidence として実証)
-6. Where dogfeeding spec が `dr-design` / `dr-log` を invoke する場合, the dual-reviewer-design-review shall internal 実装詳細を露出せず loadable artifact (skill SKILL.md + skill argument 経由 single/dual mode 切替 + JSONL 出力 contract + foundation 提供 `config.yaml` の `primary_model` / `adversarial_model` / `language` 利用) のみ提供する (foundation `config.yaml` schema 拡張は不要、encapsulation 検証基準は design phase で確定)
-7. If dogfeeding spec が prototype 起動に失敗, then the dual-reviewer-design-review shall actionable error message (どの skill / config / foundation artifact が missing / malformed か) を提供する (具体 error 提供 agent = dr-design skill / dr-log skill / config validator のいずれか、は design phase で確定)
+1. The Layer 2 design extension shall, foundation Req 1 AC5 が定義する Layer 2 attach contract (attach 対象 entry-point file の location 規約 + identifier 形式 + 失敗 signal の 3 要素) に準拠して foundation Layer 1 framework に attach する.
+2. The Layer 2 design extension shall, 10 ラウンド (Round 1-10) の review 観点を以下で固定する: Round 1 (規範範囲確認) / Round 2 (一貫性) / Round 3 (実装可能性 + アルゴリズム + 性能 統合) / Round 4 (責務境界) / Round 5 (失敗モード + 観測 統合) / Round 6 (concurrency / timing) / Round 7 (security) / Round 8 (cross-spec 整合) / Round 9 (test 戦略) / Round 10 (運用) (memory `feedback_design_review.md` 中庸統合版整合); 各ラウンドの観点は foundation Layer 1 framework が定義する pattern schema (`primary_group` + `secondary_groups`、foundation Req 1 AC3 整合) の `primary_group` entry として定義し、foundation `seed_patterns.yaml` 23 件 entry を該当 Round に関連付ける (具体 mapping は本 spec design phase で確定).
+3. The Layer 2 design extension shall, Phase 1 escalate 3 メタパターン (規範範囲先取り / 構造的不均一 / 文書 vs 実装不整合) を Step 1b 5 重検査の `ii. Phase 1 パターンマッチング` で必ず照合する.
+4. The Layer 2 design extension shall, design phase 固有 bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索 / 厳しく検証 5 種) を Layer 1 framework の base quota に追加する形で expose し、Chappy P0 quota (`fatal_patterns.yaml` 強制照合 / `impact_score` / forced_divergence) は foundation Layer 1 が data + facility を expose し (foundation Req 1 AC7) Layer 2 が design phase 実行時に invoke する provide vs execute の役割分離に従って実行する (Req 1 AC7 整合、foundation Req 5 AC5 整合 = matching logic は本 spec 責務).
+5. The Layer 2 design extension shall, escalate 必須条件 5 種 (memory `feedback_review_step_redesign.md` 整合 = 内部矛盾 / 実装不可能性 / 責務境界 / 規範範囲 / 複数選択肢 trade-off) を Step 1b-v (自動深掘り) と Step 1c (judgment) の両方で必ず適用する.
+6. The Layer 2 design extension shall, foundation Layer 1 framework の definition file を改変せず、design phase 固有 quota / pattern を additional layer として attach する (= Layer 1 framework は不変、Layer 2 のみが新規追加).
+7. While Layer 2 design extension が Layer 3 (project 固有 patterns / terminology / dev-log) と共存する場合, the Layer 2 design extension shall foundation Req 1 AC9 が定義する override 階層 (Layer 3 > Layer 2 > Layer 1) に従って、Layer 3 entry が Layer 2 entry を override 可能な状態を維持する.
+
+### Requirement 5: Foundation Integration — 共通 schema / seed/fatal patterns / V4 §5.2 prompt の import 規約
+
+**Objective:** As a `dual-reviewer-foundation` の consumer, I want 本 spec の 3 skills + Layer 2 design extension が foundation 提供の全 artifact (Layer 1 framework / 共通 schema 2 軸並列 / seed_patterns.yaml / fatal_patterns.yaml / V4 §5.2 judgment subagent prompt template / JSON Schema files) を foundation 確定の install location 規約 + override 階層に従って動的に import してほしい, so that foundation との contract が明確になり、foundation の minor revision で本 spec が破綻しない.
+
+#### Acceptance Criteria
+
+1. The 3 skills (`dr-design` / `dr-log` / `dr-judgment`) shall, foundation install location からの相対 path で foundation artifact を locate する: `./patterns/seed_patterns.yaml` / `./patterns/fatal_patterns.yaml` / `./prompts/judgment_subagent_prompt.txt` / `./schemas/<schema_name>.json` (foundation Req 4 AC6 / Req 5 AC4 / Req 6 AC1 + AC9 / Req 3 AC10 の canonical path form `./` 付き表記に整合).
+2. The 3 skills shall, foundation install location の concrete absolute path を本 spec の design phase で確定する (foundation Boundary Context = 「foundation install location は A-1 prototype 実装時に確定」を継承、本 spec は consumer 視点で path 規約のみを継承).
+3. The dr-design skill shall, foundation の `seed_patterns.yaml` の `version` field を起動時に読み込み (hardcode 禁止)、内部 quota / pattern matching に反映する (foundation Req 4 AC5 整合 = silent edit 検出は本 spec 対象外、foundation 責務).
+4. The dr-design skill shall, foundation の `fatal_patterns.yaml` 8 種 enum を yaml file から動的に読み込む (foundation Req 5 AC3 で content 固定が保証されるため、minor revision で破綻しない前提だが yaml read 自体は必須、hardcode 禁止).
+5. The dr-judgment skill shall, foundation の V4 §5.2 prompt template を `prompts/judgment_subagent_prompt.txt` から動的に読み込む (foundation Req 6 AC1 + AC9 整合、hardcode 禁止).
+6. The dr-log skill shall, foundation の JSON Schema files を `schemas/` directory 直下から動的に読み込み、validate に使用する (foundation Req 3 AC10 整合、hardcode 禁止).
+7. While foundation が `terminology.yaml` placeholder を生成する場合 (foundation Req 7 AC5 整合), the 3 skills shall Layer 3 project 固有 terminology entries を foundation Layer 1 contract (foundation Req 1 AC6) に従って attach 可能な状態を維持し、override 階層 (foundation Req 1 AC9 = Layer 3 > Layer 2 > Layer 1) で Layer 3 entry が Layer 2 design extension の terminology を override 可能とする.
+
+### Requirement 6: forced_divergence Prompt Template — design phase 確定責務 (foundation Req 7 AC4 委任)
+
+**Objective:** As a foundation Req 7 AC4 で defer された forced_divergence prompt の最終文言確定責務を持つ本 spec, I want forced_divergence prompt template の最終文言を本 spec の design phase で確定し、英語固定 + adversarial subagent prompt 末尾に組込む形式で `dr-design` skill から adversarial subagent dispatch 時に渡してほしい, so that forced_divergence (adversarial 担当、結論成立性試行) と修正否定試行 (judgment 担当、V4 §1.5、修正 proposal 必要性否定) の役割分離 (判定 5-C) が prompt レベルで保証される.
+
+#### Acceptance Criteria
+
+1. The forced_divergence prompt template shall, 本 spec の design phase で最終文言を確定する (foundation Req 7 AC4 で本 spec scope に defer された責務を本 spec が引き受ける).
+2. The forced_divergence prompt template shall, 英語固定 (single canonical form) で記述され、subagent 安定性 + multi-language 移行性を保証する (foundation Req 7 AC4 の prompt 言語 policy 整合).
+3. The forced_divergence prompt template shall, 素案 base として "Identify one tacit premise of the primary reviewer's reasoning, replace it with a plausible alternative premise, and evaluate whether the same conclusion still holds." (brief.md §Approach 整合) を採用しつつ、本 spec の design phase で必要に応じて精緻化する.
+4. The forced_divergence prompt template shall, adversarial_reviewer subagent prompt の末尾に追加される形式で `dr-design` skill から Step B dispatch 時に渡され、adversarial 独立 detection + V4 §1.5 修正否定試行 と並列に実行される; V4 §1.5 修正否定試行 prompt (英語固定 3 行、Req 1 AC3 整合) の配置先 (adversarial subagent dispatch 時 inline embed または本 spec install location 直下に別 txt として配置のいずれか) は本 spec design phase で具体規約を確定する.
+5. The forced_divergence prompt template shall, primary 提案 fix の必要性否定 (V4 §1.5 修正否定試行、judgment 用) と異なる役割を担う (= 結論成立性試行、暗黙前提を別前提に置換した場合に同じ結論が成立するかの試行) ことを prompt 文中で明示する.
+6. The forced_divergence prompt template shall, 本 spec の install location 直下に portable artifact として配置される (例: `prompts/forced_divergence_prompt.txt`、design phase で具体 path 規約を確定); foundation install location とは独立した本 spec の install location に配置し、foundation portable artifact (V4 §5.2 prompt) との混在を避ける.
+
+### Requirement 7: Phase A Scope Constraints — 3 役 subagent / 単純逐次運用 / B-1.0 minimum / sample 1 round 通過レベル
+
+**Objective:** As a Phase A scope (Rwiki repo 内 prototype 段階) を厳守する maintainer, I want 本 spec の 3 skills + Layer 2 design extension が Phase A scope の制約 (3 役 subagent / 単純逐次運用 / B-1.0 minimum schema / sample 1 round 通過レベル / Phase B fork out of scope) を Constraints として要件化してほしい, so that scope creep が AC レベルで抑制され、Phase B 独立 fork / B-1.x 機能 / B-2 multi-vendor 機能を本 spec に混入させない.
+
+#### Acceptance Criteria
+
+1. The 3 skills shall, subagent 構成を 3 役 (primary_reviewer / adversarial_reviewer / judgment_reviewer、V4 §1.2 option C 整合) に限定し、Claude family rotation (B-1.1 opt-in) / multi-vendor support (B-2) / hypothesis generator role 3 体構成 (B-2、Chappy 保留 1) は本 spec scope 外とする (foundation `config.yaml` 4 field 整合).
+2. The 3 skills shall, Round 1-10 を単純 sequential 運用 (並列処理本格実装 + 整合性 Round 6 task は B-1.x 以降) で動作させ、並列実行 / fall back trigger 5 条件 / 派生 Round 再実行は本 spec scope 外とする.
+3. The 3 skills shall, B-1.0 minimum schema (失敗構造観測軸 3 要素 + 修正必要性判定軸 V4 §1.3 整合) のみを必須付与とし、B-1.x 拡張 schema (`decision_path` / `skipped_alternatives` / `bias_signal`、自由記述 + 内省) は本 spec 対象外とする.
+4. The 3 skills の動作確認終端条件 shall, sample 1 round (= Round 1 のみ) を `dual-reviewer-dogfeeding` spec が指定する Spec 6 (rwiki-v2-perspective-generation) design に適用して通過することとし、全 10 ラウンド完走 + 3 系統対照実験 (single + dual + dual+judgment) は `dual-reviewer-dogfeeding` spec 責務として本 spec scope 外とする; ここで「sample 1 round 通過」の pass criteria は (a) Round 1 を Step A (primary detection) → Step B (adversarial review) → Step C (judgment) → Step D (integration) 全て完了 + (b) dr-log skill が JSONL に最低 1 entry を foundation 提供 schema (失敗構造観測軸 3 要素 + 修正必要性判定軸) で validate 成功で記録 + (c) dr-design skill が Step 2 user 提示用に V4 §2.5 三ラベル提示 yaml (must_fix / should_fix / do_not_fix の分類済み出力) を stdout に出力 の 3 条件を全て満たすこととする.
+5. While Phase A scope = Rwiki repo 内 prototype 段階である間, the 3 skills shall Phase B 独立 fork (npm package 化 / GitHub repo 公開 / collective learning network) を本 spec scope 外とし、本 spec の成果物は Rwiki repo 内 prototype 配置 (例: `scripts/dual_reviewer_prototype/` または `.kiro/specs/dual-reviewer/prototype/`、A-1 prototype 実装時に確定 = foundation Boundary Context 整合) のみを対象とする.

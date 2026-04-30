@@ -1,6 +1,6 @@
 # dual-reviewer 仕様検討ドラフト
 
-_v0.3 / 2026-04-29 / dual-reviewer-foundation requirements 5 ラウンドレビュー (V3 adversarial subagent 統合) 反映 = 固有名詞ゼロ削除 + trigger_state 表記精度 + 3 spec 分割反映_
+_v0.2 / 2026-04-29 / Chappy review 反映 + Phase A 細分化 + 論文化軸 + 拡張ログ schema 追加_
 
 dual-reviewer (設計レビュー方法論 v3 一般化 package) の仕様検討ドラフト。spec 策定 (A-0、`/kiro-spec-init` 〜 `tasks.md` approve) における参照点として、これまでの議論で確定した内容を集約。
 
@@ -24,12 +24,14 @@ dual-reviewer (設計レビュー方法論 v3 一般化 package) の仕様検討
 
 - npm package `dual-reviewer` (`npx dual-reviewer@latest`)
 - GitHub repo (cc-sdd と同方式で公開)
-- skills (`dr-*` 接頭辞、design / tasks / requirements / impl + framework 補助 init/log/extract/validate/update/translate)
+- skills (`dr-*` 接頭辞、design / tasks / requirements / impl + judgment + framework 補助 init/log/extract/validate/update/translate)
 - 同梱 seed: `seed_patterns.yaml` (Rwiki 由来 23 事例 + Phase A dogfeeding 蓄積) / `fatal_patterns.yaml` (致命級 8 種)
 
 ### 1.4 試験運用 evidence (確立済)
 
 Rwiki Spec 3 design Round 5-10 で adversarial subagent 試験運用 6 回。subagent 追加発見 23 件 (致命級 1 + 重要級 13 + 軽微 9)、disagreement 2/24、Phase 1 同型 3 種全該当 2 度達成 = bias 共有疑念に対する決定的反証。詳細 = `.kiro/methodology/dogfeeding/spec-3/round_5-10_subagent_adversarial.md` §1-7。
+
+**2026-04-30 7th セッション evidence (V4 protocol 確定の引き金)**: foundation design phase V3 review で 6 件検出を retroactive judgment した結果、過剰修正比率 50% 顕在化 = V3 検出機能は動くが「修正必要性 judgment」step 欠落。詳細 = `.kiro/methodology/v4-validation/v3-baseline-summary.md` + V4 protocol v0.3 final (`.kiro/methodology/v4-validation/v4-protocol.md`)。
 
 ---
 
@@ -38,12 +40,13 @@ Rwiki Spec 3 design Round 5-10 で adversarial subagent 試験運用 6 回。sub
 ### 2.1 Layer 構造 (memory §2)
 
 - **Layer 1 (phase 横断 framework、portable)**:
-  - Step A/B/C 構造 (primary detection → adversarial review → integration)
+  - Step A/B/C/D 構造 (primary detection → adversarial review → judgment (修正必要性判定 = V4 §1.3 必要性 5-field 評価 + 5 条件判定ルール + 3 ラベル分類) → integration)
   - bias 抑制 quota (formal challenge + 検出漏れ + Phase 1 同型探索)
   - pattern schema (中程度 granularity + primary_group + secondary_groups 二層)
   - 介入 framework (Quota event-triggered のみ、Tier 比率は post-run measurement only)
-  - dr-* script 群 (init / log / extract / validate / update / translate)
-  - **Chappy P0 採用**: `fatal_patterns.yaml` 強制照合 (8 種固定) / forced divergence prompt (1 行追加)
+  - dr-* script 群 (init / log / judgment / extract / validate / update / translate)
+  - **Chappy P0 採用**: `fatal_patterns.yaml` 強制照合 (8 種固定) / forced divergence prompt (adversarial subagent prompt 末尾 1 行追加)
+  - **V4 protocol 整合 (2026-04-30)**: 修正否定試行 prompt は judgment subagent prompt に組込 (V4 §5.2 既存)、必要性 5-field schema (`requirement_link` / `ignored_impact` / `fix_cost` / `scope_expansion` / `uncertainty`) + 5 条件判定ルール + 3 ラベル分類 (must_fix / should_fix / do_not_fix) を Layer 1 framework に組込
 - **Layer 2 (phase 別 extension)**:
   - `requirements_extension.md` (5 ラウンド + R-1〜R-4 quota)
   - `design_extension.md` (10 ラウンド、現行 v3、Phase 1 escalate 3 メタパターン)
@@ -98,8 +101,10 @@ cycle 周期 = user 依存 (config 化なし、自動化が必要になった時
 subagent 構成段階 (release lifecycle と同期):
 
 - **B-1** (release 直後 = release lifecycle B-1.0/B-1.x):
-  - 現行 v3 (単純 dual = Opus + Sonnet) + 案 C1 (Claude family rotation: Sonnet/Opus/Haiku) opt-in
+  - **V4 protocol §1.2 整合 (2026-04-30 確定)**: 3 役構成 = primary (Opus) + adversarial (Sonnet) + judgment (Sonnet) (= V4 §1.2 既定 = option C 採用、bias 最小化)
+  - 案 C1 (Claude family rotation: Sonnet/Opus/Haiku) opt-in
   - API コール不要 (Claude Code Agent tool の `model` parameter 切替)
+  - cost 影響: V3 dual 比 +50% wall-clock (judgment subagent +1 体分、V4 §4.3 H4 緩和 = +30% → +50% に再設定)
 - **B-2** (~6-12 ヶ月):
   - 案 A (並列 multi-subagent) + 案 C2 (multi-vendor: GPT/Gemini/etc.) opt-in 試験
   - C2 = 必要 (Bash + Python SDK で外部 API、API key 管理 + `.env` + git-secrets)
@@ -126,9 +131,10 @@ Chappy 11 課題 + 優先度 P0-P3 を再検討、以下を確定:
    - post-run JSONL schema (dr-log) に追加、analysis 用 metric
    - 採用根拠: 件数 metric では「事故防止価値」が見えず ROI 説明力が弱い
 3. **forced divergence** (Chappy 課題 5、P1 → P0 格上げ):
-   - adversarial subagent prompt template に 1 行追加
+   - **adversarial subagent** prompt template に 1 行追加 (= primary 暗黙前提への変更で結論成立性試行)
    - 文言案 (微調整版): 「primary reviewer の暗黙前提を 1 つ identify し、別の妥当な代替前提に置換した場合に同じ結論が成立するか評価せよ」
    - 採用根拠: Spec 3 disagreement 2/24 は bias 共有疑念への反証と総括したが「収束しすぎ警告」という別解釈も妥当 = 直接対策。コスト極低 (prompt 1 行)
+   - **V4 protocol との役割分離 (2026-04-30 確定、判定 5-C)**: forced divergence (= 結論成立性試行) は adversarial subagent 担当、修正否定試行 (= 修正 proposal 必要性否定、V4 §1.5) は **judgment subagent** prompt (V4 §5.2 既存) に組込済 = 役割重複なし
 
 #### 保留 (Phase B-2 以降検討) — 3 件
 
@@ -177,7 +183,7 @@ Chappy 11 課題 + 優先度 P0-P3 を再検討、以下を確定:
 
 ### 2.9 23 事例 + collective learning network (memory §5)
 
-- **23 事例** (Rwiki dev-log 由来) = `seed_patterns.yaml` (Rwiki 固有名詞付きで OK、`origin: rwiki-v2-dev-log`) として package 同梱、immutable initial knowledge (generalization は Phase B-1.0 release prep の責務)
+- **23 事例** (Rwiki dev-log 由来) = `seed_patterns.yaml` (固有名詞ゼロ + `origin: rwiki-v2-dev-log`) として package 同梱、immutable initial knowledge
 - **具体例**: 別 markdown (`seed_patterns_examples.md`、人間可読、同梱)
 - **transfer 戦略**: 16 representative を subagent prompt embed + 全 archive は別 grep
 - **`terminology.yaml`**: Phase A 蓄積開始 (review_methodology 用語 30-50 entries)、Phase B 以降で seed 化
@@ -207,11 +213,16 @@ dual-reviewer は **二重の位置付け** で進める:
 - 言い換え: LLM の問題は知識不足や推論能力不足ではなく、**制御フローの欠如**。dual-reviewer = 制御フローを外付けする装置
 - LLM を「賢くする」研究ではなく「**壊れにくくする**」研究
 
-#### 2.10.3 拡張ログ schema (B-1.0 採用 3 要素 + B-1.x 採用 3 要素)
+#### 2.10.3 拡張ログ schema (失敗構造観測軸 3 要素 + 修正必要性判定軸 V4 §1.3 整合 + B-1.x 採用 3 要素)
 
-これまでの dr-log JSONL = `impact_score` 3 軸 (severity / fix_cost / downstream_effect、Chappy P0) = 「結果の質」軸。論文化のため **「失敗構造の観測」軸** を追加。impact_score とは直交。
+これまでの dr-log JSONL = `impact_score` 3 軸 (severity / fix_cost / downstream_effect、Chappy P0) = 「結果の質」軸。論文化 + V4 protocol 整合のため **2 軸並列で拡張**:
 
-##### B-1.0 採用 3 要素 (軽量 enum / boolean、B-1.0 minimum 同梱)
+- **失敗構造観測軸** (B-1.0 拡張 3 要素、論文用 metric): Chappy P0 既存 schema、`miss_type` / `difference_type` / `trigger_state`
+- **修正必要性判定軸** (V4 protocol §1.3 整合、judgment subagent 出力 schema): 必要性 5-field + `fix_decision.label` + `recommended_action` + `override_reason`
+
+両軸は intent 区別: 失敗構造観測軸 = 「primary が何を見落としたかの研究 metric」、修正必要性判定軸 = 「judgment subagent の決定根拠 (V4 §1.3 整合)」。impact_score (Chappy P0、結果の質軸) と直交。
+
+##### 失敗構造観測軸 (B-1.0 採用 3 要素、軽量 enum、B-1.0 minimum 同梱)
 
 **要素 1: `miss_type`** (finding ごとのラベル、6 種 enum):
 
@@ -235,24 +246,45 @@ dual-reviewer は **二重の位置付け** で進める:
 
 論文 figure 2 候補: difference_type 分布 + forced divergence (Chappy P0) 効果評価 = 「どの difference_type が forced divergence で増えたか」。
 
-**要素 3: `trigger_state`** (review_case ごとのフラグ、3 軸 enum object 各 applied | skipped の 2 値 enum) **← 論文核心**:
+**要素 3: `trigger_state`** (review_case ごとのフラグ、3 string enum field) **← 論文核心**:
 
-- `negative_check: applied | skipped` — Step 1b-v Negative 視点 5 切り口が発動したか
-- `escalate_check: applied | skipped` — escalate 必須条件 5 種を確認したか
-- `alternative_considered: applied | skipped` — 代替案を検討したか
+- `negative_check`: `applied` | `skipped` — Step 1b-v Negative 視点 5 切り口が発動したか
+- `escalate_check`: `applied` | `skipped` — escalate 必須条件 5 種を確認したか
+- `alternative_considered`: `applied` | `skipped` — 代替案を検討したか
 
 論文 figure 3 候補: trigger 発動率 (skipped 頻出 = 「ルールはあるが発動しない構造的問題」の定量化、論文核心 evidence)。
 
 リスク: LLM 自己診断の信頼性 (skipped を skipped と認識できるか)。aggregate 統計として意味あり、個別精度は完全信頼不可。
 
-**要素 4: `phase1_meta_pattern`** (Phase 1 escalate 同型識別、3 値 enum + null、cross-spec contract 補強 field):
+**注 (V4 redo 2026-04-30)**: trigger_state の表記を「3 軸 boolean」から「3 string enum field」に修正 (foundation S-1 同型 issue 予防 = boolean 表現と applied/skipped enum 値の不整合を解消)。
 
-- `norm_range_preemption` (Spec 0 R4 同型 = 規範範囲先取り)
-- `doc_impl_inconsistency` (Spec 1 R5 同型 = 文書 vs 実装不整合)
-- `norm_premise_ambiguity` (Spec 1 R7 同型 = 規範前提曖昧化)
-- `null` (escalate 非該当)
+##### 修正必要性判定軸 (V4 protocol §1.3 整合、judgment subagent 出力 schema、B-1.0 minimum 同梱)
 
-escalate 検出 finding にのみ付与、`dual-reviewer-dogfeeding` Req 4 AC 3 の Phase 1 同型 hit rate 抽出 + Req 4 AC 8 (c) bias 共有反証 evidence 構成要素として再利用。要素 1-3 (B-1.0 採用 3 要素 = 失敗構造観測軸) とは別軸 (Phase 1 escalate 同型識別による cross-spec 学習継承軸) として位置付け、4 要素目として B-1.0 minimum 同梱 (foundation Req 3 AC 10 / design-review Req 6 AC 8 / dogfeeding Req 4 AC 3 連鎖)。
+V4 protocol v0.3 final (2026-04-30 確定) に基づく judgment subagent (= dr-judgment skill 起動) の出力 schema。各 finding ごとに以下を必須付与:
+
+**必要性 5-field** (V4 §1.3、semi-mechanical mapping default 適用後 override 可):
+
+- `requirement_link`: `yes` (AC 文言と直接紐付き) | `indirect` (AC 関連ありだが direct でない) | `no` (AC 紐付きなし)
+- `ignored_impact`: `critical` (system breaks) | `high` (function-blocking) | `medium` (degraded but functional) | `low` (cosmetic only)
+- `fix_cost`: `high` (cross-spec or schema change) | `medium` | `low` (within 1 file ≤5 lines)
+- `scope_expansion`: `yes` (would require spec scope change) | `no`
+- `uncertainty`: `high` (judgment unclear) | `medium` | `low`
+
+**fix_decision.label** (V4 §1.6、5 条件判定ルール (V4 §1.4.1) 適用後の最強 label):
+
+- `must_fix` (放置すると壊れる / 危険 / 矛盾)
+- `should_fix` (直した方がよいが止めるほどではない)
+- `do_not_fix` (正しい指摘でも今は直さない)
+
+**recommended_action**:
+
+- `fix_now` (must_fix の自動 apply 提案)
+- `leave_as_is` (do_not_fix の自動 skip 提案)
+- `user_decision` (should_fix の user 個別判断要請)
+
+**override_reason** (optional): semi-mechanical mapping default を override した時の理由文字列。
+
+**実装コスト**: 極低 (judgment subagent prompt の output yaml 拡張 + dr-log への append)。
 
 ##### B-1.x 採用 3 要素 (自由記述 + 内省、B-1.x で段階追加)
 
@@ -286,25 +318,22 @@ escalate 検出 finding にのみ付与、`dual-reviewer-dogfeeding` Req 4 AC 3 
 
 ### 3.1 Phase A 細分化 (A-0/A-1/A-2)
 
-#### A-0 (spec 策定、3 spec 分割)
+#### A-0 (spec 策定)
 
-- 配置: `.kiro/specs/dual-reviewer-foundation/` + `.kiro/specs/dual-reviewer-design-review/` + `.kiro/specs/dual-reviewer-dogfeeding/` (TODO_NEXT_SESSION.md 確定事項 1 で 3 spec 分割確定、依存階層: foundation → design-review → dogfeeding)
-- 内容 (3 spec 並走):
-  1. 各 spec で `/kiro-spec-init {feature}` で `brief.md` + `spec.json` 生成 (T 案 = kiro-discovery skip + 手動 brief.md、roadmap 汚染回避)
-  2. 各 spec の `requirements.md` 策定 (memory §1-14 + Chappy P0 3 件を AC 化)
-  3. 各 spec の `design.md` 策定 (memory §1-14 確定事項を design 詳細化)
-  4. 各 spec の `tasks.md` 策定:
-     - foundation = Layer 1 framework + dr-init skill + 共通 JSON schema + seed/fatal patterns yaml
-     - design-review = dr-design + dr-log skill (Layer 2 design extension + Chappy P0 全機能 + B-1.0 拡張 schema)
-     - dogfeeding = Spec 6 適用 + 対照実験 (single vs dual)
-- 終端条件: 3 spec すべての `tasks.md` approve
+- 配置: `.kiro/specs/dual-reviewer/`
+- 内容:
+  1. `/kiro-spec-init dual-reviewer` で `brief.md` + `spec.json` 生成
+  2. `requirements.md` 策定 (memory §1-13 + Chappy P0 3 件を AC 化)
+  3. `design.md` 策定 (memory §1-13 確定事項を design 詳細化)
+  4. `tasks.md` 策定 (B-1.0 minimum 3 skills + Chappy P0 + 23 事例 retrofit の task 化)
+- 終端条件: `tasks.md` approve
 - 期間目安: 数日 〜 1 週間
-- Spec 6 = A-0 中は触らない (A-2 dogfeeding で再開、ペンディング維持)
+- Spec 6 = 触らない (ペンディング維持)
 
 #### A-1 (prototype 実装)
 
 - 配置: `scripts/dual_reviewer_prototype/` または `.kiro/specs/dual-reviewer/prototype/`
-- 範囲: B-1.0 minimum 相当 = 3 skills (`dr-init` + `dr-design` + `dr-log`)
+- 範囲: B-1.0 minimum 相当 = 4 skills (`dr-init` + `dr-design` + `dr-log` + `dr-judgment`) — V4 protocol §1.2 = 3 subagent 構成 (option C 採用) 整合
 - 必須同梱: Chappy P0 3 件 (`fatal_patterns.yaml` 8 種 / impact_score 3 軸 / forced divergence prompt)
 - 23 事例 retrofit (`seed_patterns.yaml`、Rwiki 固有名詞付きで OK、generalization は B-1.0 release prep)
 - `terminology.yaml` seed 開始 (entries 蓄積は A-2 で、目標 30-50 は B-1.2 まで延伸)
@@ -326,7 +355,7 @@ escalate 検出 finding にのみ付与、`dual-reviewer-dogfeeding` Req 4 AC 3 
   - disagreement ≥ 3 件 (Spec 3 = 2 件 + Spec 6 で 1 件以上、forced divergence 効果含む)
   - bias 共有反証 evidence 確実
   - impact_score 分布が minor のみではない
-- 終端条件: dual-reviewer 適用 review evidence 提供 + Phase B fork go/hold 判断 + Spec 6 design approve = A-2 期間終端時期一致で並走後同時宣言 (session 内 simultaneous approve ではなく、approve 操作は Spec 6 spec の責務として post-本 spec、本 spec の deliverable は review evidence 提供で終端)
+- 終端条件: Spec 6 design approve **同時に** Phase B fork go/hold 判断
 - 期間目安: 2-3 週間
 - Spec 6 = この phase で完走 (= ペンディング解除 = Rwiki v2 design phase 全 8 spec approve 完了)
 
@@ -397,13 +426,14 @@ dual-reviewer は二重位置付け (プロダクト主 + 研究副産物、§2.
 
 ## §4 MVP scope (B-1.0 minimum)
 
-### 4.1 Skills (3 個のみ)
+### 4.1 Skills (4 個)
 
 - `dr-init` (project bootstrap)
-- `dr-design` (Layer 1 framework + design extension + bias 抑制 quota + `fatal_patterns.yaml` 強制照合 + forced divergence prompt)
-- `dr-log` (JSONL 構造化記録、impact_score 3 軸 schema)
+- `dr-design` (Layer 1 framework + design extension + bias 抑制 quota + `fatal_patterns.yaml` 強制照合 + forced divergence prompt + judgment subagent dispatch (= `dr-judgment` skill 起動) + 必要性 5-field 評価結果 受領 + 3 ラベル分類確定)
+- `dr-log` (JSONL 構造化記録、impact_score 3 軸 schema + 失敗構造観測軸 3 要素 + 修正必要性判定軸 (必要性 5-field + `fix_decision.label` + `recommended_action`) を全 finding に必須付与)
+- `dr-judgment` (V4 protocol §5.2 prompt template 内蔵、judgment subagent 起動 = primary + adversarial 検出結果 + counter-evidence を input に必要性 5-field 評価 + 5 条件判定ルール適用 + 3 ラベル (must_fix / should_fix / do_not_fix) 分類確定 + recommended_action 出力)
 
-残り 7 skills (`dr-tasks` / `dr-requirements` / `dr-impl` / `dr-extract` / `dr-validate` / `dr-update` / `dr-translate`) は B-1.x 段階追加。
+残り 6 skills (`dr-tasks` / `dr-requirements` / `dr-impl` / `dr-extract` / `dr-validate` / `dr-update` / `dr-translate`) は B-1.x 段階追加。
 
 ### 4.2 同梱コンテンツ
 
@@ -411,11 +441,21 @@ dual-reviewer は二重位置付け (プロダクト主 + 研究副産物、§2.
 - `fatal_patterns.yaml` (致命級 8 種固定: sandbox escape / data loss / privilege escalation / infinite retry / deadlock / path traversal / secret leakage / destructive migration)
 - design phase only (req/tasks/impl extension は B-1.x で段階追加)
 
-### 4.3 Chappy P0 3 件 (B-1.0 必須)
+### 4.3 Chappy P0 3 件 + V4 protocol §1 機能 (B-1.0 必須)
+
+#### Chappy P0 (3 件、2026-04-29 確定)
 
 - `fatal_patterns.yaml` 強制照合 (Layer 1 quota)
 - impact_score 3 軸 (post-run JSONL schema)
-- forced divergence prompt (adversarial subagent prompt template に 1 行)
+- forced divergence prompt (**adversarial** subagent prompt template に 1 行追加)
+
+#### V4 protocol §1 機能 (5 件、2026-04-30 確定)
+
+- judgment subagent (= `dr-judgment` skill、V4 §1.2 option C = primary + adversarial + judgment の 3 役構成、judgment role に dedicated subagent を起動)
+- 必要性 5-field schema (`requirement_link` / `ignored_impact` / `fix_cost` / `scope_expansion` / `uncertainty`、V4 §1.3、semi-mechanical mapping default 7 種付き)
+- 5 条件判定ルール (critical impact / requirement_link+ignored_impact / scope_expansion / fix_cost vs ignored_impact / uncertainty、V4 §1.4.1)
+- 3 ラベル分類 (must_fix / should_fix / do_not_fix、V4 §1.6) + recommended_action (fix_now / leave_as_is / user_decision) を全 finding に必須付与
+- 修正否定試行 prompt (judgment subagent prompt 末尾に組込、V4 §5.2 既存、adversarial subagent の forced divergence と役割分離 = 判定 5-C)
 
 ### 4.4 言語
 
@@ -428,16 +468,26 @@ dual-reviewer は二重位置付け (プロダクト主 + 研究副産物、§2.
 - `--integrate-cc-sdd` flag は B-1.0 で minimum (skill placeholder のみ)
 - 本格化は B-1.3
 
-### 4.6 B-1.0 拡張ログ schema (論文化軸、§2.10.3 参照)
+### 4.6 B-1.0 拡張ログ schema (論文化軸 + V4 修正必要性判定軸、§2.10.3 参照)
 
-`dr-log` JSONL に以下 4 要素を schema 追加 (B-1.0 minimum 同梱):
+`dr-log` JSONL に以下 2 軸並列で schema 追加 (B-1.0 minimum 同梱):
+
+#### 失敗構造観測軸 (Chappy P0 拡張、3 要素)
 
 - `miss_type` (finding ラベル、6 種 enum)
 - `difference_type` (adversarial 拾い分のラベル、6 種 enum)
-- `trigger_state` (review_case フラグ、3 軸 enum object 各 applied | skipped の 2 値 enum: `negative_check` / `escalate_check` / `alternative_considered`)
-- `phase1_meta_pattern` (escalate 検出 finding ラベル、3 値 enum + null: `norm_range_preemption` / `doc_impl_inconsistency` / `norm_premise_ambiguity` / null、cross-spec contract 補強 field、`dual-reviewer-dogfeeding` Req 4 AC 3 の Phase 1 同型 hit rate 抽出と integration)
+- `trigger_state` (review_case フラグ、3 string enum field: `negative_check` / `escalate_check` / `alternative_considered`、各 `applied` | `skipped`)
 
-実装コスト = 極低 (enum 定義 + LLM prompt 1 行)。impact_score 3 軸 (Chappy P0、結果の質軸) と直交 (要素 1-3 = 失敗構造観測軸 / 要素 4 = Phase 1 escalate 同型識別による cross-spec 学習継承軸)。
+#### 修正必要性判定軸 (V4 protocol §1.3 整合、judgment subagent 出力 schema)
+
+- 必要性 5-field: `requirement_link` (yes | indirect | no) / `ignored_impact` (critical | high | medium | low) / `fix_cost` (high | medium | low) / `scope_expansion` (yes | no) / `uncertainty` (high | medium | low)
+- `fix_decision.label` (must_fix | should_fix | do_not_fix、全 finding 必須付与)
+- `recommended_action` (fix_now | leave_as_is | user_decision)
+- `override_reason` (optional、semi-mechanical mapping default override 時の理由)
+
+両軸の intent 区別: 失敗構造観測軸 = 「primary が何を見落としたかの研究 metric」、修正必要性判定軸 = 「judgment subagent の決定根拠 (V4 §1.3 整合)」。impact_score 3 軸 (Chappy P0、結果の質軸) と直交。
+
+実装コスト = 極低 (enum 定義 + LLM prompt 1 行 + judgment subagent prompt の output schema 拡張)。
 
 B-1.x 段階追加: `decision_path` / `skipped_alternatives` / `bias_signal` (詳細 §2.10.3、自由記述 + 内省、A-2 後半 〜 Phase 3 で実装)。
 
@@ -489,7 +539,7 @@ _本ドラフト v0.2 = A-0 開始時点の参照点。A-0 進行中に `design.
   - §3.1 A-2 修正: 対照実験 (single vs dual 全 Round 2 倍) 追記
   - §3.5 新規: 8 月までの論文化ロードマップ (Phase 1 仕込み / Phase 2 溜め / Phase 3 書き)
   - §4.6 新規: B-1.0 拡張ログ schema 同梱 (3 要素)
-- **v0.3** (2026-04-29 改訂): dual-reviewer-foundation requirements 5 ラウンドレビュー (V3 adversarial subagent 統合) で発見した cross-document 矛盾を解消。
-  - §2.9 修正 (致命級解消、subagent 独立発見): 「固有名詞ゼロ」削除 = §3.1 / §4.2 / brief.md / req AC 4.3「Rwiki 固有名詞付きで OK」と整合 (generalization は Phase B-1.0 release prep の責務であることを明示)
-  - §2.10.3 / §4.6 修正: trigger_state「3 軸 boolean」→「3 軸 enum object 各 applied | skipped の 2 値 enum」 = JSON Schema 表現精度向上
-  - §3.1 A-0 修正: 単一 `.kiro/specs/dual-reviewer/` 想定を 3 spec 分割 (foundation / design-review / dogfeeding) に更新 (TODO_NEXT_SESSION.md 確定事項 1 反映、依存階層 / 並走方針も明示)
+- **v0.3** (2026-04-30 8th セッション、V4 protocol v0.3 final 整合 = 案 3 広義 redo): foundation/design-review/dogfeeding 3 spec を V4 想定で再設計するため、draft 自体を V4 整合に update。
+  - §1.3 / §1.4 / §2.1 / §2.5 / §2.6 / §2.10.3 / §3.1 / §4.1 / §4.3 / §4.6 改訂 (詳細省略、各 section 末尾 in-place 更新)
+  - 主要変更点: (a) Step A/B/C → Step A/B/C/D (judgment 追加) (b) subagent 構成 dual → 3 役 (primary + adversarial + judgment、V4 §1.2 option C) (c) B-1.0 minimum skills 3 → 4 (+ `dr-judgment`) (d) 拡張ログ schema 2 軸並列 (失敗構造観測軸 + 修正必要性判定軸) (e) trigger_state boolean → string enum (foundation S-1 同型予防) (f) forced divergence (adversarial) と修正否定試行 (judgment) の役割分離明示
+  - 案 3 広義 redo の経緯 = `feedback_review_v4_necessity_judgment.md` (新 memory) で記録予定
