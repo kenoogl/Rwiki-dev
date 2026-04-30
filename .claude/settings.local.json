@@ -25,7 +25,13 @@
       "Bash(python -m pytest tests/test_lint.py tests/test_lint_query.py tests/test_audit.py tests/test_ingest.py tests/test_rw_light.py -q)",
       "Read(//tmp/**)",
       "Bash(python3 *)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Read(//Users/Daily/Development/Rwiki-dev-v4/.kiro/specs/__TRACKED_VAR__/**)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 add .kiro/methodology/v4-validation/v3-baseline-summary.md .kiro/methodology/v4-validation/v4-protocol.md \"docs/過剰修正バイアス.md\" .kiro/drafts/dual-reviewer-draft.md .kiro/specs/dual-reviewer-foundation/brief.md .kiro/specs/dual-reviewer-design-review/brief.md .kiro/specs/dual-reviewer-dogfeeding/brief.md)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 commit -m ' *)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 log --oneline -3)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 status --short)",
+      "Skill(session-cont)"
     ]
   }
 }
