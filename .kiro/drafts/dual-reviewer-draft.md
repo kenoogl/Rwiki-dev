@@ -245,6 +245,15 @@ dual-reviewer は **二重の位置付け** で進める:
 
 リスク: LLM 自己診断の信頼性 (skipped を skipped と認識できるか)。aggregate 統計として意味あり、個別精度は完全信頼不可。
 
+**要素 4: `phase1_meta_pattern`** (Phase 1 escalate 同型識別、3 値 enum + null、cross-spec contract 補強 field):
+
+- `norm_range_preemption` (Spec 0 R4 同型 = 規範範囲先取り)
+- `doc_impl_inconsistency` (Spec 1 R5 同型 = 文書 vs 実装不整合)
+- `norm_premise_ambiguity` (Spec 1 R7 同型 = 規範前提曖昧化)
+- `null` (escalate 非該当)
+
+escalate 検出 finding にのみ付与、`dual-reviewer-dogfeeding` Req 4 AC 3 の Phase 1 同型 hit rate 抽出 + Req 4 AC 8 (c) bias 共有反証 evidence 構成要素として再利用。要素 1-3 (B-1.0 採用 3 要素 = 失敗構造観測軸) とは別軸 (Phase 1 escalate 同型識別による cross-spec 学習継承軸) として位置付け、4 要素目として B-1.0 minimum 同梱 (foundation Req 3 AC 10 / design-review Req 6 AC 8 / dogfeeding Req 4 AC 3 連鎖)。
+
 ##### B-1.x 採用 3 要素 (自由記述 + 内省、B-1.x で段階追加)
 
 **要素 4: `decision_path`** (B-1.x 追加、思考分岐軌跡):
@@ -317,7 +326,7 @@ dual-reviewer は **二重の位置付け** で進める:
   - disagreement ≥ 3 件 (Spec 3 = 2 件 + Spec 6 で 1 件以上、forced divergence 効果含む)
   - bias 共有反証 evidence 確実
   - impact_score 分布が minor のみではない
-- 終端条件: Spec 6 design approve **同時に** Phase B fork go/hold 判断
+- 終端条件: dual-reviewer 適用 review evidence 提供 + Phase B fork go/hold 判断 + Spec 6 design approve = A-2 期間終端時期一致で並走後同時宣言 (session 内 simultaneous approve ではなく、approve 操作は Spec 6 spec の責務として post-本 spec、本 spec の deliverable は review evidence 提供で終端)
 - 期間目安: 2-3 週間
 - Spec 6 = この phase で完走 (= ペンディング解除 = Rwiki v2 design phase 全 8 spec approve 完了)
 
@@ -421,13 +430,14 @@ dual-reviewer は二重位置付け (プロダクト主 + 研究副産物、§2.
 
 ### 4.6 B-1.0 拡張ログ schema (論文化軸、§2.10.3 参照)
 
-`dr-log` JSONL に以下 3 要素を schema 追加 (B-1.0 minimum 同梱):
+`dr-log` JSONL に以下 4 要素を schema 追加 (B-1.0 minimum 同梱):
 
 - `miss_type` (finding ラベル、6 種 enum)
 - `difference_type` (adversarial 拾い分のラベル、6 種 enum)
 - `trigger_state` (review_case フラグ、3 軸 enum object 各 applied | skipped の 2 値 enum: `negative_check` / `escalate_check` / `alternative_considered`)
+- `phase1_meta_pattern` (escalate 検出 finding ラベル、3 値 enum + null: `norm_range_preemption` / `doc_impl_inconsistency` / `norm_premise_ambiguity` / null、cross-spec contract 補強 field、`dual-reviewer-dogfeeding` Req 4 AC 3 の Phase 1 同型 hit rate 抽出と integration)
 
-実装コスト = 極低 (enum 定義 + LLM prompt 1 行)。impact_score 3 軸 (Chappy P0、結果の質軸) と直交 (拡張 schema = 失敗構造観測軸)。
+実装コスト = 極低 (enum 定義 + LLM prompt 1 行)。impact_score 3 軸 (Chappy P0、結果の質軸) と直交 (要素 1-3 = 失敗構造観測軸 / 要素 4 = Phase 1 escalate 同型識別による cross-spec 学習継承軸)。
 
 B-1.x 段階追加: `decision_path` / `skipped_alternatives` / `bias_signal` (詳細 §2.10.3、自由記述 + 内省、A-2 後半 〜 Phase 3 で実装)。
 

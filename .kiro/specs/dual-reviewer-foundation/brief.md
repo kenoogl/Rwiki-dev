@@ -11,7 +11,7 @@ dual-reviewer (LLM 設計レビュー方法論 v3 一般化 package) を Layer 1
 - ドラフト v0.3 §2.1 で Layer 1 framework 骨組み確定 (Step A/B/C 構造 + bias 抑制 quota + pattern schema + 介入 framework)
 - ドラフト v0.3 §2.9 で 23 事例 retrofit 仕様確定 (`seed_patterns.yaml`、Rwiki 由来、固有名詞付きで OK)
 - ドラフト v0.3 §2.6 で Chappy P0 採用 3 件確定、うち `fatal_patterns.yaml` 8 種固定確定
-- ドラフト v0.3 §2.10.3 で B-1.0 拡張 schema (`miss_type` / `difference_type` / `trigger_state`) の 3 要素確定
+- ドラフト v0.3 §2.10.3 で B-1.0 拡張 schema (`miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`) の 4 要素確定
 - 実装は未着手 = 全要素を本 spec で実装する
 
 ## Desired Outcome
@@ -28,7 +28,7 @@ dual-reviewer の core 基盤が稼働可能な状態:
 
 - Layer 1 = Step A/B/C 構造 + bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索) + 中程度 granularity の pattern schema を skeleton 実装
 - `dr-init` = project bootstrap、`.dual-reviewer/config.yaml` 生成、Layer 3 (project 固有) の placeholder ディレクトリ生成
-- 共通 JSON schema = review_case / finding / impact_score 3 軸 (severity / fix_cost / downstream_effect) / B-1.0 拡張 schema (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 enum object 各 applied | skipped の 2 値 enum) を JSON Schema で定義
+- 共通 JSON schema = review_case / finding / impact_score 3 軸 (severity / fix_cost / downstream_effect) / B-1.0 拡張 schema (`miss_type` 6 種 enum / `difference_type` 6 種 enum / `trigger_state` 3 軸 enum object 各 applied | skipped の 2 値 enum / `phase1_meta_pattern` 3 値 enum + null = norm_range_preemption / doc_impl_inconsistency / norm_premise_ambiguity / null、cross-spec contract 補強 field) を JSON Schema で定義
 - `seed_patterns.yaml` = 23 事例 retrofit (`feedback_review_judgment_patterns.md` を yaml schema 化、Rwiki 固有名詞付きで OK、generalization は Phase B-1.0 release prep に統合 #3)
 - `fatal_patterns.yaml` = 8 種固定 (sandbox escape / data loss / privilege escalation / infinite retry / deadlock / path traversal / secret leakage / destructive migration)
 
@@ -37,7 +37,7 @@ dual-reviewer の core 基盤が稼働可能な状態:
 - **In**:
   - Layer 1 framework (Step A/B/C + bias 抑制 quota + pattern schema)
   - `dr-init` skill (project bootstrap)
-  - 共通 JSON schema (review_case / finding / impact_score / B-1.0 拡張 schema 3 要素)
+  - 共通 JSON schema (review_case / finding / impact_score / B-1.0 拡張 schema 4 要素 = `miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`)
   - `seed_patterns.yaml` (23 事例 retrofit、Rwiki 固有名詞付きで OK)
   - `seed_patterns_examples.md` (人間可読、各 pattern の具体例)
   - `fatal_patterns.yaml` (致命級 8 種固定)

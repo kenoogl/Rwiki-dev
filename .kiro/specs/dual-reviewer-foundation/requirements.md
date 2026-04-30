@@ -4,7 +4,7 @@
 
 dual-reviewer (LLM 設計レビュー方法論 v3 一般化 package) を Layer 1/2/3 三層構造で組み立てるには、phase 横断の framework + project bootstrap + 共通 JSON schema + initial seed (23 事例 + fatal patterns) が揃っている必要がある。これらが先行整備されないと、`dr-design` / `dr-log` skill が単独で機能できず、Phase A-2 (Spec 6 dogfeeding) も実行不可。
 
-ドラフト v0.3 (`.kiro/drafts/dual-reviewer-draft.md`) §2.1 で Layer 1 framework 骨組み確定、§2.9 で 23 事例 retrofit 仕様確定 (`seed_patterns.yaml`、Rwiki 由来)、§2.6 で Chappy P0 採用 3 件確定 (うち `fatal_patterns.yaml` 8 種固定)、§2.10.3 で B-1.0 拡張 schema 3 要素 (`miss_type` / `difference_type` / `trigger_state`) 確定。実装は未着手。
+ドラフト v0.3 (`.kiro/drafts/dual-reviewer-draft.md`) §2.1 で Layer 1 framework 骨組み確定、§2.9 で 23 事例 retrofit 仕様確定 (`seed_patterns.yaml`、Rwiki 由来)、§2.6 で Chappy P0 採用 3 件確定 (うち `fatal_patterns.yaml` 8 種固定)、§2.10.3 で B-1.0 拡張 schema 4 要素 (`miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`) 確定。実装は未着手。
 
 本 spec は dual-reviewer の core 基盤 (Layer 1 framework + `dr-init` skill + 共通 JSON schema + `seed_patterns.yaml` + `fatal_patterns.yaml`) を稼働可能にし、`dual-reviewer-design-review` / `dual-reviewer-dogfeeding` が依存する全要素を提供する。Phase A scope = Rwiki repo 内 prototype 段階、B-1.0 minimum 3 skills のうち `dr-init` 部分を担当。詳細は brief.md (`.kiro/specs/dual-reviewer-foundation/brief.md`) 参照。
 
@@ -23,7 +23,7 @@ primary 参照点:
 - **In scope**:
   - Layer 1 framework 骨組み (Step A/B/C 構造 + bias 抑制 quota + 中程度 granularity の pattern schema)
   - `dr-init` skill (project bootstrap、`.dual-reviewer/` 構造 + `config.yaml` 雛形 + Layer 3 placeholder ディレクトリ生成)
-  - 共通 JSON schema 定義 (`review_case` / `finding` / `impact_score` 3 軸 / B-1.0 拡張 schema 3 要素 = `miss_type` / `difference_type` / `trigger_state`)
+  - 共通 JSON schema 定義 (`review_case` / `finding` / `impact_score` 3 軸 / B-1.0 拡張 schema 4 要素 = `miss_type` / `difference_type` / `trigger_state` / `phase1_meta_pattern`)
   - `seed_patterns.yaml` (23 事例 retrofit、Rwiki 固有名詞付きで OK、`origin: rwiki-v2-dev-log`)
   - `seed_patterns_examples.md` (人間可読、各 pattern の具体例)
   - `fatal_patterns.yaml` (致命級 8 種固定: sandbox escape / data loss / privilege escalation / infinite retry / deadlock / path traversal / secret leakage / destructive migration)
@@ -55,7 +55,7 @@ primary 参照点:
 #### Acceptance Criteria
 
 1. The Layer 1 framework shall Step A/B/C 構造 (primary detection → adversarial review → integration) を phase 横断で再利用可能な形式 (具体的提供 form = 関数 / class / config / yaml / markdown のいずれか、design phase で確定) で定義する
-2. The Layer 1 framework shall bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索 / `fatal_patterns.yaml` 強制照合 / forced divergence) を event-triggered 介入として定義し、Tier 比率は post-run measurement only (pre-run target setting は Goodhart's Law 回避のため含めない) と規定する。Layer 1 は quota の存在および採用方針を規定するに留め、forced divergence prompt template の具体生成 logic 等は Layer 2 design extension の責務 (Boundary Out 整合)。Layer 2 design extension は Layer 1 quota を継承し、`厳しく検証 5 種` / `escalate 必須条件 5 種` 等を追加した design phase quota (draft v0.3 §2.7) として発動する
+2. The Layer 1 framework shall bias 抑制 quota (formal challenge / 検出漏れ / Phase 1 同型探索 / `fatal_patterns.yaml` 強制照合 / forced divergence (概念の参照のみ、prompt template 生成は Layer 2 design extension の責務 = Boundary Out 整合)) を event-triggered 介入として定義し、Tier 比率は post-run measurement only (pre-run target setting は Goodhart's Law 回避のため含めない) と規定する。Layer 1 は quota の存在および採用方針を規定するに留め、forced divergence prompt template の具体生成 logic 等は Layer 2 design extension の責務 (Boundary Out 整合)。Layer 2 design extension は Layer 1 quota を継承し、`厳しく検証 5 種` / `escalate 必須条件 5 種` 等を追加した design phase quota (draft v0.3 §2.7) として発動する
 3. The Layer 1 framework shall pattern schema を primary_group + secondary_groups の二層構造 (中程度 granularity、primary_group の数 / secondary_groups の種類数の具体定義は design phase で確定) で定義する
 4. Where Layer 2 phase extension が Step A/B/C や quota を拡張する場合, the Layer 1 framework shall extension point (phase 別 hook + quota 追加点) を提供する
 5. The Layer 1 framework shall phase 別 review logic を含めない (= Layer 2 phase extension 側の責務)
@@ -80,14 +80,15 @@ primary 参照点:
 #### Acceptance Criteria
 
 1. The 共通 JSON schema shall `review_case` object を以下 field で定義する: id / phase / timestamp / round / primary_findings (= `finding.id` の配列) / adversarial_findings (= `finding.id` の配列) / integration_result / trigger_state (`trigger_state` は review_case = run level の実行制御状態であり、finding level の `miss_type` / `difference_type` とは異なる粒度。`primary_findings` / `adversarial_findings` の値型 = `finding.id` の配列で、JSONL のフラット構造 = 1 review_case = 1 line + 1 finding = 1 line で外部キー紐付け、`dual-reviewer-design-review` Req 5 AC 5.2 連鎖)
-2. The 共通 JSON schema shall `finding` object を以下 field で定義する: id / round / origin / description / impact_score / miss_type / difference_type (severity は impact_score 内に統合する、draft v0.3 §2.6「既存 severity を 3 軸 impact_score に拡張」と整合。`difference_type` は optional field = single mode 実行時の finding は absent 許容 / `origin` field 値範囲 = `primary` / `adversarial` の 2 値 enum / `dual-reviewer-design-review` Req 6 AC 6.6 連鎖)
+2. The 共通 JSON schema shall `finding` object を以下 field で定義する: id / round / origin / description / impact_score / miss_type / difference_type / phase1_meta_pattern (severity は impact_score 内に統合する、draft v0.3 §2.6「既存 severity を 3 軸 impact_score に拡張」と整合。`difference_type` は optional field = single mode 実行時の finding は absent 許容 / `origin` field 値範囲 = `primary` / `adversarial` の 2 値 enum / `phase1_meta_pattern` は AC 10 で定義する optional field = escalate 検出 finding にのみ付与 / `dual-reviewer-design-review` Req 6 AC 6.6 連鎖)
 3. The 共通 JSON schema shall `impact_score` を 3 軸 object (severity / fix_cost / downstream_effect) として定義する
 4. The 共通 JSON schema shall `impact_score.severity` を CRITICAL / ERROR / WARN / INFO の 4 値 enum として定義する (Rwiki steering の severity 体系に整合)
 5. The 共通 JSON schema shall `impact_score.fix_cost` および `impact_score.downstream_effect` を有限値 enum で表現する (具体 enum 値は design phase で確定する)
 6. The 共通 JSON schema shall `miss_type` を 6 値 enum (implicit_assumption / boundary_leakage / spec_implementation_gap / failure_mode_missing / security_oversight / consistency_overconfidence) として定義する
-7. The 共通 JSON schema shall `difference_type` を 6 値 enum (assumption_shift / perspective_divergence / constraint_activation / scope_expansion / adversarial_trigger / reasoning_depth) として定義する
+7. The 共通 JSON schema shall `difference_type` を 6 値 enum (assumption_shift / perspective_divergence / constraint_activation / scope_expansion / adversarial_trigger / reasoning_depth) の optional field として定義する (single mode 実行時の finding は absent 許容、AC 2 と整合)
 8. The 共通 JSON schema shall `trigger_state` を 3 軸 object (negative_check / escalate_check / alternative_considered、各 applied | skipped の 2 値 enum) として定義する
 9. The 共通 JSON schema shall JSON Schema Draft 標準形式 (具体版 = Draft 2020-12 / Draft-07 等の選定は design phase で確定) で表現される (jsonschema 等の validator で検証可能)
+10. The 共通 JSON schema shall `finding.phase1_meta_pattern` を 3 値 enum + null の optional field として定義する: norm_range_preemption (Spec 0 R4 同型 = 規範範囲先取り) / doc_impl_inconsistency (Spec 1 R5 同型 = 文書 vs 実装不整合) / norm_premise_ambiguity (Spec 1 R7 同型 = 規範前提曖昧化) / null (escalate 非該当)。escalate 検出 finding にのみ付与し、その他 finding は absent (キーなし) または null (キーあり値 null) のいずれかを許容する (JSON Schema 実装方式 = `nullable: true` / `not required` のいずれを default とするかは design phase で確定、本 spec scope では両表現を validator 受容とする)。`escalate 検出 finding` の operational 定義 (escalate 必須条件 5 種等) は Layer 2 design extension (`dual-reviewer-design-review` Req 3 AC 3 / Req 6 AC 8) の責務、本 spec は field 型のみ規定 (`dual-reviewer-dogfeeding` Req 4 AC 3 の Phase 1 同型 hit rate 抽出と integration)
 
 ### Requirement 4: seed_patterns.yaml (23 事例 retrofit)
 
