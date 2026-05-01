@@ -2,22 +2,33 @@
 
 _目的: 論文 (8月ドラフト提出) + Phase B fork 判断のための quantitative evidence 取得計画。checkbox で進捗追跡し、新 evidence 取得 + phase 移行ごとに更新する。_
 
-_v1.0 / 2026-05-01 (15th セッション、A-1 implementation phase 着手直前 + Level 6 = downstream rework signal 追加 + Claim D = external validity 主張追加 + design-review v1.2 改修 cycle 完走)_
+_v1.1 / 2026-05-01 (17th セッション、A-1 implementation phase Step 2 着手直前 + A-3 triangulation evidence batch 新設 + framing 変更 = "ground truth validation" → "convergent multi-indicator triangulation" + 比較軸 4 axes 化 + Phase A 終端 redefine)_
 
 ---
 
-## §1 論文の目的 + 3 主張
+## §1 論文の目的 + 4 主張
 
-dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論** として確立。4 主張:
+dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論** として確立。
+
+### Validation framing (v1.1 改版で確定)
+
+本論文は **ground truth による検証ではなく、convergent multi-indicator triangulation** に基づく。論文 reviewer 想定批判 1 (= 過剰修正比率 = `do_not_fix` 比率と定義されるが、`do_not_fix` 自身は V4 自身の judgment subagent verdict = self-referential metric) に対する defense として、以下の framing を採用:
+
+- 旧 framing: "V4 reduces over-correction, validated against ground truth"
+- 新 framing: "V4 reduces over-correction, validated through **convergent multi-indicator triangulation** (= no single source claims ground truth, multiple **independent** indicators converge in the same direction)"
+
+human GT (= human label) は (a) literature 上 noisy + (b) Spec 6 reviewer recruitment 困難 (= ロジック / 計算 / Wiki + dual-reviewer protocol の dual domain expertise 必要) のため scope 外。代わりに 5 件 independent indicators (= multi-vendor LLM + mutation testing + multi-run reliability + cross-project transfer + downstream rework signal) の convergence を evidence base とする (詳細 = §3.7 + 軸 4)。
+
+### 4 主張
 
 - **Claim A**: adversarial subagent (V3 = Step B) が single-reviewer に対し検出 coverage を改善 (= internal validity = bias 抑制効率の direct measurement)
 - **Claim B**: judgment subagent (V4 Step C 新規) が過剰修正 bias を抑制し採択率を改善 (= internal validity = bias 抑制効率の direct measurement)
 - **Claim C**: 上記 2 構造統合の dual-reviewer architecture が **bias 観測装置 + 改善 mechanism** として方法論的に valid
 - **Claim D** (v1.0 追加): V4 review が機能した spec の implementation phase で、上流 artifact (req/design/tasks) への post-approve 改版 (= rework) が低水準に抑制される (= **external validity** = review 出力が下流で破綻しないことの indirect measurement、claim A/B/C と独立次元)
 
-提出 timeline: **8月ドラフト提出** (Phase 3 = 7-8月、別 effort)。本計画は Phase 2 (6-7月、A-2 期間) で figure 1-3 + ablation evidence (Claim A/B/C) + Level 6 rework signal (Claim D) 完走を担保。
+提出 timeline: **8月ドラフト提出** (Phase 3 = 7-8月、別 effort)。本計画は Phase 2 (6-7月、A-2 期間) で figure 1-3 + ablation evidence (Claim A/B/C) + Level 6 rework signal (Claim D) 完走を担保し、続く A-3 triangulation evidence batch (= scenario B 独立 batch、§3.7) で multi-indicator convergence を完成させた段階を **Phase A 終端 = 論文 draft 着手 timing** と定める。
 
-## §2 比較軸 (3 axes)
+## §2 比較軸 (4 axes)
 
 軸混同を避ける設計 (V4 §4.4 で identifiability 問題に明示対処済):
 
@@ -26,10 +37,21 @@ dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論**
   - **避ける**: 「V4 全体 > V3」pure independent 比較 (B-2 multi-vendor で defer)
 - **軸 2**: phase 横断 verification (req phase vs design phase)
 - **軸 3**: V3 baseline vs V4 累計 evidence (H1-H4 仮説検証)
+- **軸 4 (v1.1 新設、Triangulation indicators)**: multi-indicator convergence による self-referential metric defense
+  - 構成 indicator (5 件、§1 Validation framing 整合):
+    - (i) **multi-vendor LLM cross-validation** (= Claude judgment vs GPT-4 judgment vs Gemini judgment、批判 1+3 LLM-on-LLM bias 同時 mitigation、A-3.2 で取得)
+    - (ii) **mutation testing** (= Spec 6 design.md に既知 defect 5-10 件 inject = constructed positive control、V4 review の sensitivity/specificity 測定、批判 1 direct rebuttal、A-3.3 で取得)
+    - (iii) **multi-run reliability** (= V4 protocol を Spec 6 に対し 3-5 random seed で再実行、inter-run agreement = 内部 consistency evidence、批判 5 order effect 同時 mitigation、A-3.4 で取得)
+    - (iv) **cross-project transfer** (= dual-reviewer 同程度規模の別 domain project = フルスクラッチ project で req+design phase に V4 適用、Spec selection bias 排除 + domain transfer 補強、批判 2+8 mitigation、A-3.1 で取得)
+    - (v) **downstream rework signal** (= Level 6 既存 plan、Claim D primary evidence、time-deferred validity = post-approve rework が少ないことを V4 review の prospective error rate 測定として活用、§3.6 既存)
+  - 主張範囲: 「5 件 independent indicators が同方向に converge する場合、self-referential metric (`do_not_fix` 比率) の妥当性が triangulation により補強される」
+  - **避ける**: 「単一 indicator が ground truth」claim (= self-referential metric では本質的に不可能)、「multi-indicator が perfect agreement」claim (= 各 indicator の noise を考慮、majority convergence = sufficient evidence)
 
 ---
 
-## §3 データ取得 checklist (5 levels)
+## §3 データ取得 checklist (6 levels + 1 triangulation batch)
+
+_Level 1-6 = spec ごとの per-finding evidence pipeline (raw data → metrics → hypothesis → figure → fork judgment → rework signal)。§3.7 = 別軸 = cross-project / cross-LLM / constructed positive control / reproducibility による triangulation evidence batch (v1.1 新設、軸 4 整合)。_
 
 ### §3.1 Level 1: Per-finding raw data (JSONL log、dr-log skill 出力)
 
@@ -180,6 +202,28 @@ A-1 期間内 tasks phase ad-hoc V4 適用 evidence = phase 横断 H1-H4 robustn
   - 主張: judgment subagent 効果 (過剰修正比率削減 + 採択率増 + override 件数 + 必要性判定 quality)
   - source data: Level 2 metrics + Level 1 `override_reason` 内容分析
 
+#### Triangulation figures (v1.1 新設、軸 4 整合、A-3 batch source)
+
+A-3 triangulation evidence batch (§3.7) で取得した independent indicators を可視化。論文 reviewer 想定批判 1 + 3 + 5 への visual rebuttal:
+
+- [ ] **figure 5: multi-vendor LLM agreement matrix (軸 4-i、A-3.2 source)**
+  - 主張: V4 judgment が Claude single vendor 固有 bias でない
+  - 形式: 3 × 3 heatmap (Claude / GPT-4 / Gemini × Claude / GPT-4 / Gemini)、cell value = per-finding 3 ラベル合致率
+  - 補助 panel: per-finding disagreement rate を `miss_type` enum で stratify (= disagreement が特定 finding type に集中するかの解像度)
+  - source data: A-3.2 § 3.7.2 agreement matrix
+  - convergence claim: majority agreement ≥ 70% で 軸 4-i 達成
+- [ ] **figure 6: mutation testing sensitivity/specificity ROC-like (軸 4-ii、A-3.3 source)**
+  - 主張: V4 review に constructed ground truth (= inject defect) 投入時の sensitivity (true positive rate) + specificity (1 - false positive rate) を直接測定 = self-referential metric の limitation を mutation で補完
+  - 形式: ROC-like curve (x = 1 - specificity、y = sensitivity)、3 系統 (single / dual / dual+judgment) で別 curve、AUC 値 numerical 注釈
+  - 補助 panel: defect type ごとの sensitivity stratification (= V4 が特定 defect type に強い or 弱い)
+  - source data: A-3.3 § 3.7.3 mutation バリアント sensitivity/specificity 集計
+  - convergence claim: dual+judgment AUC ≥ 0.7 で 軸 4-ii 達成
+- ⏸️ **figure 7 (optional): multi-run inter-run agreement (軸 4-iii、A-3.4 source)**
+  - 主張: V4 protocol が seed 不変の structural property を捉えている
+  - 形式: 5 × 5 heatmap (seed × seed) または bar chart (per-seed finding count + agreement %)
+  - 規模上 figure 5 + 6 が論文 main、figure 7 は appendix or limitations section 用
+  - 配置判断: A-3.4 結果 inspection 後、agreement ≥ 80% なら appendix figure として残す、それ未満なら numerical 表のみ
+
 #### tasks phase ad-hoc data の figure 寄与 (補助 evidence、13th セッション着手予定)
 
 - [ ] **figure 1 (miss_type 分布)**: tasks phase data point 追加で phase 横断 reproducibility 強化 = core evidence と整合 (foundation 6 enum は phase 不問)
@@ -201,6 +245,8 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 - [ ] **(d) impact_score 分布が minor のみではない** = severity ∈ {CRITICAL, ERROR} の finding ≥ 1 件
 - [ ] **(e) 過剰修正比率改善** = dual+judgment 系統 vs dual 系統で do_not_fix 比率減 + must_fix 比率増 (V4 H1+H3 仮説整合)
 - [ ] **判定結果記録** = `comparison-report.md` 最終版に go/hold + 判定根拠 + 移行手順 (go) or 改訂候補 (hold) 併記
+
+**v1.1 注記**: A-3 triangulation evidence (§3.7) と本 5 条件は **独立軸**。本 5 条件 (a-e) は **工学的有効性判断軸** (= Phase B-1.0 release prep go/hold)、A-3 evidence は **論文軸** (= 多角的妥当性 evidence、軸 4 triangulation)。Phase B fork 判定は A-2 完走時点で 5 条件 (a-e) のみで実施 (= A-3 完走待ちは不要)、A-3 は Phase A 終端 (= 論文 draft 着手 timing) の判断材料として独立に運用。
 
 ### §3.6 Level 6: Downstream rework signal (external validity、v1.0 新設、Claim D の primary evidence)
 
@@ -300,6 +346,85 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 
 → 閾値は A-1 完走時点で sample 観察に基づき精緻化 (本 v1.0 起案値は preliminary)。
 
+### §3.7 A-3 Triangulation evidence batch (v1.1 新設、軸 4 = multi-indicator convergence の primary evidence)
+
+**目的**: §1 Validation framing で確定した "convergent multi-indicator triangulation" の 5 件 independent indicators のうち、Level 6 (= rework signal) 以外の 4 件を A-2 dogfeeding 完走後の独立 batch (= scenario B) として取得。論文 reviewer 想定批判 1 (= self-referential metric) + 批判 2 (= sample size / domain transfer) + 批判 3 (= LLM-on-LLM bias) + 批判 5 (= order effect) + 批判 8 (= ecological validity) の同時 mitigation。
+
+**timing**: A-2 dogfeeding 完走後の独立 batch (= user 明示「分離した方が集中できる」per 16th 議論)。A-2 並行は集中度低下のため非推奨。Phase A 終端 redefine = A-3 完走 = 論文 draft 着手 timing (§4 + §6 整合)。
+
+**累計 cost 見積**: A-3.1 (6-12h) + A-3.2 (3-6h) + A-3.3 (7-10h) + A-3.4 (3-5h) + Level 6 (~0、既存 plan 内) = **19-33 時間 ≈ 3-5 work day = A-2 完走後 1-2 calendar 月 batch**。
+
+**批判 mitigation 予想**: 批判 1 (~80%) + 批判 2 (~70%) + 批判 3 (~70%) + 批判 5 (~80%) + 批判 8 (~90%) = 論文 acceptable line 明確に内。
+
+#### §3.7.1 A-3.1: フルスクラッチ project (cross-project transfer evidence、軸 4-iv)
+
+**目的**: dual-reviewer 同程度規模の別 domain project で req+design phase に V4 適用、Spec selection bias 排除 + domain transfer 補強。批判 2 (sample size / domain transfer) + 批判 8 (ecological validity) mitigation。
+
+- [ ] フルスクラッチ project の brief 着手 (= 構想中、明日仕様着手可、user 任意 timing で並行構想固め推奨)
+- [ ] フルスクラッチ project requirements phase に V4 適用 (= 1 spec instance 追加、V4 protocol unchanged)
+- [ ] フルスクラッチ project design phase に V4 適用 (= 1 spec instance 追加)
+- [ ] per-finding raw data (foundation Req 3 共通 schema、`miss_type` / `difference_type` / `trigger_state` 自己ラベリング)
+- [ ] per-system metrics (= 検出件数 / 採択率 / 過剰修正比率 / wall-clock / V4 修正否定 prompt 機能)
+- [ ] dual-reviewer 3 spec の同 phase metric と並列比較 (= cross-project metric stability evidence)
+
+**caveat**: フルスクラッチ project = 別 domain (= dual-reviewer 自身ではない) を選定、ただし規模 + 複雑度は dual-reviewer 同程度 (= ecological validity 担保)。Project selection bias 排除のため、A-3 着手前の brief 確定段階で domain + scope を fix し変更しない。
+
+**cost 見積**: 6-12 時間 (= V4 適用 wall-clock + analysis + raw data 抽出)。
+
+#### §3.7.2 A-3.2: multi-vendor LLM cross-validation (cross-LLM evidence、軸 4-i)
+
+**目的**: 同 finding set を Claude judgment vs GPT-4 judgment vs Gemini judgment で classify、agreement matrix で V4 judgment subagent verdict が Claude single vendor 固有 bias でないことを確認。批判 1 (self-referential metric) + 批判 3 (LLM-on-LLM bias) 同時 mitigation。
+
+- [ ] dual-reviewer 3 spec design phase finding set (= 12th 末取得済、累計 48 件) を base sample に選定
+- [ ] 同 finding set を GPT-4 judgment subagent prompt (= V4 §5.2 prompt 再利用 / vendor-specific 微調整) に投入、必要性 5-field + 5 条件判定 + 3 ラベル提示
+- [ ] 同 finding set を Gemini judgment subagent prompt に投入 (同上)
+- [ ] 3-vendor agreement matrix 算出 (= must_fix / should_fix / do_not_fix の 3 ラベル合致率、per-finding)
+- [ ] disagreement case の qualitative analysis (= disagreement の root cause = vendor-specific bias or finding 本質的 ambiguity の判定)
+- [ ] convergence threshold 評価 (= 3-vendor majority agreement ≥ 70% → Claude single vendor bias でないことの evidence)
+
+**caveat**: 3 vendor の prompt 微調整は vendor-specific tokenizer / system prompt 仕様差異の対処に限定し、judgment 5 条件 + 3 ラベル定義は不変 (= protocol 等価性担保)。
+
+**cost 見積**: 3-6 時間 (= GPT-4 + Gemini API call + agreement matrix 集計 + disagreement qualitative analysis)。
+
+#### §3.7.3 A-3.3: mutation testing (constructed positive control、軸 4-ii)
+
+**目的**: Spec 6 design.md (= dogfeeding 適用対象) に既知 defect 5-10 件を意図的に inject、V4 review の sensitivity (= true positive rate) と specificity (= true negative rate) を直接測定。批判 1 (= ground truth 不在) の direct rebuttal = inject defect は constructed ground truth として機能。
+
+- [ ] mutation set 設計 (= 5-10 件、V4 review 観点で本来検出されるべき defect type を網羅: AC 矛盾 / 責務境界違反 / dependency cycle / 規範 outsource 化 / interface 不整合 等)
+- [ ] mutation 適用版 Spec 6 design.md 生成 (= base 版 + N 件 mutation で N+1 バリアント)
+- [ ] 各バリアントに V4 protocol 適用 (= dual+judgment 系統 only)
+- [ ] sensitivity 計測 (= inject defect のうち V4 が must_fix / should_fix で検出した割合)
+- [ ] specificity 計測 (= base 版で V4 が do_not_fix と判定した finding が mutation 適用後も safely do_not_fix のままの割合 = false positive rate の補集合)
+- [ ] ROC-like figure 化 (= sensitivity vs (1-specificity)、§3.4 figure 6 で生成)
+
+**caveat**: mutation set の human-curation 必須 = mutation defect 自身が「真の defect」であることを保証する human review が必要 (= 著者 + 1 名 collaborator 体制が現実的)。mutation type の representativeness は paper limitations section で言及。
+
+**cost 見積**: 7-10 時間 (= mutation 設計 + バリアント生成 + V4 適用 wall-clock × N+1 + sensitivity/specificity 集計)。
+
+#### §3.7.4 A-3.4: multi-run reliability check (reproducibility evidence、軸 4-iii)
+
+**目的**: V4 protocol を Spec 6 に対し 3-5 random seed (= LLM temperature + random_state) で再実行、inter-run agreement matrix で内部 consistency を測定。批判 5 (order effect) 同時 mitigation。
+
+- [ ] random seed 3-5 件 fix (= 同 V4 protocol、同 Spec 6 design.md、Claude API random seed のみ変動)
+- [ ] 各 seed で V4 適用 (= dual+judgment 系統 only)
+- [ ] per-seed finding set + per-seed 3 ラベル分布 (must_fix / should_fix / do_not_fix) を記録
+- [ ] inter-run agreement matrix (= seed × seed の per-finding ラベル合致率)
+- [ ] consistency threshold 評価 (= ≥ 80% inter-run agreement → V4 protocol が seed 不変の structural property を捉えていることの evidence)
+- [ ] disagreement finding の qualitative analysis (= seed-dependent finding の root cause)
+
+**caveat**: Claude API random seed control が deterministic でない場合 (= API 仕様変動の可能性)、temperature=0 + system prompt fix で best-effort reproduction を実施し、API 非決定性は paper limitations section で言及。
+
+**cost 見積**: 3-5 時間 (= V4 適用 wall-clock × N seed + agreement matrix 集計)。
+
+#### §3.7.5 A-3 evidence convergence judgment (Phase A 終端 trigger)
+
+A-3.1-A-3.4 + 既存 Level 6 = 5 件 indicators の convergence を judgment、論文 draft 着手可否を確定:
+
+- [ ] **convergent (Phase A 終端 + 論文 draft 着手 go)**: 5 件中 4 件以上が V4 有効性方向に converge (= multi-vendor agreement ≥ 70% AND mutation sensitivity ≥ 70% AND multi-run agreement ≥ 80% AND cross-project metric stability ≥ ±20% AND Level 6 M4a ≤ 40%)
+- [ ] **mixed (Phase A 終端 + 論文 draft 着手 go with limitations expanded)**: 5 件中 3 件 converge + 2 件 mixed (= 一部 indicator で V4 有効性方向に converge、他 indicator で nuanced)。論文 limitations section で各 indicator の disagreement narrative を明示。
+- [ ] **non-convergent (Phase A hold + V4 protocol 改修要)**: 5 件中 ≤ 2 件 converge = V4 改修材料 + paper claim 縮小要、本 plan 改版要。
+- [ ] convergence judgment 結果 + narrative を `comparison-report.md` 最終版に append (= section ID `triangulation-convergence-judgment-v1`)。
+
 ---
 
 ## §4 Timeline / phase milestones
@@ -356,14 +481,33 @@ dual-reviewer 3 spec の tasks.md 生成 + V4 ad-hoc 適用 + cross-spec review 
 - [ ] Level 2 metrics 抽出 (`metric_extractor.py` 実行 → `dogfeeding_metrics.json` 生成)
 - [ ] Level 4 figure 1-3 + ablation data 生成 (`figure_data_generator.py` 実行 → `figure_<n>_data.json` × 4 生成)
 - [ ] Level 5 Phase B fork go/hold 5 条件評価 + 判定記録 (`phase_b_judgment.py` 実行 → `comparison-report.md` §12 append、section ID `phase-b-fork-judgment-v1`)
-- [ ] 最終 comparison-report v0.2 (Phase A 終端時、req + design + A-2 累計集計)
-- [ ] Spec 6 design approve = Rwiki v2 全 8 spec design approve = Phase A 終端
+- [ ] Spec 6 design approve = Rwiki v2 全 8 spec design approve = A-2 終端 (= Phase A 終端ではない、v1.1 redefine)
 
-### Phase 3 paper draft (7-8月、別 effort、本計画 scope 外)
+### A-3 triangulation evidence batch (⏸️ A-2 完走後、推定 1-2 calendar 月、v1.1 新設)
+
+§3.7 + 軸 4 整合の独立 batch (= scenario B、user 明示「分離した方が集中できる」per 16th 議論)。論文 reviewer 想定批判 1+2+3+5+8 同時 mitigation evidence。Phase A 終端 redefine (= v1.0 では A-2 完走 = Phase A 終端、v1.1 では A-3 完走 = Phase A 終端)。
+
+- [ ] A-3.1 フルスクラッチ project の req+design phase V4 適用 (cost 6-12h、§3.7.1)
+  - sub-step: brief 着手 (user 任意 timing) → req phase V4 → design phase V4 → metric 抽出
+- [ ] A-3.2 multi-vendor LLM cross-validation (cost 3-6h、§3.7.2)
+  - sub-step: GPT-4 judgment + Gemini judgment 投入 → agreement matrix 算出 → disagreement qualitative analysis
+- [ ] A-3.3 mutation testing (cost 7-10h、§3.7.3)
+  - sub-step: mutation set 設計 (5-10 件) → バリアント生成 → V4 適用 × N+1 → sensitivity/specificity 集計
+- [ ] A-3.4 multi-run reliability check (cost 3-5h、§3.7.4)
+  - sub-step: random seed 3-5 件 fix → V4 適用 × N seed → inter-run agreement matrix 算出
+- [ ] Level 6 (= rework signal、§3.6 既存) を A-2 完走時点で final analysis (cost ~0、既存 plan 内追加 cost 0)
+- [ ] A-3 evidence convergence judgment (§3.7.5) + `comparison-report.md` 最終版 append
+- [ ] **最終 comparison-report v0.2** (= Phase A 終端時、req + design + A-2 + A-3 累計集計、triangulation evidence narrative + claim convergence/mixed/non-convergent verdict)
+- [ ] **Phase A 終端 = A-3 完走** = 論文 draft 着手 timing (v1.1 redefine)
+
+### Phase 3 paper draft (8-9月、Phase A 終端後、別 effort、本計画 scope 外)
+
+_v1.1 redefine: 旧 7-8月 → 新 8-9月 (A-3 batch 1-2 calendar 月分後ろ倒し)、ただし 8月末ドラフト提出 timeline は preliminary (= A-3 cost 圧縮 or 並列化次第)。_
 
 - ⏸️ figure 1-3 + ablation で図表描画
 - ⏸️ figure 4-5 (case study qualitative narrative) 執筆
-- ⏸️ 論文ドラフト submission (8月末)
+- ⏸️ figure 5-6 (triangulation 軸 4 visual rebuttal) 執筆 (v1.1 新規)
+- ⏸️ 論文ドラフト submission (timeline は A-3 完走後に再評価)
 
 ---
 
@@ -416,3 +560,4 @@ dual-reviewer 3 spec の tasks.md 生成 + V4 ad-hoc 適用 + cross-spec review 
 - **v0.3** (2026-05-01 12th セッション末、tasks phase ad-hoc V4 適用 evidence acquisition 追加): 13th セッションで dual-reviewer 3 spec 自体の tasks.md 生成 (`/kiro-spec-tasks` 起動) 時に V4 protocol を ad-hoc 適用、補助 evidence (= phase 横断 reproducibility preliminary verification、論文 core evidence ではない) を opportunistic に取得する計画を追加。Level 1 + Level 2 + Level 3 + Level 4 各 section に tasks phase ad-hoc V4 entries 追加 (3 spec [ ] checkbox + caveat 明示)。Timeline section に「A-1 tasks phase」新 section 追加 (A-1 implementation phase の前段、3 spec tasks.md 生成 + V4 ad-hoc 適用)。§5 Constraints に tasks phase ad-hoc V4 適用の 4 caveats (ad-hoc 観点 / phase 横断 strict comparability / forced_divergence prompt 設計 phase optimization / paper rigor 保証 = limitations section 言及) 追加。systematic tasks phase evidence は Phase B-1.1 (dr-tasks skill + Layer 2 tasks extension 別 spec 化後) で paper revision に活用。
 - **v0.4** (2026-05-01 14th セッション末、A-1 tasks phase 完走 + 3 spec tasks-phase V4 metric 累計反映): 14th セッションで dual-reviewer 3 spec tasks.md 生成 + V4 ad-hoc 適用完走 (commit `021ec65`)。Level 1 + Level 2 の tasks phase ad-hoc V4 [x] checkbox 化 + 3 spec metric 完全数値反映 (foundation 採択率 5.6% / 過剰修正 66.7%、design-review 13.3% / 53.3%、dogfeeding 35.7% / 42.9%) + 3 spec tasks phase 累計 trend table (採択率 +30.1pt / 過剰修正 -23.8pt 連続改善 = V4 構造的有効性 3 spec 連続再現実証、design phase trend と方向一致 = 6 spec instance 累計再現)。Level 3 H1+H2+H3 cross-phase robustness 補助 [x] 化 (H4 wall-clock は別 metric 化要、A-2 期間取得予定)。Timeline section の A-1 tasks phase を「✅ 完了」に変更 + cross-spec review (20 観点 integrity check、Group A 17 + B 2 + C 1 + 不整合 0 件、Group C-1 = `jsonschema>=4.18` version pin 同期) checkbox [x] 化。comparison-report の最終 v0.2 集約は A-2 完走後 (本 v0.4 update では tasks-phase evidence を本 plan に集約済、comparison-report は req + design phase 集約のみで本 spec 完了時集約 timing は variance)。
 - **v1.0** (2026-05-01 15th セッション、A-1 implementation phase 着手直前 + Level 6 = downstream rework signal 追加): user 提案「実装時の手戻り signal を V4 review 有効性指標に追加」を採用、external validity 軸を内部 metric (Claim A/B/C) と独立次元として導入。§1 に Claim D (= V4 review が機能した spec の implementation phase で post-approve 改版 rework が低水準に抑制される、Claim A/B/C と独立次元) を追加し計 4 主張化。§3.6 Level 6 を新設 = 4 metric (M1 Volume / M2 Scope / M3 Discovery Phase / M4 Root Cause) + 3 data source (Data 1 commit pattern auto / Data 2 rework_log JSONL manual / Data 3 TDD cycle 任意 A-2 から導入) + per-line schema + baseline 制約 3 件 (B1 V3 baseline 不在 / B2 within-spec rework 内訳 pseudo-baseline / B3 A-1 vs A-2 within-project 比較) + checkbox tracker (A-1 implementation 4 件 + A-2 dogfeeding 2 件) + Claim D 評価基準 preliminary 起案 (Strong: M4a ≤ 20% AND M4c ≥ 50% / Moderate / Weak)。記録媒体 = `.kiro/methodology/v4-validation/rework_log.jsonl` (新規 file、append-only)。記録範囲 = 15th セッション直後 (本 v1.0 改版完了後) ~ A-2 dogfeeding 完走 (Phase A 終端)。**本 v1.2 改版 (= design-review spec の req/design/tasks 整合化 cycle) 自体は記録 infrastructure 立ち上げ前のため Level 6 記録対象外**。Timeline section の A-1 implementation phase entry に design-review v1.2 改修 cycle 完走 [x] checkbox 反映 + Level 6 記録開始 trigger を明示。
+- **v1.1** (2026-05-01 17th セッション、A-1 implementation phase Step 2 着手直前 + A-3 triangulation evidence batch 新設 + framing 変更 + 4 axes 化 + Phase A 終端 redefine): 16th 末確定の A-3 plan (= 論文 reviewer 想定批判 1 = self-referential metric への defense plan) を本 plan に正式反映。**§1 Validation framing 段落新設** = "ground truth validation" → "convergent multi-indicator triangulation" framing 変更を主張定義の前文に追記、human GT 不在の理由 (= literature noisy + Spec 6 reviewer recruitment 困難) と 5 件 independent indicators の convergence を evidence base とする旨を明示。**§2 軸 4 = Triangulation indicators 新設** (タイトル 3 axes → 4 axes)、5 件 indicator 構成 (multi-vendor / mutation / multi-run / cross-project / rework signal) + 主張範囲 + 避ける claim を明示。**§3 タイトル修正** "(5 levels)" → "(6 levels + 1 triangulation batch)"、Level 1-6 と §3.7 の性質差 (= per-finding pipeline vs cross-project triangulation batch) を冒頭リード文で明示。**§3.4 Level 4 figures に triangulation figures 2 件 + 1 件 optional 追加** = figure 5 (multi-vendor agreement matrix、3×3 heatmap、convergence threshold ≥ 70%) + figure 6 (mutation testing sensitivity/specificity ROC-like、3 系統 curve、AUC 注釈、convergence threshold dual+judgment AUC ≥ 0.7) + figure 7 optional (multi-run inter-run agreement、appendix 配置判断 = ≥ 80% で残す)。**§3.5 Level 5 v1.1 注記** = A-3 evidence と Phase B fork 5 条件は独立軸 (= 工学的有効性判断軸 vs 論文軸)、Phase B fork 判定は A-2 完走時点で 5 条件のみで実施。**§3.7 A-3 Triangulation evidence batch 新設** = §3.7.1 (フルスクラッチ project、cost 6-12h) + §3.7.2 (multi-vendor LLM、cost 3-6h) + §3.7.3 (mutation testing、cost 7-10h) + §3.7.4 (multi-run reliability、cost 3-5h) + §3.7.5 (convergence judgment = convergent / mixed / non-convergent 3 状態 + Phase A 終端 trigger)、累計 cost 19-33 時間 ≈ 3-5 work day = 1-2 calendar 月 batch、批判 mitigation 予想 80%/70%/70%/80%/90%。**§4 Timeline に A-3 phase 新設** = A-2 完走後の独立 batch (= scenario B、user 明示「分離した方が集中できる」)、5 sub-task + Level 6 final analysis + comparison-report v0.2 + Phase A 終端 = A-3 完走 redefine。**§4 A-2 dogfeeding entry の "Phase A 終端" 表現を "A-2 終端" に変更** (= v1.0 では A-2 = Phase A 終端、v1.1 では A-3 完走 = Phase A 終端 = 論文 draft 着手 timing)。**§4 Phase 3 paper draft timeline を 7-8月 → 8-9月 (preliminary) に後ろ倒し** (= A-3 batch 1-2 calendar 月分後ろ倒し、ただし最終 timeline は A-3 完走後再評価)。記録媒体: 本 v1.1 改版自体は v1.0 改版と同様 Level 6 記録対象外 (= 上流 spec artifact への post-approve 改版 trigger なし、本 plan = methodology meta-document への改版)。
