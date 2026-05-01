@@ -2,7 +2,7 @@
 
 _目的: V3 baseline / V4 各 attempt / 将来追加される実験データの所在 + 内容 + アクセス方法を継続的に記録するカタログ。新 evidence 生成時 + archive 操作時に必ず更新する。_
 
-_v0.1 / 2026-04-30 (11th セッション初日)_
+_v0.5 / 2026-05-01 (14th セッション末、A-1 tasks phase 累計 evidence + cross-spec review C-1 fix + 14th 末 cleanup 反映)_
 
 ---
 
@@ -162,7 +162,7 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 
 ---
 
-## 4. design phase V4 evidence (12th セッション完走、main 統合済)
+## 4. design + tasks phase V4 evidence (12-14th セッション完走、main 統合済)
 
 ### 4.1 foundation design phase V4 (commit `2e5637d`、12th)
 
@@ -242,6 +242,104 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 - **新規 archive branch**: `archive/v4-redo-broad-merged-2026-05-01` (commit `b6b850c`、req phase V4 redo broad endpoint 保全、origin push 済)
 - **新規 tag**: `v4-redo-broad-merged-2026-05-01` (= `b6b850c`、3 archive tags pattern 整合 = `v3-evidence-foundation-7th-session` / `v4-baseline-brief-2026-04-29` / `v4-redo-broad-merged-2026-05-01`)
 
+### 4.6 foundation tasks phase ad-hoc V4 (commit `021ec65` + cross-spec C-1 v1.2、14th)
+
+- **内容**: A-1 tasks phase 全 3 spec approve に foundation tasks.md v1.2 を含む
+  - 検出 18 件 (primary 10 + adversarial 8 独立)
+  - 分類: must_fix 1 / should_fix 5 / do_not_fix 12
+  - 採択率 5.6% / 過剰修正比率 66.7% / should_fix 比率 27.8%
+  - judgment override 7 件 / primary↔judgment disagreement 3 件 (P3, P4, P5) / adversarial↔judgment disagreement 1 件 (A4)
+  - V4 修正否定 prompt 機能 75% (adversarial 自己分類 do_not_fix 6/8)
+  - apply 6 件 (must_fix A4 + should_fix P1 + P2 + P3 + P6 + A6、user 三ラベル提示で全 apply)
+  - cross-spec review C-1 fix で v1.2 確定 = `jsonschema>=4.18` version pin 同期 (Task 1 description) を追加 apply
+  - Step 3.5 sanity review subagent verdict = `PASS` (1 pass で完走)
+- **保全 location**:
+  - main `.kiro/specs/dual-reviewer-foundation/{tasks.md, spec.json}` (commit `021ec65` + cross-spec C-1 fix で v1.2)
+  - tasks.md v1.2 + spec.json (`phase: tasks-approved` + `approvals.tasks.approved: true` + `ready_for_implementation: true`)
+- **関連 dev-log**: `docs/dual-reviewer-log-4.md` (14th セッション、user 管理)
+
+### 4.7 design-review tasks phase ad-hoc V4 (commit `021ec65`、14th)
+
+- **内容**: design-review tasks.md v1.1 確定
+  - 検出 15 件 (primary 8 + adversarial 7 独立)
+  - 分類: must_fix 2 / should_fix 5 / do_not_fix 8
+  - 採択率 13.3% / 過剰修正比率 53.3% / should_fix 比率 33.3%
+  - judgment override 5 件 / primary↔judgment disagreement 1 件 (P3) / adversarial↔judgment disagreement 2 件 (A6 should_fix → must_fix / A7 should_fix → do_not_fix)
+  - V4 修正否定 prompt 機能 28.6% (adversarial 自己分類 do_not_fix 2/7、foundation 75% より低下 = adversarial が修正必要性高めに評価傾向)
+  - apply 7 件 (must_fix A1 + A6 + should_fix P4 + P5 + P6 + A3 + A4、user 三ラベル提示で全 apply)
+  - Step 3.5 sanity review subagent verdict = `NEEDS_FIXES` 10 件 → 1 repair pass で 9 件 integrate (#6 sequential ordering で sufficient のため skip)
+- **保全 location**:
+  - main `.kiro/specs/dual-reviewer-design-review/{tasks.md, spec.json}` (commit `021ec65`)
+  - tasks.md v1.1 + spec.json (`phase: tasks-approved` + `approvals.tasks.approved: true` + `ready_for_implementation: true`)
+- **関連 dev-log**: `docs/dual-reviewer-log-4.md` (14th セッション)
+
+### 4.8 dogfeeding tasks phase ad-hoc V4 (commit `021ec65`、14th)
+
+- **内容**: dogfeeding tasks.md v1.1 確定 (consumer-only spec、Operational Protocol + Research Script Hybrid pattern)
+  - 検出 14 件 (primary 6 + adversarial 8 独立)
+  - 分類: must_fix 5 / should_fix 3 / do_not_fix 6
+  - 採択率 35.7% / 過剰修正比率 42.9% / should_fix 比率 21.4%
+  - judgment override 3 件 / primary↔judgment disagreement 2 件 (P3 INFO → must_fix / P4 WARN → must_fix) / adversarial↔judgment disagreement 2 件 (A2 should_fix → must_fix / A3 must_fix → should_fix)
+  - V4 修正否定 prompt 機能 37.5% (adversarial 自己分類 do_not_fix 3/8)
+  - apply 8 件 (must_fix P3 + P4 + A1 + A2 + A6 + should_fix P6 + A3 + A8、user 三ラベル提示で全 apply)
+  - Step 3.5 sanity review subagent verdict = `NEEDS_FIXES` 7 件 → 1 repair pass で 7 件 integrate (Task 2 削除統合 + 7.2/7.3 dependency 修正 + Task 7 design-review v1.2 gate task 追加 + Task 1 boundary clean + README order 後置 + Req 2.5 mapping 追加)
+  - Decision 7 = A-1 implementation phase = Python script 実装 (Task 1-6) + A-2 = Spec 6 適用 (Task 8) の 2 segment 分担
+- **保全 location**:
+  - main `.kiro/specs/dual-reviewer-dogfeeding/{tasks.md, spec.json}` (commit `021ec65`)
+  - tasks.md v1.1 + spec.json (`phase: tasks-approved` + `approvals.tasks.approved: true` + `ready_for_implementation: true`)
+- **関連 dev-log**: `docs/dual-reviewer-log-4.md` (14th セッション)
+
+### 4.9 cross-spec review (commit `021ec65` 統合、14th 末)
+
+- **内容**: 3 spec tasks phase 完走後 (foundation v1.1 + design-review v1.1 + dogfeeding v1.1) の 20 観点 integrity check
+  - **Group A 確認済整合 17 件** (install location 統一 / resolve mechanism (CLI flag + env fallback) / cross-file `$ref` resolver foundation Task 7.5 集約 / Consumer 拡張 4 field / Severity 4 水準 / Python 3.10+ + 2 スペースインデント / Phase A scope / Decision 7 解釈 / sample 1 round 通過 test / 3 系統対照実験 treatment flag / 8 月 timeline / Phase B fork 5 条件 / bilingual heading / frontmatter / tasks-phase ad-hoc V4 caveat 4 件 / dispatch payload 構造 / forced_divergence vs fix-negation 役割分離) = 各 spec tasks 内で確定済 (design phase 6 件から大幅増 = tasks phase で contract integrity 厚め確認)
+  - **Group B 既存対応済 2 件** (design-review v1.2 revalidation cycle 3 改修要件 / TDD 規律) = 3 spec で適切に対応済
+  - **Group C 新規 implication 1 件 全 apply**: C-1 = foundation tasks Task 1 で `jsonschema>=4.18` version pin 同期適用 (= design-review tasks v1.1 P6 apply の cross-spec implication、Task 7.5 cross-file `$ref` resolver で `Registry` 必須)
+  - **不整合 0 件**
+  - **2 phase 比較 (Group 分布)**: design phase = Group A 6 / B 11 / C 3 (各 spec 内で部分確定、3 spec 横断で軽微 implication 残) vs tasks phase = Group A 17 / B 2 / C 1 (= design phase で確定した contract integrity が tasks phase で広く再確認、Group C は version pin 同期のみ)。両 phase で 不整合 0 件、Group C 軽微 implication 全 apply で完走 = pattern 安定性確認
+- **保全 location**:
+  - main `.kiro/specs/dual-reviewer-foundation/tasks.md` v1.2 (cross-spec C-1 fix 統合)
+  - 同 commit `021ec65` で 3 spec tasks.md + spec.json approve + cross-spec C-1 fix bulk apply (= 単一 commit 一括統合)
+- **関連 dev-log**: `docs/dual-reviewer-log-4.md` (14th セッション)
+
+### 4.10 3 spec tasks phase 累計 V4 metric trend (14th 末確定)
+
+| metric | foundation | design-review | dogfeeding | trend |
+|--------|------------|---------------|------------|-------|
+| 検出件数 | 18 | 15 | 14 | 安定 (14-18) |
+| 採択率 | 5.6% | 13.3% | 35.7% | **連続改善 (+7.7pt → +22.4pt = +30.1pt 累計)** |
+| **過剰修正比率** | **66.7%** | **53.3%** | **42.9%** | **連続改善 (-13.4pt → -10.4pt = -23.8pt 累計)** |
+| should_fix 比率 | 27.8% | 33.3% | 21.4% | dogfeeding で減 (must_fix へ shift) |
+| V4 修正否定 prompt 機能 | 75% | 28.6% | 37.5% | adversarial 自己 do_not_fix 比率 |
+| judgment override | 7 | 5 | 3 | 連続減 (semi-mechanical mapping default 適合性向上) |
+
+3 spec 連続で過剰修正比率改善 (66.7% → 53.3% → 42.9%) + 採択率改善 (5.6% → 13.3% → 35.7%) = V4 protocol 構造的有効性の **3 spec 連続再現実証** (= tasks phase ad-hoc 適用でも再現)。
+
+**6 spec instance 累計 (design + tasks 2 phase) 過剰修正比率 連続改善**:
+- design phase: 81.25% → 58.8% → 40.0% (-41.25pt 累計、12th 末)
+- tasks phase: 66.7% → 53.3% → 42.9% (-23.8pt 累計、14th 末)
+- = phase 横断 reproducibility 確認 = V4 protocol が偶然 / 1 spec or 1 phase の特殊性ではなく構造的に primary completeness bias を抑制する装置である phase 横断証明
+
+**tasks phase ad-hoc V4 4 caveats** (`data-acquisition-plan.md` v0.4 §5 整合、paper limitations 明示用):
+- (1) ad-hoc 観点 = Layer 2 tasks extension 未実装 (Phase B-1.1 scope) で primary が boundary 違反 / dependency cycle / granularity / AC 網羅 / executability / verifiability の 6 観点 ad-hoc 列挙
+- (2) phase 横断 strict comparability 問題 = design phase 10 ラウンド観点 vs tasks phase ad-hoc 観点で coverage 異なり phase 間 absolute 比較は spurious comparison リスク、relative trend (= 同 spec 内 single → dual → dual+judgment) のみ valid
+- (3) forced_divergence prompt design phase optimization = adversarial subagent dispatch で tasks phase 用 ad-hoc 微調整 (= primary's task structure 暗黙前提置換)
+- (4) paper rigor 保証 = preliminary cross-phase verification 補助 evidence、systematic tasks phase evidence は Phase B-1.1 (`dr-tasks` skill 実装後) で paper revision に活用
+
+### 4.11 14th 末 cleanup (data-acquisition-plan v0.4 + memory updates、commit `aed0b2b`)
+
+- **`data-acquisition-plan.md` v0.3 → v0.4 update** (commit `aed0b2b`):
+  - Level 1 §3.1: tasks phase ad-hoc V4 raw data 3 [ ] checkbox 化 (3 spec metric 数値含む)
+  - Level 2 §3.2: tasks phase metrics 3 [ ] checkbox 化 + 3 spec 累計 trend table 追加
+  - Level 3 §3.3: H1+H2+H3 cross-phase robustness 補助 [x] 化 (H4 wall-clock は別 metric 化要、A-2 期間取得予定)
+  - §4 Timeline A-1 tasks phase: ⏳ → ✅ 完了 + cross-spec review C-1 checkbox [x] 化
+  - 変更履歴 v0.4 entry 追加
+- **memory updates** (user dir `/Users/keno/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/`、git 追跡対象外):
+  - `feedback_v4_design_phase_3spec_completion.md` → "12-14th 末 3 spec × 2 phase = 6 spec instance" rename + tasks-phase evidence 拡張
+  - `feedback_cross_spec_review_pattern.md` → "design + tasks 2 phase 適用済" rename + 14th tasks phase Group A/B/C 結果追記
+  - `MEMORY.md` index 2 line update
+- **origin push** = `e327847..aed0b2b` 2 commits push 完了、main = origin/main 同期済
+
 ---
 
 ## 5. 将来追加予定 (placeholder、A-1 implementation phase 後 + A-2 dogfeeding 完走後 fill)
@@ -296,10 +394,17 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
   - `2e5637d` design(dual-reviewer-foundation): A-0 → A-1 transition design approve
   - `76a1eb1` design(dual-reviewer-design-review): A-1 design phase approve
   - `aa40934` design(dual-reviewer-dogfeeding): A-1 design phase approve + cross-spec review C1-C3 fix
+- 14th 末 endpoint commits (origin push 済):
+  - `021ec65` tasks(dual-reviewer): A-1 3 spec tasks approve + V4 ad-hoc + cross-spec C-1
+  - `aed0b2b` docs(methodology): data-acquisition-plan v0.4 = tasks phase 累計反映
 - 3 spec design.md / research.md (12th 末 endpoint):
   - `.kiro/specs/dual-reviewer-foundation/design.md` v1.1 + `research.md` v1.0
   - `.kiro/specs/dual-reviewer-design-review/design.md` v1.1 → v1.2-prep + `research.md` v1.0
   - `.kiro/specs/dual-reviewer-dogfeeding/design.md` v1.2 + `research.md` v1.0
+- 3 spec tasks.md (14th 末 endpoint):
+  - `.kiro/specs/dual-reviewer-foundation/tasks.md` v1.2 (cross-spec C-1 fix 統合済)
+  - `.kiro/specs/dual-reviewer-design-review/tasks.md` v1.1
+  - `.kiro/specs/dual-reviewer-dogfeeding/tasks.md` v1.1
 - archive branches (origin push 済):
   - `archive/v3-foundation-design-7th-session` (V3 endpoint, commit `e6cab03`)
   - `archive/v4-redo-attempt-1-v3-scope` (V4 attempt 1, commit `e8ca94a`)
@@ -317,3 +422,4 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 - **v0.2** (2026-04-30 11th セッション): §3.9 「11th セッション 3 req 整合性 audit gap-list」追加。main 統合後の 3 req 整合性 audit 結果を反映、主要 contract 整合 OK 確認 + soft gap 4 件 (G1-G4) + 対応 timing を track。
 - **v0.3** (2026-04-30 11th セッション): §6 関連 reference に `data-acquisition-plan.md` を追加 (論文化 data 取得計画 checkbox tracker、本 catalog と並走 file)。
 - **v0.4** (2026-05-01 12th セッション末): §4 を「将来追加予定 (placeholder)」から「design phase V4 evidence (12th セッション完走、main 統合済)」に展開 (foundation `2e5637d` + design-review `76a1eb1` + dogfeeding + cross-spec `aa40934` の 3 spec evidence 集約 + 3 spec 累計 V4 metric trend = 過剰修正比率 81.25% → 58.8% → 40.0% 連続改善 + 12th 末 cleanup record)。§5 を新規 placeholder section (A-1 implementation phase + A-2 dogfeeding + 論文 figure + Phase B fork) に renumber、§6/§7 (運用規律 + 関連 reference) も連動 renumber。§7 関連 reference に 12th 末 commits + 3 spec design / research file paths + 新規 archive branch (`archive/v4-redo-broad-merged-2026-05-01`) + 新規 tag (`v4-redo-broad-merged-2026-05-01`) を追記。
+- **v0.5** (2026-05-01 14th セッション末): §4 を「design + tasks phase V4 evidence (12-14th セッション完走、main 統合済)」に rename + §4.6-§4.11 を新規追加 (14th 末 tasks phase ad-hoc V4 evidence 集約 = 3 spec tasks phase metric (foundation 採択率 5.6% / 過剰修正 66.7% + design-review 13.3% / 53.3% + dogfeeding 35.7% / 42.9%) + cross-spec review (Group A 17 + B 2 + C 1 + 不整合 0 件、Group C-1 = `jsonschema>=4.18` version pin 同期 を foundation tasks v1.2 で apply) + 3 spec tasks phase 累計 V4 metric trend (採択率 +30.1pt / 過剰修正比率 -23.8pt 累計改善 = V4 構造的有効性 3 spec 連続再現実証、design phase trend 81.25% → 58.8% → 40.0% と方向一致 = 6 spec instance 累計再現) + 14th 末 cleanup (data-acquisition-plan v0.4 + memory 2 file update + origin push) record)。§7 関連 reference に 14th 末 endpoint commits (`021ec65` + `aed0b2b`) + 3 spec tasks.md path + tasks phase ad-hoc V4 caveat 4 件 reference 追加。
