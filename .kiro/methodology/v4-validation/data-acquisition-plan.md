@@ -2,7 +2,7 @@
 
 _目的: 論文 (8月ドラフト提出) + Phase B fork 判断のための quantitative evidence 取得計画。checkbox で進捗追跡し、新 evidence 取得 + phase 移行ごとに更新する。_
 
-_v0.2 / 2026-05-01 (12th セッション末)_
+_v0.3 / 2026-05-01 (12th セッション末、tasks phase ad-hoc V4 適用 evidence acquisition 追加)_
 
 ---
 
@@ -49,6 +49,19 @@ dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論**
   - 形式: `docs/dual-reviewer-log-3.md` (user 管理 dev-log、12th セッション)
   - Cross-spec review 結果: Group A 6 件整合 + Group B 11 件既存対応済 + Group C 3 件 apply + 不整合 0 件
 
+#### 未収集 (A-1 期間内 tasks phase ad-hoc V4 適用 = opportunistic、補助 evidence、13th セッション 着手予定)
+
+dual-reviewer 3 spec 自体の tasks.md 生成 (`/kiro-spec-tasks` 起動) 時に V4 protocol を ad-hoc 適用、raw data を取得する opportunistic data collection。**論文 core evidence ではなく補助 evidence (= phase 横断 reproducibility preliminary verification)**、Layer 2 tasks extension 未実装のため ad-hoc 観点。
+
+- [ ] foundation tasks phase V4 ad-hoc raw data (`/kiro-spec-tasks dual-reviewer-foundation` 起動時、13th 以降)
+- [ ] design-review tasks phase V4 ad-hoc raw data (foundation tasks 完走後)
+- [ ] dogfeeding tasks phase V4 ad-hoc raw data (design-review tasks 完走後)
+  - 形式: foundation 共通 schema + `phase: tasks` enum で JSONL 記録 (foundation Req 3 AC1 で `tasks` enum 既定)
+  - ad-hoc 観点 (= primary 自身が列挙、Layer 2 tasks extension 未実装): boundary 違反 / dependency cycle / granularity 過大過細 / AC 網羅 / executability / verifiability
+  - V4 §5.2 prompt template (judgment subagent 用) は phase 不問 portable で再利用、5 条件判定ルール + 3 ラベル分類も再利用
+  - forced_divergence prompt (design phase 用、design-review 確定文言) は phase optimization 不足 = adversarial subagent dispatch 時 ad-hoc に tasks phase 用に微調整 (= "primary's task structure" の暗黙前提置換等、本格的 tasks phase forced_divergence prompt 文言は B-1.1 で別途確定)
+  - **caveat (paper rigor 保証用)**: Layer 2 tasks extension 未実装 = systematic 観点 set 不在 = ad-hoc 観点列挙 = paper limitations section に明示
+
 #### 未収集 (A-2 dogfeeding、A-1 完走後)
 
 - [ ] **Spec 6 dogfeeding 全 30 review session JSONL log** (= 10 round × 3 系統)
@@ -82,6 +95,13 @@ dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論**
 | should_fix 比率 | 18.75% | 17.6% | 40.0% | dogfeeding で escalate 増 |
 | subagent wall-clock | ~293s | ~255s | ~244s | 連続短縮 (-49s 累計、context efficiency) |
 
+#### 未収集 (A-1 期間内 tasks phase ad-hoc V4 適用 = opportunistic、補助 evidence、13th セッション着手予定)
+
+- [ ] foundation tasks phase metrics: 検出件数 / must_fix / should_fix / do_not_fix 件数 + 比率 / 採択率 / 過剰修正比率 / wall-clock / V4 修正否定 prompt 機能 / judgment override 件数 + 理由分析
+- [ ] design-review tasks phase metrics
+- [ ] dogfeeding tasks phase metrics
+- **caveat (phase 横断 strict comparability 問題)**: design phase 10 ラウンド観点固定 vs tasks phase ad-hoc 観点 = 観点 set / coverage 異なる = strict 数値比較 (例: design phase 採択率 vs tasks phase 採択率) は spurious comparison リスク。**relative trend (= 同 spec 内で single → dual → dual+judgment の改善方向)** は valid だが、**phase 間 absolute 比較は注意**
+
 #### 未収集 (A-2 dogfeeding、A-1 implementation phase 完走後)
 
 - [ ] **Spec 6 全 Round × 3 系統 metrics** (per system per round):
@@ -110,6 +130,16 @@ dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論**
 - [x] **H3 (採択率 ≥ 50%)** design phase 中間: 3 spec 全未達、ただし **foundation 0% から +20-23pt 大幅改善** (design-review 23.5% / dogfeeding 20.0%)、design phase で consumer-only spec の AC 直接 trace 性質で must_fix 検出が向上、最終 verification は A-2 完走後
 - [x] **H4 (wall-clock + 50% 以内)** design phase 中間: ✅ **継続達成** = wall-clock 連続短縮 (foundation ~293s → design-review ~255s → dogfeeding ~244s = -49s 累計 = context 累積 efficiency)、V4 H4 (+ 50% 以内 = 631 sec) に対し大幅余裕
 
+#### 補助 evidence (tasks phase ad-hoc V4 適用、13th セッション着手予定)
+
+A-1 期間内 tasks phase ad-hoc V4 適用 evidence = phase 横断 H1-H4 robustness 補助 verification。**論文 core evidence ではなく preliminary cross-phase verification (limitations section 言及)**:
+
+- [ ] **H1 cross-phase robustness 補助**: tasks phase 3 spec で過剰修正比率の連続改善 trend が再現するか (= req + design + tasks の 3 phase で V4 構造的有効性 reproducibility)
+- [ ] **H2 escalate cross-phase**: tasks phase escalate 件数 (req + design + tasks 累計)
+- [ ] **H3 採択率 cross-phase robustness**: tasks phase で採択率改善方向 trend 確認
+- [ ] **H4 wall-clock cross-phase**: tasks phase wall-clock も V3 baseline + 50% 以内維持確認
+- **caveat**: ad-hoc 観点 = strict statistical claim 不可、補助 evidence (= preliminary cross-phase verification) として paper limitations section で明示
+
 #### 最終 verification (A-1 + A-2 完走後)
 
 - [ ] H1 最終 verification: design phase + dogfeeding evidence で過剰修正比率 ≤ 20% 達成可否
@@ -137,6 +167,13 @@ dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論**
 - [ ] **figure ablation: dual vs dual+judgment で judgment 効果分離 (V4 §4.4 整合)**
   - 主張: judgment subagent 効果 (過剰修正比率削減 + 採択率増 + override 件数 + 必要性判定 quality)
   - source data: Level 2 metrics + Level 1 `override_reason` 内容分析
+
+#### tasks phase ad-hoc data の figure 寄与 (補助 evidence、13th セッション着手予定)
+
+- [ ] **figure 1 (miss_type 分布)**: tasks phase data point 追加で phase 横断 reproducibility 強化 = core evidence と整合 (foundation 6 enum は phase 不問)
+- [ ] **figure 3 (trigger_state 発動率)**: tasks phase 3 系統 trigger_state 発動率追加で phase 横断 reproducibility 強化 = core evidence と整合
+- [ ] **figure ablation (judgment 効果分離)**: tasks phase で dual vs dual+judgment 効果分離が再現するか追加 evidence = core evidence 補強
+- ⚠️ **figure 2 (difference_type + forced_divergence 効果)**: tasks phase data は forced_divergence prompt が design phase 用 optimize で semantic mismatch caveat、tasks phase data は **補助 evidence のみ** (= core figure 2 = design phase 3 spec + A-2 dogfeeding で十分、tasks phase は limitations 言及のみ)
 
 #### scope 外 (Phase 3 paper draft 責務)
 
@@ -181,7 +218,17 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 - [x] cross-spec review 通過 (Group A 6 件確認済整合 + Group B 11 件既存対応済 + Group C 3 件新規 implication 全 apply [C1+C2+C3] + 不整合 0 件、12th 末)
 - [ ] design phase V4 evidence で comparison-report v0.2 起草 (req + design phase 累計、13th 以降 implementation phase 中または A-2 完走後 timing)
 
-### A-1 implementation phase (⏳ 13th セッション 着手予定、推定 1 month)
+### A-1 tasks phase (⏳ 13th セッション 着手予定、tasks phase ad-hoc V4 適用 = opportunistic data acquisition)
+
+dual-reviewer 3 spec の tasks.md 生成 (`/kiro-spec-tasks` 起動) 時に V4 protocol を ad-hoc 適用、補助 evidence 取得:
+
+- [ ] foundation tasks.md 生成 + V4 ad-hoc 適用 (`/kiro-spec-tasks dual-reviewer-foundation`、13th)
+- [ ] design-review tasks.md 生成 + V4 ad-hoc 適用 (foundation tasks 完走後)
+- [ ] dogfeeding tasks.md 生成 + V4 ad-hoc 適用 (design-review tasks 完走後)
+- [ ] tasks phase ad-hoc V4 evidence を JSONL log + comparison-report (補助 evidence 章) に集約
+- caveat: ad-hoc 観点 (Layer 2 tasks extension 未実装)、phase 横断 strict comparability 問題、forced_divergence prompt design phase optimization = paper limitations section に明示
+
+### A-1 implementation phase (⏳ tasks phase 完走後、13th-14th セッション、推定 1 month)
 
 - [ ] design-review v1.2 改修 cycle (treatment flag + timestamp 必須付与 + commit_hash payload 受領 = dogfeeding/design.md Decision 6 整合、本 spec implementation phase 直前 prerequisite)
 - [ ] foundation 4 skill のうち `dr-init` 物理 file 生成 (`scripts/dual_reviewer_prototype/skills/dr-init/{SKILL.md, bootstrap.py}`)
@@ -218,6 +265,11 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 - **forced_divergence sequencing**: design-review design phase 完走 (= prompt 文言確定) が A-2 着手前提条件 (dogfeeding Req 5 AC2 で AC 化済)
 - **commit hash 変動 caveat**: Spec 6 design が 30 review session 中に進行する場合、cross-round 比較に公平性 caveat を comparison-report に併記 (dogfeeding Req 3 AC7 で AC 化済)
 - **timeline 未達 fallback**: 8月末日までに figure 1-3 + ablation evidence 完了未達 = Phase B fork hold 補助根拠 (dogfeeding Req 2 AC6 で AC 化済)
+- **tasks phase ad-hoc V4 適用 4 caveats** (12th 末追加、補助 evidence のみ paper 利用):
+  - (1) **ad-hoc 観点**: Layer 2 tasks extension 未実装 (Phase B-1.1 scope) = systematic 観点 set 不在、primary が ad-hoc 列挙 (boundary 違反 / dependency cycle / granularity / AC 網羅 / executability / verifiability)
+  - (2) **phase 横断 strict comparability 問題**: design phase 10 ラウンド観点固定 vs tasks phase ad-hoc 観点 = 観点 coverage 異なる = phase 間 absolute 比較は spurious comparison リスク、relative trend (= 同 spec 内 single → dual → dual+judgment) のみ valid
+  - (3) **forced_divergence prompt の design phase optimization**: design-review 確定文言は design phase の暗黙前提 (機能仕様) に semantic optimize、tasks phase では task 粒度 / dependency / boundary が暗黙前提のため semantic mismatch、figure 2 (forced_divergence 効果) で tasks phase data は補助のみ
+  - (4) **paper rigor 保証**: tasks phase ad-hoc V4 evidence は paper limitations section で明示 = core evidence は req + design (12th 末取得済) + A-2 dogfeeding (A-2 完走後取得予定)、tasks phase は preliminary cross-phase verification 補助 evidence、systematic tasks phase evidence は Phase B-1.1 (dr-tasks skill 実装後) で paper revision に活用
 
 ---
 
@@ -250,3 +302,4 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 
 - **v0.1** (2026-04-30 11th セッション、本 file 初版): 論文の目的 + 3 主張 + 比較軸 3 axes + データ階層 5 levels + timeline / milestones + constraints を整理。req phase 累計 evidence は [x]、design phase + A-2 + Phase 3 は [ ] で起点設定。
 - **v0.2** (2026-05-01 12th セッション末): A-1 design phase 全 3 spec 完走 + cross-spec review 通過 を反映。Level 1 (raw data) + Level 2 (metrics) で foundation `2e5637d` + design-review `76a1eb1` + dogfeeding `aa40934` を [x] チェック、3 spec 累計 trend (過剰修正比率 81.25% → 58.8% → 40.0% 連続改善) を Level 2 末に追加。Level 3 (H1-H4 中間 status) に design phase 反映 entries 追加 (req phase 中間 status の下に design phase 中間 status を併記、H1-H4 全項目で design phase 評価を追記)。Timeline section: A-1 prototype design phase を「✅ 完了」に変更 + A-1 implementation phase を新 section として追加 (13th 以降 着手予定、推定 1 month、design-review v1.2 改修 cycle + 4 skill + 3 Python script + sample 1 round 通過 test)。A-2 dogfeeding section の dependency を A-1 implementation phase 完走後に変更 + concrete 実行 step 明示。§6 関連 reference に 3 spec design / research file 整合 + comparison-report v0.1 (req phase) / evidence-catalog v0.4 (12th 末 design phase 反映済) version 整合追記。
+- **v0.3** (2026-05-01 12th セッション末、tasks phase ad-hoc V4 適用 evidence acquisition 追加): 13th セッションで dual-reviewer 3 spec 自体の tasks.md 生成 (`/kiro-spec-tasks` 起動) 時に V4 protocol を ad-hoc 適用、補助 evidence (= phase 横断 reproducibility preliminary verification、論文 core evidence ではない) を opportunistic に取得する計画を追加。Level 1 + Level 2 + Level 3 + Level 4 各 section に tasks phase ad-hoc V4 entries 追加 (3 spec [ ] checkbox + caveat 明示)。Timeline section に「A-1 tasks phase」新 section 追加 (A-1 implementation phase の前段、3 spec tasks.md 生成 + V4 ad-hoc 適用)。§5 Constraints に tasks phase ad-hoc V4 適用の 4 caveats (ad-hoc 観点 / phase 横断 strict comparability / forced_divergence prompt 設計 phase optimization / paper rigor 保証 = limitations section 言及) 追加。systematic tasks phase evidence は Phase B-1.1 (dr-tasks skill + Layer 2 tasks extension 別 spec 化後) で paper revision に活用。
