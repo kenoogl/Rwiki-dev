@@ -2,19 +2,20 @@
 
 _目的: 論文 (8月ドラフト提出) + Phase B fork 判断のための quantitative evidence 取得計画。checkbox で進捗追跡し、新 evidence 取得 + phase 移行ごとに更新する。_
 
-_v0.4 / 2026-05-01 (14th セッション末、A-1 tasks phase 完走 + 3 spec tasks-phase V4 metric 累計反映 + cross-spec review C-1 fix 適用)_
+_v1.0 / 2026-05-01 (15th セッション、A-1 implementation phase 着手直前 + Level 6 = downstream rework signal 追加 + Claim D = external validity 主張追加 + design-review v1.2 改修 cycle 完走)_
 
 ---
 
 ## §1 論文の目的 + 3 主張
 
-dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論** として確立。3 主張:
+dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論** として確立。4 主張:
 
-- **Claim A**: adversarial subagent (V3 = Step B) が single-reviewer に対し検出 coverage を改善
-- **Claim B**: judgment subagent (V4 Step C 新規) が過剰修正 bias を抑制し採択率を改善
+- **Claim A**: adversarial subagent (V3 = Step B) が single-reviewer に対し検出 coverage を改善 (= internal validity = bias 抑制効率の direct measurement)
+- **Claim B**: judgment subagent (V4 Step C 新規) が過剰修正 bias を抑制し採択率を改善 (= internal validity = bias 抑制効率の direct measurement)
 - **Claim C**: 上記 2 構造統合の dual-reviewer architecture が **bias 観測装置 + 改善 mechanism** として方法論的に valid
+- **Claim D** (v1.0 追加): V4 review が機能した spec の implementation phase で、上流 artifact (req/design/tasks) への post-approve 改版 (= rework) が低水準に抑制される (= **external validity** = review 出力が下流で破綻しないことの indirect measurement、claim A/B/C と独立次元)
 
-提出 timeline: **8月ドラフト提出** (Phase 3 = 7-8月、別 effort)。本計画は Phase 2 (6-7月、A-2 期間) で figure 1-3 + ablation evidence 完走を担保。
+提出 timeline: **8月ドラフト提出** (Phase 3 = 7-8月、別 effort)。本計画は Phase 2 (6-7月、A-2 期間) で figure 1-3 + ablation evidence (Claim A/B/C) + Level 6 rework signal (Claim D) 完走を担保。
 
 ## §2 比較軸 (3 axes)
 
@@ -201,6 +202,104 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 - [ ] **(e) 過剰修正比率改善** = dual+judgment 系統 vs dual 系統で do_not_fix 比率減 + must_fix 比率増 (V4 H1+H3 仮説整合)
 - [ ] **判定結果記録** = `comparison-report.md` 最終版に go/hold + 判定根拠 + 移行手順 (go) or 改訂候補 (hold) 併記
 
+### §3.6 Level 6: Downstream rework signal (external validity、v1.0 新設、Claim D の primary evidence)
+
+**目的**: V4 review が下流 (implementation phase) で破綻しないことの indirect measurement。Claim A/B/C (= bias 抑制 internal metric) と独立次元の妥当性軸。
+
+**記録範囲**: A-1 implementation phase 着手 (= 15th セッション、本 v1.0 改版完了直後) ~ A-2 dogfeeding 完走 (= Phase A 終端) の期間で発生する全 rework 事象。
+
+**保存先**: `.kiro/methodology/v4-validation/rework_log.jsonl` (新規 file、append-only JSONL)
+
+#### 4 metric (独立次元)
+
+- **M1. Rework Volume (件数)** = 上流 artifact (req/design/tasks) への post-approve 改版を引き起こした事象数
+  - M1a `cosmetic` = 文言 / typo / 補足追加 (本質的内容変更なし)
+  - M1b `structural` = AC追加 / interface 改版 / 責務再分配 (内容改版、phase 戻りなし)
+  - M1c `breaking` = 設計前提 crash / scope 拡張 / 規範要件追加 (phase 戻り発生)
+  - V4 有効性 evidence: M1c 少 + M1b 少
+- **M2. Rework Scope (波及範囲)**
+  - M2a `single-spec` = 該当 spec 単独完結
+  - M2b `cross-spec` = 隣接 spec への propagation (= cross-spec review が漏らした証拠)
+  - M2c `methodology` = V4 protocol 自体の改版要 (= V4 limitation 露出)
+- **M3. Discovery Phase (発見時点)**
+  - M3a `pre-impl` = implementation 着手直前の pre-flight review で発見 (= 上流 late-stage 機能した signal)
+  - M3b `tdd-red` = test-first 書いた瞬間に発覚 (test 書いて初めて見えた仕様曖昧)
+  - M3c `impl-mid` = 実装途中で発覚 (= 上流 review の漏れ)
+  - M3d `e2e-test` = sample 1 round 通過 test で発覚 (= 最遅延、手戻り cost 最大)
+- **M4. Root Cause (原因分類、解釈の中核)**
+  - M4a `v4-miss` = V4 review 観点に含まれていたが特定 finding を見落とし (= V4 改善余地)
+  - M4b `v4-outscope` = V4 review 観点自体が網羅外 (= V4 protocol 改版材料)
+  - M4c `impl-only` = 実装してみないと判らない情報 (= 理論的下限、手戻り 0 にできない上限)
+  - M4d `external` = 環境変化 / 外因 (= signal 対象外、除外)
+  - **Claim D 主張根拠**: M4a 比率 low + M4c dominant → V4 が理論的下限近くまで機能している evidence
+
+#### 3 data source
+
+- **Data 1: Commit pattern (自動計測、cost 0)**
+  - post-tasks-approve commit log から自動抽出
+  - touch artifact path (req/design/tasks) + diff stat (lines changed) per file + commit message keyword
+  - cosmetic vs structural vs breaking magnitude 推定 (keyword + diff size 併用)
+- **Data 2: Rework log (manual JSONL append-only、記録媒体 = `rework_log.jsonl`)**
+  - 記録 trigger: 上流 artifact への post-approve commit 発生時 + implementer (= Claude or human) が「これ tasks に書くべきだった」気づいた瞬間 (commit 不発生でも記録)
+  - 記録 owner: implementation 中の Claude (即時 append)、user 判断不要 (operational routine)
+  - schema: 下記 §3.6 schema 参照
+- **Data 3: TDD cycle log (任意、A-1 では skip 可能、A-2 から導入推奨)**
+  - test-first 書いた expected が design 不整合で書き直した回数 (TDD red → green の test 改修回数)
+  - cost vs value 評価で A-1 では skip、A-2 dogfeeding (Spec 6 適用) で導入
+
+#### Level 6 schema (rework_log.jsonl per-line entry)
+
+```json
+{
+  "rework_id": "R-<spec>-<n>",
+  "spec_id": "foundation | design-review | dogfeeding | spec-6",
+  "discovered_at": "<ISO8601 UTC>",
+  "discovered_during_task": "<tasks.md task #、例: '5.2'>",
+  "discovered_phase": "pre-impl | tdd-red | impl-mid | e2e-test",
+  "rework_target": "requirements | design | tasks | multi",
+  "rework_target_section": "<section名 / Req <n> AC<m> / Section 4.2 等>",
+  "magnitude": "cosmetic | structural | breaking",
+  "scope": "single-spec | cross-spec | methodology",
+  "root_cause": "v4-miss | v4-outscope | impl-only | external",
+  "v4_review_attribution": "<該当 review round / finding id、なければ null>",
+  "fix_artifact_diff_lines": <int>,
+  "fix_commit_hash": "<post-fix commit>",
+  "narrative": "<1-3 文、何が起きてどう修正したか>"
+}
+```
+
+#### baseline 制約 (paper rigor)
+
+- **B1. V3 quantitative baseline 不在**: foundation V3 design (7th archive) は implementation 未到達。V3 vs V4 直接比較は **不可能**。論文上は **absolute claim のみ可能** (= "V4 で M4a 比率 X%、M4c dominant")、relative claim ("V3 比 N% 改善") は不可。
+- **B2. Pseudo-baseline (within-spec rework 内訳比率)**: M4a vs M4c の比率 → V4 改善余地の指標
+  - M4a 比率高 → V4 review 観点不足 → V4 改修材料
+  - M4a 比率低 + M4c dominant → V4 機能、残るのは予防不可能部分
+- **B3. A-1 vs A-2 within-project 比較**: 同 V4 protocol で 3 spec (A-1) vs 1 spec (A-2) → V4 reproducibility 補強。Sample size 不均衡注意。
+- **caveat**: Sample size 制約 (A-1 = 3 spec + A-2 = 1 spec) = quantitative 統計より qualitative pattern (どんな手戻りがどこで発生したか) 抽出が現実的、paper limitations section 明示。
+
+#### checkbox tracker
+
+##### A-1 implementation phase (15th セッション着手 ~ A-1 完走、推定 1 month)
+
+- [ ] foundation implementation 中の rework 記録 (= Data 1 自動 + Data 2 manual)
+- [ ] design-review implementation 中の rework 記録 (= Data 1 自動 + Data 2 manual)
+- [ ] dogfeeding implementation 中の rework 記録 (= Data 1 自動 + Data 2 manual)
+- [ ] sample 1 round 通過 test (Round 1 のみ、treatment="dual+judgment") での rework 記録 (= e2e-test phase の signal、最遅延手戻り検出)
+- [ ] A-1 完走時点の interim analysis: M4a / M4b / M4c / M4d 比率算出 + V4 改善余地 identification
+
+##### A-2 dogfeeding (A-1 完走後、推定 1-2 month)
+
+- [ ] Spec 6 dogfeeding 中の rework 記録 (Data 1 + Data 2 + Data 3 全有効)
+- [ ] A-2 完走時点の final analysis: A-1 vs A-2 比較 + Claim D 主張可否判断 + paper claim 文言確定
+
+#### Claim D 評価基準 (v1.0 起案、A-1 完走時点で精緻化)
+
+- **Strong**: M4a 比率 ≤ 20% AND M4c 比率 ≥ 50% (= V4 が予防可能領域の大半をカバー、残余は impl-only)
+- **Moderate**: M4a 比率 ≤ 40% AND M4c 比率 ≥ 30%
+- **Weak**: M4a 比率 > 40% OR M4c 比率 < 30% (= V4 改修必要、限定的 evidence)
+
+→ 閾値は A-1 完走時点で sample 観察に基づき精緻化 (本 v1.0 起案値は preliminary)。
+
 ---
 
 ## §4 Timeline / phase milestones
@@ -240,9 +339,9 @@ dual-reviewer 3 spec の tasks.md 生成 + V4 ad-hoc 適用 + cross-spec review 
 - [x] tasks phase ad-hoc V4 evidence を本 data-acquisition-plan v0.4 + 各 spec tasks.md Change Log v1.1 に集約 (comparison-report の最終 v0.2 集約は A-2 完走後)
 - caveat: ad-hoc 観点 (Layer 2 tasks extension 未実装)、phase 横断 strict comparability 問題、forced_divergence prompt design phase optimization = paper limitations section に明示済
 
-### A-1 implementation phase (⏳ tasks phase 完走後、13th-14th セッション、推定 1 month)
+### A-1 implementation phase (⏳ 15th セッション着手、推定 1 month、**Level 6 = downstream rework signal 記録開始**)
 
-- [ ] design-review v1.2 改修 cycle (treatment flag + timestamp 必須付与 + commit_hash payload 受領 = dogfeeding/design.md Decision 6 整合、本 spec implementation phase 直前 prerequisite)
+- [x] **design-review v1.2 改修 cycle 完走** (15th セッション、treatment flag + timestamp 必須付与 + commit_hash payload 受領 = dogfeeding/design.md Decision 6 整合、req phase 整合化 = AC10 / AC8 / AC9 追加 + design.md v1.2 + tasks.md v1.1 整合確認 + Level 6 schema 確定 + rework_log.jsonl 雛形作成、本 v1.2 改版自体は記録 infrastructure 立ち上げ前のため Level 6 記録対象外)
 - [ ] foundation 4 skill のうち `dr-init` 物理 file 生成 (`scripts/dual_reviewer_prototype/skills/dr-init/{SKILL.md, bootstrap.py}`)
 - [ ] design-review 3 skills 物理 file 生成 (`scripts/dual_reviewer_prototype/skills/{dr-design, dr-log, dr-judgment}/{SKILL.md, *.py}`)
 - [ ] foundation portable artifact 物理 file 生成 (`framework/layer1_framework.yaml` + `schemas/*.json` 5 file + `patterns/{seed_patterns, fatal_patterns}.yaml` + `prompts/judgment_subagent_prompt.txt` + `config/config.yaml.template` + `terminology/terminology.yaml.template`)
@@ -316,3 +415,4 @@ dual-reviewer 3 spec の tasks.md 生成 + V4 ad-hoc 適用 + cross-spec review 
 - **v0.2** (2026-05-01 12th セッション末): A-1 design phase 全 3 spec 完走 + cross-spec review 通過 を反映。Level 1 (raw data) + Level 2 (metrics) で foundation `2e5637d` + design-review `76a1eb1` + dogfeeding `aa40934` を [x] チェック、3 spec 累計 trend (過剰修正比率 81.25% → 58.8% → 40.0% 連続改善) を Level 2 末に追加。Level 3 (H1-H4 中間 status) に design phase 反映 entries 追加 (req phase 中間 status の下に design phase 中間 status を併記、H1-H4 全項目で design phase 評価を追記)。Timeline section: A-1 prototype design phase を「✅ 完了」に変更 + A-1 implementation phase を新 section として追加 (13th 以降 着手予定、推定 1 month、design-review v1.2 改修 cycle + 4 skill + 3 Python script + sample 1 round 通過 test)。A-2 dogfeeding section の dependency を A-1 implementation phase 完走後に変更 + concrete 実行 step 明示。§6 関連 reference に 3 spec design / research file 整合 + comparison-report v0.1 (req phase) / evidence-catalog v0.4 (12th 末 design phase 反映済) version 整合追記。
 - **v0.3** (2026-05-01 12th セッション末、tasks phase ad-hoc V4 適用 evidence acquisition 追加): 13th セッションで dual-reviewer 3 spec 自体の tasks.md 生成 (`/kiro-spec-tasks` 起動) 時に V4 protocol を ad-hoc 適用、補助 evidence (= phase 横断 reproducibility preliminary verification、論文 core evidence ではない) を opportunistic に取得する計画を追加。Level 1 + Level 2 + Level 3 + Level 4 各 section に tasks phase ad-hoc V4 entries 追加 (3 spec [ ] checkbox + caveat 明示)。Timeline section に「A-1 tasks phase」新 section 追加 (A-1 implementation phase の前段、3 spec tasks.md 生成 + V4 ad-hoc 適用)。§5 Constraints に tasks phase ad-hoc V4 適用の 4 caveats (ad-hoc 観点 / phase 横断 strict comparability / forced_divergence prompt 設計 phase optimization / paper rigor 保証 = limitations section 言及) 追加。systematic tasks phase evidence は Phase B-1.1 (dr-tasks skill + Layer 2 tasks extension 別 spec 化後) で paper revision に活用。
 - **v0.4** (2026-05-01 14th セッション末、A-1 tasks phase 完走 + 3 spec tasks-phase V4 metric 累計反映): 14th セッションで dual-reviewer 3 spec tasks.md 生成 + V4 ad-hoc 適用完走 (commit `021ec65`)。Level 1 + Level 2 の tasks phase ad-hoc V4 [x] checkbox 化 + 3 spec metric 完全数値反映 (foundation 採択率 5.6% / 過剰修正 66.7%、design-review 13.3% / 53.3%、dogfeeding 35.7% / 42.9%) + 3 spec tasks phase 累計 trend table (採択率 +30.1pt / 過剰修正 -23.8pt 連続改善 = V4 構造的有効性 3 spec 連続再現実証、design phase trend と方向一致 = 6 spec instance 累計再現)。Level 3 H1+H2+H3 cross-phase robustness 補助 [x] 化 (H4 wall-clock は別 metric 化要、A-2 期間取得予定)。Timeline section の A-1 tasks phase を「✅ 完了」に変更 + cross-spec review (20 観点 integrity check、Group A 17 + B 2 + C 1 + 不整合 0 件、Group C-1 = `jsonschema>=4.18` version pin 同期) checkbox [x] 化。comparison-report の最終 v0.2 集約は A-2 完走後 (本 v0.4 update では tasks-phase evidence を本 plan に集約済、comparison-report は req + design phase 集約のみで本 spec 完了時集約 timing は variance)。
+- **v1.0** (2026-05-01 15th セッション、A-1 implementation phase 着手直前 + Level 6 = downstream rework signal 追加): user 提案「実装時の手戻り signal を V4 review 有効性指標に追加」を採用、external validity 軸を内部 metric (Claim A/B/C) と独立次元として導入。§1 に Claim D (= V4 review が機能した spec の implementation phase で post-approve 改版 rework が低水準に抑制される、Claim A/B/C と独立次元) を追加し計 4 主張化。§3.6 Level 6 を新設 = 4 metric (M1 Volume / M2 Scope / M3 Discovery Phase / M4 Root Cause) + 3 data source (Data 1 commit pattern auto / Data 2 rework_log JSONL manual / Data 3 TDD cycle 任意 A-2 から導入) + per-line schema + baseline 制約 3 件 (B1 V3 baseline 不在 / B2 within-spec rework 内訳 pseudo-baseline / B3 A-1 vs A-2 within-project 比較) + checkbox tracker (A-1 implementation 4 件 + A-2 dogfeeding 2 件) + Claim D 評価基準 preliminary 起案 (Strong: M4a ≤ 20% AND M4c ≥ 50% / Moderate / Weak)。記録媒体 = `.kiro/methodology/v4-validation/rework_log.jsonl` (新規 file、append-only)。記録範囲 = 15th セッション直後 (本 v1.0 改版完了後) ~ A-2 dogfeeding 完走 (Phase A 終端)。**本 v1.2 改版 (= design-review spec の req/design/tasks 整合化 cycle) 自体は記録 infrastructure 立ち上げ前のため Level 6 記録対象外**。Timeline section の A-1 implementation phase entry に design-review v1.2 改修 cycle 完走 [x] checkbox 反映 + Level 6 記録開始 trigger を明示。
