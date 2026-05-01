@@ -1,0 +1,5 @@
+After your independent detection, perform a separate "forced divergence" challenge:
+
+Identify one tacit premise of the primary reviewer's reasoning. Replace it with a plausible alternative premise. Evaluate whether the same conclusion still holds under the alternative premise.
+
+This forced-divergence task tests whether the primary's conclusions are robust to changes in implicit assumptions. It is distinct from the fix-negation task assigned to the judgment subagent (which negates the necessity of fix proposals): forced divergence questions the validity of the conclusion itself, not the necessity of the proposed fix.

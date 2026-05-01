@@ -1,0 +1,119 @@
+version: "1.0"
+metadata:
+  name: dual-reviewer-design-review Layer 2 Design Extension
+  description: design phase 固有規範 (10 ラウンド + Phase 1 patterns + bias quota + escalate 必須 5)
+  layer1_dependency: "1.0"  # foundation Layer 1 framework version
+  attach_identifier: design_extension  # foundation attach contract identifier (Req 4.1)
+
+# Req 4.2: 10 ラウンド観点 (Round 1-10、中庸統合版整合)
+# 具体 seed_patterns mapping は本 spec implementation phase で確定
+# resolution timing: implementation phase, when foundation seed_patterns.yaml 23 entries are materialized
+rounds:
+  - round_index: 1
+    name: 規範範囲確認
+    description: spec scope vs design 範囲の整合性、規範範囲先取り検出
+    related_seed_patterns: []
+  - round_index: 2
+    name: 一貫性
+    description: spec 内の同一性質要素処理の均一性 / 用語 / 規範強度
+    related_seed_patterns: []
+  - round_index: 3
+    name: 実装可能性 + アルゴリズム + 性能 統合
+    description: 設計提案の実装可能性 + アルゴリズム妥当性 + 性能特性 (中庸統合版で 3 観点を 1 ラウンド化)
+    related_seed_patterns: []
+  - round_index: 4
+    name: 責務境界
+    description: component / spec / agent 間の責務分担と境界明確性
+    related_seed_patterns: []
+  - round_index: 5
+    name: 失敗モード + 観測 統合
+    description: 失敗パターン列挙 + 観測可能性 (中庸統合版で 2 観点を 1 ラウンド化)
+    related_seed_patterns: []
+  - round_index: 6
+    name: concurrency / timing
+    description: 並行性 / 競合 / timing 依存性
+    related_seed_patterns: []
+  - round_index: 7
+    name: security
+    description: 認証 / 認可 / 入力 validation / secret handling
+    related_seed_patterns: []
+  - round_index: 8
+    name: cross-spec 整合
+    description: 隣接 spec への波及 + interface contract + 規約整合
+    related_seed_patterns: []
+  - round_index: 9
+    name: test 戦略
+    description: 検証可能性 / test 観点 / 観測点
+    related_seed_patterns: []
+  - round_index: 10
+    name: 運用
+    description: deployment / rollback / monitoring / incident response
+    related_seed_patterns: []
+
+# Req 4.3: Phase 1 escalate 3 メタパターン (Step 1b 5 重検査の ii. Phase 1 パターンマッチングで照合)
+phase1_metapatterns:
+  - name: 規範範囲先取り
+    description: 仕様範囲を超えた過剰実装提案
+  - name: 構造的不均一
+    description: 同一性質要素の処理が spec 内で不均一 (例 一部 AC のみ厳格、他 AC は曖昧)
+  - name: 文書 vs 実装不整合
+    description: design.md / requirements.md の文言 vs 実装意図の乖離
+
+# Req 4.4: Layer 1 base に追加する design phase 固有 bias 抑制 quota
+# Chappy P0 quota は foundation Layer 1 が expose、本 layer は invocation 指示のみ (provide vs execute 役割分離)
+bias_suppression_quota_design_specific:
+  - formal_challenge          # primary 提案を意図的に異論呈
+  - detection_miss            # 検出漏れ防止 quota
+  - phase1_isomorphism_search # Phase 1 同型探索 (3 メタパターンとの照合)
+  - rigorous_verification_5   # 厳しく検証 5 種 (a 規範範囲先取り / b 構造的不均一 / c 文書 vs 実装不整合 / d 規範前提曖昧化 / e 単純誤記 grep)
+
+# Req 4.5: Step 1b-v 自動深掘り + Step 1c judgment 両方適用される escalate 必須条件 5 種
+escalate_required_conditions:
+  - internal_contradiction        # 内部矛盾
+  - implementation_impossibility  # 実装不可能性
+  - responsibility_boundary       # 責務境界
+  - normative_scope               # 規範範囲
+  - multiple_options_tradeoff     # 複数選択肢 trade-off
+
+# Req 1.7 + 4.4 (provide vs execute 役割分離 = invocation reference のみ)
+# A1 apply: Layer 2 yaml 内 全 relative path は foundation install location (= scripts/dual_reviewer_prototype/) 基点 = ./ prefix 統一
+# yaml file location 基点 (../) ではなく install root 基点 (./) で実装側 (3 skills) が解決
+chappy_p0_invocation:
+  fatal_patterns_match:
+    data_source: "./patterns/fatal_patterns.yaml"  # foundation 提供
+    matching_logic: "本 layer 内 dr-design skill が全 finding を fatal_patterns 8 種 enum に対し全件照合"
+  impact_score:
+    schema: "./schemas/impact_score.schema.json"  # foundation 提供
+    assignment_logic: "全 finding に primary が 3 軸 (severity / fix_cost / downstream_effect) 付与"
+  forced_divergence_prompt:
+    location: "./prompts/forced_divergence_prompt.txt"  # 本 spec で配置
+    placement: "adversarial subagent dispatch payload 末尾追加"
+
+# Req 1.8 + 4.4
+# A1 apply: design.md A5 fix の chappy_p0_invocation 限定範囲を本 section にも extension 適用 = 全 path ./ 基点
+v4_features_invocation:
+  judgment_subagent_dispatch:
+    skill: "./skills/dr-judgment"
+    invoke_step: step_c
+  necessity_5_fields_evaluation:
+    schema: "./schemas/necessity_judgment.schema.json"  # foundation 提供
+    evaluator: dr-judgment skill
+  five_condition_rule:
+    rules:
+      - critical_impact_to_must_fix
+      - requirement_link_yes_high_impact_to_must_fix
+      - scope_expansion_yes_not_critical_to_do_not_fix_or_escalate
+      - fix_cost_greater_than_impact_to_do_not_fix_lean
+      - uncertainty_high_to_escalate
+    evaluator: dr-judgment skill (V4 §5.2 prompt 内適用)
+  three_label_classification:
+    labels: [must_fix, should_fix, do_not_fix]
+    output_writer: dr-judgment skill
+  fix_negation_prompt_role_separation:
+    fix_negation_assigned_to: judgment_reviewer  # V4 §5.2 既存組込
+    forced_divergence_assigned_to: adversarial_reviewer  # 本 spec ./prompts/forced_divergence_prompt.txt
+    note: "両者は intent 異なる (修正必要性否定 vs 結論成立性試行)、判定 5-C 整合"
+
+# Req 4.7: Layer 3 override 受入容認 (foundation Req 1 AC9 整合 = Layer 3 > Layer 2 > Layer 1)
+layer3_attach_acceptance:
+  override_hierarchy: layer_3_over_layer_2
