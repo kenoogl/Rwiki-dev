@@ -31,7 +31,30 @@
       "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 commit -m ' *)",
       "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 log --oneline -3)",
       "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 status --short)",
-      "Skill(session-cont)"
+      "Skill(session-cont)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev push origin main)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev push -u origin v4-redo-broad)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev push -u origin archive/v4-redo-attempt-1-v3-scope)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev push origin v4-baseline-brief-2026-04-29 v3-evidence-foundation-7th-session)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev branch -vv)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev branch -r)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 status)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 log --oneline -5)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev show archive/v4-redo-attempt-1-v3-scope:.kiro/specs/dual-reviewer-foundation/requirements.md)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 diff --stat)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 add .kiro/specs/dual-reviewer-foundation/requirements.md .kiro/specs/dual-reviewer-foundation/spec.json)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev show archive/v4-redo-attempt-1-v3-scope:.kiro/specs/dual-reviewer-design-review/requirements.md)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 add .kiro/specs/dual-reviewer-design-review/requirements.md .kiro/specs/dual-reviewer-design-review/spec.json)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 log --oneline -4)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 branch --show-current)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 add .kiro/specs/dual-reviewer-dogfeeding/requirements.md .kiro/specs/dual-reviewer-dogfeeding/spec.json)",
+      "Bash(state)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 add .kiro/specs/dual-reviewer-foundation/requirements.md .kiro/specs/dual-reviewer-design-review/requirements.md .kiro/specs/dual-reviewer-dogfeeding/requirements.md)",
+      "Bash(git -C /Users/Daily/Development/Rwiki-dev-v4 add .kiro/methodology/v4-validation/comparison-report.md)",
+      "Bash(git status *)",
+      "Bash(git *)",
+      "Skill(kiro-spec-design)",
+      "Skill(kiro-spec-tasks)"
     ]
   }
 }
