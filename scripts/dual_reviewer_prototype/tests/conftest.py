@@ -1,3 +1,12 @@
-# conftest.py — pytest 共通 fixture / 設定 placeholder
-# Validation phase (Task 6 unit tests + Task 7 integration tests) で fixture を追加する。
-# 現段階は placeholder (空 module) として配置。
+# conftest.py — pytest 共通 fixture / 設定
+import sys
+from pathlib import Path
+
+PROTOTYPE_ROOT = Path(__file__).resolve().parents[1]
+BOOTSTRAP_PATH = PROTOTYPE_ROOT / "skills" / "dr-init" / "bootstrap.py"
+SCHEMAS_DIR = PROTOTYPE_ROOT / "schemas"
+PATTERNS_DIR = PROTOTYPE_ROOT / "patterns"
+PROMPTS_DIR = PROTOTYPE_ROOT / "prompts"
+FRAMEWORK_DIR = PROTOTYPE_ROOT / "framework"
+CONFIG_DIR = PROTOTYPE_ROOT / "config"
+TERMINOLOGY_DIR = PROTOTYPE_ROOT / "terminology"
