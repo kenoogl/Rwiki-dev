@@ -90,7 +90,7 @@
 - judgment subagent dispatch payload 構造変更 → dogfeeding metric 抽出 logic に影響
 - dr-log JSONL schema (state field / source field / adversarial_counter_evidence field) の variant 規約変更 → dogfeeding 3 系統 log 比較に影響
 - 3 skill が読込む foundation install location relative path 規約変更 → dogfeeding skill 起動時 path resolution 失敗
-- **dogfeeding spec から要請される追加要件 (本 spec v1.2 で対応予定、cross-spec review C1 fix)**: (a) dr-design `--treatment` flag 対応 (single / dual / dual+judgment 3 系統で Step B/C/D 切替動作 + user 提示 skip/実行 切替) / (b) dr-log `timestamp_start` / `timestamp_end` JSONL append 時必須付与 / (c) dr-log Service Interface に `--design-md-commit-hash` payload 受領追加 — dogfeeding/design.md Decision 6 整合、本 spec design approve 後 implementation phase 直前で v1.2 改修
+- **dogfeeding spec から要請される追加要件 (本 spec v1.2 で apply 完了、cross-spec review C1 fix)**: (a) dr-design `--treatment` flag 対応 (single / dual / dual+judgment 3 系統で Step B/C 起動制御切替 + Step D user 提示 三ラベル制御 — single = primary のみ、dual = primary + adversarial + counter_evidence で V4 §2.5 三ラベルなし全件 should_fix 個別判断、dual+judgment = V4 完全) / (b) dr-log `timestamp_start` / `timestamp_end` JSONL append 時必須付与 (open 時 + flush 時自動 capture) / (c) dr-log Service Interface に `design_md_commit_hash` payload 受領 + flush 時 review_case 必須付与 — dogfeeding/design.md Decision 6 整合、本 v1.2 で 3 件全 design.md 反映完了 (dr-design Responsibilities + Service Interface + dr-log Responsibilities)、tasks.md v1.1 と整合済
 
 ## Architecture
 
@@ -386,6 +386,8 @@ flowchart TD
 - foundation `fatal_patterns.yaml` 8 種 enum 動的読込 (hardcode 禁止、Req 5.4)
 - **Round 起動時、target design.md の git commit hash を取得 (例: `git rev-parse HEAD -- <design.md path>`) し、dr-log invocation payload の `design_md_commit_hash` field に付与** (A2 fix、reproducibility 用、dogfeeding spec Req 3.7 整合)
 - **adversarial subagent 出力 yaml 受領後、Step D integration 直前で `counter_evidence` section を `issue_id` 単位 decompose し、各 finding object の `adversarial_counter_evidence` field に付与** (A6 fix、dual / dual+judgment 系統、single 系統では省略、Req 2 AC7 + Req 3 AC2 整合)
+- **`--treatment` flag (single | dual | dual+judgment) で Step B/C 起動制御を切替** (v1.2 改修、cross-spec review C1 fix、dogfeeding spec Req 3.6 整合): (a) `single`: Step B (adversarial dispatch) 全 skip + Step C (judgment dispatch) 全 skip、Step D は primary 検出のみ user 提示 / (b) `dual`: Step B 実行 + Step C skip、Step D は primary + adversarial 検出 + counter_evidence を user 提示 (judgment 不在のため V4 §2.5 三ラベル自動分類なし、全 finding を `should_fix` + `recommended_action: user_decision` として user 個別判断 prompt) / (c) `dual+judgment`: Step B/C 全実行 (V4 完全)、Step D は judgment subagent 出力の三ラベル分類 (must_fix bulk apply / do_not_fix bulk skip / should_fix individual review) を user 提示
+- **treatment は dr-log invocation payload (`open(session_id, treatment, ...)`) に必須付与** (v1.2 改修、3 系統対照実験で各 review_case JSONL line に系統識別子を不可分付与、Req 2.7 + dogfeeding spec Req 3.6 整合)
 
 **Dependencies**
 
@@ -400,15 +402,16 @@ flowchart TD
 ```python
 # orchestrator.py の helper signature (TypeScript 風で表現、実装は Python)
 interface DrDesignService {
-  invoke(target_design_md_path: AbsolutePath, dual_reviewer_root: AbsolutePath, config_yaml_path: AbsolutePath): Result<RoundReports[], ErrorEnvelope>
+  invoke(target_design_md_path: AbsolutePath, dual_reviewer_root: AbsolutePath, config_yaml_path: AbsolutePath, treatment: Literal["single", "dual", "dual+judgment"]): Result<RoundReports[], ErrorEnvelope>
 }
 
 type RoundReports = {
   round_index: int  # 1-10
+  treatment: "single" | "dual" | "dual+judgment"  # v1.2 改修: 系統識別、dr-log payload 透過用
   primary_findings: Finding[]
-  adversarial_findings: Finding[]
-  adversarial_counter_evidence: CounterEvidence[]
-  judgment_yaml: JudgmentEntry[]
+  adversarial_findings: Finding[]  # single 系統では空配列
+  adversarial_counter_evidence: CounterEvidence[]  # single 系統では空配列
+  judgment_yaml: JudgmentEntry[]  # single / dual 系統では空配列 (Step C skip)
   user_decisions: { applied: Finding[], skipped: Finding[] }
 }
 ```
@@ -444,6 +447,8 @@ type RoundReports = {
   - **dual 系統**: state = `detected`、`source: primary_self_estimate` 付与 (judgment subagent 未起動)、`adversarial_counter_evidence` field 必須記録
   - **dual+judgment 系統**: state = `judged`、`source: judgment_subagent` 付与、`adversarial_counter_evidence` field 必須記録
 - B-1.0 minimum schema (失敗構造観測軸 3 要素 + 修正必要性判定軸 V4 §1.3) のみ必須付与、B-1.x 拡張 schema (`decision_path` / `skipped_alternatives` / `bias_signal`) は scope 外 (Req 7.3)
+- **`open()` 時に `timestamp_start` (ISO8601 + UTC) を current time から自動 capture して in-memory session state に保持、`flush()` 時に `timestamp_end` (ISO8601 + UTC) を current time から自動 capture、両 field を 1 review_case JSONL line に必須付与** (v1.2 改修、cross-spec review C1 fix、dogfeeding spec Req 3.6 整合、Round wall-clock 計測用)
+- **`open()` payload で受領した `design_md_commit_hash` を session state に保持、`flush()` 時の review_case object に必須付与** (v1.2 改修、reproducibility、dogfeeding spec Req 3.7 整合、dr-design 側で `git rev-parse` 取得済 hash を透過記録)
 
 **Dependencies**
 
@@ -998,3 +1003,4 @@ V4 protocol 比較 metric (採択率 / 過剰修正比率 / wall-clock / disagre
   - V4 metric: 採択率 23.5% (4/17、foundation 0% から大幅改善、H3 ≥ 50% 未達) / 過剰修正比率 58.8% (10/17、foundation 81.25% から改善、H1 ≤ 20% 未達) / should_fix 17.6% / judgment override 8 件 / primary↔judgment disagreement 7 件 / adversarial↔judgment agreement 高 (must_fix 4 件全 adversarial ERROR と一致) / subagent wall-clock ~255s (adversarial 125s + judgment 130s)
   - do_not_fix 10 件 (P1-P3, P5-P10, A7) bulk skip + A3 false positive skip = 11 件 skip
 - **v1.2-prep** (2026-05-01 12th セッション、cross-spec review C1 fix): dogfeeding spec design phase 完走後の cross-spec review で発見された implication C1 を Revalidation Triggers section に反映 = dogfeeding spec から要請される追加要件 3 件 (dr-design `--treatment` flag 対応 / dr-log timestamp 必須付与 / dr-log commit_hash payload 受領) を v1.2 改修対象として明示。本 spec v1.2 改修自体は本 spec design approve 後の implementation phase 直前 cycle で実施 (本 spec design は v1.1 stable 維持、v1.2-prep は Revalidation Triggers section への追記のみ)
+- **v1.2** (2026-05-01 15th セッション、A-1 implementation phase 直前 cycle): cross-spec review C1 fix 3 件を design.md 本文に apply 完了 = (1) dr-design Responsibilities に `--treatment` flag (single | dual | dual+judgment) 切替責務追記 = single 系統で Step B/C 全 skip + Step D primary のみ user 提示、dual 系統で Step B 実行 + Step C skip + Step D 全件 should_fix 個別判断 prompt、dual+judgment 系統で V4 完全 / treatment は dr-log open() payload 必須付与 (2) dr-design Service Interface invoke signature に `treatment` parameter 追加 + RoundReports に treatment field 追加 (3) dr-log Responsibilities に open() 時 timestamp_start 自動 capture + flush() 時 timestamp_end 自動 capture + 両 field review_case JSONL line 必須付与 / open() payload で受領した design_md_commit_hash を session state 保持 + flush() 時 review_case 必須付与 の責務追記 (4) Revalidation Triggers section の v1.2-prep marker を v1.2 適用済 marker に書換。tasks.md v1.1 と整合済 (Task 4.1/4.2 dr-log timestamp + commit_hash / Task 5.1/5.2 dr-design --treatment flag + Step B/C/D 切替 / Task 6.5/7.5 3 系統 integration test 既存)、requirements.md v1.x AC 整合済
