@@ -2,7 +2,7 @@
 
 _目的: V3 baseline / V4 各 attempt / 将来追加される実験データの所在 + 内容 + アクセス方法を継続的に記録するカタログ。新 evidence 生成時 + archive 操作時に必ず更新する。_
 
-_v0.5 / 2026-05-01 (14th セッション末、A-1 tasks phase 累計 evidence + cross-spec review C-1 fix + 14th 末 cleanup 反映)_
+_v0.6 / 2026-05-02 (18th セッション開始、§5.1 placeholder fill = A-1 implementation phase 完走 evidence (15th-18th) + §5.2 placeholder 3 段構成展開 = data-acquisition-plan v1.3 整合)_
 
 ---
 
@@ -344,18 +344,124 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 
 ## 5. 将来追加予定 (placeholder、A-1 implementation phase 後 + A-2 dogfeeding 完走後 fill)
 
-### 5.1 A-1 implementation phase evidence (13th 以降、本 catalog §5.1 に追記予定)
+### 5.1 A-1 implementation phase evidence (15th-18th セッション完走、main 統合済、v0.6 fill)
 
-- design-review v1.2 改修 (treatment flag + timestamp + commit_hash 対応 implementation 設計、本 spec implementation phase 直前 cycle)
-- 4 skill 物理 file 生成 (`scripts/dual_reviewer_prototype/skills/{dr-init, dr-design, dr-log, dr-judgment}/{SKILL.md, *.py}`)
-- 3 Python script 物理 file 生成 (`scripts/dual_reviewer_dogfeeding/{metric_extractor, figure_data_generator, phase_b_judgment}.py + tests/`)
-- portable artifact 物理 file 生成 (foundation `framework/` + `schemas/` + `patterns/` + `prompts/` + `config/` + `terminology/`)
-- sample 1 round 通過 test 結果 (= design-review Req 7.4 動作確認終端条件)
+#### 5.1.1 design-review v1.2 改修 cycle + Level 6 infrastructure (15th セッション、commits `15cffa6` + `7722f9e`)
 
-### 5.2 A-2 dogfeeding 結果 (Phase A 終端時、本 catalog §5.2 に追記予定)
+- **内容**: design-review spec の req + design + tasks 整合化 cycle (= treatment flag + timestamp 必須付与 + commit_hash payload 受領、dogfeeding/design.md Decision 6 整合) + data-acquisition-plan v1.0 改版 (Claim D + Level 6 schema 新設) + Level 6 記録 infrastructure 立ち上げ
+- **commits**:
+  - `15cffa6` design-review v1.2 改修: requirements (AC10/AC8/AC9 追加) + design.md v1.2 + tasks.md v1.1 + spec.json updated_at
+  - `7722f9e` data-acquisition-plan v1.0 + `rework_log.jsonl` 雛形 (0 bytes、append-only target)
+- **保全 location**: main branch (origin push 済)
+  - `.kiro/specs/dual-reviewer-design-review/{requirements.md, design.md, tasks.md, spec.json}` v1.2
+  - `.kiro/methodology/v4-validation/data-acquisition-plan.md` v1.0
+  - `.kiro/methodology/v4-validation/rework_log.jsonl` (空 file)
+- **数値要約**: data-acquisition-plan v1.0 = Claim D 追加 (4 主張化) + Level 6 schema (M1 Volume / M2 Scope / M3 Discovery Phase / M4 Root Cause) + 3 data source (Data 1 auto / Data 2 manual / Data 3 任意 A-2 から導入) + per-line schema + baseline 制約 3 件 + checkbox tracker (A-1 4 件 + A-2 2 件) + Claim D 評価基準 3 段階 (Strong / Moderate / Weak)
+- **関連 dev-log**: `docs/dual-reviewer-log-5.md` (15th)
 
-- Spec 6 全 Round (1-10) × 3 系統対照実験 = 30 review session
-- JSONL log 蓄積 (foundation 共通 schema 2 軸並列 + 本 spec consumer 拡張 4 field)
+#### 5.1.2 A-3 plan 確定 + A-1 implementation Step 1 = foundation 物理 file 生成 (16th セッション、commits `7774860` / `375809b` / `a96482b` / `8cd8bf8`)
+
+- **内容**: A-3 plan 確定 (= triangulation evidence batch 新設、論文 reviewer 想定批判 1 = self-referential metric mitigation、TODO 反映のみで本 16th 末は plan 改版 commit なし、17th `8876328` で v1.1 改版に正式反映) + A-1 implementation phase Step 1 = foundation 物理 file 生成 (4 commit、56 tests pass、TDD 1 cycle)
+- **commits**:
+  - `7774860` Task 1+2 install location skeleton + portable static artifacts
+  - `375809b` Task 3+4 = 5 JSON schemas + Layer 1 framework + 2 templates
+  - `a96482b` Task 5+6 dr-init skill impl + unit tests (TDD)
+  - `8cd8bf8` Task 7 integration tests (5 sub-task、56 tests pass)
+- **保全 location**: main branch (origin push 済)
+  - `scripts/dual_reviewer_prototype/framework/layer1_framework.yaml`
+  - `scripts/dual_reviewer_prototype/patterns/{seed_patterns, fatal_patterns}.yaml`
+  - `scripts/dual_reviewer_prototype/prompts/judgment_subagent_prompt.txt`
+  - `scripts/dual_reviewer_prototype/skills/dr-init/{SKILL.md, bootstrap.py}`
+  - `scripts/dual_reviewer_prototype/tests/{conftest.py, dr_init/, integration/{dr_init_consumer, framework_structure, relative_path, schema_complex, v4_sync}/, schemas/}`
+  - `scripts/dual_reviewer_prototype/README.md`
+- **数値要約**: 4 commit / ~25 file / ~1500 insertions / 56 tests pass / TDD 1 cycle (dr-init)
+- **関連 dev-log**: `docs/dual-reviewer-log-5.md` (15th-16th)
+
+#### 5.1.3 data-acquisition-plan v1.1 + A-1 implementation Step 2 (design-review) + Step 3 (dogfeeding) (17th セッション、10 commit、151 tests pass)
+
+- **内容**: data-acquisition-plan v1.0 → v1.1 改版 (= 16th 末確定 A-3 plan + framing 変更 + 4 axes 化 + Phase A 終端 redefine) + A-1 implementation Step 2 = design-review 物理 file 生成 (5 commit、113 tests cumulative、TDD 3 cycle = dr-judgment / dr-log / dr-design) + A-1 implementation Step 3 = dogfeeding 物理 file 生成 (4 commit、151 tests cumulative、TDD 3 cycle = metric_extractor / figure_data_generator / phase_b_judgment)
+- **commits**:
+  - `8876328` docs(methodology): data-acquisition-plan v1.1 (155 insertions / 10 deletions)
+  - `2f104fa` design-review Task 1+2 scaffolding + design_extension.yaml + forced_divergence_prompt.txt
+  - `85f51f9` design-review Task 3+6.6 dr-judgment skill impl + 12 unit tests
+  - `bdda6dd` design-review Task 4+6.3-6.5 dr-log skill impl + 11 unit tests
+  - `7541896` design-review Task 5+6.1-6.2 dr-design skill impl + 13 unit tests
+  - `4e4a33d` design-review Task 7 integration tests (5 sub-task、113 tests pass)
+  - `06bcdcf` dogfeeding Task 1+2 scaffolding + helpers + metric_extractor.py + 13 unit tests
+  - `367a7aa` dogfeeding Task 3 figure_data_generator.py + 9 unit tests
+  - `0234251` dogfeeding Task 4 phase_b_judgment.py + 11 unit tests
+  - `3d72d56` dogfeeding Task 5+6 README full + 2 integration tests (151 tests pass)
+- **保全 location**: main branch (origin push 済 17th 末 endpoint = `3d72d56`)
+  - `scripts/dual_reviewer_prototype/extensions/design_extension.yaml`
+  - `scripts/dual_reviewer_prototype/prompts/forced_divergence_prompt.txt`
+  - `scripts/dual_reviewer_prototype/skills/{dr-design, dr-log, dr-judgment}/{SKILL.md, *.py}`
+  - `scripts/dual_reviewer_prototype/tests/{dr_design/, dr_log/, dr_judgment/, integration/design_review/{conftest.py, path_resolution, prompt_embed, role_separation, skill_flow, three_treatment}/}`
+  - `scripts/dual_reviewer_dogfeeding/{helpers, metric_extractor, figure_data_generator, phase_b_judgment}.py + README.md + tests/`
+- **数値要約**: 17th 累計 = 10 commit / 31 file / 3685 insertions / 8 deletions / **151 tests pass** (foundation 56 + design-review 57 + dogfeeding 38)、TDD 6 cycle 連続記録 (Step 2 = 3 + Step 3 = 3)
+- **関連 dev-log**: `docs/dual-reviewer-log-5.md` (17th)
+
+#### 5.1.4 data-acquisition-plan v1.2/v1.3 + 17th 末持ち越し cleanup (18th セッション開始、commits `87e3047` + `fd55902` + `5f27a21`)
+
+- **内容**: 18th セッション開始 = (a) user 指摘「rework_log = 0 は self-report か機械検証か」契機 → data-acquisition-plan v1.2 = Data 2 operational guide + framing 精緻化注記 / (b) 17th 末持ち越し未 commit 整理 = settings.local.json (permission allowlist 23 行追加) + docs/dual-reviewer-log-1~5.md (modified 2 + untracked 3) / (c) user 議論「dual-reviewer は design phase 専用」誤認識整理 → data-acquisition-plan v1.3 = A-2 phase 3 段構成 (A-2.1 Design / A-2.2 Tasks ad-hoc V4 / A-2.3 Impl Level 6 / A-2 終端) で §4 と §3.6 整合化
+- **commits**:
+  - `87e3047` data-acquisition-plan v1.2 = Data 2 operational guide + framing 精緻化注記 (35 insertions)
+  - `fd55902` 17th 末持ち越し cleanup (= settings.local.json + docs/dual-reviewer-log-1~5.md、6 file / 7797 insertions / 40 deletions)
+  - `5f27a21` data-acquisition-plan v1.3 = A-2 phase 3 段構成展開 (31 insertions / 2 deletions)
+- **保全 location**: main branch (origin push 済 18th 開始 endpoint = `5f27a21`)
+  - `.kiro/methodology/v4-validation/data-acquisition-plan.md` v1.3
+  - `.claude/settings.local.json`
+  - `docs/dual-reviewer-log-{1,2,3,4,5}.md`
+- **数値要約**: 18th 累計 (本セッション) = 3 commit / 8 file / 7863 insertions / 42 deletions、data-acquisition-plan v1.3 = A-2 phase の正確な scope 整理 (= "dual-reviewer skill は design phase 専用、V4 protocol は phase 横断適用可能、Level 6 観測は impl phase passive" の 3 段分離)
+- **関連 dev-log**: `docs/dual-reviewer-log-5.md` (18th 開始反映待ち)
+
+#### 5.1.5 sample 1 round 通過 test status (= A-2 統合 defer)
+
+- **元 plan** (data-acquisition-plan §4 A-1 implementation phase entry L509): foundation `dr-init` で Spec 6 working directory bootstrap → design-review `dr-design` (Round 1 のみ、treatment="dual+judgment") で Step A → B → C → D 全完了 + dr-log JSONL 1 entry 以上 schema validate 成功 + V4 §2.5 三ラベル提示 yaml stdout 出力 の 3 条件全達成
+- **状態**: ⏸️ defer
+- **justification**: Spec 6 (`rwiki-v2-perspective-generation`) 休止により本 spec implementation phase scope では実施不可、dogfeeding spec Task 8 = A-2 phase で execute (= TODO L86-87 + dogfeeding tasks.md Task 8 (a) 整合)
+- **統合先**: dogfeeding tasks.md Task 8 = A-2 phase の (a) Spec 6 適用 + dr-init bootstrap (Spec 6 working directory) + dual-reviewer prototype 動作確認 (Req 1.1-1.6) に統合
+- **関連 dev-log**: `docs/dual-reviewer-log-5.md` (17th = defer 確定)
+
+#### 5.1.6 Level 6 rework_log status (= 0 events for A-1 全 implementation phase、Claim D 中間 evidence)
+
+- **状態**: 0 bytes / 0 entries (= 17th 末 + 18th 開始 endpoint で空 file 継続)
+- **記録範囲**: 16th 末 (foundation Step 1 着手) - 17th 末 (dogfeeding Step 3 完走) + 18th 開始 (plan v1.2/v1.3 改版自体は記録対象外)
+- **検証方法**: Data 1 commit pattern auto = `git log --name-status -- .kiro/specs/dual-reviewer-{foundation,design-review,dogfeeding}/` 結果 **完全に空** = 16th-17th 期間で 3 spec 上流 artifact (req/design/tasks/spec.json) への変更 物理的 0 件
+- **解釈**: schema 範囲内 (= upstream artifact 改版) **0 events**、Claim D 中間 evidence (= V4 review が design phase で functional だった signal の継続)、weak signal は schema 範囲外 (= data-acquisition-plan v1.2 注記 = TDD red→green cycle / DRY refactoring / SKILL.md role 精緻化 等)
+- **数値要約**: A-1 全 implementation phase Step 1-3 = **0 events for Level 6**、Claim D 中間 evidence の累積継続、A-2 phase = Spec 6 implementation phase 着手後に events 発生時 append 開始 (= §3.6 Data 2 operational guide v1.2 整合)
+- **保全 location**: `.kiro/methodology/v4-validation/rework_log.jsonl` (空 file、append-only target)
+
+### 5.2 A-2 dogfeeding 結果 (3 段構成、A-2 完走時に本 catalog §5.2 に追記予定、v0.6 = data-acquisition-plan v1.3 §4 整合化)
+
+A-2 phase = Spec 6 (`rwiki-v2-perspective-generation`) を題材に **3 phase 段構成**で evidence acquisition (= data-acquisition-plan v1.3 §4 A-2.1/A-2.2/A-2.3 + 終端 整合)。Spec 6 Design = systematic main / Tasks = ad-hoc V4 補助 (option) / Impl = Level 6 passive 観測 (Claim D)。
+
+#### 5.2.1 Spec 6 Design phase (= 主要 evidence、systematic、必須、論文 figure 1-4)
+
+- Spec 6 全 Round (1-10) × 3 系統対照実験 = 30 review session (= treatment ∈ {single, dual, dual+judgment})
+- JSONL log 蓄積 (foundation 共通 schema 2 軸並列 + 本 spec consumer 拡張 4 field、30 entry / 3 系統 × 10 round)
+- `metric_extractor.py` 実行 → `dogfeeding_metrics.json` 生成 (= 12 軸 metric)
+- `figure_data_generator.py` 実行 → 4 figure data file 生成 (= figure 1-3 + ablation、論文 core evidence)
+- `phase_b_judgment.py` 実行 → `comparison-report.md` §12 append (= 5 条件評価 + V4 仮説検証 H1-H4 + evidence_references)
+
+#### 5.2.2 Spec 6 Tasks phase (= 補助 evidence、V4 ad-hoc 適用、option)
+
+- `/kiro-spec-tasks rwiki-v2-perspective-generation` Skill 経由 + V4 protocol §4 (forced_divergence + Step 1c judgment) 手動再現
+- tasks phase metric (= 採択率 / 過剰修正比率 / V4 修正否定率) を 4 spec 目 tasks phase 拡張として記録
+- 補助 evidence 役割: phase 横断 reproducibility 補強 (= 14th 累計 6 spec instance design + tasks → Spec 6 拡張で 7 spec instance)
+- dr-tasks skill 不在 (= Phase B-1.1 別 spec 化予定) のため manual 適用、推定 cost 数時間-1日
+
+#### 5.2.3 Spec 6 Impl phase (= passive、Level 6 rework signal 観測、Claim D evidence)
+
+- `rework_log.jsonl` への append (= Data 1 commit pattern auto + Data 2 manual + Data 3 任意、§3.6 Data 2 operational guide v1.2 整合)
+- within-spec rework 内訳分析 (= M1 Volume / M2 Scope / M3 Discovery Phase / M4 Root Cause 比率算出)
+- A-1 (3 spec impl) vs A-2 (Spec 6 impl) within-project 比較 = §3.6 B3 baseline
+- dual-reviewer skill 適用なし、通常の wiki 機能実装 (= perspective-generation 機能の実装作業) を進行しながら observation
+
+#### 5.2.4 A-2 終端 + 統合分析 (= A-2 完走時)
+
+- A-2 完走時の final analysis = A-1 vs A-2 比較 + Claim D 主張可否判断 (Strong / Moderate / Weak) + paper claim 文言確定
+- Spec 6 全 phase approve = Rwiki v2 全 8 spec design phase approve = **A-2 終端** (= Phase A 終端ではない、v1.1 redefine、A-3 完走 = Phase A 終端)
+- comparison-report v0.2 final 起草準備 (= req + design + A-2 累計集計、A-3 完走後に最終版完成)
 
 ### 5.3 論文 figure 1-3 + ablation evidence (A-2 完走後、本 catalog §5.3 に追記予定)
 
@@ -397,6 +503,29 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 - 14th 末 endpoint commits (origin push 済):
   - `021ec65` tasks(dual-reviewer): A-1 3 spec tasks approve + V4 ad-hoc + cross-spec C-1
   - `aed0b2b` docs(methodology): data-acquisition-plan v0.4 = tasks phase 累計反映
+- 15th 末 endpoint commits (origin push 済):
+  - `15cffa6` design-review v1.2 改修 cycle (req + design + tasks 整合化、AC10/AC8/AC9 追加)
+  - `7722f9e` data-acquisition-plan v1.0 + `rework_log.jsonl` 雛形 (Claim D + Level 6 schema 新設)
+- 16th 末 endpoint commits (origin push 済、A-1 implementation phase Step 1 = foundation):
+  - `7774860` foundation Task 1+2 install location skeleton + portable static artifacts
+  - `375809b` foundation Task 3+4 = 5 JSON schemas + Layer 1 framework + 2 templates
+  - `a96482b` foundation Task 5+6 dr-init skill impl + unit tests (TDD)
+  - `8cd8bf8` foundation Task 7 integration tests (5 sub-task、56 tests pass)
+- 17th 末 endpoint commits (origin push 済、10 commit / 31 file / 3685 insertions / 151 tests pass):
+  - `8876328` data-acquisition-plan v1.1 = A-3 plan + framing 変更 + 4 axes 化
+  - `2f104fa` design-review Task 1+2 scaffolding + design_extension.yaml + forced_divergence_prompt.txt
+  - `85f51f9` design-review Task 3+6.6 dr-judgment skill impl + 12 unit tests
+  - `bdda6dd` design-review Task 4+6.3-6.5 dr-log skill impl + 11 unit tests
+  - `7541896` design-review Task 5+6.1-6.2 dr-design skill impl + 13 unit tests
+  - `4e4a33d` design-review Task 7 integration tests (5 sub-task、113 tests pass)
+  - `06bcdcf` dogfeeding Task 1+2 scaffolding + helpers + metric_extractor.py + 13 unit tests
+  - `367a7aa` dogfeeding Task 3 figure_data_generator.py + 9 unit tests
+  - `0234251` dogfeeding Task 4 phase_b_judgment.py + 11 unit tests
+  - `3d72d56` dogfeeding Task 5+6 README full + 2 integration tests (151 tests pass、A-1 implementation phase 完走)
+- 18th 開始 endpoint commits (origin push 済):
+  - `87e3047` data-acquisition-plan v1.2 = Data 2 operational guide + framing 精緻化注記
+  - `fd55902` 17th 末持ち越し未 commit cleanup (settings.local.json + dev-log 5 file)
+  - `5f27a21` data-acquisition-plan v1.3 = A-2 phase 3 段構成展開 (§4 ⇄ §3.6 整合化)
 - 3 spec design.md / research.md (12th 末 endpoint):
   - `.kiro/specs/dual-reviewer-foundation/design.md` v1.1 + `research.md` v1.0
   - `.kiro/specs/dual-reviewer-design-review/design.md` v1.1 → v1.2-prep + `research.md` v1.0
@@ -423,3 +552,4 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 - **v0.3** (2026-04-30 11th セッション): §6 関連 reference に `data-acquisition-plan.md` を追加 (論文化 data 取得計画 checkbox tracker、本 catalog と並走 file)。
 - **v0.4** (2026-05-01 12th セッション末): §4 を「将来追加予定 (placeholder)」から「design phase V4 evidence (12th セッション完走、main 統合済)」に展開 (foundation `2e5637d` + design-review `76a1eb1` + dogfeeding + cross-spec `aa40934` の 3 spec evidence 集約 + 3 spec 累計 V4 metric trend = 過剰修正比率 81.25% → 58.8% → 40.0% 連続改善 + 12th 末 cleanup record)。§5 を新規 placeholder section (A-1 implementation phase + A-2 dogfeeding + 論文 figure + Phase B fork) に renumber、§6/§7 (運用規律 + 関連 reference) も連動 renumber。§7 関連 reference に 12th 末 commits + 3 spec design / research file paths + 新規 archive branch (`archive/v4-redo-broad-merged-2026-05-01`) + 新規 tag (`v4-redo-broad-merged-2026-05-01`) を追記。
 - **v0.5** (2026-05-01 14th セッション末): §4 を「design + tasks phase V4 evidence (12-14th セッション完走、main 統合済)」に rename + §4.6-§4.11 を新規追加 (14th 末 tasks phase ad-hoc V4 evidence 集約 = 3 spec tasks phase metric (foundation 採択率 5.6% / 過剰修正 66.7% + design-review 13.3% / 53.3% + dogfeeding 35.7% / 42.9%) + cross-spec review (Group A 17 + B 2 + C 1 + 不整合 0 件、Group C-1 = `jsonschema>=4.18` version pin 同期 を foundation tasks v1.2 で apply) + 3 spec tasks phase 累計 V4 metric trend (採択率 +30.1pt / 過剰修正比率 -23.8pt 累計改善 = V4 構造的有効性 3 spec 連続再現実証、design phase trend 81.25% → 58.8% → 40.0% と方向一致 = 6 spec instance 累計再現) + 14th 末 cleanup (data-acquisition-plan v0.4 + memory 2 file update + origin push) record)。§7 関連 reference に 14th 末 endpoint commits (`021ec65` + `aed0b2b`) + 3 spec tasks.md path + tasks phase ad-hoc V4 caveat 4 件 reference 追加。
+- **v0.6** (2026-05-02 18th セッション開始、§5.1 placeholder fill + §5.2 3 段構成展開): 14th 末起草の §5.1 placeholder 5 件を 15th-18th 累計の完走 evidence に書き換え = **§5.1.1** (15th = design-review v1.2 改修 cycle + Level 6 schema infrastructure + data-acquisition-plan v1.0、commits `15cffa6` + `7722f9e`) / **§5.1.2** (16th = A-3 plan 確定 + A-1 Step 1 = foundation 物理 file 生成、commits `7774860` / `375809b` / `a96482b` / `8cd8bf8`、56 tests pass、TDD 1 cycle) / **§5.1.3** (17th = data-acquisition-plan v1.1 + Step 2 design-review impl + Step 3 dogfeeding impl、10 commit / 31 file / 3685 insertions / 151 tests pass、TDD 6 cycle) / **§5.1.4** (18th 開始 = data-acquisition-plan v1.2 + 17th 末持ち越し cleanup + v1.3、commits `87e3047` + `fd55902` + `5f27a21`、3 commit / 8 file / 7863 insertions / 42 deletions) / **§5.1.5** (sample 1 round 通過 test = A-2 統合 defer = Spec 6 休止により dogfeeding spec Task 8 = A-2 phase で execute) / **§5.1.6** (Level 6 rework_log = 0 events for A-1 全 implementation phase = Data 1 commit pattern auto 機械検証済 = Claim D 中間 evidence 累積継続)。**§5.2 placeholder を 3 段構成展開** (= data-acquisition-plan v1.3 §4 A-2 phase 整合) = §5.2.1 Spec 6 Design phase (= 主要 evidence、systematic) + §5.2.2 Spec 6 Tasks phase (= 補助 evidence、V4 ad-hoc 適用、option) + §5.2.3 Spec 6 Impl phase (= passive、Level 6 rework signal、Claim D evidence) + §5.2.4 A-2 終端統合分析。**§7 関連 reference に 15th-18th endpoint commits 16 件追加** (= 15th 末 2 + 16th 末 4 + 17th 末 10 + 18th 開始 3 = 累計 19 commit、main origin push 済全件)。本 v0.6 改版自体は data-acquisition-plan v1.0/v1.1/v1.2/v1.3 と同様 Level 6 記録対象外 (= methodology meta-document)。
