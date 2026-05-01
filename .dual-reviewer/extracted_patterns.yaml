@@ -1,0 +1,5 @@
+# Layer 3 抽出 patterns (Layer 3 Extracted Patterns Placeholder)
+# 本 file は dr-init bootstrap で生成された Layer 3 placeholder。
+# 実体的蓄積は dogfeeding 以降に蓄積する。
+version: "1.0"
+patterns: []

@@ -1,0 +1,10 @@
+# Config Template (dr-init bootstrap 用 雛形 / Bootstrap Template for dr-init)
+# Req 2.2: dr-init が target project の `.dual-reviewer/config.yaml` に copy する placeholder。
+# project bootstrap 後、user が <...> placeholder を具体 model identifier に置換する。
+# 確定 timing = bootstrap 後の最初の review 起動前。
+
+primary_model: claude-opus-4-7           # Phase A 正規構成 (preliminary-paper-report v0.2 §73 整合)
+adversarial_model: claude-sonnet-4-6     # Phase A 正規構成 (preliminary-paper-report v0.2 §73 整合)
+judgment_model: claude-sonnet-4-6        # Phase A 正規構成 (preliminary-paper-report v0.2 §73 整合)
+lang: ja                                 # Req 2.4: default ja (Phase A scope; --lang en 等は Phase B-1.3)
+dev_log_path: .dual-reviewer/dev_log.jsonl  # Req 2.2: AC1 placeholder と整合 (target project root からの相対 path)
