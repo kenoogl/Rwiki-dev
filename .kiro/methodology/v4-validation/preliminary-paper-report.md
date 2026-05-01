@@ -1,20 +1,21 @@
 # Preliminary Paper Report — dual-reviewer methodology validation
 
-_作成: 2026-05-01 (14th セッション末) / status: 論文化 preliminary preview、8 月ドラフト submission readiness 中間評価 / 未完: A-2 dogfeeding 30 review session + figure 1-3 + ablation evidence (Phase A 終端後)_
+_作成: 2026-05-01 (14th セッション末) / 改版: 2026-05-02 (18th セッション開始 v0.2) / status: 論文化 preliminary preview、8-9 月ドラフト submission readiness 中間評価 (= v1.1 timeline redefine 反映) / 未完: A-2 dogfeeding 30 review session + figure 1-3 + ablation evidence + A-3 triangulation evidence batch (Phase A 終端後 = A-3 完走後 redefine)_
 
-_v0.1 / 2026-05-01 (14th セッション末)_
+_v0.2 / 2026-05-02 (18th セッション開始、Claim D + framing 変更 + A-3 batch + A-1 implementation 完走 反映)_
 
 ---
 
 ## §1 Executive Summary
 
-### 主張 (3 claims)
+### 主張 (4 claims、v0.2 改版で Claim D 追加)
 
-dual-reviewer = LLM 設計レビューの **bias 観測装置 + 改善 mechanism** として確立可能。具体 3 主張:
+dual-reviewer = LLM 設計レビューの **bias 観測装置 + 改善 mechanism + 品質保証装置** として確立可能。具体 4 主張:
 
 - **Claim A (adversarial subagent 効果)**: 独立検出 + 修正否定試行 prompt が primary (Opus) の completeness bias を suppress、致命級独立発見と disagreement evidence で実証
 - **Claim B (judgment subagent 効果)**: Step 1c (V4 §1.2 option C) が必要性 5-field 評価 + 5 条件判定 + 3 ラベル分類で過剰修正比率を 50% → 40% 台に抑制、6 spec instance 累計連続改善で実証
 - **Claim C (dual-reviewer architecture)**: 3 subagent 構成 (primary + adversarial + judgment) が偶然 / 1 spec or 1 phase の特殊性ではなく、構造的に primary completeness bias を抑制する装置である phase 横断証明
+- **Claim D (downstream rework signal、v0.2 追加、external validity)**: V4 review が機能した spec の implementation phase で、上流 artifact (req/design/tasks) への post-approve 改版 (= rework) が低水準に抑制される、Claim A/B/C と独立次元の妥当性軸 (= time-deferred validity = post-approve rework が少ないこと自体が V4 review の prospective error rate 測定として活用)
 
 ### 14th 末時点の readiness
 
@@ -23,10 +24,33 @@ dual-reviewer = LLM 設計レビューの **bias 観測装置 + 改善 mechanism
 | Claim A | **十分** (V3 試験運用 + req phase 3 spec) | 致命級独立発見 12 件 + disagreement 17+ 件 + Phase 1 同型 17 度 |
 | Claim B | **十分** (V4 redo broad 3 phase × 3 spec = 9 instance) | 過剰修正比率 V3 50% → V4 平均 47.4% (preliminary)、phase 内 trend 連続改善 |
 | Claim C | **十分** (6 spec instance × 2 phase 累計再現) | design phase -41.25pt + tasks phase -23.8pt 累計改善、phase 横断 reproducibility 確認 |
+| Claim D | **中間 evidence 確立** (A-1 全 implementation phase Step 1-3 = 0 events、18th 開始時点) | A-1 全 implementation phase で post-approve upstream artifact rework = 0 events (= 機械検証済、Data 1 commit pattern auto = `git log -- .kiro/specs/dual-reviewer-*/`)、A-2 完走後最終評価 |
 
 ### core figure 1-3 + ablation evidence の readiness
 
 **未充足** (= Phase A 終端 = A-2 dogfeeding 完走後で確定)。本 14th 末は **preliminary cross-phase verification 補助 evidence** のみ取得済、論文 core evidence (Spec 6 30 review session × 3 系統対照実験 = single vs dual vs dual+judgment ablation) は A-2 期間で取得予定 (8 月末 timeline 厳守)。
+
+### Validation framing (v0.2 追加、論文 framing 変更 = convergent multi-indicator triangulation)
+
+論文 framing を **ground truth validation → convergent multi-indicator triangulation** に変更 (= 16th セッション末議論で確定、data-acquisition-plan v1.1 §1 で正式反映、memory `project_a3_plan_triangulation_defense.md` + `user_paper_rigor_preference.md` 整合):
+
+- **旧 (= 撤回)**: "V4 reduces over-correction, validated against ground truth"
+- **新**: "V4 reduces over-correction, validated through **convergent multi-indicator triangulation** (= no single source claims ground truth, multiple independent indicators converge in the same direction)"
+
+**human GT 不在の理由** (= human label を絶対視しない、user paper rigor preference 軸 1 + 軸 2 整合):
+
+- (a) literature 上 human label noisy (= SE 専門家間でも `must_fix` definition は context-dependent、Cohen's kappa は分野横断的に低い)
+- (b) Spec 6 reviewer recruitment は dual domain expertise (= Wiki 計算 logic + dual-reviewer protocol) 必要で実質不可能
+
+**5 件 independent indicators** (= A-3 triangulation evidence batch + Level 6、§7.4 + data-acquisition-plan §3.7 整合):
+
+- (i) multi-vendor LLM agreement (= Claude vs GPT-4 vs Gemini agreement matrix、A-3.2)
+- (ii) mutation testing sensitivity/specificity (= constructed positive control、A-3.3)
+- (iii) multi-run reliability (= 3-5 random seed inter-run agreement、A-3.4)
+- (iv) cross-project transfer (= フルスクラッチ project metric stability、A-3.1)
+- (v) downstream rework signal (= Level 6 既存 plan、Claim D primary evidence、time-deferred validity)
+
+**論文 abstract / introduction の framing core principle**: "we acknowledge ground truth absence; we address through convergent multi-indicator triangulation"。
 
 ---
 
@@ -175,19 +199,37 @@ primary should_fix bias を adversarial counter-evidence + judgment 独立 conte
 
 dogfeeding/design.md Decision 5 + tasks.md Task 4 で 5 条件 (致命級 ≥ 2 / disagreement ≥ 3 / bias 共有反証 evidence / impact_score CRITICAL/ERROR ≥ 1 / 過剰修正比率改善) を A-2 完走後 `phase_b_judgment.py` で機械評価。本 14th 末では 4 条件部分達成 (致命級独立発見累計 12 件 + disagreement 17+ 件 + bias 共有反証 = adversarial-only finding 1 件以上)、(d) impact_score 分布 + (e) 過剰修正比率改善 (dual+judgment vs dual) は A-2 取得後判定。
 
-### 6.5 multi-vendor 比較未実施
+### 6.5 multi-vendor 比較 (= A-3.2 で計画、v0.2 update)
 
-V4 全体 vs V3 全体の **pure independent 比較** は本 14th 末 scope 外。本 evidence は V4 §4.4 ablation framing (= "Step 1c なし baseline = single + dual" vs "Step 1c あり treatment = dual+judgment") に限定。multi-vendor 比較 (Claude vs GPT vs Gemini) は Phase B-2 別 protocol で実施予定。
+V4 全体 vs V3 全体の **pure independent 比較** は本 14th 末 scope 外。本 evidence は V4 §4.4 ablation framing (= "Step 1c なし baseline = single + dual" vs "Step 1c あり treatment = dual+judgment") に限定。**multi-vendor 比較 (Claude vs GPT vs Gemini)** は **A-3.2 (triangulation evidence batch の 1 件、cost 3-6h)** で計画 (= data-acquisition-plan v1.1 §3.7.2 整合)、批判 1 (self-referential metric) + 批判 3 (LLM-on-LLM bias) 同時 mitigation evidence。Phase B-2 ではなく **Phase A 内 A-3 batch で実施 redefine** (= 16th 末議論で確定)。
+
+### 6.6 Claim D の precise scope (= v0.2 追加、論文化文言の overclaim 防止)
+
+Claim D は **"0 upstream artifact rework events"** という precise scope で主張する (= data-acquisition-plan v1.2 §3.6 v1.2 注記整合):
+
+- **正しい主張**: "V4 review が機能した 3 spec の A-1 implementation phase で、上流 artifact (req/design/tasks) への post-approve 改版は **0 events** = Claim D の strong evidence"
+- **overclaim 注意**: "rework が全くなかった" は誤り。schema 範囲外の weak signal (= test-driven implementation 精緻化、SKILL.md 文言調整、暗黙前提の自然吸収、TDD red→green cycle 中の impl 修正、helpers.py の DRY 適用) は記録対象外であり、これらの不在を主張するものではない
+- **論文 framing 推奨**: "post-approve upstream artifact rework rate" を Claim D primary metric として明示 + "schema 範囲外の implementation-level adjustments (TDD cycle / DRY refactoring / SKILL.md role 精緻化等) are out of scope of Claim D measurement" を limitations section に明記する
+
+### 6.7 human GT 不在 + triangulation defense (= v0.2 追加、論文 reviewer 想定批判 1 への direct rebuttal)
+
+論文 reviewer 想定批判 1 (= self-referential metric、過剰修正比率 = `do_not_fix` 比率と定義されるが `do_not_fix` 自身は V4 の judgment subagent verdict = self-referential) への direct rebuttal:
+
+- **acknowledge**: ground truth absence を direct に認める (= 16th セッション末議論で human GT 撤回確定)
+- **address through triangulation**: 5 件 independent indicators (= multi-vendor / mutation / multi-run / cross-project / rework signal) の convergence を evidence base として triangulation defense
+- **論文 acceptable line**: convergent triangulation framing は methodology paper として honest かつ defensible (= reviewer は "we address through triangulation" を satisfied 可能性高、批判 1 mitigation 予想 ~80%、data-acquisition-plan v1.1 §3.7 整合)
+- **5 件 indicators 詳細**: §1 Validation framing 参照 + §7.4 A-3 triangulation evidence batch 参照
 
 ---
 
 ## §7 Future Work + 8 月 Timeline Readiness
 
-### 7.1 残 work (15th セッション以降)
+### 7.1 残 work (18th セッション以降、v0.2 update)
 
-- **A-1 implementation phase** (15th-、推定 1 month): design-review v1.2 改修 cycle → foundation + design-review + dogfeeding 物理 file 生成 → sample 1 round 通過 test
-- **A-2 dogfeeding** (A-1 完走後、推定 1-2 month): Spec 6 適用 → 30 review session 完走 → metric/figure data 生成 → Phase B fork 判定
-- **論文 draft 執筆 Phase 3** (7-8 月別 effort): figure 1-3 + ablation evidence input、本 spec scope 外
+- ~~**A-1 implementation phase**~~ (15th-17th 末完走 ✅、commits `15cffa6` + `7722f9e` + foundation 4 commit + design-review 5 commit + dogfeeding 4 commit、151 tests pass、TDD 9 cycle、Level 6 = 0 events): design-review v1.2 改修 cycle → foundation + design-review + dogfeeding 物理 file 生成。残 sample 1 round 通過 test は A-2 統合 defer (= Spec 6 休止により dogfeeding spec Task 8 = A-2 phase で execute)
+- **A-2 dogfeeding** (推定 1-2 month、3 段構成 = data-acquisition-plan v1.3 §4 A-2 整合): A-2.1 Spec 6 Design (= dual-reviewer 30 session systematic) + A-2.2 Spec 6 Tasks (= V4 ad-hoc 補助、option) + A-2.3 Spec 6 Impl (= Level 6 passive、Claim D evidence) + A-2 終端統合分析
+- **A-3 triangulation evidence batch** (A-2 完走後、推定 19-33h ≈ 3-5 work day = 1-2 calendar 月 batch、§7.4 詳細): 5 件 independent indicators 取得 + convergence judgment + Phase A 終端
+- **論文 draft 執筆 Phase 3** (8-9 月、Phase A 終端後 別 effort、v1.1 redefine = 7-8月 → 8-9月 後ろ倒し): figure 1-3 + ablation evidence + A-3 triangulation evidence input、本 spec scope 外
 
 ### 7.2 Phase A 終端時 final comparison-report v0.2 集約 plan
 
@@ -210,7 +252,23 @@ A-2 完走後の最終 comparison-report.md v0.2 で:
 
 **8 月末 timeline 達成 critical path** = A-1 implementation phase 着手 (= 15th 以降) → 完了 (~6 月) → A-2 着手 → 30 review session 完走 → script 実行 → 8 月末 figure data 完了。
 
-8 月末 failure (= figure data 完了未達) は dogfeeding/design.md Decision 5 で Phase B fork hold 判定の補助根拠化。
+8 月末 failure (= figure data 完了未達) は dogfeeding/design.md Decision 5 で Phase B fork hold 判定の補助根拠化。**v0.2 注記**: Phase A 終端 redefine (= A-3 完走 = 論文 draft 着手 timing) により論文 draft timeline は **7-8 月 → 8-9 月 (preliminary)** に後ろ倒し (= A-3 batch 1-2 calendar 月分後ろ倒し、最終 timeline は A-3 完走後再評価)。
+
+### 7.4 A-3 triangulation evidence batch (v0.2 追加、論文批判 1 mitigation 戦略)
+
+A-2 完走後の独立 batch (= scenario B、user 明示「分離した方が集中できる」per 16th 議論)。論文 reviewer 想定批判 1+2+3+5+8 同時 mitigation evidence。Phase A 終端 redefine (= A-3 完走 = 論文 draft 着手 timing)。data-acquisition-plan v1.1 §3.7 + memory `project_a3_plan_triangulation_defense.md` 整合。
+
+**5 件 independent indicators 構成** (累計 cost 19-33h):
+
+- **A-3.1** フルスクラッチ project (= 別 domain、req+design phase V4 適用、cost 6-12h、批判 2 sample size + 批判 8 ecological validity mitigation): cross-project transfer evidence
+- **A-3.2** multi-vendor LLM cross-validation (= Claude vs GPT-4 vs Gemini judgment、cost 3-6h、批判 1 self-referential + 批判 3 LLM-on-LLM bias 同時 mitigation): inter-rater reliability proxy framing
+- **A-3.3** mutation testing (= Spec 6 design.md に既知 defect 5-10 件 inject、cost 7-10h、批判 1 direct rebuttal): constructed positive control、sensitivity/specificity 直接測定
+- **A-3.4** multi-run reliability check (= V4 protocol 3-5 random seed 再実行、cost 3-5h、批判 5 order effect mitigation): inter-run agreement matrix、validity の必要条件 reliability 測定
+- **Level 6 rework signal** (= 既 plan 内、cost ~0、批判 1 time-deferred validity defense): post-hoc V4 do_not_fix prospective error rate
+
+**convergence threshold** (= Phase A 終端 + 論文 draft 着手 go 判定): 5 件中 4 件以上が V4 有効性方向に converge (= multi-vendor agreement ≥ 70% AND mutation sensitivity ≥ 70% AND multi-run agreement ≥ 80% AND cross-project metric stability ≥ ±20% AND Level 6 M4a ≤ 40%)。
+
+**批判 mitigation 予想**: 批判 1 ~80% / 批判 2 ~70% / 批判 3 ~70% / 批判 5 ~80% / 批判 8 ~90% = 論文 acceptable line 明確に内。
 
 ---
 
@@ -257,6 +315,7 @@ A-2 完走後の最終 comparison-report.md v0.2 で:
 ## §10 変更履歴
 
 - **v0.1** (2026-05-01 14th セッション末、本 file 初版): 論文化 preliminary preview 起草、3 claims (A/B/C) + V4 methodology + 9 spec instance evidence + H1-H4 仮説検証 + 6 limitations + 8 月 timeline readiness assessment + critical path 提示。final comparison-report v0.2 (A-2 完走後) に至る中間集約として位置付け、Phase 3 論文 draft 執筆 (7-8 月別 effort) の input として再利用予定。
+- **v0.2** (2026-05-02 18th セッション開始、Claim D 追加 + framing 変更 + A-3 batch + A-1 implementation 完走 反映): 15th-18th 累計の進展を minimal scope で反映 (= §1 + §6 + §7 + §10 中心、§4 Results 数値は 14th 末 historical fix 維持)。**§1 Executive Summary**: (a) "主張 (3 claims)" → "(4 claims)"、Claim D (downstream rework signal、external validity) 追加、(b) readiness 表に Claim D row 追加 = "中間 evidence 確立 = A-1 全 implementation phase Step 1-3 = 0 events 機械検証済"、(c) §1 末尾 **Validation framing** sub-section 新設 = "ground truth validation → convergent multi-indicator triangulation" framing 変更 (16th セッション末議論で確定、data-acquisition-plan v1.1 §1 整合) + human GT 不在の理由 2 件 + 5 件 independent indicators 列挙 + 論文 abstract / introduction core principle。**§6 Limitations**: (a) 6.5 multi-vendor 比較 = "未実施" → "A-3.2 で計画 (cost 3-6h、批判 1+3 同時 mitigation)、Phase B-2 ではなく A-3 batch redefine"、(b) 6.6 (新設) **Claim D の precise scope** = "0 upstream artifact rework events" framing + overclaim 防止 (= weak signal は schema 範囲外) + 論文 limitations 明記推奨、(c) 6.7 (新設) **human GT 不在 + triangulation defense** = 16th 末議論直接反映 + 批判 1 direct rebuttal + convergent triangulation framing core principle positioning。**§7 Future Work**: (a) 7.1 残 work update = A-1 implementation phase 完走 ✅ (15th-17th 末、151 tests pass、TDD 9 cycle、Level 6 = 0 events) + A-2 phase 3 段構成 (data-acquisition-plan v1.3 §4 整合) + A-3 batch 追加 + 論文 draft 7-8 月 → 8-9 月 後ろ倒し、(b) 7.3 末尾 v0.2 注記 = Phase A 終端 redefine + timeline 後ろ倒し 説明、(c) 7.4 (新設) **A-3 triangulation evidence batch** = 5 件 indicators (A-3.1 フルスクラッチ project + A-3.2 multi-vendor LLM + A-3.3 mutation testing + A-3.4 multi-run reliability + Level 6 rework signal) 累計 cost 19-33h、convergence threshold + 批判 mitigation 予想 (~80%/~70%/~70%/~80%/~90%)。**冒頭 status 文言** = "8 月ドラフト" → "8-9 月ドラフト" + "Phase A 終端後 = A-3 完走後 redefine"。本 v0.2 改版の scope 制限注記: §2 Methodology / §3 Evaluation Setup / §4 Results / §5 Discussion / §8 Conclusion は 14th 末状態 historical fix 維持 (= readiness 評価の core value)、A-2 完走後の v0.3 で systematic update。
 
 ---
 
