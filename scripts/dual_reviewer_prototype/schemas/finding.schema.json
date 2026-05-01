@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "finding.schema.json",
+  "type": "object",
+  "required": ["issue_id", "source", "finding_text", "severity", "state", "impact_score"],
+  "properties": {
+    "issue_id": {"type": "string"},
+    "source": {"type": "string", "enum": ["primary", "adversarial"]},
+    "finding_text": {"type": "string"},
+    "severity": {"type": "string", "enum": ["CRITICAL", "ERROR", "WARN", "INFO"]},
+    "state": {"type": "string", "enum": ["detected", "judged"]},
+    "impact_score": {"$ref": "impact_score.schema.json"},
+    "failure_observation": {"$ref": "failure_observation.schema.json"},
+    "necessity_judgment": {"$ref": "necessity_judgment.schema.json"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"state": {"const": "judged"}}},
+      "then": {"required": ["necessity_judgment"]}
+    }
+  ]
+}

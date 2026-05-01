@@ -1,0 +1,6 @@
+# Terminology Template (用語辞書雛形 / Terminology Dictionary Template)
+# Req 7.5: dr-init が target project の `.dual-reviewer/terminology.yaml` に copy する placeholder。
+# 実体的蓄積は Phase A-2 dogfeeding 以降に蓄積する (target 30-50 entries は Phase B-1.2 まで延伸予定)。
+
+version: "1.0"
+entries: []

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "failure_observation.schema.json",
+  "type": "object",
+  "required": ["miss_type", "difference_type", "trigger_state"],
+  "properties": {
+    "miss_type": {"type": "string", "enum": ["implicit_assumption", "boundary_leakage", "spec_implementation_gap", "failure_mode_missing", "security_oversight", "consistency_overconfidence"]},
+    "difference_type": {"type": "string", "enum": ["assumption_shift", "perspective_divergence", "constraint_activation", "scope_expansion", "adversarial_trigger", "reasoning_depth"]},
+    "trigger_state": {"$ref": "#/$defs/trigger_state"}
+  },
+  "$defs": {
+    "trigger_state": {
+      "type": "object",
+      "required": ["negative_check", "escalate_check", "alternative_considered"],
+      "properties": {
+        "negative_check": {"type": "string", "enum": ["applied", "skipped"]},
+        "escalate_check": {"type": "string", "enum": ["applied", "skipped"]},
+        "alternative_considered": {"type": "string", "enum": ["applied", "skipped"]}
+      }
+    }
+  }
+}

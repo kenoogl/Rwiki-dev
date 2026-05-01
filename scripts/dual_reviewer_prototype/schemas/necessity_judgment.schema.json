@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "necessity_judgment.schema.json",
+  "type": "object",
+  "required": ["source", "requirement_link", "ignored_impact", "fix_cost", "scope_expansion", "uncertainty", "fix_decision", "recommended_action"],
+  "properties": {
+    "source": {"type": "string", "enum": ["primary_self_estimate", "judgment_subagent"]},
+    "requirement_link": {"type": "string", "enum": ["yes", "indirect", "no"]},
+    "ignored_impact": {"type": "string", "enum": ["critical", "high", "medium", "low"]},
+    "fix_cost": {"type": "string", "enum": ["high", "medium", "low"]},
+    "scope_expansion": {"type": "string", "enum": ["yes", "no"]},
+    "uncertainty": {"type": "string", "enum": ["high", "medium", "low"]},
+    "fix_decision": {
+      "type": "object",
+      "required": ["label"],
+      "properties": {
+        "label": {"type": "string", "enum": ["must_fix", "should_fix", "do_not_fix"]}
+      }
+    },
+    "recommended_action": {"type": "string", "enum": ["fix_now", "leave_as_is", "user_decision"]},
+    "override_reason": {"type": "string", "description": "semi-mechanical mapping default override 時の理由 (optional)"}
+  }
+}

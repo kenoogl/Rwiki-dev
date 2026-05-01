@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "impact_score.schema.json",
+  "type": "object",
+  "required": ["severity", "fix_cost", "downstream_effect"],
+  "properties": {
+    "severity": {"type": "string", "enum": ["CRITICAL", "ERROR", "WARN", "INFO"]},
+    "fix_cost": {"type": "string", "enum": ["low", "medium", "high"]},
+    "downstream_effect": {"type": "string", "enum": ["isolated", "local", "cross-spec"]}
+  }
+}

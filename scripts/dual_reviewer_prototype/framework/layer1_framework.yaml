@@ -1,0 +1,107 @@
+# Layer 1 Framework Definition (Phase 横断 review framework)
+# Req 1: V4 protocol v0.3 final 整合 portable framework
+# Consumer (Layer 2 design extension) が yaml 1.2 parser で読込、attach contract 経由で extension する。
+
+version: "1.0"
+metadata:
+  name: dual-reviewer-foundation Layer 1 Framework
+  description: Phase 横断 review framework, V4 protocol v0.3 final 整合
+  v4_protocol_version: "0.3"  # 参照点 (sync 識別用)
+
+# Step Pipeline (Step A/B/C/D)
+step_pipeline:                   # Req 1.1
+  step_a:
+    name: primary_detection
+    role: primary_reviewer
+    sub_steps: [step_1a, step_1b, step_1b_v]
+  step_b:
+    name: adversarial_review
+    role: adversarial_reviewer
+    sub_steps: [independent_detection, forced_divergence, fix_negation_counter_evidence]
+  step_c:
+    name: judgment
+    role: judgment_reviewer
+    sub_steps: [necessity_evaluation, semi_mechanical_mapping, five_condition_rule, label_decision]
+  step_d:
+    name: integration
+    role: primary_reviewer  # primary が Step D を主導
+    sub_steps: [merge, three_label_presentation, user_oversight]
+
+# Bias Suppression Quota (バイアス抑制ノルマ)
+bias_suppression_quota:          # Req 1.2
+  fundamental_events:
+    - formal_challenge
+    - detection_miss
+    - phase1_pattern_match
+  measurement_policy: post_run_only  # Req 1.4: Tier pre-run target 禁止
+
+# Pattern Schema (二層 grouping)
+pattern_schema:                  # Req 1.3
+  structure: two_layer_grouping
+  layers:
+    primary_group: required      # 第 1 階層 (粗 group、5-10 種程度)
+    secondary_groups: required   # 第 2 階層 (中程度 granularity)
+
+# Attach Contract (Layer 2 / Layer 3 共通 attach mechanism)
+attach_contract:                 # Req 1.5 + 1.6 + 1.9
+  placeholder_resolution: "Layer 2 / Layer 3 consumer が yaml file generation 時または runtime injection で {layer2_install_root} / {target_project_root} を自身の install root absolute path に文字列置換する (Python str.format / shell envsubst / yaml anchor のいずれかで実装、consumer 側選択)"
+  layer_2:
+    entry_point_location: "{layer2_install_root}/extensions/<phase>_extension.yaml"
+    identifier_format: "<phase>_extension"  # 例: design_extension
+    failure_signal: stderr + non_zero_exit
+  layer_3:
+    entry_point_location: "{target_project_root}/.dual-reviewer/extracted_patterns.yaml"
+    identifier_format: "<project_specific_id>"
+    failure_signal: stderr + non_zero_exit
+  override_hierarchy:
+    order: [layer_3, layer_2, layer_1]  # Req 1.9: Layer 3 が最強、Layer 1 default
+    semantics: "single_direction_unidirectional"
+
+# Chappy P0 (Chappy review 採用 P0 3 件)
+chappy_p0:                       # Req 1.7
+  fatal_patterns_match:
+    data_source: ./patterns/fatal_patterns.yaml
+    matching_responsibility: layer_2  # data 提供 vs execute 役割分離
+  impact_score:
+    schema: ./schemas/impact_score.schema.json
+    axes: [severity, fix_cost, downstream_effect]
+  forced_divergence_prompt:
+    canonical_form: english
+    placement: adversarial_subagent_prompt_tail
+    final_text_definition_responsibility: dual-reviewer-design-review  # Req 7.4 整合
+
+# V4 Features (V4 protocol v0.3 final 機能)
+v4_features:                     # Req 1.8
+  judgment_subagent_dispatch:
+    role: judgment_reviewer
+    prompt_source: ./prompts/judgment_subagent_prompt.txt
+  necessity_5_fields:
+    schema: ./schemas/necessity_judgment.schema.json
+    fields: [requirement_link, ignored_impact, fix_cost, scope_expansion, uncertainty]
+  five_condition_rule:
+    rules:
+      - critical_impact_to_must_fix
+      - requirement_link_yes_high_impact_to_must_fix
+      - scope_expansion_yes_not_critical_to_do_not_fix_or_escalate
+      - fix_cost_greater_than_impact_to_do_not_fix_lean
+      - uncertainty_high_to_escalate
+    evaluation_order: sequential_strongest_wins
+  three_label_classification:
+    labels: [must_fix, should_fix, do_not_fix]
+  role_separation:
+    step_b_forced_divergence:
+      assigned_to: adversarial_reviewer
+      intent: conclusion_validity_test
+      description: "暗黙前提を別前提に置換した場合に同じ結論が成立するか試行"
+    step_c_fix_negation:
+      assigned_to: judgment_reviewer
+      intent: fix_proposal_necessity_negation
+      description: "primary 提案 fix の必要性を否定する counter-evidence で必要性 5-field 評価"
+
+# Terminology (用語抽象化、Req 7.1)
+terminology:                     # Req 7.1
+  role_abstractions:
+    - primary_reviewer
+    - adversarial_reviewer
+    - judgment_reviewer
+  concrete_model_resolution: config_yaml_field  # config.yaml の 3 model field で resolve

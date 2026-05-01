@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "review_case.schema.json",
+  "type": "object",
+  "required": ["session_id", "phase", "target_spec_id", "timestamp_start", "findings"],
+  "properties": {
+    "session_id": {"type": "string", "description": "review session 一意識別子"},
+    "phase": {"type": "string", "enum": ["requirements", "design", "tasks", "implementation"]},
+    "target_spec_id": {"type": "string", "description": "review 対象 spec の identifier"},
+    "timestamp_start": {"type": "string", "format": "date-time"},
+    "timestamp_end": {"type": "string", "format": "date-time"},
+    "trigger_state": {"$ref": "failure_observation.schema.json#/$defs/trigger_state"},
+    "findings": {
+      "type": "array",
+      "items": {"$ref": "finding.schema.json"}
+    }
+  }
+}
