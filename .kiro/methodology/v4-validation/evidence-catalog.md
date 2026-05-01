@@ -162,34 +162,117 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 
 ---
 
-## 4. 将来追加予定 (placeholder)
+## 4. design phase V4 evidence (12th セッション完走、main 統合済)
 
-### 4.1 design phase V4 evidence (11th 以降、A-1 prototype 着手後)
+### 4.1 foundation design phase V4 (commit `2e5637d`、12th)
 
-- foundation design phase V4 適用結果
-- design-review design phase V4 適用結果
-- dogfeeding design phase V4 適用結果
-- → 本 catalog §4.1 に詳細追記予定
+- **内容**: A-0 → A-1 phase transition design、foundation v1.1 確定
+  - 検出 16 件 (primary 10 + adversarial 6 独立)
+  - 分類: must_fix 0 / should_fix 3 / do_not_fix 13
+  - 採択率 0% / 過剰修正比率 81.25% / should_fix 比率 18.75%
+  - subagent wall-clock 約 293 秒 (adversarial 157s + judgment 136s)
+  - judgment override 8 件 / primary↔judgment disagreement 1 件 (P3 ERROR → do_not_fix)
+  - V4 修正否定 prompt 機能 90% (primary 9/10 件が judgment で do_not_fix へ整合 = primary should_fix bias suppression 実証)
+  - apply 3 件 (P4 + A1 + A5、user 全 apply 採択 → design.md v1.1)
+  - 5 設計決定: foundation install location = `scripts/dual_reviewer_prototype/` (audit G3 解決、X1 採用) / source field 2 階層 disambiguate (audit G1 解決、`finding.source` vs `necessity_judgment.source`) / V4 §5.2 prompt sync mechanism = header 3 行 manual sync / dr-init skill format = SKILL.md + Python helper / A-1 phase = design + implementation phase 一体解釈
+- **保全 location**:
+  - main `.kiro/specs/dual-reviewer-foundation/{design.md, research.md, spec.json}` (commit `2e5637d`)
+  - design.md v1.1 + research.md v1.0 + spec.json (`phase: design-approved`、`approvals.design.approved: true`)
+- **関連 dev-log**: `docs/dual-reviewer-log-3.md` (12th セッション、user 管理)
 
-### 4.2 A-2 dogfeeding 結果 (Phase A 終端時)
+### 4.2 design-review design phase V4 (commit `76a1eb1`、12th)
 
-- Spec 6 全 Round (1-10) × 3 系統対照実験 = 30 review session
-- → 本 catalog §4.2 に詳細追記予定
+- **内容**: A-1 design phase の主機能 spec、design-review v1.1 → v1.2-prep
+  - 検出 17 件 (primary 10 + adversarial 7 独立)
+  - 分類: must_fix 4 (うち A3 = false positive 1 件) / should_fix 3 / do_not_fix 10
+  - 採択率 23.5% / 過剰修正比率 58.8% / should_fix 比率 17.6%
+  - subagent wall-clock 約 255 秒 (adversarial 125s + judgment 130s、foundation 比 -38s)
+  - judgment override 8 件 / primary↔judgment disagreement 7 件
+  - V4 修正否定 prompt 機能 高 (must_fix 4 件全 adversarial ERROR と一致)
+  - apply 6 件 (A1 + A5 + A6 + P4 + A2 + A4、user B 採択 = A3 false positive skip + 残 must_fix 3 件 + should_fix 3 件全 apply)
+  - 5 設計決定: install root 共有 (foundation 同 directory) / forced_divergence prompt 文言 = 3 段落構成英語固定 / V4 §1.5 fix-negation prompt 配置 = adversarial dispatch payload inline embed / 3 skill format = SKILL.md + Python helper / dr-judgment 出力受領 mechanism = stdout default
+- **保全 location**:
+  - main `.kiro/specs/dual-reviewer-design-review/{design.md, research.md, spec.json}` (commit `76a1eb1` + `aa40934` v1.2-prep cross-spec C1 fix)
+  - design.md v1.1 → v1.2-prep + research.md v1.0 + spec.json (`phase: design-approved`、`approvals.design.approved: true`)
+- **関連 dev-log**: `docs/dual-reviewer-log-3.md` (12th セッション)
 
-### 4.3 論文 figure 1-3 + ablation evidence
+### 4.3 dogfeeding design phase V4 + cross-spec review (commit `aa40934`、12th)
 
-- figure data file paths
-- ablation 比較対照点 (V3 baseline / V4 attempt 1 / V4 redo broad / V4 design phase)
-- → 本 catalog §4.3 に詳細追記予定
+- **内容**: A-1 design phase 最終 spec、dogfeeding v1.2 + 3 spec cross-spec review 統合
+  - 検出 15 件 (primary 10 + adversarial 5 独立)
+  - 分類: must_fix 3 / should_fix 6 / do_not_fix 6
+  - 採択率 20.0% / 過剰修正比率 40.0% / should_fix 比率 40.0%
+  - subagent wall-clock 約 244 秒 (adversarial 122s + judgment 122s、3 spec で最短 = context 累積 efficiency)
+  - judgment override 3 件 / primary↔judgment disagreement 4 件
+  - V4 修正否定 prompt 機能 高 (must_fix 3 件全 adversarial 検出と整合)
+  - apply 9 件 (P1+A1 + A2 + P2 + P4 + P5 + P10 + A3 + A5、user A 採択で全 apply)
+  - 7 設計決定: dogfeeding scripts location = `scripts/dual_reviewer_dogfeeding/` (X1 採用、prototype 本体と分離) / Operational Protocol + Research Script Hybrid (SKILL.md 不要、一回限り manual session) / dr-design Treatment Flag Contract = design-review revalidation trigger / comparison-report append-only (section ID `phase-b-fork-judgment-v1` 固定 + idempotent re-run) / 8 月 timeline failure 基準 = figure data 完了 / Decision 6 (design-review revalidation triggers 集約 3 件) / Decision 7 (A-1 解釈の dogfeeding 適用 = Python script 実装 (A-1 内) + Spec 6 適用 (A-2) 2 segment)
+- **cross-spec review (本 commit に統合、3 spec 累計 design phase 完走後)**:
+  - Group A 確認済整合 6 件 (install location / relative path / source field / V4 prompt / skill format / 3 系統対応)
+  - Group B 既存対応済 11 件 (req phase Step 5 12 件 + 各 spec design phase 内 fix で対応済)
+  - Group C 新規 implication 3 件 全 apply (C1: design-review/design.md Revalidation Triggers section に dogfeeding 要請 3 件反映 / C2: dogfeeding 3 Python script に foundation install location resolve mechanism 注記 / C3: Decision 7 = A-1 解釈)
+  - 不整合 0 件
+- **保全 location**:
+  - main `.kiro/specs/dual-reviewer-dogfeeding/{design.md, research.md, spec.json}` (commit `aa40934`)
+  - design.md v1.2 + research.md v1.0 + spec.json (`phase: design-approved`、`approvals.design.approved: true`)
+  - design-review/design.md C1 fix 同 commit に統合 (Revalidation Triggers section に v1.2-prep entry 追加)
+- **関連 dev-log**: `docs/dual-reviewer-log-3.md` (12th セッション)
 
-### 4.4 Phase B fork go/hold 判定 (8 月末 timeline)
+### 4.4 3 spec 累計 V4 metric trend (12th 末確定)
 
-- 判定 evidence + decision record
-- → 本 catalog §4.4 に詳細追記予定
+| metric | foundation | design-review | dogfeeding | trend |
+|--------|------------|---------------|------------|-------|
+| 検出件数 | 16 | 17 | 15 | 安定 (15-17) |
+| 採択率 | 0% | 23.5% | 20.0% | foundation 0 → 大幅改善 (+20-23pt) |
+| **過剰修正比率** | **81.25%** | **58.8%** | **40.0%** | **連続改善 (-22pt → -19pt = -41.25pt 累計)** |
+| should_fix 比率 | 18.75% | 17.6% | 40.0% | dogfeeding で escalate 増 (consumer 視点 context-dependent decisions 多) |
+| subagent wall-clock | ~293s | ~255s | ~244s | 連続短縮 (-49s 累計、context efficiency) |
+
+3 spec 連続で過剰修正比率改善 (81% → 59% → 40%) = V4 protocol 構造的有効性の **3 spec 連続再現実証** + design phase ablation framing 機能。req phase 累計と合わせて H1+H3 改善方向継続:
+- H1 (過剰修正比率 ≤ 20%): req phase = foundation 36.8% / design-review 25.0% / dogfeeding 44.4%、design phase = 81.25% → 58.8% → 40.0% (dogfeeding 接近、未達)
+- H3 (採択率 ≥ 50%): req phase = 21.1% / 40.0% / 5.6%、design phase = 0% → 23.5% → 20.0% (改善方向、未達)
+
+最終 H1+H3 verification は A-2 dogfeeding 完走後の最終 comparison-report 集計時に判定 (Phase A 終端時)。
+
+### 4.5 12th 末 cleanup (worktree + branch + origin 同期)
+
+- **worktree remove**: `/Users/Daily/Development/Rwiki-dev-v4` 削除 (clean state + main 統合済 = 安全)
+- **local branch rename**: `v4-redo-broad` → `archive/v4-redo-broad-merged-2026-05-01` (3 archive branches 統一 namespace)
+- **origin 同期**: main 14 commits push (`b4da1fd..aa40934`) + origin v4-redo-broad delete + new archive branch push + tag 作成 + push
+- **新規 archive branch**: `archive/v4-redo-broad-merged-2026-05-01` (commit `b6b850c`、req phase V4 redo broad endpoint 保全、origin push 済)
+- **新規 tag**: `v4-redo-broad-merged-2026-05-01` (= `b6b850c`、3 archive tags pattern 整合 = `v3-evidence-foundation-7th-session` / `v4-baseline-brief-2026-04-29` / `v4-redo-broad-merged-2026-05-01`)
 
 ---
 
-## 5. 運用規律
+## 5. 将来追加予定 (placeholder、A-1 implementation phase 後 + A-2 dogfeeding 完走後 fill)
+
+### 5.1 A-1 implementation phase evidence (13th 以降、本 catalog §5.1 に追記予定)
+
+- design-review v1.2 改修 (treatment flag + timestamp + commit_hash 対応 implementation 設計、本 spec implementation phase 直前 cycle)
+- 4 skill 物理 file 生成 (`scripts/dual_reviewer_prototype/skills/{dr-init, dr-design, dr-log, dr-judgment}/{SKILL.md, *.py}`)
+- 3 Python script 物理 file 生成 (`scripts/dual_reviewer_dogfeeding/{metric_extractor, figure_data_generator, phase_b_judgment}.py + tests/`)
+- portable artifact 物理 file 生成 (foundation `framework/` + `schemas/` + `patterns/` + `prompts/` + `config/` + `terminology/`)
+- sample 1 round 通過 test 結果 (= design-review Req 7.4 動作確認終端条件)
+
+### 5.2 A-2 dogfeeding 結果 (Phase A 終端時、本 catalog §5.2 に追記予定)
+
+- Spec 6 全 Round (1-10) × 3 系統対照実験 = 30 review session
+- JSONL log 蓄積 (foundation 共通 schema 2 軸並列 + 本 spec consumer 拡張 4 field)
+
+### 5.3 論文 figure 1-3 + ablation evidence (A-2 完走後、本 catalog §5.3 に追記予定)
+
+- figure data file paths (`figure_<n>_data.json` × 4 = `figure_1_data.json` miss_type 分布 / `figure_2_data.json` difference_type 分布 + forced_divergence / `figure_3_data.json` trigger_state 発動率 / `figure_ablation_data.json` dual vs dual+judgment 効果分離)
+- ablation 比較対照点 (V3 baseline / V4 attempt 1 / V4 redo broad / V4 design phase + A-2 dogfeeding)
+- 配置 path = `.kiro/methodology/v4-validation/`
+
+### 5.4 Phase B fork go/hold 判定 (8 月末 timeline、本 catalog §5.4 に追記予定)
+
+- 判定 evidence (5 条件評価結果 + V4 仮説検証併記)
+- decision record (= comparison-report.md §12 Phase B Fork Judgment、section ID `phase-b-fork-judgment-v1`)
+
+---
+
+## 6. 運用規律
 
 - **更新義務**: 新 evidence (review 適用、ablation、design/task 完走、Phase 移行) 生成時、必ず本 catalog 該当 § を追記
 - **archive 操作時義務**: file 削除 / branch tag 化 / move を行ったら、本 catalog の保全 location を即更新
@@ -200,21 +283,31 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 
 ---
 
-## 6. 関連 reference
+## 7. 関連 reference
 
 - V3 baseline 数値要約: `.kiro/methodology/v4-validation/v3-baseline-summary.md`
 - V4 protocol v0.3 final: `.kiro/methodology/v4-validation/v4-protocol.md`
 - canonical V4 source: `docs/過剰修正バイアス.md`
-- V4 redo broad 中間 evidence: `.kiro/methodology/v4-validation/comparison-report.md`
+- V4 redo broad 中間 evidence + req phase 累計: `.kiro/methodology/v4-validation/comparison-report.md` v0.1 (12th 末で design phase evidence 未追記、A-2 完走後の最終 comparison-report v0.2 で req+design+A-2 累計集計予定)
 - 論文化 data 取得計画 (checkbox tracker): `.kiro/methodology/v4-validation/data-acquisition-plan.md`
 - TODO 引き継ぎ: `TODO_NEXT_SESSION.md` (各セッション末更新、main)
-- dev-log: `docs/dual-reviewer-log-1.md` (1st-7th) + `docs/dual-reviewer-log-2.md` (8th 以降、user 管理)
-- archive branches:
+- dev-log: `docs/dual-reviewer-log-1.md` (1st-7th) + `docs/dual-reviewer-log-2.md` (8th-11th) + `docs/dual-reviewer-log-3.md` (12th 以降、user 管理)
+- 12th 末 endpoint commits (origin push 済):
+  - `2e5637d` design(dual-reviewer-foundation): A-0 → A-1 transition design approve
+  - `76a1eb1` design(dual-reviewer-design-review): A-1 design phase approve
+  - `aa40934` design(dual-reviewer-dogfeeding): A-1 design phase approve + cross-spec review C1-C3 fix
+- 3 spec design.md / research.md (12th 末 endpoint):
+  - `.kiro/specs/dual-reviewer-foundation/design.md` v1.1 + `research.md` v1.0
+  - `.kiro/specs/dual-reviewer-design-review/design.md` v1.1 → v1.2-prep + `research.md` v1.0
+  - `.kiro/specs/dual-reviewer-dogfeeding/design.md` v1.2 + `research.md` v1.0
+- archive branches (origin push 済):
   - `archive/v3-foundation-design-7th-session` (V3 endpoint, commit `e6cab03`)
   - `archive/v4-redo-attempt-1-v3-scope` (V4 attempt 1, commit `e8ca94a`)
-- tags:
+  - `archive/v4-redo-broad-merged-2026-05-01` (V4 redo broad endpoint = req phase 完走、commit `b6b850c`、12th 末 archive 化)
+- tags (origin push 済):
   - `v3-evidence-foundation-7th-session` (= `e6cab03`)
   - `v4-baseline-brief-2026-04-29` (= `06fde00`、3 spec init endpoint)
+  - `v4-redo-broad-merged-2026-05-01` (= `b6b850c`、12th 末 archive 化と同期 tag)
 
 ---
 
@@ -223,3 +316,4 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
 - **v0.1** (2026-04-30 11th セッション、本 file 初版): V3 baseline + V4 attempt 1 + V4 redo broad の所在を集約。V3 design phase artifact 3 file の main 削除と同 commit で起草、archive branch + tag による保全 location を明記。将来 evidence の placeholder § を整備。
 - **v0.2** (2026-04-30 11th セッション): §3.9 「11th セッション 3 req 整合性 audit gap-list」追加。main 統合後の 3 req 整合性 audit 結果を反映、主要 contract 整合 OK 確認 + soft gap 4 件 (G1-G4) + 対応 timing を track。
 - **v0.3** (2026-04-30 11th セッション): §6 関連 reference に `data-acquisition-plan.md` を追加 (論文化 data 取得計画 checkbox tracker、本 catalog と並走 file)。
+- **v0.4** (2026-05-01 12th セッション末): §4 を「将来追加予定 (placeholder)」から「design phase V4 evidence (12th セッション完走、main 統合済)」に展開 (foundation `2e5637d` + design-review `76a1eb1` + dogfeeding + cross-spec `aa40934` の 3 spec evidence 集約 + 3 spec 累計 V4 metric trend = 過剰修正比率 81.25% → 58.8% → 40.0% 連続改善 + 12th 末 cleanup record)。§5 を新規 placeholder section (A-1 implementation phase + A-2 dogfeeding + 論文 figure + Phase B fork) に renumber、§6/§7 (運用規律 + 関連 reference) も連動 renumber。§7 関連 reference に 12th 末 commits + 3 spec design / research file paths + 新規 archive branch (`archive/v4-redo-broad-merged-2026-05-01`) + 新規 tag (`v4-redo-broad-merged-2026-05-01`) を追記。

@@ -2,7 +2,7 @@
 
 _目的: 論文 (8月ドラフト提出) + Phase B fork 判断のための quantitative evidence 取得計画。checkbox で進捗追跡し、新 evidence 取得 + phase 移行ごとに更新する。_
 
-_v0.1 / 2026-04-30 (11th セッション末)_
+_v0.2 / 2026-05-01 (12th セッション末)_
 
 ---
 
@@ -41,11 +41,13 @@ dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論**
 - [x] dogfeeding req V4 redo broad raw data (commit `21c5ab2` → main 統合済): 検出 18 件
   - 形式: `docs/dual-reviewer-log-2.md` (user 管理 dev-log) 内に集約、JSONL 化は B-1.0 minimum schema 準拠で本格化は A-1 prototype 後
 
-#### 未収集 (A-1 design phase、12th 以降)
+#### 既収集 (A-1 design phase、12th セッション完走)
 
-- [ ] foundation design phase V4 raw data (12th〜、`/kiro-spec-design dual-reviewer-foundation` 起動後)
-- [ ] design-review design phase V4 raw data (foundation 完走後)
-- [ ] dogfeeding design phase V4 raw data (design-review 完走後)
+- [x] foundation design phase V4 raw data (commit `2e5637d`、12th): 検出 16 件 (primary 10 + adversarial 6)、apply 3 件 (P4+A1+A5)、design.md v1.1 確定
+- [x] design-review design phase V4 raw data (commit `76a1eb1`、12th): 検出 17 件 (primary 10 + adversarial 7)、apply 6 件 (A1+A5+A6+P4+A2+A4) + A3 false positive skip、design.md v1.1 → v1.2-prep
+- [x] dogfeeding design phase V4 raw data (commit `aa40934`、12th): 検出 15 件 (primary 10 + adversarial 5)、apply 9 件 (P1+A1+A2+P2+P4+P5+P10+A3+A5)、design.md v1.2、cross-spec review C1-C3 統合 commit
+  - 形式: `docs/dual-reviewer-log-3.md` (user 管理 dev-log、12th セッション)
+  - Cross-spec review 結果: Group A 6 件整合 + Group B 11 件既存対応済 + Group C 3 件 apply + 不整合 0 件
 
 #### 未収集 (A-2 dogfeeding、A-1 完走後)
 
@@ -64,11 +66,24 @@ dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論**
 - [x] design-review req: 検出 20 / must_fix 8 / should_fix 7 / do_not_fix 5 / 採択率 40.0% / 過剰修正比率 25.0% / wall-clock 301 sec / V4 修正否定 prompt 機能 80%
 - [x] dogfeeding req: 検出 18 / must_fix 1 / should_fix 9 / do_not_fix 8 / 採択率 5.6% / 過剰修正比率 44.4% / wall-clock 297 sec / V4 修正否定 prompt 機能 100%
 
-#### 未収集 (A-1 design phase + A-2 dogfeeding)
+#### 既収集 (A-1 design phase、12th セッション完走)
 
-- [ ] foundation design phase metrics
-- [ ] design-review design phase metrics
-- [ ] dogfeeding design phase metrics
+- [x] foundation design phase metrics: 検出 16 / must_fix 0 / should_fix 3 / do_not_fix 13 / 採択率 0% / 過剰修正比率 81.25% / wall-clock ~293s / V4 修正否定 prompt 機能 90% (primary 9/10 件 do_not_fix へ整合)
+- [x] design-review design phase metrics: 検出 17 / must_fix 4 (1 false positive) / should_fix 3 / do_not_fix 10 / 採択率 23.5% / 過剰修正比率 58.8% / wall-clock ~255s / judgment override 8 / disagreement 7
+- [x] dogfeeding design phase metrics: 検出 15 / must_fix 3 / should_fix 6 / do_not_fix 6 / 採択率 20.0% / 過剰修正比率 40.0% / wall-clock ~244s / judgment override 3 / disagreement 4
+
+**3 spec design phase 累計 trend (12th 末確定、過剰修正比率 連続改善で V4 構造的有効性 3 spec 連続再現実証)**:
+
+| metric | foundation | design-review | dogfeeding | trend |
+|--------|------------|---------------|------------|-------|
+| 検出件数 | 16 | 17 | 15 | 安定 |
+| 採択率 | 0% | 23.5% | 20.0% | foundation 0 → 大幅改善 |
+| **過剰修正比率** | **81.25%** | **58.8%** | **40.0%** | **連続改善 (-22pt → -19pt = -41.25pt 累計)** |
+| should_fix 比率 | 18.75% | 17.6% | 40.0% | dogfeeding で escalate 増 |
+| subagent wall-clock | ~293s | ~255s | ~244s | 連続短縮 (-49s 累計、context efficiency) |
+
+#### 未収集 (A-2 dogfeeding、A-1 implementation phase 完走後)
+
 - [ ] **Spec 6 全 Round × 3 系統 metrics** (per system per round):
   - [ ] 検出件数 / must_fix / should_fix / do_not_fix 件数 + 比率 (3 系統各々)
   - [ ] 採択率 (= must_fix 比率)
@@ -83,10 +98,17 @@ dual-reviewer methodology を **LLM 設計レビューの bias 緩和方法論**
 
 #### 中間 status (req phase のみ、`comparison-report.md` §5 集約済)
 
-- [x] **H1 (過剰修正比率 ≤ 20%)** 中間: 3 spec 全未達、ただし全 spec で V3 baseline -50% から改善方向 (-13.2 / -25.0 / -5.6 pt)、design-review 25.0% で **H1 まで -5.0 pt 近接**
-- [x] **H2 (escalate user 介入機会 = should_fix 件数増)** 中間: ✅ **達成** = 24 件 escalate 確保
-- [x] **H3 (採択率 ≥ 50%)** 中間: 3 spec 全未達、design-review 40.0% (V3 比 2.40 倍) で **H3 まで -10.0 pt 近接**、dogfeeding 5.6% (consumer spec 構造的低)
-- [x] **H4 (wall-clock + 50% 以内)** 中間: ✅ **達成** = V3 比 70% (-30% 短縮、大幅余裕)
+- [x] **H1 (過剰修正比率 ≤ 20%)** req phase 中間: 3 spec 全未達、ただし全 spec で V3 baseline -50% から改善方向 (-13.2 / -25.0 / -5.6 pt)、design-review 25.0% で **H1 まで -5.0 pt 近接**
+- [x] **H2 (escalate user 介入機会 = should_fix 件数増)** req phase 中間: ✅ **達成** = 24 件 escalate 確保
+- [x] **H3 (採択率 ≥ 50%)** req phase 中間: 3 spec 全未達、design-review 40.0% (V3 比 2.40 倍) で **H3 まで -10.0 pt 近接**、dogfeeding 5.6% (consumer spec 構造的低)
+- [x] **H4 (wall-clock + 50% 以内)** req phase 中間: ✅ **達成** = V3 比 70% (-30% 短縮、大幅余裕)
+
+#### 中間 status (design phase 反映、12th セッション完走後追加)
+
+- [x] **H1 (過剰修正比率 ≤ 20%)** design phase 中間: 3 spec 全未達、ただし **3 spec 連続改善** (foundation 81.25% → design-review 58.8% → dogfeeding 40.0%) = -41.25pt 累計改善 = V4 構造的有効性 3 spec 連続再現実証。dogfeeding 40.0% で req phase の foundation 36.8% / dogfeeding 44.4% よりは未達寄りだが、accepted 既存 design なら接近方向。最終 verification は A-2 完走後 comparison-report 集計時。
+- [x] **H2 (escalate)** design phase 中間: ✅ **継続達成** = 12 件 escalate 確保 (foundation 3 + design-review 3 + dogfeeding 6)、req phase 24 + design phase 12 = 累計 36 件
+- [x] **H3 (採択率 ≥ 50%)** design phase 中間: 3 spec 全未達、ただし **foundation 0% から +20-23pt 大幅改善** (design-review 23.5% / dogfeeding 20.0%)、design phase で consumer-only spec の AC 直接 trace 性質で must_fix 検出が向上、最終 verification は A-2 完走後
+- [x] **H4 (wall-clock + 50% 以内)** design phase 中間: ✅ **継続達成** = wall-clock 連続短縮 (foundation ~293s → design-review ~255s → dogfeeding ~244s = -49s 累計 = context 累積 efficiency)、V4 H4 (+ 50% 以内 = 631 sec) に対し大幅余裕
 
 #### 最終 verification (A-1 + A-2 完走後)
 
@@ -150,23 +172,33 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 - [x] V3 design phase artifact cleanup + evidence-catalog 起草 (11th、commit `fa35d8d`)
 - [x] 3 req 整合性 audit + gap-list 記録 (11th、commit `c383802`)
 
-### A-1 prototype design phase (⏳ 12th セッション 着手予定、推定数 month)
+### A-1 design phase (✅ 完了、12th セッション完走)
 
-- [ ] foundation design phase V4 適用 (`/kiro-spec-design dual-reviewer-foundation`)
-- [ ] design-review design phase V4 適用 (foundation 完走後)
-- [ ] dogfeeding design phase V4 適用 (design-review 完走後)
-- [ ] 4 skill 実装 (`dr-init` / `dr-design` / `dr-log` / `dr-judgment`)
-- [ ] design phase V4 evidence で comparison-report v0.2 起草 (req + design phase 累計)
-- [ ] audit gap (G1+G3 主) を design phase 中に対応
+- [x] foundation design phase V4 適用 (commit `2e5637d`、12th)
+- [x] design-review design phase V4 適用 (commit `76a1eb1`、12th)
+- [x] dogfeeding design phase V4 適用 + cross-spec review (commit `aa40934`、12th)
+- [x] audit gap design phase 対応: G1 (source field 2 階層 disambiguate) = foundation Decision 2 で解決 / G3 (foundation install location 確定 timing) = foundation Decision 5 で解決 (A-1 = design+impl 一体解釈) / G2+G4 cosmetic 残 (Phase A 終端 cleanup 候補)
+- [x] cross-spec review 通過 (Group A 6 件確認済整合 + Group B 11 件既存対応済 + Group C 3 件新規 implication 全 apply [C1+C2+C3] + 不整合 0 件、12th 末)
+- [ ] design phase V4 evidence で comparison-report v0.2 起草 (req + design phase 累計、13th 以降 implementation phase 中または A-2 完走後 timing)
 
-### A-2 dogfeeding (⏸️ A-1 完了後、推定 1-2 month)
+### A-1 implementation phase (⏳ 13th セッション 着手予定、推定 1 month)
+
+- [ ] design-review v1.2 改修 cycle (treatment flag + timestamp 必須付与 + commit_hash payload 受領 = dogfeeding/design.md Decision 6 整合、本 spec implementation phase 直前 prerequisite)
+- [ ] foundation 4 skill のうち `dr-init` 物理 file 生成 (`scripts/dual_reviewer_prototype/skills/dr-init/{SKILL.md, bootstrap.py}`)
+- [ ] design-review 3 skills 物理 file 生成 (`scripts/dual_reviewer_prototype/skills/{dr-design, dr-log, dr-judgment}/{SKILL.md, *.py}`)
+- [ ] foundation portable artifact 物理 file 生成 (`framework/layer1_framework.yaml` + `schemas/*.json` 5 file + `patterns/{seed_patterns, fatal_patterns}.yaml` + `prompts/judgment_subagent_prompt.txt` + `config/config.yaml.template` + `terminology/terminology.yaml.template`)
+- [ ] design-review portable artifact 物理 file 生成 (`extensions/design_extension.yaml` + `prompts/forced_divergence_prompt.txt`)
+- [ ] dogfeeding 3 Python script 物理 file 生成 (`scripts/dual_reviewer_dogfeeding/{metric_extractor, figure_data_generator, phase_b_judgment}.py + tests/ + README.md`)
+- [ ] sample 1 round 通過 test (= design-review Req 7.4 動作確認終端条件): foundation `dr-init` で Spec 6 working directory bootstrap → design-review `dr-design` (Round 1 のみ、treatment="dual+judgment") で Step A → B → C → D 全完了 + dr-log JSONL 1 entry 以上 schema validate 成功 + V4 §2.5 三ラベル提示 yaml stdout 出力 の 3 条件全達成
+
+### A-2 dogfeeding (⏸️ A-1 implementation phase 完了後、推定 1-2 month)
 
 - [ ] Spec 6 design への dual-reviewer 適用 (dr-init bootstrap + 3 系統 30 review session)
 - [ ] Level 1 JSONL log 取得 (30 entry、3 系統 × 10 round)
-- [ ] Level 2 metrics 抽出
-- [ ] Level 4 figure 1-3 + ablation data 生成
-- [ ] Level 5 Phase B fork go/hold 5 条件評価 + 判定記録
-- [ ] 最終 comparison-report (Phase A 終端時)
+- [ ] Level 2 metrics 抽出 (`metric_extractor.py` 実行 → `dogfeeding_metrics.json` 生成)
+- [ ] Level 4 figure 1-3 + ablation data 生成 (`figure_data_generator.py` 実行 → `figure_<n>_data.json` × 4 生成)
+- [ ] Level 5 Phase B fork go/hold 5 条件評価 + 判定記録 (`phase_b_judgment.py` 実行 → `comparison-report.md` §12 append、section ID `phase-b-fork-judgment-v1`)
+- [ ] 最終 comparison-report v0.2 (Phase A 終端時、req + design + A-2 累計集計)
 - [ ] Spec 6 design approve = Rwiki v2 全 8 spec design approve = Phase A 終端
 
 ### Phase 3 paper draft (7-8月、別 effort、本計画 scope 外)
@@ -191,10 +223,11 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 
 ## §6 関連 reference
 
-- `comparison-report.md` (本計画の中間 evidence 集約 = req phase 累計)
-- `evidence-catalog.md` (本計画の data 所在 + アクセス方法 catalog)
-- `v4-protocol.md` §4 (本計画の比較指標 + H1-H4 仮説 normative basis)
+- `comparison-report.md` v0.1 (本計画の中間 evidence 集約 = req phase 累計、12th 末で design phase evidence 未追記、A-2 完走後の v0.2 で req+design+A-2 累計集計予定)
+- `evidence-catalog.md` v0.4 (本計画の data 所在 + アクセス方法 catalog、12th 末で §4 design phase V4 evidence 反映済)
+- `v4-protocol.md` v0.3 final §4 (本計画の比較指標 + H1-H4 仮説 normative basis)
 - 3 spec requirements.md (本計画の AC source = foundation Req 3-5 + design-review Req 2 + dogfeeding Req 3-7)
+- 3 spec design.md / research.md (12th 末 endpoint = foundation v1.1 + design-review v1.1 → v1.2-prep + dogfeeding v1.2)
 - TODO_NEXT_SESSION.md (各 session 末で本計画 update 反映)
 
 ---
@@ -216,3 +249,4 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 ## 変更履歴
 
 - **v0.1** (2026-04-30 11th セッション、本 file 初版): 論文の目的 + 3 主張 + 比較軸 3 axes + データ階層 5 levels + timeline / milestones + constraints を整理。req phase 累計 evidence は [x]、design phase + A-2 + Phase 3 は [ ] で起点設定。
+- **v0.2** (2026-05-01 12th セッション末): A-1 design phase 全 3 spec 完走 + cross-spec review 通過 を反映。Level 1 (raw data) + Level 2 (metrics) で foundation `2e5637d` + design-review `76a1eb1` + dogfeeding `aa40934` を [x] チェック、3 spec 累計 trend (過剰修正比率 81.25% → 58.8% → 40.0% 連続改善) を Level 2 末に追加。Level 3 (H1-H4 中間 status) に design phase 反映 entries 追加 (req phase 中間 status の下に design phase 中間 status を併記、H1-H4 全項目で design phase 評価を追記)。Timeline section: A-1 prototype design phase を「✅ 完了」に変更 + A-1 implementation phase を新 section として追加 (13th 以降 着手予定、推定 1 month、design-review v1.2 改修 cycle + 4 skill + 3 Python script + sample 1 round 通過 test)。A-2 dogfeeding section の dependency を A-1 implementation phase 完走後に変更 + concrete 実行 step 明示。§6 関連 reference に 3 spec design / research file 整合 + comparison-report v0.1 (req phase) / evidence-catalog v0.4 (12th 末 design phase 反映済) version 整合追記。
