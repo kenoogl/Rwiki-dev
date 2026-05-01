@@ -1,0 +1,24 @@
+# 致命級パターン (Fatal Patterns)
+# 本 yaml は Req 5: 致命級 8 種固定 enum を定義する。
+# data 提供のみ責務。matching logic は Layer 2 (`dual-reviewer-design-review` spec) が実装する。
+# content (key + description) は initial commit 後 immutable (Req 5.3)。
+# 多言語対応は別 yaml (例: `fatal_patterns.en.yaml`、Phase B-1.3) で対応。
+
+version: "1.0"
+patterns:
+  - key: sandbox_escape
+    description: "サンドボックス内のプロセスが許可された境界を超えてホスト/外部資源にアクセスする"
+  - key: data_loss
+    description: "永続化されたユーザーデータが意図せず削除/上書き/破壊される"
+  - key: privilege_escalation
+    description: "通常権限のコードが権限境界を超えて高権限を取得する"
+  - key: infinite_retry
+    description: "失敗した操作が指数バックオフ/上限なしで再試行され続ける"
+  - key: deadlock
+    description: "複数 lock の循環待ちでシステムが進行不能になる"
+  - key: path_traversal
+    description: "外部入力に基づく path 解決で意図された directory 境界を超える"
+  - key: secret_leakage
+    description: "認証情報/API key/個人情報が log/error message/外部送信に含まれる"
+  - key: destructive_migration
+    description: "schema/data migration が rollback 不可能な形で既存データを破壊する"

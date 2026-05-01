@@ -1,0 +1,177 @@
+# 種パターン (Seed Patterns) - 23 件 retrofit
+# 本 yaml は Req 4: dev-log 由来 23 件を二層 grouping (primary_group + secondary_groups) で配置する。
+# 全 entry に origin: "rwiki-v2-dev-log" を付与 (initial knowledge identifier、Req 4.2)。
+# 固有名詞 (Rwiki / Spec X / 各 dev-log session reference 等) は Phase A scope では保持する (Req 4.4)。
+# Phase B-1.0 release prep で固有名詞除去 / generalization を実施予定。
+# Source: memory `feedback_review_judgment_patterns.md` (8 群 23 件分類)。
+
+version: "1.0.0"
+patterns:
+  # A 群: 内部矛盾系 (Internal Contradiction)
+  - id: pattern_01
+    primary_group: internal_contradiction
+    secondary_groups: [prohibition_vs_permission, intra_spec]
+    description: "同一 spec 内で R.X が「A を禁止」と R.Y が「A を許可」両方記述されていないか (例: Spec 1 本-1 「カテゴリは強制ディレクトリではなく推奨パターン」R1.2 vs R7.1 enforcement: required 許可)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md (Spec 1)"
+
+  - id: pattern_02
+    primary_group: internal_contradiction
+    secondary_groups: [schema_vs_behavior, field_reference]
+    description: "スキーマ定義 R.X に存在しない field を動作規定 R.Y が前提にしていないか (例: Spec 1 本-19 R6.1 に successor 不在なのに R6.5 が successor 参照)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md (Spec 1)"
+
+  - id: pattern_03
+    primary_group: internal_contradiction
+    secondary_groups: [decision_vs_decision, design_internal]
+    description: "同一 design 内の複数決定が共存不可な規律になっていないか (例: Spec 4 致-1 決定 4-7 --dry-run 提供 vs 決定 4-18 --auto バイパス禁止 の運用整合性)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-2.md (Spec 4)"
+
+  # B 群: 実装不可能性 / 逆算系 (Implementation Feasibility)
+  - id: pattern_04
+    primary_group: implementation_feasibility
+    secondary_groups: [reverse_inference, schema_action_consistency]
+    description: "「要件に書かれている動作は、spec で定義されたデータ構造で実装可能か」逆算検証 (R.X が動作 A を行う」ならば「R.Y で field F が必須」か)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md / 2.md (cross-pattern)"
+
+  - id: pattern_05
+    primary_group: implementation_feasibility
+    secondary_groups: [downstream_decidability, ambiguous_dependency]
+    description: "自 spec の定義が下流 spec で「判定・分岐可能」か、曖昧な依存性が後段で検証不可に陥らないか (例: Spec 1 本-2 type field 二系統で Spec 3 dispatcher / Spec 5 normalize API が判定不可)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md (Spec 1)"
+
+  - id: pattern_06
+    primary_group: implementation_feasibility
+    secondary_groups: [algorithm_mismatch, doc_vs_code]
+    description: "文書記述 (例: Levenshtein 距離) vs 実装コード (例: SequenceMatcher = Ratcliff/Obershelp) の数学的・物理的不一致 (Spec 1 R5 escalate 同型)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md (Spec 1 R5)"
+
+  # C 群: 責務境界系 (Responsibility Boundary)
+  - id: pattern_07
+    primary_group: responsibility_boundary
+    secondary_groups: [parameter_ownership, schema_vs_value_set]
+    description: "パラメータ値・エラー処理・スキーマで「誰が決定権を持つか」が spec 間で曖昧でないか、field 名・型 (定義側) と許可値集合 (利用側) の所管分離 (例: Spec 1 本-7 merge_strategy 5 値を Spec 1 が固定 vs lifecycle 操作は Spec 7 所管)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md (Spec 1)"
+
+  - id: pattern_08
+    primary_group: responsibility_boundary
+    secondary_groups: [api_signature, caller_callee_consistency]
+    description: "coordination requirement で「API を呼ぶ」記述あれば、呼び出し側 (caller spec) と被呼出側 (callee spec) 両方で signature が整合しているか確認 (例: Spec 7 C-1 Spec 4 R16.2 dispatch 先 cmd_promote_to_synthesis signature 不在)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 C-1)"
+
+  - id: pattern_09
+    primary_group: responsibility_boundary
+    secondary_groups: [coordination_requirement, ownership_clarity]
+    description: "「Spec X で〇〇と言及」 → 「対応 spec で実装 AC あるか」双方向確認、ownership 明確か (例: Spec 7 C-2 Spec 4 R4.7 L3 診断 API 提供責務 AC 不在)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 C-2)"
+
+  # D 群: 規範範囲判断系 (Normative Scope)
+  - id: pattern_10
+    primary_group: normative_scope
+    secondary_groups: [requirement_overreach, design_pre_emption]
+    description: "設計決定が requirements 範囲を先取り / 不必要に狭めていないか (例: Spec 0 escalate 「3 ヶ月超で ERROR 昇格」が requirements 規定外で design 先取り)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md (Spec 0 escalate)"
+
+  - id: pattern_11
+    primary_group: normative_scope
+    secondary_groups: [transaction_guarantee, consistency_model]
+    description: "transaction guarantee / consistency model / atomicity 等の規範前提が明示されていないか曖昧か (例: Spec 1 R7 transaction guarantee → Eventual Consistency 規範化)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md (Spec 1 R7)"
+
+  - id: pattern_12
+    primary_group: normative_scope
+    secondary_groups: [adjacent_sync, over_constraint]
+    description: "自 spec の設計が先行 spec と整合か、後続 spec が拘束されないか (先行 spec の Adjacent Sync 受領済確認、過剰拘束検出)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md / 2.md (cross-spec)"
+
+  # E 群: failure / 状態系 (Failure and State)
+  - id: pattern_13
+    primary_group: failure_and_state
+    secondary_groups: [observability, partial_failure_signal]
+    description: "状態遷移 (partial failure / 中間状態 / archived → deprecated 等) が定義される場合、observer (dispatcher / user / downstream) が判定可能な signal (exit code / JSON field / log message) が同時に規定されているか (例: Spec 7 第 3-1 partial failure 時 exit code 未定義)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 第 3-1)"
+
+  - id: pattern_14
+    primary_group: failure_and_state
+    secondary_groups: [atomicity, intermediate_state_persistence]
+    description: "long-running operation (8 段階対話 / multi-step batch) で「中間状態の永続化」発生可能性、明示的に「step N まで read-only」「step M で atomic commit」境界が規定されているか (例: Spec 7 第 3-2 8 段階対話 atomicity 暗黙前提)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 第 3-2)"
+
+  - id: pattern_15
+    primary_group: failure_and_state
+    secondary_groups: [failure_taxonomy, rollback_recovery]
+    description: "failure を「成功 / 失敗」二値でなく「全失敗 / 部分失敗 / 成功」段階化、各々の rollback / recovery strategy 明示、曖昧な「follow-up 化」で root cause 埋没していないか (例: Spec 7 第 4-3 全失敗 vs 部分失敗 同扱い)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 第 4-3)"
+
+  # F 群: concurrency / timeout 系 (Concurrency and Timeout)
+  - id: pattern_16
+    primary_group: concurrency_and_timeout
+    secondary_groups: [lock_boundary, transaction]
+    description: "file I/O / concurrent edit risk がある操作で、lock / transaction 機制が foundation で規定済か確認、本 spec で「明示的に lock 取得タイミング規定」しているか、「Foundation に従う」だけでは不十分 (例: Spec 7 第 3-3 Backlink 更新で .hygiene.lock 取得言及なし)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 第 3-3)"
+
+  - id: pattern_17
+    primary_group: concurrency_and_timeout
+    secondary_groups: [timeout, resource_leak]
+    description: "external API 呼出 (たとえ「同期」でも) は遅延 / hang 可能性 assume、timeout 規定必須、resource leak / deadlock trap 防止 (例: Spec 7 第 4-1 edge API timeout 不在)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 第 4-1)"
+
+  - id: pattern_18
+    primary_group: concurrency_and_timeout
+    secondary_groups: [race_window, pre_flight_recheck]
+    description: "lock 取得前後で「状態変化のリスク window」がないか、step 1-7 (lock なし) と step 8 (lock あり) 境界で check/approve 矛盾起きる可能性、lock 取得直後の「pre-flight 再確認」明示か (例: Spec 7 第 4-2 lock 取得後 pre-flight 再確認規定なし)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 第 4-2)"
+
+  # G 群: 整合性 / SSoT 系 (Consistency and SSoT)
+  - id: pattern_19
+    primary_group: consistency_and_ssot
+    secondary_groups: [ssot_citation, sync_mechanism]
+    description: "他文書を参照する場合、「引用先が実装時に確認可能か」「更新時に同期するか」、「参照している」と「参照先を特定できる」は別 (SSoT は『定義の存在』だけでは機能しない、『引用の正しさ』を検証する仕組みが伴って初めて SSoT)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md / 2.md / 3.md (cross-pattern)"
+
+  - id: pattern_20
+    primary_group: consistency_and_ssot
+    secondary_groups: [cross_spec_grep, mechanical_check]
+    description: "修正で変更した値 (数値 / enum / API name / field name) をリスト化、既 approve spec 全件を grep で網羅参照箇所確認、「coordination requirement の言及」でなく「実装で参照されているか」機械的チェック (例: Spec 7 第 5 ラウンドで Spec 4 Query API 15 種化 5 箇所未更新を後発見)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Spec 7 第 5 ラウンド)"
+
+  - id: pattern_21
+    primary_group: consistency_and_ssot
+    secondary_groups: [foundation_revision_propagation, downstream_audit]
+    description: "Foundation 改版時は傘下 7 spec (Spec 1-7) に対して改版要件番号 / 関連章番号 / 改版内容依存記述を grep、波及有無を全件報告 (波及なしも明示記録)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-3.md (Foundation revision)"
+
+  # H 群: 選択肢系 (Option Selection)
+  - id: pattern_22
+    primary_group: option_selection
+    secondary_groups: [multi_option_tradeoff, escalate_required]
+    description: "dominated 除外後も合理的選択肢 2 案以上残る場合、LLM 単独で「採択」と書かず必ず escalate (例: Spec 4 致-厳-1 決定 4-6 / 4-9 / 4-10 / 4-12 / 4-14 / 4-15 / 4-16 が複数選択肢から LLM 単独採択 7 件)"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-2.md (Spec 4 致-厳-1)"
+
+  - id: pattern_23
+    primary_group: option_selection
+    secondary_groups: [operational_grounding, binary_choice_ambiguity]
+    description: "「初期セット / 将来拡張」「手動 / 自動」「強制 / 推奨」など二項選択が曖昧、実装者が「どちらに判定すべきか」で困るパターン"
+    origin: "rwiki-v2-dev-log"
+    detected_in: "Rwiki-V2-dev-log-1.md / 2.md / 3.md (cross-pattern)"
