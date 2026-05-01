@@ -57,8 +57,17 @@ Claude assistant (primary_reviewer) が直接実行:
 adversarial subagent dispatch payload:
 
 1. **independent Step 1b detection** (= primary とは独立に 5 重検査再実施)
-2. **forced_divergence prompt** (= 本 spec `./prompts/forced_divergence_prompt.txt` 末尾追加、結論成立性試行)
+2. **forced_divergence prompt** (= 本 spec `./prompts/forced_divergence_prompt.txt` 末尾追加、3 段落構成 = Instruction + Method + Role separation、結論成立性試行)
 3. **V4 §1.5 fix-negation prompt** (= 英語固定 3 行 inline embed、Decision 3、修正提案 counter-evidence)
+
+#### 役割分離 (Role separation、judgment vs adversarial)
+
+判定 5-C 整合の役割分離規律:
+
+- **judgment_reviewer** (Step C、dr-judgment skill): 修正否定試行 (= V4 §5.2 fix-negation、修正 proposal 必要性否定) を担当。foundation `./prompts/judgment_subagent_prompt.txt` 経由
+- **adversarial_reviewer** (Step B、本 skill): forced_divergence (= 結論成立性試行、暗黙前提別前提置換) + V4 §1.5 fix-negation 3 行 inline (= 修正提案 counter-evidence) を担当。本 spec `./prompts/forced_divergence_prompt.txt` + SKILL.md inline embed
+
+両者の intent は **別物** = judgment は「修正必要性否定」、adversarial forced_divergence は「結論成立性試行」(別 task = 別 prompt)。SKILL.md instructions で両 prompt が adversarial dispatch payload には含まれ、judgment dispatch payload には含まれない wiring を厳守。
 
 #### V4 §1.5 fix-negation prompt sync header 3 行 (Decision 3 整合、SKILL.md 内 inline 配置)
 
