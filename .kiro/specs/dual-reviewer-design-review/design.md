@@ -90,6 +90,7 @@
 - judgment subagent dispatch payload 構造変更 → dogfeeding metric 抽出 logic に影響
 - dr-log JSONL schema (state field / source field / adversarial_counter_evidence field) の variant 規約変更 → dogfeeding 3 系統 log 比較に影響
 - 3 skill が読込む foundation install location relative path 規約変更 → dogfeeding skill 起動時 path resolution 失敗
+- **dogfeeding spec から要請される追加要件 (本 spec v1.2 で対応予定、cross-spec review C1 fix)**: (a) dr-design `--treatment` flag 対応 (single / dual / dual+judgment 3 系統で Step B/C/D 切替動作 + user 提示 skip/実行 切替) / (b) dr-log `timestamp_start` / `timestamp_end` JSONL append 時必須付与 / (c) dr-log Service Interface に `--design-md-commit-hash` payload 受領追加 — dogfeeding/design.md Decision 6 整合、本 spec design approve 後 implementation phase 直前で v1.2 改修
 
 ## Architecture
 
@@ -996,3 +997,4 @@ V4 protocol 比較 metric (採択率 / 過剰修正比率 / wall-clock / disagre
   - **A3 skip (false positive)**: judgment subagent が must_fix 判定したが、primary 再検討で false positive と判断 — Req 2 AC5 文言「3 string enum field」は object 内 3 string field 解釈で foundation `failure_observation.schema.json` の `trigger_state` definition (`type: object` + 3 properties as `type: string` + `enum: [applied, skipped]`) と整合、design.md Data Model 描写も整合
   - V4 metric: 採択率 23.5% (4/17、foundation 0% から大幅改善、H3 ≥ 50% 未達) / 過剰修正比率 58.8% (10/17、foundation 81.25% から改善、H1 ≤ 20% 未達) / should_fix 17.6% / judgment override 8 件 / primary↔judgment disagreement 7 件 / adversarial↔judgment agreement 高 (must_fix 4 件全 adversarial ERROR と一致) / subagent wall-clock ~255s (adversarial 125s + judgment 130s)
   - do_not_fix 10 件 (P1-P3, P5-P10, A7) bulk skip + A3 false positive skip = 11 件 skip
+- **v1.2-prep** (2026-05-01 12th セッション、cross-spec review C1 fix): dogfeeding spec design phase 完走後の cross-spec review で発見された implication C1 を Revalidation Triggers section に反映 = dogfeeding spec から要請される追加要件 3 件 (dr-design `--treatment` flag 対応 / dr-log timestamp 必須付与 / dr-log commit_hash payload 受領) を v1.2 改修対象として明示。本 spec v1.2 改修自体は本 spec design approve 後の implementation phase 直前 cycle で実施 (本 spec design は v1.1 stable 維持、v1.2-prep は Revalidation Triggers section への追記のみ)
