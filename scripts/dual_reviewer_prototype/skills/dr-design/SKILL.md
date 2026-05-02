@@ -33,7 +33,7 @@ python3 scripts/dual_reviewer_prototype/skills/dr-design/orchestrator.py \
 各 Round (1-10) で Step A → B → C → D 順次実施:
 
 1. **Round 開始時**: dr-log `open(session_id, treatment, round_index, design_md_commit_hash, target_spec_id, config_yaml_path)` invoke (A1 fix integration)
-2. **Step A (primary detection)**: invoking Claude assistant (= primary_reviewer = Opus、`config.yaml` `primary_model`) が直接実行
+2. **Step A (primary detection)**: primary_reviewer subagent (= Opus、`config.yaml` `primary_model`) を Claude Code Agent tool で fresh state dispatch (= orchestrator bias contamination 排除、Decision 6 整合)
 3. **Step B (adversarial review)**: adversarial subagent (Sonnet、`config.yaml` `adversarial_model`) を Claude Code Agent tool で dispatch
 4. **Step C (judgment)**: dr-judgment skill を Claude Code skill invocation で起動
 5. **Step D (integration)**: primary + adversarial + judgment yaml merge + V4 §2.5 三ラベル提示 user 提示
@@ -41,7 +41,7 @@ python3 scripts/dual_reviewer_prototype/skills/dr-design/orchestrator.py \
 
 ### Step A: primary detection (Req 1.2)
 
-Claude assistant (primary_reviewer) が直接実行:
+primary_reviewer subagent (Opus、Agent tool dispatch、fresh state) で実行 (Decision 6 整合):
 
 - **Step 1a**: 軽微検出
 - **Step 1b**: 構造的検出 5 重検査

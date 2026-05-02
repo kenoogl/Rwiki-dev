@@ -206,7 +206,7 @@ sequenceDiagram
     participant DrDesign as dr-design
     participant L1 as Layer 1 Framework (foundation)
     participant L2 as Layer 2 design_extension (本 spec)
-    participant Primary as primary_reviewer (Opus = invoking Claude assistant)
+    participant Primary as primary_reviewer subagent (Opus = fresh dispatch、Decision 6)
     participant Adversarial as adversarial subagent (Sonnet)
     participant DrJudgment as dr-judgment
     participant DrLog as dr-log
@@ -233,7 +233,7 @@ sequenceDiagram
 
 **Key Decisions**:
 - Round 1-10 は単純 sequential (並列 + 整合性 Round 6 task は B-1.x scope)
-- primary detection は invoking Claude assistant (= Opus、私) が直接実行 (subagent dispatch 不要)
+- primary detection は fresh primary_reviewer subagent (Opus) を Agent tool dispatch (= orchestrator bias contamination 排除、A-2 phase 全 30 session 一貫適用、Decision 6 整合)
 - adversarial + judgment は Sonnet subagent dispatch (Claude Code Agent tool)
 - dr-judgment は subordinate skill (dr-design からの skill invocation)
 - dr-log は per finding helper (dr-design からの skill invocation、JSONL append-only)
@@ -374,7 +374,7 @@ flowchart TD
 **Responsibilities & Constraints**
 
 - Round 1-10 を sequential 実行、各 Round で Step A → B → C → D を順次実施 (Req 1.1 + 1.9 + 7.2)
-- Step A (primary detection): invoking Claude assistant (= primary_reviewer = Opus、`config.yaml` `primary_model`) が直接実行、Step 1a (軽微) + Step 1b (構造的 5 重検査) + Step 1b-v (自動深掘り 5 観点 + 5 切り口 negative 視点) (Req 1.2)
+- Step A (primary detection): primary_reviewer subagent (= Opus、`config.yaml` `primary_model`) を Claude Code Agent tool で fresh state dispatch (= orchestrator bias contamination 排除、Decision 6 整合)、Step 1a (軽微) + Step 1b (構造的 5 重検査) + Step 1b-v (自動深掘り 5 観点 + 5 切り口 negative 視点) (Req 1.2)
 - Step B (adversarial review): adversarial subagent (Sonnet、`config.yaml` `adversarial_model`) を Claude Code Agent tool で dispatch、3 task = independent Step 1b detection + forced_divergence prompt (本 spec `prompts/forced_divergence_prompt.txt`) + V4 §1.5 fix-negation counter-evidence prompt (英語固定 3 行、adversarial subagent dispatch payload に inline embed、Req 6.4 整合) (Req 1.3)
 - Step C (judgment): dr-judgment skill を Claude Code skill invocation で起動、payload (primary findings + adversarial findings + counter_evidence + requirements + design) を渡す (Req 1.4)
 - Step D (integration): primary + adversarial + judgment yaml を merge、V4 §2.5 三ラベル提示 (must_fix bulk apply / do_not_fix bulk skip / should_fix individual review) を user 提示用に構造化、**自動 apply / skip 禁止** (user 判断必須、Req 1.5)
@@ -989,6 +989,19 @@ V4 protocol 比較 metric (採択率 / 過剰修正比率 / wall-clock / disagre
 - **Trade-offs**: 大量 finding (例: 100+ issues) で stdout buffer 圧迫リスク (Phase A scope sample 1 round では問題なし、本格運用 dogfeeding spec で再評価必要) / 代替 (一時 file path) も Req 3.8 で容認
 - **Follow-up**: dogfeeding spec で 30 review session × 多 finding 場合の stdout buffer test、必要なら一時 file path 切替
 
+### Decision 6: primary_reviewer 起動形態 = fresh subagent dispatch (orchestrator 直接実行から変更、20th セッション)
+
+- **Context**: A-2 phase sub-step 3 (= 20th セッション、Spec 6 design phase Round 1) で、orchestrator (= invoking Claude、Opus 4.7) が session 内で TODO_NEXT_SESSION.md / design.md / dev-log を既読 = bias contaminated 状態を発見。元設計 (Decision 1-5 確定時 = 12th セッション、本 Decision 6 以前) では「primary_reviewer は invoking Claude assistant が直接実行 (subagent dispatch 不要)」と規定していたが、orchestrator bias 既読により primary 観点の fresh state (= 採取軸、論文 evidence の核心) が壊れる risk が顕在化。requirements.md Req 1.2 は「primary_reviewer (`config.yaml` `primary_model` 指定 model) を使用」と抽象記述のみで起動形態は AC 規定外 = design 内吸収可能。
+- **Alternatives**:
+  1. 元設計維持 (orchestrator 直接実行) = cost 最小、SKILL.md / design.md 整合維持
+  2. 本 Round 1 限定で subagent 化 (20th 暫定対応) = 採取軸不一貫 (Round 1 vs Round 2-10 で primary 採取条件混在)、sub-group analysis 必要
+  3. **fresh subagent dispatch を全 review session で default 化** (= A-2 phase 30 session + 以降全運用)
+  4. fresh session 別途起動 = cost 過大、session 継続性破壊
+- **Selected**: Alternative 3 (fresh subagent dispatch default)
+- **Rationale**: orchestrator bias contamination の原理的排除 = primary fresh state (= 論文 core claim「dual-reviewer = バイアス観測装置」の measurement 独立性) を構造的に保証 / A-2 phase 全 30 session で primary 採取条件一貫 = treatment 間比較 (single / dual / dual+judgment) で confounding factor 排除 / Phase B-1.0 (固有名詞除去 / npm package 化) scope と整合衝突なし、multi-vendor (Phase B-2 以降) 整合性制約もなし / paper 貢献として "scalable bias 制御 mechanism" を methodology contribution に追加可能
+- **Trade-offs**: cost 増 = 30 session × Opus subagent dispatch ≈ 累計 +1-2h wall-clock + 数十万 token (採取軸保護 vs cost で採取軸優先) / SKILL.md L36 + L44 + design.md L209 + L236 + L377 + tasks.md L118 = 6 reference 文言更新必要 (本 Decision 6 適用で同 commit 内対応)
+- **Follow-up**: A-2 phase sub-step 4 (= Round 2-10 × 3 treatment = 29 review session 残) で本 Decision 適用継続、Level 6 rework_log + dev_log entry の primary_subagent_dispatched field で運用 evidence 累積 / Phase B-1.x release prep で SKILL.md 文言の generalization (Rwiki 固有名詞除去) に合わせ Decision 6 文言も汎用化
+
 ## Change Log
 
 - **v1.0** (2026-05-01 12th セッション、本 file 初版): 3 skills (`dr-design` / `dr-log` / `dr-judgment`) + Layer 2 design extension + forced_divergence prompt template (3 段落構成、英語固定) + Foundation Integration + Phase A scope constraints の design 確定、5 設計決定記録 (install root 共有 / forced_divergence 文言 / V4 §1.5 inline embed / skill format / stdout default)
@@ -1004,3 +1017,4 @@ V4 protocol 比較 metric (採択率 / 過剰修正比率 / wall-clock / disagre
   - do_not_fix 10 件 (P1-P3, P5-P10, A7) bulk skip + A3 false positive skip = 11 件 skip
 - **v1.2-prep** (2026-05-01 12th セッション、cross-spec review C1 fix): dogfeeding spec design phase 完走後の cross-spec review で発見された implication C1 を Revalidation Triggers section に反映 = dogfeeding spec から要請される追加要件 3 件 (dr-design `--treatment` flag 対応 / dr-log timestamp 必須付与 / dr-log commit_hash payload 受領) を v1.2 改修対象として明示。本 spec v1.2 改修自体は本 spec design approve 後の implementation phase 直前 cycle で実施 (本 spec design は v1.1 stable 維持、v1.2-prep は Revalidation Triggers section への追記のみ)
 - **v1.2** (2026-05-01 15th セッション、A-1 implementation phase 直前 cycle): cross-spec review C1 fix 3 件を design.md 本文に apply 完了 = (1) dr-design Responsibilities に `--treatment` flag (single | dual | dual+judgment) 切替責務追記 = single 系統で Step B/C 全 skip + Step D primary のみ user 提示、dual 系統で Step B 実行 + Step C skip + Step D 全件 should_fix 個別判断 prompt、dual+judgment 系統で V4 完全 / treatment は dr-log open() payload 必須付与 (2) dr-design Service Interface invoke signature に `treatment` parameter 追加 + RoundReports に treatment field 追加 (3) dr-log Responsibilities に open() 時 timestamp_start 自動 capture + flush() 時 timestamp_end 自動 capture + 両 field review_case JSONL line 必須付与 / open() payload で受領した design_md_commit_hash を session state 保持 + flush() 時 review_case 必須付与 の責務追記 (4) Revalidation Triggers section の v1.2-prep marker を v1.2 適用済 marker に書換。tasks.md v1.1 と整合済 (Task 4.1/4.2 dr-log timestamp + commit_hash / Task 5.1/5.2 dr-design --treatment flag + Step B/C/D 切替 / Task 6.5/7.5 3 系統 integration test 既存)、requirements.md v1.x AC 整合済
+- **v1.3** (2026-05-02 21st セッション、A-2 phase sub-step 4 開始前 prerequisite): Decision 6 (primary_reviewer 起動形態 = fresh subagent dispatch、orchestrator 直接実行から変更) を追記 + 文言更新 6 reference apply = (1) Flow 1 mermaid sequenceDiagram の Primary participant 表記 = "Opus = invoking Claude assistant" → "Opus = fresh dispatch、Decision 6" (2) Key Decisions の "primary detection は invoking Claude assistant が直接実行 (subagent dispatch 不要)" → "fresh primary_reviewer subagent (Opus) を Agent tool dispatch (= bias contamination 排除、A-2 phase 全 30 session 一貫適用、Decision 6 整合)" 真逆趣旨書換 (3) dr-design Responsibilities Step A 文言を "invoking Claude assistant が直接実行" → "primary_reviewer subagent を Agent tool で fresh state dispatch" 更新 (4) dr-design SKILL.md L36 + L44 同 2 箇所同 文言更新 (5) tasks.md L118 同文言更新。背景 = 20th セッション A-2 phase sub-step 3 (Round 1) で orchestrator session 内 既読による primary 採取軸 contamination 発覚、option B (= primary subagent 化) を本 Round 1 で暫定採用 → 21st 開始時に user 判断「α default 化」確定 = A-2 phase 全 30 session 適用。requirements.md Req 1.2 は起動形態を AC 規定外 = design 内吸収可能、req 改版不要。Phase B-1.0 (固有名詞除去 / npm 化) scope 整合衝突なし。
