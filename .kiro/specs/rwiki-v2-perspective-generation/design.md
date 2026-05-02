@@ -733,8 +733,14 @@ def run(hypothesis_id: str, add_evidence: list[str] = None, force_status: str = 
 - 各候補に `file` / `quote` / `span` (行番号 range) 付与
 - subprocess timeout 必須 (R8.10)
 
+**Performance Strategy (R8.2、MVP 確定方針)**:
+- 検索方式: ripgrep + semantic similarity (LLM 経由) の素朴実装、persistent incremental indexing は **不要**
+- 応答時間目標: 中規模 (1K ファイル) **5 秒以下**、大規模 (10K+ ファイル) **30 秒以下**
+- 目標未達時: WARN + degraded mode 通知 (= user に「検索が遅延しています」表示) + 結果は返却継続
+- 大規模化対応: MVP では未対応、運用で性能課題顕在化時に次 spec で incremental indexing (例: SQLite FTS5) 採用検討
+- 設計理由: MVP 規律 (= over-engineering 回避)、index 実装 cost (DB schema / sync / migration) を回避し、実運用で困った段階で対応
+
 **Open Questions / Risks**:
-- raw 10K+ ファイル規模での性能 (grep + semantic similarity の応答時間目標、incremental indexing 戦略の要否) は **実装段階で確定** (R8.2、design phase 持ち越し item)
 - 候補抽出順位の安定性 (semantic similarity の同一 input → 同一 output 保証) を実装段階で検証
 
 ### Domain E: Maintenance Surface
@@ -759,8 +765,16 @@ def run(hypothesis_id: str, add_evidence: list[str] = None, force_status: str = 
 - surface のみ (自動実行しない、R10.4)
 - session 内 1 回までの頻度制限 (R10.5)、`/dismiss` (R10.6) / `/mute maintenance` (R10.7) 受付 (表示 layer は Spec 4)
 - 閾値 config 注入 (R10.8)
-- 複数同時発火時の優先順位付け (R10.9、Scenario 33)
+- 複数同時発火時の優先順位付け (R10.9、Scenario 33、下記 Priority Strategy)
 - `rw chat --mode autonomous` toggle 対応 (R10.10、mode toggle 自体は Spec 4)
+
+**Priority Strategy (R10.9、MVP 確定方針)**:
+- Trigger priority 順序 (固定): (1) `reject_queue` → (2) `decay_edges` → (3) `dangling_edge` → (4) `typed_edge_ratio` → (5) `audit_overdue` → (6) `unapproved_synthesis`
+- 順序根拠: 蓄積影響度順 (= reject queue は LLM 提案滞留で user 流れ阻害大、decay は推論精度劣化、dangling edge は graph 整合性破綻、typed-edge / audit / synthesis は中長期的な品質指標)
+- 同時発火時の選択: **priority 1 のみ surface**、残りは次 session 持ち越し (= R10.5 同 session 1 回まで surface 制限と整合)
+- Spec 4 Maintenance UX coordination: 本 spec は priority 1 trigger 1 件を返却、Spec 4 が `💡` marker で表示 layer 担当
+- 大規模 / 複雑 priority 対応: MVP では未対応、運用で「priority 1 が常に同じで他 trigger が見えない」等顕在化時に次 spec で user preference / scoring 等採用検討
+- 設計理由: MVP 規律 (= simple first)、複雑 scoring / user preference UI 等の complexity 増、実運用で困った段階で対応
 
 **Contracts**: Service [✓]
 
@@ -836,8 +850,14 @@ def write_hypothesis(text: str, frontmatter: HypothesisFrontmatter, slug: str) -
 - interactive_synthesis 等の対話 skill ログを `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` に append (R12.5)
 - append 単位 = per Turn (1 turn = user 発話 + assistant 応答、R12.4)
 - atomic per Turn append (write-to-tmp → rename、R12.8 (a))
-- 内部 buffer 化と flush 戦略の詳細 (buffer flush 間隔 / 異常終了時 partial flush) は **実装段階で確定** (R12.4 末尾、design phase 持ち越し)
 - frontmatter は Spec 2 dialogue log schema (5 必須 field: `type: dialogue_log` / `session_id` / `started_at` / `ended_at` / `turns`) 整合
+
+**Buffer Flush Strategy (R12.4 末尾、MVP 確定方針)**:
+- buffer 化: **なし** (= per Turn 即時 append)。各 turn で `open(path, 'a') → write(turn 内容) → close()` を atomic に実施
+- flush 間隔: per Turn 毎 (= buffer なし即時書込で flush 概念不要)
+- 異常終了時 partial flush 対応: **なし** (= per Turn 即時書込のため、SIGINT / kill / crash で消失するのは最大 1 turn 分のみ、許容範囲)
+- 大規模 / 高頻度対応: MVP では未対応、運用で I/O 遅延顕在化時 (例: 1 turn 100 ms 超) に次 spec で buffer 化検討
+- 設計理由: MVP 規律 (= simple first)、buffer 化は signal handler / partial flush logic / lock 等の complexity 増、実運用で困った段階で対応
 
 **Contracts**: Service [✓]
 
@@ -1133,10 +1153,7 @@ config / 成熟度 / API 結果 は cache せず、起動毎に re-resolve (R6.7
 
 | Item | 出典 AC | 確定 timing |
 |------|--------|------------|
-| Verify Step 1 raw 10K+ ファイル規模での incremental indexing 戦略 | R8.2 | 実装段階 (Verify workflow 実装時) |
-| 対話ログ buffer flush 戦略の詳細 (buffer flush 間隔 / 異常終了時 partial flush) | R12.4 末尾 | 実装段階 (DialogueLog 実装時) |
 | `refuting_evidence_reinforcement_delta` の値 (Spec 5 config 新設要請) | R12.7 / R8.6 | Spec 5 と coordination (本 spec implementation 前に Spec 5 へ要請) |
-| Maintenance autonomous trigger 複数同時発火時の優先順位ロジック | R10.9 | 実装段階 (MaintenanceSurface 実装時、Scenario 33 と coordination) |
 | Hypothesis ID (slug) の具体的命名規則 (`hyp-<short-hash-or-topic-slug>`) | R2.9 | 実装段階 (cmd_hypothesize 実装時) |
 
 ---
