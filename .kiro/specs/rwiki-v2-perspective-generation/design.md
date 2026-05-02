@@ -307,7 +307,7 @@ sequenceDiagram
 
 **Key Decisions**:
 - Step 1 `resolve_entity` 失敗時は **WARN + exit 1** で停止 (Step 2 以降に進まない、R4.1)
-- Step 2 結果空集合は **WARN + 継続不可** (R4.8)、ledger 極貧時は R6.2 と併発 (R6.6)
+- Step 2 結果空集合は **WARN + halt signal** (R4.8) = Pipeline は `should_halt: true` を `PipelineInvokeResult` に set、継続/中止判断は呼出元 cmd handler (cmd_perspective / cmd_hypothesize) で exit 1。ledger 極貧時は R6.2 と併発 (R6.6)。Pipeline 自身は exit を返さず interface 経由で signal 伝達 (Round 2 案 2 統合修正、責務境界明文化)
 - Step 5 reinforcement は Perspective `--save` 時のみ + Hypothesis 出力時 (R12.6)、Hypothesis verify confirmed/refuted 時は別 Flow (Flow 2 Step 4)
 - usage_signal 種別は Direct / Support / Retrieval / Co-activation の 4 種から選択 (R4.6)、`reinforced` event の context attribute として記録 (R12.6 / R12.7)
 
@@ -353,6 +353,7 @@ sequenceDiagram
 **Key Decisions**:
 - Step 1 evidence 候補 0 件は **INFO + status verified 据置** (R8.11、user に手動追加または raw ingest を促す)
 - Step 4 record_decision 失敗時は **ERROR abort + atomic rollback** (R8.7、verification_attempts append + status 遷移を取消)
+- record_decision の `decision_type` payload は `hypothesis_verify` 単一型を本 spec design では採用 (R8.7 単一型表現 整合)。ただし Spec 5 R11.6 が outcome に応じて `hypothesis_verify_confirmed` / `hypothesis_verify_refuted` 2 種を要求する場合は cross-spec impl 段階で Spec 5 contract を確認し、必要なら本 spec impl で outcome 別 decision_type 切替を追加 (req R8.7 文言確定 = `hypothesis_verify` 単一型 vs 2 種型 = req 改版は別 phase work、本 spec design 内では note 化で defer、Round 2 #5 design 内吸収方針)
 - origin_edges の edge が reject / deprecated 状態は **INFO skip + skip 理由を verify 結果出力に記録** (R12.7)
 - delta 値: confirmed 時 = `supporting_evidence_reinforcement_delta` (default +0.28、Spec 5 Hygiene)、refuted 時 = 別 delta (design phase で Spec 5 と coordination、暫定方針として Spec 5 config に `refuting_evidence_reinforcement_delta` 新設要請、本 spec は呼出のみ)
 
@@ -362,7 +363,7 @@ sequenceDiagram
 stateDiagram-v2
     [*] --> draft: rw hypothesize 生成
     draft --> verified: rw verify 開始
-    verified --> verified: 再 verify (evidence 不足)
+    verified --> verified: 再 verify (evidence 不足 or evidence 混在)
     verified --> confirmed: supporting>=2 ∧ refuting=0
     verified --> refuted: refuting>=2
     verified --> evolved: 新 hypothesis 派生
@@ -545,7 +546,7 @@ def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None) -> int:
 - Step 4: 選択 page body Read + `Spec5Client.get_edge_history(edge_id)` で evidence 参照
 - Step 5: SkillInvoker.invoke() + OutputWriter.write() + EdgeFeedback.reinforced()
 - Step 失敗時は ERROR + exit 1 (R4.7)
-- Step 2 結果空集合は WARN (R4.8)
+- Step 2 結果空集合は WARN + `should_halt: true` set (R4.8)、継続/中止判断は呼出元 cmd handler (Round 2 案 2 整合)
 
 **Dependencies**:
 - Outbound: Spec5Client (P0), ScoringStrategy (P0), SkillInvoker (P0), OutputWriter (P0), EdgeFeedback (P0), MaturityClassifier (P1), DialogueLog (P1), Config (P0)
@@ -572,6 +573,7 @@ class PipelineInvokeResult:
     reinforced_events: list[ReinforcedEvent]
     warnings: list[str]
     info: list[str]
+    should_halt: bool  # Round 2 案 2 = R4.8 等で「継続不可」signal を呼出元 cmd handler に伝達、Pipeline 自身は exit を返さず caller が exit 1 判断
 
 def invoke(request: PipelineInvokeRequest) -> PipelineInvokeResult: ...
 ```
@@ -590,7 +592,7 @@ def invoke(request: PipelineInvokeRequest) -> PipelineInvokeResult: ...
 
 **Responsibilities**:
 - Spec5Client から件数取得 (stable / core / total edges)
-- 極貧 (stable+core < 10) / 疎 (stable 比率 < 20%) / 通常 (stable+core ≥ 50%) を判定 (R6.1)
+- 極貧 (stable+core < 10) / 疎 (stable 比率 < 20%) / 通常 (stable+core > 50%) を判定 (R6.1、AC text「50% 超」整合 = 厳密 strict greater-than)
 - 起動毎に再計算、cache せず (R6.7)
 - 閾値 (10 / 0.20 / 0.50) は config 注入 (R6.5)
 
@@ -1049,7 +1051,7 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 - skill `perspective_gen` / `hypothesis_gen` 不在 → ERROR、`generic_summary` fallback 不可 (R3.5)
 - L2 ledger 極貧 → WARN + 継続 (R6.2)
 - L2 ledger 疎 → INFO + 継続 (R6.3)
-- traverse 結果 0 件 → WARN + 継続不可 (R4.8)
+- traverse 結果 0 件 → WARN + `should_halt: true` signal (R4.8)、cmd handler が exit 1 判断 (Round 2 案 2 整合)
 - candidate evidence 0 件 → INFO + status verified 据置 (R8.11)
 - origin_edges に reject/deprecated edge → INFO skip + 結果出力に記録 (R12.7)
 
@@ -1161,3 +1163,5 @@ config / 成熟度 / API 結果 は cache せず、起動毎に re-resolve (R6.7
 _change log_
 
 - 2026-05-02: 初版生成 (v0.7.13 SSoT を基に 132 AC を 8 domain components に mapping、5 段階 pipeline + Verify workflow + Hypothesis state machine の 3 主要 flow を Mermaid 化、研究ログを research.md に分離)
+- 2026-05-02 (20th セッション、A-2 phase Round 1 修正): R8.2 Performance Strategy + R12.4 Buffer Flush Strategy + R10.9 Priority Strategy 各 section 追加 + Open Questions/Risks 表 cleanup (must_fix 3 件 = primary subagent 0 件 + adversarial subagent 3 件 同型 pattern 独立検出 + judgment must_fix 確定、MVP first 設計判断で確定方針追加、commit `6e26aa8`)
+- 2026-05-02 (21st セッション、A-2 phase Round 2 = 一貫性レビュー 修正): 4 修正 apply = (1) MaturityClassifier R6.1 境界値演算子 `≥ 50%` → `> 50%` (= AC「50% 超」整合、A-2 must_fix) / (2) R4.8 Step 2 空集合時 = 「WARN + 継続不可」 → 「WARN + halt signal」+ PipelineInvokeResult に `should_halt: bool` field 追加 = 責務境界明文化 (Pipeline は signal のみ、cmd handler が exit 1 判断、L310/L548/L1052 = 3 箇所統一、P-1 + A-FD-1 should_fix 統合修正、案 2 構造的解決) / (3) Hypothesis state machine self-loop 注記「再 verify (evidence 不足)」→「再 verify (evidence 不足 or evidence 混在)」(= req R8.5 partial outcome を表現、P-3 + A-1 should_fix) / (4) record_decision decision_type 命名 cross-spec note 追加 = 本 spec は単一型 `hypothesis_verify` 維持、Spec 5 R11.6 の 2 種型要求は cross-spec impl 段階確認、req R8.7 改版は別 phase work へ defer (A-3 should_fix design 内吸収方針)。do_not_fix 2 件 (P-2 Mermaid 用語重複 + A-4 evidence 0 件表現) は skip。primary subagent 3 件 + adversarial subagent 5 件 (1 confirmation + 3 independent + 1 forced_divergence supplementary) + judgment subagent must_fix 1 / should_fix 4 / do_not_fix 2 / escalate 0 / override 3 件 = primary + adversarial 独立検出 confluence evidence (Decision 6 primary subagent 化 default 適用後 初 Round)
