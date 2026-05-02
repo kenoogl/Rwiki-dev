@@ -569,8 +569,8 @@ class PipelineInvokeRequest:
 class PipelineInvokeResult:
     output_text: str
     saved_path: Optional[Path]
-    traversed_edges: list[str]
-    reinforced_events: list[ReinforcedEvent]
+    traversed_edges: list[str]                  # Step 2 で取得した全 edge_id (top-M 内外を含む traverse 集合全件)
+    reinforced_events: list[ReinforcedEvent]    # Round 3 A-7 should_fix = append 成功 event のみ (Spec 5 への append が完了し event_id を取得した event のみ含む、logging / reporting 用)。caller (cmd handler) は再処理する責務なし。skipped event (= edge reject/deprecated 等で skip された event) は含まず、warnings list に「skipped: <edge_id> (<reason>)」として記録
     warnings: list[str]
     info: list[str]
     should_halt: bool  # Round 2 案 2 = R4.8 等で「継続不可」signal を呼出元 cmd handler に伝達、Pipeline 自身は exit を返さず caller が exit 1 判断
@@ -618,6 +618,11 @@ def classify() -> MaturityLevel: ...
 - PerspectiveScoringStrategy: `0.6 × confidence + 0.3 × recency + 0.1 × novelty` (R5.1)
 - HypothesisScoringStrategy: `0.5 × novelty + 0.3 × confidence + 0.2 × bridge_potential` (R5.2)
 - 各要素計算は ScoringContext (Spec5Client 経由で取得) を受領 (R5.3)
+- **4 element 別の Spec 5 API mapping (Round 3 P-2 should_fix、R5.7 整合)**:
+  - `confidence`: `Edge.confidence` 直接参照 (no API call)
+  - `recency`: `Spec5Client.get_edge_history(edge_id)` の最新 event timestamp + `exp(-days_since_last_event / half_life_days)` decay
+  - `novelty`: 計算用 specific API (= `edges_derived_from_same_raw_count` を返す API) は Spec 5 Query API 15 種に未存在 = **Open Questions / Risks 持ち越し** (実装段階で Spec 5 拡張要請 or `get_edge_history` から raw source 集計の近似)
+  - `bridge_potential` (Hypothesis のみ): `Spec5Client.find_missing_bridges(cluster_a, cluster_b, top_n)` (cluster 特定手順は HypothesisScoringStrategy Implementation Notes 参照)
 - 係数値・top_m・depth は config 注入 (R5.4 / R13)
 - config 欠落時は default + INFO 通知 (R5.6 / R13.6)
 - 合計値 ≠ 1.0 は WARN + 継続 (R13.8)
@@ -631,9 +636,17 @@ class ScoringStrategy(Protocol):
 @dataclass
 class ScoringContext:
     spec5_client: Spec5Client
-    half_life_days: float = 30.0   # recency 計算用
-    # novelty / bridge_potential 計算は Spec 5 API 経由
+    half_life_days: float = 30.0   # recency 計算用 (Spec5Client.get_edge_history 経由)
+    # novelty: API gap 持ち越し (Open Questions / Risks 参照、実装段階で Spec 5 拡張要請 or 近似)
+    # bridge_potential (Hypothesis のみ): Spec5Client.find_missing_bridges 経由 (cluster 特定手順は HypothesisScoringStrategy Implementation Notes)
+    pre_fetched_communities: Optional[dict[str, str]] = None  # node_id → community_id, A-6 案 = batch fetch で get_communities call 削減 (option、None なら per-edge fetch)
 ```
+
+**Implementation Notes (HypothesisScoringStrategy bridge_potential 計算手順、Round 3 A-6 must_fix、R2.4 / R5.2 / R5.3 / R11.2 整合)**:
+- Step 1: candidate edge の source / target node の community 帰属を `Spec5Client.get_communities(node_id)` で取得 (Spec 5 R11.2 community detection API)、または ScoringContext.pre_fetched_communities が non-None なら lookup で API call 削減
+- Step 2: source community ID = cluster_a / target community ID = cluster_b (異 community 間の edge のみが bridge 候補、同 community 内 edge は bridge_potential = 0)
+- Step 3: `Spec5Client.find_missing_bridges(cluster_a, cluster_b, top_n)` 呼出 + 結果リスト中で当該 candidate edge の rank 位置を bridge_potential score に正規化 (例: `1 - rank/top_n`、rank 圏外なら 0)
+- 性能注: top-M=20 件分 community 帰属取得が必要 = `get_communities` per-edge 呼出で 20 call (各 100ms 以下なら合計 2 秒以下、許容範囲)。pre_fetched_communities batch 戦略は ScoringStrategy.score() invocation 前に Pipeline Step 3 直前で 1 回 `get_communities(node_ids=[...])` を batch 取得し ScoringContext に注入 (option、L2 ledger 大規模時の最適化)
 
 ### Domain C: State Management
 
@@ -700,8 +713,14 @@ def rollback_last_change(hyp_id: str) -> None: ...   # atomic rollback (R8.7 / R
 - Step 1: EvidenceCollector で raw/**/*.md grep + semantic similarity → N=5 候補抽出 (R8.2)
 - Step 2: user に 4 択 (`supporting / refuting / partial / none`) 評価収集 (R8.3)、`--add-evidence <path>:<span>` 受領
 - Step 3: 集約判定 (`supporting≥2 ∧ refuting=0 → confirmed` / `refuting≥2 → refuted` / 混在 → `partial` / 不足 → `verified_pending`、R8.4)
-- Step 4: `verification_attempts` append (atomic、R8.5 / R12.8 (d)) + `reinforced` event (confirmed/refuted のみ、R8.6) + `record_decision` (R8.7)
-- record_decision 失敗時の rollback (R8.7)、atomic で verification_attempts append + status 遷移を取消
+- **Step 4 (3 操作実行順序、Round 3 P-3 must_fix、R8.5 / R8.6 / R8.7 / R12.7 / R12.8 整合)**:
+  1. `verification_attempts` append (atomic、R8.5 / R12.8 (d))
+  2. `record_decision` (R8.7、Spec 5 への atomic write)
+  3. `reinforced` event append (confirmed/refuted のみ、R8.6、best-effort = append-only journal で物理 rollback 不可、Foundation §1.3.5 整合)
+- **失敗時 rollback boundary**:
+  - 操作 1 失敗 → ERROR abort (status 遷移未実施)
+  - 操作 2 (record_decision) 失敗 → ERROR abort + atomic rollback (R8.7、操作 1 の verification_attempts append + status 遷移を取消、reinforced event は **未実行のため整合維持**)
+  - 操作 3 (reinforced event) 失敗 → **WARN + 手動 reconciliation guide** (= Spec 5 audit log で重複 / 欠損 event を検出、必要なら manual edit で edge_events.jsonl 補修) + record_decision は記録済のため status は遷移済継続 (= confirmed/refuted で stable)、edge_events.jsonl 不整合は Hygiene Reinforcement signal 一時欠損のみで verify 結果自体は valid
 - evidence 候補 0 件時は INFO + status 据置 (R8.11)
 
 **Dependencies**:
@@ -738,7 +757,12 @@ def run(hypothesis_id: str, add_evidence: list[str] = None, force_status: str = 
 **Performance Strategy (R8.2、MVP 確定方針)**:
 - 検索方式: ripgrep + semantic similarity (LLM 経由) の素朴実装、persistent incremental indexing は **不要**
 - 応答時間目標: 中規模 (1K ファイル) **5 秒以下**、大規模 (10K+ ファイル) **30 秒以下**
+- **LLM call 仮定 (Round 3 P-5 escalate→案 X1 採用、R8.10 整合)**:
+  - 計算方式: ripgrep top-K 結果 (K = 50 程度上限、超過時は ripgrep score 上位で truncate) を **1 LLM call で batch 評価** (1 prompt で K 件まとめて semantic similarity 評価し N=5 抽出)、per-candidate K call は採用しない
+  - 典型 latency: short prompt 1-3 秒 (K ≤ 20)、long prompt 5-15 秒 (K ≤ 50)
+  - 目標達成可能性: K ≤ 50 なら 1 LLM call ≤ 5 秒で中規模目標達成可能、K > 50 では大規模 30 秒以下目標に格下、K > 200 では graceful degradation (= 結果 N 件未満で返却)
 - 目標未達時: WARN + degraded mode 通知 (= user に「検索が遅延しています」表示) + 結果は返却継続
+  - WARN trigger 条件: 1 LLM call が 5 秒超 (中規模目標違反) または 30 秒超 (大規模目標違反、subprocess timeout R8.10 = `LLM_DEFAULT_TIMEOUT_SEC` 60 秒 default 内で警告)
 - 大規模化対応: MVP では未対応、運用で性能課題顕在化時に次 spec で incremental indexing (例: SQLite FTS5) 採用検討
 - 設計理由: MVP 規律 (= over-engineering 回避)、index 実装 cost (DB schema / sync / migration) を回避し、実運用で困った段階で対応
 
@@ -879,6 +903,11 @@ def finalize_session(log_path: Path) -> None: ...
 **Responsibilities**:
 - Spec 5 R10.1 11 種列挙の基本セット 8 種のうち `reinforced` event のみを使用 (独自 event 名禁止)
 - usage_signal 種別 = Direct / Support / Retrieval / Co-activation の 4 種から選択 (R4.6)
+- **per-edge usage_signal mapping 規則** (Pipeline Step 5、Round 3 案 = 案 2 構造的解決): cmd_perspective / cmd_hypothesize 1 回あたり、`traversed_edges` 全件に対し以下 mapping で signal 種別を割当 (= R4.5 「使われた edge 全て」整合、event 発行件数上限 = traversed_edges 件数 ≤ top-M、L2 Ledger 入力規模を成熟度別に predictable 化):
+  - **Direct**: LLM 引用 edge (skill が answer 本文で当該 edge_id を言及または出典として明示参照)
+  - **Support**: top-M 内 LLM 未引用だが本文読込済 edge (Step 4 で page body Read 済、context として LLM に渡したが出力に反映せず)
+  - **Retrieval**: top-M 外の traverse touch edge (Step 2 で取得したが Step 4 で本文読込せず ScoringStrategy で順位外)
+  - **Co-activation**: 同 cmd 1 回内で同時 traverse された別 edge との関連 (= traversed_edges 集合内 pair-wise の co-occurrence、本 spec MVP では Direct/Support/Retrieval を優先し Co-activation は次 spec 候補)
 - context attribute で独自意味記録:
   - Perspective `--save` 時: `usage_context: used_in_save_perspective` / `perspective_path: <path>` (R12.6)
   - Verify confirmed/refuted 時: `verification_type: human_verification_support` / `hypothesis_id: <id>` / `verify_outcome: confirmed|refuted` (R12.7)
@@ -1062,7 +1091,8 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 | `resolve_entity` returns None / 例外 | WARN + exit 1 + entity 抽出推奨 message | R4.1 |
 | Step 失敗 (Step 2-5) | ERROR + exit 1 | R4.7 |
 | Verify Step 1 候補 0 件 | INFO + status verified 据置 | R8.11 |
-| Verify record_decision 失敗 | ERROR abort + atomic rollback (verification_attempts append + status 遷移取消) | R8.7 |
+| Verify record_decision 失敗 | ERROR abort + atomic rollback (verification_attempts append + status 遷移取消、reinforced event 未実行のため整合維持) | R8.7 |
+| Verify reinforced event append 失敗 | WARN + 手動 reconciliation guide (record_decision 記録済 + status 遷移済 + edge_events.jsonl 不整合は Hygiene signal 一時欠損のみ、verify 結果 valid 継続) | R8.6 / R12.7 |
 | Approve record_decision 失敗 | ERROR abort + atomic rollback (status 遷移 + successor_wiki 取消) | R9.5 |
 | origin_edges に reject/deprecated edge | INFO skip + 結果出力に記録 | R12.7 |
 | Spec 7 8 段階対話 user 中断 | status `confirmed` 据置、successor_wiki 不記録 | R9.7 |
@@ -1157,6 +1187,7 @@ config / 成熟度 / API 結果 は cache せず、起動毎に re-resolve (R6.7
 |------|--------|------------|
 | `refuting_evidence_reinforcement_delta` の値 (Spec 5 config 新設要請) | R12.7 / R8.6 | Spec 5 と coordination (本 spec implementation 前に Spec 5 へ要請) |
 | Hypothesis ID (slug) の具体的命名規則 (`hyp-<short-hash-or-topic-slug>`) | R2.9 | 実装段階 (cmd_hypothesize 実装時) |
+| `novelty` 計算用 Spec 5 API 不足 (= `edges_derived_from_same_raw_count` を返す API が Query API 15 種に未存在、Round 3 P-2) | R5.3 / R5.7 | Spec 5 と coordination (新 API 追加要請 or `get_edge_history` から raw source 集計近似で代替、本 spec implementation 前に決定) |
 
 ---
 
@@ -1165,3 +1196,4 @@ _change log_
 - 2026-05-02: 初版生成 (v0.7.13 SSoT を基に 132 AC を 8 domain components に mapping、5 段階 pipeline + Verify workflow + Hypothesis state machine の 3 主要 flow を Mermaid 化、研究ログを research.md に分離)
 - 2026-05-02 (20th セッション、A-2 phase Round 1 修正): R8.2 Performance Strategy + R12.4 Buffer Flush Strategy + R10.9 Priority Strategy 各 section 追加 + Open Questions/Risks 表 cleanup (must_fix 3 件 = primary subagent 0 件 + adversarial subagent 3 件 同型 pattern 独立検出 + judgment must_fix 確定、MVP first 設計判断で確定方針追加、commit `6e26aa8`)
 - 2026-05-02 (21st セッション、A-2 phase Round 2 = 一貫性レビュー 修正): 4 修正 apply = (1) MaturityClassifier R6.1 境界値演算子 `≥ 50%` → `> 50%` (= AC「50% 超」整合、A-2 must_fix) / (2) R4.8 Step 2 空集合時 = 「WARN + 継続不可」 → 「WARN + halt signal」+ PipelineInvokeResult に `should_halt: bool` field 追加 = 責務境界明文化 (Pipeline は signal のみ、cmd handler が exit 1 判断、L310/L548/L1052 = 3 箇所統一、P-1 + A-FD-1 should_fix 統合修正、案 2 構造的解決) / (3) Hypothesis state machine self-loop 注記「再 verify (evidence 不足)」→「再 verify (evidence 不足 or evidence 混在)」(= req R8.5 partial outcome を表現、P-3 + A-1 should_fix) / (4) record_decision decision_type 命名 cross-spec note 追加 = 本 spec は単一型 `hypothesis_verify` 維持、Spec 5 R11.6 の 2 種型要求は cross-spec impl 段階確認、req R8.7 改版は別 phase work へ defer (A-3 should_fix design 内吸収方針)。do_not_fix 2 件 (P-2 Mermaid 用語重複 + A-4 evidence 0 件表現) は skip。primary subagent 3 件 + adversarial subagent 5 件 (1 confirmation + 3 independent + 1 forced_divergence supplementary) + judgment subagent must_fix 1 / should_fix 4 / do_not_fix 2 / escalate 0 / override 3 件 = primary + adversarial 独立検出 confluence evidence (Decision 6 primary subagent 化 default 適用後 初 Round)
+- 2026-05-02 (22nd セッション、A-2 phase Round 3 = 実装可能性 + アルゴリズム + 性能 統合 修正): 6 修正 apply = (1) **P-1 must_fix** = EdgeFeedback Responsibilities に per-edge usage_signal mapping 規則追加 (= Direct = LLM 引用 / Support = top-M 内本文読込済 / Retrieval = top-M 外 traverse touch / Co-activation = MVP は次 spec 候補、event 発行件数上限 = traversed_edges 件数 ≤ top-M で predictable 化、R4.5 / R4.6 整合) / (2) **P-2 should_fix** = ScoringStrategy に 4 element 別 Spec 5 API mapping 追記 (confidence / recency / novelty / bridge_potential) + ScoringContext docstring 拡張 + Open Questions / Risks 表に novelty API gap 追加 (= `edges_derived_from_same_raw_count` を返す API が Query API 15 種に未存在、実装段階で Spec 5 拡張要請 or 近似決定) / (3) **P-3 must_fix** = VerifyWorkflow Step 4 3 操作実行順序明示 (= verification_attempts append → record_decision → reinforced event の sequential、各失敗時 rollback boundary 明示) + Failure Modes 表に reinforced event append 失敗 row 追加 (= WARN + 手動 reconciliation guide、record_decision 記録済で status valid 継続) / (4) **A-6 must_fix** = HypothesisScoringStrategy bridge_potential Implementation Notes 追加 (= cluster_a/cluster_b 特定手順 = source/target node の community 帰属を get_communities 取得 → cluster 特定 → find_missing_bridges 呼出、ScoringContext.pre_fetched_communities option で per-edge call 削減戦略明示) / (5) **P-5 escalate→案 X1** = EvidenceCollector Performance Strategy に LLM call 仮定追記 (= ripgrep top-K=50 を 1 LLM call で batch 評価、典型 latency 1-15 秒、目標達成可能 K 範囲 + WARN trigger 条件 + graceful degradation 明示、R8.10 整合) / (6) **A-7 should_fix** = PipelineInvokeResult.reinforced_events docstring 追記 (= append 成功 event のみ、skipped event は warnings list へ、caller 再処理責務なし)。do_not_fix 1 件 (P-4 = edge_events.jsonl atomic append contract = Spec 5 R11.6 委譲済で two-source-of-truth 回避) は skip。primary subagent 5 件 + adversarial subagent 7 件 (5 confirmation + 2 independent + 5 forced_divergence + 5 counter_evidence) + judgment subagent must_fix 3 / should_fix 2 / do_not_fix 1 / escalate 1 / override 4 件 = Round 観点難易度依存 detection (Round 1 = 0 / Round 2 = 3 / Round 3 = 5 件 primary detect)、初 escalate 1 件 = uncertainty=high の trade-off 判断を user に委譲 protocol が機能
