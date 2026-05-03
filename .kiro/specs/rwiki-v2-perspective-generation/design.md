@@ -334,25 +334,29 @@ sequenceDiagram
     note right of User: --add-evidence で手動追加可
     Workflow->>Workflow: Step 3 集約判定
     note over Workflow: confirmed if s>=2 and r=0 / refuted if r>=2 / partial / verified_pending
-    Workflow->>State: Step 4 verification_attempts append (atomic)
+    Workflow->>State: Step 4 (i) verification_attempts append (provisional, status 据置, atomic)
     alt outcome confirmed or refuted
-        Workflow->>EdgeFB: reinforced for origin_edges
-        EdgeFB->>Spec5: edge_events.jsonl append
-        alt origin_edge is reject or deprecated
-            EdgeFB->>User: INFO skip + 結果出力に skipped edge_id
-        end
-        Workflow->>Spec5: record_decision hypothesis_verify reasoning
+        Workflow->>Spec5: Step 4 (ii) record_decision hypothesis_verify reasoning
         alt record_decision fails
-            Workflow->>State: rollback frontmatter changes (atomic)
-            Workflow->>User: ERROR abort
+            Workflow->>State: rollback provisional verification_attempts (atomic, status 据置維持)
+            Workflow->>User: ERROR abort (reinforced event は非発行)
+        else
+            Workflow->>State: Step 4 (iii) status transition (verified or confirmed or refuted or evolved)
+            Workflow->>EdgeFB: reinforced for origin_edges (record_decision 成功確認後)
+            EdgeFB->>Spec5: edge_events.jsonl append
+            alt origin_edge is reject or deprecated
+                EdgeFB->>User: INFO skip + 結果出力に skipped edge_id
+            end
         end
+    else outcome partial or verified_pending
+        Workflow->>State: status transition (verified 据置 or verified_pending)
     end
-    Workflow->>State: status transition (verified or confirmed or refuted or evolved or verified)
 ```
 
 **Key Decisions**:
 - Step 1 evidence 候補 0 件は **INFO + status verified 据置** (R8.11、user に手動追加または raw ingest を促す)
-- Step 4 record_decision 失敗時は **ERROR abort + atomic rollback** (R8.7、verification_attempts append + status 遷移を取消)
+- **Step 4 内部 write 順序** = (i) frontmatter `verification_attempts` provisional append (status 据置) → (ii) `record_decision` 呼出 → (iii) record_decision 成功時のみ status 遷移 + `reinforced` event append。**reinforced event は record_decision 成功確認後にのみ append** し、Spec 5 ledger (append-only) と本 spec frontmatter の cross-file rollback 非対称を回避
+- Step 4 record_decision 失敗時は **ERROR abort + atomic rollback** (R8.7、provisional verification_attempts append のみ取消、status 据置維持で reinforced event は非発行 = cross-file partial state 永続を防止)
 - origin_edges の edge が reject / deprecated 状態は **INFO skip + skip 理由を verify 結果出力に記録** (R12.7)
 - delta 値: confirmed 時 = `supporting_evidence_reinforcement_delta` (default +0.28、Spec 5 Hygiene)、refuted 時 = 別 delta (design phase で Spec 5 と coordination、暫定方針として Spec 5 config に `refuting_evidence_reinforcement_delta` 新設要請、本 spec は呼出のみ)
 
@@ -702,8 +706,8 @@ def rollback_last_change(hyp_id: str) -> None: ...   # atomic rollback (R8.7 / R
 - Step 1: EvidenceCollector で raw/**/*.md grep + semantic similarity → N=5 候補抽出 (R8.2)
 - Step 2: user に 4 択 (`supporting / refuting / partial / none`) 評価収集 (R8.3)、`--add-evidence <path>:<span>` 受領
 - Step 3: 集約判定 (`supporting≥2 ∧ refuting=0 → confirmed` / `refuting≥2 → refuted` / 混在 → `partial` / 不足 → `verified_pending`、R8.4)
-- Step 4: `verification_attempts` append (atomic、R8.5 / R12.8 (d)) + `reinforced` event (confirmed/refuted のみ、R8.6) + `record_decision` (R8.7)
-- record_decision 失敗時の rollback (R8.7)、atomic で verification_attempts append + status 遷移を取消
+- Step 4 内部 write 順序: (i) provisional `verification_attempts` append (atomic、R8.5 / R12.8 (d)、status 据置) → (ii) `record_decision` (R8.7) → (iii) record_decision 成功時のみ status 遷移 + `reinforced` event (confirmed/refuted のみ、R8.6) を追加 append
+- record_decision 失敗時の rollback (R8.7)、atomic で provisional verification_attempts append のみ取消 (status 据置維持、reinforced event は非発行 = Spec 5 ledger との cross-file rollback 非対称を回避)
 - evidence 候補 0 件時は INFO + status 据置 (R8.11)
 
 **Dependencies**:
@@ -840,7 +844,8 @@ def write_hypothesis(text: str, frontmatter: HypothesisFrontmatter, slug: str) -
 - interactive_synthesis 等の対話 skill ログを `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` に append (R12.5)
 - append 単位 = per Turn (1 turn = user 発話 + assistant 応答、R12.4)
 - atomic per Turn append (write-to-tmp → rename、R12.8 (a))
-- 内部 buffer 化と flush 戦略の詳細 (buffer flush 間隔 / 異常終了時 partial flush) は **実装段階で確定** (R12.4 末尾、design phase 持ち越し)
+- **buffer flush 戦略 = no buffering** (per Turn ごとに即時 atomic rename、1 turn = 1 atomic write、R12.4 末尾)。crash 時は最後 turn が **0% or 100% commit** (中間 partial 残存なし = atomic rename semantic で保証)
+- **Resume semantic** = 次回起動時 `turn_no = max(existing turn_no) + 1` から append、partial flush 中間状態の検出処理は不要 (no buffering により発生しないため)
 - frontmatter は Spec 2 dialogue log schema (5 必須 field: `type: dialogue_log` / `session_id` / `started_at` / `ended_at` / `turns`) 整合
 
 **Contracts**: Service [✓]
@@ -1091,6 +1096,15 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 4. **test_rw_approve_id_8step_dialogue** — `rw approve <id>` で Spec 7 8 段階対話 + 完走時 status `promoted` (R9)
 5. **test_maintenance_surface_autonomous** — autonomous mode で 6 trigger surface + `/dismiss` / `/mute maintenance` 受付 (R10)
 
+### Concurrency Boundary
+
+本 spec は **MVP single-user single-thread 前提** を declare する (Spec 5 design「Multi-user / distributed lock = MVP 範囲外」と同方針)。本 spec が直接 write する 4 file system (Hypothesis frontmatter / Perspective 保存版 / 対話ログ / Hypothesis 候補) に対する concurrency boundary は以下:
+
+- **atomic rename (R12.8)** = 中断時 partial write 防止 (POSIX `rename(2)` semantic) のみ保証、複数 process の lost update 防止は対象外
+- **並行 `rw verify <id>` 二重起動時の挙動** = 後発 process が pre-flight check で frontmatter mtime / verification_attempts list を比較し、先発 process の commit を観測 → **fail-fast WARN + exit 1** (verification_attempts list 上書きによる lost update を防止)
+- **`.rwiki/.hygiene.lock` 取得は本 spec では行わない** (R11.6、L2 ledger 経路は Spec 5 内部で取得、Spec 6 自身が write する 4 file は MVP single-user 前提で lock 不要)
+- **Phase 2 拡張で multi-user / multi-process 対応する場合は Spec 4 G5 LockHelper scope enum に `'hypothesis'` scope 追加要請** (本 spec design 段階では要請しない、Migration Strategy 持ち越し item)
+
 ### Performance / Concurrency
 
 1. **test_concurrent_verify_atomic_update** — 並行 verify で frontmatter race condition なし (R12.8)
@@ -1138,7 +1152,6 @@ config / 成熟度 / API 結果 は cache せず、起動毎に re-resolve (R6.7
 | Item | 出典 AC | 確定 timing |
 |------|--------|------------|
 | Verify Step 1 raw 10K+ ファイル規模での incremental indexing 戦略 | R8.2 | 実装段階 (Verify workflow 実装時) |
-| 対話ログ buffer flush 戦略の詳細 (buffer flush 間隔 / 異常終了時 partial flush) | R12.4 末尾 | 実装段階 (DialogueLog 実装時) |
 | `refuting_evidence_reinforcement_delta` の値 (Spec 5 config 新設要請) | R12.7 / R8.6 | Spec 5 と coordination (本 spec implementation 前に Spec 5 へ要請) |
 | Maintenance autonomous trigger 複数同時発火時の優先順位ロジック | R10.9 | 実装段階 (MaintenanceSurface 実装時、Scenario 33 と coordination) |
 | Hypothesis ID (slug) の具体的命名規則 (`hyp-<short-hash-or-topic-slug>`) | R2.9 | 実装段階 (cmd_hypothesize 実装時) |
@@ -1151,3 +1164,4 @@ _change log_
 - 2026-05-03: A-2 phase Round 1 修正 (treatment=single、規範範囲確認、primary 検出 3 件中 2 件採用 + 1 件 skip) = P-1 (cmd_approve_hypothesis L511 + L527 で target_path 計算責務 Spec 7 所管明示) + P-2 (cmd_hypothesize Note 追記 = scope/method 引数 R2 AC 不在 + Project Description L7 整合 + Adjacent Sync 候補)、P-3 (enum default str typing 強化) は INFO で skip (impl phase 委譲、MVP first 整合)。treatment-single branch (= pristine `285e762` 起点)、3 系統対照実験第 2 系統。
 - 2026-05-03: A-2 phase Round 2 修正 (treatment=single、一貫性、primary 検出 3 件中 1 件採用 + 2 件 skip) = P-1 (cmd_promote_to_synthesis signature 3 箇所一致化 = L67-69 Allowed Dependencies + L513 Responsibilities + L527-529 Postconditions、Spec 7 design.md §cmd_promote_to_synthesis SSoT signature `(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` に整合 + Spec 7 L685 Adjacent Sync 経路反映 = adapter 責務 (argparse.Namespace construct + FinalResult.output_json['target_path'] 取出) 明示)、P-2 (4 cmd handler Pre/Post/Invariant 構造不均一) + P-3 (4 cmd handler exit code docstring 表記揺れ) は WARN で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 2/10。
 - 2026-05-03: A-2 phase Round 4 修正 (treatment=single、責務境界、primary 検出 5 件中 1 件採用 + 4 件 skip) = P-4 (cmd_approve_hypothesis signature と L513 args.target_path caller-callee inconsistency 解消 = signature L522 に `target_path: Optional[str] = None` 引数追加 + L513 文言調整 = `target_path=user_provided_target` → `target_path=target_path` + Spec 4 dispatcher 経由 user 指定 path pass-through 経路明示 + 未指定 None → Spec 7 8 段階対話内 R6.1 + Decision 7-14 4 case 自動判定 + 衝突規則で確定 = pattern_08 caller-callee consistency hit + responsibility_boundary escalate 必須条件直接 hit 解消、forward adjacent sync)、P-1 (Round 3 P-3 重複 = VerifyWorkflow path validation 3 層分散、defense-in-depth 整合) + P-2 (Round 3 P-4 重複 = MaintenanceSurface 経路選択基準不在、impl phase 委譲) + P-3 (Domain G 名責務軸混合、cosmetic) + P-5 (atomic update 単位範囲明示不足、impl phase test boundary で吸収) は WARN/INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 4/10。
+- 2026-05-03: A-2 phase Round 6 修正 (treatment=single、concurrency / timing、primary 検出 5 件中 3 件採用 + 2 件 skip) = P-1 (Concurrency Boundary 節新設 = MVP single-user single-thread 前提 declare + 並行 `rw verify` 二重起動 fail-fast 規定 + Spec 4 G5 scope 追加要請は Phase 2 拡張 Migration Strategy 持ち越し = forward Adjacent Sync 規律違反回避)、P-2 (Flow 2 Step 4 内部 write 順序入替 = provisional verification_attempts append → record_decision → 成功時のみ status 遷移 + reinforced event append = cross-file rollback 非対称回避、Spec 5 ledger append-only 整合)、P-3 (DialogueLog no buffering 確定 = R12.4 末尾「design phase で確定」要請を本 phase で satisfy + Resume semantic 明記 + Open Questions 表 1141 行削除) を採用、P-4 (VerifyWorkflow user input wait timeout suspend、Spec 7 design 比較で構造的不均一 candidate、Spec 4 G3 generator pattern wrapper で impl phase 吸収) + P-5 (Spec 5 cold/warm cache 性能 SLA 規定不在、Spec 5 R21.3-21.4 規約整合 + impl phase test 戦略) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 6/10。
