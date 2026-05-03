@@ -1069,6 +1069,17 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 
 ## Testing Strategy
 
+### TDD 規律 (CLAUDE.md global 規律継承)
+
+本 spec test 実装は CLAUDE.md global 規律「原則として TDD で進める」を継承する (Spec 7 design L1398-1407 同節と同型):
+
+1. 期待入出力に基づき failing test を先に作成する (実装コードは書かない)
+2. failing test を commit する
+3. test を実行し失敗を確認する
+4. test を pass する実装を進める
+5. 実装中は test を変更せず、コードを修正し続ける (= 全 test が pass するまで反復)
+6. インデントは常に 2 スペースを守る
+
 ### Unit Tests
 
 1. **test_perspective_scoring_weights** — `0.6c + 0.3r + 0.1n` が config 値で計算される (R5.1, R13.1)
@@ -1101,6 +1112,16 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 4. **test_rw_approve_id_8step_dialogue** — `rw approve <id>` で Spec 7 8 段階対話 + 完走時 status `promoted` (R9)
 5. **test_maintenance_surface_autonomous** — autonomous mode で 6 trigger surface + `/dismiss` / `/mute maintenance` 受付 (R10)
 
+### Cross-spec Contract Tests
+
+本 spec は **下流 spec として 5 系統 consumer 責務を負う** (memory `feedback_design_review.md` consumer 配置原則整合、Spec 3 / Spec 7 の Cross-spec test ハイブリッド方式と同型)。各 contract test は本 spec test suite 内 (`test_contract_*.py`) に配置 (= consumer 配置原則)、provider 側 spec の signature 変更時 contract test fail で signature drift detection capability を確保。本節は §Revalidation Triggers と相互参照 (Spec 5 Query API signature 変更 / Spec 7 8 段階対話 interface 変更 / Spec 2 skill schema 変更 / Spec 1 frontmatter schema 変更が contract test trigger 直結):
+
+1. **Spec 5 Query API 15 種 contract** — `get_neighbors` / `resolve_entity` / `record_decision` / `find_contradictory_decisions` 等の signature + 返り値 schema 互換 fixture (Pipeline / VerifyWorkflow / EdgeFeedback / MaintenanceSurface 利用箇所、R11.1 / R11.4)
+2. **Spec 7 `cmd_promote_to_synthesis` Generator interface contract** — `(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` signature + `FinalResult.output_json['target_path']` 取出 adapter 互換 fixture (cmd_approve_hypothesis 利用箇所、R9)
+3. **Spec 2 skill 配布 contract** — `AGENTS/skills/perspective_gen.md` / `hypothesis_gen.md` の frontmatter 5 必須 field schema + interactive: true 規約 + skill lifecycle (install / deprecate / retract) 互換 fixture (SkillInvoker 利用箇所、R3)
+4. **Spec 1 frontmatter §5.9.1 / §5.9.2 contract** — Hypothesis frontmatter §5.9.1 / Perspective frontmatter §5.9.2 field 名 + 型 + 許可値 schema 互換 fixture (HypothesisStore / Perspective 出力箇所)
+5. **Spec 4 dispatch entry contract** — CLI dispatch から本 spec 4 cmd handler への `args: argparse.Namespace` 引数受領契約 + Severity 4 stderr / exit code 0/1/2 / `--auto` ポリシー / Maintenance UX 表示 layer 互換 fixture (4 cmd handler 入口)
+
 ### Concurrency Boundary
 
 本 spec は **MVP single-user single-thread 前提** を declare する (Spec 5 design「Multi-user / distributed lock = MVP 範囲外」と同方針)。本 spec が直接 write する 4 file system (Hypothesis frontmatter / Perspective 保存版 / 対話ログ / Hypothesis 候補) に対する concurrency boundary は以下:
@@ -1114,7 +1135,7 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 
 1. **test_concurrent_verify_atomic_update** — 並行 verify で frontmatter race condition なし (R12.8)
 2. **test_concurrent_approve_atomic_update** — 並行 approve で status 遷移 race condition なし (R12.8 (d))
-3. **test_pipeline_large_traverse_response** — 10K edges depth=2 で Spec 5 API 性能 SLA (300ms) を超過しない (R11.8)
+3. **test_pipeline_large_traverse_response** — 10K edges depth=2 で Spec 5 SLA 超過時の WARN 伝播 + subprocess timeout 連動を assert (R11.8、Spec 5 SLA (300ms) 担保は Spec 5 design `test_perf_query_neighbor.py` SSoT、本 spec は consumer 側 boundary behavior に focus)
 4. **test_evidence_collector_large_raw** — raw 10K+ ファイル規模での Step 1 性能 (実装段階で incremental indexing 戦略確定後の検証、R8.2)
 
 ## Security Considerations
@@ -1179,3 +1200,4 @@ _change log_
 - 2026-05-03: A-2 phase Round 6 修正 (treatment=single、concurrency / timing、primary 検出 5 件中 3 件採用 + 2 件 skip) = P-1 (Concurrency Boundary 節新設 = MVP single-user single-thread 前提 declare + 並行 `rw verify` 二重起動 fail-fast 規定 + Spec 4 G5 scope 追加要請は Phase 2 拡張 Migration Strategy 持ち越し = forward Adjacent Sync 規律違反回避)、P-2 (Flow 2 Step 4 内部 write 順序入替 = provisional verification_attempts append → record_decision → 成功時のみ status 遷移 + reinforced event append = cross-file rollback 非対称回避、Spec 5 ledger append-only 整合)、P-3 (DialogueLog no buffering 確定 = R12.4 末尾「design phase で確定」要請を本 phase で satisfy + Resume semantic 明記 + Open Questions 表 1141 行削除) を採用、P-4 (VerifyWorkflow user input wait timeout suspend、Spec 7 design 比較で構造的不均一 candidate、Spec 4 G3 generator pattern wrapper で impl phase 吸収) + P-5 (Spec 5 cold/warm cache 性能 SLA 規定不在、Spec 5 R21.3-21.4 規約整合 + impl phase test 戦略) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 6/10。
 - 2026-05-03: A-2 phase Round 7 修正 (treatment=single、security、primary 検出 5 件中 2 件採用 + 3 件 skip) = P-1 (`cmd_approve_hypothesis` target_path validation 経路明示 = Responsibilities 1 行追加 + Args docstring 3 step validation 明示 + Error Handling User Errors 1 行追加 = fatal_patterns path_traversal hit 解消、Round 4 P-1 同型 issue を security 軸で再検出した採取軸保護観察事例、Spec 4 dispatcher = raw string pass-through のみ責務 + Spec 6 handler 内 fs boundary 完結 = 単一責務点 + forward Adjacent Sync 規律違反回避)、P-2 (Security Considerations 節 4 軸構造化 = 認証 / 認可 / 入力 validation / secret handling、新節新設ではなく既存節拡張で重複回避、認証 = OS user 境界委任 / 認可 = file system permission 委任 / 入力 validation = `--add-evidence` + target_path + frontmatter ASCII の 3 経路 / secret handling = Spec 1 foundation 委任 + at-rest 機密性 scope 外明示、Round 6 Concurrency Boundary 節新設と同型処置) を採用、P-3 (Error message log 混入経路 silent、Spec 1 log helper sanitize layer 委任) + P-4 (id collision / spoofing / enumeration 防止責務 silent、Spec 5 storage-layer 委任 + local single-user 前提で攻撃 model 不成立) + P-5 (DialogueLog at-rest 機密性 silent、local repo 前提 scope 外、defense-in-depth) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 7/10。
 - 2026-05-03: A-2 phase Round 8 修正 (treatment=single、cross-spec 整合、primary 検出 5 件中 3 件採用 + 2 件 skip) = P-1 (dialogue log path / filename 規約 = Spec 2 Decision 2-7 SSoT 整合更新 = 6 箇所書換 = `chat-<ts>.md` → `<ts>-<session-id>.md` + interactive 旧 prefix `interactive-<skill>-<ts>.md` → subdirectory 表記 `<skill>/<ts>-<session-id>.md` = Technology Stack + Directory Structure + Output Directories + DialogueLog Responsibilities 整合 = forward Adjacent Sync 規律遵守、Spec 2 改版要請 0 + Spec 5 decision_log context_ref 規約 `<ts>-<session-id>.md#L42-67` と path 整合性確保)、P-2 (cmd_approve_hypothesis L535 record_decision decision_type 名 caller-callee 整合 = 旧 `synthesis_approve` (Spec 5 R11.6 名) → `page_promote_to_synthesis` (Spec 7 design L686 / L1196 SSoT、Spec 5 R11.6 synthesis_approve 系 page promote 実装名) + 「本 spec は caller、Spec 7 が記録 site = callee 側 SSoT 整合」明示 = Spec 7 改版要請 0、後続 → 先行違反回避)、P-3 (Open Questions 表 1 行追加 = VerifyWorkflow record_decision `decision_type` 名空間整合 = Spec 5 design L1097 23 種列挙 `hypothesis_verify` vs L1111 reasoning 必須 4 種 `hypothesis_verify_confirmed/refuted` outcome 別の SSoT 解釈 = impl phase 開始前に Spec 5 と coordination 確定、本 spec 側 suffix 採択先取り回避 = 規範範囲先取り risk 抑制) を採用、P-4 (target_path 型 `Optional[str]` vs `Optional[Path]` cosmetic、Round 4 P-4 + Round 7 P-1 確定済 adapter 責務で解消) + P-5 (MaintenanceSurface 取得経路選択基準 silent、Round 4 P-2 同型 skip 採択継承 = 性能特性測定後 impl phase 判断) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 8/10。
+- 2026-05-03: A-2 phase Round 9 修正 (treatment=single、test 戦略、primary 検出 5 件中 3 件採用 + 2 件 skip) = P-1 (Cross-spec Contract Tests 節新設 = 5 系統 consumer 配置 contract test 明示 = Spec 5 Query API 15 種 / Spec 7 `cmd_promote_to_synthesis` Generator / Spec 2 skill 配布 schema / Spec 1 frontmatter §5.9.1/§5.9.2 / Spec 4 dispatch entry = memory `feedback_design_review.md` consumer 配置原則整合 + Spec 3 / Spec 7 同節と同型 + signature drift detection capability 確保 + Revalidation Triggers 相互参照 = 構造的不均一解消 + responsibility_boundary + normative_scope escalate 必須条件 hit 解消)、P-2 (TDD 規律節新設 = CLAUDE.md global 規律継承 6 step 明示 = 期待入出力先抽出 → failing test 先 commit → 失敗確認 → 実装 → 反復 → 2 スペースインデント = Spec 7 design L1398-1407 同節と同型 + impl phase test-first drift 抑制 = normative_scope escalate 必須条件 hit 解消)、P-3 (Performance test #3 SLA 測定責務分離 = test_pipeline_large_traverse_response 1 行書換 = consumer 側 boundary behavior = Spec 5 SLA 超過時 WARN 伝播 + subprocess timeout 連動 assert に focus、Spec 5 SLA (300ms) 担保は Spec 5 design `test_perf_query_neighbor.py` SSoT 整合 = test 重複削減 + Spec 5 SLA 値変更時 sync cost 解消 = responsibility_boundary escalate 必須条件 hit 解消) を採用、P-4 (parametrize specificity 不足、本 spec 内 8 Unit Tests 全件均一書き self-contained) + P-5 (Negative test / failure injection / chaos / fuzz silent、MVP local single-user CLI 前提 + Failure Modes 表で production failure 列挙済) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 9/10。
