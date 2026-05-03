@@ -103,6 +103,17 @@ dr-judgment skill invocation:
 | dual | exec | exec | skip | primary + adversarial 検出 user 提示 |
 | dual+judgment | exec | exec | exec | primary + adversarial + judgment 結果 user 提示 (V4 完全) |
 
+#### A-2.1 3 系統対照実験 design.md state policy (data-acquisition-plan v1.7 §3.6 B4 + §4 A-2.1 branch 戦略 整合)
+
+A-2.1 Spec 6 design phase 30 review session (= 3 系統 × 10 round) では、paper rigor 確保 + confounding 排除のため、全 treatment が **pristine state を起点**として独立 branch で完走する規律を必ず適用:
+
+- 各 treatment は pristine state commit (= Spec 6 design.md 起草直後 state、A-2 phase sub-step 2 終端) を起点として new branch 派生
+- 累積修正 state (= 他 treatment 完走後の design.md) を起点として複数 treatment を回すことを禁止 (= prior treatment による事前修正と current treatment 単独 effect の交絡 = V4 各 layer の機能寄与 quantify 不能)
+- 各 treatment branch は独立 commit history を保持、main 進行に影響なし
+- Level 6 events は各 treatment 別 file (例: `rework_log_treatment_single.jsonl`) または別 sub-group key で記録 = main の rework_log.jsonl と confound 回避
+- 30 review session 完走後に 3 branch 統合分析 = comparison-report v0.2 final 集約 (= ablation figure data 成立)
+- Spec 6 design.md 最終 state は main の treatment=dual+judgment 結果を採用、他 2 treatment branch は paper data source archive として delete 禁止
+
 ### bias 抑制 quota event-triggered 発動
 
 - formal challenge / 検出漏れ / Phase 1 同型探索 / 厳しく検証 5 種 (Layer 2 `bias_suppression_quota_design_specific` 4 件) を適切な event で発動
