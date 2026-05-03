@@ -733,8 +733,14 @@ def run(hypothesis_id: str, add_evidence: list[str] = None, force_status: str = 
 - 各候補に `file` / `quote` / `span` (行番号 range) 付与
 - subprocess timeout 必須 (R8.10)
 
+**Performance Strategy (R8.2、MVP 確定方針)**:
+- 検索方式: ripgrep + semantic similarity (LLM 経由) の素朴実装、persistent incremental indexing は **不要**
+- 応答時間目標: 中規模 (1K ファイル) **5 秒以下**、大規模 (10K+ ファイル) **30 秒以下**
+- 目標未達時: WARN + degraded mode 通知 (= user に「検索が遅延しています」表示) + 結果は返却継続
+- 大規模化対応: MVP では未対応、運用で性能課題顕在化時に次 spec で incremental indexing (例: SQLite FTS5) 採用検討
+- 設計理由: MVP 規律 (= over-engineering 回避)、index 実装 cost (DB schema / sync / migration) を回避し、実運用で困った段階で対応
+
 **Open Questions / Risks**:
-- raw 10K+ ファイル規模での性能 (grep + semantic similarity の応答時間目標、incremental indexing 戦略の要否) は **実装段階で確定** (R8.2、design phase 持ち越し item)
 - 候補抽出順位の安定性 (semantic similarity の同一 input → 同一 output 保証) を実装段階で検証
 
 ### Domain E: Maintenance Surface
@@ -836,8 +842,14 @@ def write_hypothesis(text: str, frontmatter: HypothesisFrontmatter, slug: str) -
 - interactive_synthesis 等の対話 skill ログを `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` に append (R12.5)
 - append 単位 = per Turn (1 turn = user 発話 + assistant 応答、R12.4)
 - atomic per Turn append (write-to-tmp → rename、R12.8 (a))
-- 内部 buffer 化と flush 戦略の詳細 (buffer flush 間隔 / 異常終了時 partial flush) は **実装段階で確定** (R12.4 末尾、design phase 持ち越し)
 - frontmatter は Spec 2 dialogue log schema (5 必須 field: `type: dialogue_log` / `session_id` / `started_at` / `ended_at` / `turns`) 整合
+
+**Buffer Flush Strategy (R12.4 末尾、MVP 確定方針)**:
+- buffer 化: **なし** (= per Turn 即時 append)。各 turn で `open(path, 'a') → write(turn 内容) → close()` を atomic に実施
+- flush 間隔: per Turn 毎 (= buffer なし即時書込で flush 概念不要)
+- 異常終了時 partial flush 対応: **なし** (= per Turn 即時書込のため、SIGINT / kill / crash で消失するのは最大 1 turn 分のみ、許容範囲)
+- 大規模 / 高頻度対応: MVP では未対応、運用で I/O 遅延顕在化時 (例: 1 turn 100 ms 超) に次 spec で buffer 化検討
+- 設計理由: MVP 規律 (= simple first)、buffer 化は signal handler / partial flush logic / lock 等の complexity 増、実運用で困った段階で対応
 
 **Contracts**: Service [✓]
 
@@ -1096,7 +1108,7 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 
 ## Security Considerations
 
-本 spec は Vault 内 file の read/write のみで、外部入力は user 提供 topic (string) と `--add-evidence <path>:<span>` の path のみ。Path traversal 攻撃を防ぐため `--add-evidence` の path validation を Spec 4 経由で実施 (本 spec は handler 層で sanity check のみ、Vault root 配下に限定)。
+本 spec は Vault 内 file の read/write のみで、外部入力は user 提供 topic (string) と `--add-evidence <path>:<span>` の path のみ。Path traversal 攻撃を防ぐため `--add-evidence` の path validation を Spec 4 経由で実施 (本 spec は handler 層で sanity check のみ、Vault root 配下に限定)。本 spec handler 層 sanity check の根拠 = R8.3 (path 受領) と R12.8 (Hypothesis frontmatter atomic write) を本 spec が直接担う = Spec 4 委譲後の defense in depth (= 二重防御) として Vault 外 path 漏れに対する最終防御層を構成 (= Foundation Security 規約は path traversal 個別対応 silent のため、本 spec で二重化採用)。
 
 LLM CLI subprocess は roadmap.md「v1 から継承する技術決定」で timeout 必須化済 (本 spec は遵守側、R3.7 / R8.10)。本 spec は LLM 直接呼出を行わず、Spec 4 dispatch 経由のため subprocess 起動コードは持たない。
 
@@ -1133,8 +1145,6 @@ config / 成熟度 / API 結果 は cache せず、起動毎に re-resolve (R6.7
 
 | Item | 出典 AC | 確定 timing |
 |------|--------|------------|
-| Verify Step 1 raw 10K+ ファイル規模での incremental indexing 戦略 | R8.2 | 実装段階 (Verify workflow 実装時) |
-| 対話ログ buffer flush 戦略の詳細 (buffer flush 間隔 / 異常終了時 partial flush) | R12.4 末尾 | 実装段階 (DialogueLog 実装時) |
 | `refuting_evidence_reinforcement_delta` の値 (Spec 5 config 新設要請) | R12.7 / R8.6 | Spec 5 と coordination (本 spec implementation 前に Spec 5 へ要請) |
 | Maintenance autonomous trigger 複数同時発火時の優先順位ロジック | R10.9 | 実装段階 (MaintenanceSurface 実装時、Scenario 33 と coordination) |
 | Hypothesis ID (slug) の具体的命名規則 (`hyp-<short-hash-or-topic-slug>`) | R2.9 | 実装段階 (cmd_hypothesize 実装時) |
@@ -1144,3 +1154,4 @@ config / 成熟度 / API 結果 は cache せず、起動毎に re-resolve (R6.7
 _change log_
 
 - 2026-05-02: 初版生成 (v0.7.13 SSoT を基に 132 AC を 8 domain components に mapping、5 段階 pipeline + Verify workflow + Hypothesis state machine の 3 主要 flow を Mermaid 化、研究ログを research.md に分離)
+- 2026-05-04: A-2 phase Round 1 修正 (treatment=dual、規範範囲確認、primary 検出 1 件 + adversarial 独立検出 1 件 = 全 2 件採用) = P-1 (Path traversal sanity check 根拠注記 design 内自己完結化 = R8.3 + R12.8 から defense in depth 導出明示、req 改版回避で 3 系統対照実験 input 同一性確保) + A-1 (R8.2/R12.4 design 後退 = Performance Strategy + Buffer Flush Strategy 各 section 追加 + Open Questions 表から該当 2 entry 削除 = 第 1 系統 main Round 1 commit `6e26aa8` と同型再現 = adversarial 独立検出能力 treatment 横断再現性 evidence、MVP first 確定方針継続)。treatment-dual branch (= pristine `285e762` 起点)、3 系統対照実験第 3 系統。
