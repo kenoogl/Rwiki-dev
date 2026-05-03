@@ -66,7 +66,7 @@
 
 - **Upstream consumed**:
   - Spec 5: Query API 15 種 (`get_neighbors` / `get_shortest_path` / `get_orphans` / `get_hubs` / `find_missing_bridges` / `get_communities` / `get_global_summary` / `get_hierarchical_summary` / `get_edge_history` / `normalize_frontmatter` / `resolve_entity` / `record_decision` / `get_decisions_for` / `search_decisions` / `find_contradictory_decisions`)、`edge_events.jsonl` への `reinforced` event append API、L2 診断 4 trigger
-  - Spec 7: `cmd_promote_to_synthesis(target_id, target_path, ...)` 8 段階対話 handler、L3 診断 5 項目のうち audit 未実行 (b) と未 approve synthesis (a)
+  - Spec 7: `cmd_promote_to_synthesis(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` 8 段階対話 handler (Spec 7 design.md §cmd_promote_to_synthesis SSoT、本 spec は `argparse.Namespace` construct + `FinalResult.output_json['target_path']` 取出 adapter 責務)、L3 診断 5 項目のうち audit 未実行 (b) と未 approve synthesis (a)
   - Spec 4: CLI dispatch entry point から本 spec の cmd_* handler を呼出、subprocess timeout 受領、`--auto` ポリシー、対話 confirm UI、Maintenance UX 表示 layer、`/dismiss` `/mute maintenance` 入力受付
   - Spec 2: `AGENTS/skills/perspective_gen.md` / `AGENTS/skills/hypothesis_gen.md` 配布、skill lifecycle (install / deprecate / retract) 参加、interactive: true 規約、dialogue log frontmatter 5 必須 field schema
   - Spec 1: Hypothesis frontmatter §5.9.1 / Perspective frontmatter §5.9.2 の field 宣言、`type:` field vocabulary、`tags.yml`
@@ -510,7 +510,7 @@ def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status:
 
 **Responsibilities**:
 - hypothesis status の `confirmed` 事前 check (R9.1)、それ以外は ERROR + exit 2 (R9.2)
-- Spec 7 `cmd_promote_to_synthesis(hypothesis_id) -> target_path` 呼出 (R9.3) — `target_path` 計算責務は **Spec 7 側所管** (= Spec 7 R6.1 で `promote-to-synthesis` を 13 種 handler 1 種として列挙、Spec 7 内 8 段階対話で path 確定)、Spec 6 は hypothesis_id を渡し target_path を return value で受領
+- Spec 7 `cmd_promote_to_synthesis(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` 呼出 (R9.3、Spec 7 design.md §cmd_promote_to_synthesis SSoT 整合) — Spec 6 は `argparse.Namespace(candidate_path=Path(f'review/hypothesis_candidates/{hyp_id}.md'), target_path=user_provided_target, merge_strategy=None, target_field=None, replace=False)` を construct し、Generator 完走後の `FinalResult.output_json['target_path']` から target_path を取出す **adapter 責務** を負う (Spec 7 design.md L681-685 Coordination 呼出規約整合、Adjacent Sync 経路反映)。target_path 計算責務は **Spec 7 側所管** (= Spec 7 R6.1 で `promote-to-synthesis` を 13 種 handler 1 種として列挙、Spec 7 内 8 段階対話で path 確定)
 - 完走時 status `confirmed → promoted` 遷移 + `successor_wiki:` 記録 (R9.4)
 - record_decision 失敗時の atomic rollback (R9.5)
 - user 中断時 status 据置 (R9.7)
@@ -524,9 +524,9 @@ def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None) -> int:
     Returns: exit_code 0 | 1 | 2
     Preconditions: hypothesis_id の status == 'confirmed'
     Postconditions on success:
-        - Spec 7 cmd_promote_to_synthesis 完走
+        - Spec 7 cmd_promote_to_synthesis Generator 完走 (FinalResult 受領)
         - hypothesis frontmatter status = 'promoted'
-        - hypothesis frontmatter successor_wiki = Spec 7 cmd_promote_to_synthesis return value (= `wiki/synthesis/<slug>.md` format、Spec 7 所管)
+        - hypothesis frontmatter successor_wiki = FinalResult.output_json['target_path'] (= `wiki/synthesis/<slug>.md` format、Spec 7 所管 + Spec 6 adapter で取出)
         - record_decision (decision_type=synthesis_approve, reasoning required)
     """
 ```
@@ -1147,3 +1147,4 @@ _change log_
 
 - 2026-05-02: 初版生成 (v0.7.13 SSoT を基に 132 AC を 8 domain components に mapping、5 段階 pipeline + Verify workflow + Hypothesis state machine の 3 主要 flow を Mermaid 化、研究ログを research.md に分離)
 - 2026-05-03: A-2 phase Round 1 修正 (treatment=single、規範範囲確認、primary 検出 3 件中 2 件採用 + 1 件 skip) = P-1 (cmd_approve_hypothesis L511 + L527 で target_path 計算責務 Spec 7 所管明示) + P-2 (cmd_hypothesize Note 追記 = scope/method 引数 R2 AC 不在 + Project Description L7 整合 + Adjacent Sync 候補)、P-3 (enum default str typing 強化) は INFO で skip (impl phase 委譲、MVP first 整合)。treatment-single branch (= pristine `285e762` 起点)、3 系統対照実験第 2 系統。
+- 2026-05-03: A-2 phase Round 2 修正 (treatment=single、一貫性、primary 検出 3 件中 1 件採用 + 2 件 skip) = P-1 (cmd_promote_to_synthesis signature 3 箇所一致化 = L67-69 Allowed Dependencies + L513 Responsibilities + L527-529 Postconditions、Spec 7 design.md §cmd_promote_to_synthesis SSoT signature `(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` に整合 + Spec 7 L685 Adjacent Sync 経路反映 = adapter 責務 (argparse.Namespace construct + FinalResult.output_json['target_path'] 取出) 明示)、P-2 (4 cmd handler Pre/Post/Invariant 構造不均一) + P-3 (4 cmd handler exit code docstring 表記揺れ) は WARN で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 2/10。
