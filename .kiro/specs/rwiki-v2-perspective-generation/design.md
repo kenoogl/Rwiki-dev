@@ -515,6 +515,7 @@ def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status:
 **Responsibilities**:
 - hypothesis status の `confirmed` 事前 check (R9.1)、それ以外は ERROR + exit 2 (R9.2)
 - Spec 7 `cmd_promote_to_synthesis(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` 呼出 (R9.3、Spec 7 design.md §cmd_promote_to_synthesis SSoT 整合) — Spec 6 は `argparse.Namespace(candidate_path=Path(f'review/hypothesis_candidates/{hyp_id}.md'), target_path=target_path, merge_strategy=None, target_field=None, replace=False)` を construct し (= signature 引数 `target_path: Optional[str] = None` を Namespace に直接転載、Spec 4 dispatcher 経由 user 指定時 path 受領可能 + 未指定 None 時は Spec 7 8 段階対話内 R6.1 + Decision 7-14 4 case 自動判定 + 衝突規則で path 確定)、Generator 完走後の `FinalResult.output_json['target_path']` から target_path を取出す **adapter 責務** を負う (Spec 7 design.md §cmd_promote_to_synthesis SSoT 呼出規約整合、Adjacent Sync 経路反映)。target_path 最終確定責務は **Spec 7 側所管** (= Spec 7 R6.1 で `promote-to-synthesis` を 13 種 handler 1 種として列挙、Spec 7 内 8 段階対話で path 確定、Spec 6 は user 指定 path の pass-through adapter のみ)
+- target_path validation = **本 spec handler 層** で sanity check 実施 (Spec 4 dispatcher は raw string pass-through のみ、fs boundary 判定は本 handler 内で完結 = 単一責務点): (1) `target_path is None` 時は validation skip (Spec 7 8 段階対話で確定)、(2) 非 None 時は `Path(target_path).resolve()` 後 Vault root (`repo_root.resolve()`) 配下 containment check、(3) 違反時は `ValidationError(path_traversal)` raise + exit 2 (§Security Considerations / Error Handling 整合、`--add-evidence` path validation と同方針)
 - 完走時 status `confirmed → promoted` 遷移 + `successor_wiki:` 記録 (R9.4)
 - record_decision 失敗時の atomic rollback (R9.5)
 - user 中断時 status 据置 (R9.7)
@@ -534,6 +535,9 @@ def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None, target_path: 
         - record_decision (decision_type=synthesis_approve, reasoning required)
     Args:
         target_path: user 指定時の昇格先 path (Spec 4 dispatcher 経由)、未指定 None 時は Spec 7 8 段階対話内で 4 case 自動判定 + 衝突規則で確定
+            validation: 非 None 時は (1) `Path(target_path).resolve()`、(2) Vault root (`repo_root.resolve()`) 配下 containment check、(3) 違反時 `ValidationError(path_traversal)` raise + exit 2 (§Security Considerations 整合)
+    Raises:
+        ValidationError(path_traversal): target_path が Vault root 配下を逸脱する場合 (`../` / absolute path 含む)
     """
 ```
 
@@ -1028,6 +1032,7 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 - topic 空文字 → Spec 4 引数 parse 段階で reject (本 spec は信頼)
 - `rw approve <hypothesis-id>` で status != confirmed → ERROR + exit 2 (R9.2)
 - `--add-evidence <path>:<span>` の path 不存在 → ERROR (Step 2 で validate)
+- `rw approve --target <path>` の target_path が Vault root 配下を逸脱 → `ValidationError(path_traversal)` + exit 2 (§Security Considerations 入力 validation 整合)
 
 **System Errors** (典型例):
 - Spec 5 record_decision API 失敗 → ERROR abort + atomic rollback (R8.7 / R9.5)
@@ -1114,11 +1119,17 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 
 ## Security Considerations
 
-本 spec は Vault 内 file の read/write のみで、外部入力は user 提供 topic (string) と `--add-evidence <path>:<span>` の path のみ。Path traversal 攻撃を防ぐため `--add-evidence` の path validation を Spec 4 経由で実施 (本 spec は handler 層で sanity check のみ、Vault root 配下に限定)。
+本 spec は **MVP local single-user CLI tool 前提** (network expose / multi-tenant 不在)、security boundary は以下 4 軸で declare する:
 
-LLM CLI subprocess は roadmap.md「v1 から継承する技術決定」で timeout 必須化済 (本 spec は遵守側、R3.7 / R8.10)。本 spec は LLM 直接呼出を行わず、Spec 4 dispatch 経由のため subprocess 起動コードは持たない。
+- **認証 (Authentication)** = OS user 境界に委任。本 spec は独自認証層を持たず、CLI 起動 OS user の identity を信頼 (= local single-user workstation 前提、network expose なし)。
+- **認可 (Authorization)** = file system permission に委任。Vault repo write 権限保持者 = approve / verify 操作の実行者と等価 (= 別途 RBAC / role 層を持たない)。Phase 2 で multi-user 拡張時は §Migration Strategy 持ち越し item として再評価。
+- **入力 validation** = 以下 3 経路で実施:
+  - `--add-evidence <path>:<span>` の path validation: Spec 4 経由 + 本 spec handler 層で sanity check (Vault root 配下 containment、Step 2 で path 存在 validate)
+  - `rw approve --target <path>` の target_path validation: 本 spec `cmd_approve_hypothesis` 内で `Path.resolve()` + Vault root containment check、違反時 `ValidationError(path_traversal)` raise + exit 2 (§Components/Domain A § CmdApproveHypothesisHandler Responsibilities 整合、Spec 4 dispatcher は raw string pass-through のみ = 単一責務点)
+  - frontmatter content: ASCII / 英数記号で記述 (R12.9、YAML parse 互換性 + control char injection 防止)、本文は対話文脈言語に追従
+- **secret handling** = Spec 1 foundation log infrastructure に委任。本 spec は API key / credential を直接扱わず、LLM CLI subprocess は roadmap.md「v1 から継承する技術決定」で timeout 必須化済 (R3.7 / R8.10、本 spec は遵守側、Spec 4 dispatch 経由のため subprocess 起動コードは持たない)。Error message / log entry への raw user input 埋め込みは Spec 1 log helper の sanitize layer で吸収 (control char escape + length truncate)。
 
-frontmatter は ASCII / 英数記号で記述 (R12.9、YAML parse 互換性のため)、本文は対話文脈言語に追従。
+DialogueLog / hypothesis content / observation content の at-rest 機密性は **本 spec scope 外** (= local repo 前提、user 責任で secret 混入回避、`.gitignore` / pre-commit secret scan は外部 tool 委任)。Phase 2 で network expose / shared deployment する場合は §Migration Strategy 持ち越し item として再評価。
 
 ## Performance & Scalability
 
@@ -1165,3 +1176,4 @@ _change log_
 - 2026-05-03: A-2 phase Round 2 修正 (treatment=single、一貫性、primary 検出 3 件中 1 件採用 + 2 件 skip) = P-1 (cmd_promote_to_synthesis signature 3 箇所一致化 = L67-69 Allowed Dependencies + L513 Responsibilities + L527-529 Postconditions、Spec 7 design.md §cmd_promote_to_synthesis SSoT signature `(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` に整合 + Spec 7 L685 Adjacent Sync 経路反映 = adapter 責務 (argparse.Namespace construct + FinalResult.output_json['target_path'] 取出) 明示)、P-2 (4 cmd handler Pre/Post/Invariant 構造不均一) + P-3 (4 cmd handler exit code docstring 表記揺れ) は WARN で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 2/10。
 - 2026-05-03: A-2 phase Round 4 修正 (treatment=single、責務境界、primary 検出 5 件中 1 件採用 + 4 件 skip) = P-4 (cmd_approve_hypothesis signature と L513 args.target_path caller-callee inconsistency 解消 = signature L522 に `target_path: Optional[str] = None` 引数追加 + L513 文言調整 = `target_path=user_provided_target` → `target_path=target_path` + Spec 4 dispatcher 経由 user 指定 path pass-through 経路明示 + 未指定 None → Spec 7 8 段階対話内 R6.1 + Decision 7-14 4 case 自動判定 + 衝突規則で確定 = pattern_08 caller-callee consistency hit + responsibility_boundary escalate 必須条件直接 hit 解消、forward adjacent sync)、P-1 (Round 3 P-3 重複 = VerifyWorkflow path validation 3 層分散、defense-in-depth 整合) + P-2 (Round 3 P-4 重複 = MaintenanceSurface 経路選択基準不在、impl phase 委譲) + P-3 (Domain G 名責務軸混合、cosmetic) + P-5 (atomic update 単位範囲明示不足、impl phase test boundary で吸収) は WARN/INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 4/10。
 - 2026-05-03: A-2 phase Round 6 修正 (treatment=single、concurrency / timing、primary 検出 5 件中 3 件採用 + 2 件 skip) = P-1 (Concurrency Boundary 節新設 = MVP single-user single-thread 前提 declare + 並行 `rw verify` 二重起動 fail-fast 規定 + Spec 4 G5 scope 追加要請は Phase 2 拡張 Migration Strategy 持ち越し = forward Adjacent Sync 規律違反回避)、P-2 (Flow 2 Step 4 内部 write 順序入替 = provisional verification_attempts append → record_decision → 成功時のみ status 遷移 + reinforced event append = cross-file rollback 非対称回避、Spec 5 ledger append-only 整合)、P-3 (DialogueLog no buffering 確定 = R12.4 末尾「design phase で確定」要請を本 phase で satisfy + Resume semantic 明記 + Open Questions 表 1141 行削除) を採用、P-4 (VerifyWorkflow user input wait timeout suspend、Spec 7 design 比較で構造的不均一 candidate、Spec 4 G3 generator pattern wrapper で impl phase 吸収) + P-5 (Spec 5 cold/warm cache 性能 SLA 規定不在、Spec 5 R21.3-21.4 規約整合 + impl phase test 戦略) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 6/10。
+- 2026-05-03: A-2 phase Round 7 修正 (treatment=single、security、primary 検出 5 件中 2 件採用 + 3 件 skip) = P-1 (`cmd_approve_hypothesis` target_path validation 経路明示 = Responsibilities 1 行追加 + Args docstring 3 step validation 明示 + Error Handling User Errors 1 行追加 = fatal_patterns path_traversal hit 解消、Round 4 P-1 同型 issue を security 軸で再検出した採取軸保護観察事例、Spec 4 dispatcher = raw string pass-through のみ責務 + Spec 6 handler 内 fs boundary 完結 = 単一責務点 + forward Adjacent Sync 規律違反回避)、P-2 (Security Considerations 節 4 軸構造化 = 認証 / 認可 / 入力 validation / secret handling、新節新設ではなく既存節拡張で重複回避、認証 = OS user 境界委任 / 認可 = file system permission 委任 / 入力 validation = `--add-evidence` + target_path + frontmatter ASCII の 3 経路 / secret handling = Spec 1 foundation 委任 + at-rest 機密性 scope 外明示、Round 6 Concurrency Boundary 節新設と同型処置) を採用、P-3 (Error message log 混入経路 silent、Spec 1 log helper sanitize layer 委任) + P-4 (id collision / spoofing / enumeration 防止責務 silent、Spec 5 storage-layer 委任 + local single-user 前提で攻撃 model 不成立) + P-5 (DialogueLog at-rest 機密性 silent、local repo 前提 scope 外、defense-in-depth) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 7/10。
