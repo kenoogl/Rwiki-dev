@@ -455,6 +455,18 @@ A-2 完走後の最終 comparison-report.md v0.2 で:
 
 8 月末 failure (= figure data 完了未達) は dogfeeding/design.md Decision 5 で Phase B fork hold 判定の補助根拠化。**v0.2 注記**: Phase A 終端 redefine (= A-3 完走 = 論文 draft 着手 timing) により論文 draft timeline は **7-8 月 → 8-9 月 (preliminary)** に後ろ倒し (= A-3 batch 1-2 calendar 月分後ろ倒し、最終 timeline は A-3 完走後再評価)。
 
+### 7.4.bis A-2.1 残 1/3 efficiency 戦略 (40th 末確定、treatment=dual session 効率化)
+
+40th 末議論で treatment=dual data 採取の効率化案 3 件を bias 装置 intent + paper rigor 観点で評価。**案 1 (per-session 多 round dispatch) 採用 + 案 2 (orchestrator script 自動化) Phase B-1.x roadmap + 案 3 (隣接 spec 絞り込み) 撤回** 確定:
+
+- **案 1 採用**: fixed cost (= 状態確認 / memory 読込 / TODO update / push、約 25-30 分/session) を 1 session 内 N round (= 2-3 round) に償却。per-round 12-16% 短縮 + total session 数 50% 削減 (= 10 session → 4-5 session)。各 round で Step D user 判断機会維持で memory `feedback_no_round_batching.md` 違反ではない (= 40th 末例外条件追加)。bias 装置 intent + paper rigor 完全保持。
+- **案 2 = Phase B-1.x roadmap (= memory `feedback_design_review_v3_generalization_design.md` §8 整合)**: primary + adversarial dispatch を Anthropic SDK 経由 `orchestrator.py` で自動化、Step A-D pipeline 自動化、Step D user 判断は維持。Phase A 内は Claude Code session 内 `run_in_background: true` で限定 variant のみ実装可能 (= 5-10 分/round 節約)、本質的 SDK 経由化は Phase B-1.x で実装予定。Phase B-2 multi-vendor の prerequisite として位置付け (= API key 管理 + `.env` + git-secrets 環境整備)。
+- **案 3 撤回**: 隣接 spec 読込絞り込みは静的 map 不可能 (= 採取軸保護 pattern 動的発生 + 検出 finding 内容依存) + 動的判断不可能 (= subagent 自己判断 bias 累積 + 採取軸保護不全 + 再現性違反 + V4 protocol primary vs adversarial input 一致性違反)、双方 dominated で撤回。
+
+**41st 以降適用**: treatment=dual session = 1 session 2-3 round 完走目標、各 round で Step D user 明示判断維持、4-5 session で treatment=dual Round 1-10 完走想定。
+
+---
+
 ### 7.4 A-3 triangulation evidence batch (v0.2 追加 / v0.3 拡張 = §3.7.6 Code-derived spec batch + §3.7.1 re-position + §3.7.7 paired comparison future work、論文批判 1+9 mitigation 戦略)
 
 A-2 完走後の独立 batch (= scenario B、user 明示「分離した方が集中できる」per 16th 議論)。論文 reviewer 想定批判 1+2+3+5+8+9 同時 mitigation evidence (= 批判 9 = 言語 generalization、v0.3 新規)。Phase A 終端 redefine (= A-3 + §3.7.6 完走 = 論文 draft 着手 timing、v0.3 update)。data-acquisition-plan v1.5 §3.7 + memory `project_a3_plan_triangulation_defense.md` 整合。
