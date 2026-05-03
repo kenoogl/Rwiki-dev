@@ -308,7 +308,8 @@ sequenceDiagram
 **Key Decisions**:
 - Step 1 `resolve_entity` 失敗時は **WARN + exit 1** で停止 (Step 2 以降に進まない、R4.1)
 - Step 2 結果空集合は **WARN + 継続不可** (R4.8)、ledger 極貧時は R6.2 と併発 (R6.6)
-- Step 5 reinforcement は Perspective `--save` 時のみ + Hypothesis 出力時 (R12.6)、Hypothesis verify confirmed/refuted 時は別 Flow (Flow 2 Step 4)
+- Step 5 reinforcement は Perspective `--save` 時のみ + Hypothesis 出力時 (R12.6 = Direct/Support 種別 `reinforced` event 送出)、Hypothesis verify confirmed/refuted 時は別 Flow (Flow 2 Step 4)
+- Perspective stdout (`--save` なし) 時も Retrieval 種別 usage_signal は送出 (R4.5(c) 「使われた edge 全て」条件と整合 = R12.6 reinforced event 送出条件 (Direct/Support) とは別軸の Retrieval 軸)
 - usage_signal 種別は Direct / Support / Retrieval / Co-activation の 4 種から選択 (R4.6)、`reinforced` event の context attribute として記録 (R12.6 / R12.7)
 
 ### Flow 2: Verify Workflow 4-step (Requirement 8)
@@ -471,7 +472,8 @@ def cmd_hypothesize(
     method: str = 'standard',
 ) -> int:
     """
-    Returns: exit_code 0 | 1
+    Returns:
+        exit_code: 0 (success) | 1 (runtime error) | 2 (FAIL detection, 本 cmd では未使用)
     Side effects:
         - review/hypothesis_candidates/<slug>-<ts>.md (atomic write)
         - traversed_edges に reinforced event append (R12.6)
@@ -495,7 +497,8 @@ def cmd_hypothesize(
 ```python
 def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status: str = None, reason: str = None) -> int:
     """
-    Returns: exit_code 0 | 1 | 2
+    Returns:
+        exit_code: 0 (success) | 1 (runtime error) | 2 (FAIL detection, R8.7 record_decision 失敗時)
     """
 ```
 
@@ -519,7 +522,8 @@ def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status:
 ```python
 def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None) -> int:
     """
-    Returns: exit_code 0 | 1 | 2
+    Returns:
+        exit_code: 0 (success) | 1 (runtime error) | 2 (FAIL detection, R9.2 status != confirmed | R9.5 record_decision 失敗時)
     Preconditions: hypothesis_id の status == 'confirmed'
     Postconditions on success:
         - Spec 7 cmd_promote_to_synthesis 完走
@@ -844,12 +848,12 @@ def write_hypothesis(text: str, frontmatter: HypothesisFrontmatter, slug: str) -
 - atomic per Turn append (write-to-tmp → rename、R12.8 (a))
 - frontmatter は Spec 2 dialogue log schema (5 必須 field: `type: dialogue_log` / `session_id` / `started_at` / `ended_at` / `turns`) 整合
 
-**Buffer Flush Strategy (R12.4 末尾、MVP 確定方針)**:
-- buffer 化: **なし** (= per Turn 即時 append)。各 turn で `open(path, 'a') → write(turn 内容) → close()` を atomic に実施
-- flush 間隔: per Turn 毎 (= buffer なし即時書込で flush 概念不要)
-- 異常終了時 partial flush 対応: **なし** (= per Turn 即時書込のため、SIGINT / kill / crash で消失するのは最大 1 turn 分のみ、許容範囲)
-- 大規模 / 高頻度対応: MVP では未対応、運用で I/O 遅延顕在化時 (例: 1 turn 100 ms 超) に次 spec で buffer 化検討
-- 設計理由: MVP 規律 (= simple first)、buffer 化は signal handler / partial flush logic / lock 等の complexity 増、実運用で困った段階で対応
+**Atomic Append Strategy (R12.4 末尾 + R12.8 (a) 整合、MVP 確定方針、Round 2 一貫性 review 反映)**:
+- 書込方式: **write-to-tmp → rename** (= R12.8 全 4 対象 (a) 対話ログ + (b) Perspective 保存 + (c) Hypothesis 候補 + (d) Hypothesis frontmatter 統一方式に整合)。各 turn で (1) 既存 log file 全内容 read → (2) 新 turn 内容を末尾に追加 → (3) tempfile に write + os.fsync → (4) os.rename で atomic 置換
+- per-Turn cost: O(N) (N = 既存 turn 数) = 1 turn 1KB × 100 turn = 100KB read+write、SSD で 10ms order、長 session (1000 turn × 1KB = 1MB) でも 100ms order = MVP 想定許容範囲
+- 異常終了時 partial write 防止: **完全保証** (= POSIX rename atomicity)、SIGINT / kill / crash で消失するのは進行中 turn 1 件のみ、許容範囲
+- 大規模 / 高頻度対応: MVP では rename 統一方式、運用で I/O 遅延顕在化時 (= 1 turn 100 ms 超 or session log 10MB 超) に次 spec で append-only mode (POSIX O_APPEND ≤ PIPE_BUF) との分岐検討
+- 設計理由: R12.8 全 file 書込統一規律 (= 4 対象全部 write-to-tmp → rename) と完全整合、partial write defense 完全。Round 1 で初期導入した POSIX O_APPEND 方式 (≤ PIPE_BUF 4KB 制約) を Round 2 一貫性 review で R12.8 違反として再評価し、統一方式に転換 = MVP 規律「simple first」は「全 file write 同一方式」が真の simple
 
 **Contracts**: Service [✓]
 
@@ -1054,6 +1058,7 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 | Verify Step 1 候補 0 件 | INFO + status verified 据置 | R8.11 |
 | Verify record_decision 失敗 | ERROR abort + atomic rollback (verification_attempts append + status 遷移取消) | R8.7 |
 | Approve record_decision 失敗 | ERROR abort + atomic rollback (status 遷移 + successor_wiki 取消) | R9.5 |
+| Perspective `--save` / Hypothesize 出力後 reinforced event append 失敗 | WARN + 出力ファイル保持 + 失敗 edge_id を traversed_edges に記録 (Spec 5 Hygiene eventual consistency 整合、abort + rollback しない) | R12.6 / R1.8 |
 | origin_edges に reject/deprecated edge | INFO skip + 結果出力に記録 | R12.7 |
 | Spec 7 8 段階対話 user 中断 | status `confirmed` 据置、successor_wiki 不記録 | R9.7 |
 | Verify Step 1 raw 10K+ ファイル grep 性能 | **実装段階で incremental indexing 戦略確定** (design 持ち越し) | R8.2 |
@@ -1155,3 +1160,4 @@ _change log_
 
 - 2026-05-02: 初版生成 (v0.7.13 SSoT を基に 132 AC を 8 domain components に mapping、5 段階 pipeline + Verify workflow + Hypothesis state machine の 3 主要 flow を Mermaid 化、研究ログを research.md に分離)
 - 2026-05-04: A-2 phase Round 1 修正 (treatment=dual、規範範囲確認、primary 検出 1 件 + adversarial 独立検出 1 件 = 全 2 件採用) = P-1 (Path traversal sanity check 根拠注記 design 内自己完結化 = R8.3 + R12.8 から defense in depth 導出明示、req 改版回避で 3 系統対照実験 input 同一性確保) + A-1 (R8.2/R12.4 design 後退 = Performance Strategy + Buffer Flush Strategy 各 section 追加 + Open Questions 表から該当 2 entry 削除 = 第 1 系統 main Round 1 commit `6e26aa8` と同型再現 = adversarial 独立検出能力 treatment 横断再現性 evidence、MVP first 確定方針継続)。treatment-dual branch (= pristine `285e762` 起点)、3 系統対照実験第 3 系統。
+- 2026-05-04: A-2 phase Round 2 修正 (treatment=dual、一貫性、primary 検出 3 件 + adversarial 独立検出 1 件 = 全 4 件採用) = P-1 (DialogueLog atomic 方式統一 = Round 1 で導入した Buffer Flush Strategy section の POSIX O_APPEND 方式を R12.8 違反として再評価、write-to-tmp → rename 方式に転換、section 名「Atomic Append Strategy」に改称、Round 1 修正の方針転換実例 = round 別観点独立性 evidence) + P-2 (Failure Modes 表に Perspective save / Hypothesize 出力後 reinforced event 失敗時 entry 追加 = WARN + 出力ファイル保持 + 失敗 edge_id 記録、Spec 5 Hygiene eventual consistency 整合) + P-3 (cmd_hypothesize / cmd_verify / cmd_approve docstring 統一 = exit code 0/1/2 各 case 発火条件明示、Foundation R11 規律内一貫性) + A-1 (Flow 1 Key Decisions L311 拡張 = Perspective stdout 時 Retrieval 種別 usage_signal 送出明記、R4.5(c) 「全て」条件と R12.6 Direct/Support 条件の軸分離明示)。
