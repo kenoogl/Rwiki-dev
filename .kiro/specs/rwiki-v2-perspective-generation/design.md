@@ -461,6 +461,8 @@ def cmd_perspective(
 - frontmatter §5.9.1 必須 field を埋める (R2.8)
 - Hypothesis ID (slug) を `hyp-<short-hash-or-topic-slug>` 形式で生成 (R2.9)
 
+**Note**: `scope` / `method` 引数は requirements R2 AC 内明示なきも Project Description (req L7 (e)) 全体特徴 + Pipeline 共通化整合で両 cmd 共通受領。AC 不在は Adjacent Sync で R2 AC 追記候補。
+
 **Contracts**: Service [✓]
 
 ```python
@@ -508,7 +510,7 @@ def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status:
 
 **Responsibilities**:
 - hypothesis status の `confirmed` 事前 check (R9.1)、それ以外は ERROR + exit 2 (R9.2)
-- Spec 7 `cmd_promote_to_synthesis(hypothesis_id, target_path)` 呼出 (R9.3)
+- Spec 7 `cmd_promote_to_synthesis(hypothesis_id) -> target_path` 呼出 (R9.3) — `target_path` 計算責務は **Spec 7 側所管** (= Spec 7 R6.1 で `promote-to-synthesis` を 13 種 handler 1 種として列挙、Spec 7 内 8 段階対話で path 確定)、Spec 6 は hypothesis_id を渡し target_path を return value で受領
 - 完走時 status `confirmed → promoted` 遷移 + `successor_wiki:` 記録 (R9.4)
 - record_decision 失敗時の atomic rollback (R9.5)
 - user 中断時 status 据置 (R9.7)
@@ -524,7 +526,7 @@ def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None) -> int:
     Postconditions on success:
         - Spec 7 cmd_promote_to_synthesis 完走
         - hypothesis frontmatter status = 'promoted'
-        - hypothesis frontmatter successor_wiki = 'wiki/synthesis/<slug>.md'
+        - hypothesis frontmatter successor_wiki = Spec 7 cmd_promote_to_synthesis return value (= `wiki/synthesis/<slug>.md` format、Spec 7 所管)
         - record_decision (decision_type=synthesis_approve, reasoning required)
     """
 ```
@@ -1144,3 +1146,4 @@ config / 成熟度 / API 結果 は cache せず、起動毎に re-resolve (R6.7
 _change log_
 
 - 2026-05-02: 初版生成 (v0.7.13 SSoT を基に 132 AC を 8 domain components に mapping、5 段階 pipeline + Verify workflow + Hypothesis state machine の 3 主要 flow を Mermaid 化、研究ログを research.md に分離)
+- 2026-05-03: A-2 phase Round 1 修正 (treatment=single、規範範囲確認、primary 検出 3 件中 2 件採用 + 1 件 skip) = P-1 (cmd_approve_hypothesis L511 + L527 で target_path 計算責務 Spec 7 所管明示) + P-2 (cmd_hypothesize Note 追記 = scope/method 引数 R2 AC 不在 + Project Description L7 整合 + Adjacent Sync 候補)、P-3 (enum default str typing 強化) は INFO で skip (impl phase 委譲、MVP first 整合)。treatment-single branch (= pristine `285e762` 起点)、3 系統対照実験第 2 系統。
