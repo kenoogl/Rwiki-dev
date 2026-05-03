@@ -176,7 +176,7 @@ Spec 4 CLI dispatch (external)
 | Skill | Markdown 8 section + frontmatter 11 field | `AGENTS/skills/perspective_gen.md` / `AGENTS/skills/hypothesis_gen.md` | Spec 2 配布、本 spec は invoke のみ |
 | Config | YAML (`pyyaml`) | `.rwiki/config.yml` | 起動毎に再読込 (cache せず、R13.7) |
 | Data Output | Markdown + frontmatter | `review/perspectives/<slug>-<ts>.md` / `review/hypothesis_candidates/<slug>-<ts>.md` | atomic write-to-tmp → rename |
-| Logging | Markdown per Turn append | `raw/llm_logs/chat-sessions/chat-<ts>.md` / `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` | atomic per Turn append |
+| Logging | Markdown per Turn append | `raw/llm_logs/chat-sessions/<ts>-<session-id>.md` / `raw/llm_logs/interactive/<skill>/<ts>-<session-id>.md` (Spec 2 Decision 2-7 SSoT 整合、`<session-id>` = frontmatter 必須 5 field の `session_id`) | atomic per Turn append |
 | Spec 5 client | Python module import (Spec 5 配布) | Query API 15 種 + record_decision + edge event append | signature 契約のみ依存 |
 | LLM Subprocess | Spec 4 経由 | timeout 必須 (継承) | 直接 subprocess 起動しない |
 
@@ -193,7 +193,7 @@ scripts/
 ├── rw_verify_workflow.py         # VerifyWorkflow + EvidenceCollector
 ├── rw_skill_invoker.py           # SkillInvoker (固定 skill loader for perspective_gen / hypothesis_gen)
 ├── rw_maintenance_surface.py     # MaintenanceSurface (6 trigger surface, Spec 5 R21.7 a-d + Spec 7 R13.7 e-f 経由)
-├── rw_dialogue_log.py            # DialogueLog (per Turn append, atomic, chat-sessions/ + interactive/<skill>/)
+├── rw_dialogue_log.py            # DialogueLog (per Turn append, atomic, chat-sessions/<ts>-<session-id>.md + interactive/<skill>/<ts>-<session-id>.md = Spec 2 Decision 2-7 SSoT 整合)
 ├── rw_edge_feedback.py           # EdgeFeedback (`reinforced` event + context attribute, Spec 5 R10.1 11 種整合)
 ├── rw_perspective.py             # CmdPerspectiveHandler (cmd_perspective) + CmdHypothesizeHandler (cmd_hypothesize)
 └── rw_verify.py                  # CmdVerifyHandler (cmd_verify) + CmdApproveHypothesisHandler (cmd_approve_hypothesis)
@@ -235,8 +235,8 @@ scripts/
 
 - `review/perspectives/<slug>-<ts>.md` — Perspective `--save` 時 (R12.2)
 - `review/hypothesis_candidates/<slug>-<ts>.md` — Hypothesis 必ずファイル化 (R12.3)
-- `raw/llm_logs/chat-sessions/chat-<ts>.md` — `rw chat` セッションログ (R12.4)
-- `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` — interactive_synthesis 等の対話 skill ログ (R12.5)
+- `raw/llm_logs/chat-sessions/<ts>-<session-id>.md` — `rw chat` セッションログ (R12.4、Spec 2 Decision 2-7 SSoT 整合 = `<session-id>` は frontmatter `session_id` field 整合)
+- `raw/llm_logs/interactive/<skill>/<ts>-<session-id>.md` — interactive_synthesis 等の対話 skill ログ (R12.5、Spec 2 Decision 2-7 で旧 prefix `interactive-<skill>-<ts>.md` から subdirectory 表記へ変更済)
 
 ### Test Files
 
@@ -532,7 +532,7 @@ def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None, target_path: 
         - Spec 7 cmd_promote_to_synthesis Generator 完走 (FinalResult 受領)
         - hypothesis frontmatter status = 'promoted'
         - hypothesis frontmatter successor_wiki = FinalResult.output_json['target_path'] (= `wiki/synthesis/<slug>.md` format、Spec 7 所管 + Spec 6 adapter で取出)
-        - record_decision (decision_type=synthesis_approve, reasoning required)
+        - record_decision は Spec 7 cmd_promote_to_synthesis 内で `decision_type=page_promote_to_synthesis` (= Spec 7 design L686 / L1196 SSoT、Spec 5 R11.6 reasoning 必須対象 `synthesis_approve` 系の page promote 実装名) で記録される (= 本 spec は caller、Spec 7 が記録 site = callee 側 SSoT に整合、reasoning required)
     Args:
         target_path: user 指定時の昇格先 path (Spec 4 dispatcher 経由)、未指定 None 時は Spec 7 8 段階対話内で 4 case 自動判定 + 衝突規則で確定
             validation: 非 None 時は (1) `Path(target_path).resolve()`、(2) Vault root (`repo_root.resolve()`) 配下 containment check、(3) 違反時 `ValidationError(path_traversal)` raise + exit 2 (§Security Considerations 整合)
@@ -844,8 +844,8 @@ def write_hypothesis(text: str, frontmatter: HypothesisFrontmatter, slug: str) -
 | Requirements | 12.4, 12.5, 12.8 (a) |
 
 **Responsibilities**:
-- `rw chat` セッションログを `raw/llm_logs/chat-sessions/chat-<ts>.md` に append (R12.4)
-- interactive_synthesis 等の対話 skill ログを `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` に append (R12.5)
+- `rw chat` セッションログを `raw/llm_logs/chat-sessions/<ts>-<session-id>.md` に append (R12.4、Spec 2 Decision 2-7 SSoT 整合)
+- interactive_synthesis 等の対話 skill ログを `raw/llm_logs/interactive/<skill>/<ts>-<session-id>.md` に append (R12.5、Spec 2 Decision 2-7 で旧 prefix 表記から subdirectory 表記へ変更済 = `<skill_name>` 配下に session 別 file)
 - append 単位 = per Turn (1 turn = user 発話 + assistant 応答、R12.4)
 - atomic per Turn append (write-to-tmp → rename、R12.8 (a))
 - **buffer flush 戦略 = no buffering** (per Turn ごとに即時 atomic rename、1 turn = 1 atomic write、R12.4 末尾)。crash 時は最後 turn が **0% or 100% commit** (中間 partial 残存なし = atomic rename semantic で保証)
@@ -1166,6 +1166,7 @@ config / 成熟度 / API 結果 は cache せず、起動毎に re-resolve (R6.7
 | `refuting_evidence_reinforcement_delta` の値 (Spec 5 config 新設要請) | R12.7 / R8.6 | Spec 5 と coordination (本 spec implementation 前に Spec 5 へ要請) |
 | Maintenance autonomous trigger 複数同時発火時の優先順位ロジック | R10.9 | 実装段階 (MaintenanceSurface 実装時、Scenario 33 と coordination) |
 | Hypothesis ID (slug) の具体的命名規則 (`hyp-<short-hash-or-topic-slug>`) | R2.9 | 実装段階 (cmd_hypothesize 実装時) |
+| VerifyWorkflow record_decision の `decision_type` 名空間整合 = Spec 5 design L1097 23 種列挙の `hypothesis_verify` (suffix なし) vs L1111 reasoning 必須 4 種 `hypothesis_verify_confirmed` / `hypothesis_verify_refuted` (outcome 別 suffix 有) | R8.7 | Spec 5 と coordination (本 spec implementation 前に Spec 5 R11.6 SSoT 解釈確定 = outcome 別分岐採択 or 単一名統一) |
 
 ---
 
@@ -1177,3 +1178,4 @@ _change log_
 - 2026-05-03: A-2 phase Round 4 修正 (treatment=single、責務境界、primary 検出 5 件中 1 件採用 + 4 件 skip) = P-4 (cmd_approve_hypothesis signature と L513 args.target_path caller-callee inconsistency 解消 = signature L522 に `target_path: Optional[str] = None` 引数追加 + L513 文言調整 = `target_path=user_provided_target` → `target_path=target_path` + Spec 4 dispatcher 経由 user 指定 path pass-through 経路明示 + 未指定 None → Spec 7 8 段階対話内 R6.1 + Decision 7-14 4 case 自動判定 + 衝突規則で確定 = pattern_08 caller-callee consistency hit + responsibility_boundary escalate 必須条件直接 hit 解消、forward adjacent sync)、P-1 (Round 3 P-3 重複 = VerifyWorkflow path validation 3 層分散、defense-in-depth 整合) + P-2 (Round 3 P-4 重複 = MaintenanceSurface 経路選択基準不在、impl phase 委譲) + P-3 (Domain G 名責務軸混合、cosmetic) + P-5 (atomic update 単位範囲明示不足、impl phase test boundary で吸収) は WARN/INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 4/10。
 - 2026-05-03: A-2 phase Round 6 修正 (treatment=single、concurrency / timing、primary 検出 5 件中 3 件採用 + 2 件 skip) = P-1 (Concurrency Boundary 節新設 = MVP single-user single-thread 前提 declare + 並行 `rw verify` 二重起動 fail-fast 規定 + Spec 4 G5 scope 追加要請は Phase 2 拡張 Migration Strategy 持ち越し = forward Adjacent Sync 規律違反回避)、P-2 (Flow 2 Step 4 内部 write 順序入替 = provisional verification_attempts append → record_decision → 成功時のみ status 遷移 + reinforced event append = cross-file rollback 非対称回避、Spec 5 ledger append-only 整合)、P-3 (DialogueLog no buffering 確定 = R12.4 末尾「design phase で確定」要請を本 phase で satisfy + Resume semantic 明記 + Open Questions 表 1141 行削除) を採用、P-4 (VerifyWorkflow user input wait timeout suspend、Spec 7 design 比較で構造的不均一 candidate、Spec 4 G3 generator pattern wrapper で impl phase 吸収) + P-5 (Spec 5 cold/warm cache 性能 SLA 規定不在、Spec 5 R21.3-21.4 規約整合 + impl phase test 戦略) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 6/10。
 - 2026-05-03: A-2 phase Round 7 修正 (treatment=single、security、primary 検出 5 件中 2 件採用 + 3 件 skip) = P-1 (`cmd_approve_hypothesis` target_path validation 経路明示 = Responsibilities 1 行追加 + Args docstring 3 step validation 明示 + Error Handling User Errors 1 行追加 = fatal_patterns path_traversal hit 解消、Round 4 P-1 同型 issue を security 軸で再検出した採取軸保護観察事例、Spec 4 dispatcher = raw string pass-through のみ責務 + Spec 6 handler 内 fs boundary 完結 = 単一責務点 + forward Adjacent Sync 規律違反回避)、P-2 (Security Considerations 節 4 軸構造化 = 認証 / 認可 / 入力 validation / secret handling、新節新設ではなく既存節拡張で重複回避、認証 = OS user 境界委任 / 認可 = file system permission 委任 / 入力 validation = `--add-evidence` + target_path + frontmatter ASCII の 3 経路 / secret handling = Spec 1 foundation 委任 + at-rest 機密性 scope 外明示、Round 6 Concurrency Boundary 節新設と同型処置) を採用、P-3 (Error message log 混入経路 silent、Spec 1 log helper sanitize layer 委任) + P-4 (id collision / spoofing / enumeration 防止責務 silent、Spec 5 storage-layer 委任 + local single-user 前提で攻撃 model 不成立) + P-5 (DialogueLog at-rest 機密性 silent、local repo 前提 scope 外、defense-in-depth) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 7/10。
+- 2026-05-03: A-2 phase Round 8 修正 (treatment=single、cross-spec 整合、primary 検出 5 件中 3 件採用 + 2 件 skip) = P-1 (dialogue log path / filename 規約 = Spec 2 Decision 2-7 SSoT 整合更新 = 6 箇所書換 = `chat-<ts>.md` → `<ts>-<session-id>.md` + interactive 旧 prefix `interactive-<skill>-<ts>.md` → subdirectory 表記 `<skill>/<ts>-<session-id>.md` = Technology Stack + Directory Structure + Output Directories + DialogueLog Responsibilities 整合 = forward Adjacent Sync 規律遵守、Spec 2 改版要請 0 + Spec 5 decision_log context_ref 規約 `<ts>-<session-id>.md#L42-67` と path 整合性確保)、P-2 (cmd_approve_hypothesis L535 record_decision decision_type 名 caller-callee 整合 = 旧 `synthesis_approve` (Spec 5 R11.6 名) → `page_promote_to_synthesis` (Spec 7 design L686 / L1196 SSoT、Spec 5 R11.6 synthesis_approve 系 page promote 実装名) + 「本 spec は caller、Spec 7 が記録 site = callee 側 SSoT 整合」明示 = Spec 7 改版要請 0、後続 → 先行違反回避)、P-3 (Open Questions 表 1 行追加 = VerifyWorkflow record_decision `decision_type` 名空間整合 = Spec 5 design L1097 23 種列挙 `hypothesis_verify` vs L1111 reasoning 必須 4 種 `hypothesis_verify_confirmed/refuted` outcome 別の SSoT 解釈 = impl phase 開始前に Spec 5 と coordination 確定、本 spec 側 suffix 採択先取り回避 = 規範範囲先取り risk 抑制) を採用、P-4 (target_path 型 `Optional[str]` vs `Optional[Path]` cosmetic、Round 4 P-4 + Round 7 P-1 確定済 adapter 責務で解消) + P-5 (MaintenanceSurface 取得経路選択基準 silent、Round 4 P-2 同型 skip 採択継承 = 性能特性測定後 impl phase 判断) は INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 8/10。
