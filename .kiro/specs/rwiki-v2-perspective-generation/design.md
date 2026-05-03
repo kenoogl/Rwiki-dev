@@ -510,7 +510,7 @@ def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status:
 
 **Responsibilities**:
 - hypothesis status の `confirmed` 事前 check (R9.1)、それ以外は ERROR + exit 2 (R9.2)
-- Spec 7 `cmd_promote_to_synthesis(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` 呼出 (R9.3、Spec 7 design.md §cmd_promote_to_synthesis SSoT 整合) — Spec 6 は `argparse.Namespace(candidate_path=Path(f'review/hypothesis_candidates/{hyp_id}.md'), target_path=user_provided_target, merge_strategy=None, target_field=None, replace=False)` を construct し、Generator 完走後の `FinalResult.output_json['target_path']` から target_path を取出す **adapter 責務** を負う (Spec 7 design.md L681-685 Coordination 呼出規約整合、Adjacent Sync 経路反映)。target_path 計算責務は **Spec 7 側所管** (= Spec 7 R6.1 で `promote-to-synthesis` を 13 種 handler 1 種として列挙、Spec 7 内 8 段階対話で path 確定)
+- Spec 7 `cmd_promote_to_synthesis(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` 呼出 (R9.3、Spec 7 design.md §cmd_promote_to_synthesis SSoT 整合) — Spec 6 は `argparse.Namespace(candidate_path=Path(f'review/hypothesis_candidates/{hyp_id}.md'), target_path=target_path, merge_strategy=None, target_field=None, replace=False)` を construct し (= signature 引数 `target_path: Optional[str] = None` を Namespace に直接転載、Spec 4 dispatcher 経由 user 指定時 path 受領可能 + 未指定 None 時は Spec 7 8 段階対話内 R6.1 + Decision 7-14 4 case 自動判定 + 衝突規則で path 確定)、Generator 完走後の `FinalResult.output_json['target_path']` から target_path を取出す **adapter 責務** を負う (Spec 7 design.md §cmd_promote_to_synthesis SSoT 呼出規約整合、Adjacent Sync 経路反映)。target_path 最終確定責務は **Spec 7 側所管** (= Spec 7 R6.1 で `promote-to-synthesis` を 13 種 handler 1 種として列挙、Spec 7 内 8 段階対話で path 確定、Spec 6 は user 指定 path の pass-through adapter のみ)
 - 完走時 status `confirmed → promoted` 遷移 + `successor_wiki:` 記録 (R9.4)
 - record_decision 失敗時の atomic rollback (R9.5)
 - user 中断時 status 据置 (R9.7)
@@ -519,7 +519,7 @@ def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status:
 **Contracts**: Service [✓]
 
 ```python
-def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None) -> int:
+def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None, target_path: Optional[str] = None) -> int:
     """
     Returns: exit_code 0 | 1 | 2
     Preconditions: hypothesis_id の status == 'confirmed'
@@ -528,6 +528,8 @@ def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None) -> int:
         - hypothesis frontmatter status = 'promoted'
         - hypothesis frontmatter successor_wiki = FinalResult.output_json['target_path'] (= `wiki/synthesis/<slug>.md` format、Spec 7 所管 + Spec 6 adapter で取出)
         - record_decision (decision_type=synthesis_approve, reasoning required)
+    Args:
+        target_path: user 指定時の昇格先 path (Spec 4 dispatcher 経由)、未指定 None 時は Spec 7 8 段階対話内で 4 case 自動判定 + 衝突規則で確定
     """
 ```
 
@@ -1148,3 +1150,4 @@ _change log_
 - 2026-05-02: 初版生成 (v0.7.13 SSoT を基に 132 AC を 8 domain components に mapping、5 段階 pipeline + Verify workflow + Hypothesis state machine の 3 主要 flow を Mermaid 化、研究ログを research.md に分離)
 - 2026-05-03: A-2 phase Round 1 修正 (treatment=single、規範範囲確認、primary 検出 3 件中 2 件採用 + 1 件 skip) = P-1 (cmd_approve_hypothesis L511 + L527 で target_path 計算責務 Spec 7 所管明示) + P-2 (cmd_hypothesize Note 追記 = scope/method 引数 R2 AC 不在 + Project Description L7 整合 + Adjacent Sync 候補)、P-3 (enum default str typing 強化) は INFO で skip (impl phase 委譲、MVP first 整合)。treatment-single branch (= pristine `285e762` 起点)、3 系統対照実験第 2 系統。
 - 2026-05-03: A-2 phase Round 2 修正 (treatment=single、一貫性、primary 検出 3 件中 1 件採用 + 2 件 skip) = P-1 (cmd_promote_to_synthesis signature 3 箇所一致化 = L67-69 Allowed Dependencies + L513 Responsibilities + L527-529 Postconditions、Spec 7 design.md §cmd_promote_to_synthesis SSoT signature `(args: argparse.Namespace) -> Generator[StageEvent, UserResponse, FinalResult]` に整合 + Spec 7 L685 Adjacent Sync 経路反映 = adapter 責務 (argparse.Namespace construct + FinalResult.output_json['target_path'] 取出) 明示)、P-2 (4 cmd handler Pre/Post/Invariant 構造不均一) + P-3 (4 cmd handler exit code docstring 表記揺れ) は WARN で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 2/10。
+- 2026-05-03: A-2 phase Round 4 修正 (treatment=single、責務境界、primary 検出 5 件中 1 件採用 + 4 件 skip) = P-4 (cmd_approve_hypothesis signature と L513 args.target_path caller-callee inconsistency 解消 = signature L522 に `target_path: Optional[str] = None` 引数追加 + L513 文言調整 = `target_path=user_provided_target` → `target_path=target_path` + Spec 4 dispatcher 経由 user 指定 path pass-through 経路明示 + 未指定 None → Spec 7 8 段階対話内 R6.1 + Decision 7-14 4 case 自動判定 + 衝突規則で確定 = pattern_08 caller-callee consistency hit + responsibility_boundary escalate 必須条件直接 hit 解消、forward adjacent sync)、P-1 (Round 3 P-3 重複 = VerifyWorkflow path validation 3 層分散、defense-in-depth 整合) + P-2 (Round 3 P-4 重複 = MaintenanceSurface 経路選択基準不在、impl phase 委譲) + P-3 (Domain G 名責務軸混合、cosmetic) + P-5 (atomic update 単位範囲明示不足、impl phase test boundary で吸収) は WARN/INFO で skip (primary bias_self_suppression default、integrity intact、MVP first 整合)。treatment-single branch、3 系統対照実験第 2 系統 Round 4/10。
