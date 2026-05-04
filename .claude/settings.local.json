@@ -54,7 +54,10 @@
       "Bash(git status *)",
       "Bash(git *)",
       "Skill(kiro-spec-design)",
-      "Skill(kiro-spec-tasks)"
+      "Skill(kiro-spec-tasks)",
+      "Skill(update-config)",
+      "Bash(/Users/keno/.claude/hooks/jargon-check.sh)",
+      "Bash(xargs basename *)"
     ]
   }
 }
