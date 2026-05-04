@@ -873,6 +873,9 @@ flowchart TD
 3. **dr-init rollback semantics (Req 2.6)**: filesystem error injection (test mock で permission denied) → 生成済 file 全削除 + exit 2 + stderr error report 確認、rollback failure injection → exit 4 + stderr 残存 file list 確認
 4. **JSON Schema validation (Req 3.8)**: 各 schema (review_case / finding / impact_score / failure_observation / necessity_judgment) で valid sample + invalid sample (各 enum 値 / 必須 field 欠落 / 型違反) を JSON Schema validator で validate、期待通り pass / fail 確認
 5. **finding state variant (Req 3.7)**: `state: detected` finding で `necessity_judgment` 省略 → validate pass、`state: judged` finding で `necessity_judgment` 省略 → validate fail 確認
+6. **dr-init --lang ja default (Req 2.4)**: target project root で `--lang` option 省略 (= default 適用) → config.yaml に `lang: ja` 確認、explicit `--lang ja` でも同 result 確認
+7. **dr-init --lang en reject (Req 2.5)**: target project root で `--lang en` (or ja 以外) → 一切 file 生成なし + exit 3 + stderr に Phase B-1.3 reference message 確認
+8. **dr-init filesystem isolation (Req 2.7)**: target project root に既存 `.kiro/` + `CLAUDE.md` を持つ状態で dr-init 起動 → `.dual-reviewer/` 配下のみ生成、既存 `.kiro/` + `CLAUDE.md` 全 file の content + mtime 不変確認
 
 ### Integration Tests
 
@@ -880,7 +883,7 @@ flowchart TD
 
 1. **dr-init bootstrap → consumer config 読込**: dr-init 生成の `.dual-reviewer/config.yaml` を consumer 側 (本 spec scope では mock consumer) で yaml parse → 5 field 全 populate 確認
 2. **schemas/ relative path locate**: foundation install location (`scripts/dual_reviewer_prototype/`) からの相対 path で 5 schema file を全 locate 可能、JSON Schema parser で全 file 読込成功確認
-3. **patterns/ + prompts/ relative path locate**: 同 location で `seed_patterns.yaml` (23 件) + `fatal_patterns.yaml` (8 種) + `judgment_subagent_prompt.txt` を全 locate 可能、yaml + text parse 成功確認
+3. **patterns/ + prompts/ relative path locate**: 同 location で `seed_patterns.yaml` (23 件) + `fatal_patterns.yaml` (8 種) + `judgment_subagent_prompt.txt` を全 locate 可能、yaml + text parse 成功確認。件数 strict 確認 (Req 4.1 = 23 件 / Req 5.1 = 8 件) は yaml parse 後の static lint script (`patterns` list length assertion) で実施し、Testing Strategy 範囲では test code 形式ではなく lint script 言及で検証手段を明示する.
 4. **V4 §5.2 prompt sync (Req 6.2)**: `prompts/judgment_subagent_prompt.txt` 本文部分を `.kiro/methodology/v4-validation/v4-protocol.md` §5.2 と byte-level diff → header 3 行を除き整合確認 (空白 / 改行差異除外)
 5. **layer1_framework.yaml schema 整合**: yaml 1.2 parse 成功 + 全 top-level section (`step_pipeline` / `bias_suppression_quota` / `pattern_schema` / `attach_contract` / `chappy_p0` / `v4_features` / `terminology`) presence 確認
 6. **JSON Schema 複合条件 validation 確認**: Draft 2020-12 の `$ref` + `allOf` + `if/then` 混在条件 (finding schema の `state=judged` 時 `necessity_judgment` 必須) を Python `jsonschema` ライブラリで実装 + valid sample (state=detected without necessity_judgment / state=judged with necessity_judgment) + invalid sample (state=judged without necessity_judgment) で意図通り pass / fail 確認。design phase で 1 sample に対する手動確認、本格的 exhaustive validation (validator 実装間差異) は implementation phase で実施。
