@@ -140,22 +140,22 @@ def prep_stage_0(dry_run=False):
 
 
 def prep_stage_n(stage: int, dry_run=False):
-  """stage 1-4 = stage_0 baseline + template で overlay (= 縮約版 file が template で上書き)"""
+  """stage 1-4 = stage_(n-1) baseline + template overlay (= cumulative chain、各 stage 増分のみ template に置く)"""
   target = stage_dir(stage)
   tmpl = template_dir(stage)
-  baseline = stage_dir(0)
+  baseline = stage_dir(stage - 1)
+
+  if dry_run:
+    print(f'[dry-run] stage {stage} -> {target} (baseline = stage_{stage - 1} + overlay from {tmpl})')
+    return
 
   if not baseline.exists():
-    print(f'[stage {stage}] ERROR: stage_0 baseline not prepared, run --stage 0 first')
+    print(f'[stage {stage}] ERROR: stage_{stage - 1} baseline not prepared, run prior stages first')
     return
 
   if not tmpl.exists():
     print(f'[stage {stage}] SKIP: template not found at {tmpl}')
     print(f'  (= 段階 {stage} の縮約版 file 手動起草が必要)')
-    return
-
-  if dry_run:
-    print(f'[dry-run] stage {stage} -> {target} (baseline + overlay)')
     return
 
   print(f'[stage {stage}] prep: {target}')
