@@ -156,6 +156,8 @@ rw_perspective_config       (yaml loader)
    ↓
 Spec 5 Client (external, import で参照)
    ↓
+rw_edge_feedback            (Pipeline + VerifyWorkflow 両方から呼出される共有 component、Spec 5 Client のみ参照)
+   ↓
 rw_skill_invoker / rw_dialogue_log / rw_perspective_pipeline (scoring / maturity 含む)
    ↓
 rw_hypothesis_state / rw_verify_workflow / rw_maintenance_surface
@@ -500,6 +502,8 @@ def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status:
     """
     Returns:
         exit_code: 0 (success) | 1 (runtime error) | 2 (FAIL detection, R8.7 record_decision 失敗時)
+    Note:
+        reason=None の場合、handler 内で chat session から auto-generate fallback により reason を補完してから record_decision を呼出 (R8.7 + Spec 5 R11.6 reasoning 必須を満たす、default skip 不可)
     """
 ```
 
@@ -512,7 +516,7 @@ def cmd_verify(hypothesis_id: str, add_evidence: list[str] = None, force_status:
 
 **Responsibilities**:
 - hypothesis status の `confirmed` 事前 check (R9.1)、それ以外は ERROR + exit 2 (R9.2)
-- Spec 7 `cmd_promote_to_synthesis(hypothesis_id, target_path)` 呼出 (R9.3)
+- Spec 7 `cmd_promote_to_synthesis(hypothesis_id, target_path)` 呼出 (R9.3、Spec 7 callee の signature は generic 名 `target_id` 表記 = R9.9 三者命名関係整合、本 spec caller 内部で `hypothesis_id` を Spec 7 の `target_id` 引数に渡す)
 - 完走時 status `confirmed → promoted` 遷移 + `successor_wiki:` 記録 (R9.4)
 - record_decision 失敗時の atomic rollback (R9.5)
 - user 中断時 status 据置 (R9.7)
@@ -531,6 +535,8 @@ def cmd_approve_hypothesis(hypothesis_id: str, reason: str = None) -> int:
         - hypothesis frontmatter status = 'promoted'
         - hypothesis frontmatter successor_wiki = 'wiki/synthesis/<slug>.md'
         - record_decision (decision_type=synthesis_approve, reasoning required)
+    Note:
+        reason=None の場合、handler 内で chat session から auto-generate fallback により reason を補完してから record_decision を呼出 (R9.5 + Spec 5 R11.6 reasoning 必須を満たす、default skip 不可)
     """
 ```
 
@@ -710,7 +716,7 @@ def rollback_last_change(hyp_id: str) -> None: ...   # atomic rollback (R8.7 / R
 - Step 2: user に 4 択 (`supporting / refuting / partial / none`) 評価収集 (R8.3)、`--add-evidence <path>:<span>` 受領
 - Step 3: 集約判定 (`supporting≥confirmed_threshold ∧ refuting=0 → confirmed` / `refuting≥refuted_threshold → refuted` / 両条件不成立 ∧ supporting+refuting≥1 → `partial` / 両条件不成立 ∧ supporting+refuting=0 → `verified_pending`、R8.4 + R13.3 config threshold 整合、threshold default = 2)
 - Step 4: `verification_attempts` append (atomic、R8.5 / R12.8 (d)) + `reinforced` event (confirmed/refuted のみ、R8.6) + `record_decision` (R8.7)
-- record_decision 失敗時の rollback (R8.7)、atomic で verification_attempts append + status 遷移を取消
+- record_decision 失敗時の rollback (R8.7)、atomic で verification_attempts append + status 遷移を取消。**rollback 対象は本 spec 所管の frontmatter (verification_attempts + status) のみ**、Step 4 で先行送出済の `reinforced` event は Spec 5 R10.1 eventual consistency 整合の forward-only として L2 ledger 上に残置 (本 spec の rollback scope 越境禁止、edge_events.jsonl への取消 API 呼出はしない、Round 4 責務境界 review 反映)
 - evidence 候補 0 件時は INFO + status 据置 (R8.11)
 
 **Dependencies**:
@@ -878,7 +884,7 @@ def finalize_session(log_path: Path) -> None: ...
 | Requirements | 12.6, 12.7, 8.6, 1.8, 4.6 |
 
 **Responsibilities**:
-- Spec 5 R10.1 11 種列挙の基本セット 8 種のうち `reinforced` event のみを使用 (独自 event 名禁止)
+- Spec 5 R10.1 11 種のうち `reinforced` event のみを使用 (独自 event 名禁止、Spec 5 R10.1 拡張可規約整合)
 - usage_signal 種別 = Direct / Support / Retrieval / Co-activation の 4 種から選択 (R4.6)
 - context attribute で独自意味記録:
   - Perspective `--save` 時: `usage_context: used_in_save_perspective` / `perspective_path: <path>` (R12.6)
@@ -1063,8 +1069,8 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 | `resolve_entity` returns None / 例外 | WARN + exit 1 + entity 抽出推奨 message | R4.1 |
 | Step 失敗 (Step 2-5) | ERROR + exit 1 | R4.7 |
 | Verify Step 1 候補 0 件 | INFO + status verified 据置 | R8.11 |
-| Verify record_decision 失敗 | ERROR abort + atomic rollback (verification_attempts append + status 遷移取消) | R8.7 |
-| Approve record_decision 失敗 | ERROR abort + atomic rollback (status 遷移 + successor_wiki 取消) | R9.5 |
+| Verify record_decision 失敗 | ERROR abort + atomic rollback (verification_attempts append + status 遷移取消、先行送出済 reinforced event は forward-only で L2 残置 = Spec 5 R10.1 eventual consistency 整合) | R8.7 |
+| Approve record_decision 失敗 | ERROR abort + atomic rollback (status 遷移 + successor_wiki 取消、Approve は reinforced event 送出なしのため rollback scope は本 spec frontmatter のみ) | R9.5 |
 | Perspective `--save` / Hypothesize 出力後 reinforced event append 失敗 | WARN + 出力ファイル保持 + 失敗 edge_id を traversed_edges に記録 (Spec 5 Hygiene eventual consistency 整合、abort + rollback しない) | R12.6 / R1.8 |
 | origin_edges に reject/deprecated edge | INFO skip + 結果出力に記録 | R12.7 |
 | Spec 7 8 段階対話 user 中断 | status `confirmed` 据置、successor_wiki 不記録 | R9.7 |
@@ -1170,3 +1176,4 @@ _change log_
 - 2026-05-04: A-2 phase Round 1 修正 (treatment=dual、規範範囲確認、primary 検出 1 件 + adversarial 独立検出 1 件 = 全 2 件採用) = P-1 (Path traversal sanity check 根拠注記 design 内自己完結化 = R8.3 + R12.8 から defense in depth 導出明示、req 改版回避で 3 系統対照実験 input 同一性確保) + A-1 (R8.2/R12.4 design 後退 = Performance Strategy + Buffer Flush Strategy 各 section 追加 + Open Questions 表から該当 2 entry 削除 = 第 1 系統 main Round 1 commit `6e26aa8` と同型再現 = adversarial 独立検出能力 treatment 横断再現性 evidence、MVP first 確定方針継続)。treatment-dual branch (= pristine `285e762` 起点)、3 系統対照実験第 3 系統。
 - 2026-05-04: A-2 phase Round 2 修正 (treatment=dual、一貫性、primary 検出 3 件 + adversarial 独立検出 1 件 = 全 4 件採用) = P-1 (DialogueLog atomic 方式統一 = Round 1 で導入した Buffer Flush Strategy section の POSIX O_APPEND 方式を R12.8 違反として再評価、write-to-tmp → rename 方式に転換、section 名「Atomic Append Strategy」に改称、Round 1 修正の方針転換実例 = round 別観点独立性 evidence) + P-2 (Failure Modes 表に Perspective save / Hypothesize 出力後 reinforced event 失敗時 entry 追加 = WARN + 出力ファイル保持 + 失敗 edge_id 記録、Spec 5 Hygiene eventual consistency 整合) + P-3 (cmd_hypothesize / cmd_verify / cmd_approve docstring 統一 = exit code 0/1/2 各 case 発火条件明示、Foundation R11 規律内一貫性) + A-1 (Flow 1 Key Decisions L311 拡張 = Perspective stdout 時 Retrieval 種別 usage_signal 送出明記、R4.5(c) 「全て」条件と R12.6 Direct/Support 条件の軸分離明示)。
 - 2026-05-04: A-2 phase Round 3 修正 (treatment=dual、実装可能性 + アルゴリズム + 性能 統合、primary 検出 3 件中 2 件採用 + 1 件 skip + adversarial 独立検出 2 件全件採用 = 全 4 件採用) = P-1 (Pipeline 全体応答時間 SLA 説明補強 = 「本 spec として独立 SLA は規定しない、Spec 5 SLA + 重い処理積算 + LLM subprocess で導出、MVP first」明記 + Open Questions 表に R11.8 持ち越し item 追加) + P-2 (ScoringStrategy + VerifyWorkflow Step 3 + Flow 2 Key Decisions に Edge Case 動作 sub-section 新設 = novelty 分母 0 → 1.0 固定 + recency event-less → 0.5 固定 + INFO 通知 + partial 範囲明示式 supporting + refuting condition) + A-1 (ScoringContext に bridge_potential_map field 追加 = Hypothesis scoring 用 edge_id → bridge_potential dict、Pipeline Step 2 後 find_missing_bridges 呼出で注入規定 + Flow 1 Key Decisions に pre-fetch 規定追加) + A-2 (Flow 1 Key Decisions に「recency 計算 + bridge_potential pre-fetch (Step 3 直前)」規定追加 = ScoringContext.edge_history_cache に Step 2 後バッチ pre-fetch + Step 4 cache 再利用、5 段階フロー順序矛盾解消)。P-3 (EdgeFeedback batch partial-success state) は skip = adversarial 両案 do_not_fix + severity INFO + 既存 Failure Modes 表で十分。
+- 2026-05-04: A-2 phase Round 4 修正 (treatment=dual、責務境界、primary 検出 4 件 + adversarial 独立検出 2 件中 1 件採用 + 1 件 P-4 同型重複 + 1 件 do_not_fix = 全 5 件採用) = P-1 (CmdApproveHypothesisHandler L515 cmd_promote_to_synthesis 引数名 caller/callee 視点分離注記 = Spec 7 callee `target_id` vs 本 spec caller `hypothesis_id` の R9.9 三者命名関係整合明示) + P-2 (cmd_verify + cmd_approve_hypothesis docstring に reason=None 時 chat session auto-generate fallback 補完規律明記 = R8.7 + R9.5 + Spec 5 R11.6 reasoning 必須 default skip 不可整合) + P-3 (Dependency Direction DAG に rw_edge_feedback.py 配置層追記 = Pipeline + VerifyWorkflow 両方から呼出される共有 component を Spec 5 Client より下流かつ Pipeline より上流に新層配置、Mermaid + File Structure + Component Mapping 整合回復) + P-4 (VerifyWorkflow Step 4 rollback 範囲明文化 + Failure Modes 表 reinforced event policy 追記 = rollback scope は本 spec frontmatter のみ、先行送出済 reinforced event は forward-only L2 残置 = Spec 5 R10.1 eventual consistency 整合、責務境界明確化 = primary P-4 + adversarial 独立検出 A-1 同型再現で検出信頼性) + A-2 (EdgeFeedback Responsibilities L881 「11 種列挙の基本セット 8 種のうち」表記削除 = requirements 未記載の本設計書初出表記が SSoT 出典不明により規範範囲先取り risk、簡素化「11 種のうち `reinforced` event のみ使用 + 拡張可規約整合」に統一)。A-3 (ScoringContext.spec5_client field と Pipeline outbound dependency の 2 経路) は skip = adversarial 自身 do_not_fix 自評価 + speculative + requirement linkage 弱。
