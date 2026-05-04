@@ -190,21 +190,66 @@ def test_condition_c_case4_one_independent_returns_true(judge_module, tmp_path):
 # ---------- comparison-report append idempotent ----------
 
 def test_append_to_report_creates_section_when_absent(judge_module, tmp_path):
+  """改修 2: 47th 末 §12 (= manual-authored) 上に scripts append section は §13 / SECTION_ID v2 として配置."""
   report = tmp_path / "comparison-report.md"
   report.write_text("# comparison-report\n\n## §1 head\n\nbody.\n")
   judge_module.append_judgment_to_report(report, judgment_record={"decision": "go", "evidence_references": []})
   text = report.read_text()
-  assert "<!-- section-id: phase-b-fork-judgment-v1 -->" in text
+  assert "<!-- section-id: phase-b-fork-judgment-v2 -->" in text
   assert "Phase B fork" in text
 
 
 def test_append_to_report_idempotent_on_existing_section(judge_module, tmp_path):
+  """改修 2: SECTION_ID v2 既存なら append skip."""
   report = tmp_path / "comparison-report.md"
-  initial = "# comparison-report\n\n## §12 Phase B fork\n<!-- section-id: phase-b-fork-judgment-v1 -->\nexisting body.\n"
+  initial = ("# comparison-report\n\n## §13 Phase B fork\n"
+             "<!-- section-id: phase-b-fork-judgment-v2 -->\nexisting body.\n")
   report.write_text(initial)
   judge_module.append_judgment_to_report(report, judgment_record={"decision": "go", "evidence_references": []})
   # idempotent: 既存 detect で append skip
   assert report.read_text() == initial
+
+
+def test_append_to_report_does_not_collide_with_legacy_v1(judge_module, tmp_path):
+  """改修 2: comparison-report に v1 (manual §12) が既に存在しても、scripts は v2 として append する.
+
+  47th 末 §12 は手動記述の section-id 無し manual section、scripts の v2 append とは衝突しない。
+  本 test は v1 section-id がもし legacy で存在しても v2 append が独立して走ることを保証.
+  """
+  report = tmp_path / "comparison-report.md"
+  initial = ("# comparison-report\n\n"
+             "## §12 (manual v0.3 final 集約)\n\n"
+             "(no section-id, manual authoring)\n\n"
+             "## §legacy\n<!-- section-id: phase-b-fork-judgment-v1 -->\n"
+             "legacy v1 body.\n")
+  report.write_text(initial)
+  judge_module.append_judgment_to_report(report, judgment_record={"decision": "go", "evidence_references": []})
+  text = report.read_text()
+  # v1 legacy は touch しない
+  assert "legacy v1 body." in text
+  # v2 として新規 append
+  assert "<!-- section-id: phase-b-fork-judgment-v2 -->" in text
+
+
+# ---------- 改修 1+2 反映: 3 系統 ablation evidence build ----------
+
+
+def test_build_judgment_record_includes_three_treatment_ablation(judge_module, tmp_path):
+  """改修 1+2: judgment_record に 3 系統 over_correction_ratio_per_treatment 含む."""
+  metrics = _mock_metrics_with_severity("CRITICAL")
+  metrics["metrics"]["single"]["over_correction_ratio"] = 29/46
+  metrics["metrics"]["dual"]["over_correction_ratio"] = 13/60
+  metrics["metrics"]["dual+judgment"]["over_correction_ratio"] = 23/69
+  rcs = [_make_review_case("dual+judgment", 1, [
+    _make_finding("P-1", "primary", severity="CRITICAL"),
+    _make_finding("A-INDEPENDENT-1", "adversarial", severity="CRITICAL"),
+  ])]
+  jsonl = _make_jsonl(tmp_path, rcs)
+  rec = judge_module.build_judgment_record(metrics, jsonl, spec3_fatal_count=1)
+  assert "three_treatment_ablation" in rec
+  for t in ["single", "dual", "dual+judgment"]:
+    assert t in rec["three_treatment_ablation"]
+    assert "over_correction_ratio" in rec["three_treatment_ablation"][t]
 
 
 # ---------- V4 仮説検証 + evidence_references ----------
