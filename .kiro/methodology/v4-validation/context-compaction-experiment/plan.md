@@ -148,6 +148,38 @@ user 指示通り、output 制御 (= 案 (β) = template apply 撤廃 + 概要 t
 
 本実験は **LLM ergonomics study** として A-2.1 (= V4 protocol claims 検証) と分離する。Phase A 完走後の独立 study または paper 補足 section 候補。
 
+## 観察 hypothesis (= 45th 末 session で identify、trial 結果との照合用)
+
+trial 実施前に identify した観察を記録する。5 trial の metric が出た後、本 hypothesis と照合して「effect の driver が量削減 (= context compaction) なのか structure 変更 (= output template) なのか」を切り分ける。
+
+### 観察 1 = 普通の対話と review turn の非対称性
+
+普通の対話 turn では規律違反 (= dense academic 文体 + 等号畳み込み + jargon 連鎖) が発生せず、review turn でのみ発生する。45th セッション内で連続観察された非対称性。具体例として、log-6 探索や session 終了議論等の通常対話では平易な日本語で応答できているが、Round 提示 turn では規律発動失敗が 5 度連続発生した。
+
+### 観察 2 = review turn が dense 文体に引かれる 4 機構
+
+review turn が dense 文体に引かれる原因として、以下 4 機構を identify した。
+
+1. **output structure の違い** = 普通の対話は「1 turn 1 件」で流れに従うが、review turn は「1 turn N 件」で template 適用。template apply の瞬間に訓練 data の technical / academic writing pattern が同時に呼び出される。
+2. **jargon density の違い** = 普通の対話は 1-2 個の jargon、review turn は subagent dispatch 結果に jargon 集積 (= forced_divergence / fatal_pattern / phase1_metapattern / escalate_condition 等)。集積が連鎖して dense 文体を引き出す。
+3. **規律意識の分散** = 普通の対話は「答える」ことに focus、review turn は多項目規律 (= 説明文体 + 1 検出 1 turn + 8 軸 self-check + sub-section pass-through + 等号畳み込み禁止 + jargon paraphrase + 多層複合 case 識別) を同時に意識する必要があり、output 直前に意識分散。
+4. **多検出 batching の pressure** = 普通の対話は 1 turn 1 件で時間効率不要、review turn は 5-9 件を「効率的に」1 turn で list する pattern が訓練 data + 過去 review 経験で強化されている。
+
+### 観察 3 = 案 (β) は普通の対話 pattern 復元操作
+
+前 turn (= 45th 末) で提示した案 (β) (= template apply 撤廃 + 概要 turn 廃止 + 各検出独立 turn) は、実質「review を普通の対話 pattern に戻す」操作と読める。なぜなら、案 (β) で 1 turn 1 件の流れに変えれば、上記 4 機構の (1) template apply と (4) batching pressure が機構的に消えるからである。残る (2) jargon density と (3) 規律意識分散は、case (β) では各 turn が短いため自然に低下する。
+
+### trial 結果との照合方法
+
+5 trial の metric 結果が出た後、以下の照合で「effect の driver」を切り分ける。
+
+- 段階 1 (= TODO 縮約のみ) で effect が薄い → 「context 量削減は driver でない」(= 観察 2 の機構 3 規律意識分散は本 trial でも残るため、量削減だけでは効かない可能性)
+- 段階 2-4 で段階増加と effect が比例 → 「量削減が一定 driver」(= 機構 3 規律意識分散の軽減が効く)
+- 案 (β) (= 別調査) で大 effect → 「structure 変更が主 driver」(= 機構 1 template apply + 機構 4 batching pressure の除去が決定的)
+- 段階 N + 案 (β) の組合せで marginal effect 大 → 「両者 additive、context 量と structure 両方 driver」
+
+trial 結果次第で、本 hypothesis を refute / confirm / refine する。
+
 ## timeline
 
 - 計画文書 + prep script 起草 = 45th セッション末 (= 本 turn)
