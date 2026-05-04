@@ -82,6 +82,7 @@
 - foundation install location (`scripts/dual_reviewer_prototype/`) の path 変更 → 全 consumer skill の relative path locate 規約に影響
 - 共通 JSON schema 2 軸並列 の field / enum 値変更 → consumer skill の schema validate logic に影響
 - `fatal_patterns.yaml` 8 種 enum 識別子変更 (Req 5 AC3 で禁止しているが、Phase A 内の design 改訂 timing で発生した場合は revalidation trigger)
+- `seed_patterns.yaml` content 変更 (= top-level version field 明示増分、Req 4.5 整合) → consumer (`dr-design` の pattern matching 結果) に影響
 - V4 §5.2 prompt template content 変更 (V4 protocol §5.2 改訂と同期する形でのみ許容、Req 6 AC8) → consumer `dr-judgment` skill の prompt 動作確認再要求
 - Layer 1 framework definition の Step A/B/C/D 構造変更 → consumer の Step 体系に影響
 - override 階層 (Layer 3 > Layer 2 > Layer 1) の semantics 変更 → consumer の attach 動作に影響
