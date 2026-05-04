@@ -450,16 +450,58 @@ judgment layer の追加 (dual → dual+judgment) で以下の変化が観測さ
 
 ---
 
-## §11 変更履歴
-
-- **v0.1** (2026-04-30 10th セッション末、本 file 初版): req phase 3 spec V4 redo broad 完走 + Step 5 cross-spec review 完了時点の中間集約。design phase 進行可否判断材料を提示。
-- **v0.3** (2026-05-04 45th セッション末、A-2.1 全 3 系統完走 = 3 系統対照実験終端 = final 集約): A-2.1 全 3 系統完走 (treatment=single 完走 40th + treatment=dual 完走 45th + treatment=dual+judgment 完走 29th) の 3 系統 ablation final 集約。**§12 A-2.1 3 系統対照実験 final 集約** 新設 = §12.1 (3 系統比較 table final = single 63.0% / dual 21.7% / dual+judgment 33.3%) + §12.2 (treatment-single vs treatment-dual ablation = adversarial layer 機能寄与 = 過剰修正比率 -41.3pt + adversarial 独立補完 47.5%) + §12.3 (treatment-dual vs treatment=dual+judgment ablation = judgment layer 機能寄与 = 過剰修正比率 +11.6pt + escalate 解決手段正式化 + must_fix 品質向上) + §12.4 (主要 finding まとめ = Claim A/B/C evidence narrative + ablation non-monotone pattern interpretation) + §12.5 (3 系統 ablation figure pre-computation = figure_data_generator.py + phase_b_judgment.py 実行 pending)。本 v0.3 update は A-2.2 tasks phase + A-2 終端統合分析 (スクリプト実行) の前段集約、paper rigor 用 final 数値確定版。本 v0.3 改版自体は Level 6 記録対象外 (= methodology meta-document)。
-
-## §13 Phase B fork judgment (scripts auto-generated)
+## §13 Phase B fork judgment (scripts auto-generated + caveat reconciliation)
 <!-- section-id: phase-b-fork-judgment-v2 -->
+
+### §13.1 scripts auto-generated raw output
+
+phase_b_judgment.py 実行結果 (= 47th 末 §12 確定数値の scripts 出力再現)。下記 5 fields は raw output、paper 用主使用 metric は §12 + 下記 §13.2-§13.6 reconciliation を参照。
 
 - decision: hold
 - conditions: {"a_fatal": false, "b_disagreement": true, "c_bias_counter_evidence": true, "d_severity": false, "e_over_correction_improved": false}
 - evidence_references count: 25
 - v4_hypotheses: {"h1_over_correction": {"value": 0.3333333333333333, "threshold": 0.2, "achieved": false}, "h3_adoption_rate": {"value": 0.6666666666666667, "threshold": 0.5, "achieved": true}, "h4_wall_clock": {"value_per_session": 6.8e-05, "threshold_per_session": 631.05, "v3_baseline_per_session": 420.7, "achieved": true}}
 - three_treatment_ablation: {"single": {"over_correction_ratio": 0.6304347826086957, "adoption_rate": 0.3695652173913043, "detection_count": 46, "primary_findings_count": 46, "adversarial_findings_count": 0, "forced_divergence_findings_count": 0}, "dual": {"over_correction_ratio": 0.21666666666666667, "adoption_rate": 0.75, "detection_count": 60, "primary_findings_count": 29, "adversarial_findings_count": 31, "forced_divergence_findings_count": 14}, "dual+judgment": {"over_correction_ratio": 0.3333333333333333, "adoption_rate": 0.6666666666666667, "detection_count": 69, "primary_findings_count": 48, "adversarial_findings_count": 54, "forced_divergence_findings_count": 48}}
+
+### §13.2 dual+judgment adversarial 数値乖離解釈 (caveat 1)
+
+§13.1 `adversarial_findings_count: 54` (dual+judgment) と §12.1 table の adversarial detect 54 件は raw count として一致する。一方 paper 主使用は **§12 derived 21 件** = 「total detect (P+A) 69 件 − primary detect 48 件 = adversarial 独自増分 21 件」(= primary との重複除外後の純粋 adversarial 寄与)。
+
+**reconciliation**: paper では §12 derived 21 件を Claim A evidence の主使用、§13.1 scripts raw 54 件は補助 evidence (= adversarial 検出機構の活動量) として位置付け。両者は同一現象の異なる metric 切り口、矛盾ではない。
+
+### §13.3 dual+judgment FD 数値乖離 (caveat 2)
+
+§13.1 `forced_divergence_findings_count: 48` (dual+judgment) は dev_log_path 内 forced_divergence event の累計 raw count。§12.1 table では FD 列が「N/A (judgment 連動)」表記 = dual+judgment では judgment layer が forced_divergence evaluation を吸収するため、独立 metric として treatment=dual と直接比較不能。
+
+**reconciliation**: §13.1 raw 48 件は scripts 整合性確認用、paper の Claim B evidence では「FD は treatment=dual の adversarial 単独機能 (= 14 件)」を主使用。dual+judgment 48 件は judgment layer に吸収された FD 評価の活動量を示す補助数値、§12 と §13 の数値乖離は metric 定義の違いに由来。
+
+### §13.4 decision=hold の解釈 (caveat 3)
+
+§13.1 `decision: hold` は phase_b_judgment.py の 5 条件 evaluation で 3 条件 fail (a_fatal=false / d_severity=false / e_over_correction_improved=false) のため Phase B 移行保留判定に該当。
+
+**reconciliation**: 本判定は **paper rigor 上の Phase B 移行保留判定であり、A-2.1 完走自体には影響しない**。Phase A 終端 trigger 成立判断は別軸 (= Spec 6 design approve は user 明示承認別 process)、また 5 条件のうち b_disagreement=true / c_bias_counter_evidence=true は達成、過剰修正改善 (e) も V3 baseline 50% から 33.3% へ -16.7pt 改善という事実は §12.4 で明示。decision=hold は scripts 機械判定の保守側 fallback、A-2.1 evidence 自体の paper 投稿可能性を妨げない。
+
+### §13.5 H4 wall_clock caveat (caveat 4)
+
+§13.1 `h4_wall_clock.value_per_session: 6.8e-05` (= 0.068 ms/session) は元 dev_log の timestamp_start == timestamp_end 制約由来 (= dev_log schema が timing precision を秒単位以下保持しない設計)。
+
+**reconciliation**: **paper 引用 N/A** = wall_clock metric は paper 用 evidence ではなく scripts 整合性確認用のみ。H4 (V4 wall-clock V3 比 +50% 以内) の paper 用主証拠は §5.4 の V4 redo broad 平均 294 秒 vs V3 baseline 420.7 秒 (-30%) を引用、§13.1 値は scripts pipeline の動作確認用として保持。
+
+### §13.6 scripts 範囲外 metric の §12 SSoT 関係 (caveat 5)
+
+§13.1 scripts auto-generated output は dev_log_path JSON schema 内の field を直接集計するため、以下 metric は **scripts 出力対象外**:
+
+- rework events (Level 6) 累計 = §12.1 行 (single 17 / dual 40 / dual+judgment 44)
+- escalate=true 累計 = §12.1 行 (single 17 / dual 0 / dual+judgment 4)
+- design.md 行数増加 = §12.1 行 (single +63 / dual +52 / dual+judgment +116)
+- fatal_pattern hits = §12.1 行 (single 1 / dual 0 / dual+judgment 5)
+
+**reconciliation**: 上記 4 metric は §12 SSoT (= manual 集約)、§13 scripts auto と相補関係。paper では §12 を一次 source、§13 raw output は scripts 再現性証拠 + 3 系統 ablation 数値完全再現確認用。両 source は重複ではなく補完関係、SECTION_ID v2 (= section-id: phase-b-fork-judgment-v2) も §12 manual と §13 scripts の coexistence を保証する装置。
+
+---
+
+## §11 変更履歴
+
+- **v0.1** (2026-04-30 10th セッション末、本 file 初版): req phase 3 spec V4 redo broad 完走 + Step 5 cross-spec review 完了時点の中間集約。design phase 進行可否判断材料を提示。
+- **v0.3** (2026-05-04 45th セッション末、A-2.1 全 3 系統完走 = 3 系統対照実験終端 = final 集約): A-2.1 全 3 系統完走 (treatment=single 完走 40th + treatment=dual 完走 45th + treatment=dual+judgment 完走 29th) の 3 系統 ablation final 集約。**§12 A-2.1 3 系統対照実験 final 集約** 新設 = §12.1 (3 系統比較 table final = single 63.0% / dual 21.7% / dual+judgment 33.3%) + §12.2 (treatment-single vs treatment-dual ablation = adversarial layer 機能寄与 = 過剰修正比率 -41.3pt + adversarial 独立補完 47.5%) + §12.3 (treatment-dual vs treatment=dual+judgment ablation = judgment layer 機能寄与 = 過剰修正比率 +11.6pt + escalate 解決手段正式化 + must_fix 品質向上) + §12.4 (主要 finding まとめ = Claim A/B/C evidence narrative + ablation non-monotone pattern interpretation) + §12.5 (3 系統 ablation figure pre-computation = figure_data_generator.py + phase_b_judgment.py 実行 pending)。本 v0.3 update は A-2.2 tasks phase + A-2 終端統合分析 (スクリプト実行) の前段集約、paper rigor 用 final 数値確定版。本 v0.3 改版自体は Level 6 記録対象外 (= methodology meta-document)。
+- **v0.4** (2026-05-05 49th セッション、Step (1) caveat 追記 + 順序整理): 48th 末 scripts 改修完走 + comparison-report §13 append (= 47th 末 §12 数値完全再現 = single 63.04% / dual 21.67% / dual+judgment 33.33%) を受けた paper rigor 仕上げ。**§13 sub-section 化** = §13.1 scripts auto-generated raw output (= 既存) + §13.2-§13.6 caveat 5 件追加 (= §13.2 dual+judgment adversarial 数値乖離解釈 = scripts raw 54 件 vs §12 derived 21 件 / §13.3 dual+judgment FD 数値乖離 = scripts raw 48 件 vs §12 N/A / §13.4 decision=hold 解釈 = paper rigor 上の Phase B 移行保留判定で A-2.1 完走自体には影響なし / §13.5 H4 wall_clock caveat = 0.07ms/session は dev_log timestamp 制約由来で paper 引用 N/A / §13.6 scripts 範囲外 metric の §12 SSoT 関係 = rework / escalate / design 行数 / fatal_pattern hits は §12 SSoT、§13 と相補関係)。**§11/§13 順序整理** = §10 → §12 → §13 (scripts auto + caveat) → §11 (変更履歴) の自然順に再配置 = 変更履歴 section を最末尾に維持する文書規律整合。本 v0.4 update は scripts §13 と manual §12 の reconciliation 整備、paper rigor 用 final 数値の解釈付与版。本 v0.4 改版自体は Level 6 記録対象外 (= methodology meta-document)。
