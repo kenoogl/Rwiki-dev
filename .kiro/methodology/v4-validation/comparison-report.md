@@ -454,3 +454,12 @@ judgment layer の追加 (dual → dual+judgment) で以下の変化が観測さ
 
 - **v0.1** (2026-04-30 10th セッション末、本 file 初版): req phase 3 spec V4 redo broad 完走 + Step 5 cross-spec review 完了時点の中間集約。design phase 進行可否判断材料を提示。
 - **v0.3** (2026-05-04 45th セッション末、A-2.1 全 3 系統完走 = 3 系統対照実験終端 = final 集約): A-2.1 全 3 系統完走 (treatment=single 完走 40th + treatment=dual 完走 45th + treatment=dual+judgment 完走 29th) の 3 系統 ablation final 集約。**§12 A-2.1 3 系統対照実験 final 集約** 新設 = §12.1 (3 系統比較 table final = single 63.0% / dual 21.7% / dual+judgment 33.3%) + §12.2 (treatment-single vs treatment-dual ablation = adversarial layer 機能寄与 = 過剰修正比率 -41.3pt + adversarial 独立補完 47.5%) + §12.3 (treatment-dual vs treatment=dual+judgment ablation = judgment layer 機能寄与 = 過剰修正比率 +11.6pt + escalate 解決手段正式化 + must_fix 品質向上) + §12.4 (主要 finding まとめ = Claim A/B/C evidence narrative + ablation non-monotone pattern interpretation) + §12.5 (3 系統 ablation figure pre-computation = figure_data_generator.py + phase_b_judgment.py 実行 pending)。本 v0.3 update は A-2.2 tasks phase + A-2 終端統合分析 (スクリプト実行) の前段集約、paper rigor 用 final 数値確定版。本 v0.3 改版自体は Level 6 記録対象外 (= methodology meta-document)。
+
+## §13 Phase B fork judgment (scripts auto-generated)
+<!-- section-id: phase-b-fork-judgment-v2 -->
+
+- decision: hold
+- conditions: {"a_fatal": false, "b_disagreement": true, "c_bias_counter_evidence": true, "d_severity": false, "e_over_correction_improved": false}
+- evidence_references count: 25
+- v4_hypotheses: {"h1_over_correction": {"value": 0.3333333333333333, "threshold": 0.2, "achieved": false}, "h3_adoption_rate": {"value": 0.6666666666666667, "threshold": 0.5, "achieved": true}, "h4_wall_clock": {"value_per_session": 6.8e-05, "threshold_per_session": 631.05, "v3_baseline_per_session": 420.7, "achieved": true}}
+- three_treatment_ablation: {"single": {"over_correction_ratio": 0.6304347826086957, "adoption_rate": 0.3695652173913043, "detection_count": 46, "primary_findings_count": 46, "adversarial_findings_count": 0, "forced_divergence_findings_count": 0}, "dual": {"over_correction_ratio": 0.21666666666666667, "adoption_rate": 0.75, "detection_count": 60, "primary_findings_count": 29, "adversarial_findings_count": 31, "forced_divergence_findings_count": 14}, "dual+judgment": {"over_correction_ratio": 0.3333333333333333, "adoption_rate": 0.6666666666666667, "detection_count": 69, "primary_findings_count": 48, "adversarial_findings_count": 54, "forced_divergence_findings_count": 48}}
