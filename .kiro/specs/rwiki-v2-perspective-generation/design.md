@@ -24,7 +24,7 @@
 - Skill dispatch ロジック (本 spec は dispatch 対象外、固定 skill 名で直接呼出、Spec 3 Requirement 10 と整合)
 - CLI dispatch frame (引数 parse / Hybrid 実行 / `--auto` ポリシー / 対話 confirm UI / exit code 制御 / Maintenance UX 表示は Spec 4 所管)
 - Page lifecycle 状態遷移 / 8 段階対話 handler (`cmd_promote_to_synthesis` 等は Spec 7 所管)
-- Maintenance trigger 計算実装 (a/b/c/d は Spec 5 R21.7、e/f は Spec 7 R13.7 所管)
+- Maintenance trigger 計算実装 (a/b/c/d は Spec 5 R21.7、e/f は Spec 7 R15.1 所管)
 - Frontmatter スキーマ宣言 (§5.9.1 Hypothesis / §5.9.2 Perspective は Foundation §5.9 / Spec 1 所管、本 spec は read/write 側)
 - `rw discover` 独立 CLI (Phase 2 検討、MVP では R4 5 段階フロー + `--scope global` + `--method hierarchical-summary` + Community-aware traversal が代替)
 
@@ -55,8 +55,8 @@
 - Skill dispatch ロジック (`--skill` → frontmatter `type:` → `categories.yml` → LLM 推論の 4 段階優先順位は distill 専用) → **Spec 3**
 - CLI dispatch frame (引数 parse / Hybrid 実行 / 対話 confirm UI / `--auto` 制御 / exit code / Maintenance UX 表示 / `/dismiss` `/mute maintenance` 入力受付 / `--mode autonomous` toggle) → **Spec 4**
 - Page lifecycle 操作・8 段階対話 handler (`cmd_promote_to_synthesis` / `cmd_deprecate` / `cmd_retract` / `cmd_archive`、警告 blockquote 自動挿入、Backlink 更新) → **Spec 7**
-- Maintenance autonomous trigger 計算実装 (reject queue 件数 / decay edges / typed-edge 整備率 / dangling edge は Spec 5 R21.7、最終 audit 実行日時 / 未 approve synthesis 件数は Spec 7 R13.7) → **Spec 5 / Spec 7**
-- Frontmatter スキーマ field 名・型・許可値の **宣言** → **Foundation §5.9 / Spec 1**
+- Maintenance autonomous trigger 計算実装 (reject queue 件数 / decay edges / typed-edge 整備率 / dangling edge は Spec 5 R21.7、最終 audit 実行日時 / 未 approve 件数は Spec 7 R15.1、L3 診断 API = `check_l3_thresholds()` / `get_l3_diagnostics()`) → **Spec 5 / Spec 7**
+- Frontmatter スキーマ field 名・型・許可値の **宣言** → **Foundation §5 Frontmatter スキーマ骨格 / Spec 1** (= `§5.9.1` / `§5.9.2` 番号は `drafts/rwiki-v2-consolidated-spec.md` 由来、Foundation 物理 file `foundation.md` 生成後に Foundation §X.Y へ migrate 予定)
 - L3 frontmatter `related:` cache の sync 実装 → **Spec 5** (`rw graph rebuild --sync-related` / Hygiene batch sync)
 - `rw chat` autonomous mode の発火条件・閾値・頻度制限の表示 layer → **Spec 4** (信頼度 ≥ 7/10 / 3 発話に 1 回 / novelty 判定 / context sensing)
 - Severity 4 水準 / exit code 0/1/2 分離 / LLM CLI subprocess timeout 必須 規約定義 → **Foundation R11 / roadmap.md「v1 から継承する技術決定」**
@@ -66,11 +66,11 @@
 
 - **Upstream consumed**:
   - Spec 5: Query API 15 種 (`get_neighbors` / `get_shortest_path` / `get_orphans` / `get_hubs` / `find_missing_bridges` / `get_communities` / `get_global_summary` / `get_hierarchical_summary` / `get_edge_history` / `normalize_frontmatter` / `resolve_entity` / `record_decision` / `get_decisions_for` / `search_decisions` / `find_contradictory_decisions`)、`edge_events.jsonl` への `reinforced` event append API、L2 診断 4 trigger
-  - Spec 7: `cmd_promote_to_synthesis(target_id, target_path, ...)` 8 段階対話 handler、L3 診断 5 項目のうち audit 未実行 (b) と未 approve synthesis (a)
+  - Spec 7: `cmd_promote_to_synthesis(target_id, target_path, ...)` 8 段階対話 handler、L3 診断 5 項目 (R15.1) のうち audit 未実行期間 (b) と未 approve 件数 (a)、取得 API = `check_l3_thresholds()` / `get_l3_diagnostics()`
   - Spec 4: CLI dispatch entry point から本 spec の cmd_* handler を呼出、subprocess timeout 受領、`--auto` ポリシー、対話 confirm UI、Maintenance UX 表示 layer、`/dismiss` `/mute maintenance` 入力受付
   - Spec 2: `AGENTS/skills/perspective_gen.md` / `AGENTS/skills/hypothesis_gen.md` 配布、skill lifecycle (install / deprecate / retract) 参加、interactive: true 規約、dialogue log frontmatter 5 必須 field schema
-  - Spec 1: Hypothesis frontmatter §5.9.1 / Perspective frontmatter §5.9.2 の field 宣言、`type:` field vocabulary、`tags.yml`
-  - Spec 0 (Foundation): 13 中核原則 / 3 層アーキテクチャ / Hypothesis status 7 種 / §5.9.1 / §5.9.2 / §2.13 Curation Provenance
+  - Spec 1: Hypothesis candidate / Perspective 保存版の frontmatter field 宣言 (Foundation §5 Frontmatter スキーマ骨格 = drafts consolidated-spec §5.9.1 / §5.9.2 由来、Foundation 物理 file 生成後に Foundation §X.Y へ migrate 予定)、`type:` field vocabulary、`tags.yml`
+  - Spec 0 (Foundation): 13 中核原則 / 3 層アーキテクチャ / Hypothesis status 7 種 (R5) / §5 Frontmatter スキーマ骨格 (Hypothesis candidate / Perspective 保存版、詳細は drafts consolidated-spec §5.9.1 / §5.9.2 由来) / §2.13 Curation Provenance
 - **共有 Infrastructure**:
   - `rw_utils` 系 (atomic_write / parse_frontmatter / 等の汎用 helper、v1 から継承)
   - `.rwiki/config.yml` (yaml config 読込)
@@ -133,7 +133,7 @@ graph TB
     SkillInvoker --> AGENTSSkills[AGENTS skills perspective_gen hypothesis_gen]
 
     MaintenanceSurface[MaintenanceSurface 6-trigger] --> Spec5Diag[Spec 5 R21.7 a-d]
-    MaintenanceSurface --> Spec7Diag[Spec 7 R13.7 e-f]
+    MaintenanceSurface --> Spec7Diag[Spec 7 R15.1 e-f]
 
     Config[Config rwiki config.yml] --> Pipeline
     Config --> VerifyWorkflow
@@ -179,7 +179,7 @@ Spec 4 CLI dispatch (external)
 | Skill | Markdown 8 section + frontmatter 11 field | `AGENTS/skills/perspective_gen.md` / `AGENTS/skills/hypothesis_gen.md` | Spec 2 配布、本 spec は invoke のみ |
 | Config | YAML (`pyyaml`) | `.rwiki/config.yml` | 起動毎に再読込 (cache せず、R13.7) |
 | Data Output | Markdown + frontmatter | `review/perspectives/<slug>-<ts>.md` / `review/hypothesis_candidates/<slug>-<ts>.md` | atomic write-to-tmp → rename |
-| Logging | Markdown per Turn append | `raw/llm_logs/chat-sessions/chat-<ts>.md` / `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` | atomic per Turn append |
+| Logging | Markdown per Turn append | `raw/llm_logs/chat-sessions/<ts>-<session_id>.md` / `raw/llm_logs/interactive/<skill_name>/<ts>-<session_id>.md` (Spec 2 Decision 2-7 整合) | atomic per Turn append |
 | Spec 5 client | Python module import (Spec 5 配布) | Query API 15 種 + record_decision + edge event append | signature 契約のみ依存 |
 | LLM Subprocess | Spec 4 経由 | timeout 必須 (継承) | 直接 subprocess 起動しない |
 
@@ -195,7 +195,7 @@ scripts/
 ├── rw_hypothesis_state.py        # HypothesisState (ALLOWED_TRANSITIONS + transition + verification_attempts append + successor_wiki record + rollback) + AtomicFrontmatterEditor
 ├── rw_verify_workflow.py         # VerifyWorkflow + EvidenceCollector
 ├── rw_skill_invoker.py           # SkillInvoker (固定 skill loader for perspective_gen / hypothesis_gen)
-├── rw_maintenance_surface.py     # MaintenanceSurface (6 trigger surface, Spec 5 R21.7 a-d + Spec 7 R13.7 e-f 経由)
+├── rw_maintenance_surface.py     # MaintenanceSurface (6 trigger surface, Spec 5 R21.7 a-d + Spec 7 R15.1 a-b 経由)
 ├── rw_dialogue_log.py            # DialogueLog (per Turn append, atomic, chat-sessions/ + interactive/<skill>/)
 ├── rw_edge_feedback.py           # EdgeFeedback (`reinforced` event + context attribute, Spec 5 R10.1 11 種整合)
 ├── rw_perspective.py             # CmdPerspectiveHandler (cmd_perspective) + CmdHypothesizeHandler (cmd_hypothesize)
@@ -238,8 +238,8 @@ scripts/
 
 - `review/perspectives/<slug>-<ts>.md` — Perspective `--save` 時 (R12.2)
 - `review/hypothesis_candidates/<slug>-<ts>.md` — Hypothesis 必ずファイル化 (R12.3)
-- `raw/llm_logs/chat-sessions/chat-<ts>.md` — `rw chat` セッションログ (R12.4)
-- `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` — interactive_synthesis 等の対話 skill ログ (R12.5)
+- `raw/llm_logs/chat-sessions/<ts>-<session_id>.md` — `rw chat` セッションログ (R12.4、Spec 2 Decision 2-7 整合)
+- `raw/llm_logs/interactive/<skill_name>/<ts>-<session_id>.md` — interactive_synthesis 等の対話 skill ログ (R12.5、Spec 2 Decision 2-7 整合 = skill 別 sub-directory に分類)
 
 ### Test Files
 
@@ -779,13 +779,13 @@ def run(hypothesis_id: str, add_evidence: list[str] = None, force_status: str = 
   - (b) Decay edges ≥ 20 (未 usage > 7 日): Spec 5 R21.7 (b)
   - (c) Typed-edge 整備率 < 2.0: Spec 5 R21.7 (c)
   - (d) Dangling edge ≥ 5: Spec 5 R21.7 (d)
-  - (e) Audit 未実行 ≥ 14 日: Spec 7 R13.7 (b)
-  - (f) 未 approve synthesis ≥ 5: Spec 7 R13.7 (a)
-- 各 trigger を `rw doctor` 経由 or 直接 API で取得 (R10.2)
+  - (e) Audit 未実行 ≥ 14 日: Spec 7 R15.1 (b)
+  - (f) 未 approve synthesis ≥ 5: Spec 7 R15.1 (a)
+- 各 trigger は Spec 5 `check_l2_thresholds()` (= L2 診断 4 項目 a-d、R21.7) と Spec 7 `check_l3_thresholds()` (= L3 診断 a-b、R15.1) の trigger 判定済みリストを `rw doctor` 経由 or 直接 API で取得 (R10.2)。閾値判定 (= 上記 (a)-(f) 各々の数値比較) は Spec 5 / Spec 7 内部で実施、本 spec MaintenanceSurface は判定結果を受け取って surface する責務専担。
 - `💡` marker で表示文字列生成 + 推奨対応コマンド併記 (R10.3)
 - surface のみ (自動実行しない、R10.4)
 - session 内 1 回までの頻度制限 (R10.5、頻度制限 state は in-process only = 各 session 独立、並行 session は各々 1 回 surface = MVP 想定、cross-process 制限不要、Round 6 A-2 整合)、`/dismiss` (R10.6) / `/mute maintenance` (R10.7) 受付 (表示 layer は Spec 4)
-- 閾値 config 注入 (R10.8)
+- 閾値 config 注入 (R10.8)。**閾値 SSoT**: 閾値値の正本は Spec 5 / Spec 7 (= 上記 6 trigger の数値判定 spec)、本 spec `MaintenanceConfig` の閾値 field (= reject_queue_threshold / decay_edges_threshold / typed_edge_ratio_threshold / dangling_edge_threshold / audit_overdue_days / unapproved_synthesis_threshold) は Spec 4 MaintenanceUX layer の表示用 redundant copy としての位置付け、impl 段階で Spec 5 / Spec 7 config 経由 read-through に統一するか本 spec 維持するかを確定 (= 二重 SSoT 化を避けるため Open Questions 持ち越し item 候補、Round 8 A-4 整合)
 - 複数同時発火時の優先順位付け (R10.9、Scenario 33)
 - `rw chat --mode autonomous` toggle 対応 (R10.10、mode toggle 自体は Spec 4)
 
@@ -859,8 +859,8 @@ def write_hypothesis(text: str, frontmatter: HypothesisFrontmatter, slug: str) -
 | Requirements | 12.4, 12.5, 12.8 (a) |
 
 **Responsibilities**:
-- `rw chat` セッションログを `raw/llm_logs/chat-sessions/chat-<ts>.md` に append (R12.4)
-- interactive_synthesis 等の対話 skill ログを `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` に append (R12.5)
+- `rw chat` セッションログを `raw/llm_logs/chat-sessions/<ts>-<session_id>.md` に append (R12.4、Spec 2 Decision 2-7 整合 = filename prefix なし、`<ts>-<session_id>` 形式)
+- interactive_synthesis 等の対話 skill ログを `raw/llm_logs/interactive/<skill_name>/<ts>-<session_id>.md` に append (R12.5、Spec 2 Decision 2-7 整合 = skill 別 sub-directory + filename `<ts>-<session_id>` 形式)
 - append 単位 = per Turn (1 turn = user 発話 + assistant 応答、R12.4)
 - atomic per Turn append (write-to-tmp → rename、R12.8 (a))
 - frontmatter は Spec 2 dialogue log schema (5 必須 field: `type: dialogue_log` / `session_id` / `started_at` / `ended_at` / `turns`) 整合
@@ -889,7 +889,7 @@ def finalize_session(log_path: Path) -> None: ...
 
 **Responsibilities**:
 - Spec 5 R10.1 11 種のうち `reinforced` event のみを使用 (独自 event 名禁止、Spec 5 R10.1 拡張可規約整合)
-- usage_signal 種別 = Direct / Support / Retrieval / Co-activation の 4 種から選択 (R4.6)
+- usage_signal 種別 = Direct / Support / Retrieval / Co-activation の 4 種から選択 (R4.6 が本 spec 4 種の SSoT。Spec 5 R10.1 は event type 11 種を SSoT 所管、context attribute schema (= ReinforcedEventContext.usage_signal) は Spec 5 拡張可規約に基づき本 spec が独自定義 = R12.6 / R12.7 の本 spec 独自意味記録に対応、Round 8 P-1 整合)
 - context attribute で独自意味記録:
   - Perspective `--save` 時: `usage_context: used_in_save_perspective` / `perspective_path: <path>` (R12.6)
   - Verify confirmed/refuted 時: `verification_type: human_verification_support` / `hypothesis_id: <id>` / `verify_outcome: confirmed|refuted` (R12.7)
@@ -969,7 +969,7 @@ def load() -> tuple[PerspectiveConfig, HypothesisConfig, VerifyConfig, Maintenan
 
 ## Data Models
 
-### Hypothesis Frontmatter (§5.9.1、本 spec は read/write 側、SSoT は Foundation §5.9 / Spec 1)
+### Hypothesis Frontmatter (Foundation §5 Frontmatter スキーマ骨格 = Hypothesis candidate、本 spec は read/write 側、詳細フィールドは Spec 1 所管。section 番号 §5.9.1 は drafts consolidated-spec 由来、Foundation 物理 file 生成後に Foundation §X.Y へ migrate 予定)
 
 | Field | Type | 必須 | 値域 | 出典 |
 |-------|------|:----:|------|------|
@@ -996,7 +996,7 @@ def load() -> tuple[PerspectiveConfig, HypothesisConfig, VerifyConfig, Maintenan
 | `outcome` | str | confirmed / refuted / partial / evolved / verified_pending (5 値) | R8.5 |
 | `edge_reinforcements` | list[dict] | `[{edge_id, delta: +0.NN}, ...]` (confirmed/refuted のみ) | R8.5 |
 
-### Perspective Frontmatter (§5.9.2、本 spec は read/write 側、SSoT は Foundation §5.9 / Spec 1)
+### Perspective Frontmatter (Foundation §5 Frontmatter スキーマ骨格 = Perspective 保存版、本 spec は read/write 側、詳細フィールドは Spec 1 所管。section 番号 §5.9.2 は drafts consolidated-spec 由来、Foundation 物理 file 生成後に Foundation §X.Y へ migrate 予定)
 
 | Field | Type | 必須 | 値域 | 出典 |
 |-------|------|:----:|------|------|
@@ -1199,3 +1199,4 @@ _change log_
 - 2026-05-04: A-2 phase Round 5 修正 (treatment=dual、失敗モード + 観測 統合、primary 検出 4 件中 2 件採用 + 2 件 skip + adversarial 独立検出 3 件中 2 件採用 + 1 件 P-2 同型重複 = 全 4 件採用) = P-2+A-2 (PipelineInvokeResult に skipped_edges field 追加 = [(edge_id, reason), ...] reject/deprecated edge skip + Spec 5 API failure + I/O error 等で append できなかった edge と理由 + reinforced_events に「append 成功 events のみ含む」注記 = VerifyResult.skipped_edges と対称化 + Pipeline / Verify 両 result type の API 設計一貫性回復 = primary + adversarial 独立同型再現 = 横断再現性 evidence) + P-3 (ReinforcedEvent skip_reason 値域に 'append_failed' 追加 = Spec 5 API failure / I/O error 識別、L1068 Failure Modes append 失敗 case の SSoT 値域充足、最小 patch) + A-1 (Failure Modes 表 L1077 entry 動作列書き換え = 「実装段階で incremental indexing 戦略確定 (持ち越し)」を「WARN + degraded mode 通知 + 結果返却継続 (Performance Strategy L747-752 整合)」に修正 = Round 1 Performance Strategy 確定後の表 update miss closure、internal_contradiction 解消) + A-3 (HypothesisState rollback_last_change → rollback_pending 改名 + docstring に「次回 commit 確定前の本 spec 所管全変更を 1 回呼出で取消、AtomicFrontmatterEditor 前 state 保持機構整合」明記 = Verify/Approve の multi-step rollback 範囲明確化、impl phase atomic boundary 判定 SSoT 確立)。P-1 (Failure Modes 表 exit code 列追加) は skip = adversarial counter do_not_fix + handler docstring 既存 SSoT で二重 SSoT 化回避。P-4 (VerifyResult outcome → new_status 写像表追加) は skip = adversarial counter do_not_fix + 要件 R8.5 + ALLOWED_TRANSITIONS 既存 SSoT で 4 重化回避。
 - 2026-05-04: A-2 phase Round 6 修正 (treatment=dual、concurrency / timing、primary 検出 3 件全件採用 + adversarial 独立検出 3 件全件採用 + 1 件 P-1 同型重複 = 全 6 件採用) = P-1+A-4 (HypothesisState State Management の Concurrency strategy + AtomicFrontmatterEditor の rollback support + Performance/Concurrency tests #1/#2 に「並行 process race の最終 winner = last-rename-wins、Read-Modify-Write race による updates lost は MVP scope 外」明記 + tests assertion を physical corruption なしに精緻化 = primary + adversarial 独立同型再現 3 度目 = 横断再現性 evidence 累計 3 度) + P-2 (Failure Modes 表に Verify Step 4 reinforced event append 失敗 entry 追加 + L719-720 docstring 追記 = WARN + record_decision 進行継続 + skipped_edges 記録 + edge_reinforcements 不記録、Spec 5 Hygiene eventual consistency 整合 + Round 4 forward-only + Round 5 'append_failed' 値域と統合) + P-3 (ALLOWED_TRANSITIONS 前に並行 transition note 追加 = last-rename-wins + check-and-set 不要 + MVP first 規律) + A-1 (DialogueLog Atomic Append Strategy「完全保証」精緻化 = 単独 process partial write 防止のみ完全保証、並行 multi-process append は last-rename-wins で turn 消失 may occur 明記 + MVP 1 session = 1 process 想定 + 並行需要時 file lock or per-session 独立 file 移行検討) + A-2 (MaintenanceSurface 頻度制限 state = in-process only、各 session 独立、cross-process 制限不要 = MVP 想定明記) + A-3 (Pipeline Step 4 cache 再利用 staleness 許容 = same Pipeline invoke 内のみ valid、cross-process concurrent edge_events.jsonl append による staleness MVP scope 外明記)。forced_divergence = partially_robust = primary 暗黙前提 (sequential process) は alternative (async/threading 実装) でも core issue 成立、severity calibration のみ前提依存。
 - 2026-05-04: A-2 phase Round 7 修正 (treatment=dual、security、primary 検出 5 件全件採用 + adversarial 独立検出 4 件中 1 件同型重複統合 + 1 件部分同型統合 + 2 件 adversarial 自身 do_not_fix skip = 全 5 件採用) = P-1+A-2 (Security Considerations section に「秘匿情報 / log artifact 漏洩 risk」sub-section 新設 = DialogueLog 平文記録 + sanitization 不実装 + `raw/llm_logs/` 物理保護 user 責任 = MVP first scope 宣言、fatal_pattern secret_leakage 直接該当を MVP scope 宣言で対処 = primary + adversarial 独立同型再現 4 度目連続再現 = 横断再現性 evidence 累計 4 度) + P-2 (L1133 「Foundation Security 規約」を「Foundation R11 の他には Foundation に security 個別 section なし、path traversal は Foundation 上で個別対応 silent」に書換 = pattern_19 ssot_citation 解消) + P-3+A-1 (Security Considerations Path traversal sub-section に「handler 層 sanity check 責務 component = CmdVerifyHandler、実装 API 詳細 (Path.resolve / relative_to vault_root) は impl 段階確定 = MVP first 規律」明記 = pattern_07 responsibility_boundary 解消、primary 責務 component 視点 + adversarial 実装 API 詳細視点の部分同型統合) + P-4 (Revalidation Triggers section に「Foundation R11 または Foundation Security 個別 section 新設 → 本 spec Security Considerations sub-sections 全 revalidate」1 行追加 = pattern_21 foundation_revision_propagation 機構整備) + P-5 (Security Considerations section に「LLM prompt injection scope 宣言」sub-section 新設 = `raw/` + `AGENTS/skills/` は user 自己管理 trust boundary 内、prompt injection 対策 scope 外 = MVP single-user 想定、path traversal 明示扱い vs prompt injection silent の構造的不均一 を MVP scope 宣言で対処) + Security Considerations を 5 sub-section 化 (Path traversal + LLM CLI subprocess + 秘匿情報 / log artifact 漏洩 risk + LLM prompt injection scope + frontmatter encoding) で構造化。A-3 (SkillInvoker prompt_input schema mismatch failure mode) は skip = adversarial 自身 do_not_fix + speculative + Spec 2 Adjacent Sync 連携。A-4 (config.yml 値域 validation) は skip = adversarial 自身 do_not_fix + INFO + user self-sabotage 範囲 + R13.8 既存 SSoT。forced_divergence = partially_robust = primary path_traversal 主要 concern は別前提 (skill file integrity) 下でも core issue 成立、ただし skill file integrity 別 vector (= 検出 5 同方向)、severity low MVP scope 外。
+- 2026-05-04: A-2 phase Round 8 修正 (treatment=dual、cross-spec 整合、primary 検出 3 件中 1 件採用 + 2 件 skip + adversarial 独立検出 5 件全件採用 = 全 6 件採用) = A-1 (Spec 7 R13.7 引用 dangling pointer → R15.1 (= L3 診断 API) に書換 6 箇所 = L27 / L58 / L69 / L136 / L198 / L782-783 で「Spec 7 R13.7」を「Spec 7 R15.1」に統一、取得 API = `check_l3_thresholds()` / `get_l3_diagnostics()` 明記、Spec 7 design L389 「R14 欠番」確認 = adversarial 独立 ERROR 検出、cross-spec 番号体系踏込なしで primary miss) + A-2 (interactive skill 対話ログ保存 path フラット形式 → Spec 2 SSoT (Decision 2-7) sub-directory 形式に書換 = `raw/llm_logs/interactive/interactive-<skill>-<ts>.md` を `raw/llm_logs/interactive/<skill_name>/<ts>-<session_id>.md` に統一 3 箇所 (L182 / L242 / L863) = Spec 2 design L774 SSoT 整合、adversarial 独立 ERROR 検出) + A-3 (Foundation §5.9.1 / §5.9.2 引用 dangling = Foundation 物理 file `foundation.md` 未生成 + §5.9.x 番号は `drafts/rwiki-v2-consolidated-spec.md` L1188/L1224 由来、L59 / L72 / L73 / L972 / L999 で「Foundation §5 Frontmatter スキーマ骨格 + drafts §5.9.x 由来 + 物理 file 生成後 migrate 予定」に一般化引用) + A-4 (MaintenanceSurface 閾値判定責務明文化 = Spec 5 `check_l2_thresholds()` / Spec 7 `check_l3_thresholds()` の trigger 判定済リスト取得明示 + 本 spec MaintenanceConfig の閾値 field を Spec 4 MaintenanceUX layer redundant copy として位置付け、impl 段階で read-through 統一を Open Questions 持ち越し item 候補化 = pattern_07 responsibility_boundary 解消) + A-5 (chat-sessions ファイル名 prefix `chat-<ts>.md` → Spec 2 SSoT `<ts>-<session_id>.md` 形式に統一 3 箇所 = A-2 と同方向、L182 / L241 / L862 修正) + P-1 (usage_signal 4 種 enum SSoT 所管明文化 = R4.6 が本 spec 4 種 SSoT、Spec 5 R10.1 event 11 種の context attribute schema を本 spec が独自拡張 = Spec 5 拡張可規約整合明記、responsibility_boundary 解消)。P-2 (Revalidation Triggers L82-90 9 entries precision 不均一) は skip = primary 自身 INFO + cosmetic level + 構造的不均一 (b) 容認。P-3 (config key namespace collision SSoT pointer 不在) は skip = primary 自身 INFO + silent 状態 + MVP scope 実害低 + 他 spec config key collision 顕在化時に次 spec で SSoT 確立検討。重要 finding = adversarial 独立 ERROR 2 件 (A-1 + A-2) = primary が他 spec 番号体系 / Spec 2 SSoT update を踏み込まず miss、cross-spec 整合観点固有の adversarial 価値再確認 = 同型重複 0 件 (= Round 1-7 の 4 件横断再現性 evidence と対照) + adversarial 独立検出力決定的 evidence。forced_divergence = partially_robust = primary 結論 (Spec 7 R13.7 dangling) は drafts consolidated-spec 未確認の uncertainty 残るが Spec 7 requirements / design grep で R13.7 不在確定。Adjacent Sync TODO = req improvements 持ち越し (= req L56 / L316 の interactive log path フラット形式 + req chat-sessions filename `chat-<ts>.md` も Spec 2 SSoT 整合の req 改版必要だが、treatment=dual branch 上 req touch 禁止規律で本 Round では design.md のみ修正、req 改版は別 session で main 上実施)。
