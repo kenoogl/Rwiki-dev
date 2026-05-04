@@ -313,7 +313,7 @@ sequenceDiagram
 - Step 5 reinforcement は Perspective `--save` 時のみ + Hypothesis 出力時 (R12.6 = Direct/Support 種別 `reinforced` event 送出)、Hypothesis verify confirmed/refuted 時は別 Flow (Flow 2 Step 4)
 - Perspective stdout (`--save` なし) 時も Retrieval 種別 usage_signal は送出 (R4.5(c) 「使われた edge 全て」条件と整合 = R12.6 reinforced event 送出条件 (Direct/Support) とは別軸の Retrieval 軸)
 - usage_signal 種別は Direct / Support / Retrieval / Co-activation の 4 種から選択 (R4.6)、`reinforced` event の context attribute として記録 (R12.6 / R12.7)
-- **recency 計算 + bridge_potential pre-fetch (Step 3 直前)**: ScoringContext.edge_history_cache に Step 2 traverse 結果 N 件分の最終 event 日時を pre-fetch (= Spec5Client.get_edge_history(edge_id) を Step 3 直前にバッチ呼出)、Step 3 ScoringStrategy.score() 内で recency 計算に使用。Step 4 の get_edge_history は evidence 参照目的で別途使用 (= cache 再利用可で重複呼出回避)。Hypothesis 系列のみ ScoringContext.bridge_potential_map に find_missing_bridges 結果を注入
+- **recency 計算 + bridge_potential pre-fetch (Step 3 直前)**: ScoringContext.edge_history_cache に Step 2 traverse 結果 N 件分の最終 event 日時を pre-fetch (= Spec5Client.get_edge_history(edge_id) を Step 3 直前にバッチ呼出)、Step 3 ScoringStrategy.score() 内で recency 計算に使用。Step 4 の get_edge_history は evidence 参照目的で別途使用 (= cache 再利用可で重複呼出回避)。Step 4 cache 再利用は staleness 許容 (= same Pipeline invoke 内のみ valid、cross-process concurrent edge_events.jsonl append による staleness は MVP scope 外、Round 6 A-3 整合)。Hypothesis 系列のみ ScoringContext.bridge_potential_map に find_missing_bridges 結果を注入
 
 ### Flow 2: Verify Workflow 4-step (Requirement 8)
 
@@ -669,6 +669,7 @@ class ScoringContext:
 **Contracts**: Service [✓] / State [✓]
 
 ```python
+# 並行 transition (= 例: confirmed → promoted と confirmed → archived の 2 process 同時実行) = last-rename-wins、check-and-set 不要 = MVP first 規律 (Round 6 P-3 整合)
 ALLOWED_TRANSITIONS: dict[HypothesisStatus, set[HypothesisStatus]] = {
     HypothesisStatus.DRAFT:     {HypothesisStatus.VERIFIED},
     HypothesisStatus.VERIFIED:  {HypothesisStatus.CONFIRMED, HypothesisStatus.REFUTED, HypothesisStatus.EVOLVED, HypothesisStatus.VERIFIED},
@@ -688,7 +689,7 @@ def rollback_pending(hyp_id: str) -> None: ...       # atomic rollback、次回 
 **State Management**:
 - State model: 7 status (`draft` / `verified` / `confirmed` / `refuted` / `promoted` / `evolved` / `archived`)
 - Persistence: `review/hypothesis_candidates/<slug>-<ts>.md` の frontmatter (Foundation §2.3 / R7.8)
-- Concurrency strategy: AtomicFrontmatterEditor 経由 (write-to-tmp → rename、R12.8 (d)、並行 verify / approve race condition 防止)
+- Concurrency strategy: AtomicFrontmatterEditor 経由 (write-to-tmp → rename、R12.8 (d))。並行 process race の最終 winner = last-rename-wins (= POSIX rename overwrites with no error)、physical corruption は防止されるが Read-Modify-Write race による updates lost は MVP scope 外 (= 運用で並行需要顕在化時に file lock 採用検討、Round 6 P-1 整合)
 
 #### AtomicFrontmatterEditor (helper、`rw_hypothesis_state.py` に同居)
 
@@ -701,7 +702,7 @@ def rollback_pending(hyp_id: str) -> None: ...       # atomic rollback、次回 
 - read frontmatter + body
 - modify frontmatter dict
 - write to tmp file → rename (POSIX atomic)
-- rollback support (前 state 保持で revert 可能)
+- rollback support (前 state 保持で revert 可能、ただし単独 process 内 rollback のみ。並行 process race による前 state 上書きは last-rename-wins で勝者 process の前 state が以後の rollback 対象、MVP scope 外、Round 6 P-1 整合)
 
 ### Domain D: Verify Workflow
 
@@ -718,6 +719,7 @@ def rollback_pending(hyp_id: str) -> None: ...       # atomic rollback、次回 
 - Step 3: 集約判定 (`supporting≥confirmed_threshold ∧ refuting=0 → confirmed` / `refuting≥refuted_threshold → refuted` / 両条件不成立 ∧ supporting+refuting≥1 → `partial` / 両条件不成立 ∧ supporting+refuting=0 → `verified_pending`、R8.4 + R13.3 config threshold 整合、threshold default = 2)
 - Step 4: `verification_attempts` append (atomic、R8.5 / R12.8 (d)) + `reinforced` event (confirmed/refuted のみ、R8.6) + `record_decision` (R8.7)
 - record_decision 失敗時の rollback (R8.7)、atomic で verification_attempts append + status 遷移を取消。**rollback 対象は本 spec 所管の frontmatter (verification_attempts + status) のみ**、Step 4 で先行送出済の `reinforced` event は Spec 5 R10.1 eventual consistency 整合の forward-only として L2 ledger 上に残置 (本 spec の rollback scope 越境禁止、edge_events.jsonl への取消 API 呼出はしない、Round 4 責務境界 review 反映)
+- **reinforced event append 自体が失敗 (= Spec 5 API timeout / network / I/O error) した case = WARN + record_decision 進行継続 + skipped_edges に (edge_id, 'append_failed') 記録 + verification_attempts.edge_reinforcements には記録しない (= Spec 5 Hygiene eventual consistency 整合、Round 5 P-3 'append_failed' 値域 + Round 6 P-2 整合)**
 - evidence 候補 0 件時は INFO + status 据置 (R8.11)
 
 **Dependencies**:
@@ -781,7 +783,7 @@ def run(hypothesis_id: str, add_evidence: list[str] = None, force_status: str = 
 - 各 trigger を `rw doctor` 経由 or 直接 API で取得 (R10.2)
 - `💡` marker で表示文字列生成 + 推奨対応コマンド併記 (R10.3)
 - surface のみ (自動実行しない、R10.4)
-- session 内 1 回までの頻度制限 (R10.5)、`/dismiss` (R10.6) / `/mute maintenance` (R10.7) 受付 (表示 layer は Spec 4)
+- session 内 1 回までの頻度制限 (R10.5、頻度制限 state は in-process only = 各 session 独立、並行 session は各々 1 回 surface = MVP 想定、cross-process 制限不要、Round 6 A-2 整合)、`/dismiss` (R10.6) / `/mute maintenance` (R10.7) 受付 (表示 layer は Spec 4)
 - 閾値 config 注入 (R10.8)
 - 複数同時発火時の優先順位付け (R10.9、Scenario 33)
 - `rw chat --mode autonomous` toggle 対応 (R10.10、mode toggle 自体は Spec 4)
@@ -865,7 +867,7 @@ def write_hypothesis(text: str, frontmatter: HypothesisFrontmatter, slug: str) -
 **Atomic Append Strategy (R12.4 末尾 + R12.8 (a) 整合、MVP 確定方針、Round 2 一貫性 review 反映)**:
 - 書込方式: **write-to-tmp → rename** (= R12.8 全 4 対象 (a) 対話ログ + (b) Perspective 保存 + (c) Hypothesis 候補 + (d) Hypothesis frontmatter 統一方式に整合)。各 turn で (1) 既存 log file 全内容 read → (2) 新 turn 内容を末尾に追加 → (3) tempfile に write + os.fsync → (4) os.rename で atomic 置換
 - per-Turn cost: O(N) (N = 既存 turn 数) = 1 turn 1KB × 100 turn = 100KB read+write、SSD で 10ms order、長 session (1000 turn × 1KB = 1MB) でも 100ms order = MVP 想定許容範囲
-- 異常終了時 partial write 防止: **完全保証** (= POSIX rename atomicity)、SIGINT / kill / crash で消失するのは進行中 turn 1 件のみ、許容範囲
+- 異常終了時 partial write 防止: **完全保証** (= 単独 process における POSIX rename atomicity)、SIGINT / kill / crash で消失するのは進行中 turn 1 件のみ、許容範囲。**並行 process race**: 同一 log file への concurrent multi-process append は last-rename-wins (= 先 process の turn 消失 may occur)。MVP 想定 = 1 session = 1 process = 並行 append なし。並行需要顕在化時に file lock or per-session 独立 file 移行検討 (Round 6 A-1 整合)
 - 大規模 / 高頻度対応: MVP では rename 統一方式、運用で I/O 遅延顕在化時 (= 1 turn 100 ms 超 or session log 10MB 超) に次 spec で append-only mode (POSIX O_APPEND ≤ PIPE_BUF) との分岐検討
 - 設計理由: R12.8 全 file 書込統一規律 (= 4 対象全部 write-to-tmp → rename) と完全整合、partial write defense 完全。Round 1 で初期導入した POSIX O_APPEND 方式 (≤ PIPE_BUF 4KB 制約) を Round 2 一貫性 review で R12.8 違反として再評価し、統一方式に転換 = MVP 規律「simple first」は「全 file write 同一方式」が真の simple
 
@@ -1071,6 +1073,7 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 | Step 失敗 (Step 2-5) | ERROR + exit 1 | R4.7 |
 | Verify Step 1 候補 0 件 | INFO + status verified 据置 | R8.11 |
 | Verify record_decision 失敗 | ERROR abort + atomic rollback (verification_attempts append + status 遷移取消、先行送出済 reinforced event は forward-only で L2 残置 = Spec 5 R10.1 eventual consistency 整合) | R8.7 |
+| Verify Step 4 reinforced event append 失敗 (Spec 5 API timeout / network / I/O error) | WARN + record_decision 進行継続 + skipped_edges に (edge_id, 'append_failed') 記録 + verification_attempts.edge_reinforcements 不記録 (Spec 5 Hygiene eventual consistency 整合、Round 6 P-2 整合) | R8.6 / R12.6 |
 | Approve record_decision 失敗 | ERROR abort + atomic rollback (status 遷移 + successor_wiki 取消、Approve は reinforced event 送出なしのため rollback scope は本 spec frontmatter のみ) | R9.5 |
 | Perspective `--save` / Hypothesize 出力後 reinforced event append 失敗 | WARN + 出力ファイル保持 + 失敗 edge_id を traversed_edges に記録 (Spec 5 Hygiene eventual consistency 整合、abort + rollback しない) | R12.6 / R1.8 |
 | origin_edges に reject/deprecated edge | INFO skip + 結果出力に記録 | R12.7 |
@@ -1120,8 +1123,8 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 
 ### Performance / Concurrency
 
-1. **test_concurrent_verify_atomic_update** — 並行 verify で frontmatter race condition なし (R12.8)
-2. **test_concurrent_approve_atomic_update** — 並行 approve で status 遷移 race condition なし (R12.8 (d))
+1. **test_concurrent_verify_atomic_update** — 並行 verify で frontmatter physical corruption なし (R12.8、Round 6 P-1 整合)。Read-Modify-Write race による updates lost は assertion 対象外 (= last-rename-wins、MVP scope 外)
+2. **test_concurrent_approve_atomic_update** — 並行 approve で status 遷移 physical corruption なし (R12.8 (d)、Round 6 P-1 整合)。同上 RMW race は assertion 対象外
 3. **test_pipeline_large_traverse_response** — 10K edges depth=2 で Spec 5 API 性能 SLA (300ms) を超過しない (R11.8)
 4. **test_evidence_collector_large_raw** — raw 10K+ ファイル規模での Step 1 性能 (実装段階で incremental indexing 戦略確定後の検証、R8.2)
 
@@ -1179,3 +1182,4 @@ _change log_
 - 2026-05-04: A-2 phase Round 3 修正 (treatment=dual、実装可能性 + アルゴリズム + 性能 統合、primary 検出 3 件中 2 件採用 + 1 件 skip + adversarial 独立検出 2 件全件採用 = 全 4 件採用) = P-1 (Pipeline 全体応答時間 SLA 説明補強 = 「本 spec として独立 SLA は規定しない、Spec 5 SLA + 重い処理積算 + LLM subprocess で導出、MVP first」明記 + Open Questions 表に R11.8 持ち越し item 追加) + P-2 (ScoringStrategy + VerifyWorkflow Step 3 + Flow 2 Key Decisions に Edge Case 動作 sub-section 新設 = novelty 分母 0 → 1.0 固定 + recency event-less → 0.5 固定 + INFO 通知 + partial 範囲明示式 supporting + refuting condition) + A-1 (ScoringContext に bridge_potential_map field 追加 = Hypothesis scoring 用 edge_id → bridge_potential dict、Pipeline Step 2 後 find_missing_bridges 呼出で注入規定 + Flow 1 Key Decisions に pre-fetch 規定追加) + A-2 (Flow 1 Key Decisions に「recency 計算 + bridge_potential pre-fetch (Step 3 直前)」規定追加 = ScoringContext.edge_history_cache に Step 2 後バッチ pre-fetch + Step 4 cache 再利用、5 段階フロー順序矛盾解消)。P-3 (EdgeFeedback batch partial-success state) は skip = adversarial 両案 do_not_fix + severity INFO + 既存 Failure Modes 表で十分。
 - 2026-05-04: A-2 phase Round 4 修正 (treatment=dual、責務境界、primary 検出 4 件 + adversarial 独立検出 2 件中 1 件採用 + 1 件 P-4 同型重複 + 1 件 do_not_fix = 全 5 件採用) = P-1 (CmdApproveHypothesisHandler L515 cmd_promote_to_synthesis 引数名 caller/callee 視点分離注記 = Spec 7 callee `target_id` vs 本 spec caller `hypothesis_id` の R9.9 三者命名関係整合明示) + P-2 (cmd_verify + cmd_approve_hypothesis docstring に reason=None 時 chat session auto-generate fallback 補完規律明記 = R8.7 + R9.5 + Spec 5 R11.6 reasoning 必須 default skip 不可整合) + P-3 (Dependency Direction DAG に rw_edge_feedback.py 配置層追記 = Pipeline + VerifyWorkflow 両方から呼出される共有 component を Spec 5 Client より下流かつ Pipeline より上流に新層配置、Mermaid + File Structure + Component Mapping 整合回復) + P-4 (VerifyWorkflow Step 4 rollback 範囲明文化 + Failure Modes 表 reinforced event policy 追記 = rollback scope は本 spec frontmatter のみ、先行送出済 reinforced event は forward-only L2 残置 = Spec 5 R10.1 eventual consistency 整合、責務境界明確化 = primary P-4 + adversarial 独立検出 A-1 同型再現で検出信頼性) + A-2 (EdgeFeedback Responsibilities L881 「11 種列挙の基本セット 8 種のうち」表記削除 = requirements 未記載の本設計書初出表記が SSoT 出典不明により規範範囲先取り risk、簡素化「11 種のうち `reinforced` event のみ使用 + 拡張可規約整合」に統一)。A-3 (ScoringContext.spec5_client field と Pipeline outbound dependency の 2 経路) は skip = adversarial 自身 do_not_fix 自評価 + speculative + requirement linkage 弱。
 - 2026-05-04: A-2 phase Round 5 修正 (treatment=dual、失敗モード + 観測 統合、primary 検出 4 件中 2 件採用 + 2 件 skip + adversarial 独立検出 3 件中 2 件採用 + 1 件 P-2 同型重複 = 全 4 件採用) = P-2+A-2 (PipelineInvokeResult に skipped_edges field 追加 = [(edge_id, reason), ...] reject/deprecated edge skip + Spec 5 API failure + I/O error 等で append できなかった edge と理由 + reinforced_events に「append 成功 events のみ含む」注記 = VerifyResult.skipped_edges と対称化 + Pipeline / Verify 両 result type の API 設計一貫性回復 = primary + adversarial 独立同型再現 = 横断再現性 evidence) + P-3 (ReinforcedEvent skip_reason 値域に 'append_failed' 追加 = Spec 5 API failure / I/O error 識別、L1068 Failure Modes append 失敗 case の SSoT 値域充足、最小 patch) + A-1 (Failure Modes 表 L1077 entry 動作列書き換え = 「実装段階で incremental indexing 戦略確定 (持ち越し)」を「WARN + degraded mode 通知 + 結果返却継続 (Performance Strategy L747-752 整合)」に修正 = Round 1 Performance Strategy 確定後の表 update miss closure、internal_contradiction 解消) + A-3 (HypothesisState rollback_last_change → rollback_pending 改名 + docstring に「次回 commit 確定前の本 spec 所管全変更を 1 回呼出で取消、AtomicFrontmatterEditor 前 state 保持機構整合」明記 = Verify/Approve の multi-step rollback 範囲明確化、impl phase atomic boundary 判定 SSoT 確立)。P-1 (Failure Modes 表 exit code 列追加) は skip = adversarial counter do_not_fix + handler docstring 既存 SSoT で二重 SSoT 化回避。P-4 (VerifyResult outcome → new_status 写像表追加) は skip = adversarial counter do_not_fix + 要件 R8.5 + ALLOWED_TRANSITIONS 既存 SSoT で 4 重化回避。
+- 2026-05-04: A-2 phase Round 6 修正 (treatment=dual、concurrency / timing、primary 検出 3 件全件採用 + adversarial 独立検出 3 件全件採用 + 1 件 P-1 同型重複 = 全 6 件採用) = P-1+A-4 (HypothesisState State Management の Concurrency strategy + AtomicFrontmatterEditor の rollback support + Performance/Concurrency tests #1/#2 に「並行 process race の最終 winner = last-rename-wins、Read-Modify-Write race による updates lost は MVP scope 外」明記 + tests assertion を physical corruption なしに精緻化 = primary + adversarial 独立同型再現 3 度目 = 横断再現性 evidence 累計 3 度) + P-2 (Failure Modes 表に Verify Step 4 reinforced event append 失敗 entry 追加 + L719-720 docstring 追記 = WARN + record_decision 進行継続 + skipped_edges 記録 + edge_reinforcements 不記録、Spec 5 Hygiene eventual consistency 整合 + Round 4 forward-only + Round 5 'append_failed' 値域と統合) + P-3 (ALLOWED_TRANSITIONS 前に並行 transition note 追加 = last-rename-wins + check-and-set 不要 + MVP first 規律) + A-1 (DialogueLog Atomic Append Strategy「完全保証」精緻化 = 単独 process partial write 防止のみ完全保証、並行 multi-process append は last-rename-wins で turn 消失 may occur 明記 + MVP 1 session = 1 process 想定 + 並行需要時 file lock or per-session 独立 file 移行検討) + A-2 (MaintenanceSurface 頻度制限 state = in-process only、各 session 独立、cross-process 制限不要 = MVP 想定明記) + A-3 (Pipeline Step 4 cache 再利用 staleness 許容 = same Pipeline invoke 内のみ valid、cross-process concurrent edge_events.jsonl append による staleness MVP scope 外明記)。forced_divergence = partially_robust = primary 暗黙前提 (sequential process) は alternative (async/threading 実装) でも core issue 成立、severity calibration のみ前提依存。
