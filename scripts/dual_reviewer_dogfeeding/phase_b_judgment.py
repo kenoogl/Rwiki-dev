@@ -26,7 +26,9 @@ from helpers import resolve_foundation_root  # noqa: E402
 
 V3_BASELINE_WALL_CLOCK_SECONDS = 420.7  # per review session (foundation V3 design 7th archive)
 H4_THRESHOLD_PER_SESSION = V3_BASELINE_WALL_CLOCK_SECONDS * 1.5  # 631s
-SECTION_ID = "phase-b-fork-judgment-v1"
+# 47th 末改修: §12 (= manual-authored final 集約) と衝突回避のため SECTION_ID を v2 に bump、§13 配置
+SECTION_ID = "phase-b-fork-judgment-v2"
+SECTION_NUMBER = "§13"
 SPEC3_FATAL_COUNT_DEFAULT = 1
 SPEC3_DISAGREEMENT_COUNT_DEFAULT = 2
 
@@ -132,6 +134,27 @@ def evaluate_v4_hypotheses(metrics: dict) -> dict[str, Any]:
   }
 
 
+def _build_three_treatment_ablation(metrics: dict) -> dict[str, Any]:
+  """3 系統 ablation evidence (47th 末改修、§12 整合).
+
+  各系統の over_correction_ratio + adoption_rate + adversarial / judgment 寄与 metric を集約。
+  paper rigor 用 ablation evidence の machine-readable representation.
+  """
+  per = metrics.get("metrics", {})
+  result: dict[str, Any] = {}
+  for t in ["single", "dual", "dual+judgment"]:
+    m = per.get(t, {})
+    result[t] = {
+      "over_correction_ratio": m.get("over_correction_ratio", 0),
+      "adoption_rate": m.get("adoption_rate", 0),
+      "detection_count": m.get("detection_count", 0),
+      "primary_findings_count": m.get("primary_findings_count", 0),
+      "adversarial_findings_count": m.get("adversarial_findings_count", 0),
+      "forced_divergence_findings_count": m.get("forced_divergence_findings_count", 0),
+    }
+  return result
+
+
 def build_judgment_record(metrics: dict, jsonl_path: Path,
                            spec3_fatal_count: int = SPEC3_FATAL_COUNT_DEFAULT,
                            figure_dir: Path | None = None) -> dict[str, Any]:
@@ -149,6 +172,7 @@ def build_judgment_record(metrics: dict, jsonl_path: Path,
     },
     "evidence_references": conditions["evidence_references"],
     "v4_hypotheses": hypotheses,
+    "three_treatment_ablation": _build_three_treatment_ablation(metrics),
   }
   if figure_dir is not None:
     figure_dir = Path(figure_dir)
@@ -166,7 +190,7 @@ def build_judgment_record(metrics: dict, jsonl_path: Path,
 
 
 def append_judgment_to_report(report_path: Path, judgment_record: dict) -> str:
-  """comparison-report.md §12 append (idempotent、P5 fix).
+  """comparison-report.md §13 append (idempotent、47th 末改修 = §12 衝突回避のため §13 / SECTION_ID v2).
 
   Returns: "appended" | "skipped"
   """
@@ -176,12 +200,13 @@ def append_judgment_to_report(report_path: Path, judgment_record: dict) -> str:
     print("warning: section-id already exists、append skip", file=sys.stderr)
     return "skipped"
   appendix = (
-    f"\n## §12 Phase B fork judgment\n"
+    f"\n## {SECTION_NUMBER} Phase B fork judgment (scripts auto-generated)\n"
     f"<!-- section-id: {SECTION_ID} -->\n\n"
     f"- decision: {judgment_record.get('decision')}\n"
     f"- conditions: {json.dumps(judgment_record.get('conditions', {}), ensure_ascii=False)}\n"
     f"- evidence_references count: {len(judgment_record.get('evidence_references', []))}\n"
     f"- v4_hypotheses: {json.dumps(judgment_record.get('v4_hypotheses', {}), ensure_ascii=False)}\n"
+    f"- three_treatment_ablation: {json.dumps(judgment_record.get('three_treatment_ablation', {}), ensure_ascii=False)}\n"
   )
   with report_path.open("a", encoding="utf-8") as f:
     f.write(appendix)

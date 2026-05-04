@@ -127,8 +127,8 @@ def test_3_script_sequential_flow_produces_all_outputs(clean_30_line_jsonl_with_
   assert r3.returncode == 0, r3.stderr
   rec = json.loads(r3.stdout)
 
-  # comparison-report append 確認
-  assert "section-id: phase-b-fork-judgment-v1" in report.read_text()
+  # comparison-report append 確認 (47th 末改修: §12 衝突回避のため SECTION_ID v2)
+  assert "section-id: phase-b-fork-judgment-v2" in report.read_text()
 
   # judgment record evidence_references に independent adversarial issue 含む
   ids = [r["issue_id"] for r in rec["evidence_references"]]

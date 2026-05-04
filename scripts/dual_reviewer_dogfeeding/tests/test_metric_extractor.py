@@ -389,11 +389,12 @@ def test_extract_metrics_three_branch_concatenated_three_treatments(extractor_mo
   """改修 1+2: 3 系統 concatenate jsonl で全 treatment が独立 metric 持つ + 過剰修正比率横断統一定義."""
   jsonl_path = tmp_path / "merged_dev_log.jsonl"
   lines = []
-  # single 5 round × 2 detect = 10、skip 6 → 60%
+  # single 5 round × 2 detect = 10、round 1-2 fix_now (0 skip) + round 3-5 skip (6 skip) → 60%
   for r in range(1, 6):
+    decision = "fix_now" if r <= 2 else "skip"
     summary = [
-      _make_primary_summary_item(f"S-P-{r}-1", user_decision="fix_now" if r <= 2 else "skip"),
-      _make_primary_summary_item(f"S-P-{r}-2", user_decision="skip"),
+      _make_primary_summary_item(f"S-P-{r}-1", user_decision=decision),
+      _make_primary_summary_item(f"S-P-{r}-2", user_decision=decision),
     ]
     lines.append(json.dumps(_make_summary_review_case_single(r, "h", summary)))
   # dual 5 round × 2 detect (P 1 + A 1) = 10、skip 3 → 30%

@@ -70,14 +70,39 @@ def _build_figure_3(metrics: dict) -> dict:
 
 
 def _build_figure_ablation(metrics: dict) -> dict:
-  """dual vs dual+judgment 過剰修正比率削減 + 採択率増加 + judgment override + 必要性判定 quality (Req 5.4、V4 §4.4 整合)."""
-  dual = metrics["metrics"].get("dual", {})
-  dual_judgment = metrics["metrics"].get("dual+judgment", {})
+  """3 系統 ablation 拡張 (47th 末改修、§12 整合).
+
+  単独 dual vs dual+judgment 比較に加えて 3 系統 cross ablation を出力:
+  - over_correction_ratio_per_treatment: single / dual / dual+judgment 各系統の過剰修正比率
+  - adoption_rate_per_treatment: 各系統の採択率
+  - single_to_dual_over_correction_diff: adversarial layer 純効果 (§12.2、47th 末 -41.3pt)
+  - dual_to_dual_judgment_over_correction_diff: judgment layer 純効果 (§12.3、47th 末 +11.6pt)
+  既存 dual vs dual+judgment field (over_correction_reduction / adoption_rate_increase /
+    judgment_override_count / override_reasons) は後方互換のため維持.
+  """
+  per = metrics.get("metrics", {})
+  single = per.get("single", {})
+  dual = per.get("dual", {})
+  dual_judgment = per.get("dual+judgment", {})
   return {
+    # 既存 fields (後方互換 = 既存 test 維持)
     "over_correction_reduction": dual.get("over_correction_ratio", 0) - dual_judgment.get("over_correction_ratio", 0),
     "adoption_rate_increase": dual_judgment.get("adoption_rate", 0) - dual.get("adoption_rate", 0),
     "judgment_override_count": dual_judgment.get("judgment_override_count", 0),
     "override_reasons": dual_judgment.get("override_reasons", []),
+    # 47th 末改修: 3 系統 ablation
+    "over_correction_ratio_per_treatment": {
+      "single": single.get("over_correction_ratio", 0),
+      "dual": dual.get("over_correction_ratio", 0),
+      "dual+judgment": dual_judgment.get("over_correction_ratio", 0),
+    },
+    "adoption_rate_per_treatment": {
+      "single": single.get("adoption_rate", 0),
+      "dual": dual.get("adoption_rate", 0),
+      "dual+judgment": dual_judgment.get("adoption_rate", 0),
+    },
+    "single_to_dual_over_correction_diff": dual.get("over_correction_ratio", 0) - single.get("over_correction_ratio", 0),
+    "dual_to_dual_judgment_over_correction_diff": dual_judgment.get("over_correction_ratio", 0) - dual.get("over_correction_ratio", 0),
   }
 
 

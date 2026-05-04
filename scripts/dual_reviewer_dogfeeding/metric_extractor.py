@@ -52,8 +52,54 @@ def _label(finding: dict) -> str | None:
   return necessity.get("fix_decision", {}).get("label")
 
 
+def _aggregate_findings_array(findings: list[dict], m: dict[str, Any]) -> None:
+  """Path A: dual+judgment 系統 = `findings[]` array path (= necessity_judgment.fix_decision.label 集計)."""
+  for f in findings:
+    m["detection_count"] += 1
+    label = _label(f)
+    if label == "must_fix":
+      m["must_fix_count"] += 1
+    elif label == "should_fix":
+      m["should_fix_count"] += 1
+    elif label == "do_not_fix":
+      m["do_not_fix_count"] += 1
+    necessity = f.get("necessity_judgment", {})
+    if necessity.get("override_reason"):
+      m["judgment_override_count"] += 1
+      m["override_reasons"].append(necessity["override_reason"])
+    if f.get("source") == "adversarial" and label in ("must_fix", "do_not_fix"):
+      m["adversarial_disagreement_count"] += 1
+
+
+def _aggregate_summary_arrays(rc: dict, m: dict[str, Any]) -> None:
+  """Path B: single / dual 系統 = summary array path (judgment skip 系で findings[] 不在).
+
+  detection_count = primary_findings_summary + adversarial_findings_summary 件数
+    (forced_divergence は count up しない、§12 整合 = total detect は P + A のみ)
+  user_decision == "skip" → do_not_fix_count に集計 (judgment 系の do_not_fix label と意味的統一)
+  user_decision != "skip" (= "fix_now" / "approved" 等) → must_fix_count に集計
+  """
+  primary = rc.get("primary_findings_summary", [])
+  adversarial = rc.get("adversarial_findings_summary", [])
+  for item in list(primary) + list(adversarial):
+    m["detection_count"] += 1
+    decision = item.get("user_decision", "")
+    if decision == "skip":
+      m["do_not_fix_count"] += 1
+    else:
+      m["must_fix_count"] += 1
+
+
 def extract_metrics(jsonl_path: Path) -> dict[str, Any]:
-  """JSONL log read + 12 軸 metric 算出."""
+  """JSONL log read + 12 軸 metric 算出.
+
+  schema 分岐 (47th 末改修):
+  - dual+judgment 系統 = `findings[]` array (= necessity_judgment.fix_decision.label 集計、Path A)
+  - single / dual 系統 = `primary_findings_summary[]` + `adversarial_findings_summary[]`
+    + `forced_divergence_summary[]` (judgment skip で findings[] 不在、Path B)
+  過剰修正比率は系統横断統一 = skip 件数 (B 系統) / do_not_fix 件数 (A 系統) を do_not_fix_count に集計、
+    over_correction_ratio = do_not_fix_count / detection_count (= total detect P+A)
+  """
   jsonl_path = Path(jsonl_path)
   if not jsonl_path.is_file():
     raise FileNotFoundError(jsonl_path)
@@ -89,27 +135,25 @@ def extract_metrics(jsonl_path: Path) -> dict[str, Any]:
         "judgment_override_count": 0, "override_reasons": [],
         "fatal_patterns_hit": 0, "phase_1_isomorphism_hit": 0,
         "adversarial_disagreement_count": 0,
+        # top-level count field aggregation (47th 末改修: dev_log の上位 field を per-treatment 保持)
+        "primary_findings_count": 0,
+        "adversarial_findings_count": 0,
+        "forced_divergence_findings_count": 0,
       }
     m = per_treatment[t]
     m["wall_clock_seconds"] += _wall_clock_seconds(rc)
-    for f in rc.get("findings", []):
-      m["detection_count"] += 1
-      label = _label(f)
-      if label == "must_fix":
-        m["must_fix_count"] += 1
-      elif label == "should_fix":
-        m["should_fix_count"] += 1
-      elif label == "do_not_fix":
-        m["do_not_fix_count"] += 1
-      necessity = f.get("necessity_judgment", {})
-      if necessity.get("override_reason"):
-        m["judgment_override_count"] += 1
-        m["override_reasons"].append(necessity["override_reason"])
-      # adversarial_disagreement: source=adversarial で must_fix or do_not_fix label
-      if f.get("source") == "adversarial" and label in ("must_fix", "do_not_fix"):
-        m["adversarial_disagreement_count"] += 1
+    # top-level count field aggregation
+    m["primary_findings_count"] += rc.get("primary_findings_count", 0)
+    m["adversarial_findings_count"] += rc.get("adversarial_findings_count", 0)
+    m["forced_divergence_findings_count"] += rc.get("forced_divergence_findings_count", 0)
+    # schema 分岐: findings[] 存在で Path A、それ以外 (= summary array) で Path B
+    findings = rc.get("findings")
+    if findings:
+      _aggregate_findings_array(findings, m)
+    else:
+      _aggregate_summary_arrays(rc, m)
 
-  # ratio + adoption_rate + over_correction_ratio
+  # ratio + adoption_rate + over_correction_ratio (47th 末改修: 系統横断統一定義)
   for t, m in per_treatment.items():
     total = m["detection_count"] or 1
     m["must_fix_ratio"] = m["must_fix_count"] / total
