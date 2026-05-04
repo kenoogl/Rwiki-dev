@@ -580,7 +580,8 @@ class PipelineInvokeResult:
     output_text: str
     saved_path: Optional[Path]
     traversed_edges: list[str]
-    reinforced_events: list[ReinforcedEvent]
+    reinforced_events: list[ReinforcedEvent]   # append 成功 events のみ含む (skipped entries は別 field skipped_edges 参照、Round 5 P-2/A-2 整合)
+    skipped_edges: list[tuple[str, str]]       # [(edge_id, reason), ...] reject/deprecated edge skip + Spec 5 API failure + I/O error 等で append できなかった edge と理由 (= VerifyResult.skipped_edges と対称、Round 5 P-2/A-2 整合)
     warnings: list[str]
     info: list[str]
 
@@ -681,7 +682,7 @@ ALLOWED_TRANSITIONS: dict[HypothesisStatus, set[HypothesisStatus]] = {
 def transition(hyp_id: str, from_: HypothesisStatus, to: HypothesisStatus) -> None: ...
 def append_verification_attempt(hyp_id: str, attempt: VerificationAttempt) -> None: ...
 def record_successor_wiki(hyp_id: str, wiki_path: Path) -> None: ...
-def rollback_last_change(hyp_id: str) -> None: ...   # atomic rollback (R8.7 / R9.5)
+def rollback_pending(hyp_id: str) -> None: ...       # atomic rollback、次回 commit 確定前の本 spec 所管全変更を 1 回呼出で取消 (= verification_attempts append + status 遷移 + successor_wiki 記録の組み合わせ、AtomicFrontmatterEditor 前 state 保持機構と整合、R8.7 / R9.5、Round 5 A-3 整合)
 ```
 
 **State Management**:
@@ -1033,7 +1034,7 @@ class ReinforcedEvent:
     actor: str = 'spec6'
     context: ReinforcedEventContext
     skipped: bool = False
-    skip_reason: Optional[str] = None  # 'edge_rejected' | 'edge_deprecated'
+    skip_reason: Optional[str] = None  # 'edge_rejected' | 'edge_deprecated' | 'append_failed' (Spec 5 API failure / I/O error 識別、Round 5 P-3 整合)
 ```
 
 ## Error Handling
@@ -1074,7 +1075,7 @@ Severity 4 水準 (`CRITICAL` / `ERROR` / `WARN` / `INFO`) + exit code 0/1/2 統
 | Perspective `--save` / Hypothesize 出力後 reinforced event append 失敗 | WARN + 出力ファイル保持 + 失敗 edge_id を traversed_edges に記録 (Spec 5 Hygiene eventual consistency 整合、abort + rollback しない) | R12.6 / R1.8 |
 | origin_edges に reject/deprecated edge | INFO skip + 結果出力に記録 | R12.7 |
 | Spec 7 8 段階対話 user 中断 | status `confirmed` 据置、successor_wiki 不記録 | R9.7 |
-| Verify Step 1 raw 10K+ ファイル grep 性能 | **実装段階で incremental indexing 戦略確定** (design 持ち越し) | R8.2 |
+| Verify Step 1 raw 10K+ ファイル grep 性能未達 | WARN + degraded mode 通知 (= 「検索が遅延しています」表示) + 結果返却継続 (Performance Strategy L747-752 整合、Round 1 確定 / Round 5 A-1 で update miss closure) | R8.2 |
 
 ### Monitoring
 
@@ -1177,3 +1178,4 @@ _change log_
 - 2026-05-04: A-2 phase Round 2 修正 (treatment=dual、一貫性、primary 検出 3 件 + adversarial 独立検出 1 件 = 全 4 件採用) = P-1 (DialogueLog atomic 方式統一 = Round 1 で導入した Buffer Flush Strategy section の POSIX O_APPEND 方式を R12.8 違反として再評価、write-to-tmp → rename 方式に転換、section 名「Atomic Append Strategy」に改称、Round 1 修正の方針転換実例 = round 別観点独立性 evidence) + P-2 (Failure Modes 表に Perspective save / Hypothesize 出力後 reinforced event 失敗時 entry 追加 = WARN + 出力ファイル保持 + 失敗 edge_id 記録、Spec 5 Hygiene eventual consistency 整合) + P-3 (cmd_hypothesize / cmd_verify / cmd_approve docstring 統一 = exit code 0/1/2 各 case 発火条件明示、Foundation R11 規律内一貫性) + A-1 (Flow 1 Key Decisions L311 拡張 = Perspective stdout 時 Retrieval 種別 usage_signal 送出明記、R4.5(c) 「全て」条件と R12.6 Direct/Support 条件の軸分離明示)。
 - 2026-05-04: A-2 phase Round 3 修正 (treatment=dual、実装可能性 + アルゴリズム + 性能 統合、primary 検出 3 件中 2 件採用 + 1 件 skip + adversarial 独立検出 2 件全件採用 = 全 4 件採用) = P-1 (Pipeline 全体応答時間 SLA 説明補強 = 「本 spec として独立 SLA は規定しない、Spec 5 SLA + 重い処理積算 + LLM subprocess で導出、MVP first」明記 + Open Questions 表に R11.8 持ち越し item 追加) + P-2 (ScoringStrategy + VerifyWorkflow Step 3 + Flow 2 Key Decisions に Edge Case 動作 sub-section 新設 = novelty 分母 0 → 1.0 固定 + recency event-less → 0.5 固定 + INFO 通知 + partial 範囲明示式 supporting + refuting condition) + A-1 (ScoringContext に bridge_potential_map field 追加 = Hypothesis scoring 用 edge_id → bridge_potential dict、Pipeline Step 2 後 find_missing_bridges 呼出で注入規定 + Flow 1 Key Decisions に pre-fetch 規定追加) + A-2 (Flow 1 Key Decisions に「recency 計算 + bridge_potential pre-fetch (Step 3 直前)」規定追加 = ScoringContext.edge_history_cache に Step 2 後バッチ pre-fetch + Step 4 cache 再利用、5 段階フロー順序矛盾解消)。P-3 (EdgeFeedback batch partial-success state) は skip = adversarial 両案 do_not_fix + severity INFO + 既存 Failure Modes 表で十分。
 - 2026-05-04: A-2 phase Round 4 修正 (treatment=dual、責務境界、primary 検出 4 件 + adversarial 独立検出 2 件中 1 件採用 + 1 件 P-4 同型重複 + 1 件 do_not_fix = 全 5 件採用) = P-1 (CmdApproveHypothesisHandler L515 cmd_promote_to_synthesis 引数名 caller/callee 視点分離注記 = Spec 7 callee `target_id` vs 本 spec caller `hypothesis_id` の R9.9 三者命名関係整合明示) + P-2 (cmd_verify + cmd_approve_hypothesis docstring に reason=None 時 chat session auto-generate fallback 補完規律明記 = R8.7 + R9.5 + Spec 5 R11.6 reasoning 必須 default skip 不可整合) + P-3 (Dependency Direction DAG に rw_edge_feedback.py 配置層追記 = Pipeline + VerifyWorkflow 両方から呼出される共有 component を Spec 5 Client より下流かつ Pipeline より上流に新層配置、Mermaid + File Structure + Component Mapping 整合回復) + P-4 (VerifyWorkflow Step 4 rollback 範囲明文化 + Failure Modes 表 reinforced event policy 追記 = rollback scope は本 spec frontmatter のみ、先行送出済 reinforced event は forward-only L2 残置 = Spec 5 R10.1 eventual consistency 整合、責務境界明確化 = primary P-4 + adversarial 独立検出 A-1 同型再現で検出信頼性) + A-2 (EdgeFeedback Responsibilities L881 「11 種列挙の基本セット 8 種のうち」表記削除 = requirements 未記載の本設計書初出表記が SSoT 出典不明により規範範囲先取り risk、簡素化「11 種のうち `reinforced` event のみ使用 + 拡張可規約整合」に統一)。A-3 (ScoringContext.spec5_client field と Pipeline outbound dependency の 2 経路) は skip = adversarial 自身 do_not_fix 自評価 + speculative + requirement linkage 弱。
+- 2026-05-04: A-2 phase Round 5 修正 (treatment=dual、失敗モード + 観測 統合、primary 検出 4 件中 2 件採用 + 2 件 skip + adversarial 独立検出 3 件中 2 件採用 + 1 件 P-2 同型重複 = 全 4 件採用) = P-2+A-2 (PipelineInvokeResult に skipped_edges field 追加 = [(edge_id, reason), ...] reject/deprecated edge skip + Spec 5 API failure + I/O error 等で append できなかった edge と理由 + reinforced_events に「append 成功 events のみ含む」注記 = VerifyResult.skipped_edges と対称化 + Pipeline / Verify 両 result type の API 設計一貫性回復 = primary + adversarial 独立同型再現 = 横断再現性 evidence) + P-3 (ReinforcedEvent skip_reason 値域に 'append_failed' 追加 = Spec 5 API failure / I/O error 識別、L1068 Failure Modes append 失敗 case の SSoT 値域充足、最小 patch) + A-1 (Failure Modes 表 L1077 entry 動作列書き換え = 「実装段階で incremental indexing 戦略確定 (持ち越し)」を「WARN + degraded mode 通知 + 結果返却継続 (Performance Strategy L747-752 整合)」に修正 = Round 1 Performance Strategy 確定後の表 update miss closure、internal_contradiction 解消) + A-3 (HypothesisState rollback_last_change → rollback_pending 改名 + docstring に「次回 commit 確定前の本 spec 所管全変更を 1 回呼出で取消、AtomicFrontmatterEditor 前 state 保持機構整合」明記 = Verify/Approve の multi-step rollback 範囲明確化、impl phase atomic boundary 判定 SSoT 確立)。P-1 (Failure Modes 表 exit code 列追加) は skip = adversarial counter do_not_fix + handler docstring 既存 SSoT で二重 SSoT 化回避。P-4 (VerifyResult outcome → new_status 写像表追加) は skip = adversarial counter do_not_fix + 要件 R8.5 + ALLOWED_TRANSITIONS 既存 SSoT で 4 重化回避。
