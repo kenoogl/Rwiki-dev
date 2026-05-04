@@ -52,9 +52,29 @@ def _label(finding: dict) -> str | None:
   return necessity.get("fix_decision", {}).get("label")
 
 
+_SKIP_PREFIXES = ("skip", "do_not_fix")
+
+
+def _is_skip_value(v: str) -> bool:
+  """user_decisions value (= prefix 不統一の文字列) から skip 判定 (= do_not_fix 同等)."""
+  if not isinstance(v, str):
+    return False
+  v_lower = v.lower()
+  if any(v_lower.startswith(p) for p in _SKIP_PREFIXES):
+    return True
+  if "skip_" in v_lower[:30] or "do_not_fix" in v_lower[:50]:
+    return True
+  return False
+
+
 def _aggregate_findings_array(findings: list[dict], m: dict[str, Any]) -> None:
-  """Path A: dual+judgment 系統 = `findings[]` array path (= necessity_judgment.fix_decision.label 集計)."""
+  """Path A: legacy findings[] array path (test fixture + entry に findings 含む dual+judgment 場合).
+
+  必要性判定 5-field がある finding を `necessity_judgment.fix_decision.label` で集計.
+  """
   for f in findings:
+    if not isinstance(f, dict):
+      continue
     m["detection_count"] += 1
     label = _label(f)
     if label == "must_fix":
@@ -71,23 +91,93 @@ def _aggregate_findings_array(findings: list[dict], m: dict[str, Any]) -> None:
       m["adversarial_disagreement_count"] += 1
 
 
+def _aggregate_judgment_label_distribution(rc: dict, m: dict[str, Any]) -> None:
+  """Path A': dual+judgment 実 data path = `judgment_label_distribution` 累計集計.
+
+  47th 末確認: 実 data dual+judgment では judgment_label_distribution.must_fix/should_fix/do_not_fix
+    の合計が §12 total detect (= 69) と一致、do_not_fix が §12 do_not_fix (= 23) と一致。
+  override / adversarial_disagreement は findings[] が同 entry に在る場合は補完集計.
+  """
+  jld = rc.get("judgment_label_distribution", {})
+  if not isinstance(jld, dict):
+    return
+  must = jld.get("must_fix", 0)
+  should = jld.get("should_fix", 0)
+  dnf = jld.get("do_not_fix", 0)
+  m["detection_count"] += must + should + dnf
+  m["must_fix_count"] += must
+  m["should_fix_count"] += should
+  m["do_not_fix_count"] += dnf
+  # findings[] が同 entry にあれば override / adversarial_disagreement のみ補完
+  findings = rc.get("findings", [])
+  if isinstance(findings, list):
+    for f in findings:
+      if not isinstance(f, dict):
+        continue
+      label = _label(f)
+      necessity = f.get("necessity_judgment", {})
+      if necessity.get("override_reason"):
+        m["judgment_override_count"] += 1
+        m["override_reasons"].append(necessity["override_reason"])
+      if f.get("source") == "adversarial" and label in ("must_fix", "do_not_fix"):
+        m["adversarial_disagreement_count"] += 1
+  # top-level judgment_override_count もあれば反映 (override_reasons は dev_log に明示なしの場合 0 で OK)
+  rc_override = rc.get("judgment_override_count", 0)
+  if rc_override and not findings:
+    m["judgment_override_count"] += rc_override
+
+
 def _aggregate_summary_arrays(rc: dict, m: dict[str, Any]) -> None:
-  """Path B: single / dual 系統 = summary array path (judgment skip 系で findings[] 不在).
+  """Path B: judgment skip 系統 + summary item が dict (= 完全 schema) の場合.
 
   detection_count = primary_findings_summary + adversarial_findings_summary 件数
     (forced_divergence は count up しない、§12 整合 = total detect は P + A のみ)
-  user_decision == "skip" → do_not_fix_count に集計 (judgment 系の do_not_fix label と意味的統一)
-  user_decision != "skip" (= "fix_now" / "approved" 等) → must_fix_count に集計
+  user_decision == "skip" → do_not_fix_count に集計、他 → must_fix_count.
   """
   primary = rc.get("primary_findings_summary", [])
   adversarial = rc.get("adversarial_findings_summary", [])
+  ud_top = rc.get("user_decisions", {}) if isinstance(rc.get("user_decisions"), dict) else {}
   for item in list(primary) + list(adversarial):
     m["detection_count"] += 1
+    if not isinstance(item, dict):
+      m["must_fix_count"] += 1
+      continue
     decision = item.get("user_decision", "")
-    if decision == "skip":
+    is_skip = _is_skip_value(decision)
+    # fallback: item.user_decision 空 + top-level user_decisions[issue_id|finding_id] が skip
+    if not is_skip and not decision:
+      iid = item.get("issue_id") or item.get("finding_id") or ""
+      if iid in ud_top:
+        is_skip = _is_skip_value(ud_top[iid])
+    if is_skip:
       m["do_not_fix_count"] += 1
     else:
       m["must_fix_count"] += 1
+
+
+def _aggregate_top_level_with_user_decisions(rc: dict, m: dict[str, Any]) -> None:
+  """Path C: 実 data 救済 path (= summary array が壊れている R9/R10 dual 等).
+
+  detection_count = top-level primary_findings_count + adversarial_findings_count.
+  do_not_fix_count = user_decisions value で skip prefix or do_not_fix を含むものを集計.
+  """
+  p = rc.get("primary_findings_count", 0)
+  a = rc.get("adversarial_findings_count", 0)
+  m["detection_count"] += p + a
+  ud = rc.get("user_decisions", {})
+  if isinstance(ud, dict):
+    for k, v in ud.items():
+      if _is_skip_value(v):
+        m["do_not_fix_count"] += 1
+      else:
+        m["must_fix_count"] += 1
+
+
+def _summary_items_usable(items: list) -> bool:
+  """summary array の全 item が dict (= 解釈可能) か."""
+  if not items:
+    return False
+  return all(isinstance(x, dict) for x in items)
 
 
 def extract_metrics(jsonl_path: Path) -> dict[str, Any]:
@@ -146,12 +236,31 @@ def extract_metrics(jsonl_path: Path) -> dict[str, Any]:
     m["primary_findings_count"] += rc.get("primary_findings_count", 0)
     m["adversarial_findings_count"] += rc.get("adversarial_findings_count", 0)
     m["forced_divergence_findings_count"] += rc.get("forced_divergence_findings_count", 0)
-    # schema 分岐: findings[] 存在で Path A、それ以外 (= summary array) で Path B
+    # schema 分岐 4 path (priority A' > A > B > C):
+    #   A' = judgment_label_distribution non-empty (= dual+judgment 実 data 主軸)
+    #   A  = legacy findings[] array (test fixture + judgment label 不在で findings 在る場合)
+    #   B  = summary array dict items (= single / dual 健全 entry)
+    #   C  = top-level count + user_decisions (= 実 data 救済 = summary 壊れ R9/R10 dual 等)
+    jld = rc.get("judgment_label_distribution", {})
+    jld_total = 0
+    if isinstance(jld, dict):
+      jld_total = jld.get("must_fix", 0) + jld.get("should_fix", 0) + jld.get("do_not_fix", 0)
     findings = rc.get("findings")
-    if findings:
+    primary_summary = rc.get("primary_findings_summary", [])
+    adversarial_summary = rc.get("adversarial_findings_summary", [])
+    summary_usable = (
+      _summary_items_usable(primary_summary) or _summary_items_usable(adversarial_summary)
+      or (not primary_summary and not adversarial_summary)
+    )
+
+    if jld_total > 0:
+      _aggregate_judgment_label_distribution(rc, m)
+    elif findings:
       _aggregate_findings_array(findings, m)
-    else:
+    elif summary_usable and (primary_summary or adversarial_summary):
       _aggregate_summary_arrays(rc, m)
+    else:
+      _aggregate_top_level_with_user_decisions(rc, m)
 
   # ratio + adoption_rate + over_correction_ratio (47th 末改修: 系統横断統一定義)
   for t, m in per_treatment.items():
