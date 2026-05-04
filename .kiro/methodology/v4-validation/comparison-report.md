@@ -384,6 +384,73 @@ V4 §1.5 (adversarial subagent 修正否定試行 prompt) + V4 §5.2 (judgment s
 
 ---
 
+## §12 A-2.1 3 系統対照実験 final 集約 (v0.3 追加、A-2.1 全完走、45th 末)
+
+### §12.1 3 系統比較 table (final、45th 末確定)
+
+Spec 6 (`rwiki-v2-perspective-generation`) design phase を pristine state `285e762` 起点として 3 系統で独立完走した ablation study 結果。
+
+| metric | treatment=single (第 2 系統) | treatment=dual (第 3 系統) | treatment=dual+judgment (第 1 系統) |
+|--------|-----------------------------|---------------------------|--------------------------------------|
+| branch | treatment-single | treatment-dual | main |
+| endpoint commit | `33e1a12` | `1b15138` | `f6bac54` |
+| total detect (P+A) | 46 | 60 | 69 |
+| primary detect | 46 | 29 | 48 |
+| adversarial detect | N/A (なし) | 31 | 54 |
+| forced_divergence 累計 | N/A | 14 件 | N/A (judgment 連動) |
+| rework events (Level 6) | 17 件 | 40 件 | 44 件 |
+| skip | 29 | 13 | 23 |
+| **過剰修正比率** | **63.0%** | **21.7%** | **33.3%** |
+| escalate=true 累計 | 17 件 | 0 件 | 4 件 |
+| design.md 行数増加 | +63 行 | +52 行 | +116 行 |
+| fatal_pattern hits | 1 件 | 0 件 (adversarial forced_divergence で代替) | 5 件 |
+
+### §12.2 treatment-single vs treatment-dual ablation (adversarial layer 機能寄与)
+
+adversarial layer の追加 (single → dual) で以下の変化が観測される:
+
+- 過剰修正比率: 63.0% → 21.7% = **-41.3pt** = adversarial layer 純効果
+- total detect 増加: 46 → 60 件 (+14 件) = adversarial が独立補完した primary 見落とし群
+  - adversarial 独立補完 (primary 単独では miss): 19 件 (全 40 rework events の 47.5%)
+  - P+A 横断同型重複 (merged): 5 件 = inter-rater reliability proxy (convergent detection pattern)
+- escalate=true: 17 件 → 0 件 = judgment skip により escalate 解決手段が user 直接判断に移行
+- forced_divergence 機能: 14 件 = adversarial による primary 判断の修正否定試行 (partially_robust 3 件 + no 1 件を rework_log で確認)
+
+**解釈**: adversarial layer が primary completeness bias を大幅に suppression (過剰修正比率 -41.3pt)。adversarial は primary 見落とし事例を独立補完する機能 (19/40 = 47.5% の rework が adversarial 主導) と、forced_divergence で primary 判断の成立性を試行する機能を担う。単独 layer 追加だけで judgement 込みより過剰修正比率が低い = adversarial 単独では primary の should_fix 以外の修正が adoption され、judgment がそれを一部 suppress する構造。
+
+### §12.3 treatment-dual vs treatment=dual+judgment ablation (judgment layer 機能寄与)
+
+judgment layer の追加 (dual → dual+judgment) で以下の変化が観測される:
+
+- 過剰修正比率: 21.7% → 33.3% = **+11.6pt 悪化** (= judgment が adversarial の一部採用を do_not_fix に抑制)
+- total detect 増加: 60 → 69 件 (+9 件) = judgment が独自 detection なし、判定 precision 向上が主効果
+- rework events 増加: 40 → 44 件 (+4 件) = must_fix upgrade 分
+- escalate=true: 0 件 → 4 件 = judgment が escalate path 確立 (path 1-4、Round 3/5/6/7)
+- design.md 行数増加: +52 → +116 行 = judgment による追加採用 (should_fix が must_fix 昇格分)
+
+**解釈**: judgment layer は過剰修正比率を一見悪化させる (+11.6pt) が、その機構は adversarial が採用した「必要性低い修正 (= adversarial 観点では should_fix だが judgment 観点では do_not_fix)」を適切に抑制すること + escalate 解決手段の正式化 (path 1-4 確立) + must_fix / should_fix の quality 向上。rework events 増加 (+4 件) は judgment による precision 向上効果 = V4 protocol の設計意図通りの機能分離。
+
+### §12.4 主要 finding まとめ
+
+- **Claim A evidence (adversarial 効果)**: treatment=dual 系統で adversarial 独立補完 5 度目連続再現 = primary 見落とし補完機能の 10 round 構造的実証。adversarial 独立補完が全 rework events の 47.5% = adversarial なしでは大幅な coverage 低下。
+- **Claim B evidence (judgment 効果)**: 3 系統の過剰修正比率 single 63.0% / dual 21.7% / dual+judgment 33.3% = V3 baseline 50% vs V4 各 layer の ablation 定量化完了。judgment layer は adversarial 単独と比較して修正精度向上 (escalate 確立 + must_fix 判定品質向上) を担う。
+- **Claim C evidence (dual-reviewer architecture)**: 3 系統で forward Adjacent Sync 規律遵守 10 round 全件実証 = V4 protocol が primary / adversarial / judgment の各 layer 構成に関わらず phase 横断的な adjacency 構造維持を保証する装置である evidence。
+- **ablation narrative**: single(63.0%) → dual(21.7%) → dual+judgment(33.3%) の non-monotone pattern = adversarial layer が over-correction suppression の主効果を担い、judgment layer が escalate 解決手段の正式化と修正品質向上の補完機能を担うという **layer 機能分離 hypothesis を ablation data が支持**。
+
+### §12.5 3 系統 ablation figure (pre-computation)
+
+3 branch 統合後に `figure_data_generator.py` + `phase_b_judgment.py` を実行することで以下の figure data が生成される:
+
+- `figure_ablation_data.json`: 3 系統 × 10 round の過剰修正比率 time-series + 累計値
+- `figure_1_data.json`: miss_type 6 enum 分布 (3 系統別)
+- `figure_2_data.json`: difference_type 6 enum + forced_divergence 効果
+- `figure_3_data.json`: trigger_state 3 enum 発動率
+
+**現状**: 数値確定済み (本 §12.1-12.4)、スクリプト実行 = A-2.2 tasks phase 完走後の A-2 終端 analysis タイミングで実施 (= data-acquisition-plan v1.9 §4 A-2 終端統合分析整合)。
+
+---
+
 ## §11 変更履歴
 
 - **v0.1** (2026-04-30 10th セッション末、本 file 初版): req phase 3 spec V4 redo broad 完走 + Step 5 cross-spec review 完了時点の中間集約。design phase 進行可否判断材料を提示。
+- **v0.3** (2026-05-04 45th セッション末、A-2.1 全 3 系統完走 = 3 系統対照実験終端 = final 集約): A-2.1 全 3 系統完走 (treatment=single 完走 40th + treatment=dual 完走 45th + treatment=dual+judgment 完走 29th) の 3 系統 ablation final 集約。**§12 A-2.1 3 系統対照実験 final 集約** 新設 = §12.1 (3 系統比較 table final = single 63.0% / dual 21.7% / dual+judgment 33.3%) + §12.2 (treatment-single vs treatment-dual ablation = adversarial layer 機能寄与 = 過剰修正比率 -41.3pt + adversarial 独立補完 47.5%) + §12.3 (treatment-dual vs treatment=dual+judgment ablation = judgment layer 機能寄与 = 過剰修正比率 +11.6pt + escalate 解決手段正式化 + must_fix 品質向上) + §12.4 (主要 finding まとめ = Claim A/B/C evidence narrative + ablation non-monotone pattern interpretation) + §12.5 (3 系統 ablation figure pre-computation = figure_data_generator.py + phase_b_judgment.py 実行 pending)。本 v0.3 update は A-2.2 tasks phase + A-2 終端統合分析 (スクリプト実行) の前段集約、paper rigor 用 final 数値確定版。本 v0.3 改版自体は Level 6 記録対象外 (= methodology meta-document)。

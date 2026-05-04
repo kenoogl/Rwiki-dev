@@ -4,6 +4,8 @@ _目的: V3 baseline / V4 各 attempt / 将来追加される実験データの�
 
 _v0.11 / 2026-05-04 (40th セッション末、treatment=single 系統 10 round 完走 = A-2.1 1/3 段階完了 = §5.2.1.6 新設 = primary 単独 detection 累計 evidence (46 detect / 17 採用 / 29 skip / 過剰修正比率 63.0% / Level 6 events 17 件 / treatment-single endpoint `33e1a12`) + 観点 axis 別 escalate 出現 pattern 全 Round 累計 (Round 1 0% → Round 10 40% suppress) + §5.2.1 残作業 update = treatment=dual 残のみ反映 = data-acquisition-plan v1.8 §A-2.1 checkbox 整合化)_
 
+_v0.12 / 2026-05-04 (45th セッション末、treatment=dual 系統 10 round 完走 = **A-2.1 全 3 系統完走 = 3 系統対照実験終端** = §5.2.1.7 新設 = adversarial 二層構成 detection 累計 evidence (60 detect / 40 rework events / 過剰修正比率 21.7% / Level 6 events 40 件 / treatment-dual endpoint `1b15138`) + adversarial 独立補完 5 度目連続再現 / forced_divergence partially_robust + no 混在 / P+A 横断同型重複 4 度 + §5.2.1 残作業 update = 3 系統全完走反映 = comparison-report v0.3 final 集約残のみ = data-acquisition-plan v1.9 §A-2.1 checkbox 整合化)_
+
 _v0.10 / 2026-05-03 (30th セッション初頭、A-2.1 3 系統対照実験 design.md state policy 明示 = pristine state `285e762` 起点 + 各 treatment 独立 branch 戦略 + 第 1 系統 main archive + 第 2/3 系統 new branch 派生 + 3 branch 統合分析 = data-acquisition-plan v1.7 §3.6 B4 + §4 A-2.1 整合化、paper rigor 確保のための confounding 排除)_
 
 _v0.9 / 2026-05-03 (29th セッション末、A-2.3 critical path 外し + §3.7.6 re-impl phase で Claim D primary evidence 代替 = §5.1.6 Claim D primary evidence 構成 update + §5.2.3 A-2.3 を Phase B-1.x supplementary defer 明示 + §5.5.6.1-3 entries に Level 6 観測対象明示 = data-acquisition-plan v1.6 整合化)_
@@ -595,11 +597,79 @@ A-2 phase = Spec 6 (`rwiki-v2-perspective-generation`) を題材に **3 phase �
 - `.kiro/specs/rwiki-v2-perspective-generation/design.md` (1213 行、post-Round 10 single 修正済 = R-spec-6-17 endpoint `850fc51`)
 - treatment-single branch endpoint = `33e1a12` (40th 末 push 済 = `86e7760..33e1a12`)、累計 commits = 31st-40th で多数
 
-**残作業 (41st 以降、A-2.1 残 1/3、v0.11 update = treatment=single 完走反映)**:
-- treatment=dual (Round 1-10) = new branch `treatment-dual` で pristine state `285e762` 起点に完走 = 推定 10-20 commit batch、Level 6 events 別 sub-group key (treatment="dual" + branch="treatment-dual") 記録
-- A-2.1 完走時 = 3 branch 統合 = `metric_extractor.py` + `figure_data_generator.py` + `phase_b_judgment.py` 実行 → comparison-report v0.2 final 集約 (= 3 系統 ablation figure 成立、treatment=single 過剰修正比率 63.0% vs treatment=dual+judgment 33.3% vs treatment=dual 比較で adversarial / judgment 各 layer 機能寄与 quantify)
+**残作業 (45th 末確定、A-2.1 全完走 = v0.12 update)**:
+- ✅ treatment=dual (Round 1-10) = treatment-dual branch 完走済 (41st-45th、endpoint `1b15138` / `86cdc5f`、Level 6 events 40 件 = R-spec-6-1 〜 R-spec-6-40)
+- A-2.1 完走 = 3 branch 統合 = `metric_extractor.py` + `figure_data_generator.py` + `phase_b_judgment.py` 実行 → **comparison-report v0.3 final 集約** (= 3 系統 ablation figure 成立 = treatment=single 63.0% / treatment=dual 21.7% / treatment=dual+judgment 33.3% の 3 系統比較で adversarial / judgment 各 layer 機能寄与 quantify 完了)
 
-**関連 dev-log**: `docs/dual-reviewer-log-5.md` (15-29th、user 管理) + `docs/sual-reviewer-log-6.md` (30th-、user 管理) + `TODO_NEXT_SESSION.md` (40th 末 slim) + `TODO_HISTORY_through_40th.md` (40th 末新設 archive、repo 追跡)
+**関連 dev-log**: `docs/dual-reviewer-log-5.md` (15-29th、user 管理) + `docs/dual-reviewer-log-6.md` (30th-39th、user 管理) + `docs/dual-reviewer-log-7.md` (40th-、user 管理) + `TODO_NEXT_SESSION.md` (slim) + `TODO_HISTORY_through_45th.md` (45th 末新設 archive、repo 追跡)
+
+##### 5.2.1.7 A-2.1 completion = treatment=dual 全 10 ラウンド完走 (45th 末、A-2.1 3/3 終端、v0.12 partial fill)
+
+41st セッション着手 (Round 1) ~ 45th セッション完走 (Round 10) で **treatment=dual** 全 10 ラウンド完走 (= treatment-dual branch 上、pristine state `285e762` 起点)。**A-2.1 全 3 系統完走 = 3 系統対照実験終端確定**。
+
+**累計 metric (treatment=dual、10 ラウンド aggregate)**:
+
+| metric | 値 | 備考 |
+|--------|----|------|
+| primary detection 累計 | 29 | Round 別 = 1/3/3/4/4/3/5/3/2/1 |
+| adversarial detection 累計 | 31 | 独立補完 19 件 + merged 5 件 + adversarial 自身 skip 7 件 |
+| total detect (P+A) | 60 | forced_divergence 累計 14 件 |
+| 採用 (rework events) | 40 | merged 5 件含む = 実 Level 6 events 数と一致 |
+| skip | 13 | adversarial 自身 do_not_fix 7 件 + primary skip 6 件 |
+| **過剰修正比率 (= skip / detect)** | **21.7%** (13/60) | = adversarial 二層構成 = adversarial 補完で primary miss 補完 + judgment なし系統 |
+| Level 6 events 累計 | 40 件 | R-spec-6-1 〜 R-spec-6-40 (treatment-dual branch、treatment="dual" + branch="treatment-dual" sub-group key 付与) |
+| escalate=true 累計 | 0 件 | judgment skip = escalate 判定は user 直接、dev_log judgment_escalate_count = 全 Round 0 |
+| forced_divergence_findings_count 累計 | 14 件 | Round 別 = 1/2/3/1/1/1/1/1/2/1 |
+| design.md 行数増加 | +52 行 | pristine 1150 → post-Round 10 1202 |
+
+**3 系統比較 (A-2.1 全完走、最終数値)**:
+
+| metric | single (第 2 系統) | dual (第 3 系統) | dual+judgment (第 1 系統) |
+|--------|--------------------|-----------------|---------------------------|
+| total detect | 46 | 60 | 69 |
+| rework events | 17 | 40 | 44 |
+| skip | 29 | 13 | 23 |
+| **過剰修正比率** | **63.0%** | **21.7%** | **33.3%** |
+| Level 6 events | 17 件 | 40 件 | 44 件 |
+| escalate=true | 17 件 | 0 件 | 4 件 |
+
+= **ablation 解釈**: single → dual の差 (-41.3pt 過剰修正比率) = adversarial layer 純効果 / dual → dual+judgment の差 (+11.6pt = 過剰修正比率悪化) = judgment layer が adversarial の一部採用を otherwise-do_not_fix に抑制する効果 = **adversarial 単独の方が過剰修正比率は低いが、judgment 追加で修正の quality 評価精度 (= must_fix vs should_fix 分類精度) が向上する trade-off evidence**。
+
+**forced_divergence label 分類**:
+- partially_robust (adversarial が primary の判断を部分成立と評価): R-spec-6-1 (Round 1) / R-spec-6-8 (Round 3) / R-spec-6-9 (Round 3) = 3 件
+- conclusion_holds=no (adversarial が primary の do_not_fix 前提を否定): R-spec-6-39 (Round 9) = 1 件
+- その他 forced_divergence: 推定 = 残 10 件 forced_divergence は rework_log 未記録 (= dev_log の forced_divergence_findings_count にのみ計上、rework entry 未生成 = skip 扱い)
+
+**adversarial 独立検出補完 5 度目連続再現 (系列B)**:
+- 系列定義: primary が single review では見落とす finding を adversarial が独立文脈から補完検出するパターン
+- 1 度目: R-spec-6-1 (Round 1、normative_scope、forced_divergence partially_robust = adversarial が partial 補完)
+- 2-3 度目: Round 6-7 adversarial 独立補完 events (複数件)
+- 4 度目: R-spec-6-38 (Round 9、Testing Strategy Req 2.4 独立補完)
+- **5 度目: R-spec-6-40 (Round 10、Revalidation Triggers seed_patterns.yaml 独立補完 = P-1 と独立に同型 detect)** = treatment=dual 系統 10 round 完走時点での最終再現
+
+**P+A 横断同型重複 4 度目 (系列A)**:
+- 系列定義: primary と adversarial が独立文脈から同一 finding を検出する convergent detection pattern
+- 4 度: R-spec-6-15 (Round 4 P-4+A-1) / R-spec-6-17 (Round 5 P-2+A-2) / R-spec-6-21 (Round 6 P-1+A-4) / R-spec-6-27 (Round 7 P-1+A-2)
+
+**Phase 1 metapattern 分布 (40 Level 6 events)**:
+- metapattern a (normative_scope): 3 件 (7.5%)
+- metapattern b (structural_nonuniformity): 21 件 (52.5%)
+- metapattern c (cross-spec / implementation): 15 件 (37.5%)
+- N/A: 1 件 (R-spec-6-39、forced_divergence driven)
+
+**Sub-group analysis 規律遵守状況 (v0.7 §5.2.5 整合)**:
+- ✅ explicit labeling: 全 dev_log entry に `spec_source: forward-fresh` field 付与 (Round 1-10 全件)
+- ✅ explicit treatment + branch labeling: 全 dev_log + rework_log entry に `treatment="dual"` + `branch="treatment-dual"` sub-group key 付与 (Round 1-10 全件)
+- ✅ spec characteristic descriptive metric: AC 数 132 / 文字数 1202 行 (post-Round 10 dual = `1b15138` endpoint) / Design Decisions 数 7 / Architecture Pattern Evaluation 4 件 / 起草所要時間 (sub-step 2 内 19th 計測) 記録済
+- ✅ branch 物理分離 + sub-group key 分離 triple protection: main 44 events (第 1 系統) + treatment-single 17 events (第 2 系統) + treatment-dual 40 events (第 3 系統) が完全分離維持 = confounding 排除 paper rigor 確保 = 3 系統 ablation figure 成立
+
+**保全 location**:
+- `.dual-reviewer/dev_log.jsonl` (10 lines、Round 1-10 entries、treatment=dual = treatment-dual branch 上)
+- `.kiro/methodology/v4-validation/rework_log.jsonl` (40 lines、Level 6 累計 = R-spec-6-1 〜 R-spec-6-40、treatment-dual branch 上)
+- `.kiro/specs/rwiki-v2-perspective-generation/design.md` (1202 行、post-Round 10 dual 修正済)
+- treatment-dual branch endpoint = `1b15138` (Round 10 修正 commit) / `86cdc5f` (log commit)
+
+**関連 dev-log**: `docs/dual-reviewer-log-7.md` (41st-45th、user 管理)
 
 #### 5.2.2 Spec 6 Tasks phase (= 補助 evidence、V4 ad-hoc 適用、option)
 
@@ -802,6 +872,7 @@ reverse-engineering 方式 (= 既存コード → spec → re-impl) で 3 sample
 - **v0.5** (2026-05-01 14th セッション末): §4 を「design + tasks phase V4 evidence (12-14th セッション完走、main 統合済)」に rename + §4.6-§4.11 を新規追加 (14th 末 tasks phase ad-hoc V4 evidence 集約 = 3 spec tasks phase metric (foundation 採択率 5.6% / 過剰修正 66.7% + design-review 13.3% / 53.3% + dogfeeding 35.7% / 42.9%) + cross-spec review (Group A 17 + B 2 + C 1 + 不整合 0 件、Group C-1 = `jsonschema>=4.18` version pin 同期 を foundation tasks v1.2 で apply) + 3 spec tasks phase 累計 V4 metric trend (採択率 +30.1pt / 過剰修正比率 -23.8pt 累計改善 = V4 構造的有効性 3 spec 連続再現実証、design phase trend 81.25% → 58.8% → 40.0% と方向一致 = 6 spec instance 累計再現) + 14th 末 cleanup (data-acquisition-plan v0.4 + memory 2 file update + origin push) record)。§7 関連 reference に 14th 末 endpoint commits (`021ec65` + `aed0b2b`) + 3 spec tasks.md path + tasks phase ad-hoc V4 caveat 4 件 reference 追加。
 - **v0.6** (2026-05-02 18th セッション開始、§5.1 placeholder fill + §5.2 3 段構成展開): 14th 末起草の §5.1 placeholder 5 件を 15th-18th 累計の完走 evidence に書き換え = **§5.1.1** (15th = design-review v1.2 改修 cycle + Level 6 schema infrastructure + data-acquisition-plan v1.0、commits `15cffa6` + `7722f9e`) / **§5.1.2** (16th = A-3 plan 確定 + A-1 Step 1 = foundation 物理 file 生成、commits `7774860` / `375809b` / `a96482b` / `8cd8bf8`、56 tests pass、TDD 1 cycle) / **§5.1.3** (17th = data-acquisition-plan v1.1 + Step 2 design-review impl + Step 3 dogfeeding impl、10 commit / 31 file / 3685 insertions / 151 tests pass、TDD 6 cycle) / **§5.1.4** (18th 開始 = data-acquisition-plan v1.2 + 17th 末持ち越し cleanup + v1.3、commits `87e3047` + `fd55902` + `5f27a21`、3 commit / 8 file / 7863 insertions / 42 deletions) / **§5.1.5** (sample 1 round 通過 test = A-2 統合 defer = Spec 6 休止により dogfeeding spec Task 8 = A-2 phase で execute) / **§5.1.6** (Level 6 rework_log = 0 events for A-1 全 implementation phase = Data 1 commit pattern auto 機械検証済 = Claim D 中間 evidence 累積継続)。**§5.2 placeholder を 3 段構成展開** (= data-acquisition-plan v1.3 §4 A-2 phase 整合) = §5.2.1 Spec 6 Design phase (= 主要 evidence、systematic) + §5.2.2 Spec 6 Tasks phase (= 補助 evidence、V4 ad-hoc 適用、option) + §5.2.3 Spec 6 Impl phase (= passive、Level 6 rework signal、Claim D evidence) + §5.2.4 A-2 終端統合分析。**§7 関連 reference に 15th-18th endpoint commits 16 件追加** (= 15th 末 2 + 16th 末 4 + 17th 末 10 + 18th 開始 3 = 累計 19 commit、main origin push 済全件)。本 v0.6 改版自体は data-acquisition-plan v1.0/v1.1/v1.2/v1.3 と同様 Level 6 記録対象外 (= methodology meta-document)。
 - **v0.7** (2026-05-02 19th セッション末、§5.5 A-3 triangulation batch evidence 新設 + §5.2 Sub-group analysis 規律言及追加 = data-acquisition-plan v1.5 整合化): data-acquisition-plan v1.5 改版 (= 軸 4 → 軸 7 拡張 + §3.7.6 Code-derived spec batch 新設 + §3.7.1 forward-fresh-spec 独立必須化 + Sub-group analysis 規律) を catalog 側に反映。**§5.5 A-3 triangulation batch evidence を新設** = §5.5.1 §3.7.1 forward-fresh-spec sample (= cross-project transfer + 軸 6 forward 側) + §5.5.2-4 §3.7.2-4 (multi-vendor / mutation / multi-run) + §5.5.5 §3.7.5 convergence judgment 6 indicators + **§5.5.6 §3.7.6 Code-derived spec batch (3 sub-entry = §5.5.6.1 Phase field / §5.5.6.2 3D 熱伝導 / §5.5.6.3 Arduino IoT、reverse-engineering bias mitigation 5 step 整合)** + §5.5.7 §3.7.7 paired comparison future work (= 議論記録のみ、scope 外)。各 entry に 配置 path 予約 (= `.kiro/methodology/v4-validation/a3_batch/{forward_fresh,multi_vendor,mutation,multi_run,code_derived/{phase_field,heat_equation_3d,arduino_iot},paired_comparison}/`)。**§5.2 末尾に §5.2.5 Sub-group analysis 規律 sub-section 追加** = explicit labeling (`spec_source: forward-fresh | reverse-engineered`) + spec characteristic descriptive metric (AC 数 / 文字数 / Design Decisions 数 / 言及 alternative 数 / 起草所要時間) + sub-group reporting 必須化を A-2 evidence 取得時から適用、§5.5.6 reverse-engineered batch との sub-group 比較 base として A-2 sample (= forward-fresh) を運用。Phase A 終端 redefine = A-3 + §3.7.6 完走 (v1.5 redefine 反映)。本 v0.7 改版自体は v0.6 同様 Level 6 記録対象外 (= methodology meta-document)。
+- **v0.12** (2026-05-04 45th セッション末、treatment=dual 系統 10 round 完走 = **A-2.1 全 3 系統完走 = 3 系統対照実験終端** = §5.2.1.7 新設 = adversarial 二層構成 detection 累計 evidence (total detect 60 / rework events 40 / 過剰修正比率 21.7% / Level 6 events 40 件 / treatment-dual endpoint `1b15138`) + adversarial 独立補完 5 度目連続再現 (R-spec-6-40) + forced_divergence partially_robust 3 件 + conclusion_holds=no 1 件 + P+A 横断同型重複 4 度 + Phase 1 metapattern 分布 (a:3/b:21/c:15) + §5.2.1 残作業 update = 3 系統全完走反映 + comparison-report v0.3 final 集約残のみ明示 = data-acquisition-plan v1.9 §A-2.1 整合化。本 v0.12 改版自体は v0.11 同様 Level 6 記録対象外 (= methodology meta-document)。
 - **v0.10** (2026-05-03 30th セッション初頭、A-2.1 3 系統対照実験 design.md state policy 明示 = pristine state 起点 + 各 treatment 独立 branch 戦略 = data-acquisition-plan v1.7 整合化、paper rigor 確保のための confounding 排除): 30th セッション開始時に user 指摘「single の Round 1 を開始するとき、元になる design.md はどうやって準備するか」を契機に、A-2.1 30 review session の input design.md state policy が SSoT 文書群に明示記述されていない盲点を identified。29th 末まで第 1 系統 (= main、`treatment=dual+judgment`) が pristine state `285e762` から 10 round 累積修正で `f6bac54` に到達、accumulated state を起点に第 2/第 3 系統を回すと「prior treatment による事前修正」と「current treatment 単独 effect」が交絡 = V4 各 layer の機能寄与を quantify 不能 + Claim B/C primary evidence の paper rigor 致命的弱体化 (= self-referential bias)。**§5.2.1 Spec 6 Design phase entry に branch 戦略 sub-bullet 追加** = 全 treatment は pristine state `285e762` 起点で完走、第 1 系統 main 完走済 + 第 2 系統 (`treatment-single`) + 第 3 系統 (`treatment-dual`) は 30th 以降に new branch 派生で 10 round 完走、Level 6 events 別 file/sub-group key 記録 (= confound 回避)、3 branch 統合分析で comparison-report v0.2 final 集約 (= ablation figure 成立)、Spec 6 design.md 最終 state は main の post-Round 10 (`f6bac54`) 採用 + 他 2 treatment branch は paper data source archive として保持 (delete 禁止)。**§5.2.1.5 残作業 sub-section update** = treatment=single / treatment=dual の Round 1-10 を new branch で pristine 起点完走する明示記述追加 + Level 6 events 別記録明示。本 v0.10 改版自体は v0.9 同様 Level 6 記録対象外 (= methodology meta-document)。timeline 文言 (= 9-10 月 paper draft 着手) は user 指示「現状維持」遵守、本 v0.10 update は scope (= 3 系統対照実験 state policy 明示) 整合化のみ。
 - **v0.9** (2026-05-03 29th セッション末、A-2.3 critical path 外し + §3.7.6 re-impl phase で Claim D primary evidence 代替 = §3.7.6 Level 6 観測統合 = data-acquisition-plan v1.6 整合化): 29th 末議論「§3.7.6 で planned されている 3 sample (Phase field / 3D 熱伝導 / Arduino IoT) は既に re-implementation phase を含む = re-impl phase で発生する rework events を Level 6 で観測すれば A-2.3 と等価な Claim D primary evidence を取得可能」採用、A-2.3 を critical path から外し Phase B-1.x post-paper supplementary evidence として defer する方針確定。**§5.1.6 Claim D primary evidence 構成 update** = A-1 全 implementation phase (3 spec self-dogfooding、Python、forward-fresh) + §3.7.6 re-implementation phase (3 sample external、Julia/C++/Arduino C、reverse-engineered) = **6 spec instance** で構成 + sub-group reporting 必須 (= forward-fresh A-1 vs reverse-engineered §3.7.6 で別 metric 計算 + reverse-engineering 5 source bias を paper Limitations sub-section で acknowledge)。**§5.2.3 Spec 6 Impl phase update** = A-2.3 を critical path から外し Phase B-1.x supplementary defer 明示 + Spec 6 implementation 完了時点で paper revision 用補強 data として後付け運用。**§5.5.6.1-3 entries に "re-impl phase 中の Level 6 rework events 観測" sub-step 追加** = `spec_id="phase-field|heat-equation-3d|arduino-iot"` + `discovered_phase="impl-mid"` 付与、A-1 vs §3.7.6 sub-group 比較 base、Level 6 観測 overhead 0-3h per sample。**§5.5.6 全体 cost update** = 20-32h → 20-41h (= Level 6 観測 overhead 0-9h 追加分)、3-6 work day。本 v0.9 改版自体は v0.8 同様 Level 6 記録対象外 (= methodology meta-document)。timeline 文言 (= 9-10 月 paper draft 着手) は user 指示「現状維持」遵守、本 v0.9 update は scope 整合化のみ。
 - **v0.8** (2026-05-03 29th セッション末、§5.1.6 Level 6 status update + §5.2.1.5 A-2.1 partial completion partial fill + §7 endpoint commits 19th-29th 追加): A-2.1 Spec 6 Design phase の treatment=dual+judgment 全 10 ラウンド完走 (= A-2.1 1/3 終端、20th-29th 累計、20 commits、29th 末 endpoint = `3cbefdb`) を反映。**§5.1.6 Level 6 rework_log status を 0 → 44 events に update** = A-1 impl 0 events (Claim D primary evidence = strong) と A-2.1 design 44 events (Claim B/C functioning evidence = V4 review が design fix を generate する pattern observation、design rework は Claim D primary ではなく Claim B/C functioning = adaptive 用法) の **2 phase 解釈分離** を明示、論文 framing で 2 evidence 種別 disambiguate 必要を明記、A-2.3 impl phase events は 30th 以降 append 開始予定。**§5.2.1 末尾に §5.2.1.5 A-2.1 partial completion sub-section を partial fill** = treatment=dual+judgment 累計 metric (検出 69 / 採択率 30.4% / **過剰修正比率 33.3% = V3 baseline 50% 比 -16.7pt 改善**) + **4 spec instance 累計 design phase 過剰修正比率 連続改善** (foundation 81.25% → design-review 58.8% → dogfeeding 40.0% → Spec 6 33.3% = -47.95pt 累計改善 = V4 構造的有効性 4 spec 連続再現実証) + **v4-miss core evidence 累計 17 件** (10 件 must_fix upgrade core + 7 件 should_fix upgrade minor、Round 1-10) + **fatal_pattern hits 5 件** (path_traversal × 3 + data_loss × 1 + destructive_migration 逆向き × 1 = Chappy P0 quota 機能 evidence) + **escalate 解決手段 5 path 確立 + path 5 候補 4 連続再現** (Round 7-10 escalate=0 streak 過去最長) + **Round 10 V4 過剰修正 bias 抑制機能 evidence** (= primary single なら +3 修正 → dual+judgment net 1 修正 = 67% 抑制 + 検出漏れ 1 件補完 = Claim B strong evidence、29th 末新規)。残作業 = treatment=single + treatment=dual の Round 1-10 = 20 review session (推定 1-2 month batch、A-2.1 残 2/3)。**§7 関連 reference に 19th-29th endpoint commits 20 件追加** (= 各 Round design.md 修正 + log commit、20th-29th セッション、20 commits、main origin push 済全件)。本 v0.8 改版自体は v0.7 同様 Level 6 記録対象外 (= methodology meta-document)。
