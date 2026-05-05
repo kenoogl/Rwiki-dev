@@ -197,7 +197,7 @@ using Field = double[ND][ND];             // raw 2D static array
 
 | Component | Layer | Intent | Req Coverage | Key Dependencies (P0) | Contracts |
 |-----------|-------|--------|--------------|----------------------|-----------|
-| Numerical Engine | Core | 化学ポテンシャル + lap + 時間発展 7 step | 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9 | Concentration Clamp (P0), Mean Composition Corrector (P0) | Service |
+| Numerical Engine | Core | 化学ポテンシャル + lap + 時間発展 7 step | 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8 | Concentration Clamp (P0), Mean Composition Corrector (P0) | Service |
 | Initial Field Builder | Core | ランダムゆらぎ + 初期 clamp | 3.1, 3.2 | Concentration Clamp (P0), `std::mt19937` (P0) | Service |
 | Concentration Clamp | Core | 4 invariant 補正 | 3.3, 3.4, 3.5, 3.6, 3.7, 3.8 | (none) | Service |
 | Mean Composition Corrector | Core | 平均組成保存補正 | 3.9 | Concentration Clamp (P0) | Service |
@@ -205,7 +205,7 @@ using Field = double[ND][ND];             // raw 2D static array
 | Snapshot Reader | I/O | テキスト形式読み込み | 4.7, 4.8, 6.4, 6.5 | (none) | Service |
 | Renderer | Visualization | 色変換 + 矩形描画 | 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 | wingxa.h `gcolor`/`grect`/`gsetorg` (P0) | Service |
 | BMP Writer | Visualization | snapshot → BMP | 4.5, 4.9, 6.6 | wingxa.h `save_screen` (P0), Renderer (P0) | Service |
-| Re-render Function | Visualization | snapshot → live display | 4.6 | Renderer (P0), wingxa.h `gwinsize`/`ginit`/`swapbuffers`/`keypress` (P0) | Service |
+| Re-render Function | Visualization | snapshot → live display | 4.6 | Renderer (P0、`keypress` wrapper 経由), wingxa.h `gwinsize`/`ginit`/`swapbuffers` (P0) | Service |
 | Simulation Module | Application | CLI parser + main loop + 終了処理 | 1.1-1.10, 6.1-6.6 | All Core / I/O / Visualization (P0) | Service |
 
 ### Core Layer
@@ -273,7 +273,7 @@ void time_step(
 
 **Responsibilities & Constraints**
 
-- 単一責務: `§9` ランダムゆらぎ生成 (= 平均 `c2a, c3a` + uniform `[-fluct_amp, +fluct_amp]`) + 終端で Concentration Clamp service を invoke して `§10` 4 濃度制約適用 (= Req 2 AC8 step (0)/(5)/(7) / Req 3 AC9 / Req 7 AC6 と invoke 記法統一)
+- 単一責務: `§9` ランダムゆらぎ生成 (= 平均 `c2a, c3a` + uniform `[-fluct_amp, +fluct_amp]`) + 終端で Concentration Clamp service を invoke して `§10` 4 濃度制約適用。本 builder 終端 clamp は `§10` 4 timing の「初期化時」に該当 (= `§11` step 番号体系外、Req 2 AC8 step (0)/(5)/(7) は Numerical Engine 内 invoke のみ、Req 3 AC9 は Mean Composition Corrector 内部 invoke、本 invoke 記法は全 invoke point で「`clamp_concentrations(c2, c3)` 関数呼出」と統一)
 - Invariants: 終了時 Field は `§10` 4 濃度制約を満たす
 - Note: `c2a` または `c3a` が境界近傍 (= 例 `c2a < 0.01` or `c2a + c3a > 0.99`) で initial clamping が field を変更する場合、initial field の実際平均が `c2a, c3a` から bounded deviation で乖離する可能性あり (= Req 3 AC2 Note と整合、Mean Composition Corrector が time step 1 で補正)
 
@@ -290,9 +290,12 @@ void time_step(
 namespace pfm {
 
 // 初期 Field 構築 (§9, Req 3.1-3.2)
-// fluct_amp / seed は caller (= Simulation Module) が §9 既定値等を渡す = req 3 AC1 が
-// 「§9 既定値、本 spec で明示固定値として要求するわけではない」と裁量を残しているため
-// design は default 値を固定しない
+// SSoT 一本化 (= 本 design 内 fluct_amp 取扱):
+// (1) builder 自身は default 値を固定しない (= Req 3 AC1 が「§9 既定値、本 spec で明示固定値
+//     として要求するわけではない」と裁量を残している)
+// (2) caller = Simulation Module が §9 既定値 0.01 を本関数に渡す (= L688 Implementation
+//     Notes と整合、CLI option 化は本 spec scope 外)
+// → 「builder 側固定なし + caller 側 §9 既定値 0.01 渡し」が本 design の SSoT 規約
 void build_initial_field(
     Field& c2, Field& c3,
     double c2a, double c3a,
@@ -346,7 +349,7 @@ void clamp_concentrations(Field& c2, Field& c3);
 
 **Implementation Notes**
 
-- Integration: Numerical Engine step (0) / step (5) / step (7) 計 3 回、Initial Field Builder 終端、Mean Composition Corrector 終端 (= `§10` 4 timing と整合)
+- Integration: `§10` 4 timing への対応 = (1) Initial Field Builder 終端 = `§10` timing「初期化時」 / (2) Numerical Engine step (0) = `§10` timing「ポテンシャル計算前」 (`§11` 番号体系内) / (3) Numerical Engine step (5) = `§10` timing「時間更新後」 / (4) Numerical Engine step (7) = `§10` timing「平均組成補正後」、Mean Composition Corrector 内部 clamp は (4) と階層的同 timing (= `§12` 補正手順内の post-correction clamp、Req 3 AC9 階層委譲)
 - 実装属性 (= req 規範ではない): idempotent (= 2 回連続呼出で同結果)、統合適用 loop は経験的に 1-2 iteration 内で収束 (= 比例縮小 + 個別下限再適用、`CLAMP_EPS = 1e-6` 既定下で観測される性質、unit test で boundary case 網羅して保証)
 - Validation: unit test で境界 case (= `c2 = 0`, `c2 = 1`, `c2 + c3 = 1`) を網羅、idempotency 検証 + AC8 後 AC4-7 再違反 case (= 比例縮小で `c2 + c3 = 1 - 2 * eps` strict 下回り) 確認
 
@@ -418,7 +421,7 @@ enum class WriteMode {
     Append,             // §16 後続 snapshot
 };
 
-// 0 on success, non-zero on I/O error (Req 4.7-4.9 補助)
+// 0 on success, non-zero on I/O error (Req 6 AC4 = file open / write 失敗時 non-zero exit)
 // time1 = 物理時刻 = 累積 step 数 × delt (初期 snapshot は time1 = 0.0、Req 4 AC1)
 int write_snapshot(
     const std::string& path,
@@ -530,7 +533,7 @@ int poll_keypress();
 
 - Integration: BMP Writer / Re-render Function / Simulation Module 全てから呼出
 - Validation: unit test で boundary case (= `c2 = c3 = 0` → `R=255,G=0,B=0`) 等の色値検証
-- Risks: 周期境界連続性 (Req 5 AC5 operational 判定基準 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間に visible gap なし、wraparound 列 `i = ND` 相当の追加描画は実装裁量) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル、端点を周期で連続化する必要あり → 描画 loop で `ND - 1` の次は `0` に戻る contiguous fill で対応
+- Risks: 周期境界連続性 (Req 5 AC5 operational 判定基準 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間に visible gap なし、wraparound 列 `i = ND` 相当の追加描画は実装裁量) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル → 描画 loop は `i = 0..ND-1` の一巡で全 100 × 100 grid を描画、各 grid を 4 × 4 ピクセル (= 計 400 × 400 ピクセル、ピッタリ収まる) で隣接配置することで visible gap なしを担保。wraparound 列 (`i = ND` 相当の追加描画) は実装裁量範囲内、本 design では採用しない (= AC5 pass 条件は loop 一巡で満たす)
 
 #### BMP Writer
 
@@ -546,7 +549,7 @@ int poll_keypress();
 
 **Dependencies**
 
-- Outbound: Snapshot Reader (P0、自身の orchestration の一部として直接呼出 = Application Layer は SnapReader 直接依存しない)
+- Outbound: Snapshot Reader (P0、自身の orchestration の一部として直接呼出 = Application Layer は Snapshot Reader 直接依存しない)
 - Outbound: Renderer (P0、色変換 + 矩形描画委譲)
 - External: `wingxa.h::save_screen` (P0、Visualization Layer 内なので直接依存可)
 
@@ -604,7 +607,7 @@ int write_bmp_steps(
 
 **Dependencies**
 
-- Outbound: Snapshot Reader (P0、自身の orchestration として直接呼出 = Application Layer は SnapReader 直接依存しない)
+- Outbound: Snapshot Reader (P0、自身の orchestration として直接呼出 = Application Layer は Snapshot Reader 直接依存しない)
 - Outbound: Renderer (P0、色変換 + 矩形描画 + keypress wrapper 委譲)
 - External: `wingxa.h::gwinsize` / `ginit` / `swapbuffers` (P0、Visualization Layer 内なので直接依存可、`keypress` は Renderer wrapper 経由)
 
@@ -692,9 +695,12 @@ pfm_sim --c2a <c2a> --c3a <c3a> --delt <dt>
 
 ### Simulation Time Loop (`§11` 7 step + step (0) entry-clamp)
 
+> Note: 本 sequence diagram の関数名は service interface section の正式関数名 (= `clamp_concentrations`, `correct_mean_composition`, `write_bmp_for_snapshot` 等) と統一。引数も signature と一致 (= 一部省略時は `(...)` で省略明示)。
+
 ```mermaid
 sequenceDiagram
     participant Main as pfm_sim main
+    participant Renderer as Renderer
     participant Init as Initial Field Builder
     participant Engine as Numerical Engine
     participant Clamp as Concentration Clamp
@@ -702,31 +708,34 @@ sequenceDiagram
     participant Writer as Snapshot Writer
     participant BMP as BMP Writer
 
-    Main->>Init: build_initial_field(c2, c3, c2a, c3a)
-    Init->>Clamp: clamp(c2, c3)
-    Init-->>Main: ok
-    Main->>Writer: write_snapshot(t=0, c2, c3, Overwrite)
-    Main->>BMP: write_bmp(step=0)
+    Main->>Renderer: gwinsize / ginit / gsetorg [§14 (d)(e)(f) Renderer 初期化委譲、Application は wingxa.h 直接呼出禁止]
+    Main->>Init: build_initial_field(c2, c3, c2a, c3a, fluct_amp, seed)
+    Init->>Clamp: clamp_concentrations(c2, c3)
+    Init-->>Main: void return
+    Main->>Writer: write_snapshot(path, t=0, c2, c3, OverwriteOrCreate)
+    Main->>BMP: write_bmp_for_snapshot(snapshot_path, 0, bmp_path)
+    BMP->>Renderer: render_field(c2, c3)
 
     loop time step
         Main->>Engine: time_step(c2, c3, c2a, c3a, delt)
-        Engine->>Clamp: step (0) clamp(c2, c3) [pre-potential]
+        Engine->>Clamp: step (0) clamp_concentrations(c2, c3) [pre-potential]
         Note over Engine: step (1): compute mu2, mu3
         Note over Engine: step (2): compute lap(mu2), lap(mu3)
         Note over Engine: step (3): compute dc2_dt, dc3_dt
         Note over Engine: step (4): write to temp arrays
-        Engine->>Clamp: step (5) clamp(temp_c2, temp_c3)
-        Engine->>Mean: step (6) correct_mean(temp_c2, temp_c3, c2a, c3a)
-        Mean->>Clamp: clamp(temp_c2, temp_c3) [internal to step (6)]
-        Engine->>Clamp: step (7) clamp(temp_c2, temp_c3) [post-correction]
-        Note over Engine: post step (7): commit temp_c2 → c2, temp_c3 → c3 (= main 配列反映、time_step 戻り値で main にも反映済)
-        Engine-->>Main: ok
+        Engine->>Clamp: step (5) clamp_concentrations(temp_c2, temp_c3)
+        Engine->>Mean: step (6) correct_mean_composition(temp_c2, temp_c3, c2a, c3a)
+        Mean->>Clamp: clamp_concentrations(temp_c2, temp_c3) [internal to step (6)]
+        Engine->>Clamp: step (7) clamp_concentrations(temp_c2, temp_c3) [post-correction]
+        Note over Engine: post step (7): 参照引数 c2, c3 経由で main 配列に in-place 反映 (= time_step は void return、temp 配列を main 配列に commit して終了)
+        Engine-->>Main: void return
         Main->>Main: step++ ; check stop
         opt step % data_interval == 0
-            Main->>Writer: write_snapshot(t, c2, c3, Append)
+            Main->>Writer: write_snapshot(path, t, c2, c3, Append)
         end
         opt step % bmp_interval == 0
-            Main->>BMP: write_bmp(step)
+            Main->>BMP: write_bmp_for_snapshot(snapshot_path, snapshot_index, bmp_path)
+            BMP->>Renderer: render_field(c2, c3)
         end
     end
 
@@ -747,6 +756,8 @@ stateDiagram-v2
 
 ## Requirements Traceability
 
+> Note: 「Build System (Makefile)」は build artifact (= component ではなく Component Summary table 参照外)。下表 Components 欄に登場する場合は build artifact reference として読む。
+
 | Requirement | Summary | Components | Interfaces | Flows |
 |-------------|---------|------------|------------|-------|
 | 1.1-1.5 | CLI 入力 + 既定値 | Simulation Module | `pfm_sim` CLI | - |
@@ -756,7 +767,7 @@ stateDiagram-v2
 | 2.1-2.8 | 数値モデル | Numerical Engine | `time_step()` | Time Loop (per step) |
 | 2.9 | 静的配列 | (全 Core / I/O / Viz component) | `Field` 型 alias | - |
 | 3.1-3.2 | 初期化 | Initial Field Builder | `build_initial_field()` | Time Loop (init phase) |
-| 3.3-3.8 | 4 濃度制約 invariant | Concentration Clamp | `clamp_concentrations()` | Time Loop (step 5, 7) |
+| 3.3-3.8 | 4 濃度制約 invariant | Concentration Clamp | `clamp_concentrations()` | Time Loop (step 0, 5, 6 内, 7) |
 | 3.9 | 平均組成保存 | Mean Composition Corrector | `correct_mean_composition()` | Time Loop (step 6) |
 | 4.1-4.4 | snapshot 書出 | Snapshot Writer | `write_snapshot()` | Time Loop (save) |
 | 4.5 | BMP 17 step 群 | BMP Writer | `write_bmp_default_steps()` | - |
@@ -784,7 +795,7 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 
 - **Invalid CLI input** (Req 6.1, 6.2): Affected = Simulation Module。`argv` parse 段階で usage 表示 + `return 2`
 - **Filesystem error** (Req 6.3): Affected = Simulation Module。`<filesystem>` exception を catch、stderr に message 出力 + `return 3`
-- **Snapshot file open error** (Req 6.4): Affected = Simulation Module / Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function。`fopen` 失敗で `return 3`、上位 main で同 code 伝播
+- **Snapshot file open error** (Req 6.4): Affected = Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function (= 直接呼出元、Application Layer = Simulation Module には main 経由で伝播)。`fopen` 失敗で `return 3`、上位 main で同 code 伝播
 - **Snapshot parse error** (Req 6.5): Affected = Snapshot Reader (= 直接呼出元 BMP Writer / Re-render Function 経由で main 伝播)。`fscanf` の戻り値 check + `return 4`
 - **BMP save error** (Req 6.6): Affected = BMP Writer (= 直接呼出元 pfm_bmp main / pfm_sim main 経由で伝播)。`wingxa.h::save_screen` の戻り値 check + `return 5`
 
