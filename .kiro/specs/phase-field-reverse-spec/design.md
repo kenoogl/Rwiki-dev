@@ -109,6 +109,8 @@ graph TB
     ReRender --> WingxaH
 ```
 
+> **Note (= mermaid 表現スコープ)**: 本 Boundary Map は概念図。`SimMain` / `RenderMain` / `BmpMain` は executable node として表示しているが、それぞれ Application Layer の component (= Simulation Module / Re-render Function 呼出元 / BMP Writer 呼出元) を内包する。Application Layer の component 構造詳細は Components 節 + Architecture Integration 文章記述を SSoT とする (= mermaid は概念図、文章が SSoT)。
+
 **Architecture Integration**:
 
 - Selected pattern: **Layered + Library-based CLI** (= 共通 core / I/O / visualization library + 3 executable consumers)
@@ -204,7 +206,7 @@ using Field = double[ND][ND];             // raw 2D static array
 | Mean Composition Corrector | Core | 平均組成保存補正 | 3.9 | Concentration Clamp (P0) | Service |
 | Snapshot Writer | I/O | テキスト形式書き出し | 4.1, 4.2, 4.3, 4.4 | (none) | Service |
 | Snapshot Reader | I/O | テキスト形式読み込み | 4.7, 4.8, 6.4, 6.5 | (none) | Service |
-| Renderer | Visualization | 色変換 + 矩形描画 | 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 | wingxa.h `gcolor`/`grect`/`gsetorg` (P0) | Service |
+| Renderer | Visualization | 色変換 + 矩形描画 + 描画バッファ初期化委譲 | 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 | wingxa.h `gcolor`/`grect`/`gsetorg`/`gwinsize`/`ginit` (P0) | Service |
 | BMP Writer | Visualization | snapshot → BMP | 4.5, 4.9, 6.6 | wingxa.h `save_screen` (P0), Renderer (P0) | Service |
 | Re-render Function | Visualization | snapshot → live display | 4.6 | Renderer (P0、`keypress` wrapper 経由), wingxa.h `gwinsize`/`ginit`/`swapbuffers` (P0) | Service |
 | Simulation Module | Application | CLI parser + main loop + 終了処理 | 1.1-1.10, 6.1-6.6 | All Core / I/O / Visualization (P0) | Service |
@@ -263,7 +265,13 @@ void time_step(
 
 - Integration: `pfm_sim_main` の time loop から各 step 呼出
 - Validation: unit test で 1 step 結果が手計算と一致 (= 4 grid 単純例で reference value 比較)
-- temp 配列 lifecycle (= step (4) c2_new / c3_new 格納先): `time_step()` 内部 `static` (= 関数 level static または anonymous namespace static) で `Field temp_c2, temp_c3` を 1 度だけ確保し、`time_step` 末尾で `std::memcpy` 相当 (= grid 単位代入) で `c2`, `c3` 引数に commit。Field 80KB × 2 = 160KB の static は thread-unsafe = 本 spec single-thread 前提 (= `§21` 並列化 scope 外) で許容。step (2) `lap(mu2)`, `lap(mu3)` は on-the-fly 再計算 (= 一時 stack 変数で stencil 計算、追加 temp 配列なし、メモリ収支は temp_c2 / temp_c3 の 160KB のみ)
+- 内部配列 lifecycle (= Numerical Engine 所有権、すべて Numerical Engine 内部 `static` で 1 度確保、外部から不可視):
+  - `mu2`, `mu3` (= step (1) 出力先、`compute_potentials` 引数で受ける) = `Field` × 2 = 160 KB
+  - `temp_c2`, `temp_c3` (= step (4) c2_new / c3_new 格納先) = `Field` × 2 = 160 KB
+  - 合計 4 配列 = 320 KB を Numerical Engine 内部 static (= 関数 level static または anonymous namespace static) で確保
+  - `time_step()` 末尾で `std::memcpy` 相当 (= grid 単位代入) で `temp_c2 → c2`, `temp_c3 → c3` 引数に commit
+  - thread-unsafe = 本 spec single-thread 前提 (= `§21` 並列化 scope 外) で許容
+  - step (2) `lap(mu2)`, `lap(mu3)` は **on-the-fly 再計算** (= 一時 stack 変数で stencil 計算、追加配列なし、5 点差分の 4 隣接値読込のみ)
 - Risks: 浮動小数点誤差累積 (= explicit Euler、`delt` 過大で発散) → 安定条件概算 (= Cahn-Hilliard explicit Euler の CFL-like 条件 `delt < O(dx^4 / (kappa * M))`、`ND = 100` / `§8` 既定値下で `delt < 1e-3` 程度を推奨)、`delt` 既定値は `§13` 由来 user input、user 責任。step (4) → step (5) 間で c2_new / c3_new に対し `std::isnan` / `std::isinf` check、検出時は stderr に diagnostic + `std::abort()` (= NaN 伝播防止、Req 7 AC5 「log 定義域逸脱なし」担保)
 
 #### Initial Field Builder
@@ -443,6 +451,7 @@ int write_snapshot(
 **Implementation Notes**
 
 - Integration: `pfm_sim_main` から保存間隔ごとに呼出
+- write 順序保証 (= BMP Writer の re-read 前提): `write_snapshot()` は内部で `fopen` → `fwrite`/`fprintf` → `fclose` を関数内で完結 (= 関数 return 時点で OS file system に write 確定)、後続の BMP Writer / Re-render Function による re-read で再読可能。同一 process 内逐次呼出 (= `pfm_sim_main` の time loop 内で `write_snapshot` → `write_bmp_for_snapshot` 順) では `fclose` で write 確定が保証される
 - Validation: unit test で round-trip 整合 (= write → read で同一値復元)
 - Risks: テキスト精度損失 → `printf("%.17g")` を normative 採用 (= IEEE 754 double round-trip safe、`%.15g` では一部値で誤差残存し test failure risk)、read 側 `fscanf("%lf")` との対称性で round-trip 完全復元保証
 
@@ -487,7 +496,8 @@ int seek_snapshot(
 
 **Implementation Notes**
 
-- Integration: `pfm_render_main` / `pfm_bmp_main` から呼出
+- Integration: `pfm_render_main` / `pfm_bmp_main` (= Re-render Function / BMP Writer 経由) から呼出
+- 責務分担 (= file open 責務): **`fopen` は caller (= Re-render Function / BMP Writer)** が担当、Snapshot Reader は `FILE*` を引数で受け read 段階の I/O / parse error のみ責務 (= Req 6 AC4 file open 失敗 non-zero exit は caller 側で trigger、Req 6 AC5 parse error は本 component 責務)
 - Validation: unit test で 3-snapshot file の各 index 取得 + 不正形式 (= 値欠損 / 非数値) で exit code non-zero
 - Risks: `§16` の「数値間は空白または改行で区切られていればよい」緩い仕様 → `fscanf("%lf", ...)` で吸収
 
@@ -508,7 +518,7 @@ int seek_snapshot(
 
 **Dependencies**
 
-- External: `wingxa.h::gcolor` (P0), `wingxa.h::grect` (P0), `wingxa.h::gsetorg` (P0)
+- External: `wingxa.h::gcolor` (P0), `wingxa.h::grect` (P0), `wingxa.h::gsetorg` (P0), `wingxa.h::gwinsize` (P0), `wingxa.h::ginit` (P0), `wingxa.h::keypress` (P0、`poll_keypress` wrapper 内のみ)
 
 **Contracts**: Service [✓]
 
@@ -523,6 +533,10 @@ inline constexpr int DRAW_H = 400;          // §17 既定値、規範は Req 5 
 // ND 変更時の gap 防止 (= Req 5 AC5 visible gap なし担保)
 static_assert(DRAW_W % ND == 0, "DRAW_W must be divisible by ND for gap-free contiguous fill");
 static_assert(DRAW_H % ND == 0, "DRAW_H must be divisible by ND for gap-free contiguous fill");
+
+// 描画バッファ初期化 wrapper (= Req 1 AC6 (e) / Req 5 AC6、Application Layer が wingxa.h::gwinsize / ginit / gsetorg を直接呼出禁止、本 wrapper 経由)
+// pfm_sim main / pfm_render main が起動順 §14 (d)(e)(f) で本関数を 1 度呼出
+void init_drawing_buffer();
 
 // 全 grid 描画 (= 1 frame) (§17, Req 5.1-5.5)
 void render_field(
@@ -544,6 +558,7 @@ int poll_keypress();
 **Implementation Notes**
 
 - Integration: BMP Writer / Re-render Function / Simulation Module 全てから呼出
+- `init_drawing_buffer` 実装方針: 内部で `wingxa.h::gwinsize(DRAW_W, DRAW_H)` → `wingxa.h::ginit()` → `wingxa.h::gsetorg(0, 0)` を `§14` (d)(e)(f) 順で呼出し、Application Layer が wingxa.h を直接 include しない構造を担保 (= Req 1 AC9 / Req 5 AC6 依存方向制約と整合)
 - `poll_keypress` 実装方針: 内部で `isatty(STDIN_FILENO)` (= `<unistd.h>` POSIX) で stdin 非対話モード判定、非対話なら即 `0` return (= non-blocking、Req 1 AC9 停止条件は Renderer wrapper 内で安全に吸収)。対話モードなら `wingxa.h::keypress()` を呼出して戻り値をそのまま return (= 既存規範通りキー押下で非 0)
 - Validation: unit test で boundary case (= `c2 = c3 = 0` → `R=255,G=0,B=0`) 等の色値検証
 - Risks: 周期境界連続性 (Req 5 AC5 operational 判定基準 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間に visible gap なし、wraparound 列 `i = ND` 相当の追加描画は実装裁量) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル → 描画 loop は `i = 0..ND-1` の一巡で全 100 × 100 grid を描画、各 grid を 4 × 4 ピクセル (= 計 400 × 400 ピクセル、ピッタリ収まる) で隣接配置することで visible gap なしを担保。wraparound 列 (`i = ND` 相当の追加描画) は実装裁量範囲内、本 design では採用しない (= AC5 pass 条件は loop 一巡で満たす)
@@ -643,7 +658,7 @@ int re_render_all(
 }  // namespace pfm
 ```
 
-- Preconditions: `wingxa.h::ginit` 既起動 (= caller 責任)、描画 buffer 有効
+- Preconditions: `pfm_render_main` が起動時に `Renderer::init_drawing_buffer()` を呼出済 (= `pfm_sim` と対称、Application Layer は wingxa.h 直接呼出禁止、Req 1 AC9 / Req 5 AC6 整合)、描画 buffer 有効
 - Postconditions: snapshot file 末尾まで順次描画完了、または Renderer wrapper 経由 keypress 戻り値非 0 検出時に「現 snapshot 描画 + swapbuffers 完了後」のタイミングで停止 (= `§15` 停止 semantics と整合、即時停止 / 次 snapshot 前停止ではなく、現 snapshot の描画完了後停止)
 - Invariants: snapshot 描画は時系列順 (= snapshot file 内の格納順、Snapshot Reader が seek で順次返却)
 
@@ -722,14 +737,16 @@ sequenceDiagram
     participant Clamp as Concentration Clamp
     participant Mean as Mean Composition Corrector
     participant Writer as Snapshot Writer
+    participant SnapReader as Snapshot Reader
     participant BMP as BMP Writer
 
-    Main->>Renderer: gwinsize / ginit / gsetorg [§14 (d)(e)(f) Renderer 初期化委譲、Application は wingxa.h 直接呼出禁止]
+    Main->>Renderer: init_drawing_buffer() [§14 (d)(e)(f) wrapper、内部で gwinsize/ginit/gsetorg 呼出、Application は wingxa.h 直接呼出禁止]
     Main->>Init: build_initial_field(c2, c3, c2a, c3a, fluct_amp, seed)
     Init->>Clamp: clamp_concentrations(c2, c3)
     Init-->>Main: void return
     Main->>Writer: write_snapshot(path, t=0, c2, c3, OverwriteOrCreate)
     Main->>BMP: write_bmp_for_snapshot(snapshot_path, 0, bmp_path)
+    BMP->>SnapReader: seek_snapshot(fp, 0, time1, c2, c3)
     BMP->>Renderer: render_field(c2, c3)
 
     loop time step
@@ -751,6 +768,7 @@ sequenceDiagram
         end
         opt step % bmp_interval == 0
             Main->>BMP: write_bmp_for_snapshot(snapshot_path, snapshot_index, bmp_path)
+            BMP->>SnapReader: seek_snapshot(fp, snapshot_index, time1, c2, c3)
             BMP->>Renderer: render_field(c2, c3)
         end
     end
@@ -764,7 +782,7 @@ sequenceDiagram
 stateDiagram-v2
     [*] --> Running
     Running --> StoppedNormal: step >= max_step
-    Running --> StoppedNormal: keypress() != 0
+    Running --> StoppedNormal: poll_keypress() != 0
     Running --> StoppedError: I/O error
     StoppedNormal --> [*]: exit 0
     StoppedError --> [*]: exit non-zero
@@ -796,7 +814,7 @@ stateDiagram-v2
 | 7.2 | 初期 snapshot + 初期 BMP 出力 (= `§22` 受け入れ基準 2) | Simulation Module / Snapshot Writer / BMP Writer | `pfm_sim` startup sequence | Time Loop (init phase) |
 | 7.3 | 再描画 file load (= `§22` 受け入れ基準 3) | Re-render Function / Snapshot Reader | `re_render_all()` | - |
 | 7.4 | BMP 17 step 群出力 (= `§22` 受け入れ基準 4) | BMP Writer | `write_bmp_default_steps()` | - |
-| 7.5 | `log` 定義域逸脱なし (= `§22` 受け入れ基準 5) | Numerical Engine / Concentration Clamp | `time_step()` step (0)/(5)/(7) clamp | Time Loop (per step) |
+| 7.5 | `log` 定義域逸脱なし (= `§22` 受け入れ基準 5) | Initial Field Builder / Numerical Engine / Concentration Clamp | `build_initial_field()` 終端 clamp + `time_step()` step (0)/(5)/(7) clamp | Time Loop (init phase + per step) |
 | 7.6 | 平均組成補正後 4 制約満足 (= `§22` 受け入れ基準 6) | Numerical Engine / Mean Composition Corrector / Concentration Clamp | `correct_mean_composition()` + step (7) re-clamp | Time Loop (step (6)/(7)) |
 
 ## Error Handling
@@ -813,7 +831,7 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 - **Filesystem error** (Req 6.3): Affected = Simulation Module。`<filesystem>` exception を catch、stderr に message 出力 + `return 3`
 - **Snapshot file open error** (Req 6.4): Affected = Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function (= 直接呼出元、Application Layer = Simulation Module には main 経由で伝播)。`fopen` 失敗で `return 3`、上位 main で同 code 伝播
 - **Snapshot parse error** (Req 6.5): Affected = Snapshot Reader (= 直接呼出元 BMP Writer / Re-render Function 経由で main 伝播)。`fscanf` の戻り値 check + `return 4`
-- **BMP save error** (Req 6.6): Affected = BMP Writer (= 直接呼出元 pfm_bmp main / pfm_sim main 経由で伝播)。`wingxa.h::save_screen` の戻り値 check + `return 5`
+- **BMP save error** (Req 6.6): Affected = BMP Writer (= 直接呼出元 pfm_bmp main / pfm_sim main 経由で伝播)。`wingxa.h::save_screen` の戻り値 check + `return 5`。`save_screen` 戻り値 contract = 0 success / non-zero error を本 design 前提 (= 詳細は `wingxa.h` 仕様書参照、本 design は contract のみ規定し実体は Out of Boundary)
 
 ### Monitoring
 
