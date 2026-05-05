@@ -33,7 +33,7 @@
 
 #### Acceptance Criteria
 
-1. When the user starts the simulation, the Simulation Module shall accept the following input parameters per `§13`: 平均組成 `c2a`, 平均組成 `c3a`, 時間刻み `delt`, 最大ステップ数, 濃度データ保存間隔, BMP 保存間隔, 出力ディレクトリ. Note: `c2a`, `c3a` は SSoT `§13` 文言「平均組成 `c2`」「平均組成 `c3`」の Kiro req 内正規名 (= `§9`/`§12` 系命名と統一)。
+1. When the user starts the simulation, the Simulation Module shall accept the following input parameters per `§13`: 平均組成 `c2a`, 平均組成 `c3a`, 時間刻み `delt`, 最大ステップ数, 濃度データ保存間隔, BMP 保存間隔, 出力ディレクトリ. 各 parameter の値域 / 型は `0 < c2a < 1`, `0 < c3a < 1`, `c2a + c3a < 1`, `delt > 0` の double、最大ステップ数 / 濃度データ保存間隔 / BMP 保存間隔は正整数 (`> 0`)、出力ディレクトリは文字列。`delt` は必須引数 (= 省略不可、未指定時は AC10 / Req 6 AC1 に従い非 0 終了)。Note: `c2a`, `c3a` は SSoT `§13` 文言「平均組成 `c2`」「平均組成 `c3`」の Kiro req 内正規名 (= `§9`/`§12` 系命名と統一)。
 2. When the maximum step count is not specified, the Simulation Module shall use the default value `100000` per `§13`.
 3. When the concentration data save interval is not specified, the Simulation Module shall use the default value `2000` per `§13`.
 4. When the BMP save interval is not specified, the Simulation Module shall use the default value `2000` per `§13`.
@@ -54,10 +54,11 @@
 2. The Numerical Engine shall compute chemical potentials `μ2`, `μ3` per `§6` using the following explicit formulas: chemical free-energy partial derivatives `∂f_chem/∂c2 = om_12 (c1 - c2) - om_13 c3 + om_23 c3 + log(c2) - log(c1)` and `∂f_chem/∂c3 = om_13 (c1 - c3) - om_12 c2 + om_23 c2 + log(c3) - log(c1)`; full chemical potentials `μ2 = ∂f_chem/∂c2 - 2 κ2 ∇²c2 - κ3 ∇²c3` and `μ3 = ∂f_chem/∂c3 - 2 κ3 ∇²c3 - κ2 ∇²c2` (= ここで `κ2 ≡ kapa_c2`, `κ3 ≡ kapa_c3`、SSoT `§8` で既定値定義の同係数の数式記号表記、AC6 / AC8 step(1) と同一変数).
 3. The Numerical Engine shall discretize space on a 2D square lattice with default grid count `ND = 100` and grid indices `0` to `ND-1` per `§7`.
 4. The Numerical Engine shall apply periodic boundary conditions in both x and y directions per `§7`.
-5. The Numerical Engine shall approximate the Laplacian using the 5-point finite difference stencil defined in `§7`: `lap(a) = a(i+1,j) + a(i-1,j) + a(i,j+1) + a(i,j-1) - 4 a(i,j)`.
+5. The Numerical Engine shall approximate the Laplacian using the 5-point finite difference stencil defined in `§7`: `lap(a) = a(i+1,j) + a(i-1,j) + a(i,j+1) + a(i,j-1) - 4 a(i,j)` (= dimensionless stencil = `dx = 1` 相当、物理格子間隔 `b1` は `§8` の `kapa_c2`, `kapa_c3` 定義に `b1^2` として吸収済、stencil に `b1^2` を追加除算しない).
 6. The Numerical Engine shall use the default constants defined in `§8` listed independently per SSoT format: `rr = 8.3145`, `temp = 900.0`, `al = 100.0e-9`, `b1 = al / ND`, `om_12 = 25000 / (rr * temp)`, `om_23 = 25000 / (rr * temp)`, `om_13 = 25000 / (rr * temp)`, `cmob22 = 1.0`, `cmob33 = 1.0`, `cmob23 = -0.5`, `cmob32 = -0.5`, `kapa_c2 = 5.0e-15 / (b1 * b1 * rr * temp)`, `kapa_c3 = 5.0e-15 / (b1 * b1 * rr * temp)`.
 7. The Numerical Engine shall integrate time explicitly per `§11`.
 8. While computing one time step, the Numerical Engine shall execute the following 7 steps in the fixed order defined in `§11` using the explicit formulas (= step boundary は SSoT `§11` 文言と一致):
+   - step (0) (= ポテンシャル計算前 clamp、`§10` 4 タイミング invariant の 1 つ、Req 3 AC3 と整合): apply concentration clamps to `c2`, `c3` per `§10` before potential computation;
    - step (1): compute the chemical free-energy partial derivatives `mu2_chem = om_12*(c1 - c2) - om_13*c3 + om_23*c3 + log(c2) - log(c1)` and `mu3_chem = om_13*(c1 - c3) - om_12*c2 + om_23*c2 + log(c3) - log(c1)`, then compute the full chemical potentials `mu2 = mu2_chem - 2*kapa_c2*lap(c2) - kapa_c3*lap(c3)` and `mu3 = mu3_chem - 2*kapa_c3*lap(c3) - kapa_c2*lap(c2)` at all grid points;
    - step (2): compute `lap(mu2)` and `lap(mu3)` at all grid points;
    - step (3): compute concentration time derivatives `dc2_dt = cmob22*lap(mu2) + cmob23*lap(mu3)` and `dc3_dt = cmob32*lap(mu2) + cmob33*lap(mu3)`;
@@ -65,7 +66,7 @@
    - step (5): apply concentration clamps to the temporary array (= `§10`);
    - step (6): invoke the Mean Composition Corrector to apply mean composition correction (= `§12`、Mean Composition Corrector に委譲、内部で Concentration Clamp 呼出);
    - step (7): re-apply concentration clamps after correction (= `§10`).
-9. The Numerical Engine shall allocate concentration field arrays statically using the grid count parameter `ND` defined in `§7` (= サイズは compile time に固定、runtime での動的再確保は行わない). この AC は `§21` で実装裁量とされた「配列を静的 / 動的に保持するか」を本 spec で静的確保に固定するための上書き条項である。
+9. The Numerical Engine shall allocate concentration field arrays statically using the grid count parameter `ND` defined in `§7` (= サイズは compile time に固定、runtime での動的再確保は行わない、`ND` は compile-time constant で `§7` 既定値 `100` に固定、runtime での `ND` 変更は本 spec scope 外). この AC は `§21` で実装裁量とされた「配列を静的 / 動的に保持するか」を本 spec で静的確保に固定するための上書き条項である。
 
 ### Requirement 3: 濃度制約 invariant + 初期化 + 平均組成保存 (= `§9`, `§10`, `§12`)
 
@@ -74,14 +75,14 @@
 #### Acceptance Criteria
 
 1. When the simulation is initialized, the Initial Field Builder shall set the initial concentration at each grid point to the mean compositions `c2a`, `c3a` plus random fluctuation of default amplitude `±0.01` per `§9` (= `§9` 既定値、本 spec で明示固定値として要求するわけではない).
-2. When initialization completes, the Initial Field Builder shall apply the concentration clamping defined in `§10` such that `0 < c2 < 1`, `0 < c3 < 1`, `c2 + c3 < 1`, and `c1 = 1 - c2 - c3 > 0` hold at every grid point.
+2. When initialization completes, the Initial Field Builder shall apply the concentration clamping defined in `§10` such that `0 < c2 < 1`, `0 < c3 < 1`, `c2 + c3 < 1`, and `c1 = 1 - c2 - c3 > 0` hold at every grid point. Note: `c2a` または `c3a` が境界近傍 (= 例 `c2a < 0.01` or `c2a + c3a > 0.99`) で initial clamping が field を変更する場合、initial field の実際平均が `c2a`, `c3a` から bounded deviation で乖離する可能性あり、AC9 の Mean Composition Corrector が time step 1 で補正する。
 3. While the simulation is running, the Numerical Engine shall maintain `0 < c2 < 1`, `0 < c3 < 1`, `c2 + c3 < 1`, and `c1 > 0` at every grid point at the four points specified in `§10` (= 初期化時、ポテンシャル計算前、時間更新後、平均組成補正後).
 4. If `c2 ≤ 0` at any grid point, the Concentration Clamp shall set `c2 = eps` where the default `eps = 1.0e-6` per `§10`.
 5. If `c2 ≥ 1` at any grid point, the Concentration Clamp shall set `c2 = 1 - eps` per `§10`.
 6. If `c3 ≤ 0` at any grid point, the Concentration Clamp shall set `c3 = eps` per `§10`.
 7. If `c3 ≥ 1` at any grid point, the Concentration Clamp shall set `c3 = 1 - eps` per `§10`.
-8. If `c2 + c3 ≥ 1` at any grid point, the Concentration Clamp shall scale `c2` and `c3` proportionally so that the sum is at most `1 - 2*eps` per `§10`.
-9. After each time step, the Mean Composition Corrector shall maintain the input mean compositions `c2a`, `c3a` per `§12` by computing `delta_c2 = avg_c2 - c2a` and `delta_c3 = avg_c3 - c3a`, uniformly subtracting them from all grid points, and re-applying concentration clamps via the Concentration Clamp service (= 階層委譲: Mean Composition Corrector が Concentration Clamp を下請け呼出、Numerical Engine が Mean Composition Corrector を呼出).
+8. If `c2 + c3 ≥ 1` at any grid point, the Concentration Clamp shall scale `c2` and `c3` proportionally so that the sum is at most `1 - 2*eps` per `§10`. After the proportional scaling, if any of AC4-AC7 conditions become violated (= 縮小後 `c2 < eps` or `c3 < eps` 等)、the Concentration Clamp shall re-apply AC4-AC7 to restore individual lower-bound invariants (= 統合適用 = AC4-AC8 を全条件満足まで適用)。
+9. After each time step, the Mean Composition Corrector shall maintain the input mean compositions `c2a`, `c3a` per `§12` by computing `delta_c2 = avg_c2 - c2a` and `delta_c3 = avg_c3 - c3a`, uniformly subtracting them from all grid points, and re-applying concentration clamps via the Concentration Clamp service (= 階層委譲: Mean Composition Corrector が Concentration Clamp を下請け呼出、Numerical Engine が Mean Composition Corrector を呼出). Priority note: re-clamping 後の residual deviation (= `|avg_c2 - c2a|`, `|avg_c3 - c3a|`) は clamping epsilon の bounded 範囲内で許容、本 AC は再 iterate しない (= `§10` 濃度制約 invariant を `§12` 平均組成厳密保存より優先、final invariant は `§10`)。
 
 ### Requirement 4: 濃度データ入出力 + BMP 書き出し (= `§3` 機能 2-3, `§16`, `§19`)
 
@@ -89,11 +90,11 @@
 
 #### Acceptance Criteria
 
-1. When the Snapshot Writer saves a concentration snapshot, the Snapshot Writer shall record one real value `time1` followed by `ND * ND` real pairs `(c2, c3)` in text format per `§16`.
+1. When the Snapshot Writer saves a concentration snapshot, the Snapshot Writer shall record one real value `time1` followed by `ND * ND` real pairs `(c2, c3)` in text format per `§16`. `time1` の値は当該 snapshot 保存時点の物理時刻 (= 累積 step 数 × `delt`、初期 snapshot は `time1 = 0.0`)。
 2. The Snapshot Writer shall separate numeric values with whitespace or newlines such that the output is parsable as whitespace-separated text.
 3. When saving the initial snapshot, the Snapshot Writer shall create a new file or overwrite an existing one per `§16`.
 4. When saving a subsequent snapshot, the Snapshot Writer shall append to the existing file per `§16`.
-5. The BMP Writer shall be able to generate a BMP image for any saved concentration snapshot. Under the default BMP save interval parameter (= `§13` 既定 `2000`) and default maximum step count (= `§13` 既定 `100000`), this shall include at least the steps `0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 30000, 40000, 50000, 60000, 70000, 80000` per `§19` (= デフォルト param での normative 保存 step 列挙、param 変更時は対応する step 群を生成).
+5. The BMP Writer shall be able to generate a BMP image for any saved concentration snapshot. Under the default BMP save interval parameter (= `§13` 既定 `2000`) and default maximum step count (= `§13` 既定 `100000`), this shall include at least the steps `0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 30000, 40000, 50000, 60000, 70000, 80000` per `§19` (= デフォルト param での normative 保存 step 列挙)。param 変更時 (= BMP 保存間隔 `K` で実行時) は step 群 = `{0, K, 2K, ...} ∩ {≤ 最大ステップ数}` を生成 (= 動的規則、default 下では本 AC 列挙の `§19` 17 step を必ず含む)。
 6. The Re-render Function shall be able to load a saved concentration snapshot file and re-display its contents via the Renderer per `§3` 機能 2.
 7. If the concentration data file fails to open, the Snapshot Reader shall terminate with a non-zero exit code per `§20` (= canonical error termination policy は Requirement 6 で規定、本 AC は局所的完結性のための per-component 適用記述).
 8. If concentration data parsing fails, the Snapshot Reader shall terminate with a non-zero exit code per `§20` (= 同 Req 6 への canonical pointer).
@@ -109,7 +110,7 @@
 2. The Renderer shall clamp each color component to `[0, 1]` and convert it to a `0..255` integer color before drawing per `§17`.
 3. The Renderer shall draw each grid point as a filled rectangle per `§17`.
 4. The Renderer shall use a default drawing area of `400 x 400` pixels per `§17`.
-5. The Renderer shall handle grid edges so that the periodic boundaries appear continuous in the displayed image per `§17`.
+5. The Renderer shall handle grid edges so that the periodic boundaries appear continuous in the displayed image per `§17`. Operational 判定基準: 描画は格子インデックス `0` から `ND-1` の全格子点を網羅し、wraparound 列 (= `ND` 番目相当) の追加描画は実装裁量 (= `§21`)。本 AC pass 条件は「格子全点描画 + 隣接格子間に visible gap がない」。
 6. The Renderer shall depend only on the 9 functions declared in `wingxa.h` per `§18`: `gwinsize`, `ginit`, `gsetorg`, `keypress`, `gcolor`, `grect`, `swapbuffers`, `save_screen`, `itoa`.
 
 ### Requirement 6: エラー処理 + 異常終了 (= `§20`)
@@ -118,7 +119,7 @@
 
 #### Acceptance Criteria
 
-1. If invalid input arguments are detected at startup, the Simulation Module shall terminate with a non-zero exit code per `§20`.
+1. If invalid input arguments are detected at startup (= Req 1 AC1 値域違反 = `c2a ≤ 0` or `c2a ≥ 1` or `c3a ≤ 0` or `c3a ≥ 1` or `c2a + c3a ≥ 1` or `delt ≤ 0` or 最大ステップ数 / 保存間隔 が非正整数 / 必須 `delt` 引数欠落), the Simulation Module shall terminate with a non-zero exit code per `§20`.
 2. If numeric conversion of input parameters fails, the Simulation Module shall terminate with a non-zero exit code per `§20`.
 3. If output directory creation fails, the Simulation Module shall terminate with a non-zero exit code per `§20`.
 4. If the concentration data file fails to open during read or write, the affected component (= Simulation Module / Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function) shall terminate with a non-zero exit code per `§20`.
