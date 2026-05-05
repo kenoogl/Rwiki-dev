@@ -290,11 +290,14 @@ void time_step(
 namespace pfm {
 
 // 初期 Field 構築 (§9, Req 3.1-3.2)
+// fluct_amp / seed は caller (= Simulation Module) が §9 既定値等を渡す = req 3 AC1 が
+// 「§9 既定値、本 spec で明示固定値として要求するわけではない」と裁量を残しているため
+// design は default 値を固定しない
 void build_initial_field(
     Field& c2, Field& c3,
     double c2a, double c3a,
-    double fluct_amp = 0.01,
-    uint32_t seed = 0
+    double fluct_amp,
+    uint32_t seed
 );
 
 }  // namespace pfm
@@ -339,13 +342,13 @@ void clamp_concentrations(Field& c2, Field& c3);
 
 - Preconditions: なし (= 任意 Field 状態を入力可能)
 - Postconditions: 全 grid 点で 4 濃度制約 (AC4-AC8) 全て満たす
-- Invariants: idempotent (= 2 回連続呼出で同結果、統合適用 loop は monotonic で 1-2 iteration 内に収束)
+- Invariants: 適用後の Field が `§10` 4 濃度制約 post-condition を満たす (= AC4-AC8 規範)
 
 **Implementation Notes**
 
 - Integration: Numerical Engine step (0) / step (5) / step (7) 計 3 回、Initial Field Builder 終端、Mean Composition Corrector 終端 (= `§10` 4 timing と整合)
-- Validation: unit test で境界 case (= `c2 = 0`, `c2 = 1`, `c2 + c3 = 1`) を網羅
-- Risks: 比例縮小 case (= AC 3.8) で `c2 + c3 = 1 - 2 * eps` を strict に下回るか? → unit test で確認
+- 実装属性 (= req 規範ではない): idempotent (= 2 回連続呼出で同結果)、統合適用 loop は経験的に 1-2 iteration 内で収束 (= 比例縮小 + 個別下限再適用、`CLAMP_EPS = 1e-6` 既定下で観測される性質、unit test で boundary case 網羅して保証)
+- Validation: unit test で境界 case (= `c2 = 0`, `c2 = 1`, `c2 + c3 = 1`) を網羅、idempotency 検証 + AC8 後 AC4-7 再違反 case (= 比例縮小で `c2 + c3 = 1 - 2 * eps` strict 下回り) 確認
 
 #### Mean Composition Corrector
 
@@ -380,11 +383,12 @@ void correct_mean_composition(
 
 - Preconditions: なし
 - Postconditions: Field `c2`, `c3` の平均 ≈ `c2a`, `c3a` (clamp 由来 residual error 許容、`§12` と整合)、4 濃度制約満たす
-- Invariants: 平均値変化が単調収束 (= 同一 input に対し idempotent ではないが convergent)
+- Invariants: 適用後 Field 平均が clamp epsilon の bounded 範囲で `(c2a, c3a)` 保存 (= req 3 AC9 規範、`§10` 濃度制約 invariant 優先)
 
 **Implementation Notes**
 
 - Integration: Numerical Engine step 6
+- 実装属性 (= req 規範ではない): 平均値変化は単調収束 (= 同一 input に対し idempotent ではないが convergent、`§12` 補正手順の monotonic 性質に依存)
 - Validation: unit test で初期偏差 `0.01` 与え correct 後 `< CLAMP_EPS * ND * ND` 程度
 - Risks: clamp 連続適用で平均が drift (= 経験則、`§12` 既存仕様で許容)
 
@@ -502,13 +506,18 @@ int seek_snapshot(
 ```cpp
 namespace pfm {
 
-inline constexpr int DRAW_W = 400;          // §17 既定
-inline constexpr int DRAW_H = 400;          // §17 既定
+inline constexpr int DRAW_W = 400;          // §17 既定値、規範は Req 5 AC4 (= default 400 x 400 pixels per §17)
+inline constexpr int DRAW_H = 400;          // §17 既定値、規範は Req 5 AC4
 
 // 全 grid 描画 (= 1 frame) (§17, Req 5.1-5.5)
 void render_field(
     const Field& c2, const Field& c3
 );
+
+// keypress wrapper (= Req 5 AC6、上位 component が wingxa.h::keypress を直接呼出禁止、本 wrapper 経由)
+// 戻り値: 0 = キー非押下、非 0 = キー押下 (= §15 停止 trigger)
+// stdin 非対話モードでの block 回避は本 wrapper 内で吸収 (= 即 0 return、req 1 AC9 停止条件と整合)
+int poll_keypress();
 
 }  // namespace pfm
 ```
@@ -521,7 +530,7 @@ void render_field(
 
 - Integration: BMP Writer / Re-render Function / Simulation Module 全てから呼出
 - Validation: unit test で boundary case (= `c2 = c3 = 0` → `R=255,G=0,B=0`) 等の色値検証
-- Risks: 周期境界連続性 (Req 5.5) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル、端点を周期で連続化する必要あり → 描画 loop で `ND - 1` の次は `0` に戻る contiguous fill で対応
+- Risks: 周期境界連続性 (Req 5 AC5 operational 判定基準 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間に visible gap なし、wraparound 列 `i = ND` 相当の追加描画は実装裁量) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル、端点を周期で連続化する必要あり → 描画 loop で `ND - 1` の次は `0` に戻る contiguous fill で対応
 
 #### BMP Writer
 
@@ -557,9 +566,19 @@ int write_bmp_for_snapshot(
 );
 
 // §19 既定 17 step を batch 出力 (snapshot file の各 snapshot index 0,1,2,...)
+// 既定 param (= §13 BMP 保存間隔 2000 + 最大ステップ数 100000) 前提
 int write_bmp_default_steps(
     const std::string& snapshot_path,
     const std::string& bmp_dir
+);
+
+// 動的 step 群 batch 出力 (= Req 4 AC5 param 変更時規則、step 群 = {0, K, 2K, ...} ∩ {≤ max_step})
+// bmp_interval = K (= §13 BMP 保存間隔)、max_step = §13 最大ステップ数
+int write_bmp_steps(
+    const std::string& snapshot_path,
+    const std::string& bmp_dir,
+    int bmp_interval,
+    int max_step
 );
 
 }  // namespace pfm
@@ -605,6 +624,10 @@ int re_render_all(
 }  // namespace pfm
 ```
 
+- Preconditions: `wingxa.h::ginit` 既起動 (= caller 責任)、描画 buffer 有効
+- Postconditions: snapshot file 末尾まで順次描画完了、または Renderer wrapper 経由 keypress 戻り値非 0 検出時に「現 snapshot 描画 + swapbuffers 完了後」のタイミングで停止 (= `§15` 停止 semantics と整合、即時停止 / 次 snapshot 前停止ではなく、現 snapshot の描画完了後停止)
+- Invariants: snapshot 描画は時系列順 (= snapshot file 内の格納順、Snapshot Reader が seek で順次返却)
+
 **Implementation Notes**
 
 - Integration: `pfm_render_main` の entry point
@@ -646,18 +669,14 @@ pfm_sim --c2a <c2a> --c3a <c3a> --delt <dt>
         [--seed <uint32_t>]
 ```
 
-- Required arguments (= 省略時 Req 6 AC1 で non-zero exit): `--c2a`, `--c3a`, `--delt`
-- Value types & ranges (Req 1 AC1):
-  - `c2a` (double): `0 < c2a < 1`
-  - `c3a` (double): `0 < c3a < 1`
-  - 加えて `c2a + c3a < 1` の組合せ制約
-  - `delt` (double): `delt > 0`
-  - `--max-step` (positive int, > 0): default `100000`
-  - `--data-interval` (positive int, > 0): default `2000`
-  - `--bmp-interval` (positive int, > 0): default `2000`
-  - `--output-dir` (string): default `"output"`
-  - `--seed` (uint32_t): default `0`
-- Parse rules: 各引数を `std::stod` / `std::stoi` 系で変換、`std::invalid_argument` / `std::out_of_range` 例外 catch で Req 6 AC2 (= 数値変換失敗 → non-zero exit)。値域 check は parse 後に手書き、違反時 Req 6 AC1 (= 不正引数 → non-zero exit)
+- Required / value types / ranges: requirements.md Req 1 AC1 / Req 6 AC1 を SSoT として参照 (= 必須引数 + 値域 + 数値変換失敗時の non-zero exit 規範は req 側で確定済、design は HOW = 変換方式 + 例外 catch + 値域 check の実装方針のみ規定)
+- Defaults (= `§13` 既定値 reference、req 1 AC2-5):
+  - `--max-step`: default `100000`
+  - `--data-interval`: default `2000`
+  - `--bmp-interval`: default `2000`
+  - `--output-dir`: default `"output"`
+  - `--seed`: default `0`
+- Parse rules: 各引数を `std::stod` / `std::stoi` 系で変換、`std::invalid_argument` / `std::out_of_range` 例外 catch で Req 6 AC2 (= 数値変換失敗 → non-zero exit)。値域 check (= Req 1 AC1 規範) は parse 後に手書き、違反時 Req 6 AC1 (= 不正引数 → non-zero exit)
 - Preconditions: argv 配列が上記 required + value 形式を満たす (= caller / shell 責任)
 - Postconditions: 正常終了で exit code 0、異常で Req 6 AC1-6 に従う non-zero exit code
 - Invariants: 起動順 = `§14` (a)-(f) を厳守 (= Req 1 AC6 と整合)
@@ -666,7 +685,8 @@ pfm_sim --c2a <c2a> --c3a <c3a> --delt <dt>
 
 - Integration: 唯一の binary entry point for 機能 1
 - Validation: integration test で 100 step run + snapshot round-trip
-- Risks: `keypress()` が stdin 非対話モードで block する可能性 → off-screen mode で skip 検討 (`§21` 実装裁量)
+- 実装定数: `build_initial_field` 呼出時の `fluct_amp` には `§9` 既定値 `0.01` を渡す (= Req 3 AC1 reference、CLI option 化は本 spec scope 外、実装裁量)、`seed` は `--seed` CLI 引数値 (= 既定 `0`) を渡す
+- Risks: `wingxa.h::keypress` が stdin 非対話モードで block する可能性 → block 回避は Renderer wrapper (= `poll_keypress`) 内で stdin 非対話判定 + non-blocking 実装 (= 即 0 return) で吸収 (= Req 1 AC9 停止条件は維持、Application Layer は wingxa.h 直接依存禁止と整合、`§21` 実装裁量範囲)
 
 ## System Flows
 
@@ -699,6 +719,7 @@ sequenceDiagram
         Engine->>Mean: step (6) correct_mean(temp_c2, temp_c3, c2a, c3a)
         Mean->>Clamp: clamp(temp_c2, temp_c3) [internal to step (6)]
         Engine->>Clamp: step (7) clamp(temp_c2, temp_c3) [post-correction]
+        Note over Engine: post step (7): commit temp_c2 → c2, temp_c3 → c3 (= main 配列反映、time_step 戻り値で main にも反映済)
         Engine-->>Main: ok
         Main->>Main: step++ ; check stop
         opt step % data_interval == 0
@@ -759,6 +780,8 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 
 ### Error Categories and Responses
 
+> **Note (= 規範範囲明示)**: 以下の exit code 具体値 (= `return 2 / 3 / 4 / 5`) は Req 6 AC1-6 が規範化する「non-zero exit code」を満たすための実装提案であり、req-level の契約ではない (= req は 0 以外の exit code のみ規範化、code 値による error category 区別は本設計の実装一貫性のための割当)。CI / バッチ運用者が code 値で error category を区別する要件が将来必要になった場合は req 改訂で昇格 (= Req 6 に code 値追加) を要する。
+
 - **Invalid CLI input** (Req 6.1, 6.2): Affected = Simulation Module。`argv` parse 段階で usage 表示 + `return 2`
 - **Filesystem error** (Req 6.3): Affected = Simulation Module。`<filesystem>` exception を catch、stderr に message 出力 + `return 3`
 - **Snapshot file open error** (Req 6.4): Affected = Simulation Module / Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function。`fopen` 失敗で `return 3`、上位 main で同 code 伝播
@@ -776,7 +799,7 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 ### Unit Tests (3-5 items)
 
 - **`test_concentration_clamp.cpp`**: 境界 case (= `c2 = 0`, `c2 = 1`, `c2 + c3 = 1`, `c2 + c3 > 1`) の補正後値を期待値と比較、idempotency 検証
-- **`test_mean_correction.cpp`**: 平均偏差 `0.01` 与え補正後の平均が `c2a, c3a` ± `2 * CLAMP_EPS * ND * ND` 以内
+- **`test_mean_correction.cpp`**: 平均偏差 `0.01` 与え補正後の平均が `c2a, c3a` の clamp epsilon bounded 範囲内 (= Req 3 AC9 規範、Implementation 目安は `± 2 * CLAMP_EPS * ND * ND` 程度、本数式は req 契約ではなく実装目安)
 - **`test_numerical_engine.cpp`**: 4 grid 単純例で `compute_potentials` / `laplacian` / 1 step `time_step` の手計算 reference 一致
 - **`test_initial_field.cpp`**: 同 seed 同結果 (= deterministic)、平均値が `c2a, c3a` ± `fluct_amp` 範囲
 - **`test_snapshot_io.cpp`**: write → read round-trip で `time1, c2, c3` 完全一致、不正形式 input で non-zero return
@@ -795,7 +818,7 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 - **Req 7.3 再描画 file load**: snapshot round-trip で確認
 - **Req 7.4 BMP 17 step 群出力**: BMP write integration test で確認
 - **Req 7.5 `log` 定義域逸脱なし**: 100000 step run 中の crash / NaN なし、4 濃度制約 monitoring (= debug build で assertion)
-- **Req 7.6 平均組成補正後 4 制約満足**: `pfm_sim` 後の snapshot ファイルから平均算出、入力との差が `< CLAMP_EPS * ND * ND` (= clamp epsilon の bounded 範囲)、かつ全 grid で `§10` 4 制約満足
+- **Req 7.6 平均組成補正後 4 制約満足**: `pfm_sim` 後の snapshot ファイルから平均算出、入力との差が clamp epsilon の bounded 範囲内 (= Req 3 AC9 規範、Implementation 目安は `< CLAMP_EPS * ND * ND` 程度)、かつ全 grid で `§10` 4 制約満足
 
 ### Performance Tests (Optional)
 
@@ -804,7 +827,7 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 
 ## Performance & Scalability
 
-- 目標: 100000 step 実行を single-thread で `< 5 min` (= 経験則、`ND = 100` の standard 規模)
+- 参考値 (= reference, 規範ではない): 100000 step 実行を single-thread で `< 5 min` 程度 (= forward 系統の経験則、req に性能 AC は含まれない、`ND = 100` の standard 規模での expected order)
 - スケーリング: 本 spec scope 外 (= multi-thread / GPU は `§21` 実装裁量範囲)
 - メモリ: `Field = double[100][100]` = 80 KB / Field、c2 / c3 / mu2 / mu3 / temp 5 個 = 400 KB 程度、L1/L2 cache fit
 
