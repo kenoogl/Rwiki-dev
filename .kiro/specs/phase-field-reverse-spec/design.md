@@ -44,7 +44,8 @@
 
 ### Allowed Dependencies
 
-- C++17 standard library (= `<array>`, `<cstdio>`, `<cmath>`, `<random>`, `<string>`, `<filesystem>`, `<fstream>`)
+- C++17 standard library (= `<array>`, `<cstdio>`, `<cmath>`, `<random>`, `<string>`, `<filesystem>`, `<fstream>`, `<algorithm>`)
+- POSIX `<unistd.h>` (= `isatty(STDIN_FILENO)` for Renderer wrapper の stdin 非対話判定、`§21` POSIX 前提下で許容)
 - 描画 API ヘッダ `wingxa.h` (= 9 関数 prototype のみ参照、実体は外部提供)
 - GNU Make (= build orchestration)
 
@@ -262,7 +263,8 @@ void time_step(
 
 - Integration: `pfm_sim_main` の time loop から各 step 呼出
 - Validation: unit test で 1 step 結果が手計算と一致 (= 4 grid 単純例で reference value 比較)
-- Risks: 浮動小数点誤差累積 (= explicit Euler、`delt` 過大で発散) → `delt` 既定値は `§13` 由来 user input、user 責任
+- temp 配列 lifecycle (= step (4) c2_new / c3_new 格納先): `time_step()` 内部 `static` (= 関数 level static または anonymous namespace static) で `Field temp_c2, temp_c3` を 1 度だけ確保し、`time_step` 末尾で `std::memcpy` 相当 (= grid 単位代入) で `c2`, `c3` 引数に commit。Field 80KB × 2 = 160KB の static は thread-unsafe = 本 spec single-thread 前提 (= `§21` 並列化 scope 外) で許容。step (2) `lap(mu2)`, `lap(mu3)` は on-the-fly 再計算 (= 一時 stack 変数で stencil 計算、追加 temp 配列なし、メモリ収支は temp_c2 / temp_c3 の 160KB のみ)
+- Risks: 浮動小数点誤差累積 (= explicit Euler、`delt` 過大で発散) → 安定条件概算 (= Cahn-Hilliard explicit Euler の CFL-like 条件 `delt < O(dx^4 / (kappa * M))`、`ND = 100` / `§8` 既定値下で `delt < 1e-3` 程度を推奨)、`delt` 既定値は `§13` 由来 user input、user 責任。step (4) → step (5) 間で c2_new / c3_new に対し `std::isnan` / `std::isinf` check、検出時は stderr に diagnostic + `std::abort()` (= NaN 伝播防止、Req 7 AC5 「log 定義域逸脱なし」担保)
 
 #### Initial Field Builder
 
@@ -315,6 +317,7 @@ void build_initial_field(
 - Integration: `pfm_sim_main` 起動時に 1 度呼出
 - Validation: unit test で seed 固定時の出力 reproducibility + 平均組成が `c2a ± fluct_amp` 範囲内
 - Risks: `fluct_amp` 過大で初期 clamp 多発 → 既定 `0.01` を維持 (= `§9`)
+- `fluct_amp` 推奨値域: `0 < fluct_amp < min(c2a, c3a, 1 - c2a - c3a)` (= 値域逸脱で初期 clamp 多発 + 初期平均 deviation 大、Mean Composition Corrector が time step 1 で補正するが収束 cost 増)。`fluct_amp = 0` は trivial 解 (= 全 grid 同値、bifurcation 不発で時間発展で意味のない結果)、本 design では実用上 disallow (= caller = Simulation Module が `§9` 既定値 `0.01` を渡す前提)
 
 #### Concentration Clamp
 
@@ -351,7 +354,8 @@ void clamp_concentrations(Field& c2, Field& c3);
 
 - Integration: `§10` 4 timing への対応 = (1) Initial Field Builder 終端 = `§10` timing「初期化時」 / (2) Numerical Engine step (0) = `§10` timing「ポテンシャル計算前」 (`§11` 番号体系内) / (3) Numerical Engine step (5) = `§10` timing「時間更新後」 / (4) Numerical Engine step (7) = `§10` timing「平均組成補正後」、Mean Composition Corrector 内部 clamp は (4) と階層的同 timing (= `§12` 補正手順内の post-correction clamp、Req 3 AC9 階層委譲)
 - 実装属性 (= req 規範ではない): idempotent (= 2 回連続呼出で同結果)、統合適用 loop は経験的に 1-2 iteration 内で収束 (= 比例縮小 + 個別下限再適用、`CLAMP_EPS = 1e-6` 既定下で観測される性質、unit test で boundary case 網羅して保証)
-- Validation: unit test で境界 case (= `c2 = 0`, `c2 = 1`, `c2 + c3 = 1`) を網羅、idempotency 検証 + AC8 後 AC4-7 再違反 case (= 比例縮小で `c2 + c3 = 1 - 2 * eps` strict 下回り) 確認
+- 統合適用 loop guard (= 病的入力対策): 関数内で `MAX_ITER = 10` を上限とする loop を実装、超過時は last-resort clamp (= 各 grid で `c2 = std::clamp(c2, CLAMP_EPS, 1 - 2*CLAMP_EPS)`, `c3 = std::clamp(c3, CLAMP_EPS, 1 - c2 - CLAMP_EPS)` の単純 clamp) + stderr に diagnostic message 出力。理論上の無限 loop (= 例 `c2 = eps/2`, `c3 = 1 - eps/2` の連続比例縮小) を実装 level で防止
+- Validation: unit test で境界 case (= `c2 = 0`, `c2 = 1`, `c2 + c3 = 1`) を網羅、idempotency 検証 + AC8 後 AC4-7 再違反 case (= 比例縮小で `c2 + c3 = 1 - 2 * eps` strict 下回り) 確認 + MAX_ITER 超過 case (= 病的入力で last-resort clamp 発動) 確認
 
 #### Mean Composition Corrector
 
@@ -394,6 +398,7 @@ void correct_mean_composition(
 - 実装属性 (= req 規範ではない): 平均値変化は単調収束 (= 同一 input に対し idempotent ではないが convergent、`§12` 補正手順の monotonic 性質に依存)
 - Validation: unit test で初期偏差 `0.01` 与え correct 後 `< CLAMP_EPS * ND * ND` 程度
 - Risks: clamp 連続適用で平均が drift (= 経験則、`§12` 既存仕様で許容)
+- 平均計算 summation 精度: ND × ND = 10000 grid 点の double naive sum は誤差 `O(1e-13)` 程度 (= 相対誤差 ε_machine ≈ 1e-16 × N ≈ 1e-12 worst case)、`CLAMP_EPS = 1e-6` に対し negligible。Kahan summation / pairwise summation 等の高精度方式は不要、本 design は naive sum 採用 (= 実装裁量範囲内、Req 3 AC9 bounded 範囲内で十分)
 
 ### I/O Layer
 
@@ -423,6 +428,8 @@ enum class WriteMode {
 
 // 0 on success, non-zero on I/O error (Req 6 AC4 = file open / write 失敗時 non-zero exit)
 // time1 = 物理時刻 = 累積 step 数 × delt (初期 snapshot は time1 = 0.0、Req 4 AC1)
+// format: printf("%.17g") で IEEE 754 double round-trip safe (= write/read で同一 double 値完全復元)
+// fscanf("%lf") との対称性で Req 4 AC2 「同一値復元」 + integration test round-trip 担保
 int write_snapshot(
     const std::string& path,
     double time1,
@@ -437,7 +444,7 @@ int write_snapshot(
 
 - Integration: `pfm_sim_main` から保存間隔ごとに呼出
 - Validation: unit test で round-trip 整合 (= write → read で同一値復元)
-- Risks: テキスト精度損失 (= `printf("%.15g")` 等で double full precision 確保)
+- Risks: テキスト精度損失 → `printf("%.17g")` を normative 採用 (= IEEE 754 double round-trip safe、`%.15g` では一部値で誤差残存し test failure risk)、read 側 `fscanf("%lf")` との対称性で round-trip 完全復元保証
 
 #### Snapshot Reader
 
@@ -497,6 +504,7 @@ int seek_snapshot(
 
 - 単一責務: 色変換 (`R = 1 - c2 - c3`, `G = c2`, `B = c3`、`[0,1]` clamp + `0..255` 整数化) + `grect` 矩形描画
 - Invariants: `wingxa.h` 9 関数以外には依存しない (Req 5.6)
+- color clamp タイミング: float 計算段階で clamp (= `R = std::clamp(1.0 - c2 - c3, 0.0, 1.0)` のように clamp 後 `[0,1]` 確定 → `static_cast<int>(R * 255)` で 0..255 整数化)。int 変換は clamp 後の non-negative 値に対してのみ実施 (= 負値 float → int 変換の実装定義動作回避、`gcolor()` が unsigned char 期待でも安全)
 
 **Dependencies**
 
@@ -511,6 +519,10 @@ namespace pfm {
 
 inline constexpr int DRAW_W = 400;          // §17 既定値、規範は Req 5 AC4 (= default 400 x 400 pixels per §17)
 inline constexpr int DRAW_H = 400;          // §17 既定値、規範は Req 5 AC4
+
+// ND 変更時の gap 防止 (= Req 5 AC5 visible gap なし担保)
+static_assert(DRAW_W % ND == 0, "DRAW_W must be divisible by ND for gap-free contiguous fill");
+static_assert(DRAW_H % ND == 0, "DRAW_H must be divisible by ND for gap-free contiguous fill");
 
 // 全 grid 描画 (= 1 frame) (§17, Req 5.1-5.5)
 void render_field(
@@ -532,6 +544,7 @@ int poll_keypress();
 **Implementation Notes**
 
 - Integration: BMP Writer / Re-render Function / Simulation Module 全てから呼出
+- `poll_keypress` 実装方針: 内部で `isatty(STDIN_FILENO)` (= `<unistd.h>` POSIX) で stdin 非対話モード判定、非対話なら即 `0` return (= non-blocking、Req 1 AC9 停止条件は Renderer wrapper 内で安全に吸収)。対話モードなら `wingxa.h::keypress()` を呼出して戻り値をそのまま return (= 既存規範通りキー押下で非 0)
 - Validation: unit test で boundary case (= `c2 = c3 = 0` → `R=255,G=0,B=0`) 等の色値検証
 - Risks: 周期境界連続性 (Req 5 AC5 operational 判定基準 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間に visible gap なし、wraparound 列 `i = ND` 相当の追加描画は実装裁量) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル → 描画 loop は `i = 0..ND-1` の一巡で全 100 × 100 grid を描画、各 grid を 4 × 4 ピクセル (= 計 400 × 400 ピクセル、ピッタリ収まる) で隣接配置することで visible gap なしを担保。wraparound 列 (`i = ND` 相当の追加描画) は実装裁量範囲内、本 design では採用しない (= AC5 pass 条件は loop 一巡で満たす)
 
@@ -545,7 +558,10 @@ int poll_keypress();
 **Responsibilities & Constraints**
 
 - 単一責務: step selection (= `§19` 既定 17 step or BMP 保存間隔から動的生成) + file naming + Snapshot Reader 呼出 + Renderer 呼出 + `save_screen` 呼出の orchestration (= Req 4 AC5 と整合、色変換 / 矩形描画は Renderer 責務に委譲)
-- Invariants: 既定 param (= `§13` BMP 保存間隔 `2000` + 最大ステップ数 `100000`) で `§19` 17 step (= `0, 2000, ..., 80000`) を全て生成、param 変更時は `{0, K, 2K, ...} ∩ {≤ max-step}` を生成
+- Invariants: BMP 出力 step 系列は **2 規則 branch** で確定 (= Req 4 AC5 と §19 の関係を本 design で明示):
+  - **default param 時** (= `--bmp-interval` 未指定): `§19` 17 step (= `0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 30000, 40000, 50000, 60000, 70000, 80000`) を hardcode で生成 (= 前半 `0..20000` は 2000 増分の 11 step、後半 `20000..80000` は 10000 増分の 6 step、計 17 step、等差列ではない `§19` 規範を直接 trace)
+  - **param 変更時** (= `--bmp-interval K` 指定): `{0, K, 2K, ...} ∩ {≤ max-step}` の等差列を生成 (= 例 K=2000, max-step=100000 で 51 step)
+  - 実装は `write_bmp_default_steps` (= 17 step hardcode) と `write_bmp_steps` (= 等差列) の 2 関数で対応済 (= caller `pfm_bmp_main` が CLI 引数で branch)
 
 **Dependencies**
 
@@ -840,7 +856,7 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 
 - 参考値 (= reference, 規範ではない): 100000 step 実行を single-thread で `< 5 min` 程度 (= forward 系統の経験則、req に性能 AC は含まれない、`ND = 100` の standard 規模での expected order)
 - スケーリング: 本 spec scope 外 (= multi-thread / GPU は `§21` 実装裁量範囲)
-- メモリ: `Field = double[100][100]` = 80 KB / Field、c2 / c3 / mu2 / mu3 / temp 5 個 = 400 KB 程度、L1/L2 cache fit
+- メモリ: `Field = double[100][100]` = 80 KB / Field、c2 / c3 / mu2 / mu3 / temp_c2 / temp_c3 = 6 個 = 480 KB 程度。L1d (= 32-48KB) には Field 1 個も収まらないが、5-point stencil の row-major access (= row 単位 800 B/row × N rows in flight) で row level L1 hit、L2/L3 (= 256KB-数 MB) で working set 全体保持 (= cache locality 良好)
 
 ## Migration Strategy
 
