@@ -38,11 +38,11 @@
 3. When the concentration data save interval is not specified, the Simulation Module shall use the default value `2000` per `§13`.
 4. When the BMP save interval is not specified, the Simulation Module shall use the default value `2000` per `§13`.
 5. When the output directory is not specified, the Simulation Module shall use the default value `"output"` per `§13`.
-6. When the simulation starts, the Simulation Module shall execute the startup sequence specified in `§14`: (a) パラメータを解釈する, (b) 出力ディレクトリの存在を確認する, (c) 必要なら出力ディレクトリを作成する, (d) 初期濃度場を構築する, (e) 描画バッファを初期化する, (f) 初期スナップショットを濃度データと BMP に保存する.
+6. When the simulation starts, the Simulation Module shall orchestrate the startup sequence specified in `§14` by delegating to subordinate components: (a) パラメータを解釈する (= Simulation Module 自身), (b) 出力ディレクトリの存在を確認する (= Simulation Module 自身), (c) 必要なら出力ディレクトリを作成する (= Simulation Module 自身), (d) 初期濃度場を構築する (= invoke the Initial Field Builder), (e) 描画バッファを初期化する (= invoke the Renderer to initialize via `wingxa.h::gwinsize` + `ginit` + `gsetorg`), (f) 初期スナップショットを濃度データと BMP に保存する (= invoke the Snapshot Writer + BMP Writer).
 7. While the simulation is running, the Simulation Module shall execute time steps until one of the stop conditions defined in `§15` is met.
 8. When the step count reaches the maximum, the Simulation Module shall terminate normally per `§15`.
-9. When `keypress()` returns non-zero, the Simulation Module shall terminate normally per `§15`.
-10. If an I/O error occurs during simulation execution, the Simulation Module shall terminate with a non-zero exit code per `§15` and `§20`.
+9. When the Renderer reports that `keypress()` returned non-zero (= via Renderer wrapper、`wingxa.h::keypress` 呼出は Renderer 責務に集約 = Application 層 → Visualization 層単一方向依存維持)、the Simulation Module shall terminate normally per `§15`.
+10. If an I/O error occurs during simulation execution, the Simulation Module shall terminate with a non-zero exit code per `§15` and `§20` (= canonical error termination policy は Requirement 6 で規定、本 AC は Simulation Module top-level orchestration 視点での記述、Req 4 AC7-9 と書きぶり統一).
 
 ### Requirement 2: 数値モデル (= 支配方程式 + 離散化 + 時間発展、`§4`-`§8`, `§11`)
 
@@ -58,14 +58,14 @@
 6. The Numerical Engine shall use the default constants defined in `§8` listed independently per SSoT format: `rr = 8.3145`, `temp = 900.0`, `al = 100.0e-9`, `b1 = al / ND`, `om_12 = 25000 / (rr * temp)`, `om_23 = 25000 / (rr * temp)`, `om_13 = 25000 / (rr * temp)`, `cmob22 = 1.0`, `cmob33 = 1.0`, `cmob23 = -0.5`, `cmob32 = -0.5`, `kapa_c2 = 5.0e-15 / (b1 * b1 * rr * temp)`, `kapa_c3 = 5.0e-15 / (b1 * b1 * rr * temp)`.
 7. The Numerical Engine shall integrate time explicitly per `§11`.
 8. While computing one time step, the Numerical Engine shall execute the following 7 steps in the fixed order defined in `§11` using the explicit formulas (= step boundary は SSoT `§11` 文言と一致):
-   - step (0) (= ポテンシャル計算前 clamp、`§10` 4 タイミング invariant の 1 つ、Req 3 AC3 と整合): apply concentration clamps to `c2`, `c3` per `§10` before potential computation;
+   - step (0) (= ポテンシャル計算前 clamp、`§10` 4 タイミング invariant の 1 つ、Req 3 AC3 と整合): invoke the Concentration Clamp service to apply concentration constraints on `c2`, `c3` per `§10` before potential computation;
    - step (1): compute the chemical free-energy partial derivatives `mu2_chem = om_12*(c1 - c2) - om_13*c3 + om_23*c3 + log(c2) - log(c1)` and `mu3_chem = om_13*(c1 - c3) - om_12*c2 + om_23*c2 + log(c3) - log(c1)`, then compute the full chemical potentials `mu2 = mu2_chem - 2*kapa_c2*lap(c2) - kapa_c3*lap(c3)` and `mu3 = mu3_chem - 2*kapa_c3*lap(c3) - kapa_c2*lap(c2)` at all grid points;
    - step (2): compute `lap(mu2)` and `lap(mu3)` at all grid points;
    - step (3): compute concentration time derivatives `dc2_dt = cmob22*lap(mu2) + cmob23*lap(mu3)` and `dc3_dt = cmob32*lap(mu2) + cmob33*lap(mu3)`;
    - step (4): update to a temporary array `c2_new = c2_old + dc2_dt * delt` and `c3_new = c3_old + dc3_dt * delt`;
-   - step (5): apply concentration clamps to the temporary array (= `§10`);
+   - step (5): invoke the Concentration Clamp service to apply constraints to the temporary array (= `§10`);
    - step (6): invoke the Mean Composition Corrector to apply mean composition correction (= `§12`、Mean Composition Corrector に委譲、内部で Concentration Clamp 呼出);
-   - step (7): re-apply concentration clamps after correction (= `§10`).
+   - step (7): invoke the Concentration Clamp service to re-apply constraints after correction (= `§10`).
 9. The Numerical Engine shall allocate concentration field arrays statically using the grid count parameter `ND` defined in `§7` (= サイズは compile time に固定、runtime での動的再確保は行わない、`ND` は compile-time constant で `§7` 既定値 `100` に固定、runtime での `ND` 変更は本 spec scope 外). この AC は `§21` で実装裁量とされた「配列を静的 / 動的に保持するか」を本 spec で静的確保に固定するための上書き条項である。
 
 ### Requirement 3: 濃度制約 invariant + 初期化 + 平均組成保存 (= `§9`, `§10`, `§12`)
@@ -75,8 +75,8 @@
 #### Acceptance Criteria
 
 1. When the simulation is initialized, the Initial Field Builder shall set the initial concentration at each grid point to the mean compositions `c2a`, `c3a` plus random fluctuation of default amplitude `±0.01` per `§9` (= `§9` 既定値、本 spec で明示固定値として要求するわけではない).
-2. When initialization completes, the Initial Field Builder shall apply the concentration clamping defined in `§10` such that `0 < c2 < 1`, `0 < c3 < 1`, `c2 + c3 < 1`, and `c1 = 1 - c2 - c3 > 0` hold at every grid point. Note: `c2a` または `c3a` が境界近傍 (= 例 `c2a < 0.01` or `c2a + c3a > 0.99`) で initial clamping が field を変更する場合、initial field の実際平均が `c2a`, `c3a` から bounded deviation で乖離する可能性あり、AC9 の Mean Composition Corrector が time step 1 で補正する。
-3. While the simulation is running, the Numerical Engine shall maintain `0 < c2 < 1`, `0 < c3 < 1`, `c2 + c3 < 1`, and `c1 > 0` at every grid point at the four points specified in `§10` (= 初期化時、ポテンシャル計算前、時間更新後、平均組成補正後).
+2. When initialization completes, the Initial Field Builder shall invoke the Concentration Clamp service to enforce the constraints defined in `§10` such that `0 < c2 < 1`, `0 < c3 < 1`, `c2 + c3 < 1`, and `c1 = 1 - c2 - c3 > 0` hold at every grid point (= 階層委譲: Initial Field Builder → Concentration Clamp、AC9 / Req 7 AC6 / Req 2 AC8 step (0)/(5)/(7) と委譲記法統一). Note: `c2a` または `c3a` が境界近傍 (= 例 `c2a < 0.01` or `c2a + c3a > 0.99`) で initial clamping が field を変更する場合、initial field の実際平均が `c2a`, `c3a` から bounded deviation で乖離する可能性あり、AC9 の Mean Composition Corrector が time step 1 で補正する。
+3. While the simulation is running, the Numerical Engine shall maintain `0 < c2 < 1`, `0 < c3 < 1`, `c2 + c3 < 1`, and `c1 > 0` at every grid point by delegating clamp enforcement to the Concentration Clamp service at the four points specified in `§10` (= 初期化時 / ポテンシャル計算前 / 時間更新後 / 平均組成補正後、Numerical Engine = invariant 保証責任、Concentration Clamp service = 補正規則実装).
 4. If `c2 ≤ 0` at any grid point, the Concentration Clamp shall set `c2 = eps` where the default `eps = 1.0e-6` per `§10`.
 5. If `c2 ≥ 1` at any grid point, the Concentration Clamp shall set `c2 = 1 - eps` per `§10`.
 6. If `c3 ≤ 0` at any grid point, the Concentration Clamp shall set `c3 = eps` per `§10`.
@@ -94,8 +94,8 @@
 2. The Snapshot Writer shall separate numeric values with whitespace or newlines such that the output is parsable as whitespace-separated text.
 3. When saving the initial snapshot, the Snapshot Writer shall create a new file or overwrite an existing one per `§16`.
 4. When saving a subsequent snapshot, the Snapshot Writer shall append to the existing file per `§16`.
-5. The BMP Writer shall be able to generate a BMP image for any saved concentration snapshot. Under the default BMP save interval parameter (= `§13` 既定 `2000`) and default maximum step count (= `§13` 既定 `100000`), this shall include at least the steps `0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 30000, 40000, 50000, 60000, 70000, 80000` per `§19` (= デフォルト param での normative 保存 step 列挙)。param 変更時 (= BMP 保存間隔 `K` で実行時) は step 群 = `{0, K, 2K, ...} ∩ {≤ 最大ステップ数}` を生成 (= 動的規則、default 下では本 AC 列挙の `§19` 17 step を必ず含む)。
-6. The Re-render Function shall be able to load a saved concentration snapshot file and re-display its contents via the Renderer per `§3` 機能 2.
+5. The BMP Writer shall be able to generate a BMP image for any saved concentration snapshot by invoking the Renderer for color mapping and pixel rendering (= 色変換 / 矩形描画は Renderer 責務、Req 5 AC1-5 と委譲整合) and then invoking `wingxa.h::save_screen` (= `§18`) to write the BMP file. BMP Writer 自身の責務 = step selection + file naming + Renderer / save_screen orchestration。Under the default BMP save interval parameter (= `§13` 既定 `2000`) and default maximum step count (= `§13` 既定 `100000`), this shall include at least the steps `0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 30000, 40000, 50000, 60000, 70000, 80000` per `§19` (= デフォルト param での normative 保存 step 列挙)。param 変更時 (= BMP 保存間隔 `K` で実行時) は step 群 = `{0, K, 2K, ...} ∩ {≤ 最大ステップ数}` を生成 (= 動的規則、default 下では本 AC 列挙の `§19` 17 step を必ず含む)。
+6. The Re-render Function shall invoke the Snapshot Reader to load a saved concentration snapshot file, and shall invoke the Renderer to re-display its contents per `§3` 機能 2 (= 2 段委譲: Re-render Function → Snapshot Reader → Renderer、Re-render Function 自身の責務 = 全 snapshot 順次再描画 + keypress 監視 orchestration、Snapshot Reader 独立 component = AC7-8 と整合).
 7. If the concentration data file fails to open, the Snapshot Reader shall terminate with a non-zero exit code per `§20` (= canonical error termination policy は Requirement 6 で規定、本 AC は局所的完結性のための per-component 適用記述).
 8. If concentration data parsing fails, the Snapshot Reader shall terminate with a non-zero exit code per `§20` (= 同 Req 6 への canonical pointer).
 9. If a BMP save fails, the BMP Writer shall terminate with a non-zero exit code per `§20` (= 同 Req 6 への canonical pointer).
@@ -111,7 +111,7 @@
 3. The Renderer shall draw each grid point as a filled rectangle per `§17`.
 4. The Renderer shall use a default drawing area of `400 x 400` pixels per `§17`.
 5. The Renderer shall handle grid edges so that the periodic boundaries appear continuous in the displayed image per `§17`. Operational 判定基準: 描画は格子インデックス `0` から `ND-1` の全格子点を網羅し、wraparound 列 (= `ND` 番目相当) の追加描画は実装裁量 (= `§21`)。本 AC pass 条件は「格子全点描画 + 隣接格子間に visible gap がない」。
-6. The Renderer shall depend only on the 9 functions declared in `wingxa.h` per `§18`: `gwinsize`, `ginit`, `gsetorg`, `keypress`, `gcolor`, `grect`, `swapbuffers`, `save_screen`, `itoa`.
+6. The Renderer shall depend only on the 9 functions declared in `wingxa.h` per `§18`: `gwinsize`, `ginit`, `gsetorg`, `keypress`, `gcolor`, `grect`, `swapbuffers`, `save_screen`, `itoa`. `keypress` は Simulation Module / Re-render Function / BMP Writer 等の上位 component が停止判定に使う場合、Renderer が wrapper として provide する (= Application 層 / 上位 component は wingxa.h 直接依存しない、依存方向 = Application → Visualization → wingxa.h 単一方向、Req 1 AC9 と整合)。
 
 ### Requirement 6: エラー処理 + 異常終了 (= `§20`)
 
