@@ -12,10 +12,10 @@
 
 - **In scope**:
   - 3 機能 = (1) シミュレーション実行、(2) 保存済み濃度データの再描画、(3) 保存済み濃度データからの BMP 書き出し (= `§3`)
-  - 数値モデル = 支配方程式 (= `§5`) / 化学ポテンシャル (= `§6`) / 空間離散 (= `§7`) / 既定定数 (= `§8`) / 時間発展手順 (= `§11`) / 平均組成保存補正 (= `§12`)
+  - 数値モデル = 支配変数 (= `§4`) / 支配方程式 (= `§5`) / 化学ポテンシャル (= `§6`) / 空間離散 (= `§7`) / 既定定数 (= `§8`) / 時間発展手順 (= `§11`) / 平均組成保存補正 (= `§12`)
   - 入出力契約 = 実行パラメータ受付 (= `§13`) / 濃度データ形式 (= `§16`) / BMP 書き出し対象ステップ群 (= `§19`) / 異常終了 (= `§20`)
-  - 可視化 = 色変換 (= `§17`) / 描画 API 依存契約 (= `§18`)
-  - 濃度制約 invariant = 初期化時 / ポテンシャル計算前 / 時間更新後 / 平均組成補正後 (= `§9`, `§10`)
+  - 可視化 = 可視化仕様 (= `§17`、色変換 + 描画要件 + 描画領域 + 周期境界連続性) / 描画 API 依存契約 (= `§18`)
+  - 濃度制約 invariant = 初期化時 / ポテンシャル計算前 / 時間更新後 / 平均組成補正後 (= `§10` で 4 タイミング定義、初期化時の適用 trigger は `§9`)
 - **Out of scope (= 実装裁量、`§21` から本 spec 用に絞り込み)**:
   - 反復制御の書き方、乱数生成器の具体実装、内部関数名、ファイル分割の仕方
   - 画面表示を実機で行うか、ヘッドレス描画バッファのみで扱うか
@@ -51,20 +51,20 @@
 #### Acceptance Criteria
 
 1. The Numerical Engine shall solve the 2-component coupled Cahn-Hilliard equation per `§5`: `∂c2/∂t = M22 ∇²μ2 + M23 ∇²μ3` and `∂c3/∂t = M32 ∇²μ2 + M33 ∇²μ3`, where `c1 = 1 - c2 - c3` is the dependent component (= `§4`).
-2. The Numerical Engine shall compute chemical potentials `μ2`, `μ3` per `§6` using the following explicit formulas: chemical free-energy partial derivatives `∂f_chem/∂c2 = om_12 (c1 - c2) - om_13 c3 + om_23 c3 + log(c2) - log(c1)` and `∂f_chem/∂c3 = om_13 (c1 - c3) - om_12 c2 + om_23 c2 + log(c3) - log(c1)`; full chemical potentials `μ2 = ∂f_chem/∂c2 - 2 κ2 ∇²c2 - κ3 ∇²c3` and `μ3 = ∂f_chem/∂c3 - 2 κ3 ∇²c3 - κ2 ∇²c2`.
+2. The Numerical Engine shall compute chemical potentials `μ2`, `μ3` per `§6` using the following explicit formulas: chemical free-energy partial derivatives `∂f_chem/∂c2 = om_12 (c1 - c2) - om_13 c3 + om_23 c3 + log(c2) - log(c1)` and `∂f_chem/∂c3 = om_13 (c1 - c3) - om_12 c2 + om_23 c2 + log(c3) - log(c1)`; full chemical potentials `μ2 = ∂f_chem/∂c2 - 2 κ2 ∇²c2 - κ3 ∇²c3` and `μ3 = ∂f_chem/∂c3 - 2 κ3 ∇²c3 - κ2 ∇²c2` (= ここで `κ2 ≡ kapa_c2`, `κ3 ≡ kapa_c3`、SSoT `§8` で既定値定義の同係数の数式記号表記、AC6 / AC8 step(1) と同一変数).
 3. The Numerical Engine shall discretize space on a 2D square lattice with default grid count `ND = 100` and grid indices `0` to `ND-1` per `§7`.
 4. The Numerical Engine shall apply periodic boundary conditions in both x and y directions per `§7`.
 5. The Numerical Engine shall approximate the Laplacian using the 5-point finite difference stencil defined in `§7`: `lap(a) = a(i+1,j) + a(i-1,j) + a(i,j+1) + a(i,j-1) - 4 a(i,j)`.
 6. The Numerical Engine shall use the default constants defined in `§8` listed independently per SSoT format: `rr = 8.3145`, `temp = 900.0`, `al = 100.0e-9`, `b1 = al / ND`, `om_12 = 25000 / (rr * temp)`, `om_23 = 25000 / (rr * temp)`, `om_13 = 25000 / (rr * temp)`, `cmob22 = 1.0`, `cmob33 = 1.0`, `cmob23 = -0.5`, `cmob32 = -0.5`, `kapa_c2 = 5.0e-15 / (b1 * b1 * rr * temp)`, `kapa_c3 = 5.0e-15 / (b1 * b1 * rr * temp)`.
 7. The Numerical Engine shall integrate time explicitly per `§11`.
-8. While computing one time step, the Numerical Engine shall execute the following 7 steps in the fixed order defined in `§11` using the explicit formulas:
-   - step (1): compute `mu2_chem = om_12*(c1 - c2) - om_13*c3 + om_23*c3 + log(c2) - log(c1)` and `mu3_chem = om_13*(c1 - c3) - om_12*c2 + om_23*c2 + log(c3) - log(c1)` at all grid points;
-   - step (2): compute `mu2 = mu2_chem - 2*kapa_c2*lap(c2) - kapa_c3*lap(c3)` and `mu3 = mu3_chem - 2*kapa_c3*lap(c3) - kapa_c2*lap(c2)`, then compute `lap(mu2)` and `lap(mu3)`;
+8. While computing one time step, the Numerical Engine shall execute the following 7 steps in the fixed order defined in `§11` using the explicit formulas (= step boundary は SSoT `§11` 文言と一致):
+   - step (1): compute the chemical free-energy partial derivatives `mu2_chem = om_12*(c1 - c2) - om_13*c3 + om_23*c3 + log(c2) - log(c1)` and `mu3_chem = om_13*(c1 - c3) - om_12*c2 + om_23*c2 + log(c3) - log(c1)`, then compute the full chemical potentials `mu2 = mu2_chem - 2*kapa_c2*lap(c2) - kapa_c3*lap(c3)` and `mu3 = mu3_chem - 2*kapa_c3*lap(c3) - kapa_c2*lap(c2)` at all grid points;
+   - step (2): compute `lap(mu2)` and `lap(mu3)` at all grid points;
    - step (3): compute concentration time derivatives `dc2_dt = cmob22*lap(mu2) + cmob23*lap(mu3)` and `dc3_dt = cmob32*lap(mu2) + cmob33*lap(mu3)`;
    - step (4): update to a temporary array `c2_new = c2_old + dc2_dt * delt` and `c3_new = c3_old + dc3_dt * delt`;
-   - step (5): apply concentration clamps to the temporary array;
-   - step (6): apply mean composition correction;
-   - step (7): re-apply concentration clamps after correction.
+   - step (5): apply concentration clamps to the temporary array (= `§10`);
+   - step (6): invoke the Mean Composition Corrector to apply mean composition correction (= `§12`、Mean Composition Corrector に委譲、内部で Concentration Clamp 呼出);
+   - step (7): re-apply concentration clamps after correction (= `§10`).
 9. The Numerical Engine shall allocate concentration field arrays statically using the grid count parameter `ND` defined in `§7` (= サイズは compile time に固定、runtime での動的再確保は行わない). この AC は `§21` で実装裁量とされた「配列を静的 / 動的に保持するか」を本 spec で静的確保に固定するための上書き条項である。
 
 ### Requirement 3: 濃度制約 invariant + 初期化 + 平均組成保存 (= `§9`, `§10`, `§12`)
@@ -81,7 +81,7 @@
 6. If `c3 ≤ 0` at any grid point, the Concentration Clamp shall set `c3 = eps` per `§10`.
 7. If `c3 ≥ 1` at any grid point, the Concentration Clamp shall set `c3 = 1 - eps` per `§10`.
 8. If `c2 + c3 ≥ 1` at any grid point, the Concentration Clamp shall scale `c2` and `c3` proportionally so that the sum is at most `1 - 2*eps` per `§10`.
-9. After each time step, the Mean Composition Corrector shall maintain the input mean compositions `c2a`, `c3a` per `§12` by computing `delta_c2 = avg_c2 - c2a` and `delta_c3 = avg_c3 - c3a`, uniformly subtracting them from all grid points, and re-applying concentration clamps.
+9. After each time step, the Mean Composition Corrector shall maintain the input mean compositions `c2a`, `c3a` per `§12` by computing `delta_c2 = avg_c2 - c2a` and `delta_c3 = avg_c3 - c3a`, uniformly subtracting them from all grid points, and re-applying concentration clamps via the Concentration Clamp service (= 階層委譲: Mean Composition Corrector が Concentration Clamp を下請け呼出、Numerical Engine が Mean Composition Corrector を呼出).
 
 ### Requirement 4: 濃度データ入出力 + BMP 書き出し (= `§3` 機能 2-3, `§16`, `§19`)
 
@@ -121,7 +121,7 @@
 1. If invalid input arguments are detected at startup, the Simulation Module shall terminate with a non-zero exit code per `§20`.
 2. If numeric conversion of input parameters fails, the Simulation Module shall terminate with a non-zero exit code per `§20`.
 3. If output directory creation fails, the Simulation Module shall terminate with a non-zero exit code per `§20`.
-4. If the concentration data file fails to open during read or write, the affected component (= Simulation Module / BMP Writer / Re-render Function) shall terminate with a non-zero exit code per `§20`.
+4. If the concentration data file fails to open during read or write, the affected component (= Simulation Module / Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function) shall terminate with a non-zero exit code per `§20`.
 5. If concentration data parsing fails, the affected component shall terminate with a non-zero exit code per `§20`.
 6. If a BMP save fails, the affected component shall terminate with a non-zero exit code per `§20`.
 
@@ -134,6 +134,6 @@
 1. The Build System shall succeed in building all required executables (= ビルドが成功する) per `§22`.
 2. When the Simulation Module is started, it shall produce both an initial concentration snapshot and an initial BMP file (= シミュレーション実行機能が起動し、初期濃度データと初期 BMP を出力する) per `§22`.
 3. The Re-render Function shall be able to load a previously saved concentration data file (= 再描画機能が保存済み濃度データを読み込める) per `§22`.
-4. The BMP Writer shall be able to generate BMP files for the prescribed step group defined in `§19` (= BMP 書き出し機能が所定ステップ群を出力できる) per `§22`.
+4. The BMP Writer shall be able to generate BMP files for the prescribed step group defined in `§19` under the default `§13` parameters (= BMP 書き出し機能が所定ステップ群を出力できる、param 変更時は対応する step 群を生成、Req 4 AC5 と整合) per `§22`.
 5. While the simulation is running, the Numerical Engine shall keep `c1`, `c2`, `c3` strictly within the domain of `log()` (= 実行中に `log(c1), log(c2), log(c3)` の定義域を外れない) per `§22`.
-6. After mean composition correction at every time step, the Concentration Clamp shall ensure all 4 concentration constraints defined in `§10` remain satisfied (= 平均組成補正後も濃度制約を満たす) per `§22`.
+6. After mean composition correction at every time step, the Numerical Engine shall ensure all 4 concentration constraints defined in `§10` remain satisfied (= 平均組成補正後も濃度制約を満たす、内部で Concentration Clamp に委譲、Req 3 AC3 と subject 整合) per `§22`.
