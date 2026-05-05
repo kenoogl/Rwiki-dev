@@ -248,7 +248,9 @@ void compute_potentials(
 double laplacian(const Field& a, int i, int j);
 
 // 1 time step = step (0) entry-clamp + §11 7 step 順実行 (Req 2.7-2.8)
-void time_step(
+// returns 0 on success, non-zero (= 1) on Numerical divergence / clamp non-convergence
+// (= caller pfm_sim_main で return 6 で main exit、Req 7 AC5 / Req 6 AC1-6 と整合)
+int time_step(
     Field& c2, Field& c3,
     double c2a, double c3a,
     double delt
@@ -272,7 +274,7 @@ void time_step(
   - `time_step()` 末尾で `std::memcpy` 相当 (= grid 単位代入) で `temp_c2 → c2`, `temp_c3 → c3` 引数に commit
   - thread-unsafe = 本 spec single-thread 前提 (= `§21` 並列化 scope 外) で許容
   - step (2) `lap(mu2)`, `lap(mu3)` は **on-the-fly 再計算** (= 一時 stack 変数で stencil 計算、追加配列なし、5 点差分の 4 隣接値読込のみ)
-- Risks: 浮動小数点誤差累積 (= explicit Euler、`delt` 過大で発散) → 安定条件概算 (= Cahn-Hilliard explicit Euler の CFL-like 条件 `delt < O(dx^4 / (kappa * M))`、`ND = 100` / `§8` 既定値下で `delt < 1e-3` 程度を推奨)、`delt` 既定値は `§13` 由来 user input、user 責任。step (4) → step (5) 間で c2_new / c3_new に対し `std::isnan` / `std::isinf` check、検出時は stderr に diagnostic + `std::abort()` (= NaN 伝播防止、Req 7 AC5 「log 定義域逸脱なし」担保)
+- Risks: 浮動小数点誤差累積 (= explicit Euler、`delt` 過大で発散) → 安定条件概算 (= Cahn-Hilliard explicit Euler の CFL-like 条件 `delt < O(dx^4 / (kappa * M))`、`ND = 100` / `§8` 既定値下で `delt < 1e-3` 程度を推奨)、`delt` 既定値は `§13` 由来 user input、user 責任。step (4) → step (5) 間で c2_new / c3_new に対し `std::isnan` / `std::isinf` check、検出時は stderr に diagnostic (= step / grid index (i,j) / 違反値 c2/c3/c1) 出力 + `time_step` が non-zero return (= caller `pfm_sim_main` で `return 6`、Req 7 AC5 「log 定義域逸脱なし」担保)。step (5) / step (7) の `clamp_concentrations` が non-zero return (= MAX_ITER 超過) した場合も同様に non-zero return + main 伝播 (= `std::abort` 不採用 = stdio buffer flush 保証 + exit code 1-127 体系統一)
 
 #### Initial Field Builder
 
@@ -349,7 +351,8 @@ namespace pfm {
 inline constexpr double CLAMP_EPS = 1.0e-6;   // §10 既定
 
 // 全 grid clamp (§10, Req 3.3-3.8、AC8 統合適用 = AC4-7 + AC8 loop)
-void clamp_concentrations(Field& c2, Field& c3);
+// returns 0 on success, non-zero (= 1) on MAX_ITER=10 超過 (= last-resort 適用後、caller が return 6 で main 伝播)
+int clamp_concentrations(Field& c2, Field& c3);
 
 }  // namespace pfm
 ```
@@ -362,7 +365,7 @@ void clamp_concentrations(Field& c2, Field& c3);
 
 - Integration: `§10` 4 timing への対応 = (1) Initial Field Builder 終端 = `§10` timing「初期化時」 / (2) Numerical Engine step (0) = `§10` timing「ポテンシャル計算前」 (`§11` 番号体系内) / (3) Numerical Engine step (5) = `§10` timing「時間更新後」 / (4) Numerical Engine step (7) = `§10` timing「平均組成補正後」、Mean Composition Corrector 内部 clamp は (4) と階層的同 timing (= `§12` 補正手順内の post-correction clamp、Req 3 AC9 階層委譲)
 - 実装属性 (= req 規範ではない): idempotent (= 2 回連続呼出で同結果)、統合適用 loop は経験的に 1-2 iteration 内で収束 (= 比例縮小 + 個別下限再適用、`CLAMP_EPS = 1e-6` 既定下で観測される性質、unit test で boundary case 網羅して保証)
-- 統合適用 loop guard (= 病的入力対策): 関数内で `MAX_ITER = 10` を上限とする loop を実装、超過時は last-resort clamp (= 各 grid で `c2 = std::clamp(c2, CLAMP_EPS, 1 - 2*CLAMP_EPS)`, `c3 = std::clamp(c3, CLAMP_EPS, 1 - c2 - CLAMP_EPS)` の単純 clamp) + stderr に diagnostic message 出力。理論上の無限 loop (= 例 `c2 = eps/2`, `c3 = 1 - eps/2` の連続比例縮小) を実装 level で防止
+- 統合適用 loop guard (= 病的入力対策): `clamp_concentrations` は `int` return に変更 (= 0 success / non-zero `clamp non-convergence`)。関数内で `MAX_ITER = 10` を上限とする loop を実装、超過時は **sum constraint enforcing last-resort** = (1) 全 grid で `c2 + c3 > 1 - 2*CLAMP_EPS` の場合、`scale = (1 - 2*CLAMP_EPS) / (c2 + c3)` で比例縮小し strict に `c2 + c3 ≤ 1 - 2*CLAMP_EPS` に収束、(2) 個別下限 `c2 < CLAMP_EPS` / `c3 < CLAMP_EPS` を強制 clamp、(3) stderr に diagnostic (= step number / 該当 grid index / 違反値 c2/c3/c1 / "clamp non-convergence after MAX_ITER=10") 出力、(4) `return 1` (= caller = Numerical Engine が main に伝播 → exit code `return 6`)。理論上の無限 loop (= 例 `c2 = eps/2`, `c3 = 1 - eps/2` の連続比例縮小) を実装 level で防止しつつ、AC4-AC8 sum constraint を last-resort で必ず満たす状態に収束
 - Validation: unit test で境界 case (= `c2 = 0`, `c2 = 1`, `c2 + c3 = 1`) を網羅、idempotency 検証 + AC8 後 AC4-7 再違反 case (= 比例縮小で `c2 + c3 = 1 - 2 * eps` strict 下回り) 確認 + MAX_ITER 超過 case (= 病的入力で last-resort clamp 発動) 確認
 
 #### Mean Composition Corrector
@@ -451,7 +454,9 @@ int write_snapshot(
 **Implementation Notes**
 
 - Integration: `pfm_sim_main` から保存間隔ごとに呼出
-- write 順序保証 (= BMP Writer の re-read 前提): `write_snapshot()` は内部で `fopen` → `fwrite`/`fprintf` → `fclose` を関数内で完結 (= 関数 return 時点で OS file system に write 確定)、後続の BMP Writer / Re-render Function による re-read で再読可能。同一 process 内逐次呼出 (= `pfm_sim_main` の time loop 内で `write_snapshot` → `write_bmp_for_snapshot` 順) では `fclose` で write 確定が保証される
+- write 順序保証 (= BMP Writer の re-read 前提): `write_snapshot()` は内部で `fopen` → `fwrite`/`fprintf` → `fclose` を関数内で完結 (= 関数 return 時点で OS file system に write 確定)、後続の BMP Writer / Re-render Function による re-read で再読可能。同一 process 内逐次呼出 (= `pfm_sim_main` の time loop 内で `write_snapshot` → `write_bmp_for_snapshot` 順、並走しない) では `fclose` で write 確定が保証される
+- write 中 I/O error 検出 (= 5a-i 失敗モード網羅): `fprintf` の戻り値 (= `< 0` で失敗) + `fclose` の戻り値 (= `EOF` で flush 失敗) を必ず check、検出時は (1) `std::filesystem::remove(path)` で partial file 削除 (= 後続 reader の parse error fail 連鎖防止)、(2) stderr に diagnostic (= path + `errno` + 失敗 step) 出力、(3) non-zero return → main で `return 3` (= Snapshot file open / I/O error と同 category)
+- 同一 file への並走禁止 (= serialization 契約): time loop 内で `write_snapshot` 完結後にのみ次の `write_bmp_for_snapshot` 等を呼出、並走呼出 (= 同一 path への 2 重 fopen + write) は本 design では undefined (= single-thread 前提下で発生しない)
 - Validation: unit test で round-trip 整合 (= write → read で同一値復元)
 - Risks: テキスト精度損失 → `printf("%.17g")` を normative 採用 (= IEEE 754 double round-trip safe、`%.15g` では一部値で誤差残存し test failure risk)、read 側 `fscanf("%lf")` との対称性で round-trip 完全復元保証
 
@@ -484,6 +489,7 @@ int read_snapshot(
 
 // step 番号 (0-indexed snapshot 順) で seek
 // returns 0 on success, non-zero on EOF / parse error
+// failure 時 FILE* position は 不定 (= caller は同一 FILE* で次 read を行う前に rewind / fseek で再 positioning が必要、5a-iv FILE* failure path contract)
 int seek_snapshot(
     FILE* fp,
     int snapshot_index,
@@ -536,7 +542,8 @@ static_assert(DRAW_H % ND == 0, "DRAW_H must be divisible by ND for gap-free con
 
 // 描画バッファ初期化 wrapper (= Req 1 AC6 (e) / Req 5 AC6、Application Layer が wingxa.h::gwinsize / ginit / gsetorg を直接呼出禁止、本 wrapper 経由)
 // pfm_sim main / pfm_render main が起動順 §14 (d)(e)(f) で本関数を 1 度呼出
-void init_drawing_buffer();
+// returns 0 on success, non-zero on wingxa.h 初期化失敗 (= caller は stderr diagnostic + main で return 7 等で exit、silent fail 防止)
+int init_drawing_buffer();
 
 // 全 grid 描画 (= 1 frame) (§17, Req 5.1-5.5)
 void render_field(
@@ -558,7 +565,7 @@ int poll_keypress();
 **Implementation Notes**
 
 - Integration: BMP Writer / Re-render Function / Simulation Module 全てから呼出
-- `init_drawing_buffer` 実装方針: 内部で `wingxa.h::gwinsize(DRAW_W, DRAW_H)` → `wingxa.h::ginit()` → `wingxa.h::gsetorg(0, 0)` を `§14` (d)(e)(f) 順で呼出し、Application Layer が wingxa.h を直接 include しない構造を担保 (= Req 1 AC9 / Req 5 AC6 依存方向制約と整合)
+- `init_drawing_buffer` 実装方針: 内部で `wingxa.h::gwinsize(DRAW_W, DRAW_H)` → `wingxa.h::ginit()` → `wingxa.h::gsetorg(0, 0)` を `§14` (d)(e)(f) 順で呼出し、Application Layer が wingxa.h を直接 include しない構造を担保 (= Req 1 AC9 / Req 5 AC6 依存方向制約と整合)。各 wingxa.h 関数の戻り値 contract が「0 success / non-zero error」前提なら直接 check + non-zero return、`void` return の関数は副作用に依存せず success 前提 = 失敗時 silent (= caller 側 `init_drawing_buffer` 戻り値 0 で続行)
 - `poll_keypress` 実装方針: 内部で `isatty(STDIN_FILENO)` (= `<unistd.h>` POSIX) で stdin 非対話モード判定、非対話なら即 `0` return (= non-blocking、Req 1 AC9 停止条件は Renderer wrapper 内で安全に吸収)。対話モードなら `wingxa.h::keypress()` を呼出して戻り値をそのまま return (= 既存規範通りキー押下で非 0)
 - Validation: unit test で boundary case (= `c2 = c3 = 0` → `R=255,G=0,B=0`) 等の色値検証
 - Risks: 周期境界連続性 (Req 5 AC5 operational 判定基準 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間に visible gap なし、wraparound 列 `i = ND` 相当の追加描画は実装裁量) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル → 描画 loop は `i = 0..ND-1` の一巡で全 100 × 100 grid を描画、各 grid を 4 × 4 ピクセル (= 計 400 × 400 ピクセル、ピッタリ収まる) で隣接配置することで visible gap なしを担保。wraparound 列 (`i = ND` 相当の追加描画) は実装裁量範囲内、本 design では採用しない (= AC5 pass 条件は loop 一巡で満たす)
@@ -623,6 +630,8 @@ int write_bmp_steps(
 - Integration: `pfm_bmp_main` の entry point
 - Validation: unit test で `snapshot_index` 不正 (= EOF 超過) で non-zero
 - Risks: `wingxa.h::save_screen` が screen を読み出す前提 → off-screen 描画 buffer のみ運用 (= `§21` 実装裁量範囲内)
+- save_screen silent fail fallback (= 5a-v): `wingxa.h::save_screen` の戻り値が `void` または常時 0 return の実装の場合に BMP save 失敗が exit code 伝播せず Req 6 AC6 silent fail risk。fallback として save_screen 呼出後に `std::filesystem::exists(bmp_path)` + `std::filesystem::file_size(bmp_path) > 0` で indirect verify (= 実装裁量範囲、wingxa.h 仕様外の補強)、verify 失敗で stderr diagnostic + non-zero return → main `return 5`
+- FILE* failure path (= 5a-iv): 内部で `fopen(snapshot_path)` 後、`fopen` が NULL return した場合は **`fclose` を呼ばず** stderr diagnostic + non-zero return → main `return 3`。`fopen` 成功後は `fclose` を必ず呼ぶ (= scope exit / RAII or 各 return path で明示 fclose)
 
 #### Re-render Function
 
@@ -783,10 +792,16 @@ stateDiagram-v2
     [*] --> Running
     Running --> StoppedNormal: step >= max_step
     Running --> StoppedNormal: poll_keypress() != 0
-    Running --> StoppedError: I/O error
+    Running --> StoppedError: Snapshot file I/O error (return 3)
+    Running --> StoppedError: Snapshot parse error (return 4)
+    Running --> StoppedError: BMP save error (return 5)
+    Running --> StoppedError: Numerical divergence / clamp non-convergence (return 6)
+    Running --> StoppedError: Renderer init failure (return 7)
     StoppedNormal --> [*]: exit 0
     StoppedError --> [*]: exit non-zero
 ```
+
+> Note: error path 全般で各 component が non-zero return → main が exit code policy に従って exit (= `std::abort` 不採用、return + 上位伝播統一)。Time Loop sequence diagram は success path 主体、error path は本 state diagram + Error Categories 節を参照。
 
 ## Requirements Traceability
 
@@ -832,11 +847,24 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 - **Snapshot file open error** (Req 6.4): Affected = Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function (= 直接呼出元、Application Layer = Simulation Module には main 経由で伝播)。`fopen` 失敗で `return 3`、上位 main で同 code 伝播
 - **Snapshot parse error** (Req 6.5): Affected = Snapshot Reader (= 直接呼出元 BMP Writer / Re-render Function 経由で main 伝播)。`fscanf` の戻り値 check + `return 4`
 - **BMP save error** (Req 6.6): Affected = BMP Writer (= 直接呼出元 pfm_bmp main / pfm_sim main 経由で伝播)。`wingxa.h::save_screen` の戻り値 check + `return 5`。`save_screen` 戻り値 contract = 0 success / non-zero error を本 design 前提 (= 詳細は `wingxa.h` 仕様書参照、本 design は contract のみ規定し実体は Out of Boundary)
+- **Numerical divergence / non-convergence** (Req 7.5、本 design 内致命数値 error 集約 category): Affected = Numerical Engine / Concentration Clamp (= 直接呼出元 main 経由で伝播)。`return 6` で統一。3 sub-cases:
+  - **NaN/Inf 検出** (= step (4) → step (5) 間 `std::isnan` / `std::isinf` 検出、Numerical Engine 内): stderr diagnostic (= step / grid index / 違反値) + non-zero return → main で `return 6`
+  - **`log` 定義域逸脱** (= compute_potentials の `log(c2)` 等で c ≤ 0): step (0) clamp で予防、検出時は NaN/Inf path と同経路で `return 6`
+  - **Concentration Clamp MAX_ITER 超過** (= 統合適用 loop が 10 iteration で収束せず last-resort 適用): last-resort で sum constraint enforcing 比例縮小後、`clamp_concentrations` は non-zero return → Numerical Engine が caller に伝播 → main で `return 6`
+- **Renderer init failure** (= 5a-iii silent fail 防止、本 design 内 wingxa.h 初期化失敗 category): Affected = Renderer (= 直接呼出元 pfm_sim_main / pfm_render_main / pfm_bmp_main 経由で伝播)。`init_drawing_buffer()` が内部 `wingxa.h::gwinsize` / `ginit` / `gsetorg` の戻り値 contract で失敗検出時 non-zero return → main で `return 7`。stderr diagnostic (= 失敗 wingxa.h 関数名 + 戻り値)
 
 ### Monitoring
 
 - stderr に diagnostic message 出力 (= バッチ実行時 log redirect 前提)
-- exit code は POSIX 慣習 (= 0 success / 1-127 error category)
+- exit code は POSIX 慣習 (= 0 success / 1-127 error category、`std::abort` (= 128+SIGABRT = 134) は不採用、致命数値 error も return 6 で main 伝播統一)
+- diagnostic message 必須情報項目 (= category 別 normative 仕様):
+  - **共通**: error category 識別子 (= 例 `[CLI]` / `[FS]` / `[SNAPSHOT_OPEN]` / `[SNAPSHOT_PARSE]` / `[BMP_SAVE]` / `[NUM_DIVERGENCE]`) + 1 行 1 message
+  - **Invalid CLI input**: 違反引数名 + 違反値 + 期待値域
+  - **Filesystem error**: 試行 path + `std::filesystem` exception message
+  - **Snapshot file open error**: 試行 path + `errno` (= POSIX) message
+  - **Snapshot parse error**: 試行 path + 行番号 (= 該当 fscanf 失敗位置) + 期待 token 種別
+  - **BMP save error**: 試行 bmp path + snapshot index + `save_screen` 戻り値
+  - **Numerical divergence / non-convergence**: step number + grid index `(i, j)` + 違反値 c2/c3/c1 + sub-case (= NaN/Inf / log 定義域 / clamp MAX_ITER 超過)
 - session ごとの実行 log は本 spec 範囲外 (= caller 責任)
 
 ## Testing Strategy
