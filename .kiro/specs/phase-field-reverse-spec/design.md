@@ -169,7 +169,13 @@ DR-pfm/
 │   ├── test_mean_correction.cpp
 │   ├── test_numerical_engine.cpp
 │   ├── test_snapshot_io.cpp
-│   └── test_initial_field.cpp
+│   ├── test_initial_field.cpp
+│   ├── test_renderer.cpp
+│   ├── test_bmp_writer.cpp
+│   ├── test_pfm_sim_cli.cpp
+│   ├── precompute_reference.py    # task 3.2 reference 値算出 (Python)
+│   └── fixtures/
+│       └── mock_wingxa_record.cpp # task 5.1 (g) test 用 recording mock (= test 専用 LDFLAGS で link、production wingxa_stub と ODR 競合禁止)
 └── output/                        # default output dir (= §13 既定)
 ```
 
@@ -353,7 +359,8 @@ inline constexpr double CLAMP_EPS = 1.0e-6;   // §10 既定
 
 // 全 grid clamp (§10, Req 3.3-3.8、AC8 統合適用 = AC4-7 + AC8 loop)
 // returns 0 on success, non-zero (= 1) on MAX_ITER=10 超過 (= last-resort 適用後、caller が return 6 で main 伝播)
-int clamp_concentrations(Field& c2, Field& c3);
+// step = MAX_ITER 超過時 stderr diagnostic 用 caller context (= Numerical Engine は実 step、Initial Field Builder は -1 = 初期化時 sentinel)
+int clamp_concentrations(Field& c2, Field& c3, int step = -1);
 
 }  // namespace pfm
 ```

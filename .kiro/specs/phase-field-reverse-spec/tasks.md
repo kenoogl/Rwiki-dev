@@ -26,22 +26,24 @@
 - [ ] 1.3 Makefile + test runner + wingxa stub
   - `Makefile` に C++17 flag、`libpfmcore.a` target、`tests` target、3 executable target (= placeholder rules) を定義
   - test runner = 軽量 main() ベース (= TDD 準拠、外部 framework 不要)、`-UNDEBUG` flag 強制 (= debug / release 両 build で `assert` 有効化、`NDEBUG` no-op 回避)、各 test を `void test_xxx()` 関数化、main() で list 呼出、fail 時 `std::cerr << "FAIL: " << #fn << " at " << __FILE__ << ":" << __LINE__` 出力後 `std::exit(1)`
+  - test runner 規約 = 同一 .cpp file 内の sequential test (= 例 task 4.1 + 4.2 が共有する `tests/test_snapshot_io.cpp`) は 4.1 が main を持ち、4.2 以降は test 関数追加のみで main 重複定義禁止 (= ODR 違反 link error 防止)
   - Makefile `CXXFLAGS_TEST = -UNDEBUG -O0 -g` で `tests` target に強制付与
   - wingxa stub 提供 = `src/wingxa_stub.cpp` で wingxa.h 宣言 9 関数全 no-op 実装 (= `gwinsize`/`ginit`/`gsetorg`/`gcolor`/`grect`/`swapbuffers` は空 body、`keypress` は `return 0`、`save_screen` は `return 0`、`itoa` は `if (buffer) buffer[0] = '0'; buffer[1] = '\0'; return buffer;`)
   - Makefile default = `LDFLAGS = wingxa_stub.o`、wingxa 実体がある場合は `make LDFLAGS='-L/path/to -lwingxa'` で上書き
+  - test 専用 mock との link 衝突回避 = 例 task 5.1 で導入する `tests/fixtures/mock_wingxa_record.cpp` (= recording mock) は test 専用 LDFLAGS で link、production `wingxa_stub.o` と同時 link 禁止 (= ODR 違反回避)
   - 観測条件: `make tests` で空 test list が exit 0 で終了、`make` で 3 executable が placeholder build success、故意 1 assertion fail させた test を `make tests` 実行 → exit code 非 0 + stderr に test 名出力確認
   - _Requirements: 7.1 (= placeholder build、最終受け入れは task 7.1 で取得)_
-  - _Boundary: Makefile, tests runner, wingxa_stub (layer: Build artifact); allowed_outbound: 全 layer source compile + libpfmcore.a + 3 executable link + wingxa_stub no-op 実装_
+  - _Boundary: Makefile, tests runner, wingxa_stub (layer: Build artifact); allowed_outbound: 全 layer source compile + libpfmcore.a + 3 executable link + wingxa.h (= 9 関数 prototype 参照、stub 実装の declarations 出所) + wingxa_stub no-op 実装 (= 外部 link fallback 兼用、design L40 Out of Boundary 例外配置)_
 
 ## 2. Core Library — Concentration Clamp + Mean Composition Corrector
 
 - [ ] 2.1 (P) Concentration Clamp 実装
   - test first = `tests/test_concentration_clamp.cpp` 作成 = (a) `c2 = 0` → `eps` (= `std::abs(actual - 1.0e-6) < 1e-15` で literal 値 round-trip 検証)、(b) `c2 = 1` → `1 - eps` (= 同 tolerance)、(c) `c3` 同様、(d) `c2 + c3 = 1.5` → 同比例縮小で `c2 + c3 ≤ 1 - 2*eps + 1e-15` (= 浮動小数点 buffer 含む)、(e) idempotency (= 2 連続呼出で全 grid `==` 完全一致)、(f) AC8 後 AC4-7 再違反 case (= 比例縮小で `c2 + c3 = 1 - 2*eps` strict 下回り) で再 iter 後収束、(g) MAX_ITER 超過 case (= 病的入力 `c2 = eps/2`, `c3 = 1 - eps/2` 等) で last-resort 適用 + non-zero return、`make tests` で fail 確認
-  - impl = `src/concentration_clamp.cpp` で `int clamp_concentrations(Field&, Field&)` 実装、全 grid に `§10` AC4-AC8 統合適用 loop (= MAX_ITER=10 上限) + last-resort sum constraint enforcing 比例縮小、超過時 stderr diagnostic (= step / 該当 grid index / 違反値 c2/c3/c1 / "clamp non-convergence after MAX_ITER=10") + non-zero return → caller `time_step` non-zero return → main `return 6`
+  - impl = `src/concentration_clamp.cpp` で `int clamp_concentrations(Field&, Field&, int step = -1)` 実装、step は MAX_ITER 超過時 stderr diagnostic 用 caller context (= Numerical Engine は実 step 渡し、Initial Field Builder は -1 渡し = 初期化時を示す sentinel)、全 grid に `§10` AC4-AC8 統合適用 loop (= MAX_ITER=10 上限) + last-resort sum constraint enforcing 比例縮小、超過時 stderr diagnostic (= step (= -1 なら "init" 表示) / 該当 grid index / 違反値 c2/c3/c1 / "clamp non-convergence after MAX_ITER=10") + non-zero return → caller `time_step` non-zero return → main `return 6`
   - 注 = `MAX_ITER=10` は req `## Boundary Context` out-of-scope「反復制御の書き方」に対する design L368 上書き規範 (= 病的入力 fail-safe 確保のため本 spec で具体値固定)
   - 観測条件: `make tests` で全 test pass + 境界 case 5 種で期待値完全一致 + MAX_ITER 超過 case 1 件発動 + last-resort 後 sum constraint `c2 + c3 ≤ 1 - 2*eps` 必ず満足
   - _Requirements: 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
-  - _Boundary: Concentration Clamp (layer: Core); allowed_outbound: なし (= pure 補正、外部依存なし)_
+  - _Boundary: Concentration Clamp (layer: Core); allowed_outbound: <cstdio> (stderr diagnostic on MAX_ITER overflow only、pure 補正本体は外部依存なし)_
 
 - [ ] 2.2 Mean Composition Corrector 実装
   - test first = `tests/test_mean_correction.cpp` 作成 = (a) 平均偏差 `0.01` 与え補正後の平均 - target が `< 2 * CLAMP_EPS * ND * ND = 2.0e-2` 以内 (= 本 spec 内 unit test + acceptance test 統一閾値、Req 3 AC9 priority note bounded 範囲の実装規範化)、(b) 補正後 4 濃度制約満足 (= 各 grid で `c2 > 0`, `c3 > 0`, `c2 + c3 < 1` を `>= CLAMP_EPS` 余裕付きで assert)、(c) 内部 Clamp non-convergence 注入 case (= 病的入力で内部 `clamp_concentrations` MAX_ITER 超過) で `correct_mean_composition()` non-zero return 確認、`make tests` で fail 確認
@@ -71,7 +73,7 @@
   - Risks = `delt` CFL-like 安定条件目安 (= Cahn-Hilliard explicit Euler の `delt < O(dx^4 / (kappa * M))`、`ND = 100` / `§8` 既定値下で `delt < 1e-3` 程度を推奨)、user 責任
   - 観測条件: `make tests` で 5 test pass + 計算順序 step (0) + (1)-(7) の 8 step 厳守 (= step (0) entry-clamp invoke 確認 + step 5/6/7 で適切な dependency 呼出 + step 6 内部 Clamp invoke 確認 + step 6 戻り値 propagation 確認)
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.3_
-  - _Boundary: Numerical Engine (layer: Core); allowed_outbound: Concentration Clamp (step 0/5/7), Mean Composition Corrector (step 6)_
+  - _Boundary: Numerical Engine (layer: Core); allowed_outbound: Concentration Clamp (step 0/5/7), Mean Composition Corrector (step 6), <cmath> (log/isnan/isinf), <cstdio> (stderr diagnostic on NaN/Inf detection)_
   - _Depends: 2.1, 2.2_
 
 ## 4. I/O Library — Snapshot Writer + Reader
@@ -93,7 +95,7 @@
   - failure 時 contract = `seek_snapshot` 失敗時 FILE* position は不定、caller は次 read 前に rewind/fseek で再 positioning が必要
   - 観測条件: `make tests` の read test 3 件 pass + 不正 input で exit code non-zero
   - _Requirements: 4.7, 4.8, 6.4, 6.5_
-  - _Boundary: Snapshot Reader (layer: I/O); allowed_outbound: <cstdio> (fscanf)_
+  - _Boundary: Snapshot Reader (layer: I/O); allowed_outbound: <cstdio> (fscanf)、test source = test_snapshot_io.cpp に test 関数のみ追加 (= 4.1 の main を再利用、test runner 二重定義禁止、task 1.3 規約整合)_
   - _Depends: 4.1_
 
 ## 5. Visualization Library — Renderer + BMP Writer + Re-render
@@ -104,9 +106,10 @@
   - impl 追加 = `int init_drawing_buffer()` (= 内部で wingxa API 呼出順 `gwinsize(DRAW_W, DRAW_H)` → `ginit(0)` → `gsetorg(0, 0)` の順で呼出 (= `§14` (e) 内部の 3 API 呼出順、`§14` 全体の (d)(e)(f) step 番号とは別)、3 関数すべて `void` return = wingxa.h SSoT 制約下で失敗検出 mechanism なし、本 wrapper は best-effort 実装で常に 0 return、Application 層の wingxa.h 直接依存禁止のみ責務 = Req 1 AC9 / Req 5 AC6 / 依存方向 Application → Visualization → wingxa.h 単一方向)
   - 注 = `return 7` Renderer init failure exit code は本 spec で採用しない (= wingxa.h `void` return 制約下で失敗検出 mechanism が SSoT 違反なしに実装不能、exit code 体系は `return 2-6` の 5 category)
   - impl 追加 = `int poll_keypress()` (= `isatty(STDIN_FILENO)` で stdin 非対話判定、非対話なら即 0 return、対話なら `wingxa.h::keypress()` 戻り値 return、`§15` 停止条件は本 wrapper 経由で安全吸収)
+  - mock fixture Boundary: `tests/fixtures/mock_wingxa_record.cpp` (layer: Test artifact); allowed_outbound: `<vector>`, wingxa.h API 9 関数 declarations のみ (= 各関数で呼出順 record 副作用のみ実装、production `wingxa_stub.cpp` と link 衝突回避のため test 専用 LDFLAGS で link、本 spec scope 内 Test artifact layer に隔離)
   - 観測条件: `make tests` で compute_color test 5 件 + poll_keypress test 1 件 + init_drawing_buffer 呼出順 record test 1 件 pass、`render_field()` 自体は手動目視 (= task 5.3 完成後)
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 1.9_
-  - _Boundary: Renderer (layer: Visualization); allowed_outbound: wingxa.h::gcolor/grect/gsetorg/gwinsize/ginit/keypress (P0、init_drawing_buffer + poll_keypress wrapper 経由で隔離、`itoa` は本 spec scope で不使用 = req.md L114 9 関数 declare 済の中で本 spec は 8 関数のみ依存、BMP 名生成は `std::to_string` 等 C++ 標準で代替), <unistd.h> (isatty)_
+  - _Boundary: Renderer (layer: Visualization); allowed_outbound: wingxa.h::gcolor/grect (= render_field 内のみ、直接呼出可), wingxa.h::gwinsize/ginit/gsetorg (= init_drawing_buffer 内のみ呼出), wingxa.h::keypress (= poll_keypress 内のみ呼出); `itoa` は本 spec scope で不使用 (= req.md L114 9 関数 declare 済の中で本 spec は 8 関数のみ依存、BMP 名生成は `std::to_string` 等 C++ 標準で代替), <unistd.h> (isatty)_
 
 - [ ] 5.2 (P) BMP Writer 実装
   - test first = `tests/test_bmp_writer.cpp` 作成 = (a) `write_bmp_default_steps` の 17 step 列挙が `§19` の `{0, 2000, 4000, ..., 80000}` と完全一致 (= 内部 step 配列 expose or BMP file 名 grep)、(b) `write_bmp_steps(snapshot, dir, K=5000, max=50000, D=2000)` で `{0, 5000, ..., 50000}` 11 step 生成、(c) snapshot index 計算 = `step / data_interval` 検証 (= `step=10000, data_interval=2000` で `index=5`)、(d) FILE* `fopen(snapshot_path)` NULL case で `fclose` 不呼出 + non-zero return 確認、(e) save_screen silent fail = mock save_screen 提供で BMP file 不生成 case の `std::filesystem::exists` 経由検出、`make tests` で fail 確認
@@ -117,7 +120,7 @@
   - error path 追加 = FILE* failure path (= `fopen(snapshot_path)` NULL なら `fclose` 呼ばず stderr diagnostic + non-zero return → main `return 3`、fopen 成功後は `fclose` 必ず呼出)
   - 観測条件: `write_bmp_default_steps` で `§19` 17 step BMP 全 file 存在 + `write_bmp_steps` で K=2000, max-step=100000 で 51 step 出力の両 branch 動作、`ls output/*.bmp` で存在確認、不正 input で non-zero
   - _Requirements: 4.5, 4.9, 6.6_
-  - _Boundary: BMP Writer (layer: Visualization); allowed_outbound: Snapshot Reader (I/O direct), Renderer (Visualization), wingxa.h::save_screen (external P0), <filesystem> (exists/file_size)_
+  - _Boundary: BMP Writer (layer: Visualization); allowed_outbound: Snapshot Reader (I/O direct), Renderer (Visualization), wingxa.h::save_screen (external P0), <cstdio> (fopen/fclose), <filesystem> (exists/file_size); forbidden: wingxa.h::save_screen 以外の 8 関数 direct (= gcolor/grect は Renderer 経由、gwinsize/ginit/gsetorg は caller pfm_bmp_main 起動時 init_drawing_buffer で呼出済、keypress/swapbuffers/itoa は BMP Writer 責務範囲外)_
   - _Depends: 4.2, 5.1_
 
 - [ ] 5.3 (P) Re-render Function 実装
@@ -126,7 +129,7 @@
   - error path = file open 失敗で `return 3` / parse 失敗で `return 4`
   - 観測条件: snapshot file load → live display 動作 (= 手動目視)、不正 file で exit non-zero
   - _Requirements: 4.6_
-  - _Boundary: Re-render Function (layer: Visualization); allowed_outbound: Snapshot Reader (I/O direct), Renderer (Visualization、render_field + poll_keypress), wingxa.h::swapbuffers (external P0)_
+  - _Boundary: Re-render Function (layer: Visualization); allowed_outbound: Snapshot Reader (I/O direct), Renderer (Visualization、render_field + poll_keypress), wingxa.h::swapbuffers (external P0); forbidden: wingxa.h::keypress direct (= Renderer::poll_keypress 経由のみ), wingxa.h::gwinsize/ginit/gsetorg direct (= caller pfm_render_main が起動時 1 度 init_drawing_buffer 呼出済、本 component は init 不依存)_
   - _Depends: 4.2, 5.1_
 
 ## 6. Application — 3 Executables
@@ -137,7 +140,7 @@
   - 値域 check = `0 < c2a < 1`, `0 < c3a < 1`, `c2a + c3a < 1`, `delt > 0`, `max-step / data-interval / bmp-interval > 0` (= 整数)、文字列引数の数値変換失敗 (= `std::stod` exception) も exit code 2
   - 観測条件: `make tests` で 6 unit test pass、main 統合は 6.1c で行うため本 task は parser + 値域 check 単独で完結
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 6.1, 6.2_
-  - _Boundary: pfm_sim CLI parser (layer: Application); allowed_outbound: <cstdlib> (std::stod), <iostream> (stderr); forbidden: wingxa.h direct_
+  - _Boundary: pfm_sim CLI parser (layer: Application); allowed_outbound: <string> (std::stod), <iostream> (stderr); forbidden: wingxa.h direct_
 
 - [ ] 6.1b pfm_sim 起動 sequence + 初期 snapshot/BMP (Simulation Module 第 2 段) [推定 1.5h]
   - test first = smoke test = `tests/test_pfm_sim_init.sh` 作成 = (a) 0 step run (= `--max-step 0` で起動 sequence のみ実行) で `output/snapshot.txt` 存在 + 初期 BMP 1 file 存在 + exit 0、(b) 出力 dir 不在で `create_directories` 動作確認、`make tests` で fail 確認
@@ -145,7 +148,7 @@
   - error path = filesystem 操作失敗で stderr `[FS]` + `return 3`、`build_initial_field` non-zero return で stderr `[NUM_DIVERGENCE]` + `return 6`、Snapshot Writer / BMP Writer non-zero return で `return 3` / `return 5` 伝播
   - 観測条件: `make tests` で smoke test 2 件 pass + 0 step run output が parse 可能
   - _Requirements: 1.6, 3.1, 4.1, 4.3, 5.6, 6.3_
-  - _Boundary: pfm_sim 起動 sequence (layer: Application); allowed_outbound: Initial Field Builder, Snapshot Writer, BMP Writer, Renderer (= Core/I/O/Visualization service); forbidden: wingxa.h direct_
+  - _Boundary: pfm_sim 起動 sequence (layer: Application); allowed_outbound: Initial Field Builder, Snapshot Writer, BMP Writer, Renderer (= Core/I/O/Visualization service), <filesystem> (exists/create_directories); forbidden: wingxa.h direct_
   - _Depends: 3.1, 4.1, 5.1, 5.2, 6.1a_
 
 - [ ] 6.1c pfm_sim main loop + 停止条件 + stderr diagnostic (Simulation Module 第 3 段) [推定 2.5h]
@@ -154,7 +157,7 @@
   - 異常終了 = design Error Categories normative = 5 category × return code 2-6 (= `return 2` 不正引数 / `return 3` FS or Snapshot file open / `return 4` Snapshot parse / `return 5` BMP save / `return 6` Numerical divergence or clamp non-convergence)、`std::abort` 不採用 (= stdio buffer flush 保証 + exit code 1-127 統一、`std::cerr.flush() + std::cout.flush()` を `return` 直前に明示呼出)、stderr diagnostic は category 別 normative format (= `[CLI]` / `[FS]` / `[SNAPSHOT_OPEN]` / `[SNAPSHOT_PARSE]` / `[BMP_SAVE]` / `[NUM_DIVERGENCE]` 識別子 + 1 行 1 message + category 必須情報項目)
   - 観測条件: `make tests` で 5 unit test pass、加えて `./pfm_sim --c2a 0.3 --c3a 0.3 --delt 0.005 --max-step 10` で 10 step 実行 → output dir に `snapshot.txt` + 初期 BMP + step 10 BMP 生成、exit 0
   - _Requirements: 1.7, 1.8, 1.9, 1.10, 4.4, 6.4, 6.5, 6.6_
-  - _Boundary: pfm_sim main loop (layer: Application); allowed_outbound: Numerical Engine, Snapshot Writer, BMP Writer, Renderer (= Core/I/O/Visualization service); forbidden: wingxa.h direct (= via Renderer wrapper のみ)_
+  - _Boundary: pfm_sim main loop (layer: Application); allowed_outbound: Numerical Engine, Snapshot Writer, BMP Writer, Renderer (= Core/I/O/Visualization service); forbidden: wingxa.h direct, Snapshot Reader direct (= Visualization service (BMP Writer) 経由のみ、design L118 / L592 整合)_
   - _Depends: 3.2, 6.1b_
 
 - [ ] 6.2 (P) pfm_render 実装
@@ -162,7 +165,7 @@
   - error path = `re_render_all()` 戻り値非 0 で適切な error code (= snapshot open `return 3` / parse `return 4`) 伝播
   - 観測条件: `./pfm_render <snapshot_file>` で連続描画動作 (= 手動目視)、不正 file で exit non-zero (= 3 or 4)
   - _Requirements: 4.6, 5.6, 6.4, 6.5_
-  - _Boundary: pfm_render_main (layer: Application); allowed_outbound: Renderer (init_drawing_buffer wrapper), Re-render Function (Visualization service); forbidden: wingxa.h direct_
+  - _Boundary: pfm_render_main (layer: Application); allowed_outbound: Renderer (init_drawing_buffer wrapper), Re-render Function (Visualization service); forbidden: wingxa.h direct, Snapshot Reader direct (= Re-render Function 経由のみ、design L118 / L592 整合)_
   - _Depends: 5.3_
 
 - [ ] 6.3 (P) pfm_bmp 実装
@@ -170,7 +173,7 @@
   - error path = BMP write 戻り値非 0 で適切な error code (= `return 3` / `return 5`) 伝播
   - 観測条件: `./pfm_bmp <snapshot> <out_dir>` 実行後、`out_dir` 内に `§19` 17 step 群 BMP 全 file 存在、exit 0、`./pfm_bmp <snapshot> <out_dir> --bmp-interval 5000 --max-step 50000` で `{0, 5000, ..., 50000}` 11 step BMP 出力
   - _Requirements: 4.5, 4.9, 6.4, 6.5, 6.6_
-  - _Boundary: pfm_bmp_main (layer: Application); allowed_outbound: Renderer (init_drawing_buffer wrapper), BMP Writer (Visualization service); forbidden: wingxa.h direct_
+  - _Boundary: pfm_bmp_main (layer: Application); allowed_outbound: Renderer (init_drawing_buffer wrapper), BMP Writer (Visualization service); forbidden: wingxa.h direct, Snapshot Reader direct (= BMP Writer 経由のみ、design L118 / L592 整合)_
   - _Depends: 5.2_
 
 ## 7. Integration & Acceptance
@@ -212,5 +215,5 @@
   - test = `tests/acceptance_22.sh` 作成 = (1) `make` build success、(2) `pfm_sim` 起動 + 初期 snapshot + 初期 BMP 出力 (= smoke 100 step run で代替、再実行 cost 軽減)、(3) `pfm_render` で snapshot file load 成功 (= smoke 100 step snapshot 使用)、(4) `pfm_bmp` で 17 step 群出力 (= 7.4 と共用 100000 step snapshot 使用)、(5) 100000 step run 中の `log(c1/c2/c3)` 定義域逸脱なし (= NaN/Inf 検出 grep)、(6) 平均組成保存 (= snapshot 平均算出値が input ± `2 * CLAMP_EPS * ND * ND` 程度、Req 3 AC9 規範下の bounded 範囲、unit test 閾値と統一) 以内 + 全 grid で `§10` 4 制約満足
   - 観測条件: 6 項目全 pass、(5)(6) の 100000 step run は 1 回のみ実行 (= wall-clock 約 5 min reference、再実行 cost 高のため最終 acceptance 段階のみ、(2)(3)(4) の smoke 100 step 出力は別途 short cycle で代替可)、結果を Rwiki-dev/.kiro/methodology/v4-validation/sample_3_7_6_1/dev_log.jsonl + rework_log.jsonl に sub_group_key=phase_field_reverse_cpp で append (= Step (3.3) Level 6 観測 trigger)
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
-  - _Boundary: acceptance integration (layer: Test artifact), methodology log (cross-spec writing); allowed_outbound: 3 binary execution + dev_log.jsonl/rework_log.jsonl append (= Rwiki-dev/.kiro/ への cross-spec write)_
+  - _Boundary: acceptance integration (layer: Test artifact); allowed_outbound: 3 binary execution + dev_log.jsonl/rework_log.jsonl append (= Rwiki-dev/.kiro/methodology/v4-validation/ への cross-spec write、本 spec scope 例外、Step (3.3) Level 6 観測 trigger)_
   - _Depends: 7.2, 7.3, 7.4_
