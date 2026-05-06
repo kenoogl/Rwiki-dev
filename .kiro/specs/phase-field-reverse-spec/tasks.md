@@ -154,7 +154,7 @@
   - _Boundary: pfm_sim 起動 sequence (layer: Application); allowed_outbound: Initial Field Builder, Snapshot Writer, BMP Writer, Renderer (= Core/I/O/Visualization service), <filesystem> (exists/create_directories); forbidden: wingxa.h direct_
   - _Depends: 3.1, 4.1, 5.1, 5.2, 6.1a_
 
-- [ ] 6.1c pfm_sim main loop + 停止条件 + stderr diagnostic (Simulation Module 第 3 段) [推定 2.5h]
+- [x] 6.1c pfm_sim main loop + 停止条件 + stderr diagnostic (Simulation Module 第 3 段) [推定 2.5h]
   - test first = `tests/test_pfm_sim_loop.sh` 作成 = (a) 10 step run で正常終了 + step 10 で snapshot/BMP 出力、(b) `Renderer::poll_keypress()` mock = 第 5 step で 1 return 注入 → exit 0 (= `§15` 停止条件) + exit 後の output dir 状態確認 = `snapshot.txt` 内 snapshot 数が `data_interval` 規則に従う数量 (= 5 step で `data_interval=10` なら 1 snapshot のみ = 初期 step 0 のみ)、BMP file 数が `bmp_interval` 規則に従う数量 (= 同 1 file のみ)、partial / 中途半端な write がないこと assert (= 停止 semantics の partial state 検証)、(c) NaN/Inf 注入 (= `--delt 0.5` CFL violation) で exit code 6 + stderr `[NUM_DIVERGENCE]`、(d) Snapshot Writer mock fail で exit code 3 + stderr `[FS]` (= write 失敗 path)、(e) BMP Writer mock fail で exit code 5 + stderr `[BMP_SAVE]`、`make tests` で fail 確認
   - impl = `src/pfm_sim_main.cpp` で `int main(int argc, char** argv)` 実装 = `parse_cli` → `run_init_sequence` → main loop (= `§11` 7 step + step (0) entry-clamp 経由 `time_step` 呼出、step counter / `data_interval` 判定で snapshot Append 出力 / `bmp_interval` 判定で BMP 出力、`§15` 停止条件 = `max-step` / `Renderer::poll_keypress()` 非 0 / `time_step` non-zero return = `return 6` / I/O error = `return 3` or `return 5`)
   - 異常終了 = design Error Categories normative = 5 category × return code 2-6 (= `return 2` 不正引数 / `return 3` FS or Snapshot file open / `return 4` Snapshot parse / `return 5` BMP save / `return 6` Numerical divergence or clamp non-convergence)、`std::abort` 不採用 (= stdio buffer flush 保証 + exit code 1-127 統一、`std::cerr.flush() + std::cout.flush()` を `return` 直前に明示呼出)、stderr diagnostic は category 別 normative format (= `[CLI]` / `[FS]` / `[SNAPSHOT_OPEN]` / `[SNAPSHOT_PARSE]` / `[BMP_SAVE]` / `[NUM_DIVERGENCE]` 識別子 + 1 行 1 message + category 必須情報項目)
@@ -163,7 +163,7 @@
   - _Boundary: pfm_sim main loop (layer: Application); allowed_outbound: Numerical Engine, Snapshot Writer, BMP Writer, Renderer (= Core/I/O/Visualization service); forbidden: wingxa.h direct, Snapshot Reader direct (= Visualization service (BMP Writer) 経由のみ、design L118 / L592 整合)_
   - _Depends: 3.2, 6.1b_
 
-- [ ] 6.2 (P) pfm_render 実装
+- [x] 6.2 (P) pfm_render 実装
   - impl = `src/pfm_render_main.cpp` で CLI parser (= snapshot file path 1 引数) + `Renderer::init_drawing_buffer()` (= Renderer wrapper、内部で wingxa.h gwinsize/ginit/gsetorg 呼出) + `re_render_all()` 呼出
   - error path = `re_render_all()` 戻り値非 0 で適切な error code (= snapshot open `return 3` / parse `return 4`) 伝播
   - 観測条件: `./pfm_render <snapshot_file>` で連続描画動作 (= 手動目視)、不正 file で exit non-zero (= 3 or 4)
@@ -171,7 +171,7 @@
   - _Boundary: pfm_render_main (layer: Application); allowed_outbound: Renderer (init_drawing_buffer wrapper), Re-render Function (Visualization service); forbidden: wingxa.h direct, Snapshot Reader direct (= Re-render Function 経由のみ、design L118 / L592 整合)_
   - _Depends: 5.3_
 
-- [ ] 6.3 (P) pfm_bmp 実装
+- [x] 6.3 (P) pfm_bmp 実装
   - impl = `src/pfm_bmp_main.cpp` で CLI parser (= snapshot file + 出力 dir + optional `--bmp-interval K` + `--max-step N` + `--data-interval D` (= `§13` 既定 `2000`)) + `Renderer::init_drawing_buffer()` (= Renderer wrapper) + branch: `--bmp-interval` 未指定なら `write_bmp_default_steps()` 呼出 (= `§19` 17 step hardcode)、指定なら `write_bmp_steps(snapshot, out_dir, K, N, D)` 呼出 (= 動的等差列、Req 4 AC5)
   - error path = BMP write 戻り値非 0 で適切な error code (= `return 3` / `return 5`) 伝播
   - 観測条件: `./pfm_bmp <snapshot> <out_dir>` 実行後、`out_dir` 内に `§19` 17 step 群 BMP 全 file 存在、exit 0、`./pfm_bmp <snapshot> <out_dir> --bmp-interval 5000 --max-step 50000` で `{0, 5000, ..., 50000}` 11 step BMP 出力
@@ -181,7 +181,7 @@
 
 ## 7. Integration & Acceptance
 
-- [ ] 7.1 Makefile build target 完結
+- [x] 7.1 Makefile build target 完結
   - 全 source file の compile rule + `libpfmcore.a` 生成 (= core / I/O lib object 集約) + 3 executable link rule (= libpfmcore.a + Visualization object + wingxa external link via LDFLAGS)
   - debug / release flag (= `-O0 -g` / `-O2`) 切替 variable
   - 観測条件: `make` 1 コマンドで `pfm_sim`, `pfm_render`, `pfm_bmp` 3 binary 全 build success、exit 0
@@ -189,7 +189,7 @@
   - _Boundary: Makefile (layer: Build artifact); allowed_outbound: 全 layer source compile + libpfmcore.a + 3 executable link_
   - _Depends: 6.1c, 6.2, 6.3_
 
-- [ ] 7.2 Integration test = pfm_sim 100 step run + 異常 path 2 case
+- [x] 7.2 Integration test = pfm_sim 100 step run + 異常 path 2 case
   - test = `tests/integration_pfm_sim.sh` 作成 = (主 case) `./pfm_sim --c2a 0.3 --c3a 0.3 --delt 0.005 --max-step 100 --data-interval 10 --bmp-interval 10 --output-dir test_output` 実行
   - 観測条件 (主 case 詳細) = (1) snapshot 各 token 数値 + 4 制約満足 (= shell parser `awk '/^[0-9]/{...}'` で全 grid 値 `0 < c2 < 1`, `0 < c3 < 1`, `c2 + c3 < 1`, `c1 = 1 - c2 - c3 > 0` 違反 0 件確認、`§10` 4 制約検証)、(2) `test_output/*.bmp` ちょうど 11 file (= step `0, 10, 20, ..., 100` の 11 個)、(3) `pfm_sim` の stderr に `NaN`/`Inf`/`[NUM_DIVERGENCE]` 識別子 grep 0 件 (= Req 7 AC5)、(4) exit code 0
   - Adversarial test = (a) 病的 `delt = 0.5` (= CFL violation) で 100 step 実行 → step 途中で NaN/Inf 検出 → exit code 6 + stderr diagnostic に `[NUM_DIVERGENCE]` カテゴリ識別子 + step number + grid index `(i, j)` + 違反値 c2/c3/c1 + sub-case (= `NaN/Inf 検出`) 含有確認 (= MAX_ITER 超過 trigger 系 test は task 2.1 unit test (g) で網羅、integration では NaN/Inf path のみ検証)、(b) `pfm_sim --c2a -0.1 --c3a 0.3 --delt 0.005` (= c2a 値域違反) で exit code 2 + stderr `[CLI]` 識別子 + 違反引数名 + 違反値含有確認 (= return 2 carrier、Req 6 AC1 normative)、(c) read-only output dir = `chmod 555 read_only_test_dir` 後 `./pfm_sim --output-dir read_only_test_dir` で exit code 3 + stderr `[FS]` 識別子 + path + errno 含有 grep 確認 (= integration level で実 filesystem error path 発火、unit test (d) mock との対称検証、test 末尾で `chmod` 復元)
@@ -198,14 +198,14 @@
   - _Boundary: pfm_sim integration (layer: Test artifact); allowed_outbound: pfm_sim binary execution_
   - _Depends: 7.1_
 
-- [ ] 7.3 Integration test = pfm_render snapshot round-trip
+- [x] 7.3 Integration test = pfm_render snapshot round-trip
   - test = `tests/integration_pfm_render.sh` 作成 = 7.2 出力 `test_output/snapshot.txt` を `./pfm_render test_output/snapshot.txt` で再描画起動、exit 0、不正 file = `tests/fixtures/broken.txt` (= parse 失敗用) で exit code 4 + stderr `[SNAPSHOT_PARSE]` 識別子 grep 確認、`tests/fixtures/missing.txt` (= 不在 path、open 失敗用) で exit code 3 + stderr `[SNAPSHOT_OPEN]` 識別子 grep 確認
   - 観測条件: shell test runner で 3 case pass (= 正常 + parse 失敗 + open 失敗)
   - _Requirements: 4.6, 4.7, 4.8, 7.3_
   - _Boundary: pfm_render integration (layer: Test artifact); allowed_outbound: pfm_render binary execution_
   - _Depends: 7.1_
 
-- [ ] 7.4 Integration test = pfm_bmp 17 step 群 + 動的 step 群
+- [x] 7.4 Integration test = pfm_bmp 17 step 群 + 動的 step 群
   - test = `tests/integration_pfm_bmp.sh` 作成
   - 事前条件 = test script 冒頭で 100000 step snapshot 生成 = `./pfm_sim --c2a 0.3 --c3a 0.3 --delt 0.001 --max-step 100000 --data-interval 2000 --output-dir test_output_long` 実行 (= wall-clock 約 5 min reference、本 fixture は task 7.5 acceptance test と共用、`test_output_long/snapshot.txt` を re-use)
   - test 本体 = (主 case) `./pfm_bmp test_output_long/snapshot.txt bmp_output` 実行、`§19` 17 step (`0, 2000, ..., 80000`) 群の BMP 全 17 file が `bmp_output/` に存在 + (動的 case) `./pfm_bmp test_output_long/snapshot.txt bmp_output_dyn --bmp-interval 5000 --max-step 50000 --data-interval 2000` で `{0, 5000, ..., 50000}` 11 file が `bmp_output_dyn/` に存在 + (partial fail case) step index 4 で seek 失敗を注入する fixture (= snapshot file の途中切詰版) で `./pfm_bmp` 実行、exit code non-zero + first-fail-exit 規則により BMP file 4 個 (= step 0/1/2/3) のみ存在 + step 4 以降未生成 確認
@@ -214,7 +214,7 @@
   - _Boundary: pfm_bmp integration (layer: Test artifact); allowed_outbound: pfm_bmp binary execution + pfm_sim long run_
   - _Depends: 7.1, 7.2_
 
-- [ ] 7.5 Acceptance test = §22 6 項目 final 検証 + Level 6 観測 record
+- [x] 7.5 Acceptance test = §22 6 項目 final 検証 + Level 6 観測 record
   - test = `tests/acceptance_22.sh` 作成 = (1) `make` build success、(2) `pfm_sim` 起動 + 初期 snapshot + 初期 BMP 出力 (= smoke 100 step run で代替、再実行 cost 軽減)、(3) `pfm_render` で snapshot file load 成功 (= smoke 100 step snapshot 使用)、(4) `pfm_bmp` で 17 step 群出力 (= 7.4 と共用 100000 step snapshot 使用)、(5) 100000 step run 中の `log(c1/c2/c3)` 定義域逸脱なし (= NaN/Inf 検出 grep)、(6) 平均組成保存 (= snapshot 平均算出値が input ± `2 * CLAMP_EPS * ND * ND` 程度、Req 3 AC9 規範下の bounded 範囲、unit test 閾値と統一) 以内 + 全 grid で `§10` 4 制約満足
   - 観測条件: 6 項目全 pass、(5)(6) の 100000 step run は 1 回のみ実行 (= wall-clock 約 5 min reference、再実行 cost 高のため最終 acceptance 段階のみ、(2)(3)(4) の smoke 100 step 出力は別途 short cycle で代替可)。観測 (5) の信頼性は task 7.2 Adversarial test (a) (= 病的 `delt = 0.5` で NaN/Inf 検出 → exit code 6 + diagnostic 5 項目 grep 完全) との対称検証で担保 (= acceptance level の negative assertion = grep 0 件 が positive 検証 carrier に依存する明示、観測 mechanism 完全性の cross-task 連携)。Limitation 記録 = task 5.1 注 (= production 実 wingxa link 時 `gwinsize`/`ginit`/`gsetorg` silent fail 観測手段なし) + task 5.3 注 (= `swapbuffers` void return silent fail 観測手段なし) は本 acceptance test 結果に「known limitation」として明示。結果を Rwiki-dev/.kiro/methodology/v4-validation/sample_3_7_6_1/dev_log.jsonl + rework_log.jsonl に sub_group_key=phase_field_reverse_cpp で append (= Step (3.3) Level 6 観測 trigger)
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_

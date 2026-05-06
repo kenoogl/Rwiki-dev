@@ -1,0 +1,82 @@
+{
+  "spec_id": "phase-field-reverse-spec",
+  "spec_source": "reverse-engineered",
+  "language": "cpp",
+  "domain": "numerical_simulation",
+  "sub_domain": "phase_field_cahn_hilliard",
+  "source_artifact": "DR-pfm/spec_seed/DEVELOPMENT_SPEC.md (22章 9007 byte)",
+  "drafting_sessions": "50th-51st (session 50 kiro-spec-init + req, session 51 req V4 rounds)",
+  "requirements_md": {
+    "line_count": 140,
+    "requirement_count": 7,
+    "acceptance_criteria_count": 55,
+    "boundary_context_lines": 17
+  },
+  "design_md": {
+    "line_count": 930,
+    "section_count_h3": 25,
+    "architecture_alternatives_evaluated": 2,
+    "cascade_from_req_fixes": 12,
+    "v4_review_rounds": 5,
+    "total_fixes_incl_cascade": 77
+  },
+  "tasks_md": {
+    "line_count": 222,
+    "task_count": 22,
+    "cascade_from_design_fixes": 14,
+    "v4_review_rounds": 5,
+    "total_fixes_incl_cascade": 85
+  },
+  "v4_review_summary": {
+    "phases_reviewed": ["req", "design", "tasks"],
+    "rounds_per_phase": 5,
+    "total_rounds": 15,
+    "req_phase": {
+      "total_merged_findings": 63,
+      "fixes_applied": 42,
+      "acceptance_rate": 0.667,
+      "overfix_rate": 0.333,
+      "must_fix": 14,
+      "should_fix": 27,
+      "do_not_fix": 21,
+      "escalate": 1
+    },
+    "design_phase": {
+      "total_merged_findings": 78,
+      "fixes_applied": 65,
+      "acceptance_rate": 0.833,
+      "overfix_rate": 0.154,
+      "must_fix": 9,
+      "should_fix": 52,
+      "do_not_fix": 12,
+      "escalate": 5,
+      "cascade_fixes": 12
+    },
+    "tasks_phase": {
+      "total_merged_findings": 82,
+      "fixes_applied": 71,
+      "acceptance_rate": 0.866,
+      "overfix_rate": 0.134,
+      "do_not_fix": 11,
+      "override_count": 0,
+      "forced_div_rate_avg": 0.26,
+      "cascade_fixes": 14
+    },
+    "all_phases_aggregate": {
+      "total_merged_findings": 223,
+      "fixes_applied": 178,
+      "acceptance_rate": 0.798,
+      "overfix_rate": 0.197,
+      "do_not_fix": 44
+    }
+  },
+  "impl_outcome": {
+    "task_count": 22,
+    "unit_tests": 13,
+    "integration_scripts": 3,
+    "forced_rework_events": 2,
+    "acceptance_criteria_pass": "8/8",
+    "l6_rework_log": "sample_3_7_6_1/rework_log.jsonl"
+  },
+  "notes": "逐語的 per-finding L1 raw data (miss_type / difference_type / trigger_state) は dual-reviewer-log-8.md sessions 51-55 に自然言語記述あり、JSONL 化は別作業"
+}
