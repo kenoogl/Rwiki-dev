@@ -391,7 +391,8 @@ int clamp_concentrations(Field& c2, Field& c3);
 ```cpp
 namespace pfm {
 
-void correct_mean_composition(
+// 0 success / non-zero on internal clamp non-convergence (= caller Numerical Engine が time_step non-zero return で main return 6 へ伝播)
+int correct_mean_composition(
     Field& c2, Field& c3,
     double c2a, double c3a
 );
@@ -542,7 +543,7 @@ static_assert(DRAW_H % ND == 0, "DRAW_H must be divisible by ND for gap-free con
 
 // 描画バッファ初期化 wrapper (= Req 1 AC6 (e) / Req 5 AC6、Application Layer が wingxa.h::gwinsize / ginit / gsetorg を直接呼出禁止、本 wrapper 経由)
 // pfm_sim main / pfm_render main が起動順 §14 (d)(e)(f) で本関数を 1 度呼出
-// returns 0 on success, non-zero on wingxa.h 初期化失敗 (= caller は stderr diagnostic + main で return 7 等で exit、silent fail 防止)
+// 戻り値 = 常に 0 (= wingxa.h SSoT で gwinsize/ginit/gsetorg は全 void return、失敗検出 mechanism なし、本 wrapper は best-effort 実装)
 int init_drawing_buffer();
 
 // 全 grid 描画 (= 1 frame) (§17, Req 5.1-5.5)
@@ -565,7 +566,7 @@ int poll_keypress();
 **Implementation Notes**
 
 - Integration: BMP Writer / Re-render Function / Simulation Module 全てから呼出
-- `init_drawing_buffer` 実装方針: 内部で `wingxa.h::gwinsize(DRAW_W, DRAW_H)` → `wingxa.h::ginit()` → `wingxa.h::gsetorg(0, 0)` を `§14` (d)(e)(f) 順で呼出し、Application Layer が wingxa.h を直接 include しない構造を担保 (= Req 1 AC9 / Req 5 AC6 依存方向制約と整合)。各 wingxa.h 関数の戻り値 contract が「0 success / non-zero error」前提なら直接 check + non-zero return、`void` return の関数は副作用に依存せず success 前提 = 失敗時 silent (= caller 側 `init_drawing_buffer` 戻り値 0 で続行)
+- `init_drawing_buffer` 実装方針: 内部で `wingxa.h::gwinsize(DRAW_W, DRAW_H)` → `wingxa.h::ginit(0)` → `wingxa.h::gsetorg(0, 0)` を `§14` (d)(e)(f) 順で呼出し、Application Layer が wingxa.h を直接 include しない構造を担保 (= Req 1 AC9 / Req 5 AC6 依存方向制約と整合)。3 関数すべて wingxa.h SSoT で `void` return = 失敗検出 mechanism なし、本 wrapper は best-effort 実装で常に 0 return。`return 7` Renderer init failure exit code は本 design で採用しない (= `void` return 制約下で SSoT 違反なしに失敗検出不能、exit code 体系は `return 2-6` の 5 category に縮減)
 - `poll_keypress` 実装方針: 内部で `isatty(STDIN_FILENO)` (= `<unistd.h>` POSIX) で stdin 非対話モード判定、非対話なら即 `0` return (= non-blocking、Req 1 AC9 停止条件は Renderer wrapper 内で安全に吸収)。対話モードなら `wingxa.h::keypress()` を呼出して戻り値をそのまま return (= 既存規範通りキー押下で非 0)
 - Validation: unit test で boundary case (= `c2 = c3 = 0` → `R=255,G=0,B=0`) 等の色値検証
 - Risks: 周期境界連続性 (Req 5 AC5 operational 判定基準 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間に visible gap なし、wraparound 列 `i = ND` 相当の追加描画は実装裁量) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル → 描画 loop は `i = 0..ND-1` の一巡で全 100 × 100 grid を描画、各 grid を 4 × 4 ピクセル (= 計 400 × 400 ピクセル、ピッタリ収まる) で隣接配置することで visible gap なしを担保。wraparound 列 (`i = ND` 相当の追加描画) は実装裁量範囲内、本 design では採用しない (= AC5 pass 条件は loop 一巡で満たす)
@@ -796,7 +797,6 @@ stateDiagram-v2
     Running --> StoppedError: Snapshot parse error (return 4)
     Running --> StoppedError: BMP save error (return 5)
     Running --> StoppedError: Numerical divergence / clamp non-convergence (return 6)
-    Running --> StoppedError: Renderer init failure (return 7)
     StoppedNormal --> [*]: exit 0
     StoppedError --> [*]: exit non-zero
 ```
@@ -851,7 +851,7 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
   - **NaN/Inf 検出** (= step (4) → step (5) 間 `std::isnan` / `std::isinf` 検出、Numerical Engine 内): stderr diagnostic (= step / grid index / 違反値) + non-zero return → main で `return 6`
   - **`log` 定義域逸脱** (= compute_potentials の `log(c2)` 等で c ≤ 0): step (0) clamp で予防、検出時は NaN/Inf path と同経路で `return 6`
   - **Concentration Clamp MAX_ITER 超過** (= 統合適用 loop が 10 iteration で収束せず last-resort 適用): last-resort で sum constraint enforcing 比例縮小後、`clamp_concentrations` は non-zero return → Numerical Engine が caller に伝播 → main で `return 6`
-- **Renderer init failure** (= 5a-iii silent fail 防止、本 design 内 wingxa.h 初期化失敗 category): Affected = Renderer (= 直接呼出元 pfm_sim_main / pfm_render_main / pfm_bmp_main 経由で伝播)。`init_drawing_buffer()` が内部 `wingxa.h::gwinsize` / `ginit` / `gsetorg` の戻り値 contract で失敗検出時 non-zero return → main で `return 7`。stderr diagnostic (= 失敗 wingxa.h 関数名 + 戻り値)
+- **Renderer init failure category 不採用** (= wingxa.h SSoT で gwinsize/ginit/gsetorg が全 void return、失敗検出 mechanism なし): `init_drawing_buffer()` は best-effort 実装で常に 0 return、`return 7` exit code は本 design で採用しない、Error Categories は `return 2-6` の 5 category 体系
 
 ### Monitoring
 
