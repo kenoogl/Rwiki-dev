@@ -407,7 +407,7 @@ Data 2 = manual JSONL append は self-report に依存するため、何を appe
 
 ##### §3.7.6 Code-derived spec batch re-implementation phase (v1.6 新設、Claim D primary evidence の主要 source、A-3 batch 内、推定 0-3h overhead per sample)
 
-- [x] **§3.7.6.1 Phase field 法 re-impl phase rework 記録** (= reverse-engineered、C++、完了 2026-05-06 session 56、22 tasks / 13 unit tests / forced_rework=2 / acceptance 8/8 pass、Level 6 records: sample_3_7_6_1/rework_log.jsonl)
+- [x] **§3.7.6.1 Phase field 法 re-impl phase rework 記録** (= reverse-engineered、C++、完了 2026-05-06 session 56、22 tasks / 13 unit tests / forced_rework=2 / acceptance 8/8 pass、Level 6 records: samples/a3/3_7_6_1_phase_field_cpp/rework_log.jsonl)
 - [ ] **§3.7.6.2 3D 熱伝導方程式 re-impl phase rework 記録** (= reverse-engineered、Julia or C++、cost 10-14h)
 - [ ] **§3.7.6.3 Arduino IoT センサ re-impl phase rework 記録** (= reverse-engineered、Arduino C、cost 4-8h)
 - [ ] **§3.7.6 + A-1 sub-group 比較**: forward-fresh (= A-1 3 spec) vs reverse-engineered (= §3.7.6 3 sample) で M1-M4 metric 別 reporting + Claim D primary evidence narrative
@@ -524,11 +524,11 @@ A-3.1-A-3.4 + 既存 Level 6 + §3.7.6 sub-group 比較 = 6 件 indicators の c
 - [x] 既存コード → reverse engineering で spec (brief / req / design) 起草 (= phase-field-reverse-spec、sessions 50-55)
 - [x] V4 protocol で req phase + design phase review 取得 (= 1 spec instance 追加、dual-reviewer-log-8 sessions 50-55)
 - [x] re-implementation 生成 (= DR-pfm C++17 clean-room re-impl、session 56、22 tasks / 13 unit tests / 3 integration scripts)
-- [x] **re-impl phase 中の Level 6 rework events 観測** (v1.6 新設、Claim D primary evidence): 2 rework events 記録 = (1) time_step return 1→6 / (2) wingxa boundary violation fix、`sample_3_7_6_1/rework_log.jsonl` append 完了、2026-05-06
+- [x] **re-impl phase 中の Level 6 rework events 観測** (v1.6 新設、Claim D primary evidence): 2 rework events 記録 = (1) time_step return 1→6 / (2) wingxa boundary violation fix、`samples/a3/3_7_6_1_phase_field_cpp/rework_log.jsonl` append 完了、2026-05-06
 - [x] re-impl vs 既存コード の behavior 差分検証 (= ground truth-anchored validation、軸 5 evidence): acceptance_22.sh 8/8 pass、c2/c3 mean=0.30000000±2e-5、constraint_violations=0、100k step no-divergence、real BMP output confirmed via wingxa_sw
-- [x] per-finding raw data (foundation Req 3 共通 schema、`miss_type` / `difference_type` / `trigger_state` 自己ラベリング、forward-spec / reverse-engineered explicit label) — `a3_batch/code_derived/phase_field/l1_findings_{req,design,tasks}.jsonl` 生成済 (計 223 lines: req 63 / design 78 / tasks 82)。caveat: オリジナルレビュアーの self-label ではなく、dual-reviewer-log-8.md 自然言語記述から LLM が事後ラベリング
-- [x] per-system metrics (= 検出件数 / 採択率 / 過剰修正比率 / V4 修正否定 prompt 機能) — `a3_batch/code_derived/phase_field/l2_metrics.jsonl` 生成済 (17 entries: req R1-5 / design R0-5 / tasks R0-5)
-- [x] spec characteristic descriptive metric 記録 (= AC 数 55 / req 140行 / design 930行 / tasks 222行 / alternatives 2 / 起草 sessions 50-51) — `a3_batch/code_derived/phase_field/spec_characteristic.json` 生成済
+- [x] per-finding raw data (foundation Req 3 共通 schema、`miss_type` / `difference_type` / `trigger_state` 自己ラベリング、forward-spec / reverse-engineered explicit label) — `samples/a3/3_7_6_1_phase_field_cpp/l1_findings_{req,design,tasks}.jsonl` 生成済 (計 223 lines: req 63 / design 78 / tasks 82)。caveat: オリジナルレビュアーの self-label ではなく、dual-reviewer-log-8.md 自然言語記述から LLM が事後ラベリング
+- [x] per-system metrics (= 検出件数 / 採択率 / 過剰修正比率 / V4 修正否定 prompt 機能) — `samples/a3/3_7_6_1_phase_field_cpp/l2_metrics.jsonl` 生成済 (17 entries: req R1-5 / design R0-5 / tasks R0-5)
+- [x] spec characteristic descriptive metric 記録 (= AC 数 55 / req 140行 / design 930行 / tasks 222行 / alternatives 2 / 起草 sessions 50-51) — `samples/a3/3_7_6_1_phase_field_cpp/spec_characteristic.json` 生成済
 
 **cost 見積 (v1.6 update)**: 1 work day = 6-10 時間 (= compact code 想定、reverse engineering + V4 適用 + behavior 差分検証 + raw data 抽出) + Level 6 観測 overhead +0-3h (= rework_log.jsonl append per event)。
 

@@ -733,26 +733,26 @@ A-3 batch = 軸 4-7 (= multi-indicator convergence + ground truth + forward-reve
 - per-finding raw data + per-system metrics + spec characteristic descriptive metric (= AC 数 / 文字数 / Design Decisions 数 / 言及 alternative 数 / 起草所要時間)
 - §5.5.6 §3.7.6 reverse-engineered batch との sub-group 比較 base (= 軸 6 forward / reverse 比較の base sample)
 - explicit label = `spec_source: forward-fresh`、cost 6-12h
-- 配置 path = `.kiro/methodology/v4-validation/a3_batch/forward_fresh/`
+- 配置 path = `.kiro/methodology/v4-validation/samples/a3/3_7_1_forward_fresh/`
 
 #### 5.5.2 §3.7.2 multi-vendor LLM cross-validation evidence
 
 - dual-reviewer 3 spec design phase finding set (= 12th 末取得済 累計 48 件) を base に GPT-4 + Gemini judgment subagent 投入
 - 3-vendor agreement matrix (= must_fix / should_fix / do_not_fix の 3 ラベル合致率、per-finding) + disagreement qualitative analysis
-- 配置 path = `.kiro/methodology/v4-validation/a3_batch/multi_vendor/`、cost 3-6h
+- 配置 path = `.kiro/methodology/v4-validation/samples/a3/3_7_2_multi_vendor/`、cost 3-6h
 
 #### 5.5.3 §3.7.3 mutation testing evidence (constructed positive control)
 
 - Spec 6 design.md に mutation 5-10 件 inject (= AC 矛盾 / 責務境界違反 / dependency cycle / 規範 outsource 化 / interface 不整合 等の defect type)
 - mutation 適用版 × N+1 バリアントに V4 protocol 適用 (= dual+judgment 系統 only)
 - sensitivity (= true positive rate) + specificity (= true negative rate) → ROC-like figure 6 data
-- 配置 path = `.kiro/methodology/v4-validation/a3_batch/mutation/`、cost 7-10h
+- 配置 path = `.kiro/methodology/v4-validation/samples/a3/3_7_3_mutation/`、cost 7-10h
 
 #### 5.5.4 §3.7.4 multi-run reliability evidence (reproducibility)
 
 - V4 protocol を Spec 6 に対し 3-5 random seed で再実行
 - per-seed finding set + per-seed 3 ラベル分布 + inter-run agreement matrix (= ≥ 80% で structural property evidence)
-- 配置 path = `.kiro/methodology/v4-validation/a3_batch/multi_run/`、cost 3-5h
+- 配置 path = `.kiro/methodology/v4-validation/samples/a3/3_7_4_multi_run/`、cost 3-5h
 
 #### 5.5.5 §3.7.5 A-3 evidence convergence judgment (Phase A 終端 trigger)
 
@@ -769,14 +769,14 @@ reverse-engineering 方式 (= 既存コード → spec → re-impl) で 3 sample
   - **re-impl phase 中の Level 6 rework events 観測** (v0.9 新設、Claim D primary evidence の主要 source、`spec_id="phase-field"` + `discovered_phase="impl-mid"` 付与、A-1 vs §3.7.6 sub-group 比較 base)
   - per-finding raw data + per-system metrics + spec characteristic descriptive metric (= 全 sample 共通)
   - explicit label = `spec_source: reverse-engineered`、cost 6-10h + Level 6 観測 overhead 0-3h
-  - 配置 path = `.kiro/methodology/v4-validation/a3_batch/code_derived/phase_field/`
+  - 配置 path = `.kiro/methodology/v4-validation/samples/a3/3_7_6_1_phase_field_cpp/`
   - **完了サマリ (session 56 / 2026-05-06)**:
     - spec: phase-field-reverse-spec (sessions 50-55)、V4 req+design review 完走
     - impl: C++17 clean-room re-impl、22 tasks / 13 unit tests / 3 integration scripts
     - forced_rework = 2 件: (1) time_step divergence return 1→6 / (2) wingxa boundary violation (Application layer → Renderer/BMPWriter wrapper 追加)
     - acceptance 8/8 pass: make build / pfm_sim smoke / pfm_render / pfm_bmp 17files / 100k step no-divergence / c2 mean=0.30±2e-5 / c3 mean=0.30±2e-5 / constraint_violations=0
     - real BMP output confirmed: wingxa_sw.cpp software renderer で step 0 R:96-107 (uniform) → step 80000 R:13-226 (phase-separated) 実出力確認
-    - Level 6 records: `sample_3_7_6_1/dev_log.jsonl` + `sample_3_7_6_1/rework_log.jsonl` append 完了
+    - Level 6 records: `samples/a3/3_7_6_1_phase_field_cpp/dev_log.jsonl` + `samples/a3/3_7_6_1_phase_field_cpp/rework_log.jsonl` append 完了
     - impl_log: `.dual-reviewer/impl_log.jsonl` 17 entries (task 1.1–7.5)
 - **§5.5.6.2 3D 熱伝導方程式 + 複雑モデル生成 (Julia or C++)**:
   - real-world numerical project rich 化 (= mesh / boundary condition / I/O 含む)
@@ -796,7 +796,7 @@ reverse-engineering 方式 (= 既存コード → spec → re-impl) で 3 sample
 - 同一 problem を forward-spec + reverse-engineered 両方で実施 = reverse-engineering bias の strict internal validity disentangle (gold standard)
 - scope 外理由: cost 2 倍、§3.7.6 + §3.7.1 sub-group 比較で paper acceptable line 内 mitigation 達成
 - 採用条件: §3.7.6 sub-group 比較で systematic 差異が paper limitations 範囲外 = forward / reverse 混合で aggregate metric が confound する場合のみ Phase B 以降に追加検討
-- 配置 path 予約 = `.../a3_batch/paired_comparison/` (= 採用時のみ生成、scope 外段階では未配置)
+- 配置 path 予約 = `.../samples/a3/3_7_7_paired_comparison/` (= 採用時のみ生成、scope 外段階では未配置)
 
 ---
 
