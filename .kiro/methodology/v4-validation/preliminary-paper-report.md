@@ -14,6 +14,16 @@ _v0.4 / 2026-05-03 (29th セッション末、A-2.1 partial completion = treatme
 
 _v0.3 / 2026-05-02 (19th セッション末、軸 4 → 軸 7 拡張 + §3.7.6 Code-derived spec batch 反映 + §3.7.1 forward-fresh-spec 独立必須化 + reverse-engineering bias 5 source caveats 追加 = data-acquisition-plan v1.5 + evidence-catalog v0.7 整合化)_
 
+_注 (= 2026-05-07 追記、論文化計画統合に伴う命名対応): SES 2026 (= 5/29 投稿締切) 提出向けの作業群は、別文書の論文化計画 (= paper-submission-plan v1.0 §4) で F (= 形式定義) / Q (= 品質整備) / P (= 論文入力整備) / S (= 起草) / R (= 改訂) の 5 系統に整理されている。本文書中の Phase A 内の作業区分 (= A-1 / A-2 / A-3 / §3.7.6 等) は実証研究の段階区分を指し、F/Q/P/S/R は SES 投稿準備の作業分類で、両者は階層が異なるため共存する。本文書は P-8 (= preliminary-paper-report v0.9、5/12 想定) で命名対応を本文に正式統合する予定。_
+
+**作業群対応 (= F/Q/P/S/R 5 系統と Phase A 内区分との関係)**:
+
+- F (= 形式定義) = 形式定義 6 件起草・拡張 + 配置移行 + 書込手順 + 検証ツール (= 新規)。Phase A 内では §3.7.6 系統取得時の品質担保および Q 整備の前提として位置づく
+- Q (= 品質整備) = 既存記録の形式修復 + 「0 件」の明示記録 + 後付けの形式整え (= 新規)。Phase A 内では §3.7.6.1 evidence と A-1 implementation evidence に対して適用
+- P (= 論文入力整備) = 11 件 (= 旧 A.1〜A.11 を P-1〜P-11 に rename)。既存の論文入力作業群と同義
+- S (= 起草) = SES paper の章節別起草 9 件 (= 新規)。本来 Phase A 終端後の想定だったが、SES 5/29 投稿のため前倒しで Phase A 内に組み込み
+- R (= 改訂) = self-review + 文章推敲 + LaTeX 微調整 + Julia 対照実験 + 最終確認 + 投稿 6 件 (= 新規)。同上、前倒しで Phase A 内に組み込み
+
 ---
 
 ## §1 Executive Summary
