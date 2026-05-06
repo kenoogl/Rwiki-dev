@@ -125,7 +125,7 @@
   - _Boundary: BMP Writer (layer: Visualization); allowed_outbound: Snapshot Reader (I/O direct), Renderer (Visualization), wingxa.h::save_screen (external P0), <cstdio> (fopen/fclose), <filesystem> (exists/file_size); forbidden: wingxa.h::save_screen 以外の 8 関数 direct (= gcolor/grect は Renderer 経由、gwinsize/ginit/gsetorg は caller pfm_bmp_main 起動時 init_drawing_buffer で呼出済、keypress/swapbuffers/itoa は BMP Writer 責務範囲外)_
   - _Depends: 4.2, 5.1_
 
-- [ ] 5.3 (P) Re-render Function 実装
+- [x] 5.3 (P) Re-render Function 実装
   - impl = `src/re_render.cpp` で `int re_render_all(snapshot_path)` (= snapshot file 全 snapshot を順次 `render_field` + `swapbuffers`、`Renderer::poll_keypress()` wrapper 経由で停止判定 = wingxa.h 直接依存禁止 = Req 5 AC6 / Application → Visualization 単一方向)
   - 停止 contract = poll_keypress 戻り値非 0 検出時に「現 snapshot 描画 + swapbuffers 完了後」のタイミングで停止 (= `§15` 停止 semantics、即時停止 / 次 snapshot 前停止ではない)
   - error path = file open 失敗で `return 3` / parse 失敗で `return 4`
