@@ -208,7 +208,7 @@ using Field = double[ND][ND];             // raw 2D static array
 | Snapshot Reader | I/O | テキスト形式読み込み | 4.7, 4.8, 6.4, 6.5 | (none) | Service |
 | Renderer | Visualization | 色変換 + 矩形描画 + 描画バッファ初期化委譲 | 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 | wingxa.h `gcolor`/`grect`/`gsetorg`/`gwinsize`/`ginit` (P0) | Service |
 | BMP Writer | Visualization | snapshot → BMP | 4.5, 4.9, 6.6 | wingxa.h `save_screen` (P0), Renderer (P0) | Service |
-| Re-render Function | Visualization | snapshot → live display | 4.6 | Renderer (P0、`keypress` wrapper 経由), wingxa.h `gwinsize`/`ginit`/`swapbuffers` (P0) | Service |
+| Re-render Function | Visualization | snapshot → live display | 4.6 | Renderer (P0、`keypress` wrapper 経由), wingxa.h `swapbuffers` (P0) | Service |
 | Simulation Module | Application | CLI parser + main loop + 終了処理 | 1.1-1.10, 6.1-6.6 | All Core / I/O / Visualization (P0) | Service |
 
 ### Core Layer
@@ -308,7 +308,8 @@ namespace pfm {
 // (2) caller = Simulation Module が §9 既定値 0.01 を本関数に渡す (= L688 Implementation
 //     Notes と整合、CLI option 化は本 spec scope 外)
 // → 「builder 側固定なし + caller 側 §9 既定値 0.01 渡し」が本 design の SSoT 規約
-void build_initial_field(
+// 0 success / non-zero on internal clamp non-convergence (= 病的 c2a/c3a 入力時、caller pfm_sim_main で return 6 伝播)
+int build_initial_field(
     Field& c2, Field& c3,
     double c2a, double c3a,
     double fluct_amp,
@@ -408,7 +409,7 @@ int correct_mean_composition(
 
 - Integration: Numerical Engine step 6
 - 実装属性 (= req 規範ではない): 平均値変化は単調収束 (= 同一 input に対し idempotent ではないが convergent、`§12` 補正手順の monotonic 性質に依存)
-- Validation: unit test で初期偏差 `0.01` 与え correct 後 `< CLAMP_EPS * ND * ND` 程度
+- Validation: unit test で初期偏差 `0.01` 与え correct 後 `< 2 * CLAMP_EPS * ND * ND` 程度 (= acceptance test と統一閾値、Implementation 目安、req 契約ではない)
 - Risks: clamp 連続適用で平均が drift (= 経験則、`§12` 既存仕様で許容)
 - 平均計算 summation 精度: ND × ND = 10000 grid 点の double naive sum は誤差 `O(1e-13)` 程度 (= 相対誤差 ε_machine ≈ 1e-16 × N ≈ 1e-12 worst case)、`CLAMP_EPS = 1e-6` に対し negligible。Kahan summation / pairwise summation 等の高精度方式は不要、本 design は naive sum 採用 (= 実装裁量範囲内、Req 3 AC9 bounded 範囲内で十分)
 
@@ -525,7 +526,7 @@ int seek_snapshot(
 
 **Dependencies**
 
-- External: `wingxa.h::gcolor` (P0), `wingxa.h::grect` (P0), `wingxa.h::gsetorg` (P0), `wingxa.h::gwinsize` (P0), `wingxa.h::ginit` (P0), `wingxa.h::keypress` (P0、`poll_keypress` wrapper 内のみ)
+- External: `wingxa.h::gcolor` (P0), `wingxa.h::grect` (P0), `wingxa.h::gsetorg` (P0), `wingxa.h::gwinsize` (P0), `wingxa.h::ginit` (P0), `wingxa.h::keypress` (P0、`poll_keypress` wrapper 内のみ)。`wingxa.h::itoa` は本 spec scope で不使用 (= req.md L114 9 関数 declare 済の中で本 spec は 8 関数のみ依存、BMP 名生成は `std::to_string` 等 C++ 標準で代替)
 
 **Contracts**: Service [✓]
 
@@ -566,7 +567,7 @@ int poll_keypress();
 **Implementation Notes**
 
 - Integration: BMP Writer / Re-render Function / Simulation Module 全てから呼出
-- `init_drawing_buffer` 実装方針: 内部で `wingxa.h::gwinsize(DRAW_W, DRAW_H)` → `wingxa.h::ginit(0)` → `wingxa.h::gsetorg(0, 0)` を `§14` (d)(e)(f) 順で呼出し、Application Layer が wingxa.h を直接 include しない構造を担保 (= Req 1 AC9 / Req 5 AC6 依存方向制約と整合)。3 関数すべて wingxa.h SSoT で `void` return = 失敗検出 mechanism なし、本 wrapper は best-effort 実装で常に 0 return。`return 7` Renderer init failure exit code は本 design で採用しない (= `void` return 制約下で SSoT 違反なしに失敗検出不能、exit code 体系は `return 2-6` の 5 category に縮減)
+- `init_drawing_buffer` 実装方針: 内部で wingxa API 呼出順 `wingxa.h::gwinsize(DRAW_W, DRAW_H)` → `wingxa.h::ginit(0)` → `wingxa.h::gsetorg(0, 0)` の順で呼出し (= `§14` (e) 内部の 3 API 呼出順、`§14` 全体の (d)(e)(f) step 番号とは別)、Application Layer が wingxa.h を直接 include しない構造を担保 (= Req 1 AC9 / Req 5 AC6 依存方向制約と整合)。3 関数すべて wingxa.h SSoT で `void` return = 失敗検出 mechanism なし、本 wrapper は best-effort 実装で常に 0 return。`return 7` Renderer init failure exit code は本 design で採用しない (= `void` return 制約下で SSoT 違反なしに失敗検出不能、exit code 体系は `return 2-6` の 5 category に縮減)
 - `poll_keypress` 実装方針: 内部で `isatty(STDIN_FILENO)` (= `<unistd.h>` POSIX) で stdin 非対話モード判定、非対話なら即 `0` return (= non-blocking、Req 1 AC9 停止条件は Renderer wrapper 内で安全に吸収)。対話モードなら `wingxa.h::keypress()` を呼出して戻り値をそのまま return (= 既存規範通りキー押下で非 0)
 - Validation: unit test で boundary case (= `c2 = c3 = 0` → `R=255,G=0,B=0`) 等の色値検証
 - Risks: 周期境界連続性 (Req 5 AC5 operational 判定基準 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間に visible gap なし、wraparound 列 `i = ND` 相当の追加描画は実装裁量) = 描画域 400x400 / `ND = 100` で 1 grid = 4x4 ピクセル → 描画 loop は `i = 0..ND-1` の一巡で全 100 × 100 grid を描画、各 grid を 4 × 4 ピクセル (= 計 400 × 400 ピクセル、ピッタリ収まる) で隣接配置することで visible gap なしを担保。wraparound 列 (`i = ND` 相当の追加描画) は実装裁量範囲内、本 design では採用しない (= AC5 pass 条件は loop 一巡で満たす)
@@ -615,12 +616,13 @@ int write_bmp_default_steps(
 );
 
 // 動的 step 群 batch 出力 (= Req 4 AC5 param 変更時規則、step 群 = {0, K, 2K, ...} ∩ {≤ max_step})
-// bmp_interval = K (= §13 BMP 保存間隔)、max_step = §13 最大ステップ数
+// bmp_interval = K (= §13 BMP 保存間隔)、max_step = §13 最大ステップ数、data_interval = §13 濃度データ保存間隔 (= snapshot index 計算用 = step / data_interval、caller pfm_bmp_main から --data-interval 引数値で渡す)
 int write_bmp_steps(
     const std::string& snapshot_path,
     const std::string& bmp_dir,
     int bmp_interval,
-    int max_step
+    int max_step,
+    int data_interval
 );
 
 }  // namespace pfm
@@ -650,7 +652,7 @@ int write_bmp_steps(
 
 - Outbound: Snapshot Reader (P0、自身の orchestration として直接呼出 = Application Layer は Snapshot Reader 直接依存しない)
 - Outbound: Renderer (P0、色変換 + 矩形描画 + keypress wrapper 委譲)
-- External: `wingxa.h::gwinsize` / `ginit` / `swapbuffers` (P0、Visualization Layer 内なので直接依存可、`keypress` は Renderer wrapper 経由)
+- External: `wingxa.h::swapbuffers` (P0、Visualization Layer 内なので直接依存可、`keypress` は Renderer wrapper 経由、`gwinsize`/`ginit` は Application 層が `init_drawing_buffer` wrapper 経由で呼出 = Re-render Function 自身は不依存)
 
 **Contracts**: Service [✓]
 
@@ -753,7 +755,8 @@ sequenceDiagram
     Main->>Renderer: init_drawing_buffer() [§14 (d)(e)(f) wrapper、内部で gwinsize/ginit/gsetorg 呼出、Application は wingxa.h 直接呼出禁止]
     Main->>Init: build_initial_field(c2, c3, c2a, c3a, fluct_amp, seed)
     Init->>Clamp: clamp_concentrations(c2, c3)
-    Init-->>Main: void return
+    Clamp-->>Init: int return (= non-zero で build_initial_field non-zero 伝播)
+    Init-->>Main: int return (= non-zero で main return 6 伝播)
     Main->>Writer: write_snapshot(path, t=0, c2, c3, OverwriteOrCreate)
     Main->>BMP: write_bmp_for_snapshot(snapshot_path, 0, bmp_path)
     BMP->>SnapReader: seek_snapshot(fp, 0, time1, c2, c3)
@@ -762,17 +765,22 @@ sequenceDiagram
     loop time step
         Main->>Engine: time_step(c2, c3, c2a, c3a, delt)
         Engine->>Clamp: step (0) clamp_concentrations(c2, c3) [pre-potential]
+        Clamp-->>Engine: int return (= non-zero で time_step non-zero 伝播)
         Note over Engine: step (1): compute mu2, mu3
         Note over Engine: step (2): compute lap(mu2), lap(mu3)
         Note over Engine: step (3): compute dc2_dt, dc3_dt
-        Note over Engine: step (4): write to temp arrays
+        Note over Engine: step (4): write to temp arrays + std::isnan/isinf check (= 検出時 time_step non-zero 伝播)
         Engine->>Clamp: step (5) clamp_concentrations(temp_c2, temp_c3)
+        Clamp-->>Engine: int return
         Engine->>Mean: step (6) correct_mean_composition(temp_c2, temp_c3, c2a, c3a)
         Mean->>Clamp: clamp_concentrations(temp_c2, temp_c3) [internal to step (6)]
+        Clamp-->>Mean: int return (= non-zero で correct_mean_composition non-zero 伝播)
+        Mean-->>Engine: int return (= non-zero で step (7) skip + time_step non-zero 伝播)
         Engine->>Clamp: step (7) clamp_concentrations(temp_c2, temp_c3) [post-correction]
-        Note over Engine: post step (7): 参照引数 c2, c3 経由で main 配列に in-place 反映 (= time_step は void return、temp 配列を main 配列に commit して終了)
-        Engine-->>Main: void return
-        Main->>Main: step++ ; check stop
+        Clamp-->>Engine: int return
+        Note over Engine: post step (7): 参照引数 c2, c3 経由で main 配列に in-place 反映 (= temp 配列を main 配列に commit して終了)
+        Engine-->>Main: int return (= 0 success / non-zero on NaN/Inf or clamp non-convergence、main で return 6 伝播)
+        Main->>Main: step++ ; check stop (= 戻り値 non-zero で時刻 loop break + return 6 で exit)
         opt step % data_interval == 0
             Main->>Writer: write_snapshot(path, t, c2, c3, Append)
         end
@@ -891,7 +899,7 @@ C-style `int` return code (= 0 success, non-zero error) を全 I/O / 描画 / pa
 - **Req 7.3 再描画 file load**: snapshot round-trip で確認
 - **Req 7.4 BMP 17 step 群出力**: BMP write integration test で確認
 - **Req 7.5 `log` 定義域逸脱なし**: 100000 step run 中の crash / NaN なし、4 濃度制約 monitoring (= debug build で assertion)
-- **Req 7.6 平均組成補正後 4 制約満足**: `pfm_sim` 後の snapshot ファイルから平均算出、入力との差が clamp epsilon の bounded 範囲内 (= Req 3 AC9 規範、Implementation 目安は `< CLAMP_EPS * ND * ND` 程度)、かつ全 grid で `§10` 4 制約満足
+- **Req 7.6 平均組成補正後 4 制約満足**: `pfm_sim` 後の snapshot ファイルから平均算出、入力との差が clamp epsilon の bounded 範囲内 (= Req 3 AC9 規範、Implementation 目安は `< 2 * CLAMP_EPS * ND * ND` 程度、unit test 閾値と統一)、かつ全 grid で `§10` 4 制約満足
 
 ### Performance Tests (Optional)
 

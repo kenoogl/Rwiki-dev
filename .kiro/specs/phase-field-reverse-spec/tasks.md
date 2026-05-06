@@ -2,6 +2,8 @@
 
 > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。
 
+> 各 task の `_Depends:_` field は **直接依存** のみを列挙する (= transitive 依存は省略、依存解決は task graph 探索で行う)。
+
 ## 1. Foundation — プロジェクト基盤と build 基盤
 
 - [ ] 1.1 プロジェクトディレクトリ初期化
@@ -49,7 +51,7 @@
 
 - [ ] 3.1 Initial Field Builder 実装
   - test first = `tests/test_initial_field.cpp` 作成 = (a) 同 seed (= `seed = 42`) で 2 回呼出し結果完全一致、(b) 平均が `c2a ± fluct_amp` 範囲、(c) 4 濃度制約満足、`make tests` で fail 確認
-  - impl = `src/initial_field.cpp` で `build_initial_field(c2, c3, c2a, c3a, fluct_amp, seed)` 実装、`std::mt19937` + uniform `[-fluct_amp, +fluct_amp]` ゆらぎ追加 + 終端で `clamp_concentrations()` 呼出 (= `§10` 4 timing の「初期化時」)
+  - impl = `src/initial_field.cpp` で `int build_initial_field(c2, c3, c2a, c3a, fluct_amp, seed)` (= 0 success / non-zero on internal clamp non-convergence) 実装、`std::mt19937` + uniform `[-fluct_amp, +fluct_amp]` ゆらぎ追加 + 終端で `clamp_concentrations()` 呼出 (= `§10` 4 timing の「初期化時」、戻り値 non-zero で本関数も非 0 return → caller `pfm_sim_main` で `return 6` 伝播)
   - 注 = `fluct_amp` は caller (= Simulation Module) が `§9` 既定値 `0.01` を渡す前提、本 builder 自身は default 値固定しない (= Req 3 AC1 / design L688 SSoT 規約)
   - 注 = `std::mt19937` は req `## Boundary Context` out-of-scope「乱数生成器の具体実装」に対する design L296 上書き規範 (= deterministic seed reproducibility 確保のため本 spec で具体実装固定)
   - 観測条件: `make tests` で 3 test pass + deterministic 性確認
@@ -63,7 +65,7 @@
   - impl 追加 = step (4) → step (5) 間で c2_new/c3_new に対し `std::isnan` / `std::isinf` check、検出時 stderr diagnostic (= step / grid index (i,j) / 違反値 c2/c3/c1) 出力 + non-zero return → caller `pfm_sim_main` で `return 6` (Numerical divergence)
   - impl 追加 = 内部 static 配列 lifecycle (= mu2/mu3/temp_c2/temp_c3 = 320 KB を Numerical Engine 内部 static で 1 度確保、外部から不可視、step (2) lap(μ) は on-the-fly stencil 再計算で追加配列なし)
   - Risks = `delt` CFL-like 安定条件目安 (= Cahn-Hilliard explicit Euler の `delt < O(dx^4 / (kappa * M))`、`ND = 100` / `§8` 既定値下で `delt < 1e-3` 程度を推奨)、user 責任
-  - 観測条件: `make tests` で 5 test pass + 計算順序 step (0) + (1)-(7) の 8 step 厳守 (= step 5/6/7 で適切な dependency 呼出 + step 6 内部 Clamp invoke 確認 + step 6 戻り値 propagation 確認)
+  - 観測条件: `make tests` で 5 test pass + 計算順序 step (0) + (1)-(7) の 8 step 厳守 (= step (0) entry-clamp invoke 確認 + step 5/6/7 で適切な dependency 呼出 + step 6 内部 Clamp invoke 確認 + step 6 戻り値 propagation 確認)
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.3_
   - _Boundary: Numerical Engine (layer: Core); allowed_outbound: Concentration Clamp (step 0/5/7), Mean Composition Corrector (step 6)_
   - _Depends: 2.1, 2.2_
@@ -91,18 +93,18 @@
 ## 5. Visualization Library — Renderer + BMP Writer + Re-render
 
 - [ ] 5.1 Renderer 実装
-  - test first = `tests/test_renderer.cpp` 作成 = `compute_color(c2, c3)` を pure 関数として抽出、(a) `c2 = c3 = 0` → `(R, G, B) = (255, 0, 0)`、(b) `c2 = 1, c3 = 0` → `(0, 255, 0)`、(c) `c2 = c3 = 0.5` → `(0, 128, 128)`、(d) `c2 + c3 > 1` overflow case で `[0, 255]` clamp、(e) 負値 float → int 変換境界 = `c2 = -0.001`, `c3 = -0.001` で compute_color 戻り値 `(R=255, G=0, B=0)` (= float 段階 clamp で int 負値 path 不到達)、(f) `poll_keypress` non-interactive mode (= isatty false) で 0 return、`make tests` で fail 確認
+  - test first = `tests/test_renderer.cpp` 作成 = `compute_color(c2, c3)` を pure 関数として抽出、(a) `c2 = c3 = 0` → `(R, G, B) = (255, 0, 0)`、(b) `c2 = 1, c3 = 0` → `(0, 255, 0)`、(c) `c2 = c3 = 0.5` → `(0, 127, 127)` (= `static_cast<int>(0.5 * 255) = 127` truncation 結果)、(d) `c2 + c3 > 1` overflow case で `[0, 255]` clamp、(e) 負値 float → int 変換境界 = `c2 = -0.001`, `c3 = -0.001` で compute_color 戻り値 `(R=255, G=0, B=0)` (= float 段階 clamp で int 負値 path 不到達)、(f) `poll_keypress` non-interactive mode (= isatty false) で 0 return、`make tests` で fail 確認
   - impl = `src/renderer.cpp` で `compute_color()` (= `§17` formula `R = std::clamp(1.0 - c2 - c3, 0.0, 1.0)` / `G = std::clamp(c2, 0.0, 1.0)` / `B = std::clamp(c3, 0.0, 1.0)` で float 段階 clamp + `static_cast<int>(R * 255)` 等で `0..255` 整数化、負値 float → int 変換の implementation-defined 回避) + `render_field()` (= 全 grid 走査 + `gcolor` + `grect` 呼出、描画域 400x400 を `ND=100` の 4x4 ピクセル整数倍 fill = `static_assert(DRAW_W % ND == 0)` 担保、wraparound 列追加描画は採用しない、Req 5 AC5 pass 条件 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間 visible gap なし)
-  - impl 追加 = `int init_drawing_buffer()` (= 内部で `wingxa.h::gwinsize(DRAW_W, DRAW_H)` → `ginit(0)` → `gsetorg(0, 0)` を `§14` (d)(e)(f) 順で呼出、3 関数すべて `void` return = wingxa.h SSoT 制約下で失敗検出 mechanism なし、本 wrapper は best-effort 実装で常に 0 return、Application 層の wingxa.h 直接依存禁止のみ責務 = Req 1 AC9 / Req 5 AC6 / 依存方向 Application → Visualization → wingxa.h 単一方向)
+  - impl 追加 = `int init_drawing_buffer()` (= 内部で wingxa API 呼出順 `gwinsize(DRAW_W, DRAW_H)` → `ginit(0)` → `gsetorg(0, 0)` の順で呼出 (= `§14` (e) 内部の 3 API 呼出順、`§14` 全体の (d)(e)(f) step 番号とは別)、3 関数すべて `void` return = wingxa.h SSoT 制約下で失敗検出 mechanism なし、本 wrapper は best-effort 実装で常に 0 return、Application 層の wingxa.h 直接依存禁止のみ責務 = Req 1 AC9 / Req 5 AC6 / 依存方向 Application → Visualization → wingxa.h 単一方向)
   - 注 = `return 7` Renderer init failure exit code は本 spec で採用しない (= wingxa.h `void` return 制約下で失敗検出 mechanism が SSoT 違反なしに実装不能、exit code 体系は `return 2-6` の 5 category)
   - impl 追加 = `int poll_keypress()` (= `isatty(STDIN_FILENO)` で stdin 非対話判定、非対話なら即 0 return、対話なら `wingxa.h::keypress()` 戻り値 return、`§15` 停止条件は本 wrapper 経由で安全吸収)
   - 観測条件: `make tests` で compute_color test 5 件 + poll_keypress test 1 件 pass、`render_field()` 自体は手動目視 (= task 5.3 完成後)
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 1.9_
-  - _Boundary: Renderer (layer: Visualization); allowed_outbound: wingxa.h::gcolor/grect/gsetorg/gwinsize/ginit/keypress (P0、init_drawing_buffer + poll_keypress wrapper 経由で隔離), <unistd.h> (isatty)_
+  - _Boundary: Renderer (layer: Visualization); allowed_outbound: wingxa.h::gcolor/grect/gsetorg/gwinsize/ginit/keypress (P0、init_drawing_buffer + poll_keypress wrapper 経由で隔離、`itoa` は本 spec scope で不使用 = req.md L114 9 関数 declare 済の中で本 spec は 8 関数のみ依存、BMP 名生成は `std::to_string` 等 C++ 標準で代替), <unistd.h> (isatty)_
 
 - [ ] 5.2 (P) BMP Writer 実装
-  - impl = `src/bmp_writer.cpp` で `int write_bmp_for_snapshot(snapshot_path, snapshot_index, bmp_path)` (= snapshot read → render_field → save_screen → 出力 path) + `int write_bmp_default_steps(snapshot_path, bmp_dir)` (= `§19` 17 step hardcode batch 出力 = `0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 30000, 40000, 50000, 60000, 70000, 80000`、step `N` の snapshot index = `N / data_interval`) + `int write_bmp_steps(snapshot_path, bmp_dir, bmp_interval, max_step)` (= 動的等差列 step 群 `{0, K, 2K, ...} ∩ {≤ max_step}` 生成、各 step → snapshot index = `step / data_interval` で seek、Req 4 AC5 param 変更時規則対応)
-  - 注 = `write_bmp_default_steps` は `§13` 既定 `data_interval = 2000` を内部 hardcode 前提 (= `§19` 17 step 列挙が既定 param 依存のため、param 変更時は `write_bmp_steps(snapshot, dir, K, N)` 経由で caller pfm_bmp_main が branch、Req 4 AC5)
+  - impl = `src/bmp_writer.cpp` で `int write_bmp_for_snapshot(snapshot_path, snapshot_index, bmp_path)` (= snapshot read → render_field → save_screen → 出力 path) + `int write_bmp_default_steps(snapshot_path, bmp_dir)` (= `§19` 17 step hardcode batch 出力 = `0, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 30000, 40000, 50000, 60000, 70000, 80000`、step `N` の snapshot index = `N / data_interval`、内部 hardcode `data_interval = 2000`) + `int write_bmp_steps(snapshot_path, bmp_dir, bmp_interval, max_step, data_interval)` (= 動的等差列 step 群 `{0, K, 2K, ...} ∩ {≤ max_step}` 生成、各 step → snapshot index = `step / data_interval` で seek、Req 4 AC5 param 変更時規則対応)
+  - 注 = `write_bmp_default_steps` は `§13` 既定 `data_interval = 2000` を内部 hardcode 前提 (= `§19` 17 step 列挙が既定 param 依存のため)、`write_bmp_steps` は caller (= pfm_bmp_main) から `--data-interval D` 引数値を渡す (= param 変更時規則対応、Req 4 AC5)
   - error path = read 失敗で `return 3` / parse 失敗で `return 4` / save_screen 失敗で `return 5`
   - error path 追加 = save_screen silent fail fallback (= save_screen 呼出後に `std::filesystem::exists(bmp_path)` + `std::filesystem::file_size(bmp_path) > 0` で indirect verify、verify 失敗で stderr diagnostic + non-zero return → main `return 5`)
   - error path 追加 = FILE* failure path (= `fopen(snapshot_path)` NULL なら `fclose` 呼ばず stderr diagnostic + non-zero return → main `return 3`、fopen 成功後は `fclose` 必ず呼出)
@@ -140,7 +142,7 @@
   - _Depends: 5.3_
 
 - [ ] 6.3 (P) pfm_bmp 実装
-  - impl = `src/pfm_bmp_main.cpp` で CLI parser (= snapshot file + 出力 dir + optional `--bmp-interval K` + `--max-step N`) + `Renderer::init_drawing_buffer()` (= Renderer wrapper) + branch: `--bmp-interval` 未指定なら `write_bmp_default_steps()` 呼出 (= `§19` 17 step hardcode)、指定なら `write_bmp_steps(snapshot, out_dir, K, N)` 呼出 (= 動的等差列、Req 4 AC5)
+  - impl = `src/pfm_bmp_main.cpp` で CLI parser (= snapshot file + 出力 dir + optional `--bmp-interval K` + `--max-step N` + `--data-interval D` (= `§13` 既定 `2000`)) + `Renderer::init_drawing_buffer()` (= Renderer wrapper) + branch: `--bmp-interval` 未指定なら `write_bmp_default_steps()` 呼出 (= `§19` 17 step hardcode)、指定なら `write_bmp_steps(snapshot, out_dir, K, N, D)` 呼出 (= 動的等差列、Req 4 AC5)
   - error path = BMP write 戻り値非 0 で適切な error code (= `return 3` / `return 5`) 伝播
   - 観測条件: `./pfm_bmp <snapshot> <out_dir>` 実行後、`out_dir` 内に `§19` 17 step 群 BMP 全 file 存在、exit 0、`./pfm_bmp <snapshot> <out_dir> --bmp-interval 5000 --max-step 50000` で `{0, 5000, ..., 50000}` 11 step BMP 出力
   - _Requirements: 4.5, 4.9, 6.4, 6.5, 6.6_
@@ -157,10 +159,10 @@
   - _Boundary: Makefile (layer: Build artifact); allowed_outbound: 全 layer source compile + libpfmcore.a + 3 executable link_
   - _Depends: 6.1, 6.2, 6.3_
 
-- [ ] 7.2 Integration test = pfm_sim 100 step run + 異常 path 2 case
-  - test = `tests/integration_pfm_sim.sh` 作成 = (主 case) `./pfm_sim --c2a 0.3 --c3a 0.3 --delt 0.005 --max-step 100 --data-interval 10 --bmp-interval 10 --output-dir test_output` 実行、exit 0、`test_output/snapshot.txt` 存在 + 行数 ≈ `(100/10 + 1) * (1 + ND*ND)` 程度、`test_output/*.bmp` 11 file 存在、log/c1/c2/c3 定義域逸脱なし (= debug build で assertion 検証)
-  - Adversarial test = (a) 病的 `delt = 0.5` (= CFL violation) で 100 step 実行 → step 途中で NaN/Inf 検出 → exit code 6 + stderr diagnostic に `[NUM_DIVERGENCE]` カテゴリ識別子 + step number + grid index `(i, j)` + 違反値 c2/c3/c1 + sub-case (= `NaN/Inf 検出`) 含有確認、(b) 病的 init `--c2a 0.000001 --c3a 0.999998` (= ほぼ境界) で 1 step 実行 → Concentration Clamp MAX_ITER 超過 trigger → exit code 6 + stderr に sub-case (= `clamp non-convergence after MAX_ITER=10`) 含有
-  - 観測条件: shell test runner で全 assertion pass (= 主 case + 異常 2 case)、各 exit code (0, 6, 6) 期待通り
+- [ ] 7.2 Integration test = pfm_sim 100 step run + 異常 path 1 case
+  - test = `tests/integration_pfm_sim.sh` 作成 = (主 case) `./pfm_sim --c2a 0.3 --c3a 0.3 --delt 0.005 --max-step 100 --data-interval 10 --bmp-interval 10 --output-dir test_output` 実行、exit 0、`test_output/snapshot.txt` 存在 + file size > 0 (= 空白/改行区切りで parse 可能なら pass、Req 4 AC2 緩い仕様)、`test_output/*.bmp` 11 file 存在、log/c1/c2/c3 定義域逸脱なし (= debug build で assertion 検証)
+  - Adversarial test = 病的 `delt = 0.5` (= CFL violation) で 100 step 実行 → step 途中で NaN/Inf 検出 → exit code 6 + stderr diagnostic に `[NUM_DIVERGENCE]` カテゴリ識別子 + step number + grid index `(i, j)` + 違反値 c2/c3/c1 + sub-case (= `NaN/Inf 検出`) 含有確認 (= MAX_ITER 超過 trigger 系 test は task 2.1 unit test (g) で網羅、integration では NaN/Inf path のみ検証)
+  - 観測条件: shell test runner で全 assertion pass (= 主 case + 異常 1 case)、各 exit code (0, 6) 期待通り
   - _Requirements: 1.1-1.10, 2.1-2.9, 3.1-3.9, 4.1-4.5, 5.1-5.6, 6.1-6.6, 7.2, 7.5_
   - _Boundary: pfm_sim integration (layer: Test artifact); allowed_outbound: pfm_sim binary execution_
   - _Depends: 7.1_
@@ -180,7 +182,7 @@
   - _Depends: 7.1_
 
 - [ ] 7.5 Acceptance test = §22 6 項目 final 検証 + Level 6 観測 record
-  - test = `tests/acceptance_22.sh` 作成 = (1) `make` build success、(2) `pfm_sim` 起動 + 初期 snapshot + 初期 BMP 出力、(3) `pfm_render` で snapshot file load 成功、(4) `pfm_bmp` で 17 step 群出力、(5) 100000 step run 中の `log(c1/c2/c3)` 定義域逸脱なし (= NaN/Inf 検出 grep)、(6) 平均組成保存 (= snapshot 平均算出値が input ± `CLAMP_EPS * ND * ND` 程度、Req 3 AC9 規範下の bounded 範囲) 以内 + 全 grid で `§10` 4 制約満足
+  - test = `tests/acceptance_22.sh` 作成 = (1) `make` build success、(2) `pfm_sim` 起動 + 初期 snapshot + 初期 BMP 出力、(3) `pfm_render` で snapshot file load 成功、(4) `pfm_bmp` で 17 step 群出力、(5) 100000 step run 中の `log(c1/c2/c3)` 定義域逸脱なし (= NaN/Inf 検出 grep)、(6) 平均組成保存 (= snapshot 平均算出値が input ± `2 * CLAMP_EPS * ND * ND` 程度、Req 3 AC9 規範下の bounded 範囲、unit test 閾値と統一) 以内 + 全 grid で `§10` 4 制約満足
   - 観測条件: 6 項目全 pass + 結果を Rwiki-dev/.kiro/methodology/v4-validation/sample_3_7_6_1/dev_log.jsonl + rework_log.jsonl に sub_group_key=phase_field_reverse_cpp で append (= Step (3.3) Level 6 観測 trigger)
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
   - _Boundary: acceptance integration (layer: Test artifact), methodology log (cross-spec writing); allowed_outbound: 3 binary execution + dev_log.jsonl/rework_log.jsonl append (= Rwiki-dev/.kiro/ への cross-spec write)_
