@@ -76,7 +76,7 @@
     "integration_scripts": 3,
     "forced_rework_events": 2,
     "acceptance_criteria_pass": "8/8",
-    "l6_rework_log": "sample_3_7_6_1/rework_log.jsonl"
+    "l6_rework_log": "samples/a3/3_7_6_1_phase_field_cpp/rework_log.jsonl"
   },
   "notes": "逐語的 per-finding L1 raw data (miss_type / difference_type / trigger_state) は dual-reviewer-log-8.md sessions 51-55 に自然言語記述あり、JSONL 化は別作業"
 }
