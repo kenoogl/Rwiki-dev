@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spec_characteristic.schema.json",
+  "type": "object",
+  "required": [
+    "spec_id", "spec_source", "language", "domain",
+    "source_artifact", "drafting_sessions",
+    "requirements_md", "design_md", "tasks_md",
+    "v4_review_summary"
+  ],
+  "properties": {
+    "spec_id": {"type": "string"},
+    "spec_source": {"type": "string", "enum": ["forward-fresh", "reverse-engineered"]},
+    "language": {"type": "string"},
+    "domain": {"type": "string"},
+    "sub_domain": {"type": "string"},
+    "source_artifact": {"type": "string"},
+    "drafting_sessions": {"type": "string"},
+    "requirements_md": {
+      "type": "object",
+      "required": ["line_count", "requirement_count", "acceptance_criteria_count"],
+      "properties": {
+        "line_count": {"type": "integer", "minimum": 0},
+        "requirement_count": {"type": "integer", "minimum": 0},
+        "acceptance_criteria_count": {"type": "integer", "minimum": 0},
+        "boundary_context_lines": {"type": "integer", "minimum": 0}
+      }
+    },
+    "design_md": {
+      "type": "object",
+      "required": ["line_count", "v4_review_rounds"],
+      "properties": {
+        "line_count": {"type": "integer", "minimum": 0},
+        "section_count_h3": {"type": "integer", "minimum": 0},
+        "architecture_alternatives_evaluated": {"type": "integer", "minimum": 0},
+        "cascade_from_req_fixes": {"type": "integer", "minimum": 0},
+        "v4_review_rounds": {"type": "integer", "minimum": 0},
+        "total_fixes_incl_cascade": {"type": "integer", "minimum": 0}
+      }
+    },
+    "tasks_md": {
+      "type": "object",
+      "required": ["line_count", "task_count", "v4_review_rounds"],
+      "properties": {
+        "line_count": {"type": "integer", "minimum": 0},
+        "task_count": {"type": "integer", "minimum": 0},
+        "cascade_from_design_fixes": {"type": "integer", "minimum": 0},
+        "v4_review_rounds": {"type": "integer", "minimum": 0},
+        "total_fixes_incl_cascade": {"type": "integer", "minimum": 0}
+      }
+    },
+    "v4_review_summary": {
+      "type": "object",
+      "required": ["phases_reviewed", "total_rounds"],
+      "properties": {
+        "phases_reviewed": {"type": "array", "items": {"type": "string", "enum": ["req", "design", "tasks", "implementation"]}},
+        "rounds_per_phase": {"type": "integer", "minimum": 1},
+        "total_rounds": {"type": "integer", "minimum": 1}
+      }
+    },
+    "impl_outcome": {
+      "type": "object",
+      "properties": {
+        "task_count": {"type": "integer", "minimum": 0},
+        "unit_tests": {"type": "integer", "minimum": 0},
+        "integration_scripts": {"type": "integer", "minimum": 0},
+        "forced_rework_events": {"type": "integer", "minimum": 0},
+        "acceptance_criteria_pass": {"type": "string"},
+        "l6_rework_log": {"type": "string"}
+      }
+    },
+    "notes": {"type": "string"}
+  }
+}

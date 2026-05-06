@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "no_rework_record.schema.json",
+  "type": "object",
+  "required": [
+    "spec_id", "spec_source", "language", "phase",
+    "session_range", "rework_count",
+    "observation_period_complete", "evidence_basis", "timestamp"
+  ],
+  "properties": {
+    "spec_id": {"type": "string"},
+    "spec_source": {"type": "string", "enum": ["forward-fresh", "reverse-engineered"]},
+    "language": {"type": "string"},
+    "phase": {"type": "string", "enum": ["req", "design", "tasks", "implementation"]},
+    "session_range": {"type": "string"},
+    "rework_count": {"type": "integer", "const": 0},
+    "observation_period_complete": {"type": "boolean", "const": true},
+    "evidence_basis": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"}
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rework_event.schema.json",
+  "type": "object",
+  "required": ["session_id", "sub_group_key", "timestamp", "reworks"],
+  "properties": {
+    "session_id": {"type": "string"},
+    "sub_group_key": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "reworks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "task_id", "type", "description", "cause",
+          "severity", "root_cause", "discovered_phase_detail", "propagation"
+        ],
+        "properties": {
+          "task_id": {"type": "string"},
+          "type": {"type": "string"},
+          "description": {"type": "string"},
+          "file": {"type": "string"},
+          "files": {"type": "array", "items": {"type": "string"}},
+          "cause": {"type": "string"},
+          "severity": {"type": "string", "enum": ["CRITICAL", "ERROR", "WARN", "INFO"]},
+          "root_cause": {"type": "string", "enum": ["spec_gap", "boundary_violation", "implementation_drift", "external_constraint", "spec_ambiguity", "test_oversight"]},
+          "discovered_phase_detail": {"type": "string", "enum": ["impl_unit_test", "impl_integration_test", "impl_acceptance_test", "impl_compile_error", "impl_runtime_error", "impl_review", "design_review", "req_review"]},
+          "propagation": {"type": "string", "enum": ["isolated", "single_file", "multi_file", "cross_module", "cross_layer"]}
+        }
+      }
+    }
+  }
+}

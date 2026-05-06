@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "l1_finding.schema.json",
+  "type": "object",
+  "required": [
+    "spec_id", "spec_source", "language", "phase",
+    "round_index", "round_topic", "finding_id", "source",
+    "judgment_label", "finding_summary",
+    "miss_type", "difference_type", "trigger_state"
+  ],
+  "properties": {
+    "spec_id": {"type": "string"},
+    "spec_source": {"type": "string", "enum": ["forward-fresh", "reverse-engineered"]},
+    "language": {"type": "string"},
+    "phase": {"type": "string", "enum": ["req", "design", "tasks", "implementation"]},
+    "round_index": {"type": "integer", "minimum": 1},
+    "round_topic": {"type": "string"},
+    "finding_id": {"type": "string"},
+    "source": {"type": "string", "enum": ["primary", "adversarial", "judgment"]},
+    "judgment_label": {"type": "string", "enum": ["must_fix", "should_fix", "do_not_fix"]},
+    "finding_summary": {"type": "string"},
+    "miss_type": {"type": "string", "enum": ["implicit_assumption", "boundary_leakage", "spec_implementation_gap", "failure_mode_missing", "security_oversight", "consistency_overconfidence"]},
+    "difference_type": {"type": "string", "enum": ["assumption_shift", "perspective_divergence", "constraint_activation", "scope_expansion", "adversarial_trigger", "reasoning_depth"]},
+    "trigger_state": {
+      "type": "object",
+      "required": ["negative_check", "escalate_check", "alternative_considered"],
+      "properties": {
+        "negative_check": {"type": "string", "enum": ["applied", "skipped"]},
+        "escalate_check": {"type": "string", "enum": ["applied", "skipped"]},
+        "alternative_considered": {"type": "string", "enum": ["applied", "skipped"]}
+      }
+    }
+  }
+}

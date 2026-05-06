@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paired_comparison.schema.json",
+  "type": "object",
+  "required": [
+    "comparison_id", "timestamp",
+    "treatment_with", "treatment_without",
+    "metrics_compared", "conclusion"
+  ],
+  "properties": {
+    "comparison_id": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "treatment_with": {
+      "type": "object",
+      "required": ["spec_id", "spec_source", "language", "review_protocol"],
+      "properties": {
+        "spec_id": {"type": "string"},
+        "spec_source": {"type": "string", "enum": ["forward-fresh", "reverse-engineered"]},
+        "language": {"type": "string"},
+        "review_protocol": {"type": "string", "enum": ["v4_dual_reviewer", "single_review", "v3_baseline"]}
+      }
+    },
+    "treatment_without": {
+      "type": "object",
+      "required": ["spec_id", "spec_source", "language", "review_protocol"],
+      "properties": {
+        "spec_id": {"type": "string"},
+        "spec_source": {"type": "string", "enum": ["forward-fresh", "reverse-engineered"]},
+        "language": {"type": "string"},
+        "review_protocol": {"type": "string", "enum": ["no_review", "v3_baseline", "single_review"]}
+      }
+    },
+    "metrics_compared": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["metric_name", "with_value", "without_value", "direction"],
+        "properties": {
+          "metric_name": {"type": "string"},
+          "with_value": {"type": ["number", "string", "null"]},
+          "without_value": {"type": ["number", "string", "null"]},
+          "direction": {"type": "string", "enum": ["improvement", "degradation", "equivalent", "incomparable"]},
+          "delta": {"type": ["number", "null"]},
+          "delta_pct": {"type": ["number", "null"]}
+        }
+      }
+    },
+    "conclusion": {"type": "string"},
+    "caveats": {"type": "array", "items": {"type": "string"}}
+  }
+}

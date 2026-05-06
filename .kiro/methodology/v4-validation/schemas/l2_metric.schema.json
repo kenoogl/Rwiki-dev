@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "l2_metric.schema.json",
+  "type": "object",
+  "required": [
+    "spec_id", "spec_source", "language", "treatment",
+    "phase", "round_index", "round_topic",
+    "merged_findings", "must_fix", "should_fix", "do_not_fix",
+    "escalate", "fixes_applied", "override_count", "disagreement_count",
+    "source_session", "source_log"
+  ],
+  "properties": {
+    "spec_id": {"type": "string"},
+    "spec_source": {"type": "string", "enum": ["forward-fresh", "reverse-engineered"]},
+    "language": {"type": "string"},
+    "treatment": {"type": "string", "enum": ["v3_baseline", "dual_review_v4", "single_review", "dual_review_no_judgment"]},
+    "phase": {"type": "string", "enum": ["req", "design", "tasks", "implementation"]},
+    "round_index": {"type": "integer", "minimum": 1},
+    "round_topic": {"type": "string"},
+    "merged_findings": {"type": "integer", "minimum": 0},
+    "must_fix": {"type": "integer", "minimum": 0},
+    "should_fix": {"type": "integer", "minimum": 0},
+    "do_not_fix": {"type": "integer", "minimum": 0},
+    "escalate": {"type": "integer", "minimum": 0},
+    "fixes_applied": {"type": "integer", "minimum": 0},
+    "override_count": {"type": "integer", "minimum": 0},
+    "disagreement_count": {"type": "integer", "minimum": 0},
+    "forced_div_count": {"type": ["integer", "null"], "minimum": 0},
+    "forced_div_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "source_session": {"type": "integer"},
+    "source_log": {"type": "string"}
+  }
+}
