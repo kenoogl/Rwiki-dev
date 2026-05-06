@@ -8,14 +8,14 @@
 
 ## 1. Foundation — プロジェクト基盤と build 基盤
 
-- [ ] 1.1 プロジェクトディレクトリ初期化
+- [x] 1.1 プロジェクトディレクトリ初期化
   - `DR-pfm/` 直下に `include/`, `src/`, `tests/`, `output/` の 4 dir を作成
   - 既存 `spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch せず保持
   - `DR-pfm/` 直下で `git init` (= local only、Rwiki-dev/ git とは独立)
   - 観測条件: `ls DR-pfm/` で `include/`, `src/`, `tests/`, `output/`, `spec_seed/`, `.git/` の 6 entry 確認できる
   - _Boundary: project skeleton (layer: Build artifact); allowed_outbound: filesystem 操作のみ_
 
-- [ ] 1.2 Field 型 + 共通定数 header
+- [x] 1.2 Field 型 + 共通定数 header
   - `field_types.h` で `namespace pfm` + `inline constexpr int ND = 100` + `using Field = double[ND][ND]` 定義
   - `concentration_clamp.h` で `inline constexpr double CLAMP_EPS = 1.0e-6` 定義
   - `renderer.h` で `inline constexpr int DRAW_W = 400` + `inline constexpr int DRAW_H = 400` 定義
@@ -23,7 +23,7 @@
   - _Requirements: 2.3, 2.5, 2.6, 2.9_
   - _Boundary: header types (layer: Core); allowed_outbound: 標準 library のみ_
 
-- [ ] 1.3 Makefile + test runner + wingxa stub
+- [x] 1.3 Makefile + test runner + wingxa stub
   - `Makefile` に C++17 flag、`libpfmcore.a` target、`tests` target、3 executable target (= placeholder rules) を定義
   - test runner = 軽量 main() ベース (= TDD 準拠、外部 framework 不要)、`-UNDEBUG` flag 強制 (= debug / release 両 build で `assert` 有効化、`NDEBUG` no-op 回避)、各 test を `void test_xxx()` 関数化、main() で list 呼出、fail 時 `std::cerr << "FAIL: " << #fn << " at " << __FILE__ << ":" << __LINE__` 出力後 `std::exit(1)`
   - test runner 規約 = 同一 .cpp file 内の sequential test (= 例 task 4.1 + 4.2 が共有する `tests/test_snapshot_io.cpp`) は 4.1 が main を持ち、4.2 以降は test 関数追加のみで main 重複定義禁止 (= ODR 違反 link error 防止)
@@ -37,7 +37,7 @@
 
 ## 2. Core Library — Concentration Clamp + Mean Composition Corrector
 
-- [ ] 2.1 (P) Concentration Clamp 実装
+- [x] 2.1 (P) Concentration Clamp 実装
   - test first = `tests/test_concentration_clamp.cpp` 作成 = (a) `c2 = 0` → `eps` (= `std::abs(actual - 1.0e-6) < 1e-15` で literal 値 round-trip 検証)、(b) `c2 = 1` → `1 - eps` (= 同 tolerance)、(c) `c3` 同様、(d) `c2 + c3 = 1.5` → 同比例縮小で `c2 + c3 ≤ 1 - 2*eps + 1e-15` (= 浮動小数点 buffer 含む)、(e) idempotency (= 2 連続呼出で全 grid `==` 完全一致)、(f) AC8 後 AC4-7 再違反 case (= 比例縮小で `c2 + c3 = 1 - 2*eps` strict 下回り) で再 iter 後収束、(g) MAX_ITER 超過 case (= 病的入力 `c2 = eps/2`, `c3 = 1 - eps/2` 等) で last-resort 適用 + non-zero return + stderr に "clamp non-convergence after MAX_ITER=10" 文字列 + step 値 ("init" or step 数値) + grid index (i,j) + 違反値 c2/c3/c1 含有 grep 確認、`make tests` で fail 確認
   - impl = `src/concentration_clamp.cpp` で `int clamp_concentrations(Field&, Field&, int step = -1)` 実装、step は MAX_ITER 超過時 stderr diagnostic 用 caller context (= Numerical Engine は実 step 渡し、Initial Field Builder は -1 渡し = 初期化時を示す sentinel)、全 grid に `§10` AC4-AC8 統合適用 loop (= MAX_ITER=10 上限) + last-resort sum constraint enforcing 比例縮小、超過時 stderr diagnostic (= step (= -1 なら "init" 表示) / 該当 grid index / 違反値 c2/c3/c1 / "clamp non-convergence after MAX_ITER=10") + non-zero return → caller `time_step` non-zero return → main `return 6`
   - 注 = `MAX_ITER=10` は req `## Boundary Context` out-of-scope「反復制御の書き方」に対する design L368 上書き規範 (= 病的入力 fail-safe 確保のため本 spec で具体値固定)
@@ -45,7 +45,7 @@
   - _Requirements: 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
   - _Boundary: Concentration Clamp (layer: Core); allowed_outbound: <cstdio> (stderr diagnostic on MAX_ITER overflow only、pure 補正本体は外部依存なし)_
 
-- [ ] 2.2 Mean Composition Corrector 実装
+- [x] 2.2 Mean Composition Corrector 実装
   - test first = `tests/test_mean_correction.cpp` 作成 = (a) 平均偏差 `0.01` 与え補正後の平均 - target が `< 2 * CLAMP_EPS * ND * ND = 2.0e-2` 以内 (= 本 spec 内 unit test + acceptance test 統一閾値、Req 3 AC9 priority note bounded 範囲の実装規範化)、(b) 補正後 4 濃度制約満足 (= 各 grid で `c2 > 0`, `c3 > 0`, `c2 + c3 < 1` を `>= CLAMP_EPS` 余裕付きで assert)、(c) 内部 Clamp non-convergence 注入 case (= 病的入力で内部 `clamp_concentrations` MAX_ITER 超過) で `correct_mean_composition()` non-zero return 確認、`make tests` で fail 確認
   - impl = `src/mean_correction.cpp` で `int correct_mean_composition(Field&, Field&, double c2a, double c3a)` (= 0 success / non-zero on internal clamp non-convergence) 実装、`§12` 4 step (= avg → delta → 一様減算 → 再 clamp)、内部 `clamp_concentrations()` 戻り値非 0 で本関数も非 0 return → caller (= Numerical Engine step (6)) non-zero return → time_step non-zero return → main `return 6`
   - 観測条件: `make tests` で 3 test pass + 補正後の Field 平均が target 値に収束 + 内部 Clamp 失敗 propagation 確認
@@ -55,7 +55,7 @@
 
 ## 3. Core Library — Initial Field + Numerical Engine
 
-- [ ] 3.1 Initial Field Builder 実装
+- [x] 3.1 Initial Field Builder 実装
   - test first = `tests/test_initial_field.cpp` 作成 = (a) 同 seed (= `seed = 42`) で 2 回呼出し結果 `Field` 全 grid `==` 完全一致 (= deterministic RNG = bit-exact、tolerance 不要)、(b) 平均が `c2a - fluct_amp <= avg_c2 <= c2a + fluct_amp + 1e-12` (= 浮動小数点 naive sum 誤差 buffer)、(b') 病的 c2a 入力 case (= `c2a = 0.005, c3a = 0.005, fluct_amp = 0.01` の初期 clamp 多発条件) で `build_initial_field` 呼出後、本関数 0 return (= clamp 非 non-convergence)、ただし initial field の実際平均 `avg_c2` が `c2a = 0.005` から bounded deviation で乖離していることを assert (= 初期 clamp が field 変更した事実を test layer に記録、Mean Composition Corrector が time step 1 で補正する前提条件、Req 3 AC2 Note 整合)、(c) 4 濃度制約満足 (= `>= CLAMP_EPS` 余裕付き assert)、`make tests` で fail 確認
   - impl = `src/initial_field.cpp` で `int build_initial_field(c2, c3, c2a, c3a, fluct_amp, seed)` (= 0 success / non-zero on internal clamp non-convergence) 実装、`std::mt19937` + uniform `[-fluct_amp, +fluct_amp]` ゆらぎ追加 + 終端で `clamp_concentrations()` 呼出 (= `§10` 4 timing の「初期化時」、戻り値 non-zero で本関数も非 0 return → caller `pfm_sim_main` で `return 6` 伝播)
   - 注 = `fluct_amp` は caller (= Simulation Module) が `§9` 既定値 `0.01` を渡す前提、本 builder 自身は default 値固定しない (= Req 3 AC1 / design L688 SSoT 規約)
@@ -65,7 +65,7 @@
   - _Boundary: Initial Field Builder (layer: Core); allowed_outbound: Concentration Clamp (終端 clamp), std::mt19937 (RNG)_
   - _Depends: 2.1_
 
-- [ ] 3.2 Numerical Engine 実装
+- [x] 3.2 Numerical Engine 実装
   - test first = `tests/test_numerical_engine.cpp` 作成 = (a) `compute_potentials` で 4 grid 単純例 (= `c2 = c3 = 0.3` uniform field、Laplacian = 0) の `μ2_chem` / `μ3_chem` が `tests/precompute_reference.py` で算出した anchor 値と一致 (= tolerance `1e-12`、Python script は `§6` 数式 + `§8` 13 定数を full precision で代入し `print(repr(value))` で test source 埋込、test source 冒頭 comment に `// reference computed by tests/precompute_reference.py @ commit XXX` 明記)、(b) `laplacian` で周期境界 case (= grid 端点 `(0, 0)`, `(ND-1, ND-1)`) の値が手計算と tolerance `1e-12` で一致、(c) 1 step `time_step` 結果が 4 grid 単純例で reference 一致 (= 同 tolerance)、(d) NaN/Inf 注入 case (= 病的 delt or 異常初期値で step (4) で c2_new に nan 注入する fixture 経由) で `time_step` non-zero return + stderr 1 行に `[NUM_DIVERGENCE]` 識別子 + `step_num` 数値 + grid index `(i,j)` tuple + 違反値 c2/c3/c1 浮動小数点 + sub-case "NaN/Inf detected" 文字列 の 5 項目すべて grep 検証 (= design L882 normative)、(e) step (0) entry-clamp 順序検証 (= 入力 c2/c3 が制約逸脱でも step (0) 後に正常範囲)、`make tests` で fail 確認
   - impl = `src/numerical_engine.cpp` で `compute_potentials()` (= `§6` 化学ポテンシャル + 勾配エネルギー)、`laplacian()` (= 5 点差分 + 周期境界 `(i ± 1 + ND) % ND`)、`int time_step(Field& c2, Field& c3, double c2a, double c3a, double delt, int step_num = -1)` (= 0 success / 1 NaN/Inf or clamp non-convergence、`step_num` は caller pfm_sim main から累積 step 値渡し = NaN/Inf 検出時 stderr diagnostic に出力、`§11` 7 step + step (0) entry-clamp 順厳守 = step (0) Concentration Clamp pre-potential / step (1) μ 計算 / step (2) lap(μ) / step (3) dc/dt / step (4) temp 配列更新 / step (5) Clamp / step (6) Mean Correction (内部 Clamp、戻り値 non-zero で time_step non-zero return 伝播 → main return 6) / step (7) post-correction Clamp、計 1 time step に Clamp 3 + Mean Correction 1 invoke = 階層委譲: Numerical Engine → Mean Composition Corrector → Concentration Clamp)
   - impl 追加 = step (4) → step (5) 間で c2_new/c3_new に対し `std::isnan` / `std::isinf` check、検出時 stderr diagnostic (= step / grid index (i,j) / 違反値 c2/c3/c1) 出力 + non-zero return → caller `pfm_sim_main` で `return 6` (Numerical divergence)
@@ -78,7 +78,7 @@
 
 ## 4. I/O Library — Snapshot Writer + Reader
 
-- [ ] 4.1 (P) Snapshot Writer 実装
+- [x] 4.1 (P) Snapshot Writer 実装
   - test runner structure = `tests/test_snapshot_io.cpp` 内 1 個の `main()` で write tests + read tests を sequential 呼出、4.1 では write 関数 + main 骨格 (= write tests のみ呼出)、4.2 では read 関数追加 + main から read 呼出 (= main 二重定義回避、link error 防止)
   - test first = `tests/test_snapshot_io.cpp` の write 部 = (a) `time1 = 0.0` + 既知 `c2/c3` Field を Overwrite mode で write、出力 file が `§16` 形式 (= `time1` + `ND*ND` 個の `(c2, c3)` ペア、空白/改行区切り) を満たす、(b) Append mode で 2 snapshot 連続書出後 file size が 2 倍程度、(c) round-trip test = `time1 = 0.5`, `c2 = 0.25`, `c3 = 0.125` (= dyadic fraction = exact IEEE 754 representable) で write → read 後 `std::memcmp(&original, &readback, sizeof(double)) == 0` で bit-exact 一致 (= `%.17g` IEEE 754 round-trip 仕様検証、test 環境 = `g++ -std=c++17` glibc / libstdc++ 前提)、(d) write 中 I/O error mock = `fopen` success 後の最初の `fprintf` を mock 戻り値 -1 にする fixture (= LD_PRELOAD or wrapper 経由の writer mock) で `fprintf` 失敗注入、本関数 non-zero return + `std::filesystem::exists(path)` false (= partial file 削除済) + stderr に `[FS]` 識別子 + path + errno 含有確認、(e) `fclose` 失敗 mock = `fclose` を EOF return に差替えた fixture で同 contract 検証、`make tests` で fail 確認
   - impl = `src/snapshot_io.cpp` で `int write_snapshot(path, time1, c2, c3, mode)` (= 0 success / non-zero on I/O error) 実装、`enum class WriteMode { OverwriteOrCreate, Append }` を引数で受け、Overwrite/Append で `fopen` の mode `"w"` / `"a"` 切替、`fprintf("%.17g", ...)` で IEEE 754 double round-trip safe (= `%.15g` では一部値で誤差残存 + read 側 `fscanf("%lf")` との対称性で round-trip 完全復元保証)
@@ -88,7 +88,7 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
   - _Boundary: Snapshot Writer (layer: I/O); allowed_outbound: <cstdio> (fopen/fprintf/fclose), <filesystem> (remove on partial)_
 
-- [ ] 4.2 (P) Snapshot Reader 実装
+- [x] 4.2 (P) Snapshot Reader 実装
   - test first = `tests/test_snapshot_io.cpp` の read 部 = (a) 4.1 で書いた 3-snapshot file を `read_snapshot()` で順次 read、各 snapshot の `time1, c2, c3` が write 時と完全一致、(b) `seek_snapshot(2)` で index 2 取得、(c) 不正形式 file (= 値欠損 / 非数値混入) で non-zero return + stderr に `[SNAPSHOT_PARSE]` 識別子 + 行番号 + 期待 token 種別 含有確認 (= design L880 normative)、`make tests` で fail 確認
   - impl = `src/snapshot_io.cpp` で `int read_snapshot(FILE*, time1, c2, c3)` / `int seek_snapshot(FILE*, snapshot_index, time1, c2, c3)` 実装、`fscanf("%lf", ...)` の戻り値 check で error 検出
   - 責務分担 = `fopen` は caller (= Re-render Function / BMP Writer) 担当、Snapshot Reader は `FILE*` を引数で受け read 段階の I/O / parse error のみ責務 (= Req 6 AC4 file open 失敗は caller、Req 6 AC5 parse error は本 component)
@@ -100,7 +100,7 @@
 
 ## 5. Visualization Library — Renderer + BMP Writer + Re-render
 
-- [ ] 5.1 Renderer 実装
+- [x] 5.1 Renderer 実装
   - test first = `tests/test_renderer.cpp` 作成 = `compute_color(c2, c3)` を pure 関数として抽出、(a) `c2 = c3 = 0` → `(R, G, B) = (255, 0, 0)`、(b) `c2 = 1, c3 = 0` → `(0, 255, 0)`、(c) `c2 = c3 = 0.5` → `(0, 127, 127)` (= `static_cast<int>(0.5 * 255) = 127` truncation 結果)、(d) `c2 + c3 > 1` overflow case で `[0, 255]` clamp、(e) 負値 float → int 変換境界 = `c2 = -0.001`, `c3 = -0.001` で compute_color 戻り値 `(R=255, G=0, B=0)` (= float 段階 clamp で int 負値 path 不到達)、(f) `poll_keypress()` の non-interactive mode 動作 (= CI 環境前提、`isatty(STDIN_FILENO)` false で 0 return、interactive mode = 端末で `wingxa.h::keypress()` wrapper 経由動作は手動確認)、(g) `init_drawing_buffer()` の wingxa API 呼出順検証 = `tests/fixtures/mock_wingxa_record.cpp` (= 各 wingxa API 呼出を順次 vector に push する recording mock) を test 専用 LDFLAGS で link、`init_drawing_buffer()` 呼出後の record vector が `[gwinsize(400,400), ginit(0), gsetorg(0,0)]` の 3 entry 厳密一致、(h) `render_field()` 全 grid 描画完了検証 = recording mock を render_field にも適用、`render_field(c2_uniform, c3_uniform)` 呼出後 mock の `gcolor` 呼出回数 = `grect` 呼出回数 = `ND * ND` = 10000 確認 (= for loop 早期 return バグ検出、production wingxa での void return silent fail に対する代替 observability)、`make tests` で fail 確認
   - impl = `src/renderer.cpp` で `compute_color()` (= `§17` formula `R = std::clamp(1.0 - c2 - c3, 0.0, 1.0)` / `G = std::clamp(c2, 0.0, 1.0)` / `B = std::clamp(c3, 0.0, 1.0)` で float 段階 clamp + `static_cast<int>(R * 255)` 等で `0..255` 整数化、負値 float → int 変換の implementation-defined 回避) + `render_field()` (= 全 grid 走査 + `gcolor` + `grect` 呼出、描画域 400x400 を `ND=100` の 4x4 ピクセル整数倍 fill = `static_assert(DRAW_W % ND == 0)` 担保、wraparound 列追加描画は採用しない、Req 5 AC5 pass 条件 = 全格子点 (`0 ≤ i, j ≤ ND - 1`) 描画 + 隣接格子間 visible gap なし)
   - impl 追加 = `int init_drawing_buffer()` (= 内部で wingxa API 呼出順 `gwinsize(DRAW_W, DRAW_H)` → `ginit(0)` → `gsetorg(0, 0)` の順で呼出 (= `§14` (e) 内部の 3 API 呼出順、`§14` 全体の (d)(e)(f) step 番号とは別)、3 関数すべて `void` return = wingxa.h SSoT 制約下で失敗検出 mechanism なし、本 wrapper は best-effort 実装で常に 0 return、Application 層の wingxa.h 直接依存禁止のみ責務 = Req 1 AC9 / Req 5 AC6 / 依存方向 Application → Visualization → wingxa.h 単一方向)
