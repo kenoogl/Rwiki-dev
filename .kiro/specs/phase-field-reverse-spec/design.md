@@ -256,10 +256,12 @@ double laplacian(const Field& a, int i, int j);
 // 1 time step = step (0) entry-clamp + §11 7 step 順実行 (Req 2.7-2.8)
 // returns 0 on success, non-zero (= 1) on Numerical divergence / clamp non-convergence
 // (= caller pfm_sim_main で return 6 で main exit、Req 7 AC5 / Req 6 AC1-6 と整合)
+// step_num = caller pfm_sim_main から累積 step 値渡し (= NaN/Inf 検出時 stderr diagnostic に出力、test (d) で 5 項目 grep 検証)
 int time_step(
     Field& c2, Field& c3,
     double c2a, double c3a,
-    double delt
+    double delt,
+    int step_num = -1
 );
 
 }  // namespace pfm
@@ -770,7 +772,7 @@ sequenceDiagram
     BMP->>Renderer: render_field(c2, c3)
 
     loop time step
-        Main->>Engine: time_step(c2, c3, c2a, c3a, delt)
+        Main->>Engine: time_step(c2, c3, c2a, c3a, delt, step_num=current_step)
         Engine->>Clamp: step (0) clamp_concentrations(c2, c3) [pre-potential]
         Clamp-->>Engine: int return (= non-zero で time_step non-zero 伝播)
         Note over Engine: step (1): compute mu2, mu3
