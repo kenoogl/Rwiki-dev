@@ -753,13 +753,21 @@ A-3 batch = 軸 4-7 (= multi-indicator convergence + ground truth + forward-reve
 
 reverse-engineering 方式 (= 既存コード → spec → re-impl) で 3 sample 取得。§5.5.1 §3.7.1 forward-fresh-spec との sub-group 比較が paper rigor の core defense。
 
-- **§5.5.6.1 Phase field 法 (compact、Julia or C++)**:
+- **§5.5.6.1 Phase field 法 (compact、C++) — ✅ 完了 2026-05-06 (session 56)**:
   - reverse-engineering feasibility 検証 sample (= A-3 batch 着手順序最先行)
-  - 既存 Phase field コード → reverse engineering で spec 起草 → V4 適用 → re-impl + behavior 差分検証
+  - 既存 Phase field コード (DR-pfm / wingxa 3成分 Cahn-Hilliard) → reverse engineering で spec 起草 → V4 適用 → re-impl + behavior 差分検証
   - **re-impl phase 中の Level 6 rework events 観測** (v0.9 新設、Claim D primary evidence の主要 source、`spec_id="phase-field"` + `discovered_phase="impl-mid"` 付与、A-1 vs §3.7.6 sub-group 比較 base)
   - per-finding raw data + per-system metrics + spec characteristic descriptive metric (= 全 sample 共通)
   - explicit label = `spec_source: reverse-engineered`、cost 6-10h + Level 6 観測 overhead 0-3h
   - 配置 path = `.kiro/methodology/v4-validation/a3_batch/code_derived/phase_field/`
+  - **完了サマリ (session 56 / 2026-05-06)**:
+    - spec: phase-field-reverse-spec (sessions 50-55)、V4 req+design review 完走
+    - impl: C++17 clean-room re-impl、22 tasks / 13 unit tests / 3 integration scripts
+    - forced_rework = 2 件: (1) time_step divergence return 1→6 / (2) wingxa boundary violation (Application layer → Renderer/BMPWriter wrapper 追加)
+    - acceptance 8/8 pass: make build / pfm_sim smoke / pfm_render / pfm_bmp 17files / 100k step no-divergence / c2 mean=0.30±2e-5 / c3 mean=0.30±2e-5 / constraint_violations=0
+    - real BMP output confirmed: wingxa_sw.cpp software renderer で step 0 R:96-107 (uniform) → step 80000 R:13-226 (phase-separated) 実出力確認
+    - Level 6 records: `sample_3_7_6_1/dev_log.jsonl` + `sample_3_7_6_1/rework_log.jsonl` append 完了
+    - impl_log: `.dual-reviewer/impl_log.jsonl` 17 entries (task 1.1–7.5)
 - **§5.5.6.2 3D 熱伝導方程式 + 複雑モデル生成 (Julia or C++)**:
   - real-world numerical project rich 化 (= mesh / boundary condition / I/O 含む)
   - **re-impl phase 中の Level 6 rework events 観測** (v0.9 新設、`spec_id="heat-equation-3d"` 付与)
