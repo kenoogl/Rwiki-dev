@@ -137,7 +137,7 @@
 
 ## 6. Application — 3 Executables
 
-- [ ] 6.1a pfm_sim CLI parser + 値域 check (Simulation Module 第 1 段) [推定 2h]
+- [x] 6.1a pfm_sim CLI parser + 値域 check (Simulation Module 第 1 段) [推定 2h]
   - test first = `tests/test_pfm_sim_cli.cpp` 作成 = (a) 正常系 `--c2a 0.3 --c3a 0.3 --delt 0.005` で parse 成功 + parameter struct 値域内、(b) `--c2a -0.1` で exit code 2 + stderr `[CLI]` 識別子 + 違反引数名 + 違反値、(c) `--c2a 0.6 --c3a 0.5` (= `c2a + c3a >= 1`) で exit code 2、(d) `--delt 0` で exit code 2、(e) 必須 `--delt` 欠落で exit code 2、(f) 数値変換失敗 (= `--c2a abc`) で exit code 2、`make tests` で fail 確認
   - impl = `src/pfm_sim_cli.cpp` で `int parse_cli(int argc, char** argv, SimParams& out)` (= 0 success / 2 不正引数 + stderr diagnostic) 実装、CLI = `--c2a / --c3a / --delt` 必須 (= SSoT `§13` 「平均組成 `c2`」「平均組成 `c3`」の正規名、`§9`/`§12` 命名統一)、`--max-step / --data-interval / --bmp-interval / --output-dir / --seed` 既定値あり (= `§13` reference、`--seed` 既定 `0`)
   - 値域 check = `0 < c2a < 1`, `0 < c3a < 1`, `c2a + c3a < 1`, `delt > 0`, `max-step / data-interval / bmp-interval > 0` (= 整数)、文字列引数の数値変換失敗 (= `std::stod` exception) も exit code 2
