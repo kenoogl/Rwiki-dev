@@ -2371,3 +2371,151 @@
   判断ください。
 ```
 
+##### ❯ PreToolのhookを使うと、同じ文章が何度もでてくる。違反したときだけ、表示する方式に変更するか。
+
+```
+⏺ 良い指摘です。確かに毎回同じ文章が出るのは雑音です。修正案を 3 つ提案します。
+
+  修正案
+
+  (案 A) 完全に reminder を削除、メモリ規律と audit log だけに頼る
+
+  - PreToolUse hook の reminder 出力を停止
+  - 記録 (= PostToolUse audit log) は維持
+  - feedback_plan_implementation_consistency_check.md の active 必読層 auto-load で持続的にリマインド
+  - メリット = 雑音ゼロ
+  - デメリット = 強制力が弱まる (= 私が自己 check を忘れる可能性)
+
+  (案 B) ヒューリスティック検出 = 「合意の引用がない時だけ」reminder を出す
+
+  - hook が直前の私の応答を読み、「agreement-quote:」または「ユーザの指示」「合意 quote」等のパターンが含まれているか確認
+  - 含まれていれば silent (= 自己 check 済みと判断)
+  - 含まれていなければ reminder 出力 (= 違反疑い)
+  - メリット = 違反疑いの時のみ表示、雑音減
+  - デメリット = ヒューリスティックなので誤判定あり (= 私が嘘の引用を出せば素通り)
+
+  (案 C) セッション初回のみ reminder
+
+  - セッション開始後の最初の Write/Edit/MultiEdit で reminder 出力
+  - 2 回目以降は silent
+  - 一時ファイル (= /tmp/claude-prewrite-shown-${session_id}) でフラグ管理
+  - メリット = 1 回だけのリマインド、雑音少
+  - デメリット = 初回以降は完全に私の自己規律頼り
+
+  推奨 = 案 B
+
+  理由:
+  - 「違反したときだけ表示」というご要望に最も近い (= 自己 check の証拠がない時だけ警告)
+  - 私が「agreement-quote:」を出力する習慣が身につく (= 観測可能な行動指標)
+  - 案 A より強制力が高く、案 C より細かく機能
+
+  ただし、案 A も合理的です。メモリ規律だけで十分なら雑音ゼロが最もユーザ体験を損なわない。
+
+  確認
+
+  どれを採用するか教えてください:
+  - (案 A) 完全削除
+  - (案 B) ヒューリスティック検出 (= 推奨)
+  - (案 C) 初回のみ
+  - (別案 / 修正案あり)
+```
+
+##### ❯ 今度はBを試そう
+
+```
+⏺ 案 B 実装します。修正後のスクリプト内容を提案します。
+
+  修正後の ~/.claude/hooks/pre-write-self-check.sh
+
+  #!/bin/bash
+  # PreToolUse hook for Write|Edit|MultiEdit
+  # 案 B = ヒューリスティック検出: 直前の応答に self-check 証跡が
+  # 含まれていればサイレント、なければリマインダーを差し込む。
+  #
+  # self-check 証跡として認識するパターン:
+  #   - "agreement-quote:"
+  #   - "scope check:"
+  #   - "合意 quote"
+
+  set -e
+
+  JQ="$(command -v jq)"
+  if [ -z "$JQ" ]; then
+    exit 0
+  fi
+
+  input=$(cat)
+  tool_name=$(echo "$input" | "$JQ" -r '.tool_name // "unknown"')
+  file_path=$(echo "$input" | "$JQ" -r '.tool_input.file_path // "unknown"')
+  session_id=$(echo "$input" | "$JQ" -r '.session_id // empty')
+
+  # 直前の assistant メッセージから self-check 証跡をチェック
+  if [ -n "$session_id" ]; then
+    sanitized_cwd=$(pwd | sed 's|/|-|g')
+    transcript="$HOME/.claude/projects/${sanitized_cwd}/${session_id}.jsonl"
+
+    if [ ! -f "$transcript" ]; then
+      transcript=$(ls -t "$HOME/.claude/projects/"*"/${session_id}.jsonl" 2>/dev/null | head -1)
+    fi
+
+    if [ -f "$transcript" ]; then
+      last_msg=$(tac "$transcript" 2>/dev/null | while IFS= read -r line; do
+        type=$(echo "$line" | "$JQ" -r '.type // empty' 2>/dev/null)
+        if [ "$type" = "assistant" ]; then
+          text=$(echo "$line" | "$JQ" -r '
+            [.message.content[]? | select(.type=="text") | .text] | join("\n")
+          ' 2>/dev/null)
+          if [ -n "$text" ] && [ "$text" != "null" ]; then
+            echo "$text"
+            break
+          fi
+        fi
+      done)
+
+      if [ -n "$last_msg" ]; then
+        if echo "$last_msg" | grep -qE 'agreement-quote:|scope check:|合意 quote'; then
+          # self-check 証跡あり、サイレント終了
+          exit 0
+        fi
+      fi
+    fi
+  fi
+
+  # 証跡なし、リマインダーを差し込む (= 従来動作)
+  reminder="[plan-implementation consistency check]
+  About to invoke ${tool_name} on: ${file_path}
+
+  In your next response (after the tool runs), you MUST:
+  1. Quote the most recent user message containing explicit agreement to this content/structure
+  2. If output added sections/entries/layers/scope beyond what user explicitly agreed → admit deviation, propose correction
+  3. If agreement was implicit/vague → admit ambiguity, ask user for explicit confirmation
+  4. State \"agreement-quote: <verbatim user text>\" + \"scope check: matches/exceeds/uncertain\"
+
+  Failure context: 57th session unilaterally added 18-entry 参照層 to MEMORY.md beyond user-agreed 4-entry lean spec. Audit log records this
+  write."
+
+  "$JQ" -n --arg msg "$reminder" '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      additionalContext: $msg
+    }
+  }'
+
+  動作の変化
+
+  - 直前のターンで「agreement-quote:」または「scope check:」を出している場合 = silent (= リマインダー出ない)
+  - 証跡がない場合 = 従来どおりリマインダー差し込み
+
+  実用上の流れ:
+  1. 1 回目のファイル書き込み → 私はまだ引用していない → リマインダー表示
+  2. 私が「agreement-quote: ...」「scope check: matches」と応答 → 次のファイル書き込みは silent
+  3. 引用を忘れた turn の次の書き込み → リマインダー再表示
+
+  確認
+
+  - (1) 上記スクリプト内容で OK か
+  - (2) 検出パターン (= agreement-quote:|scope check:|合意 quote) の追加・修正したいか
+
+  OK なら Edit で書き換え、pipe-test します。
+```
+
