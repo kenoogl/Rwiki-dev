@@ -57,7 +57,11 @@
       "Skill(kiro-spec-tasks)",
       "Skill(update-config)",
       "Bash(/Users/keno/.claude/hooks/jargon-check.sh)",
-      "Bash(xargs basename *)"
+      "Bash(xargs basename *)",
+      "Skill(kiro-spec-init)",
+      "Skill(kiro-spec-requirements)",
+      "Bash(grep -l \"feedback_design_review_v3_generalization_design\" *.md)",
+      "Bash(grep -n \"feedback_design_review_v3_generalization_design\" *.md)"
     ]
   }
 }
