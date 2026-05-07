@@ -3,6 +3,8 @@
 _作成: 2026-05-05 49th セッション_
 _status: **defer = (c) 選択 = C++ §3.7.6.1 完走後に追加判断**、本 file は議論内容と決定の記録_
 
+_注 (= 2026-05-07 58th セッション末追記、命名規則): ファイル名の prefix `sample_3_7_6_1_` は §3.7.6.1 セクション識別子の意である。58th セッションで旧 directory `sample_3_7_6_1/` は `samples/a3/3_7_6_1_phase_field_cpp/` に統合移転して削除済 (= F-2)。本 file 名はその旧 directory とは独立した分析文書で、R-4 (= Julia 対照実験) 着手時に samples/a3/ 配下の適切な sample directory に再配置予定 (= paper-submission-plan v1.0 §11 Week 3 R-4)。_
+
 ## 1. 背景
 
 §3.7.6.1 (= Phase field reverse-engineered C++ 1 sample) の plan 確定後 (= 49th Step (3) 着手予定)、別 1 件として **同じ reverse spec から Julia でも再実装する案**を検討した。本 file はその議論内容とメリット 5 / デメリット 3 / timing 3 / 決定 (= (c) C++ 完走後判断 defer) の記録。後日 C++ 完走時点で再評価し、Julia 追加実施 / non-実施を判断する。
