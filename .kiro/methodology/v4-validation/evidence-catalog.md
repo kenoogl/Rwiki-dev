@@ -462,7 +462,7 @@ main 統合直後 (commit `bcd604f` + `fa35d8d` 完了後) に user 指示で 3 
   - Claim D primary evidence = A-1 全 impl + §3.7.6 re-impl の events、weak signal (= TDD cycle / DRY refactoring / SKILL.md role 精緻化等) は schema 範囲外
   - Claim B/C functioning evidence = A-2.1 design phase events = V4 review が design fix を generate する pattern observation
   - **論文 framing 必要**: 2 evidence 種別 (Claim D primary vs Claim B/C functioning) を Limitations / Validity threats section で disambiguate + forward-fresh / reverse-engineered sub-group 比較を Claim D primary metric narrative で明示
-- **保全 location**: `.kiro/methodology/v4-validation/rework_log.jsonl` (44 lines、append-only)
+- **保全 location**: `.kiro/methodology/v4-validation/samples/a2/spec_6_design_review/rework_log.jsonl` (44 lines、append-only)
 
 ### 5.2 A-2 dogfeeding 結果 (3 段構成、A-2 完走時に本 catalog §5.2 に追記予定、v0.6 = data-acquisition-plan v1.3 §4 整合化)
 
@@ -547,7 +547,7 @@ A-2 phase = Spec 6 (`rwiki-v2-perspective-generation`) を題材に **3 phase �
 
 **保全 location**:
 - `.dual-reviewer/dev_log.jsonl` (10 lines、Round 1-10 entries、treatment=dual+judgment)
-- `.kiro/methodology/v4-validation/rework_log.jsonl` (44 lines、Level 6 累計 = R-spec-6-1 ~ R-spec-6-44)
+- `.kiro/methodology/v4-validation/samples/a2/spec_6_design_review/rework_log.jsonl` (44 lines、Level 6 累計 = R-spec-6-1 ~ R-spec-6-44)
 - `.kiro/specs/rwiki-v2-perspective-generation/design.md` (1266 行、post-Round 10 修正済)
 - main commits 20 件 (= 各 Round 修正 + log commit、20th-29th endpoint = `3cbefdb`)
 

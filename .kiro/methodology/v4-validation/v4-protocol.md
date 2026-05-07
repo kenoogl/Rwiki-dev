@@ -446,7 +446,7 @@ primary は §2.2 5 重検査の各観点に、adversarial は §1.5 修正否�
 
 ### §7.4 implementation phase の rework event 書込 (L6)
 
-implementation phase で rework が発生した時点 (= 単体テスト失敗 / 統合テスト失敗 / 受入テスト失敗 / コンパイル失敗 / 実行時エラー / 実装レビュー指摘 / 設計レビュー指摘 / 要件レビュー指摘 のいずれかで spec 修正または再実装が必要と判断された時点) に、L6 record 1 行を該当 spec の `rework_log.jsonl` に atomic append する。
+implementation phase で rework が発生した時点 (= 単体テスト失敗 / 統合テスト失敗 / 受入テスト失敗 / コンパイル失敗 / 実行時エラー / 実装レビュー指摘 / 設計レビュー指摘 / 要件レビュー指摘 のいずれかで spec 修正または再実装が必要と判断された時点) に、L6 record 1 行を該当サンプル配下の `rework_log.jsonl` に atomic append する。配置経路は `.kiro/methodology/v4-validation/samples/<軸>/<サンプル>/rework_log.jsonl` (= `samples/a1/<spec名>/` / `samples/a2/<spec名_phase>/` / `samples/a3/<論文章節_内容_言語>/` 等) で、各サンプル単位に独立ファイルを保持する (= 整理方法 Y、ファイル名統一 + ディレクトリで対象区別)。
 
 L6 record で必須付与する 4 項目 (F-1 で `rework_event.schema.json` 平坦化済):
 

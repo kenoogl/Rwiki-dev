@@ -293,7 +293,7 @@ A-2 dogfeeding 完走時に 5 条件全件評価、全達成 → go (Phase B-1.0
 
 **Sub-group analysis 規律遵守 (v1.5 §7 整合)**: A-1 (= forward-fresh) と §3.7.6 (= reverse-engineered) を別 sub-group reporting + paper Limitations sub-section で reverse-engineering 5 source bias を acknowledge。
 
-**保存先**: `.kiro/methodology/v4-validation/rework_log.jsonl` (新規 file、append-only JSONL)
+**保存先**: `.kiro/methodology/v4-validation/samples/a2/spec_6_design_review/rework_log.jsonl` (新規 file、append-only JSONL)
 
 #### 4 metric (独立次元)
 

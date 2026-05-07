@@ -24,7 +24,7 @@ dual-reviewer methodology には scope と適用 phase が異なる 3 つの概�
 
 ### (3) Level 6 = downstream rework signal (= 観測軸)
 - **scope**: **implementation phase で review ではなく上流 artifact 改版数を passive 観測** (= proactive review でなく post-hoc 観察)
-- **適用 phase**: A-1 + A-2.3 implementation phase で `rework_log.jsonl` に Data 1 (commit pattern auto) + Data 2 (manual JSONL) + Data 3 (任意 TDD cycle) を記録
+- **適用 phase**: A-1 + A-2.3 implementation phase で **該当 spec の rework_log 系 file** に Data 1 (commit pattern auto) + Data 2 (manual JSONL) + Data 3 (任意 TDD cycle) を記録（具体パスは SSoT 文書参照）
 - **Claim D evidence**: 16th-17th + 18-19th methodology 改版 + 19th sub-step 1-2 含めて累計 0 events 継続中、Spec 6 implementation phase で初 event 発生可能性
 
 ## 3 概念分離による A-2 phase 3 段構成
