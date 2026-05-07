@@ -13,7 +13,7 @@ _注 (= 2026-05-07 追記、論文化計画統合に伴う命名対応): SES 202
 - S (= 起草) = SES paper の章節別起草 9 件 (= 新規)。本来 Phase A 終端後の想定だったが、SES 5/29 投稿のため前倒しで Phase A 内に組み込み
 - R (= 改訂) = self-review + 文章推敲 + LaTeX 微調整 + Julia 対照実験 + 最終確認 + 投稿 6 件 (= 新規)。同上、前倒しで Phase A 内に組み込み
 
-V4 protocol v0.3 final (`v4-protocol.md`) を 3 spec (foundation + design-review + dogfeeding) requirements phase に適用 (V4 redo broad、9th-10th セッション)、V3 baseline (`v3-baseline-summary.md`) と直接対比して V4 効果を測定する。
+V4 protocol v0.4 (`v4-protocol.md`) を 3 spec (foundation + design-review + dogfeeding) requirements phase に適用 (V4 redo broad、9th-10th セッション)、V3 baseline (`v3-baseline-summary.md`) と直接対比して V4 効果を測定する。
 
 ---
 
@@ -373,7 +373,7 @@ V4 §1.5 (adversarial subagent 修正否定試行 prompt) + V4 §5.2 (judgment s
 ## §10 関連 reference
 
 - V3 baseline: `.kiro/methodology/v4-validation/v3-baseline-summary.md`
-- V4 protocol v0.3 final: `.kiro/methodology/v4-validation/v4-protocol.md`
+- V4 protocol v0.4: `.kiro/methodology/v4-validation/v4-protocol.md`
 - canonical V4 design source: `docs/過剰修正バイアス.md` §1-6 + §7.2
 - archive (V3 endpoint): `archive/v3-foundation-design-7th-session` commit `e6cab03`
 - archive (V4 attempt 1): `archive/v4-redo-attempt-1-v3-scope` commit `e8ca94a`

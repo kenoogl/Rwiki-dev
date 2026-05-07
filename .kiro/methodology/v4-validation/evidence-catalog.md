@@ -814,7 +814,7 @@ reverse-engineering 方式 (= 既存コード → spec → re-impl) で 3 sample
 ## 7. 関連 reference
 
 - V3 baseline 数値要約: `.kiro/methodology/v4-validation/v3-baseline-summary.md`
-- V4 protocol v0.3 final: `.kiro/methodology/v4-validation/v4-protocol.md`
+- V4 protocol v0.4: `.kiro/methodology/v4-validation/v4-protocol.md`
 - canonical V4 source: `docs/過剰修正バイアス.md`
 - V4 redo broad 中間 evidence + req phase 累計: `.kiro/methodology/v4-validation/comparison-report.md` v0.1 (12th 末で design phase evidence 未追記、A-2 完走後の最終 comparison-report v0.2 で req+design+A-2 累計集計予定)
 - 論文化 data 取得計画 (checkbox tracker): `.kiro/methodology/v4-validation/data-acquisition-plan.md`

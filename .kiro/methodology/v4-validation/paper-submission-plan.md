@@ -366,7 +366,7 @@ _命名規律: 「Phase D」「Phase E」 ad-hoc 命名 撤回、既存 Phase A/
 - `comparison-report.md` v0.4 (= A-2.1 final ablation + scripts auto + caveat reconciliation)
 - `preliminary-paper-report.md` v0.8 (= 4 claims readiness + 9 spec instance evidence、SES paper input)
 - `evidence-catalog.md` v0.12 (= §5.x 全 sample evidence index)
-- `v4-protocol.md` (= V4 protocol v0.3 final、本 plan F-3 で v0.4 に改版予定)
+- `v4-protocol.md` (= V4 protocol v0.4、本 plan F-3 で改版済)
 - `sample_3_7_6_1/` (= §3.7.6.1 evidence directory、Q-1 で rework_log 修復対象)
 - `sample_3_7_6_1_julia_addition_analysis.md` (= 49th 末作成、§3.7.6.1' Julia 追加案分析、本 plan R-4 で活用)
 - `a3_batch/code_derived/phase_field/` (= §3.7.6.1 evidence files、F-2 で path 移行対象)

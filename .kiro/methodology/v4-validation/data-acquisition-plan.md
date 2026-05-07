@@ -755,7 +755,7 @@ _v1.1 redefine: 旧 7-8月 → 新 8-9月 (A-3 batch 1-2 calendar 月分後ろ�
 
 - `comparison-report.md` v0.1 (本計画の中間 evidence 集約 = req phase 累計、12th 末で design phase evidence 未追記、A-2 完走後の v0.2 で req+design+A-2 累計集計予定)
 - `evidence-catalog.md` v0.4 (本計画の data 所在 + アクセス方法 catalog、12th 末で §4 design phase V4 evidence 反映済)
-- `v4-protocol.md` v0.3 final §4 (本計画の比較指標 + H1-H4 仮説 normative basis)
+- `v4-protocol.md` v0.4 §4 (本計画の比較指標 + H1-H4 仮説 normative basis)
 - 3 spec requirements.md (本計画の AC source = foundation Req 3-5 + design-review Req 2 + dogfeeding Req 3-7)
 - 3 spec design.md / research.md (12th 末 endpoint = foundation v1.1 + design-review v1.1 → v1.2-prep + dogfeeding v1.2)
 - TODO_NEXT_SESSION.md (各 session 末で本計画 update 反映)

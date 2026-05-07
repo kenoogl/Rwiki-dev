@@ -77,7 +77,7 @@ dual-reviewer = LLM 設計レビューの **bias 観測装置 + 改善 mechanism
 
 ---
 
-## §2 Methodology (V4 protocol v0.3 final)
+## §2 Methodology (V4 protocol v0.4)
 
 V3 protocol (adversarial subagent 統合) の検出機能を維持しつつ、過剰修正 bias 50% を suppress する Step 1c judgment 統合:
 
@@ -518,7 +518,7 @@ A-2 完走後の最終 comparison-report.md v0.2 で:
 | 必要 evidence | 現状 | 不足 work |
 |--------------|------|-----------|
 | V3 baseline | ✅ 確定 | — |
-| V4 methodology (v4-protocol.md v0.3 final) | ✅ 確定 | — |
+| V4 methodology (v4-protocol.md v0.4) | ✅ 確定 | — |
 | 9 spec instance evidence (req+design+tasks) | ✅ 取得 (本 14th 末) | tasks phase 4 caveats limitations 言及必須 |
 | Spec 6 30 review session × 3 系統 | ❌ 未取得 | A-1 implementation 完了後 A-2 着手 |
 | figure 1-3 + ablation data files | ❌ 未取得 | A-2 完走後 generation |
@@ -599,7 +599,7 @@ A-2 完走後の独立 batch (= scenario B、user 明示「分離した方が集
 ## §9 関連 reference
 
 - `v3-baseline-summary.md` (V3 baseline 確定文書)
-- `v4-protocol.md` v0.3 final (V4 methodology canonical)
+- `v4-protocol.md` v0.4 (V4 methodology canonical)
 - `comparison-report.md` v0.1 (req phase evidence、最終 v0.2 = A-2 完走後)
 - `data-acquisition-plan.md` v0.4 (data 取得計画 + 14th 末状態反映済 checkbox tracker)
 - `evidence-catalog.md` v0.5 (data 所在 catalog + 14th 末状態反映済)

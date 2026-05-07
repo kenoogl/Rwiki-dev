@@ -1,6 +1,6 @@
 ---
 name: V4 protocol 確定経緯 + 必要性判定 step
-description: V4 protocol v0.3 final 確定経緯 (7th 末 V3 過剰修正 bias 50% 顕在化 → V4 = Step 1c 必要性判定 + judgment subagent dispatch + 5 条件判定ルール + 3 ラベル分類 追加) と適用規律
+description: V4 protocol v0.4 確定経緯 (7th 末 V3 過剰修正 bias 50% 顕在化 → V4 = Step 1c 必要性判定 + judgment subagent dispatch + 5 条件判定ルール + 3 ラベル分類 追加 + v0.4 で書込手順 §7 追加) と適用規律
 type: feedback
 originSessionId: 4c67776f-efa3-4a91-a1d7-36330ad3c35b
 ---
@@ -17,7 +17,7 @@ V4 protocol = V3 protocol (5 ラウンド + adversarial subagent 統合) + 修�
 
 **How to apply:**
 
-## V4 protocol 構造 (v0.3 final、`.kiro/methodology/v4-validation/v4-protocol.md` 参照)
+## V4 protocol 構造 (v0.4、`.kiro/methodology/v4-validation/v4-protocol.md` 参照)
 
 - **Step A (primary detection)**: Opus が 5 重検査 (二重逆算 / Phase 1 patterns / dev-log 23 patterns / 自己診断 / 内部論理整合)
 - **Step B (adversarial review)**: Sonnet subagent dispatch、独立 detection + V4 §1.5 修正否定試行 + forced_divergence (= adversarial 担当 3 task)
@@ -54,6 +54,7 @@ semi-mechanical mapping default 7 種 (V4 §1.4.2) を judgment subagent prompt 
 - design phase review で必ず適用 (foundation + design-review + dogfeeding 3 spec design phase で連続適用済 = 3 spec 連続改善 evidence)
 - req phase でも適用 (req phase V4 redo broad で 3 spec 完走済、9th-10th セッション)
 - review gate 通過後の 3 spec cross-spec review でも Group A/B/C 分類で integrity check (12th 末で適用)
+- 書込手順 = v0.4 §7 で normative 化
 
 ## False positive 対応
 
@@ -61,7 +62,7 @@ judgment subagent が must_fix 判定したが primary 再検討で false positi
 
 ## 関連 reference
 
-- V4 protocol v0.3 final: `.kiro/methodology/v4-validation/v4-protocol.md`
+- V4 protocol v0.4: `.kiro/methodology/v4-validation/v4-protocol.md`
 - V3 baseline: `.kiro/methodology/v4-validation/v3-baseline-summary.md`
 - comparison-report: `.kiro/methodology/v4-validation/comparison-report.md`
 - evidence-catalog: `.kiro/methodology/v4-validation/evidence-catalog.md`

@@ -1,6 +1,6 @@
 # V4 Review Protocol — 修正必要性 judgment 統合版
 
-_version: v0.3 / 2026-04-30 (7th セッション末) / status: open issues 4 件すべて user 決定済、final_
+_version: v0.4 / 2026-05-07 (59th セッション、F-3) / status: 書込手順 §7 追加、§1-6 評価規範は v0.3 final 維持 (back-compatible)_
 
 V3 protocol (5 ラウンド + adversarial subagent 統合) は検出機能を実証したが、検出された issue を「本当に修正すべきか」の judgment step が欠落していた (= 過剰修正 bias 50% 顕在化、`v3-baseline-summary.md` §2.3)。V4 protocol = V3 を base に **修正必要性 judgment step (Step 1c)** を体系的に追加した派生 protocol。
 
@@ -405,7 +405,67 @@ and override_reason if any.
 
 ---
 
-## §7 関連 reference
+## §7 書込手順 (v0.4 で新規追加、F-3)
+
+V4 review round の検出 → 判定 → 採択結果と、実装フェーズで発生する rework event を、後続分析が機械処理できる形で残すための書込規律を本節で normative 化する。事後 LLM ラベリング caveat (= reviewer 自然言語出力からのバッチ抽出) を構造的に排除し、reviewer 自身が finding 検出時点で必要なフィールドを自己付与する。
+
+### §7.1 書込対象 3 階層と schema 対応
+
+書込対象は以下の 3 階層で、それぞれ JSON Schema が `.kiro/methodology/v4-validation/schemas/` に配置されている。
+
+- **L1 = finding 1 件単位の記録**: `l1_finding.schema.json`、JSONL (= 1 行 1 record の JSON、ファイル末尾追記運用) で蓄積
+- **L2 = round 単位の集計記録**: `l2_metric.schema.json`、JSONL で round 1 件あたり 1 行
+- **L6 = implementation phase の rework event 記録**: `rework_event.schema.json`、JSONL で event 1 件あたり 1 行
+
+### §7.2 self-label 必須化
+
+primary / adversarial / judgment の 3 subagent (§1.2) が finding を検出した時点で、L1 record の以下 5 フィールドを必ず自己付与して出力する。事後にバッチで埋める運用は本 protocol で禁止する。
+
+- `judgment_label`: must_fix / should_fix / do_not_fix のいずれか (§1.3)
+- `source`: primary / adversarial / judgment のいずれか (§1.2 の役割)
+- `miss_type`: implicit_assumption / boundary_leakage / spec_implementation_gap / failure_mode_missing / security_oversight / consistency_overconfidence のいずれか
+- `difference_type`: assumption_shift / perspective_divergence / constraint_activation / scope_expansion / adversarial_trigger / reasoning_depth のいずれか
+- `trigger_state`: negative_check / escalate_check / alternative_considered の 3 サブフィールドが applied / skipped 表記必須
+
+primary は §2.2 5 重検査の各観点に、adversarial は §1.5 修正否定試行に、judgment は §2.4 5 条件判定に、それぞれ self-label を整合させて出力する。
+
+### §7.3 round close 時の atomic append (L1 + L2)
+
+各レビュー round が close する時点 (= judgment subagent が全 finding に対する判定 yaml を返却し、Step 2 user 提示が完了して Step 3 適用が確定した直後) に、以下 2 操作を実施する。
+
+1. **L1 atomic append**: 当該 round で確定した全 finding の L1 record を、対応する `l1_findings_<phase>.jsonl` (= phase は req / design / tasks / implementation のいずれか) に 1 行ずつ追記。
+2. **L2 atomic append**: 当該 round の集計 1 行を `l2_metrics.jsonl` に追記。集計対象は merged_findings / must_fix / should_fix / do_not_fix / escalate / fixes_applied / override_count / disagreement_count + treatment 別カウント (§1.7 metric 改訂参照)。
+
+書込手順は次の 3 ステップを atomic に実施する (= 部分書込で破損行が残らないようにする)。
+
+- ファイルを append モードで open
+- 1 record を 1 行 (改行で区切る) として書込
+- close
+
+複数 round の同時 close は想定していない (= V4 round は逐次進行)。
+
+### §7.4 implementation phase の rework event 書込 (L6)
+
+implementation phase で rework が発生した時点 (= 単体テスト失敗 / 統合テスト失敗 / 受入テスト失敗 / コンパイル失敗 / 実行時エラー / 実装レビュー指摘 / 設計レビュー指摘 / 要件レビュー指摘 のいずれかで spec 修正または再実装が必要と判断された時点) に、L6 record 1 行を該当 spec の `rework_log.jsonl` に atomic append する。
+
+L6 record で必須付与する 4 項目 (F-1 で `rework_event.schema.json` 平坦化済):
+
+- `severity`: CRITICAL / ERROR / WARN / INFO のいずれか
+- `root_cause`: spec_gap / boundary_violation / implementation_drift / external_constraint / spec_ambiguity / test_oversight のいずれか
+- `discovered_phase_detail`: impl_unit_test / impl_integration_test / impl_acceptance_test / impl_compile_error / impl_runtime_error / impl_review / design_review / req_review のいずれか
+- `propagation`: isolated / single_file / multi_file / cross_module / cross_layer のいずれか
+
+implementation phase で rework が 0 件で完走した spec についても、空エビデンスではなく `no_rework_record.schema.json` に従った 0 件記録を 1 entry 出力する (= Q-2 適用対象)。
+
+### §7.5 emit ツール参照
+
+§7.3 の round close 書込手順は F-4 で起草予定の `emit_round_close.py` が機械的に実装する。同ツール完成までの暫定運用として手書き append を許容するが、その場合も本節の atomic 規約と self-label 規約を満たすこと。`validate_evidence.py` (F-4) が事後検証で schema validation を実施し、不正 record を検出する。
+
+§7.1 で言及していない他 3 schema (= no_rework_record / paired_comparison / spec_characteristic) の書込タイミングは spec 完了時 / paired control 完了時 / spec instance 追加時にそれぞれ 1 entry 出力で、運用詳細は別途規定する。
+
+---
+
+## §8 関連 reference
 
 - canonical V4 design source: `docs/過剰修正バイアス.md` §1-6 (user 拡張) + §7.2 (open issues 決定)
 - V3 baseline evidence: `.kiro/methodology/v4-validation/v3-baseline-summary.md`
@@ -434,3 +494,11 @@ and override_reason if any.
   - **Issue 3 = 3 ラベル提示方式** 採用 → §2.5 で must_fix bulk apply / do_not_fix bulk skip / should_fix individual review 規定
   - **Issue 4 = ablation framing 限定** 採用 → §4.4 で ablation 比較性質明記
   - §6 を「open issues 決定済」に更新、`docs/過剰修正バイアス.md` §7.2 を canonical decision source として参照
+- **v0.4** (2026-05-07 59th セッション、F-3): §7「書込手順」を新規追加
+  - §7.1 で書込対象 3 階層 (L1 / L2 / L6) と schema 対応を明示
+  - §7.2 で primary / adversarial / judgment 3 subagent の self-label 必須化を normative 化 (= 事後 LLM ラベリング caveat の根本対策)
+  - §7.3 で round close 時の L1 + L2 atomic append 手順を規定
+  - §7.4 で implementation phase の L6 atomic append 手順と必須 4 項目を規定
+  - §7.5 で F-4 emit ツール参照と他 3 schema の暫定言及
+  - 旧 §7「関連 reference」を §8 に繰り下げ
+  - §1-6 既存評価規範は変更なし (back-compatible)
