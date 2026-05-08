@@ -1,0 +1,56 @@
+review_session_id: "manual-tasks-review-20260509-001"
+review_mode: "manual-dual-reviewer-inspired"
+reviewed_feature: "repo-wide"
+reviewed_spec_phase: "tasks"
+reviewed_phase_profile: "tasks"
+review_basis:
+  intent_refs:
+    - "intent/INTENT.md"
+  requirement_refs:
+    - ".kiro/specs/dual-reviewer-foundation/requirements.md"
+    - ".kiro/specs/dual-reviewer-runtime/requirements.md"
+    - ".kiro/specs/dual-reviewer-evaluation/requirements.md"
+    - ".kiro/specs/dual-reviewer-self-improvement/requirements.md"
+    - ".kiro/specs/dual-reviewer-paper-interface/requirements.md"
+  design_refs:
+    - ".kiro/specs/dual-reviewer-foundation/design.md"
+    - ".kiro/specs/dual-reviewer-runtime/design.md"
+    - ".kiro/specs/dual-reviewer-evaluation/design.md"
+    - ".kiro/specs/dual-reviewer-self-improvement/design.md"
+    - ".kiro/specs/dual-reviewer-paper-interface/design.md"
+  alignment_refs:
+    - "docs/alignment/cross-spec-tasks-alignment.md"
+review_question_set:
+  - "Is the implementation order consistent with the dependency map?"
+  - "Do any tasks depend on artifacts that are still owned by an earlier unfinished task?"
+  - "Are optional tasks clearly separated from blocking implementation prerequisites?"
+  - "Can implementation start without violating shared artifact ownership?"
+target_paths:
+  - ".kiro/specs/dual-reviewer-foundation/tasks.md"
+  - ".kiro/specs/dual-reviewer-runtime/tasks.md"
+  - ".kiro/specs/dual-reviewer-evaluation/tasks.md"
+  - ".kiro/specs/dual-reviewer-self-improvement/tasks.md"
+  - ".kiro/specs/dual-reviewer-paper-interface/tasks.md"
+  - "docs/alignment/cross-spec-tasks-alignment.md"
+  - "docs/alignment/phase-and-feature-dependency-map.md"
+target_version_refs:
+  spec_json_updated_at: "2026-05-09T00:40:00+09:00"
+  git_commit: null
+reviewer:
+  type: "human-assisted-codex"
+  name: "codex"
+review_started_at: "2026-05-09T00:45:00+09:00"
+review_closed_at: "2026-05-09T00:45:00+09:00"
+review_scope:
+  objective: "Close the tasks phase after cross-spec tasks alignment."
+  notes:
+    - "This review checks that task ordering and blocking dependencies are implementation-safe."
+upstream_context:
+  operations_refs:
+    - "operations/HUMAN_WORKFLOW.md"
+alignment_context:
+  alignment_docs:
+    - "docs/alignment/cross-spec-tasks-alignment.md"
+status:
+  review_in_progress: false
+  signoff_status: "approved"

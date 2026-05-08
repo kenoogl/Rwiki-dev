@@ -1,0 +1,92 @@
+{
+  "review_session_id": "manual-intent-review-20260508-001",
+  "findings": [
+    {
+      "finding_id": "manual-intent-review-20260508-001-f001",
+      "severity": "medium",
+      "category": "workflow_gap",
+      "summary": "The intent now states that this repo itself is a manual dogfooding target, but it does not yet define what distinguishes a valid manual dual-reviewer-inspired review from ordinary document editing.",
+      "rationale": "Without a minimal definition of review procedure or required output characteristics, later evidence may mix ad-hoc authoring with manual review records and weaken claims about early method application.",
+      "affected_refs": [
+        {
+          "file": "intent/INTENT.md",
+          "section": "4.6 phase ごとの複雑性増大に対応できる"
+        },
+        {
+          "file": "intent/INTENT.md",
+          "section": "12.5 本 repo への手動適用"
+        }
+      ],
+      "suggested_action": "Add a short intent-level statement describing the minimum properties of a valid manual dogfooding review, or explicitly defer that definition to workflow/runtime requirements.",
+      "confidence": "high",
+      "decision_status": "accepted",
+      "decision_note": "Accepted and reflected in INTENT plus downstream requirements for evaluation/self-improvement/paper-interface.",
+      "decision_timestamp": "2026-05-08T00:00:00+09:00",
+      "fix_linkage": {
+        "applied": true,
+        "refs": [
+          "intent/INTENT.md",
+          ".kiro/specs/dual-reviewer-evaluation/requirements.md",
+          ".kiro/specs/dual-reviewer-self-improvement/requirements.md",
+          ".kiro/specs/dual-reviewer-paper-interface/requirements.md"
+        ]
+      },
+      "reopen_linkage": {
+        "required": false,
+        "target_spec_phase": null,
+        "target_features": []
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": false,
+        "alignment_docs": [
+          "docs/alignment/cross-spec-requirements-alignment.md"
+        ]
+      },
+      "created_at": "2026-05-08T00:00:00+09:00",
+      "updated_at": "2026-05-08T00:00:00+09:00"
+    },
+    {
+      "finding_id": "manual-intent-review-20260508-001-f002",
+      "severity": "medium",
+      "category": "ambiguity",
+      "summary": "The intent describes manual application to this repo, but it does not define the transition condition from manual dogfooding to runtime-mediated review sessions.",
+      "rationale": "If manual and runtime-mediated sessions are not clearly separated, future evidence and metrics may combine incomparable review modes under one narrative of system use.",
+      "affected_refs": [
+        {
+          "file": "intent/INTENT.md",
+          "section": "12.5 本 repo への手動適用"
+        },
+        {
+          "file": "intent/INTENT.md",
+          "section": "13. 将来像"
+        }
+      ],
+      "suggested_action": "Clarify whether manual dogfooding is strictly Phase 1 evidence, and define the intended handoff condition to runtime-mediated review in a later workflow or evaluation contract.",
+      "confidence": "medium",
+      "decision_status": "accepted",
+      "decision_note": "Accepted and reflected by clarifying manual dogfooding as Phase 1 evidence and by adding downstream review-mode provenance requirements.",
+      "decision_timestamp": "2026-05-08T00:00:00+09:00",
+      "fix_linkage": {
+        "applied": true,
+        "refs": [
+          "intent/INTENT.md",
+          ".kiro/specs/dual-reviewer-evaluation/requirements.md",
+          ".kiro/specs/dual-reviewer-paper-interface/requirements.md"
+        ]
+      },
+      "reopen_linkage": {
+        "required": false,
+        "target_spec_phase": null,
+        "target_features": []
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": false,
+        "alignment_docs": [
+          "docs/alignment/cross-spec-requirements-alignment.md"
+        ]
+      },
+      "created_at": "2026-05-08T00:00:00+09:00",
+      "updated_at": "2026-05-08T00:00:00+09:00"
+    }
+  ]
+}

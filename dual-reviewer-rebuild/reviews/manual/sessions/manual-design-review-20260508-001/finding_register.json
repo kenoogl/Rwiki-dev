@@ -1,0 +1,161 @@
+{
+  "review_session_id": "manual-design-review-20260508-001",
+  "findings": [
+    {
+      "finding_id": "manual-design-review-20260508-001-f001",
+      "severity": "medium",
+      "category": "missing_design_detail",
+      "summary": "Foundation design did not yet concretize cross-project provenance fields added in requirements.",
+      "rationale": "Requirement 6 added provenance naming for cross-project intake, but metadata field table lacked source repository and source revision details.",
+      "affected_refs": [
+        {
+          "file": ".kiro/specs/dual-reviewer-foundation/design.md",
+          "section": "Run Metadata Contract"
+        }
+      ],
+      "suggested_action": "Add source repository, source revision, and review mode to the metadata contract field list and explain their roles.",
+      "confidence": "high",
+      "decision_status": "accepted",
+      "decision_note": "Applied in design handback.",
+      "decision_timestamp": "2026-05-08T23:59:30+09:00",
+      "fix_linkage": {
+        "applied": true,
+        "refs": [
+          ".kiro/specs/dual-reviewer-foundation/design.md"
+        ]
+      },
+      "reopen_linkage": {
+        "required": true,
+        "target_spec_phase": "design",
+        "target_features": [
+          "dual-reviewer-foundation"
+        ]
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": true,
+        "alignment_docs": [
+          "docs/alignment/cross-spec-design-alignment.md"
+        ]
+      },
+      "created_at": "2026-05-08T23:59:30+09:00",
+      "updated_at": "2026-05-08T23:59:30+09:00"
+    },
+    {
+      "finding_id": "manual-design-review-20260508-001-f002",
+      "severity": "high",
+      "category": "missing_design_detail",
+      "summary": "Runtime design lacked a concrete portable bundle export model for cross-project collection.",
+      "rationale": "Requirements introduced portable evidence bundle export, but runtime design only described in-repo run directories.",
+      "affected_refs": [
+        {
+          "file": ".kiro/specs/dual-reviewer-runtime/design.md",
+          "section": "Runtime Artifact Layout"
+        }
+      ],
+      "suggested_action": "Define export boundary, bundle shape, and export manifest fields without mutating raw run semantics.",
+      "confidence": "high",
+      "decision_status": "accepted",
+      "decision_note": "Applied in design handback.",
+      "decision_timestamp": "2026-05-08T23:59:30+09:00",
+      "fix_linkage": {
+        "applied": true,
+        "refs": [
+          ".kiro/specs/dual-reviewer-runtime/design.md"
+        ]
+      },
+      "reopen_linkage": {
+        "required": true,
+        "target_spec_phase": "design",
+        "target_features": [
+          "dual-reviewer-runtime"
+        ]
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": true,
+        "alignment_docs": [
+          "docs/alignment/cross-spec-design-alignment.md"
+        ]
+      },
+      "created_at": "2026-05-08T23:59:30+09:00",
+      "updated_at": "2026-05-08T23:59:30+09:00"
+    },
+    {
+      "finding_id": "manual-design-review-20260508-001-f003",
+      "severity": "high",
+      "category": "missing_design_detail",
+      "summary": "Evaluation design lacked central-side imported bundle intake and admission artifacts.",
+      "rationale": "Requirements introduced ingestion and admission ownership, but design still assumed only in-repo runtime runs as intake.",
+      "affected_refs": [
+        {
+          "file": ".kiro/specs/dual-reviewer-evaluation/design.md",
+          "section": "Intake Model"
+        }
+      ],
+      "suggested_action": "Add imported bundle intake inputs, admission states, and import/admission registers.",
+      "confidence": "high",
+      "decision_status": "accepted",
+      "decision_note": "Applied in design handback.",
+      "decision_timestamp": "2026-05-08T23:59:30+09:00",
+      "fix_linkage": {
+        "applied": true,
+        "refs": [
+          ".kiro/specs/dual-reviewer-evaluation/design.md"
+        ]
+      },
+      "reopen_linkage": {
+        "required": true,
+        "target_spec_phase": "design",
+        "target_features": [
+          "dual-reviewer-evaluation"
+        ]
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": true,
+        "alignment_docs": [
+          "docs/alignment/cross-spec-design-alignment.md"
+        ]
+      },
+      "created_at": "2026-05-08T23:59:30+09:00",
+      "updated_at": "2026-05-08T23:59:30+09:00"
+    },
+    {
+      "finding_id": "manual-design-review-20260508-001-f004",
+      "severity": "medium",
+      "category": "missing_design_detail",
+      "summary": "Self-improvement design lacked concrete provenance fields for proposals derived from imported evidence.",
+      "rationale": "Requirements added imported evidence provenance preservation, but proposal and backtest artifacts did not yet carry source-origin and admission references.",
+      "affected_refs": [
+        {
+          "file": ".kiro/specs/dual-reviewer-self-improvement/design.md",
+          "section": "Proposal Model"
+        }
+      ],
+      "suggested_action": "Add source origin and imported evidence provenance fields to proposal and backtest artifacts.",
+      "confidence": "high",
+      "decision_status": "accepted",
+      "decision_note": "Applied in design handback.",
+      "decision_timestamp": "2026-05-08T23:59:30+09:00",
+      "fix_linkage": {
+        "applied": true,
+        "refs": [
+          ".kiro/specs/dual-reviewer-self-improvement/design.md"
+        ]
+      },
+      "reopen_linkage": {
+        "required": true,
+        "target_spec_phase": "design",
+        "target_features": [
+          "dual-reviewer-self-improvement"
+        ]
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": true,
+        "alignment_docs": [
+          "docs/alignment/cross-spec-design-alignment.md"
+        ]
+      },
+      "created_at": "2026-05-08T23:59:30+09:00",
+      "updated_at": "2026-05-08T23:59:30+09:00"
+    }
+  ]
+}

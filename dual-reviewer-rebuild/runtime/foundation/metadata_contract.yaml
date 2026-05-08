@@ -1,0 +1,169 @@
+contract_id: foundation_run_metadata
+version: 1.0.0
+applies_to:
+  - review_case.metadata
+description: >
+  Canonical run-level metadata contract shared by runtime, evaluation,
+  self-improvement, and validator integrations.
+required_fields:
+  - run_id
+  - target_id
+  - target_artifact_hash
+  - source_repository_id
+  - source_revision
+  - phase_profile
+  - treatment
+  - review_mode
+  - protocol_version
+  - runtime_version
+  - schema_set_version
+  - prompt_set_version
+  - run_status
+  - validator_status
+  - human_signoff_status
+  - evidence_class
+  - started_at
+  - closed_at
+enum_definitions:
+  phase_profile:
+    - intent
+    - requirements
+    - design
+    - tasks
+  treatment:
+    - single
+    - dual
+    - dual+judgment
+  review_mode:
+    - manual_dogfooding
+    - runtime_mediated
+    - imported_bundle
+  run_status:
+    - created
+    - in_progress
+    - closed
+    - orchestration_failed
+  validator_status:
+    - not_run
+    - passed
+    - failed
+  human_signoff_status:
+    - pending
+    - approved
+    - rejected
+    - deferred
+  evidence_class:
+    - candidate
+    - valid
+    - invalid
+    - exploratory
+field_definitions:
+  run_id:
+    type: string
+    required: true
+    nullable: false
+    description: Stable identifier for a single review run.
+  target_id:
+    type: string
+    required: true
+    nullable: false
+    description: Stable identifier for the reviewed target artifact.
+  target_artifact_hash:
+    type: string
+    required: true
+    nullable: false
+    description: Hash or equivalent fixed digest for the reviewed target artifact.
+  source_repository_id:
+    type: string
+    required: true
+    nullable: false
+    description: Repository identity where the evidence was produced.
+  source_revision:
+    type: string
+    required: true
+    nullable: false
+    description: Source revision captured when the evidence was produced.
+  phase_profile:
+    type: enum
+    required: true
+    nullable: false
+    enum_ref: phase_profile
+    description: Review phase/profile under inspection.
+  treatment:
+    type: enum
+    required: true
+    nullable: false
+    enum_ref: treatment
+    description: Review treatment variant applied to the run.
+  review_mode:
+    type: enum
+    required: true
+    nullable: false
+    enum_ref: review_mode
+    description: Operational mode that produced the evidence.
+  protocol_version:
+    type: string
+    required: true
+    nullable: false
+    description: Protocol version governing the run.
+  runtime_version:
+    type: string
+    required: true
+    nullable: false
+    description: Runtime implementation version governing the run.
+  schema_set_version:
+    type: string
+    required: true
+    nullable: false
+    description: Shared schema set version expected by the run.
+  prompt_set_version:
+    type: string
+    required: true
+    nullable: false
+    description: Prompt asset set version expected by the run.
+  run_status:
+    type: enum
+    required: true
+    nullable: false
+    enum_ref: run_status
+    description: Runtime lifecycle status for the run.
+  validator_status:
+    type: enum
+    required: true
+    nullable: false
+    enum_ref: validator_status
+    description: Mechanical validation status for the run.
+  human_signoff_status:
+    type: enum
+    required: true
+    nullable: false
+    enum_ref: human_signoff_status
+    description: Operator sign-off state for the run.
+  evidence_class:
+    type: enum
+    required: true
+    nullable: false
+    enum_ref: evidence_class
+    description: Downstream consumption class for the run evidence.
+  started_at:
+    type: string
+    format: date-time
+    required: true
+    nullable: false
+    description: Run start timestamp in RFC 3339 format.
+  closed_at:
+    type: string
+    format: date-time
+    required: true
+    nullable: true
+    description: >
+      Run close timestamp in RFC 3339 format. This field remains null until the
+      run closes or fails.
+state_notes:
+  candidate_transition_rule: >
+    Evidence remains candidate until validator_status and human_signoff_status
+    have been resolved enough to assign valid, invalid, or exploratory.
+  provenance_rule: >
+    source_repository_id, source_revision, target_id, and target_artifact_hash
+    together provide the minimum cross-project provenance tuple.
+  validation_rule: Missing required metadata is validator failure.

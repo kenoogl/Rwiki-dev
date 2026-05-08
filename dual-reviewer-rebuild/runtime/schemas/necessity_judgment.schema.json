@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dual-reviewer:foundation:necessity_judgment:1.0.0",
+  "title": "necessity_judgment",
+  "description": "Step C judgment contract with a five-field necessity structure and final action guidance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "necessity_judgment_id",
+    "finding_id",
+    "step_id",
+    "necessity_dimensions",
+    "final_label",
+    "recommended_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "necessity_judgment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "finding_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "step_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "necessity_dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issue_validity",
+        "issue_materiality",
+        "actionability",
+        "fix_readiness",
+        "adoption_priority"
+      ],
+      "properties": {
+        "issue_validity": {
+          "$ref": "#/$defs/necessityDimension"
+        },
+        "issue_materiality": {
+          "$ref": "#/$defs/necessityDimension"
+        },
+        "actionability": {
+          "$ref": "#/$defs/necessityDimension"
+        },
+        "fix_readiness": {
+          "$ref": "#/$defs/necessityDimension"
+        },
+        "adoption_priority": {
+          "$ref": "#/$defs/necessityDimension"
+        }
+      }
+    },
+    "final_label": {
+      "type": "string",
+      "enum": [
+        "necessary",
+        "optional",
+        "not_necessary",
+        "defer"
+      ]
+    },
+    "recommended_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "override_reason": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "necessityDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "score",
+        "rationale"
+      ],
+      "properties": {
+        "score": {
+          "type": "number"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

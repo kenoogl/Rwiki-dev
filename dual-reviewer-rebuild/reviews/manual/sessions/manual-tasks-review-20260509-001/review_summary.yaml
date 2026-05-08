@@ -1,0 +1,25 @@
+review_session_id: "manual-tasks-review-20260509-001"
+signoff_status: "approved"
+reopen_required: false
+downstream_recheck_required: false
+downstream_recheck_targets: []
+unresolved_concerns: []
+finding_counts:
+  total: 0
+  low: 0
+  medium: 0
+  high: 0
+  critical: 0
+  accepted: 0
+  rejected: 0
+  deferred: 0
+  open: 0
+notes:
+  - "Tasks review wave passed with no new findings."
+  - "Implementation may start in dependency order."
+category_counts: {}
+manual_effort:
+  started_at: "2026-05-09T00:45:00+09:00"
+  closed_at: "2026-05-09T00:45:00+09:00"
+  duration_minutes: 0
+closed_at: "2026-05-09T00:45:00+09:00"

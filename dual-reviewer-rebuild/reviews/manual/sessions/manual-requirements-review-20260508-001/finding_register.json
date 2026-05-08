@@ -1,0 +1,104 @@
+{
+  "review_session_id": "manual-requirements-review-20260508-001",
+  "findings": [
+    {
+      "finding_id": "manual-requirements-review-20260508-001-f001",
+      "severity": "high",
+      "category": "missing_requirement",
+      "summary": "The requirements wave now depends on review-mode provenance, but no shared upstream requirement defines the canonical field or vocabulary for `review_mode` across manual and runtime evidence.",
+      "rationale": "Evaluation Requirement 9, Self-Improvement Requirement 7, and Paper-Interface Requirement 6 all require review-mode distinction, yet foundation metadata and runtime requirements do not define where this provenance lives or how it is normalized. This creates a cross-feature contract gap before design.",
+      "affected_refs": [
+        {
+          "file": ".kiro/specs/dual-reviewer-evaluation/requirements.md",
+          "section": "Requirement 9"
+        },
+        {
+          "file": ".kiro/specs/dual-reviewer-self-improvement/requirements.md",
+          "section": "Requirement 7"
+        },
+        {
+          "file": ".kiro/specs/dual-reviewer-paper-interface/requirements.md",
+          "section": "Requirement 6"
+        },
+        {
+          "file": ".kiro/specs/dual-reviewer-foundation/requirements.md",
+          "section": "Requirement 6"
+        }
+      ],
+      "suggested_action": "Add an upstream contract for review-mode provenance, likely in foundation metadata contract and possibly runtime evidence requirements, with a canonical vocabulary that downstream features can reuse.",
+      "confidence": "high",
+      "decision_status": "accepted",
+      "decision_note": "Accepted and reflected by adding review-mode provenance contract to foundation/runtime plus downstream provenance consumers.",
+      "decision_timestamp": "2026-05-08T00:00:00+09:00",
+      "fix_linkage": {
+        "applied": true,
+        "refs": [
+          ".kiro/specs/dual-reviewer-foundation/requirements.md",
+          ".kiro/specs/dual-reviewer-runtime/requirements.md",
+          ".kiro/specs/dual-reviewer-evaluation/requirements.md",
+          ".kiro/specs/dual-reviewer-self-improvement/requirements.md",
+          ".kiro/specs/dual-reviewer-paper-interface/requirements.md"
+        ]
+      },
+      "reopen_linkage": {
+        "required": false,
+        "target_spec_phase": null,
+        "target_features": []
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": false,
+        "alignment_docs": [
+          "docs/alignment/cross-spec-requirements-alignment.md"
+        ]
+      },
+      "created_at": "2026-05-08T00:00:00+09:00",
+      "updated_at": "2026-05-08T00:00:00+09:00"
+    },
+    {
+      "finding_id": "manual-requirements-review-20260508-001-f002",
+      "severity": "medium",
+      "category": "ambiguity",
+      "summary": "The requirements do not yet define the handoff rule that decides when manual dogfooding evidence stops being primary and runtime-mediated evidence becomes the standard comparison population.",
+      "rationale": "Intent now distinguishes Phase 1 manual dogfooding from later runtime-mediated evidence, but the requirements wave does not yet specify which feature owns the transition rule or how mixed populations should be constrained before comparison and proposal generation.",
+      "affected_refs": [
+        {
+          "file": ".kiro/specs/dual-reviewer-evaluation/requirements.md",
+          "section": "Requirement 9"
+        },
+        {
+          "file": ".kiro/specs/dual-reviewer-self-improvement/requirements.md",
+          "section": "Requirement 7"
+        },
+        {
+          "file": "intent/INTENT.md",
+          "section": "12.5 本 repo への手動適用"
+        }
+      ],
+      "suggested_action": "Define which requirement set owns the handoff boundary and whether the rule is metadata-based, protocol-based, or workflow-based before design proceeds.",
+      "confidence": "medium",
+      "decision_status": "accepted",
+      "decision_note": "Accepted and reflected by assigning standard comparison-population ownership to evaluation and documenting operational handling in invalidation policy.",
+      "decision_timestamp": "2026-05-08T00:00:00+09:00",
+      "fix_linkage": {
+        "applied": true,
+        "refs": [
+          ".kiro/specs/dual-reviewer-evaluation/requirements.md",
+          "operations/DATA_INVALIDATION_POLICY.md"
+        ]
+      },
+      "reopen_linkage": {
+        "required": false,
+        "target_spec_phase": null,
+        "target_features": []
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": false,
+        "alignment_docs": [
+          "docs/alignment/cross-spec-requirements-alignment.md"
+        ]
+      },
+      "created_at": "2026-05-08T00:00:00+09:00",
+      "updated_at": "2026-05-08T00:00:00+09:00"
+    }
+  ]
+}

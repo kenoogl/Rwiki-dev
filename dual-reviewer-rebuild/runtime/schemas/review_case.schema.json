@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dual-reviewer:foundation:review_case:1.0.0",
+  "title": "review_case",
+  "description": "Run-level review evidence envelope owned by dual-reviewer-foundation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "review_case_id",
+    "metadata",
+    "step_records",
+    "findings",
+    "validation_artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "review_case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "metadata": {
+      "$ref": "#/$defs/runMetadata"
+    },
+    "step_records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stepRecord"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "finding.schema.json"
+      }
+    },
+    "validation_artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "validator_result_refs",
+        "invalidation_marker_refs"
+      ],
+      "properties": {
+        "validator_result_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "invalidation_marker_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nullableTimestamp": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "runMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "target_id",
+        "target_artifact_hash",
+        "source_repository_id",
+        "source_revision",
+        "phase_profile",
+        "treatment",
+        "review_mode",
+        "protocol_version",
+        "runtime_version",
+        "schema_set_version",
+        "prompt_set_version",
+        "run_status",
+        "validator_status",
+        "human_signoff_status",
+        "evidence_class",
+        "started_at",
+        "closed_at"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_artifact_hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_repository_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase_profile": {
+          "type": "string",
+          "enum": [
+            "intent",
+            "requirements",
+            "design",
+            "tasks"
+          ]
+        },
+        "treatment": {
+          "type": "string",
+          "enum": [
+            "single",
+            "dual",
+            "dual+judgment"
+          ]
+        },
+        "review_mode": {
+          "type": "string",
+          "enum": [
+            "manual_dogfooding",
+            "runtime_mediated",
+            "imported_bundle"
+          ]
+        },
+        "protocol_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtime_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_set_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt_set_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_status": {
+          "type": "string",
+          "enum": [
+            "created",
+            "in_progress",
+            "closed",
+            "orchestration_failed"
+          ]
+        },
+        "validator_status": {
+          "type": "string",
+          "enum": [
+            "not_run",
+            "passed",
+            "failed"
+          ]
+        },
+        "human_signoff_status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "rejected",
+            "deferred"
+          ]
+        },
+        "evidence_class": {
+          "type": "string",
+          "enum": [
+            "candidate",
+            "valid",
+            "invalid",
+            "exploratory"
+          ]
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "closed_at": {
+          "$ref": "#/$defs/nullableTimestamp"
+        }
+      }
+    },
+    "stepRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "step_name",
+        "step_status",
+        "step_prompt_artifact_id",
+        "step_started_at",
+        "step_closed_at"
+      ],
+      "properties": {
+        "step_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "step_name": {
+          "type": "string",
+          "enum": [
+            "primary_detection",
+            "adversarial_review",
+            "judgment",
+            "integration"
+          ]
+        },
+        "step_status": {
+          "type": "string",
+          "enum": [
+            "not_started",
+            "skipped",
+            "in_progress",
+            "completed",
+            "failed"
+          ]
+        },
+        "step_prompt_artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "step_started_at": {
+          "$ref": "#/$defs/nullableTimestamp"
+        },
+        "step_closed_at": {
+          "$ref": "#/$defs/nullableTimestamp"
+        }
+      }
+    }
+  }
+}

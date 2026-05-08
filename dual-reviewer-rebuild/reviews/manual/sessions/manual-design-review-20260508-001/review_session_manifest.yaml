@@ -1,0 +1,57 @@
+review_session_id: "manual-design-review-20260508-001"
+review_mode: "manual-dual-reviewer-inspired"
+reviewed_feature: "repo-wide"
+reviewed_spec_phase: "design"
+reviewed_phase_profile: "design"
+review_basis:
+  intent_refs:
+    - "intent/INTENT.md"
+  requirement_refs:
+    - ".kiro/specs/dual-reviewer-foundation/requirements.md"
+    - ".kiro/specs/dual-reviewer-runtime/requirements.md"
+    - ".kiro/specs/dual-reviewer-evaluation/requirements.md"
+    - ".kiro/specs/dual-reviewer-self-improvement/requirements.md"
+    - ".kiro/specs/dual-reviewer-paper-interface/requirements.md"
+  design_refs:
+    - ".kiro/specs/dual-reviewer-foundation/design.md"
+    - ".kiro/specs/dual-reviewer-runtime/design.md"
+    - ".kiro/specs/dual-reviewer-evaluation/design.md"
+    - ".kiro/specs/dual-reviewer-self-improvement/design.md"
+    - ".kiro/specs/dual-reviewer-paper-interface/design.md"
+  alignment_refs:
+    - "docs/alignment/cross-spec-design-alignment.md"
+review_question_set:
+  - "Are new external bundle requirements concretely represented in design artifacts?"
+  - "Are portable export, central ingestion, and admission boundaries separated cleanly?"
+  - "Is cross-project provenance concrete enough for later metric extraction and proposal tracing?"
+  - "Does the design preserve the initial local-only target while allowing the first expansion path?"
+target_paths:
+  - ".kiro/specs/dual-reviewer-foundation/design.md"
+  - ".kiro/specs/dual-reviewer-runtime/design.md"
+  - ".kiro/specs/dual-reviewer-evaluation/design.md"
+  - ".kiro/specs/dual-reviewer-self-improvement/design.md"
+  - ".kiro/specs/dual-reviewer-paper-interface/design.md"
+  - "operations/DEPLOYMENT_MODEL.md"
+  - "EVIDENCE_PROTOCOL.md"
+target_version_refs:
+  spec_json_updated_at: "2026-05-08T23:59:30+09:00"
+  git_commit: null
+reviewer:
+  type: "human-assisted-codex"
+  name: "codex"
+review_started_at: "2026-05-08T23:59:30+09:00"
+review_closed_at: "2026-05-08T23:59:30+09:00"
+review_scope:
+  objective: "Review design wave after external evidence bundle requirements were added."
+  notes:
+    - "This session includes design handback and same-phase recheck."
+upstream_context:
+  operations_refs:
+    - "operations/DEPLOYMENT_MODEL.md"
+    - "operations/HUMAN_WORKFLOW.md"
+alignment_context:
+  alignment_docs:
+    - "docs/alignment/cross-spec-design-alignment.md"
+status:
+  review_in_progress: false
+  signoff_status: "approved"

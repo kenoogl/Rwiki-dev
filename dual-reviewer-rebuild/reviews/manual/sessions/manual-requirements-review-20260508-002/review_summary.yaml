@@ -1,0 +1,25 @@
+review_session_id: "manual-requirements-review-20260508-002"
+signoff_status: "approved"
+reopen_required: false
+downstream_recheck_required: false
+downstream_recheck_targets: []
+unresolved_concerns: []
+finding_counts:
+  total: 0
+  low: 0
+  medium: 0
+  high: 0
+  critical: 0
+  accepted: 0
+  rejected: 0
+  deferred: 0
+  open: 0
+notes:
+  - "Supplemental requirements review passed with no new findings."
+  - "Requirements phase is ready to hand off to design review."
+category_counts: {}
+manual_effort:
+  started_at: "2026-05-08T23:59:00+09:00"
+  closed_at: "2026-05-08T23:59:00+09:00"
+  duration_minutes: 0
+closed_at: "2026-05-08T23:59:00+09:00"

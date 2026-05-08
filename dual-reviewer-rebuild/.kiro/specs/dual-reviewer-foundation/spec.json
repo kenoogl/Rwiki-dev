@@ -1,0 +1,61 @@
+{
+  "feature_name": "dual-reviewer-foundation",
+  "created_at": "2026-05-08T00:00:00+09:00",
+  "updated_at": "2026-05-09T00:45:00+09:00",
+  "language": "ja",
+  "phase": "tasks-approved",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true,
+  "custom": {
+    "reopened": {
+      "requirements": false,
+      "design": false,
+      "tasks": false
+    },
+    "alignment": {
+      "requirements": {
+        "required": true,
+        "status": "completed",
+        "last_checked": "2026-05-08",
+        "note": "cross-spec requirements alignment rechecked after external evidence bundle additions"
+      },
+      "design": {
+        "required": true,
+        "status": "completed",
+        "last_checked": "2026-05-08",
+        "note": "cross-spec design alignment rechecked after external bundle design handback"
+      },
+      "tasks": {
+        "required": true,
+        "status": "completed",
+        "last_checked": "2026-05-09",
+        "note": "cross-spec tasks alignment completed"
+      }
+    },
+    "recheck": {
+      "upstream_change_pending": false,
+      "impacted_downstream_phases": [
+        "tasks"
+      ]
+    },
+    "traceability": {
+      "intent_requirements_matrix_required": true,
+      "intent_requirements_matrix_status": "current",
+      "intent_requirements_matrix_last_checked": "2026-05-08",
+      "intent_requirements_matrix_update_required": false
+    }
+  }
+}

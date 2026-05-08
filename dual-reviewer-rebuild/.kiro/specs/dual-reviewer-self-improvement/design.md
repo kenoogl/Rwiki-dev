@@ -1,0 +1,406 @@
+# Design Document
+
+## Overview
+
+`dual-reviewer-self-improvement` は、runtime evidence と evaluation analysis を入力にして、runtime / prompt / policy / schema / workflow を evidence-driven に改善する learning layer である。
+
+本 design の役割は、次を concrete に定義することにある。
+
+- improvement input の分類
+- proposal artifact の構造
+- replay / backtest artifact の構造
+- approval / adoption / rollback の state flow
+
+この feature は runtime の一部ではない。runtime から出た evidence と evaluation から出た analysis を読んで、改善候補を formal artifact に変換する。
+
+## Goals
+
+- improvement を intuition ではなく artifact-driven にする
+- valid run と invalid run の学習価値を分離して扱う
+- proposal ごとの採否理由を保存する
+- replay / backtest を proposal ごとの検証工程として残す
+- rollback も学習履歴として保持する
+- project-specific signal を meta-pattern 候補へ抽象化できるようにする
+
+## Non-Goals
+
+- runtime 変更の自動適用
+- prompt の自動膨張
+- paper convenience のための change justification
+- external contributor network の intake
+
+## Design Drivers
+
+- raw run evidence と analysis artifact は immutable
+- invalid run は比較評価には使わないが、workflow defect 学習には使える
+- adopted change は proposal artifact と version update に紐づいていなければならない
+- proposal は `runtime quality`、`workflow quality`、`evidence quality` のどれを改善するのかを明示する
+
+## Architecture
+
+self-improvement は `signal intake -> proposal generation -> test gate -> decision gate -> history registry` の 5 段に分ける。
+
+```mermaid
+graph TD
+    Runtime["experiments/runs/"] --> Intake["signal intake"]
+    Eval["experiments/analysis/"] --> Intake
+    Intake --> Proposal["proposal builder"]
+    Proposal --> Test["replay/backtest gate"]
+    Test --> Decision["approval / rejection / adoption gate"]
+    Decision --> History["learning history registry"]
+
+    History --> RuntimeChange["runtime-facing change"]
+    History --> PaperBlock["paper convenience is not sufficient"]
+```
+
+### Components
+
+- `signal intake`
+  - runtime / evaluation artifact から改善信号を抽出
+- `proposal builder`
+  - structured proposal を作る
+- `test gate`
+  - replay または lighter backtest を実行
+- `decision gate`
+  - human approval を通す
+- `history registry`
+  - accepted / rejected / rolled back を保存
+
+## Learning Artifact Layout
+
+self-improvement の正本出力先は `learning/` 配下とする。
+
+```text
+learning/
+├── findings/
+│   ├── recurring_failure_signals.json
+│   └── workflow_failure_signals.json
+├── proposals/
+│   ├── proposal_index.json
+│   └── <proposal_id>.yaml
+├── backtests/
+│   ├── backtest_index.json
+│   └── <proposal_id>.json
+├── approved-updates/
+│   └── adoption_register.json
+├── rejected-updates/
+│   └── rejection_register.json
+└── rollback/
+    └── rollback_register.json
+```
+
+### Placement Rationale
+
+- `findings/`
+  - 改善前の signal inventory
+- `proposals/`
+  - proposal 正本
+- `backtests/`
+  - 検証 artifact
+- `approved-updates/`
+  - 採用履歴
+- `rejected-updates/`
+  - 却下履歴
+- `rollback/`
+  - rollback 履歴
+
+## Input Model
+
+### 1. Input Classes
+
+self-improvement は入力を 3 class に分ける。
+
+- `review_quality_signal`
+  - false negative / false positive / unstable judgment など
+- `workflow_failure_signal`
+  - invalidation、sign-off violation、artifact missing など
+- `evidence_quality_signal`
+  - analysis_blocked、missing metadata、caveat concentration など
+
+### 2. Valid vs Invalid Inputs
+
+input の価値は run validity と独立ではない。次のように扱う。
+
+- valid runs
+  - review quality 改善の一次入力
+- invalid runs
+  - workflow / validation / contamination 防止の一次入力
+- exploratory runs
+  - hypothesis seed には使えるが、adoption 根拠としては弱い
+
+proposal artifact は、どの input class とどの evidence maturity に依拠するかを必ず記録する。
+
+## Signal Extraction Model
+
+### 1. Runtime-Derived Signals
+
+runtime 由来の signal 例:
+
+- repeated defer clusters
+- high reject concentration
+- frequent skip-marker misuse
+- repeated invalidation categories
+
+### 2. Evaluation-Derived Signals
+
+evaluation 由来の signal 例:
+
+- treatment-specific quality drop
+- phase-specific caveat concentration
+- low acceptance ratio in `design` or `tasks`
+- repeated `analysis_blocked`
+
+`findings/recurring_failure_signals.json` は、こうした signal を proposal 前に整理した inventory とする。
+
+### 3. Project-Specific Pattern Extraction
+
+self-improvement は、project 固有知識を repo 外 memory に蓄積するのではなく、runtime / evaluation artifact から抽出して repo 内 artifact に固定する役割も持つ。
+
+初版の抽出 flow:
+
+1. runtime / evaluation から recurring signal を抽出
+2. signal を project-specific pattern candidate として整理
+3. 必要に応じて meta-pattern 候補へ抽象化
+4. proposal や将来の pattern asset 改訂へ接続
+
+このとき区別するもの:
+
+- project-specific concrete
+  - 特定 project の事例、文脈、用語に依存するもの
+- meta-pattern candidate
+  - 他 project でも再利用可能そうな抽象化
+
+これにより、learning loop が「個別失敗の記録」で終わらず、pattern layer の成長へつながる。
+
+## Proposal Model
+
+### 1. Proposal Unit
+
+proposal は 1 改善仮説 = 1 artifact とする。
+
+`learning/proposals/<proposal_id>.yaml` は少なくとも次を持つ。
+
+- `proposal_id`
+- `status`
+- `target_layer`
+- `motivation_class`
+- `source_evidence_refs`
+- `source_origin`
+- `source_repository_refs`
+- `source_admission_refs`
+- `problem_statement`
+- `proposed_change_summary`
+- `expected_benefit`
+- `possible_risks`
+- `required_test_mode`
+- `created_at`
+
+### 2. Target Layers
+
+`target_layer` の初版 enum:
+
+- `prompt`
+- `policy`
+- `schema`
+- `runtime`
+- `workflow`
+
+これにより「品質改善なのか、workflow 改善なのか」を曖昧にしない。
+
+`source_origin` の初版 enum:
+
+- `central_local_run`
+- `imported_external_bundle`
+- `manual_review_record`
+
+### 3. Proposal States
+
+proposal state は次を採る。
+
+- `draft`
+- `awaiting_test`
+- `tested`
+- `approved`
+- `rejected`
+- `adopted`
+- `rolled_back`
+
+## Replay and Backtest Model
+
+### 1. Test Mode Selection
+
+proposal ごとに `required_test_mode` を持たせる。
+
+- `replay`
+  - step-level evidence を再評価する必要がある場合
+- `backtest`
+  - existing analysis artifact に対する軽量検証で足りる場合
+- `manual_review`
+  - artifact comparison と人間判断が主になる場合
+
+### 2. Replay Inputs
+
+replay は runtime の step-level artifact を読む。
+
+最低入力:
+
+- `review_case.json`
+- relevant `steps/*.json`
+- decision units
+- validator / invalidation artifacts
+
+imported external bundle を replay 入力に使う場合でも、proposal と backtest artifact には元の `source_repository_id`、`source_revision`、`admission_status` を残す。
+
+特に Step B と Step C の挙動に関わる proposal では、step-level replay を必須にする。
+
+### 3. Backtest Inputs
+
+backtest は evaluation output を読む。
+
+最低入力:
+
+- `run_classification_index.json`
+- `run_metrics.json`
+- `finding_metrics.json`
+- `caveat_register.json`
+
+### 4. Test Result Artifact
+
+`learning/backtests/<proposal_id>.json` は少なくとも次を持つ。
+
+- `proposal_id`
+- `test_mode`
+- `input_refs`
+- `input_origin_refs`
+- `result_label`
+- `observed_effect`
+- `risk_observations`
+- `tested_at`
+
+`result_label` の初版 enum:
+
+- `supported`
+- `unsupported`
+- `inconclusive`
+- `untested`
+
+`untested` は proposal state と矛盾しないように、`awaiting_test` から `tested` への遷移条件を制御する。
+
+## Decision and Adoption Model
+
+### 1. Approval Gate
+
+human approval が必要な対象:
+
+- prompt change
+- policy change
+- schema change
+- runtime-affecting workflow change
+
+`approved` は proposal の採否判断であり、実際に repo change が入ったことをまだ意味しない。
+
+### 2. Adoption Gate
+
+`adopted` になる条件:
+
+1. proposal が `approved`
+2. required test artifact が存在
+3. repo change が version update と結びつく
+
+`approved-updates/adoption_register.json` は proposal と実際の repo change を結ぶ registry とする。
+
+### 3. Rejection Model
+
+rejection は失敗ではなく履歴である。`rejected-updates/rejection_register.json` には少なくとも次を残す。
+
+- `proposal_id`
+- `rejection_reason`
+- `rejected_at`
+- `reviewer_note`
+
+## Rollback Model
+
+rollback は supersession と分けて扱う。
+
+- supersession
+  - より新しい改善に置き換わる
+- rollback
+  - 採用した change が有害だったため戻す
+
+`rollback/rollback_register.json` は少なくとも次を持つ。
+
+- `proposal_id`
+- `adopted_change_ref`
+- `rollback_reason`
+- `rollback_trigger_signal_refs`
+- `rolled_back_at`
+
+rollback も次の proposal の input になりうる。
+
+## Separation from Paper Narrative
+
+self-improvement は paper-facing motivation を proposal reason として単独採用しない。
+
+許容されない例:
+
+- 表を綺麗にしたいので runtime field を変える
+- 論文の主張に都合がよいので exploratory evidence を valid 扱いにする
+
+paper convenience は caveat 整理や export 層で扱い、runtime-affecting proposal の主理由にはしない。
+
+## Interfaces to Other Features
+
+### Runtime
+
+self-improvement は runtime に直接書き戻さない。採用済み proposal を通じて次の feature change に変換される。
+
+### Evaluation
+
+evaluation は self-improvement の主要 signal source である。特に invalid / exploratory 分布、phase-aware metrics、caveat register が入力になる。
+
+### Paper-Interface
+
+paper-interface は self-improvement proposal を narrative source として扱わない。必要なら adopted changes の履歴を methodology note として参照するだけに留める。
+
+## Key Decisions
+
+### Decision 1: Proposal is the unit of change intent
+
+「なんとなく改善した」は許さず、proposal artifact を必須にする。
+
+### Decision 2: Invalid runs are learning signals, not quality evidence
+
+invalid run は workflow defect 改善には使えるが、quality gain claim には使わない。
+
+### Decision 3: Approval and adoption are separate states
+
+承認済みでも、repo 反映と version update がなければ adopted ではない。
+
+### Decision 4: Rollback remains part of learning history
+
+失敗改善も消さずに次の改善入力へつなげる。
+
+## Requirements Traceability
+
+| Requirement | Design Response |
+|------------|-----------------|
+| Improvement input definition | 3 input class と validity-aware input policy を定義 |
+| Proposal artifact contract | proposal unit と state model を定義 |
+| Replay and backtest requirements | test mode selection と result artifact を定義 |
+| Approval and adoption flow | approval gate と adoption register を定義 |
+| Rollback and failure handling | rollback registry と supersession 区別を定義 |
+| Separation from paper narrative | paper convenience 禁止ルールを定義 |
+
+## Open Issues for Design Alignment Gate
+
+- proposal から repo version update をどう参照するか
+- schema change proposal の最小 replay 要件
+- workflow-only proposal に replay を要求する境界
+- paper-interface に見せる adopted change 履歴の粒度
+
+## Completion Criteria
+
+- valid / invalid / exploratory の signal をどう使い分けるか説明できる
+- proposal、backtest、adoption、rollback artifact の所在を説明できる
+- approval と adoption の違いを説明できる
+- runtime / evaluation / paper-interface との境界を説明できる

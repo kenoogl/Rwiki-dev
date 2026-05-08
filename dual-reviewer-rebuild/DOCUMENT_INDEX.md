@@ -1,0 +1,229 @@
+# DOCUMENT_INDEX
+
+## 1. 目的
+
+この文書は、`dual-reviewer-rebuild` 内で生成・管理される文書と主要 artifact の index である。
+
+目的は次の 3 つ。
+
+- どの文書が何のために存在するかを一目で分かるようにする
+- どの文書が正本で、どの文書が補助資料かを区別する
+- multi-feature 開発で文書追加が進んでも、所在と更新責務を見失わないようにする
+
+この repo では文書が多層に増えるため、新しい文書を追加した場合は原則として本 index も更新する。
+
+## 2. 文書階層
+
+この repo の文書階層は次の順で読む。
+
+1. `intent/`
+2. `operations/`
+3. top-level contract documents
+4. `.kiro/steering/`
+5. `.kiro/specs/`
+6. `docs/`
+7. 実装・実験・学習・論文化 artifact
+
+意味:
+
+- 上にあるほど「なぜ」「どう使うか」に近い
+- 下にあるほど「どう作るか」「どう測るか」「何が起きたか」に近い
+
+## 3. ルート文書
+
+| Path | Role | Status |
+|------|------|--------|
+| [README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/README.md) | repo 全体の入口 | overview |
+| [DOCUMENT_INDEX.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/DOCUMENT_INDEX.md) | 文書・artifact の所在管理 index | authoritative index |
+| [CLAUDE.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CLAUDE.md) | 開発作業時の運用メモ | working guidance |
+| [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md) | status / 用語 / naming の共通規約 | top-level contract |
+| [SYSTEM_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/SYSTEM_BOUNDARY.md) | system の in/out scope | top-level contract |
+| [REPRODUCIBILITY_CONTRACT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/REPRODUCIBILITY_CONTRACT.md) | 再現性条件 | top-level contract |
+| [EVIDENCE_PROTOCOL.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/EVIDENCE_PROTOCOL.md) | evidence の扱い規約 | top-level contract |
+| [SELF_IMPROVEMENT_LOOP.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/SELF_IMPROVEMENT_LOOP.md) | 改善 loop の上位定義 | top-level contract |
+| [PAPER_WORK_BREAKDOWN.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/PAPER_WORK_BREAKDOWN.md) | 論文化作業の分解 | planning reference |
+| [MIGRATION_MANIFEST.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/MIGRATION_MANIFEST.md) | 旧 repo からの移植対象一覧 | migration authority |
+
+## 4. `intent/`
+
+`intent/` は「なぜこの system を作るか」の層であり、spec より上位の正本である。
+
+| Path | Role | Status |
+|------|------|--------|
+| [intent/INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md) | 再構築の目的と価値命題 | authoritative |
+| [intent/NON_GOALS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/NON_GOALS.md) | 今回やらないことの明示 | authoritative |
+| [intent/DESIGN_PRINCIPLES.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/DESIGN_PRINCIPLES.md) | 設計原則 | authoritative |
+| [intent/TRACEABILITY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/TRACEABILITY.md) | intent から spec / artifact への接続 | authoritative |
+
+補足:
+
+- phase-specific effectiveness metrics の価値命題は `intent/INTENT.md`
+- 具体定義は `dual-reviewer-evaluation` spec
+を正本とする
+- `dual-reviewer` 方法論を本 repo 自身へ手動適用する方針も `intent/INTENT.md` と `operations/HUMAN_WORKFLOW.md` を正本とする
+
+## 5. `operations/`
+
+`operations/` は「どう使い、何を信頼し、どう無効化するか」の層である。
+
+| Path | Role | Status |
+|------|------|--------|
+| [operations/DEPLOYMENT_MODEL.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/DEPLOYMENT_MODEL.md) | deploy 形態の固定 | authoritative |
+| [operations/TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md) | LLM / validator / human の責務境界 | authoritative |
+| [operations/HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md) | 開発・運用 workflow | authoritative |
+| [operations/DATA_INVALIDATION_POLICY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/DATA_INVALIDATION_POLICY.md) | valid / invalid / exploratory の扱い | authoritative |
+
+補足:
+
+- review の進め方も `operations/HUMAN_WORKFLOW.md` が正本であり、`intent -> requirements -> design -> tasks` の段階的かつ水平的な wave を採る
+
+## 6. `.kiro/steering/`
+
+`cc-sdd` 全体にかかる共通 steering。
+
+| Path | Role | Status |
+|------|------|--------|
+| [product.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/steering/product.md) | product steering | steering |
+| [tech.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/steering/tech.md) | technical steering | steering |
+| [structure.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/steering/structure.md) | repo structure steering | steering |
+
+## 7. `.kiro/specs/`
+
+ここが `cc-sdd` の feature 正本である。各 spec は `brief -> requirements -> design -> tasks` の順に整備する。
+
+### 7.1 feature 一覧
+
+| Feature | Purpose | Current note |
+|---------|---------|--------------|
+| `dual-reviewer-foundation` | 共通 contract と shared asset layer | tasks approved |
+| `dual-reviewer-runtime` | review orchestration | tasks approved |
+| `dual-reviewer-evaluation` | valid/invalid 分離と metrics | tasks approved |
+| `dual-reviewer-paper-interface` | paper-facing export | tasks approved |
+| `dual-reviewer-self-improvement` | evidence-driven improvement loop | tasks approved |
+
+### 7.2 spec 内ファイルの意味
+
+各 feature directory には次の文書がある。
+
+| File | Role |
+|------|------|
+| `brief.md` | feature の短い導入 |
+| `research.md` | 調査メモや参考知見 |
+| `requirements.md` | feature contract の正本 |
+| `design.md` | feature 設計の正本 |
+| `tasks.md` | 実装・移植タスクの正本 |
+| `spec.json` | `cc-sdd` 管理用メタデータ |
+
+### 7.3 spec 主要ファイルリンク
+
+| Feature | Requirements | Design | Tasks |
+|---------|--------------|--------|-------|
+| foundation | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/tasks.md) |
+| runtime | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-runtime/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-runtime/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-runtime/tasks.md) |
+| evaluation | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/tasks.md) |
+| paper-interface | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-paper-interface/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-paper-interface/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-paper-interface/tasks.md) |
+| self-improvement | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/tasks.md) |
+
+## 8. `docs/`
+
+`docs/` は spec 正本ではなく、横断判断や棚卸しの補助資料を置く。
+
+### 8.1 `docs/alignment/`
+
+| Path | Role | Status |
+|------|------|--------|
+| [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md) | requirements wave の横断整合メモ | alignment memo |
+| [cross-spec-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md) | design wave の横断整合メモ | alignment memo |
+| [cross-spec-tasks-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md) | tasks wave の横断整合メモ | alignment memo |
+| [phase-and-feature-dependency-map.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/phase-and-feature-dependency-map.md) | phase 間・feature 間依存と進行順の正本補助 | alignment memo |
+
+`cross-spec-design-alignment.md` には design 修正時の reopen procedure を含める。
+
+### 8.2 `docs/coordination/`
+
+| Path | Role | Status |
+|------|------|--------|
+| [implementation-coordination-log.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md) | implementation 中の横断調整ログ | coordination log |
+
+### 8.3 `docs/traceability/`
+
+| Path | Role | Status |
+|------|------|--------|
+| [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) | intent 命題と feature requirements の対応表 | traceability matrix |
+
+### 8.4 `docs/migration/`
+
+| Path | Role | Status |
+|------|------|--------|
+| [feature-disposition-judgment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/migration/feature-disposition-judgment.md) | 旧機能の keep/reshape/drop 判定表 | migration memo |
+
+### 8.5 `docs/legacy/`
+
+| Path | Role | Status |
+|------|------|--------|
+| [legacy-discussion-carryover.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/legacy/legacy-discussion-carryover.md) | 初期議論から継承する論点の整理 | legacy reference |
+
+## 9. Artifact Directory Index
+
+以下は現時点では mostly skeleton だが、今後の実装・実験・学習で主要な置き場になる。
+
+| Path | Expected contents | Status |
+|------|-------------------|--------|
+| [runtime/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime) | prompts / schemas / validators / config / runtime assets | shared asset layer |
+| [experiments/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments) | protocols / runs / analysis / fixtures | experiment workspace |
+| [learning/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/learning) | findings / proposals / approved-updates / rejected-updates | self-improvement workspace |
+| [paper/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/paper) | reports / figures / tables | paper-facing workspace |
+| [scripts/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/scripts) | utility scripts | implementation workspace |
+| [tests/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/tests) | repo-level tests | validation workspace |
+| [reviews/manual/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/reviews/manual) | manual dogfooding review records, templates, and aggregate summaries | manual review workspace |
+
+## 10. 正本と参考資料の区別
+
+### 正本
+
+- `intent/`
+- `operations/`
+- top-level contract documents
+- `.kiro/steering/`
+- `.kiro/specs/*/requirements.md`
+- `.kiro/specs/*/design.md`
+- `.kiro/specs/*/tasks.md`
+- `.kiro/specs/*/spec.json` for status and phase state
+
+### 補助資料
+
+- `docs/`
+- `brief.md`
+- `research.md`
+- 将来の analysis notes
+
+判断に迷った場合は、補助資料ではなく正本を優先する。
+
+## 11. 更新ルール
+
+1. 新しい上位文書を追加したら本 index に追加する
+2. 新しい feature spec を追加したら `7.1` と `7.3` を更新する
+3. `docs/` に alignment memo や棚卸し資料を追加したら `8` を更新する
+4. 主要 artifact directory の役割が変わったら `9` を更新する
+5. `status` 列は説明用 overview として追随させてよいが、正本は `spec.json` とする
+6. `intent -> requirements` の trace matrix を追加した場合は `4` または `8` の関連項目に追記し、更新トリガーの所在も明示する
+
+## 12. 次に読むべき順序
+
+新規参加者向けの推奨順序は次だ。
+
+1. [README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/README.md)
+2. [DOCUMENT_INDEX.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/DOCUMENT_INDEX.md)
+3. [intent/INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md)
+4. [operations/TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md)
+5. [SYSTEM_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/SYSTEM_BOUNDARY.md)
+6. [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md)
+7. [MIGRATION_MANIFEST.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/MIGRATION_MANIFEST.md)
+8. [dual-reviewer-foundation/requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/requirements.md)
+9. [dual-reviewer-foundation/design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/design.md)
+10. [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md)
+11. [cross-spec-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md)
+12. [cross-spec-tasks-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md)
+13. [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md)
+
+この順序で、意図、運用境界、system boundary、移行方針、feature contract に到達できる。

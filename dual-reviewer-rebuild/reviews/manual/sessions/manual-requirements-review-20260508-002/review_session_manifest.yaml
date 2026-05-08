@@ -1,0 +1,53 @@
+review_session_id: "manual-requirements-review-20260508-002"
+review_mode: "manual-dual-reviewer-inspired"
+reviewed_feature: "repo-wide"
+reviewed_spec_phase: "requirements"
+reviewed_phase_profile: "requirements"
+review_basis:
+  intent_refs:
+    - "intent/INTENT.md"
+  requirement_refs:
+    - ".kiro/specs/dual-reviewer-foundation/requirements.md"
+    - ".kiro/specs/dual-reviewer-runtime/requirements.md"
+    - ".kiro/specs/dual-reviewer-evaluation/requirements.md"
+    - ".kiro/specs/dual-reviewer-self-improvement/requirements.md"
+    - ".kiro/specs/dual-reviewer-paper-interface/requirements.md"
+  design_refs: []
+  alignment_refs:
+    - "docs/alignment/cross-spec-requirements-alignment.md"
+review_question_set:
+  - "Does the distributed local collection and central ingestion flow have clear ownership?"
+  - "Does the new external bundle flow conflict with the initial local-only deployment target?"
+  - "Are provenance and admission requirements sufficient for later metric extraction?"
+  - "Has public intake been accidentally pulled into the initial rebuild scope?"
+target_paths:
+  - ".kiro/specs/dual-reviewer-foundation/requirements.md"
+  - ".kiro/specs/dual-reviewer-runtime/requirements.md"
+  - ".kiro/specs/dual-reviewer-evaluation/requirements.md"
+  - ".kiro/specs/dual-reviewer-self-improvement/requirements.md"
+  - ".kiro/specs/dual-reviewer-paper-interface/requirements.md"
+  - "operations/DEPLOYMENT_MODEL.md"
+  - "EVIDENCE_PROTOCOL.md"
+target_version_refs:
+  spec_json_updated_at: "2026-05-08T23:59:00+09:00"
+  git_commit: null
+reviewer:
+  type: "human-assisted-codex"
+  name: "codex"
+review_started_at: "2026-05-08T23:59:00+09:00"
+review_closed_at: "2026-05-08T23:59:00+09:00"
+review_scope:
+  objective: "Close requirements review after the external evidence bundle additions."
+  notes:
+    - "This session supplements the earlier requirements review wave."
+    - "The focus is the export / ingest / admission addition and its consistency with initial deployment scope."
+upstream_context:
+  operations_refs:
+    - "operations/DEPLOYMENT_MODEL.md"
+    - "operations/DATA_INVALIDATION_POLICY.md"
+alignment_context:
+  alignment_docs:
+    - "docs/alignment/cross-spec-requirements-alignment.md"
+status:
+  review_in_progress: false
+  signoff_status: "approved"

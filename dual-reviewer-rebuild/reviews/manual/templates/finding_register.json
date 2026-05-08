@@ -1,0 +1,38 @@
+{
+  "review_session_id": "manual-review-0001",
+  "findings": [
+    {
+      "finding_id": "manual-review-0001-f001",
+      "severity": "medium",
+      "category": "ambiguity",
+      "summary": "Requirement wording does not clearly separate foundation and runtime ownership.",
+      "rationale": "The current text could be interpreted as allowing foundation to own execution behavior.",
+      "affected_refs": [
+        {
+          "file": ".kiro/specs/dual-reviewer-foundation/requirements.md",
+          "section": "Requirement 1"
+        }
+      ],
+      "suggested_action": "Clarify ownership boundary in requirement acceptance criteria.",
+      "confidence": "medium",
+      "decision_status": "open",
+      "decision_note": null,
+      "decision_timestamp": null,
+      "fix_linkage": {
+        "applied": false,
+        "refs": []
+      },
+      "reopen_linkage": {
+        "required": false,
+        "target_spec_phase": null,
+        "target_features": []
+      },
+      "alignment_impact": {
+        "alignment_recheck_required": false,
+        "alignment_docs": []
+      },
+      "created_at": "2026-05-08T00:00:00+09:00",
+      "updated_at": "2026-05-08T00:00:00+09:00"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+review_session_id: "manual-design-review-20260508-001"
+signoff_status: "approved"
+reopen_required: false
+downstream_recheck_required: false
+downstream_recheck_targets: []
+unresolved_concerns: []
+finding_counts:
+  total: 4
+  low: 0
+  medium: 2
+  high: 2
+  critical: 0
+  accepted: 4
+  rejected: 0
+  deferred: 0
+  open: 0
+notes:
+  - "Design review wave found missing external bundle details and resolved them in the same phase."
+  - "Cross-spec design alignment recheck is required and assumed in this handback."
+category_counts:
+  missing_design_detail: 4
+manual_effort:
+  started_at: "2026-05-08T23:59:30+09:00"
+  closed_at: "2026-05-08T23:59:30+09:00"
+  duration_minutes: 0
+closed_at: "2026-05-08T23:59:30+09:00"

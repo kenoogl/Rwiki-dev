@@ -1,0 +1,83 @@
+{
+  "summary_version": "v1",
+  "generated_from": "manual review session summaries",
+  "scope": {
+    "session_count": 5,
+    "included_sessions": [
+      "manual-intent-review-20260508-001",
+      "manual-requirements-review-20260508-001",
+      "manual-requirements-review-20260508-002",
+      "manual-design-review-20260508-001",
+      "manual-tasks-review-20260509-001"
+    ],
+    "review_modes": [
+      "manual-dual-reviewer-inspired"
+    ]
+  },
+  "session_metrics": {
+    "total_sessions": 5,
+    "approved_sessions": 5,
+    "pending_sessions": 0,
+    "sessions_with_findings": 3,
+    "sessions_with_zero_findings": 2,
+    "sessions_with_unresolved_concerns": 2,
+    "sessions_requiring_downstream_recheck": 1
+  },
+  "finding_metrics": {
+    "total_findings": 8,
+    "accepted_findings": 8,
+    "rejected_findings": 0,
+    "deferred_findings": 0,
+    "open_findings": 0,
+    "severity_distribution": {
+      "low": 0,
+      "medium": 5,
+      "high": 3,
+      "critical": 0
+    },
+    "category_distribution": {
+      "missing_design_detail": 4,
+      "ambiguity": 2,
+      "workflow_gap": 1,
+      "missing_requirement": 1
+    }
+  },
+  "phase_metrics": {
+    "intent": {
+      "sessions": 1,
+      "findings": 2,
+      "accepted_findings": 2
+    },
+    "requirements": {
+      "sessions": 2,
+      "findings": 2,
+      "accepted_findings": 2
+    },
+    "design": {
+      "sessions": 1,
+      "findings": 4,
+      "accepted_findings": 4
+    },
+    "tasks": {
+      "sessions": 1,
+      "findings": 0,
+      "accepted_findings": 0
+    }
+  },
+  "workflow_metrics": {
+    "reopen_required_sessions": 0,
+    "downstream_recheck_targets": {
+      "design": 1
+    }
+  },
+  "effort_metrics": {
+    "total_recorded_minutes": 75,
+    "sessions_with_zero_recorded_minutes": 3,
+    "effort_reliability": "partial"
+  },
+  "limitations": [
+    "This summary covers only manual dogfooding review sessions recorded before runtime implementation.",
+    "Manual effort is under-recorded because three session summaries currently record duration_minutes as 0.",
+    "These metrics do not estimate recall, missed issues, or runtime review quality."
+  ]
+}
