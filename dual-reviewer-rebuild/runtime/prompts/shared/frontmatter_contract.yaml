@@ -1,0 +1,47 @@
+contract_id: prompt_frontmatter_contract
+version: 1.0.0
+description: >
+  Shared frontmatter contract for repo-contained prompt artifacts owned by
+  dual-reviewer-foundation.
+required_fields:
+  - prompt_id
+  - prompt_version
+  - version
+  - role
+  - phase_scope
+  - step
+  - language
+  - source_ref
+field_definitions:
+  prompt_id:
+    type: string
+    description: Stable prompt artifact identifier used in run records.
+  prompt_version:
+    type: string
+    description: Canonical prompt version field for runtime traceability.
+  version:
+    type: string
+    description: Human-readable artifact version mirrored from prompt_version.
+  role:
+    type: string
+    enum:
+      - primary_reviewer
+      - adversarial_reviewer
+      - judgment_reviewer
+  phase_scope:
+    type: array
+    item_type: string
+    description: Review phase/profile coverage for which the prompt is intended.
+  step:
+    type: string
+    enum:
+      - primary_detection
+      - adversarial_review
+      - judgment
+      - integration
+  language:
+    type: string
+    description: Human language used in the prompt body.
+  source_ref:
+    type: string
+    description: Source contract or design reference that justifies the prompt.

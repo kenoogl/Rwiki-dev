@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "finding_id": "finding-001",
+  "run_id": "run-001",
+  "step_id": "step-a-001",
+  "source_role": "primary_reviewer",
+  "severity": "medium",
+  "summary": "A minimal finding fixture for foundation contract tests.",
+  "source_refs": [
+    "steps/step_a_primary_detection.json#finding-001"
+  ],
+  "counter_evidence_refs": [],
+  "judgment_ref": "steps/step_c_judgment.json#judgment-001",
+  "decision_unit_id": "decision-unit-001",
+  "human_decision_ref": "decisions/decision_units.json#decision-unit-001",
+  "impact_score_ref": null,
+  "failure_observation_refs": [],
+  "validation_refs": {
+    "invalidation_marker_refs": []
+  }
+}

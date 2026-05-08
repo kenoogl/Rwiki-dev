@@ -151,3 +151,119 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: design と tasks に沿って foundation-owned directory skeleton、run metadata contract、shared schema set 初版を実装
 - status: completed
+
+### 6.3 2026-05-08 foundation shared contract Task 4-6
+
+- 日付: 2026-05-08
+- 対象 feature: `dual-reviewer-foundation`
+- 対象 task: `Task 4` / `Task 5` / `Task 6`
+- touched artifacts:
+  - `runtime/prompts/judgment/judgment_reviewer.prompt.md`
+  - `runtime/prompts/shared/frontmatter_contract.yaml`
+  - `runtime/patterns/seed_patterns.yaml`
+  - `runtime/patterns/fatal_patterns.yaml`
+  - `runtime/config/config.yaml.template`
+  - `runtime/config/terminology.yaml.template`
+  - `runtime/validators/contracts/validator_result.schema.json`
+  - `runtime/validators/contracts/invalidation_marker.schema.json`
+  - `runtime/validators/contracts/review_mode_vocab.yaml`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: prompt identity contract、pattern/config assets、validator-facing contracts を追加。`tasks.md` の `terminology_template.yaml` 表記は design canonical の `terminology.yaml.template` に正規化し、requirements が要求する `config.yaml.template` も同時実装
+- status: completed
+
+### 6.4 2026-05-08 foundation shared contract Task 7-8
+
+- 日付: 2026-05-08
+- 対象 feature: `dual-reviewer-foundation`
+- 対象 task: `Task 7` / `Task 8`
+- touched artifacts:
+  - `tests/fixtures/foundation/review_case.minimal.json`
+  - `tests/fixtures/foundation/finding.minimal.json`
+  - `tests/fixtures/foundation/validator_result.minimal.json`
+  - `tests/fixtures/foundation/invalidation_marker.minimal.json`
+  - `scripts/validate_foundation_contracts.rb`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: downstream reuse 用の最小 fixture を追加し、schema parse、metadata required field、prompt frontmatter、review-mode vocabulary の smoke check を実行する repo-contained validation script を実装
+- status: completed
+
+### 6.5 2026-05-08 runtime skeleton Task 1
+
+- 日付: 2026-05-08
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `Task 1`
+- touched artifacts:
+  - `runtime/controller/session_controller.rb`
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `runtime/executors/step_c_judgment.rb`
+  - `runtime/executors/step_d_integration.rb`
+  - `runtime/writers/evidence_writer.rb`
+  - `runtime/validation/validation_bridge.rb`
+  - `runtime/export/bundle_exporter.rb`
+  - `runtime/support/foundation_asset_loader.rb`
+  - `scripts/run_review_session.rb`
+  - `scripts/export_evidence_bundle.rb`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: runtime ownership 境界を Ruby module skeleton として切り出し、entrypoint から foundation metadata contract と prompt contract をロードできる状態を作成
+- status: completed
+
+### 6.6 2026-05-08 runtime initialization Task 2-3
+
+- 日付: 2026-05-08
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `Task 2` / `Task 3`
+- touched artifacts:
+  - `runtime/controller/session_controller.rb`
+  - `runtime/writers/evidence_writer.rb`
+  - `scripts/run_review_session.rb`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: foundation metadata contract に従う run initialization と `experiments/runs/<run_id>/` canonical layout 作成を実装。required metadata 欠損時は run 開始前に停止するガードを追加
+- status: completed
+
+### 6.7 2026-05-08 runtime step emission Task 4-5
+
+- 日付: 2026-05-08
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `Task 4` / `Task 5`
+- touched artifacts:
+  - `runtime/support/foundation_asset_loader.rb`
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `runtime/executors/step_c_judgment.rb`
+  - `runtime/executors/step_d_integration.rb`
+  - `runtime/writers/evidence_writer.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/run_review_session.rb`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: treatment-aware step artifact emission と `review_case.json` aggregation の最小実装を追加。Step C は foundation prompt frontmatter を実参照し、Step A/B/D は runtime-owned prompt 未実装のため deferred resolution を明示
+- status: completed
+
+### 6.8 2026-05-08 runtime close/export Task 6-8
+
+- 日付: 2026-05-08
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `Task 6` / `Task 7` / `Task 8`
+- touched artifacts:
+  - `runtime/writers/evidence_writer.rb`
+  - `runtime/validation/validation_bridge.rb`
+  - `runtime/export/bundle_exporter.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/run_review_session.rb`
+  - `scripts/export_evidence_bundle.rb`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: decision unit と human sign-off artifact、run close 後の validator result / invalidation marker / metadata update、portable bundle export の最小実装を追加
+- status: completed

@@ -1,0 +1,17 @@
+version: 1.0.0
+asset_type: seed_patterns
+description: >
+  Reusable seed knowledge for cross-project review support. This file is a
+  data source, not executable matching logic.
+reusable_seed_patterns:
+  - pattern_id: seed.missing-validation-path
+    status: active
+    applicable_phases:
+      - design
+      - tasks
+    summary: Validation artifacts are referenced late or not wired into the execution path.
+    signals:
+      - validator invocation is deferred without an explicit run-close boundary
+      - invalidation handling rewrites raw evidence instead of annotating it
+    review_hint: Check whether validation and invalidation remain separate from raw evidence writes.
+project_accumulated_patterns: []

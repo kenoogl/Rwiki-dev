@@ -1,0 +1,14 @@
+version: 1.0.0
+asset_type: fatal_patterns
+description: >
+  Stable baseline patterns that indicate review output should not be treated as
+  trustworthy without explicit remediation.
+fatal_patterns:
+  - pattern_id: fatal.hidden-external-memory
+    status: active
+    summary: Runtime-critical behavior depends on repo-external hidden memory or files.
+    consequence: Treat affected output as invalid until the dependency is modeled in repo-contained config and metadata.
+  - pattern_id: fatal.raw-evidence-mutation
+    status: active
+    summary: Validation or invalidation mutates raw evidence instead of emitting separate artifacts.
+    consequence: Treat affected output as invalid because provenance and replay integrity are broken.

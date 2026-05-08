@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dual-reviewer:foundation:validator:invalidation_marker:1.0.0",
+  "title": "invalidation_marker",
+  "description": "Annotation artifact describing why a run, step, or finding was invalidated without mutating raw evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "invalidation_marker_id",
+    "run_id",
+    "reason_code",
+    "reason_detail",
+    "scope",
+    "issued_by",
+    "issued_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "invalidation_marker_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "step_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "finding_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "missing_required_metadata",
+        "schema_validation_failed",
+        "prompt_resolution_failed",
+        "human_signoff_missing",
+        "provenance_incomplete",
+        "manual_invalidation",
+        "other"
+      ]
+    },
+    "reason_detail": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "run",
+        "step",
+        "finding"
+      ]
+    },
+    "issued_by": {
+      "type": "string",
+      "enum": [
+        "validator",
+        "human_operator"
+      ]
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

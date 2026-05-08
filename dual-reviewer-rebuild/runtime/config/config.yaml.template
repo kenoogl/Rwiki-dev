@@ -1,0 +1,14 @@
+version: 1.0.0
+project:
+  language: ja
+  default_phase_profile: design
+review_protocol:
+  protocol_version: 1.0.0
+  evidence_output_location: runtime/runs
+roles:
+  primary_reviewer:
+    model_identifier: YOUR_PRIMARY_MODEL
+  adversarial_reviewer:
+    model_identifier: YOUR_ADVERSARIAL_MODEL
+  judgment_reviewer:
+    model_identifier: YOUR_JUDGMENT_MODEL
