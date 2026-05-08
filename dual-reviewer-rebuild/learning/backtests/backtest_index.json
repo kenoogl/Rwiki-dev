@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-05-08T21:50:58Z",
+  "entries": [
+    {
+      "proposal_id": "proposal-policy-exploratory-evidence-mode-run-exploratory-001",
+      "test_mode": "backtest",
+      "result_label": "inconclusive",
+      "tested_at": "2026-05-08T21:50:58Z"
+    },
+    {
+      "proposal_id": "proposal-prompt-human-decision-mix-run-exploratory-001",
+      "test_mode": "replay",
+      "result_label": "untested",
+      "tested_at": "2026-05-08T21:50:58Z"
+    },
+    {
+      "proposal_id": "proposal-prompt-human-decision-mix-run-fixture-001",
+      "test_mode": "replay",
+      "result_label": "untested",
+      "tested_at": "2026-05-08T21:50:58Z"
+    },
+    {
+      "proposal_id": "proposal-schema-unresolved-judgment-labels-run-fixture-001",
+      "test_mode": "backtest",
+      "result_label": "supported",
+      "tested_at": "2026-05-08T21:50:58Z"
+    },
+    {
+      "proposal_id": "proposal-workflow-analysis-precondition-gap-run-blocked-001",
+      "test_mode": "manual_review",
+      "result_label": "untested",
+      "tested_at": "2026-05-08T21:50:58Z"
+    },
+    {
+      "proposal_id": "proposal-workflow-caveat-observed-aggregate",
+      "test_mode": "backtest",
+      "result_label": "supported",
+      "tested_at": "2026-05-08T21:50:58Z"
+    },
+    {
+      "proposal_id": "proposal-workflow-invalidation-marker-issued-run-invalid-001",
+      "test_mode": "manual_review",
+      "result_label": "untested",
+      "tested_at": "2026-05-08T21:50:58Z"
+    },
+    {
+      "proposal_id": "proposal-workflow-validator-failed-run-invalid-001",
+      "test_mode": "manual_review",
+      "result_label": "untested",
+      "tested_at": "2026-05-08T21:50:58Z"
+    }
+  ]
+}

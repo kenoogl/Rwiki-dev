@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "validator_result_id": "validator-result-invalid-001",
+  "run_id": "run-invalid-001",
+  "validator_name": "runtime-validation-bridge",
+  "validator_version": "0.1.0",
+  "review_mode": "runtime_mediated",
+  "overall_status": "failed",
+  "executed_at": "2026-05-09T00:10:00Z",
+  "checks": [
+    {
+      "check_id": "required-metadata",
+      "status": "passed",
+      "severity": "info",
+      "message": "All required metadata fields are present."
+    },
+    {
+      "check_id": "manual-invalidation",
+      "status": "failed",
+      "severity": "error",
+      "message": "Fixture invalidation marker present."
+    }
+  ],
+  "invalidation_marker_refs": [
+    "invalid-invalid-001"
+  ]
+}

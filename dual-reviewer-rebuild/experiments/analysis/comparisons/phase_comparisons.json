@@ -1,0 +1,19 @@
+{
+  "comparison_status": "valid",
+  "comparison_invalid_reason": [
+
+  ],
+  "available_phases": [
+    "tasks"
+  ],
+  "phase_slices": [
+    {
+      "phase_profile": "tasks",
+      "overlay_metric_profile": "tasks_overlay_v1",
+      "run_count": 1,
+      "treatments_present": [
+        "dual+judgment"
+      ]
+    }
+  ]
+}

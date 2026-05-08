@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-05-08T22:27:01Z",
+  "entries": [
+    {
+      "table_id": "table-analysis-summary-v1",
+      "source_artifact_refs": [
+        "experiments/analysis/comparisons/phase_comparisons.json",
+        "experiments/analysis/comparisons/treatment_comparisons.json",
+        "experiments/analysis/caveats/caveat_register.json",
+        "experiments/analysis/classifications/exclusion_report.json",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml"
+      ],
+      "field_projection": [
+        {
+          "artifact_ref": "experiments/analysis/comparisons/phase_comparisons.json",
+          "fields": [
+            "comparison_status",
+            "available_phases",
+            "phase_slices[].phase_profile",
+            "phase_slices[].overlay_metric_profile",
+            "phase_slices[].run_count"
+          ]
+        },
+        {
+          "artifact_ref": "experiments/analysis/comparisons/treatment_comparisons.json",
+          "fields": [
+            "comparison_status",
+            "comparison_invalid_reason",
+            "available_treatments"
+          ]
+        },
+        {
+          "artifact_ref": "experiments/analysis/classifications/exclusion_report.json",
+          "fields": [
+            "entries[].run_id",
+            "entries[].classification",
+            "entries[].reason_codes"
+          ]
+        },
+        {
+          "artifact_ref": "experiments/analysis/caveats/caveat_register.json",
+          "fields": [
+            "entries[].caveat_code",
+            "entries[].severity",
+            "entries[].affected_scope"
+          ]
+        }
+      ],
+      "maturity_label": "preliminary",
+      "caveat_refs": [
+        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+      ]
+    }
+  ]
+}

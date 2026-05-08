@@ -1,0 +1,12 @@
+{
+  "comparison_status": "invalid",
+  "comparison_invalid_reason": [
+    "insufficient_variant_count"
+  ],
+  "available_treatments": [
+    "dual+judgment"
+  ],
+  "comparisons": [
+
+  ]
+}

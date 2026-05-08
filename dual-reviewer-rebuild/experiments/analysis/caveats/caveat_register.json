@@ -1,0 +1,10 @@
+{
+  "entries": [
+    {
+      "caveat_code": "single_treatment_only",
+      "severity": "warning",
+      "details": "Only one treatment is present in valid population, so treatment comparison is not meaningful.",
+      "affected_scope": "treatment_comparison"
+    }
+  ]
+}

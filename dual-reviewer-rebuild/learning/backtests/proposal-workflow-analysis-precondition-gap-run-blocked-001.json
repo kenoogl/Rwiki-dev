@@ -1,0 +1,21 @@
+{
+  "proposal_id": "proposal-workflow-analysis-precondition-gap-run-blocked-001",
+  "test_mode": "manual_review",
+  "input_refs": [
+    "required_artifact_missing"
+  ],
+  "input_origin_refs": [
+    {
+      "source_repository_id": "kenoogl/Rwiki-dev",
+      "source_revision": "0943943",
+      "run_id": "run-blocked-001"
+    }
+  ],
+  "result_label": "untested",
+  "observed_effect": "This proposal requires human review of workflow or validation behavior before adoption.",
+  "risk_observations": [
+    "Result remains untested until a human review gate is performed.",
+    "Evidence maturity is analysis_blocked."
+  ],
+  "tested_at": "2026-05-08T21:50:58Z"
+}

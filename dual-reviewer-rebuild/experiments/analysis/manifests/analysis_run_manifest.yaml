@@ -1,0 +1,8 @@
+---
+analysis_logic_version: 0.1.0
+input_run_set:
+- run-fixture-001
+generated_at: '2026-05-08T14:10:55Z'
+metric_set_version: 0.1.0
+phase_metric_profile_version: overlay-v1
+comparison_contract_version: 0.1.0

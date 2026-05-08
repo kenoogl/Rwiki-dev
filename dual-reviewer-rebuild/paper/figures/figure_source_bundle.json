@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-05-08T22:28:13Z",
+  "entries": [
+    {
+      "figure_id": "figure-phase-treatment-overview-v1",
+      "source_artifact_refs": [
+        "experiments/analysis/comparisons/phase_comparisons.json",
+        "experiments/analysis/metrics/treatment_metrics.json",
+        "experiments/analysis/comparisons/treatment_comparisons.json"
+      ],
+      "plot_contract": {
+        "chart_family": "faceted_bar_plus_status_annotation",
+        "primary_slice": "phase_profile",
+        "secondary_grouping": "treatment",
+        "metric_fields": [
+          "acceptance_ratio",
+          "findings_per_run",
+          "judgment_invocation_coverage"
+        ],
+        "status_annotations": [
+          {
+            "artifact_ref": "experiments/analysis/comparisons/phase_comparisons.json",
+            "field": "comparison_status"
+          },
+          {
+            "artifact_ref": "experiments/analysis/comparisons/treatment_comparisons.json",
+            "field": "comparison_invalid_reason"
+          }
+        ]
+      },
+      "maturity_label": "preliminary",
+      "caveat_refs": [
+        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+      ]
+    }
+  ]
+}

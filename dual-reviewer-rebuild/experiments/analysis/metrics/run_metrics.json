@@ -1,0 +1,14 @@
+{
+  "entries": [
+    {
+      "run_id": "run-fixture-001",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "total_findings": 1,
+      "accepted_findings": 1,
+      "rejected_findings": 0,
+      "deferred_findings": 0,
+      "validation_outcome": "passed"
+    }
+  ]
+}

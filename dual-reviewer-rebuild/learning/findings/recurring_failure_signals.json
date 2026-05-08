@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-05-08T21:18:36Z",
+  "entries": [
+    {
+      "signal_id": "runtime:run-blocked-001:analysis_precondition_gap:required-artifact-missing",
+      "signal_class": "evidence_quality_signal",
+      "signal_code": "analysis_precondition_gap",
+      "signal_source": "runtime",
+      "source_refs": [
+        "required_artifact_missing"
+      ],
+      "summary": "Runtime run did not satisfy analysis intake preconditions.",
+      "validity_context": "analysis_blocked",
+      "phase_profile": "tasks",
+      "treatment": "single",
+      "run_id": "run-blocked-001",
+      "signal_value": {
+        "reason_codes": [
+          "required_artifact_missing"
+        ],
+        "reason_details": [
+          "Missing evaluation input artifacts: validation/validator_result.json, validation/invalidation_markers.json"
+        ]
+      }
+    },
+    {
+      "signal_id": "runtime:run-exploratory-001:human_decision_mix:decisions-decision-units-json",
+      "signal_class": "review_quality_signal",
+      "signal_code": "human_decision_mix",
+      "signal_source": "runtime",
+      "source_refs": [
+        "decisions/decision_units.json"
+      ],
+      "summary": "Runtime decision distribution captured for self-improvement intake.",
+      "validity_context": "exploratory",
+      "phase_profile": "tasks",
+      "treatment": "dual",
+      "run_id": "run-exploratory-001",
+      "signal_value": {
+        "approved_count": 0,
+        "rejected_count": 0,
+        "deferred_count": 1
+      }
+    },
+    {
+      "signal_id": "runtime:run-exploratory-001:exploratory_evidence_mode:run-manifest-yaml",
+      "signal_class": "evidence_quality_signal",
+      "signal_code": "exploratory_evidence_mode",
+      "signal_source": "runtime",
+      "source_refs": [
+        "run_manifest.yaml",
+        "review_case.json"
+      ],
+      "summary": "Runtime metadata marks this run as exploratory evidence.",
+      "validity_context": "exploratory",
+      "phase_profile": "tasks",
+      "treatment": "dual",
+      "run_id": "run-exploratory-001",
+      "signal_value": {
+        "evidence_class": "exploratory",
+        "review_mode": "runtime_mediated"
+      }
+    },
+    {
+      "signal_id": "runtime:run-fixture-001:human_decision_mix:decisions-decision-units-json",
+      "signal_class": "review_quality_signal",
+      "signal_code": "human_decision_mix",
+      "signal_source": "runtime",
+      "source_refs": [
+        "decisions/decision_units.json"
+      ],
+      "summary": "Runtime decision distribution captured for self-improvement intake.",
+      "validity_context": "valid",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "run_id": "run-fixture-001",
+      "signal_value": {
+        "approved_count": 1,
+        "rejected_count": 0,
+        "deferred_count": 0
+      }
+    },
+    {
+      "signal_id": "evaluation:run-fixture-001:unresolved_judgment_labels:metrics-finding-metrics-json-run-fixture-001",
+      "signal_class": "evidence_quality_signal",
+      "signal_code": "unresolved_judgment_labels",
+      "signal_source": "evaluation",
+      "source_refs": [
+        "metrics/finding_metrics.json#run-fixture-001"
+      ],
+      "summary": "Evaluation metric extraction could not resolve judgment labels directly.",
+      "validity_context": "valid",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "run_id": "run-fixture-001",
+      "signal_value": {
+        "judgment_ref_present": 1,
+        "unresolved_judgment_labels": 1
+      }
+    },
+    {
+      "signal_id": "evaluation:aggregate:caveat_observed:caveats-caveat-register-json-single-treatment-only",
+      "signal_class": "evidence_quality_signal",
+      "signal_code": "caveat_observed",
+      "signal_source": "evaluation",
+      "source_refs": [
+        "caveats/caveat_register.json#single_treatment_only"
+      ],
+      "summary": "Evaluation emitted a caveat relevant to self-improvement intake.",
+      "validity_context": "aggregate_analysis",
+      "phase_profile": null,
+      "treatment": null,
+      "run_id": null,
+      "signal_value": {
+        "caveat_code": "single_treatment_only",
+        "severity": "warning",
+        "affected_scope": "treatment_comparison"
+      }
+    }
+  ]
+}

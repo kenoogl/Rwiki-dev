@@ -1,0 +1,15 @@
+{
+  "decision_units": [
+    {
+      "decision_unit_id": "decision-unit-exploratory-001",
+      "finding_refs": [],
+      "judgment_refs": [
+        "step_c_judgment.json#step-03"
+      ],
+      "proposed_action": "observe_only",
+      "human_decision": "deferred",
+      "human_decision_timestamp": "2026-05-09T02:05:00Z",
+      "human_decision_note": "Exploratory fixture decision unit."
+    }
+  ]
+}

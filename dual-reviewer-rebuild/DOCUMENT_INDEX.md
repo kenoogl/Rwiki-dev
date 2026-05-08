@@ -144,6 +144,7 @@
 | Path | Role | Status |
 |------|------|--------|
 | [implementation-coordination-log.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md) | implementation 中の横断調整ログ | coordination log |
+| [implementation-signal-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-signal-register.md) | implementation 中の軽微な兆候・未確定リスクの台帳 | signal register |
 
 ### 8.3 `docs/traceability/`
 
@@ -171,8 +172,8 @@
 |------|-------------------|--------|
 | [runtime/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime) | prompts / schemas / validators / config / runtime assets | shared asset layer |
 | [experiments/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments) | protocols / runs / analysis / fixtures | experiment workspace |
-| [learning/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/learning) | findings / proposals / approved-updates / rejected-updates | self-improvement workspace |
-| [paper/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/paper) | reports / figures / tables | paper-facing workspace |
+| [learning/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/learning) | findings / proposals / backtests / approved-updates / rejected-updates / rollback | self-improvement workspace |
+| [paper/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/paper) | reports / tables / figures / caveats | paper-facing workspace |
 | [scripts/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/scripts) | utility scripts | implementation workspace |
 | [tests/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/tests) | repo-level tests | validation workspace |
 | [reviews/manual/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/reviews/manual) | manual dogfooding review records, templates, and aggregate summaries | manual review workspace |

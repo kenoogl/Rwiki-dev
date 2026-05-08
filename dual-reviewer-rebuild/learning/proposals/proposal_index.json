@@ -1,0 +1,93 @@
+{
+  "generated_at": "2026-05-08T21:28:58Z",
+  "entries": [
+    {
+      "proposal_id": "proposal-workflow-analysis-precondition-gap-run-blocked-001",
+      "status": "draft",
+      "target_layer": "workflow",
+      "motivation_class": "evidence_quality",
+      "source_origin": "central_local_run",
+      "source_provenance_status": "central_local",
+      "required_test_mode": "manual_review",
+      "source_signal_id": "runtime:run-blocked-001:analysis_precondition_gap:required-artifact-missing",
+      "created_at": "2026-05-08T21:28:58Z"
+    },
+    {
+      "proposal_id": "proposal-prompt-human-decision-mix-run-exploratory-001",
+      "status": "draft",
+      "target_layer": "prompt",
+      "motivation_class": "review_quality",
+      "source_origin": "central_local_run",
+      "source_provenance_status": "central_local",
+      "required_test_mode": "replay",
+      "source_signal_id": "runtime:run-exploratory-001:human_decision_mix:decisions-decision-units-json",
+      "created_at": "2026-05-08T21:28:58Z"
+    },
+    {
+      "proposal_id": "proposal-policy-exploratory-evidence-mode-run-exploratory-001",
+      "status": "draft",
+      "target_layer": "policy",
+      "motivation_class": "evidence_quality",
+      "source_origin": "central_local_run",
+      "source_provenance_status": "central_local",
+      "required_test_mode": "backtest",
+      "source_signal_id": "runtime:run-exploratory-001:exploratory_evidence_mode:run-manifest-yaml",
+      "created_at": "2026-05-08T21:28:58Z"
+    },
+    {
+      "proposal_id": "proposal-prompt-human-decision-mix-run-fixture-001",
+      "status": "draft",
+      "target_layer": "prompt",
+      "motivation_class": "review_quality",
+      "source_origin": "central_local_run",
+      "source_provenance_status": "central_local",
+      "required_test_mode": "replay",
+      "source_signal_id": "runtime:run-fixture-001:human_decision_mix:decisions-decision-units-json",
+      "created_at": "2026-05-08T21:28:58Z"
+    },
+    {
+      "proposal_id": "proposal-schema-unresolved-judgment-labels-run-fixture-001",
+      "status": "draft",
+      "target_layer": "schema",
+      "motivation_class": "evidence_quality",
+      "source_origin": "imported_external_bundle",
+      "source_provenance_status": "standard_admitted",
+      "required_test_mode": "backtest",
+      "source_signal_id": "evaluation:run-fixture-001:unresolved_judgment_labels:metrics-finding-metrics-json-run-fixture-001",
+      "created_at": "2026-05-08T21:28:58Z"
+    },
+    {
+      "proposal_id": "proposal-workflow-caveat-observed-aggregate",
+      "status": "draft",
+      "target_layer": "workflow",
+      "motivation_class": "evidence_quality",
+      "source_origin": "manual_review_record",
+      "source_provenance_status": "manual_or_aggregate",
+      "required_test_mode": "backtest",
+      "source_signal_id": "evaluation:aggregate:caveat_observed:caveats-caveat-register-json-single-treatment-only",
+      "created_at": "2026-05-08T21:28:58Z"
+    },
+    {
+      "proposal_id": "proposal-workflow-validator-failed-run-invalid-001",
+      "status": "draft",
+      "target_layer": "workflow",
+      "motivation_class": "workflow_quality",
+      "source_origin": "central_local_run",
+      "source_provenance_status": "central_local",
+      "required_test_mode": "manual_review",
+      "source_signal_id": "runtime:run-invalid-001:validator_failed:validation-validator-result-json",
+      "created_at": "2026-05-08T21:28:58Z"
+    },
+    {
+      "proposal_id": "proposal-workflow-invalidation-marker-issued-run-invalid-001",
+      "status": "draft",
+      "target_layer": "workflow",
+      "motivation_class": "workflow_quality",
+      "source_origin": "central_local_run",
+      "source_provenance_status": "central_local",
+      "required_test_mode": "manual_review",
+      "source_signal_id": "runtime:run-invalid-001:invalidation_marker_issued:validation-invalidation-markers-json-invalid-invalid-001",
+      "created_at": "2026-05-08T21:28:58Z"
+    }
+  ]
+}

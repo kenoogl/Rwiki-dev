@@ -1,0 +1,21 @@
+{
+  "proposal_id": "proposal-schema-unresolved-judgment-labels-run-fixture-001",
+  "test_mode": "backtest",
+  "input_refs": [
+    "experiments/analysis/metrics/finding_metrics.json"
+  ],
+  "input_origin_refs": [
+    {
+      "source_repository_id": "kenoogl/Rwiki-dev",
+      "source_revision": "0943943",
+      "run_id": "run-fixture-001",
+      "bundle_id": "bundle-run-fixture-001"
+    }
+  ],
+  "result_label": "supported",
+  "observed_effect": "Finding metrics record unresolved judgment labels for this run, substantiating the schema-oriented proposal.",
+  "risk_observations": [
+    "Imported evidence should preserve admission context during downstream review."
+  ],
+  "tested_at": "2026-05-08T21:50:58Z"
+}

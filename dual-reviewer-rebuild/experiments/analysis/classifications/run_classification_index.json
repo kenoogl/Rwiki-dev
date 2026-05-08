@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {
+      "run_id": "run-fixture-001",
+      "classification": "valid",
+      "reason_codes": [
+        "valid_population_member"
+      ],
+      "reason_details": [
+        "Run satisfies validator, sign-off, and evidence-class conditions for valid analysis population."
+      ],
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment"
+    },
+    {
+      "run_id": "run-fixture-001",
+      "classification": "valid",
+      "reason_codes": [
+        "valid_population_member"
+      ],
+      "reason_details": [
+        "Run satisfies validator, sign-off, and evidence-class conditions for valid analysis population."
+      ],
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment"
+    }
+  ]
+}

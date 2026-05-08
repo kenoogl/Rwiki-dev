@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {
+      "proposal_id": "fixture-imported-bundle-proposal",
+      "adopted_change_ref": "commit:fixture-adopted-change",
+      "rollback_reason": "fixture_regression_detected",
+      "rollback_trigger_signal_refs": [
+        "signal:fixture-regression"
+      ],
+      "rolled_back_at": "2026-05-08T22:00:00Z"
+    }
+  ]
+}

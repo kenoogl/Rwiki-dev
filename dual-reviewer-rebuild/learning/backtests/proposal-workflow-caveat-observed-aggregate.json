@@ -1,0 +1,16 @@
+{
+  "proposal_id": "proposal-workflow-caveat-observed-aggregate",
+  "test_mode": "backtest",
+  "input_refs": [
+    "experiments/analysis/caveats/caveat_register.json"
+  ],
+  "input_origin_refs": [
+
+  ],
+  "result_label": "supported",
+  "observed_effect": "Evaluation caveat register contains the cited caveat, so the workflow concern is preserved in analysis artifacts.",
+  "risk_observations": [
+    "No additional backtest risk observed."
+  ],
+  "tested_at": "2026-05-08T21:50:58Z"
+}

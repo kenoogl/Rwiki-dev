@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "run_id": "run-fixture-001",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "severity_distribution": {
+        "medium": 1
+      },
+      "source_role_distribution": {
+        "primary_reviewer": 1
+      },
+      "judgment_label_distribution": {
+        "resolved_labels": {
+        },
+        "judgment_ref_present": 1,
+        "unresolved_judgment_labels": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-05-08T21:18:36Z",
+  "entries": [
+    {
+      "signal_id": "runtime:run-invalid-001:validator_failed:validation-validator-result-json",
+      "signal_class": "workflow_failure_signal",
+      "signal_code": "validator_failed",
+      "signal_source": "runtime",
+      "source_refs": [
+        "validation/validator_result.json"
+      ],
+      "summary": "Runtime validator failed for this run.",
+      "validity_context": "invalid",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "run_id": "run-invalid-001",
+      "signal_value": {
+        "validator_status": "failed",
+        "human_signoff_status": "approved"
+      }
+    },
+    {
+      "signal_id": "runtime:run-invalid-001:invalidation_marker_issued:validation-invalidation-markers-json-invalid-invalid-001",
+      "signal_class": "workflow_failure_signal",
+      "signal_code": "invalidation_marker_issued",
+      "signal_source": "runtime",
+      "source_refs": [
+        "validation/invalidation_markers.json#invalid-invalid-001"
+      ],
+      "summary": "Runtime invalidation marker issued for this run.",
+      "validity_context": "invalid",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "run_id": "run-invalid-001",
+      "signal_value": {
+        "reason_code": "manual_invalidation",
+        "scope": "run",
+        "issued_by": "human_operator"
+      }
+    }
+  ]
+}

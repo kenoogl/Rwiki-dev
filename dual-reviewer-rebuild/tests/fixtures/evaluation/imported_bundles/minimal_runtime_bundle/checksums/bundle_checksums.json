@@ -1,0 +1,45 @@
+{
+  "bundle_id": "bundle-run-fixture-001",
+  "checksums": [
+    {
+      "path": "bundle_manifest.yaml",
+      "sha256": "6848e94b01227e4786eb658802e6611fed3366ce7f65e9f3546d4d6710c5b1dd"
+    },
+    {
+      "path": "run/run-fixture-001/run_manifest.yaml",
+      "sha256": "c10d3619fc7f158e71e1b38f1ea23579aa6739686a44206ad2917ee654e115b7"
+    },
+    {
+      "path": "run/run-fixture-001/review_case.json",
+      "sha256": "8fd1ec7a3dcd5cf580e7fc4da5f4a57dad53c98e43ed74896522e6ff9adbbdb1"
+    },
+    {
+      "path": "run/run-fixture-001/decisions/decision_units.json",
+      "sha256": "9f22494373e4434d94747ca5a49953544cc7d2f5067a3cdf088d41bde0d2ca47"
+    },
+    {
+      "path": "run/run-fixture-001/validation/validator_result.json",
+      "sha256": "62b3d8994dda2ce32483517eac63d0a643800b7318511f6cae9a0d654dc86866"
+    },
+    {
+      "path": "run/run-fixture-001/validation/invalidation_markers.json",
+      "sha256": "1d5cf926ca28403fc3d81670e3b242586f7f58b596a6640612cc9d042abd1ee4"
+    },
+    {
+      "path": "run/run-fixture-001/steps/step_a_primary_detection.json",
+      "sha256": "ff126530bab2e29c8cf57664ebc13264536319baaa739a497d9c15c7835d4440"
+    },
+    {
+      "path": "run/run-fixture-001/steps/step_b_adversarial_review.json",
+      "sha256": "3e6955ab8413ef3d0161a67384821f727039907ad4ebe45e81ef17b88177f8ca"
+    },
+    {
+      "path": "run/run-fixture-001/steps/step_c_judgment.json",
+      "sha256": "c2c81cc31aa95f77666a81b5d9be734fbc6101d503efc095340c908c33434ae1"
+    },
+    {
+      "path": "run/run-fixture-001/steps/step_d_integration.json",
+      "sha256": "84c3914ab2f490d7f403c61b3d19f73c0f4f8c277413cf7d21e69cd9ff828db7"
+    }
+  ]
+}

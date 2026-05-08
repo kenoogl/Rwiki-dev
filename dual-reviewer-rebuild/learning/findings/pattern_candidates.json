@@ -1,0 +1,117 @@
+{
+  "generated_at": "2026-05-08T22:12:08Z",
+  "entries": [
+    {
+      "candidate_id": "pattern-runtime-run-blocked-001-analysis-precondition-gap-required-artifact-missing",
+      "source_signal_id": "runtime:run-blocked-001:analysis_precondition_gap:required-artifact-missing",
+      "candidate_scope": "project_specific_concrete",
+      "abstraction_basis": "single-project-runtime-observation",
+      "signal_class": "evidence_quality_signal",
+      "phase_profile": "tasks",
+      "treatment": "single",
+      "summary": "Project-specific pattern candidate: Runtime run did not satisfy analysis intake preconditions.",
+      "linked_proposal_ids": [
+        "proposal-workflow-analysis-precondition-gap-run-blocked-001"
+      ],
+      "created_at": "2026-05-08T22:12:08Z"
+    },
+    {
+      "candidate_id": "pattern-runtime-run-exploratory-001-human-decision-mix-decisions-decision-units-json",
+      "source_signal_id": "runtime:run-exploratory-001:human_decision_mix:decisions-decision-units-json",
+      "candidate_scope": "project_specific_concrete",
+      "abstraction_basis": "single-project-runtime-observation",
+      "signal_class": "review_quality_signal",
+      "phase_profile": "tasks",
+      "treatment": "dual",
+      "summary": "Project-specific pattern candidate: Runtime decision distribution captured for self-improvement intake.",
+      "linked_proposal_ids": [
+        "proposal-prompt-human-decision-mix-run-exploratory-001"
+      ],
+      "created_at": "2026-05-08T22:12:08Z"
+    },
+    {
+      "candidate_id": "pattern-runtime-run-exploratory-001-exploratory-evidence-mode-run-manifest-yaml",
+      "source_signal_id": "runtime:run-exploratory-001:exploratory_evidence_mode:run-manifest-yaml",
+      "candidate_scope": "project_specific_concrete",
+      "abstraction_basis": "single-project-runtime-observation",
+      "signal_class": "evidence_quality_signal",
+      "phase_profile": "tasks",
+      "treatment": "dual",
+      "summary": "Project-specific pattern candidate: Runtime metadata marks this run as exploratory evidence.",
+      "linked_proposal_ids": [
+        "proposal-policy-exploratory-evidence-mode-run-exploratory-001"
+      ],
+      "created_at": "2026-05-08T22:12:08Z"
+    },
+    {
+      "candidate_id": "pattern-runtime-run-fixture-001-human-decision-mix-decisions-decision-units-json",
+      "source_signal_id": "runtime:run-fixture-001:human_decision_mix:decisions-decision-units-json",
+      "candidate_scope": "project_specific_concrete",
+      "abstraction_basis": "single-project-runtime-observation",
+      "signal_class": "review_quality_signal",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "summary": "Project-specific pattern candidate: Runtime decision distribution captured for self-improvement intake.",
+      "linked_proposal_ids": [
+        "proposal-prompt-human-decision-mix-run-fixture-001"
+      ],
+      "created_at": "2026-05-08T22:12:08Z"
+    },
+    {
+      "candidate_id": "pattern-evaluation-run-fixture-001-unresolved-judgment-labels-metrics-finding-metrics-json-run-fixture-001",
+      "source_signal_id": "evaluation:run-fixture-001:unresolved_judgment_labels:metrics-finding-metrics-json-run-fixture-001",
+      "candidate_scope": "meta_pattern_candidate",
+      "abstraction_basis": "cross-run-or-aggregate-analysis",
+      "signal_class": "evidence_quality_signal",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "summary": "Abstractable pattern candidate: Evaluation metric extraction could not resolve judgment labels directly.",
+      "linked_proposal_ids": [
+        "proposal-schema-unresolved-judgment-labels-run-fixture-001"
+      ],
+      "created_at": "2026-05-08T22:12:08Z"
+    },
+    {
+      "candidate_id": "pattern-evaluation-aggregate-caveat-observed-caveats-caveat-register-json-single-treatment-only",
+      "source_signal_id": "evaluation:aggregate:caveat_observed:caveats-caveat-register-json-single-treatment-only",
+      "candidate_scope": "meta_pattern_candidate",
+      "abstraction_basis": "cross-run-or-aggregate-analysis",
+      "signal_class": "evidence_quality_signal",
+      "phase_profile": null,
+      "treatment": null,
+      "summary": "Abstractable pattern candidate: Evaluation emitted a caveat relevant to self-improvement intake.",
+      "linked_proposal_ids": [
+        "proposal-workflow-caveat-observed-aggregate"
+      ],
+      "created_at": "2026-05-08T22:12:08Z"
+    },
+    {
+      "candidate_id": "pattern-runtime-run-invalid-001-validator-failed-validation-validator-result-json",
+      "source_signal_id": "runtime:run-invalid-001:validator_failed:validation-validator-result-json",
+      "candidate_scope": "project_specific_concrete",
+      "abstraction_basis": "single-project-runtime-observation",
+      "signal_class": "workflow_failure_signal",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "summary": "Project-specific pattern candidate: Runtime validator failed for this run.",
+      "linked_proposal_ids": [
+        "proposal-workflow-validator-failed-run-invalid-001"
+      ],
+      "created_at": "2026-05-08T22:12:08Z"
+    },
+    {
+      "candidate_id": "pattern-runtime-run-invalid-001-invalidation-marker-issued-validation-invalidation-markers-json-invalid-invalid-001",
+      "source_signal_id": "runtime:run-invalid-001:invalidation_marker_issued:validation-invalidation-markers-json-invalid-invalid-001",
+      "candidate_scope": "project_specific_concrete",
+      "abstraction_basis": "single-project-runtime-observation",
+      "signal_class": "workflow_failure_signal",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "summary": "Project-specific pattern candidate: Runtime invalidation marker issued for this run.",
+      "linked_proposal_ids": [
+        "proposal-workflow-invalidation-marker-issued-run-invalid-001"
+      ],
+      "created_at": "2026-05-08T22:12:08Z"
+    }
+  ]
+}

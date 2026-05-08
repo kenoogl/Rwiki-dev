@@ -1,0 +1,14 @@
+{
+  "step_id": "step-04",
+  "step_name": "integration",
+  "step_status": "completed",
+  "phase_profile": "tasks",
+  "treatment": "dual",
+  "prompt_identity": {
+    "prompt_artifact_path": null,
+    "prompt_id": "runtime.integration.integration.deferred",
+    "prompt_version": null,
+    "resolution_status": "deferred"
+  },
+  "decision_units": []
+}

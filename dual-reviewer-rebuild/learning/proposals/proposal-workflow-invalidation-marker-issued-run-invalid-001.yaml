@@ -1,0 +1,28 @@
+---
+proposal_id: proposal-workflow-invalidation-marker-issued-run-invalid-001
+status: draft
+target_layer: workflow
+motivation_class: workflow_quality
+source_signal_id: runtime:run-invalid-001:invalidation_marker_issued:validation-invalidation-markers-json-invalid-invalid-001
+source_signal_class: workflow_failure_signal
+source_evidence_refs:
+- validation/invalidation_markers.json#invalid-invalid-001
+source_origin: central_local_run
+source_repository_refs:
+- source_repository_id: kenoogl/Rwiki-dev
+  source_revision: '0943943'
+  run_id: run-invalid-001
+source_admission_refs: []
+source_provenance_status: central_local
+evidence_maturity_context: invalid
+phase_context: tasks
+treatment_context: dual+judgment
+problem_statement: Runtime invalidation marker issued for this run. Signal invalidation_marker_issued
+  was observed in self-improvement intake.
+proposed_change_summary: Harden workflow checks and closure conditions so invalid
+  or incomplete runs are prevented earlier.
+expected_benefit: Reduce invalid or contaminated runs before they reach evaluation.
+possible_risks:
+- May optimize for invalid-run cleanup without improving review quality.
+required_test_mode: manual_review
+created_at: '2026-05-08T21:28:58Z'

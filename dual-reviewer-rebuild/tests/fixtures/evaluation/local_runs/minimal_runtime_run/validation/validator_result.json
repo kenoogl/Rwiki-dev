@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "validator_result_id": "validator-result-fixture-001",
+  "run_id": "run-fixture-001",
+  "validator_name": "runtime-validation-bridge",
+  "validator_version": "0.1.0",
+  "review_mode": "runtime_mediated",
+  "overall_status": "passed",
+  "executed_at": "2026-05-08T08:10:00Z",
+  "checks": [
+    {
+      "check_id": "required-metadata",
+      "status": "passed",
+      "severity": "info",
+      "message": "All required metadata fields are present."
+    }
+  ],
+  "invalidation_marker_refs": []
+}

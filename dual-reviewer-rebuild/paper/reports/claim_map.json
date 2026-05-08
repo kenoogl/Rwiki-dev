@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-05-08T22:24:41Z",
+  "entries": [
+    {
+      "claim_id": "claim-phase-comparison-summary",
+      "claim_text": "Phase-aware comparison is available for the current analysis set, anchored at tasks.",
+      "supporting_artifact_refs": [
+        "experiments/analysis/comparisons/phase_comparisons.json"
+      ],
+      "maturity_label": "mature",
+      "caveat_refs": [
+
+      ],
+      "provenance_refs": [
+        "experiments/analysis/manifests/analysis_run_manifest.yaml",
+        "analysis_logic_version:0.1.0",
+        "input_run_set:run-fixture-001"
+      ]
+    },
+    {
+      "claim_id": "claim-treatment-comparison-status",
+      "claim_text": "Treatment comparison is not yet supportable for the current analysis set because insufficient_variant_count.",
+      "supporting_artifact_refs": [
+        "experiments/analysis/comparisons/treatment_comparisons.json",
+        "experiments/analysis/caveats/caveat_register.json"
+      ],
+      "maturity_label": "preliminary",
+      "caveat_refs": [
+        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+      ],
+      "provenance_refs": [
+        "experiments/analysis/manifests/analysis_run_manifest.yaml",
+        "analysis_logic_version:0.1.0",
+        "input_run_set:run-fixture-001"
+      ]
+    },
+    {
+      "claim_id": "claim-analysis-population-transparency",
+      "claim_text": "Current analysis population contains only valid entries, but exclusion reporting remains part of the evidence trail.",
+      "supporting_artifact_refs": [
+        "experiments/analysis/classifications/exclusion_report.json",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml"
+      ],
+      "maturity_label": "preliminary",
+      "caveat_refs": [
+        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+      ],
+      "provenance_refs": [
+        "experiments/analysis/manifests/analysis_run_manifest.yaml",
+        "analysis_logic_version:0.1.0",
+        "input_run_set:run-fixture-001"
+      ]
+    }
+  ]
+}

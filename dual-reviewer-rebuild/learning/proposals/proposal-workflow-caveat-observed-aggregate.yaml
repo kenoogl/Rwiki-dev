@@ -1,0 +1,26 @@
+---
+proposal_id: proposal-workflow-caveat-observed-aggregate
+status: draft
+target_layer: workflow
+motivation_class: evidence_quality
+source_signal_id: evaluation:aggregate:caveat_observed:caveats-caveat-register-json-single-treatment-only
+source_signal_class: evidence_quality_signal
+source_evidence_refs:
+- caveats/caveat_register.json#single_treatment_only
+source_origin: manual_review_record
+source_repository_refs: []
+source_admission_refs: []
+source_provenance_status: manual_or_aggregate
+evidence_maturity_context: aggregate_analysis
+phase_context: 
+treatment_context: 
+problem_statement: Evaluation emitted a caveat relevant to self-improvement intake.
+  Signal caveat_observed was observed in self-improvement intake.
+proposed_change_summary: Add analysis workflow support to surface caveat-heavy slices
+  before downstream proposal review.
+expected_benefit: Improve evidence usability for downstream evaluation and adoption
+  decisions.
+possible_risks:
+- Aggregate caveat signals may hide run-level causes.
+required_test_mode: backtest
+created_at: '2026-05-08T21:28:58Z'

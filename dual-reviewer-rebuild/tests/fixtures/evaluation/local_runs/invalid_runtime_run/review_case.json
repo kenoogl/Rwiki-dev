@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-invalid-001",
+  "metadata": {
+    "run_id": "run-invalid-001",
+    "target_id": "spec:dual-reviewer-runtime:tasks",
+    "target_artifact_hash": "sha256:invalid-target-hash",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0943943",
+    "phase_profile": "tasks",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "failed",
+    "human_signoff_status": "approved",
+    "evidence_class": "invalid",
+    "started_at": "2026-05-09T00:00:00Z",
+    "closed_at": "2026-05-09T00:10:00Z"
+  },
+  "step_records": [],
+  "findings": [],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-invalid-001"
+    ],
+    "invalidation_marker_refs": [
+      "validation/invalidation_markers.json#invalid-invalid-001"
+    ]
+  }
+}

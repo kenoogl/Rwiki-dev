@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-05-08T22:29:30Z",
+  "entries": [
+    {
+      "caveat_id": "paper-caveat-single_treatment_only",
+      "source_caveat_ref": "experiments/analysis/caveats/caveat_register.json#single_treatment_only",
+      "applies_to_claim_refs": [
+        "paper/reports/claim_map.json#claim-treatment-comparison-status"
+      ],
+      "applies_to_artifact_refs": [
+        "paper/tables/table_source_bundle.json#table-analysis-summary-v1"
+      ],
+      "limitation_type": "insufficient_comparison_coverage",
+      "narrative_note": "Paper-facing limitation: Only one treatment is present in valid population, so treatment comparison is not meaningful."
+    }
+  ]
+}
