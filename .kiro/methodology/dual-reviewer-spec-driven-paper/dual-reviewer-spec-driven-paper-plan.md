@@ -2,7 +2,6 @@
 
 _作成: 2026-05-09_  
 _status: draft v0.2_  
-_position: `paper-submission-plan.md` と `preliminary-paper-report.md` を踏まえた次段計画_  
 _focus: code review 単体ではなく、intent 起点の仕様駆動開発支援_
 
 ---
@@ -105,37 +104,7 @@ implementation code が存在するケース。
 
 ---
 
-## 4. 前回計画からの修正点
-
-### 4.1 code review 主線からの修正
-
-前回の草案では、主対象が
-`dual-reviewer v1` を用いた external code review evaluation
-に寄りすぎていた。
-
-本計画ではこれを修正し、
-code review は implementation phase の一部に戻す。
-
-### 4.2 intent の復帰
-
-`dual-reviewer` の最小入力は `intent` である。
-したがって、論文の主張も
-`intent-only` ケースを含む必要がある。
-
-### 4.3 実コードの位置づけ修正
-
-実コードは「主役の評価対象」ではなく、
-仕様駆動開発の downstream artifact である。
-
-実コードを使う場合も前提は次である。
-
-- 対応する `intent/spec/design/tasks` がある
-  または
-- 後から再構成されている
-
----
-
-## 5. 論文の新規性
+## 4. 論文の新規性
 
 ### 5.1 intent 起点の workflow-governed review system
 
@@ -185,7 +154,7 @@ code review は implementation phase の一部に戻す。
 
 ---
 
-## 6. 論文の主訴求点
+## 5. 論文の主訴求点
 
 1. `dual-reviewer` は code review assistant ではなく、仕様駆動開発支援 system である
 2. 人間の認知負荷が高い下流工程を、adversarial/judgment と artifact/gate の両方で支える
@@ -201,7 +170,7 @@ code review は implementation phase の一部に戻す。
 
 ---
 
-## 7. 評価仮説
+## 6. 評価仮説
 
 ### Claim 1
 

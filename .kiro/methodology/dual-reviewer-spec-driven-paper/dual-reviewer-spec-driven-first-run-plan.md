@@ -56,7 +56,7 @@ first-run の順序は次とする。
 
 - batch label: `F1-phase-field-cpp`
 - fixed snapshot:
-  - [phase-field-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/phase-field-implementation-phase-first-snapshot.md:1)
+  - [phase-field-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md:1)
 - initial comparison modes:
   - `single review`
   - `dual-reviewer workflow`
@@ -178,10 +178,10 @@ main batch の前に潰す。
 2. `single review` と `dual-reviewer workflow` の run template を作る
 3. Intent Track / Spec Track 用の first-run も別文書で定義する
    - status:
-     - [intent-track-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/intent-track-first-run-plan.md:1)
-     - [spec-track-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/spec-track-first-run-plan.md:1)
+     - [intent-track-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-first-run-plan.md:1)
+     - [spec-track-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-run-plan.md:1)
 4. 3 track の run template を作る
    - status:
-     - [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/intent-track-run-template.md:1)
-     - [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/spec-track-run-template.md:1)
-     - [implementation-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/implementation-track-run-template.md:1)
+     - [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-run-template.md:1)
+     - [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-run-template.md:1)
+     - [implementation-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-track-run-template.md:1)

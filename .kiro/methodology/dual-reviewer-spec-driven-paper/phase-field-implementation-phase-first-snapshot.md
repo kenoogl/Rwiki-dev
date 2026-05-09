@@ -119,11 +119,11 @@ code-side shape:
 snapshot boundary の説明責任を支える補助 anchor は次である。
 
 - characteristic summary:
-  - [spec_characteristic.json](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/samples/a3/3_7_6_1_phase_field_cpp/spec_characteristic.json:1)
+  - [spec_characteristic.json](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/samples/a3/3_7_6_1_phase_field_cpp/spec_characteristic.json:1)
 - implementation dev log:
-  - [dev_log.jsonl](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/samples/a3/3_7_6_1_phase_field_cpp/dev_log.jsonl:1)
+  - [dev_log.jsonl](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/samples/a3/3_7_6_1_phase_field_cpp/dev_log.jsonl:1)
 - implementation rework log:
-  - [rework_log.jsonl](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/samples/a3/3_7_6_1_phase_field_cpp/rework_log.jsonl:1)
+  - [rework_log.jsonl](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/samples/a3/3_7_6_1_phase_field_cpp/rework_log.jsonl:1)
 
 これらの資料は snapshot provenance の補助に使う。
 main evaluation metric としては使わない。

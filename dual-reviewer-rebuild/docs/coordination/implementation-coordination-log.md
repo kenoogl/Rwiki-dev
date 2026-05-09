@@ -962,3 +962,46 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: `Intent Track` の最初の concrete case として `dual-reviewer-rebuild` bootstrap 区間を `F1-intent-dual-reviewer-rebuild` に固定し、Intent Track first-run plan から参照できるようにした。これにより、intent-only に最も近い bootstrap case を使って `single review` と `dual-reviewer workflow` の両方で同一 input を比較するための境界が定まった
 - status: completed
+
+### 6.49 2026-05-09 methodology document index
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: methodology navigation support
+- touched artifacts:
+  - `.kiro/methodology/v4-validation/INDEX.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `.kiro/methodology/v4-validation/` 配下の論文化・取得計画・補助資料を active paper set / historical references / samples / research memory に分けて辿れる index を追加した。主線の `spec-driven` 一式を先頭に置き、3 track の plan / template / case 固定へ順に降りられる reading order も明示した
+- status: completed
+
+### 6.50 2026-05-09 methodology directory split
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: methodology organization
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: active な論文化主線を `v4-validation` から分離し、`.kiro/methodology/dual-reviewer-spec-driven-paper/` に移設した。あわせて相互リンクを新ディレクトリへ更新し、index は旧版や補助資料への導線を外して active 文書だけを辿る構成に整理した
+- status: completed
+
+### 6.51 2026-05-09 claim-case orthogonal matrix
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: evaluation planning stabilization
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/claim-case-matrix.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `Claim 1-4` と評価 case の対応を直交表として固定し、どの claim にどの case class が必須か、`intent` がない case を main paper から除外する rule を明文化した。あわせて paper index に matrix を組み込み、case 選定の主線を `intent` 先行に固定した
+- status: completed
