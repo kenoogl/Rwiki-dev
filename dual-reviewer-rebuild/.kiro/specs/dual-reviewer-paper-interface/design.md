@@ -104,6 +104,10 @@ paper-interface は claim を 1 artifact 単位で扱う。
 - `caveat_refs`
 - `provenance_refs`
 
+claim-to-evidence と caveat linkage は文字列 heuristic ではなく構造化参照で扱う。
+artifact-specific caveat の canonical source は claim entry が持つ `supporting_artifact_refs` と `caveat_refs` とし、
+basename や filename の部分一致を正本判定に使ってはならない。
+
 ### 2. Supporting Artifact Sources
 
 標準的な source は次に限定する。

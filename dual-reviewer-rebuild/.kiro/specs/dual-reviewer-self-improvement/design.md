@@ -251,6 +251,10 @@ replay は runtime の step-level artifact を読む。
 
 imported external bundle を replay 入力に使う場合でも、proposal と backtest artifact には元の `source_repository_id`、`source_revision`、`admission_status` を残す。
 
+local run を replay 入力に使う場合、run root 解決は fixture 名や固定 path の列挙に依存してはならない。
+canonical な解決 anchor は `run_manifest.yaml` と `run_id` とし、replay input preparation は manifest-based discovery で run root を解決する。
+これにより、新しい local fixture や generated local run を追加しても replay readiness が false negative にならないようにする。
+
 特に Step B と Step C の挙動に関わる proposal では、step-level replay を必須にする。
 
 ### 3. Backtest Inputs

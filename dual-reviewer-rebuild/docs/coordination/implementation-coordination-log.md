@@ -915,3 +915,17 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: intent 専用 review artifact と template を追加し、`intent_revision_count` / `intent_handback_count` の baseline を固定した。あわせて下流 phase では intent 起因問題を `intent-attributed issue` として記録する rule を workflow 文書へ追加した
 - status: completed
+
+### 6.46 2026-05-09 replay resolver and caveat linkage design clarification
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-self-improvement` / `dual-reviewer-paper-interface`
+- 対象 task: design note elevation
+- touched artifacts:
+  - `.kiro/specs/dual-reviewer-self-improvement/design.md`
+  - `.kiro/specs/dual-reviewer-paper-interface/design.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: replay input resolution の manifest-based discovery 原則を self-improvement design に追記し、evidence-caveat linkage の structured reference 原則を paper-interface design に追記した。いずれも implementation-only fix で吸収済みの挙動を design note として正本へ昇格した
+- status: completed
