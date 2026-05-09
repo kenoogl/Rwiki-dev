@@ -947,3 +947,18 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: `Intent Track` と `Spec Track` の first-run template で要求していた最小 artifact を run 単位で機械生成する writer と CLI entrypoint を追加した。あわせて tmpdir 上で manifest / markdown / phase metric snapshot / signal linkage note の生成を検証する validator を追加し、実データ取得計画のうち upstream track の最低限 artifact が現実に採取可能であることを確認するための mechanical baseline を整えた
 - status: completed
+
+### 6.48 2026-05-09 intent track first case fixation
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: spec-driven acquisition preparation
+- touched artifacts:
+  - `.kiro/methodology/v4-validation/intent-track-first-case-dual-reviewer-rebuild.md`
+  - `.kiro/methodology/v4-validation/intent-track-first-run-plan.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `Intent Track` の最初の concrete case として `dual-reviewer-rebuild` bootstrap 区間を `F1-intent-dual-reviewer-rebuild` に固定し、Intent Track first-run plan から参照できるようにした。これにより、intent-only に最も近い bootstrap case を使って `single review` と `dual-reviewer workflow` の両方で同一 input を比較するための境界が定まった
+- status: completed

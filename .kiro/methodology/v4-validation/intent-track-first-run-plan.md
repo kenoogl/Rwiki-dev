@@ -40,7 +40,7 @@ first-run では、少なくとも次の条件を満たす case を使う。
 
 推奨 first case:
 
-- `dual-reviewer-rebuild` の初期 intent bootstrap 区間
+- [intent-track-first-case-dual-reviewer-rebuild.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/intent-track-first-case-dual-reviewer-rebuild.md:1)
 
 ---
 
@@ -120,6 +120,11 @@ Intent Track first-run の結果は、
 この plan の直後に必要なのは次である。
 
 1. `dual-reviewer-rebuild` を Intent Track first case として固定する
+   - status:
+     - fixed as `F1-intent-dual-reviewer-rebuild`
 2. `single review` と `dual-reviewer workflow` の intent-run template を作る
+   - status:
+     - [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/intent-track-run-template.md:1)
 3. intent review artifact の最小 field を run template に落とす
-
+   - status:
+     - reflected in [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/v4-validation/intent-track-run-template.md:1)
