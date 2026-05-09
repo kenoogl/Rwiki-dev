@@ -161,19 +161,25 @@
 | [2026-05-09-prototype-shelf-review-rerun.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review-rerun.md) | open finding 修正後の conformance review short rerun artifact | review artifact |
 | [templates/implementation-conformance-review-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/implementation-conformance-review-template.md) | conformance review artifact の再利用 template | review template |
 
-### 8.4 `docs/traceability/`
+### 8.4 `docs/reports/`
+
+| Path | Role | Status |
+|------|------|--------|
+| [dual-reviewer-v1-completion-report.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reports/dual-reviewer-v1-completion-report.md) | dual-reviewer v1 の完成報告と review/evidence の要約 | completion report |
+
+### 8.5 `docs/traceability/`
 
 | Path | Role | Status |
 |------|------|--------|
 | [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) | intent 命題と feature requirements の対応表 | traceability matrix |
 
-### 8.5 `docs/migration/`
+### 8.6 `docs/migration/`
 
 | Path | Role | Status |
 |------|------|--------|
 | [feature-disposition-judgment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/migration/feature-disposition-judgment.md) | 旧機能の keep/reshape/drop 判定表 | migration memo |
 
-### 8.6 `docs/legacy/`
+### 8.7 `docs/legacy/`
 
 | Path | Role | Status |
 |------|------|--------|
