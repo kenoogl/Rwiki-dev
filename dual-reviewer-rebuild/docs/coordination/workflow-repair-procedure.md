@@ -73,6 +73,8 @@ workflow 逸脱、spec 手戻り、review finding に対応するための
 
 問題と対応は次へ記録する。
 
+- intent review:
+  - `docs/reviews/*intent*.md`
 - 実装判断:
   - `docs/coordination/implementation-coordination-log.md`
 - 軽微 signal:
@@ -91,6 +93,9 @@ workflow 逸脱、spec 手戻り、review finding に対応するための
 - `design alignment gate`
 - `tasks alignment gate`
 - `implementation conformance review`
+
+下流 phase で観測した issue が intent 起因なら、当該 phase artifact に
+`intent-attributed issue` として残し、必要なら `D` handback 判定へ上げる。
 
 ### Step 8: 下流 phase を再判定する
 

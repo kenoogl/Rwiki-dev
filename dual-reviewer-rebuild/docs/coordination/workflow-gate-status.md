@@ -20,6 +20,7 @@ workflow gate の current status を記録するための台帳である。
 
 ### 3.1 Core feature progression
 
+- `intent review`: `completed`
 - `requirements wave`: `completed`
 - `design wave`: `completed`
 - `tasks wave`: `completed`

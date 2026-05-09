@@ -75,26 +75,77 @@ manual `implementation conformance review` を 1 サイクル実施した。
 
 short rerun では新規 finding は 0 件で、initial finding 3 件は `fixed` と判定した。
 
-## 5. 実施エビデンス
+## 5. phase 別 metrics と手戻り統計
 
-### 5.1 workflow と governance
+v1 時点で phase ごとに回収できる metrics は次である。
+
+| phase | 主指標 | v1 baseline | 解釈 |
+|------|--------|-------------|------|
+| `intent` | `intent_revision_count` / `intent_handback_count` | `0 / 0` | v1 baseline review 時点では intent revision も `D` handback も記録なし |
+| `requirements` | blocking 級矛盾数 | `3` | requirements wave で 3 件の major mismatch を修正してから recheck を実施 |
+| `requirements` | phase recheck | `1` | `requirements review wave` 後の修正を受けて alignment recheck を 1 回実施 |
+| `design` | blocking 級齟齬数 | `2` | design wave で 2 件の major mismatch を修正 |
+| `design` | open alignment points | `4` | tasks 前に detail として持ち越した論点。blocking ではない |
+| `tasks` | blocking ordering conflict | `0` | 実装順序の破綻はなし |
+| `tasks` | alignment 中の修正点 | `2` | checksum handoff 追加など task-level の軽微修正を実施 |
+| `implementation` | coordination entry 数 | `42` | 実装区間の task 完了ログ 42 件 |
+| `implementation` | handback class 分布 | `A=42 / B=0 / C=0 / D=0` | 実装中の手戻りはすべて task-local correction で吸収 |
+| `implementation` | reopen 要否 | `不要=42 / 要=0` | 実装中に upstream reopen を必要としたケースはなし |
+| `implementation` | signal entry 数 | `9` | 軽微 signal / nonconformance signal の累積件数 |
+| `implementation` | signal status 分布 | `absorbed=5 / watch=4 / open=0 / escalated=0` | open signal を残さず v1 を close |
+| `implementation` | signal risk 分布 | `high=1 / medium=5 / low=3` | 高リスク 1 件は adoption gate nonconformance |
+| `implementation review` | 初回 conformance findings | `3` | smoke pass 後の nonconformance を 3 件検出 |
+| `implementation review` | 初回 severity weighted score | `7` | `P1=3, P2=2` の重み付け合計 |
+| `implementation review` | short rerun findings | `0` | 修正後 rerun では新規 / 残留 finding なし |
+| `implementation review` | gate status | `completed` | review, fix, rerun を通して gate close |
+
+根拠:
+
+- `requirements`
+  - [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md:51)
+  - [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md:149)
+- `intent`
+  - [2026-05-09-intent-baseline-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-intent-baseline-review.md:1)
+- `design`
+  - [cross-spec-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md:46)
+  - [cross-spec-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md:75)
+- `tasks`
+  - [cross-spec-tasks-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md:110)
+- `implementation`
+  - [implementation-coordination-log.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md:153)
+  - [implementation-signal-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-signal-register.md:65)
+- `implementation review`
+  - [2026-05-09-prototype-shelf-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review.md:24)
+  - [2026-05-09-prototype-shelf-review-rerun.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review-rerun.md:20)
+  - [workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md:19)
+
+補足:
+
+- `intent` は [2026-05-09-intent-baseline-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-intent-baseline-review.md:1) を baseline artifact とし、v1 では `intent_revision_count=0`, `intent_handback_count=0` を採る。
+- intent 起因の問題は、`intent` 自体の件数としてではなく、今後は `requirements / design / tasks / implementation` 側の `intent-attributed issue` として数える。
+- `requirements / design / tasks` は report に必要な統計を抽出できるが、現状は alignment memo 由来の semi-manual aggregation である。
+- 今後の phase 別定量化ルールは [phase-review-metric-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/phase-review-metric-register.md:1) を正本補助とする。
+
+## 6. 実施エビデンス
+
+### 6.1 workflow と governance
 
 - [implementation-conformance-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md:1)
 - [implementation-conformance-metric-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-conformance-metric-register.md:1)
 - [workflow-repair-procedure.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md:1)
 - [workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md:1)
 
-### 5.2 実装判断と signal
+### 6.2 実装判断と signal
 
 - [implementation-coordination-log.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md:132)
 - [implementation-signal-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-signal-register.md:60)
 
-### 5.3 review artifact
+### 6.3 review artifact
 
 - [2026-05-09-prototype-shelf-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review.md:1)
 - [2026-05-09-prototype-shelf-review-rerun.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review-rerun.md:1)
 
-## 6. 実行した validator
+## 7. 実行した validator
 
 v1 completion 時点で pass を確認した validator は次である。
 
@@ -104,7 +155,7 @@ v1 completion 時点で pass を確認した validator は次である。
 - `ruby dual-reviewer-rebuild/scripts/validate_paper_interface_pipeline.rb`
 - `ruby dual-reviewer-rebuild/scripts/validate_implementation_governance_artifacts.rb`
 
-## 7. v1 の意味
+## 8. v1 の意味
 
 v1 は「dual-reviewer の最初の完成 prototype」である。
 
@@ -121,7 +172,7 @@ v1 は「dual-reviewer の最初の完成 prototype」である。
 - 実ターゲット群に対する評価データが十分に揃っていること
 - implementation language や deploy model が最終確定していること
 
-## 8. 次段
+## 9. 次段
 
 v1 の次に進む自然な作業は次である。
 

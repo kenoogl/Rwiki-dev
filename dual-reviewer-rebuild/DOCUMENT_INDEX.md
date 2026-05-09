@@ -150,6 +150,7 @@
 | [implementation-signal-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-signal-register.md) | implementation 中の軽微な兆候・未確定リスクの台帳 | signal register |
 | [implementation-conformance-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md) | prototype 実装後の仕様準拠性・境界条件・証跡性 review 工程定義 | review procedure |
 | [implementation-conformance-metric-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-conformance-metric-register.md) | conformance review を測る metric 定義台帳 | metric register |
+| [phase-review-metric-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/phase-review-metric-register.md) | `intent` から `implementation` までの phase friction / handback / recheck を測る metric 定義台帳 | metric register |
 | [workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md) | 現在どの workflow gate まで通過したかの状態台帳 | gate status register |
 | [workflow-repair-procedure.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md) | `A/B/C/D` handback と gate 再実施の修正手続き一覧と状態遷移表 | workflow repair procedure |
 
@@ -157,9 +158,11 @@
 
 | Path | Role | Status |
 |------|------|--------|
+| [2026-05-09-intent-baseline-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-intent-baseline-review.md) | v1 baseline 時点の intent review artifact | review artifact |
 | [2026-05-09-prototype-shelf-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review.md) | prototype 一巡後の implementation conformance review artifact | review artifact |
 | [2026-05-09-prototype-shelf-review-rerun.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review-rerun.md) | open finding 修正後の conformance review short rerun artifact | review artifact |
 | [templates/implementation-conformance-review-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/implementation-conformance-review-template.md) | conformance review artifact の再利用 template | review template |
+| [templates/intent-review-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/intent-review-template.md) | intent review artifact の再利用 template | review template |
 
 ### 8.4 `docs/reports/`
 
@@ -167,19 +170,25 @@
 |------|------|--------|
 | [dual-reviewer-v1-completion-report.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reports/dual-reviewer-v1-completion-report.md) | dual-reviewer v1 の完成報告と review/evidence の要約 | completion report |
 
-### 8.5 `docs/traceability/`
+### 8.5 `docs/guides/`
+
+| Path | Role | Status |
+|------|------|--------|
+| [dual-reviewer-v1-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v1-user-guide.md) | dual-reviewer v1 の目的と使い方をまとめた利用者向けガイド | user guide |
+
+### 8.6 `docs/traceability/`
 
 | Path | Role | Status |
 |------|------|--------|
 | [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) | intent 命題と feature requirements の対応表 | traceability matrix |
 
-### 8.6 `docs/migration/`
+### 8.7 `docs/migration/`
 
 | Path | Role | Status |
 |------|------|--------|
 | [feature-disposition-judgment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/migration/feature-disposition-judgment.md) | 旧機能の keep/reshape/drop 判定表 | migration memo |
 
-### 8.7 `docs/legacy/`
+### 8.8 `docs/legacy/`
 
 | Path | Role | Status |
 |------|------|--------|

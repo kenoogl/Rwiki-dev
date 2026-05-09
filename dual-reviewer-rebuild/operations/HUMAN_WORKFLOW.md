@@ -181,12 +181,23 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - 各 review stage の内部では feature を水平展開して扱う
 - 1 feature だけを先に深く review し切るのではなく、その stage に属する feature 群を一通り見てから次段へ進む
 - 上流 review で修正が入った場合、下流 review は未確定扱いに戻す
+- 下流 phase で観測した issue のうち、原因が intent の再解釈や intent 不整合にある場合は `intent-attributed issue` として記録する
 
 例:
 
 - `intent review` 完了後に `requirements review wave` へ進む
 - `requirements review` は 5 feature を横断して行う
 - `requirements` 修正が入った後は、`design review` を始める前に requirements alignment を再確認する
+
+`intent review` artifact では少なくとも次を残す。
+
+- `intent_revision_count`
+- `intent_handback_count`
+- `intent_review_findings_count`
+
+下流 phase artifact では、必要に応じて次を残す。
+
+- `phase_intent_attributed_issue_count`
 
 是正ルール:
 

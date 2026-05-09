@@ -865,3 +865,53 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: v1 の完成条件、manual conformance review サイクル、validator pass、evidence location をまとめた completion report を追加した
 - status: completed
+
+### 6.43 2026-05-09 v1 user guide
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: user-facing documentation addendum
+- touched artifacts:
+  - `docs/guides/dual-reviewer-v1-user-guide.md`
+  - `README.md`
+  - `DOCUMENT_INDEX.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: v1 の目的、想定利用者、最短利用手順、pipeline validator、生成物、限界をまとめた user guide を追加し、README の status を v1 完成状態へ更新した
+- status: completed
+
+### 6.44 2026-05-09 v1 phase metrics reporting
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: reporting and measurement addendum
+- touched artifacts:
+  - `docs/reports/dual-reviewer-v1-completion-report.md`
+  - `docs/coordination/phase-review-metric-register.md`
+  - `DOCUMENT_INDEX.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: v1 completion report に `intent / requirements / design / tasks / implementation` の phase 別 metrics と手戻り統計を追記し、今後の baseline 抽出規則を固定する `phase-review-metric register` を追加した
+- status: completed
+
+### 6.45 2026-05-09 intent review baseline and intent-attribution rule
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: phase measurement completion
+- touched artifacts:
+  - `docs/reviews/2026-05-09-intent-baseline-review.md`
+  - `docs/reviews/templates/intent-review-template.md`
+  - `docs/coordination/phase-review-metric-register.md`
+  - `docs/reports/dual-reviewer-v1-completion-report.md`
+  - `operations/HUMAN_WORKFLOW.md`
+  - `docs/coordination/workflow-repair-procedure.md`
+  - `docs/coordination/workflow-gate-status.md`
+  - `DOCUMENT_INDEX.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: intent 専用 review artifact と template を追加し、`intent_revision_count` / `intent_handback_count` の baseline を固定した。あわせて下流 phase では intent 起因問題を `intent-attributed issue` として記録する rule を workflow 文書へ追加した
+- status: completed
