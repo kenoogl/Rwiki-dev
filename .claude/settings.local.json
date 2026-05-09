@@ -102,7 +102,9 @@
       "Bash(bash /Users/Daily/Development/DR-pfm/tests/integration_pfm_bmp.sh)",
       "Bash(bash /Users/Daily/Development/DR-pfm/tests/acceptance_22.sh)",
       "Bash(./pfm_bmp_sw /tmp/pfm_accept/snapshot.txt /tmp/pfm_sw_out)",
-      "Bash(~/.claude/hooks/user-prompt-plain-ja-reminder.sh)"
+      "Bash(~/.claude/hooks/user-prompt-plain-ja-reminder.sh)",
+      "WebFetch(domain:ses.sigse.jp)",
+      "Bash(\" /Users/Daily/Development/Rwiki-dev/docs/dual-reviewer-log-10.md | head -10)"
     ]
   }
 }
