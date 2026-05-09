@@ -22,7 +22,7 @@ Review system 再構築用 repository。
 
 ## Status
 
-初期 skeleton 作成直後。実装移植前。
+v1 prototype 完成。manual implementation conformance review と short rerun まで完了。
 
 ## Workflow Note
 
