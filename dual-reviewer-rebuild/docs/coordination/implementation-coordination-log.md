@@ -929,3 +929,21 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: replay input resolution の manifest-based discovery 原則を self-improvement design に追記し、evidence-caveat linkage の structured reference 原則を paper-interface design に追記した。いずれも implementation-only fix で吸収済みの挙動を design note として正本へ昇格した
 - status: completed
+
+### 6.47 2026-05-09 intent/spec track artifact writers
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: spec-driven acquisition support
+- touched artifacts:
+  - `scripts/track_runs/intent_track_writer.rb`
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/write_intent_track_run_artifacts.rb`
+  - `scripts/write_spec_track_run_artifacts.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `Intent Track` と `Spec Track` の first-run template で要求していた最小 artifact を run 単位で機械生成する writer と CLI entrypoint を追加した。あわせて tmpdir 上で manifest / markdown / phase metric snapshot / signal linkage note の生成を検証する validator を追加し、実データ取得計画のうち upstream track の最低限 artifact が現実に採取可能であることを確認するための mechanical baseline を整えた
+- status: completed
