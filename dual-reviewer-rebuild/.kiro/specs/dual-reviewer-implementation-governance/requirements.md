@@ -19,10 +19,12 @@ paper export を定義しているが、prototype 実装後に
 ## Boundary Context
 
 - **In scope**
+  - `intent review` の artifact contract
   - post-implementation `implementation conformance review` の定義
   - conformance finding の severity と disposition rule
   - review artifact placement rule
   - conformance metric definition
+  - phase-review metric definition
   - finding と signal / coordination の接続 rule
   - governance artifact の最小 validation
 
@@ -105,3 +107,16 @@ paper export を定義しているが、prototype 実装後に
 3. The feature shall distinguish `completed` from `completed_with_open_findings` for implementation checkpoints.
 4. The feature shall require governance spec metadata to reflect whether cross-spec alignment was required and completed.
 5. The feature shall support intent-triggered reopen propagation, where an intent change can invalidate downstream requirements, design, and tasks checkpoints.
+
+### Requirement 7: Intent Review and Phase-Review Metrics
+
+**Objective:** As a maintainer, I want intent review and phase-level measurement to be part of the governance spec, so that upstream intent changes and downstream intent-attributed problems are recorded in the same workflow system.
+
+#### Acceptance Criteria
+
+1. The governance feature shall define `intent review` as a first-class review stage in the repository workflow.
+2. The feature shall define a canonical template and at least one concrete artifact for `intent review`.
+3. The feature shall define `intent_revision_count` and `intent_handback_count` as intent-phase metrics.
+4. The feature shall define that issues observed in downstream phases may be recorded as `intent-attributed` without reclassifying them as intent-phase issues.
+5. The feature shall define a canonical phase-review metric register that covers at minimum `intent`, `requirements`, `design`, `tasks`, and `implementation`.
+6. The feature shall require the governance artifact validator to check the presence of the intent review template, a concrete intent review artifact, and the phase-review metric register.

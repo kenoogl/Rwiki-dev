@@ -23,6 +23,7 @@ governance feature は feature logic ではなく workflow contract を所有す
 5. signal / coordination linkage を実装する
 6. governance artifact validator を実装する
 7. workflow gate status と cross-spec alignment を実装する
+8. intent review と phase-review metrics を正式化する
 
 理由:
 
@@ -30,6 +31,7 @@ governance feature は feature logic ではなく workflow contract を所有す
 - concrete review artifact がないと validator の対象がない
 - signal / coordination linkage がないと finding が repo evidence として閉じない
 - governance 自体が workflow を外れないよう、最後に status と cross-spec alignment を閉じる
+- intent review と phase-review metrics は governance 所有範囲の拡張として最後に formalize する
 
 ## 3. Tasks
 
@@ -163,3 +165,29 @@ validator が確認すること:
 完了条件:
 
 - governance spec 自体が cross-spec alignment を通過したことを repo artifact で説明できる
+
+### Task 8: Formalize intent review and phase-review metrics
+
+目的:
+
+- governance spec の owning scope に `intent review` と phase-level measurement を含める
+
+作業:
+
+- `docs/reviews/templates/intent-review-template.md`
+- `docs/reviews/<date>-intent-*.md`
+- `docs/coordination/phase-review-metric-register.md`
+- `operations/HUMAN_WORKFLOW.md`
+
+を spec に対応する owner artifact として明示する。
+
+あわせて validator を更新し、次を確認対象に含める。
+
+- intent review template の存在
+- concrete intent review artifact の存在
+- phase-review metric register の存在
+
+完了条件:
+
+- intent review と phase-review metrics が governance spec の正式範囲として説明できる
+- governance artifact validation が新しい owner artifact を検査する

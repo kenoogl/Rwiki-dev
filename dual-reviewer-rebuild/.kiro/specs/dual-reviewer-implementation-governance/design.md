@@ -9,9 +9,13 @@
 
 具体的には次を repo-contained artifact として固定する。
 
+- intent review procedure linkage
 - conformance review procedure
 - conformance metric register
+- phase-review metric register
+- intent review template
 - conformance review template
+- concrete intent review artifacts
 - concrete review artifacts
 - governance artifact validator
 - workflow gate status artifact
@@ -62,10 +66,14 @@ graph TD
   - procedure definition
 - `docs/coordination/implementation-conformance-metric-register.md`
   - metric definitions
+- `docs/coordination/phase-review-metric-register.md`
+  - phase-level metric definitions
+- `docs/reviews/templates/intent-review-template.md`
+  - reusable intent review template
 - `docs/reviews/templates/implementation-conformance-review-template.md`
   - reusable artifact template
 - `docs/reviews/*.md`
-  - concrete review evidence
+  - concrete intent / conformance review evidence
 - `scripts/validate_implementation_governance_artifacts.rb`
   - governance artifact validator
 - `docs/coordination/workflow-gate-status.md`
@@ -83,6 +91,21 @@ graph TD
   - review procedure と evidence contract の owner
 
 ## Workflow Model
+
+### Stage 0: Intent Review
+
+workflow の最上流には `intent review` を置く。
+
+reviewer は次を行う。
+
+- reviewed intent documents の固定
+- traceability document の確認
+- `D` handback 要否の判定
+- `intent_revision_count` と `intent_handback_count` の snapshot 記録
+
+`intent review` は下流 phase issue の総件数を吸い上げない。
+下流 phase で見つかった issue のうち、原因が intent の再解釈や不整合にあるものだけを
+`intent-attributed issue` として downstream artifact 側に残す。
 
 ### Stage 1: Implementation
 
@@ -210,13 +233,30 @@ metric register は review 自体を測る。
 
 prototype 段階では manual snapshot を許容する。
 
+phase-review metric register は phase progression 全体を測る。
+
+- `intent`
+  - `intent_revision_count`
+  - `intent_handback_count`
+- `requirements / design / tasks / implementation`
+  - phase-local issue count
+  - recheck count
+  - handback count
+  - `intent-attributed issue` count
+
+これにより、`intent` phase 自体の変更回数と、
+下流 phase で観測された intent 起因問題を分離して扱う。
+
 ## Validation Model
 
 governance artifact validator は次を確認する。
 
 - procedure doc の存在
 - metric register の存在
+- phase-review metric register の存在
+- intent review template の存在
 - review template の存在
+- concrete intent review artifact の required section
 - review artifact の required section
 - metric snapshot の required keys
 
