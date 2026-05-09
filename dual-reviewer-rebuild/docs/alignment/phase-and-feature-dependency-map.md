@@ -43,12 +43,14 @@ _対象: `dual-reviewer-rebuild` 全体_
 3. `design`
 4. `tasks`
 5. `implementation`
+6. `implementation conformance review`
 
 ルール:
 
 - 下流 phase は上流 phase の approved 状態に依存する
 - 同 phase に修正が入ったら、その phase の alignment gate を再実施する
 - 上流 phase に修正が入ったら、完了済みの下流 phase も reopen 対象になる
+- `intent` に修正が入った場合は、影響を受ける `requirements`、`design`、`tasks`、必要なら `implementation` を連鎖的に reopen 対象とする
 
 ## 3.2 Review Progression
 
@@ -58,10 +60,12 @@ manual review も同じ順で流れる。
 2. `requirements review wave`
 3. `design review wave`
 4. `tasks review wave`
+5. `implementation conformance review`
 
 review dependency:
 
 - review wave の finding を反映して同じ phase が変わったら、次の review wave に進む前に同 phase の alignment recheck が必要
+- `intent review` の変更は、少なくとも `requirements review wave` から下流をやり直す起点になる
 
 ## 4. Feature Dependency
 
@@ -73,6 +77,10 @@ graph TD
     Foundation --> Evaluation["evaluation"]
     Foundation --> SelfImprove["self-improvement"]
     Foundation --> Paper["paper-interface"]
+    Runtime --> Governance["implementation-governance"]
+    Evaluation --> Governance
+    SelfImprove --> Governance
+    Paper --> Governance
 
     Runtime --> Evaluation
     Runtime --> SelfImprove
@@ -183,6 +191,26 @@ graph TD
 - paper-interface は runtime raw artifact を standard source にしない
 - paper-facing provenance は evaluation output 経由で継承する
 
+## 4.7 Implementation-Governance
+
+役割:
+
+- implementation completion rule
+- post-implementation conformance review
+- review artifact / metric governance
+
+依存の種類:
+
+- runtime に対して `review dependency`
+- evaluation に対して `review dependency`
+- self-improvement に対して `review dependency`
+- paper-interface に対して `review dependency`
+
+理由:
+
+- governance は feature implementation 後の artifact と smoke pass を前提にする
+- feature data contract を生成するのではなく、completion gate を追加する
+
 ## 5. Phase-by-Phase Generation Order
 
 ## 5.1 Requirements Wave
@@ -195,11 +223,13 @@ graph TD
 4. `self-improvement`
 5. `paper-interface`
 6. `requirements alignment gate`
+7. `implementation-governance`
 
 注意:
 
 - 実際には 1 つ書き切って終わりではなく、wave として横に広げてから alignment する
 - `paper-interface` は consumer なので最後でよい
+- implementation-governance は feature requirements を横断して completion rule を定義するため最後に置く
 
 ## 5.2 Design Wave
 
@@ -211,6 +241,7 @@ graph TD
 4. `self-improvement`
 5. `paper-interface`
 6. `design alignment gate`
+7. `implementation-governance`
 
 理由:
 
@@ -219,6 +250,7 @@ graph TD
 - evaluation が intake / admission / metrics を concrete 化する
 - self-improvement が proposal provenance を concrete 化する
 - paper-interface は最後に evaluation output consumer として整える
+- implementation-governance は feature design 完了後に post-implementation gate を定義する
 
 ## 5.3 Tasks Wave
 
@@ -230,6 +262,7 @@ graph TD
 4. `self-improvement tasks`
 5. `paper-interface tasks`
 6. `tasks alignment gate`
+7. `implementation-governance tasks`
 
 理由:
 
@@ -238,6 +271,7 @@ graph TD
 - evaluation tasks が intake / admission / analysis path を作る
 - self-improvement tasks が proposal / backtest / provenance linkage を作る
 - paper-interface tasks は evaluation output contract が定まった後に作る
+- implementation-governance tasks は prototype 実装後の review gate と validator を定義する
 
 ## 6. Current Blocking Points Before Tasks
 
@@ -269,6 +303,7 @@ graph TD
 - shared owner の変更
 - `requirements` または `design` で依存方向が変わる修正
 - `tasks wave` の実際の blocking dependency が本書と一致しないと分かった場合
+- implementation completion rule が変更された場合
 
 ## 9. Current Conclusion
 
@@ -277,6 +312,7 @@ graph TD
 - `requirements`: 完了
 - `design`: 完了
 - 次は `foundation -> runtime -> evaluation -> self-improvement -> paper-interface` の順で `tasks wave`
-- 最後に `tasks alignment gate`
+- `tasks alignment gate`
+- implementation 後は `implementation conformance review`
 
 である。

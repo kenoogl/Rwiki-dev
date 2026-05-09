@@ -62,14 +62,7 @@ module DualReviewer
           return repo_root.join("tests/fixtures/evaluation/imported_bundles", bundle_id, "run", run_id) if bundle_id && repo_root.join("tests/fixtures/evaluation/imported_bundles", bundle_id, "run", run_id).exist?
           return repo_root.join("exports", bundle_id, "run", run_id) if bundle_id && repo_root.join("exports", bundle_id, "run", run_id).exist?
         when "central_local_run"
-          candidate_paths = [
-            repo_root.join("experiments/runs", run_id),
-            repo_root.join("tests/fixtures/evaluation/local_runs/minimal_runtime_run"),
-            repo_root.join("tests/fixtures/evaluation/local_runs/invalid_runtime_run"),
-            repo_root.join("tests/fixtures/evaluation/local_runs/exploratory_runtime_run"),
-            repo_root.join("tests/fixtures/evaluation/local_runs/analysis_blocked_run")
-          ]
-          return candidate_paths.find { |path| path.exist? && manifest_run_id(path) == run_id }
+          return local_run_candidates.find { |path| manifest_run_id(path) == run_id }
         end
 
         nil
@@ -145,6 +138,18 @@ module DualReviewer
         return nil unless manifest_path.exist?
 
         YAML.load_file(manifest_path).dig("metadata", "run_id")
+      end
+
+      def local_run_candidates
+        candidates = []
+
+        experiments_root = repo_root.join("experiments/runs")
+        candidates.concat(experiments_root.children.select(&:directory?)) if experiments_root.exist?
+
+        fixture_root = repo_root.join("tests/fixtures/evaluation/local_runs")
+        candidates.concat(fixture_root.children.select(&:directory?)) if fixture_root.exist?
+
+        candidates.select { |path| path.join("run_manifest.yaml").exist? }
       end
     end
   end

@@ -36,7 +36,8 @@ module DualReviewer
 
       def record_adoption(proposal_id:, linked_repo_change_ref:, reviewer_note:)
         ensure_backtest_exists!(proposal_id)
-        ensure_approved_or_tested!(proposal_id)
+        ensure_approved!(proposal_id)
+        ensure_linked_repo_change_ref!(linked_repo_change_ref)
         proposal = load_proposal(proposal_id)
         entry = {
           "proposal_id" => proposal_id,
@@ -99,10 +100,15 @@ module DualReviewer
         raise ArgumentError, "missing backtest artifact for #{proposal_id}" unless path.exist?
       end
 
-      def ensure_approved_or_tested!(proposal_id)
+      def ensure_approved!(proposal_id)
         proposal = load_proposal(proposal_id)
-        allowed = %w[approved tested draft awaiting_test]
-        raise ArgumentError, "proposal #{proposal_id} is not eligible for adoption from status #{proposal['status']}" unless allowed.include?(proposal["status"])
+        raise ArgumentError, "proposal #{proposal_id} is not approved for adoption from status #{proposal['status']}" unless proposal["status"] == "approved"
+      end
+
+      def ensure_linked_repo_change_ref!(linked_repo_change_ref)
+        return unless linked_repo_change_ref.nil? || linked_repo_change_ref.strip.empty?
+
+        raise ArgumentError, "linked_repo_change_ref is required for adoption"
       end
 
       def ensure_adopted!(proposal_id)

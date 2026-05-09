@@ -1,0 +1,62 @@
+{
+  "feature_name": "dual-reviewer-implementation-governance",
+  "created_at": "2026-05-09T10:00:00+09:00",
+  "updated_at": "2026-05-09T10:40:00+09:00",
+  "language": "ja",
+  "phase": "tasks-approved",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true,
+  "custom": {
+    "reopened": {
+      "requirements": false,
+      "design": false,
+      "tasks": false
+    },
+    "alignment": {
+      "requirements": {
+        "required": true,
+        "status": "completed",
+        "last_checked": "2026-05-09",
+        "note": "governance-specific cross-spec alignment completed after workflow gate formalization"
+      },
+      "design": {
+        "required": true,
+        "status": "completed",
+        "last_checked": "2026-05-09",
+        "note": "governance design alignment completed; feature data contracts remain unchanged"
+      },
+      "tasks": {
+        "required": true,
+        "status": "completed",
+        "last_checked": "2026-05-09",
+        "note": "governance tasks alignment completed with workflow gate status and alignment memo artifacts"
+      }
+    },
+    "recheck": {
+      "upstream_change_pending": false,
+      "impacted_downstream_phases": [
+        "implementation",
+        "implementation-conformance-review"
+      ]
+    },
+    "traceability": {
+      "intent_requirements_matrix_required": false,
+      "intent_requirements_matrix_status": "not-required",
+      "intent_requirements_matrix_last_checked": "2026-05-09",
+      "intent_requirements_matrix_update_required": false
+    }
+  }
+}

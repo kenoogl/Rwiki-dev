@@ -34,7 +34,7 @@ implementation 中に次を記録する。
 
 ## 3.5 Handback Decision Rule
 
-implementation 中の手戻りは、少なくとも次の 3 区分で判定する。
+implementation 中の手戻りは、少なくとも次の 4 区分で判定する。
 
 ### A. Task-local adjustment
 
@@ -90,11 +90,32 @@ implementation 中の手戻りは、少なくとも次の 3 区分で判定す�
 - trace matrix が関係する場合は同時に更新対象とする
 - `requirements alignment gate`、必要に応じて `design/tasks alignment gate` を再実施する
 
+### D. Intent handback
+
+feature spec の前提となる上位意図、non-goal、最適化対象そのものが不適切だった手戻り。
+
+例:
+
+- requirement 自体は整っているが、system intent に反する最適化をしていた
+- intent が禁止している振る舞いを downstream spec が正しく実装していた
+- trust boundary や human workflow の前提が intent 層で不足していた
+- intent 変更により複数 feature requirement の存在理由が変わる
+
+扱い:
+
+- `implementation-coordination-log` に記録する
+- `intent/` 配下の正本を reopen する
+- 影響を受ける feature の `requirements` を reopen する
+- downstream の `design` と `tasks` も reopen 対象にする
+- trace matrix と関連 operation 文書も同時に更新対象とする
+- `intent review`、`requirements alignment gate`、必要に応じて `design/tasks alignment gate` を再実施する
+
 ### 判定原則
 
 - task の意図を変えないなら `A`
 - task の意図は維持できるが設計境界を直す必要があるなら `B`
 - そもそも contract が不足しているなら `C`
+- contract より上位の system intent が不適切なら `D`
 
 判定に迷う場合は、より上流へ戻す側に倒す。
 
@@ -107,7 +128,7 @@ implementation 中の手戻りは、少なくとも次の 3 区分で判定す�
 - 対象 task
 - touched artifacts
 - blocker
-- handback class (`A` / `B` / `C`)
+- handback class (`A` / `B` / `C` / `D`)
 - reopen 要否
 - action
 - status
@@ -745,4 +766,88 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - handback class: `A`
 - reopen 要否: 不要
 - action: minimal claim/evidence/caveat/imported-provenance fixture を追加し、一時コピー上で traceability, provenance, table/figure field, caveat retention, no silent strengthening, methodology-note separation を確認する smoke validator を実装した
+- status: completed
+
+### 6.37 2026-05-09 prototype implementation conformance review
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-runtime` / `dual-reviewer-evaluation` / `dual-reviewer-self-improvement` / `dual-reviewer-paper-interface`
+- 対象 task: post-prototype shelf review
+- touched artifacts:
+  - `docs/coordination/implementation-conformance-review.md`
+  - `docs/coordination/implementation-conformance-metric-register.md`
+  - `docs/reviews/2026-05-09-prototype-shelf-review.md`
+  - `docs/coordination/implementation-signal-register.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: smoke pass 後の横断棚卸し工程として implementation conformance review を定義し、初回 review artifact と metric snapshot を追加。approval/adoption gate、fixture-bound replay resolution、heuristic caveat linkage を finding として signal register に接続した
+- status: completed
+
+### 6.38 2026-05-09 implementation governance spec and validator
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: `Task 1` / `Task 2` / `Task 3` / `Task 4` / `Task 5` / `Task 6`
+- touched artifacts:
+  - `.kiro/specs/dual-reviewer-implementation-governance/*`
+  - `docs/reviews/templates/implementation-conformance-review-template.md`
+  - `scripts/validate_implementation_governance_artifacts.rb`
+  - `DOCUMENT_INDEX.md`
+  - `docs/alignment/phase-and-feature-dependency-map.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: implementation completion rule の仕様化として governance spec を起票し、procedure/metric register/template/current review artifact を spec ownership に接続。併せて governance artifact validator を追加し、dependency map と document index を更新した
+- status: completed
+
+### 6.39 2026-05-09 governance cross-spec alignment and gate status
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: `Task 7`
+- touched artifacts:
+  - `docs/alignment/cross-spec-implementation-governance-alignment.md`
+  - `docs/coordination/workflow-gate-status.md`
+  - `.kiro/specs/dual-reviewer-implementation-governance/requirements.md`
+  - `.kiro/specs/dual-reviewer-implementation-governance/design.md`
+  - `.kiro/specs/dual-reviewer-implementation-governance/tasks.md`
+  - `.kiro/specs/dual-reviewer-implementation-governance/spec.json`
+  - `scripts/validate_implementation_governance_artifacts.rb`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: governance spec 自体が workflow 外で成立しないよう、cross-spec alignment memo と gate status register を追加し、governance spec の alignment status を required/completed に更新。validator も新 artifact を必須対象に拡張した
+- status: completed
+
+### 6.40 2026-05-09 workflow repair procedure formalization
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: workflow repair procedure addendum
+- touched artifacts:
+  - `docs/coordination/workflow-repair-procedure.md`
+  - `DOCUMENT_INDEX.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `A/B/C/D` handback を含む修正手続き一覧と状態遷移表を repo artifact として固定し、intent handback を含む reopen propagation を参照可能にした
+- status: completed
+
+### 6.41 2026-05-09 open conformance findings fix and short rerun
+
+- 日付: 2026-05-09
+- 対象 feature: `dual-reviewer-self-improvement` / `dual-reviewer-paper-interface`
+- 対象 task: post-review fix sweep
+- touched artifacts:
+  - `scripts/self_improvement/history_registry.rb`
+  - `scripts/self_improvement/replay_input_resolver.rb`
+  - `scripts/paper_interface/evidence_register_builder.rb`
+  - `docs/reviews/2026-05-09-prototype-shelf-review-rerun.md`
+  - `docs/coordination/implementation-signal-register.md`
+  - `docs/coordination/workflow-gate-status.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: initial conformance review の 3 finding を implementation-only fix として修正し、self-improvement / paper-interface / governance validator を再実行。short rerun review artifact を追加し、open finding status を `fixed` / `absorbed` に更新した
 - status: completed

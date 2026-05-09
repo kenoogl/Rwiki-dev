@@ -44,8 +44,9 @@ module DualReviewer
       private
 
       def relevant_caveat_refs(claim:, artifact_ref:)
-        artifact_specific = claim.fetch("caveat_refs").select { |ref| ref.include?(artifact_ref.split("/").last.sub(".json", "")) }
-        artifact_specific.empty? ? claim.fetch("caveat_refs") : artifact_specific
+        return [] unless claim.fetch("supporting_artifact_refs").include?(artifact_ref)
+
+        claim.fetch("caveat_refs")
       end
 
       def dedupe_entries(entries)

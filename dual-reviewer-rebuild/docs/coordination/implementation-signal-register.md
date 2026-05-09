@@ -56,6 +56,9 @@
 - `downstream_dependency_risk`
 - `temporary_workaround`
 - `generated_artifact_cleanup`
+- `implementation_nonconformance`
+- `fixture_bound_resolution`
+- `heuristic_traceability_linkage`
 
 ## 6. 実施ログ
 
@@ -146,3 +149,47 @@
 - immediate_action: metrics は structured artifact だけで計算しつつ、judgment label distribution は resolved label なしの暫定 shape で保持。
 - escalation_risk: `medium`
 - status: `watch`
+
+### 6.7 2026-05-09 self-improvement adoption gate allows unapproved adoption
+
+- 日付: 2026-05-09
+- feature: `dual-reviewer-self-improvement`
+- task: `Task 8` / `Task 9`
+- signal_type: `implementation_nonconformance`
+- artifacts:
+  - `scripts/self_improvement/history_registry.rb`
+  - `.kiro/specs/dual-reviewer-self-improvement/design.md`
+  - `docs/reviews/2026-05-09-prototype-shelf-review.md`
+- description: conformance review で、`record_adoption` が `draft` と `awaiting_test` proposal からも `adopted` を記録できることが見つかった。`approved` と `adopted` の分離条件に反する。
+- immediate_action: finding を review artifact と signal に起票し、その後 `approved` status 限定の adoption gate と `linked_repo_change_ref` 必須チェックへ修正。short rerun で validator pass を確認。
+- escalation_risk: `high`
+- status: `absorbed`
+
+### 6.8 2026-05-09 replay input resolver is fixture-name-bound
+
+- 日付: 2026-05-09
+- feature: `dual-reviewer-self-improvement`
+- task: `Task 6`
+- signal_type: `fixture_bound_resolution`
+- artifacts:
+  - `scripts/self_improvement/replay_input_resolver.rb`
+  - `docs/reviews/2026-05-09-prototype-shelf-review.md`
+- description: `central_local_run` の run root 解決が固定 fixture 名の列挙に依存しており、新しい local fixture や別 path の run で false negative を返しうる。
+- immediate_action: finding を review artifact と signal に起票し、その後 `run_manifest.yaml` ベースの generic local run discovery へ差し替えた。short rerun で replay pipeline pass を確認。
+- escalation_risk: `medium`
+- status: `absorbed`
+
+### 6.9 2026-05-09 evidence-caveat linkage is heuristic
+
+- 日付: 2026-05-09
+- feature: `dual-reviewer-paper-interface`
+- task: `Task 4`
+- signal_type: `heuristic_traceability_linkage`
+- artifacts:
+  - `scripts/paper_interface/evidence_register_builder.rb`
+  - `paper/reports/evidence_register.json`
+  - `docs/reviews/2026-05-09-prototype-shelf-review.md`
+- description: evidence register が caveat ref と artifact basename の部分一致で artifact-specific caveat を判定しており、traceability が構造化参照ではなく heuristic に依存している。
+- immediate_action: finding を review artifact と signal に起票し、その後 basename heuristic を廃止して claim の `supporting_artifact_refs` と `caveat_refs` に基づく structured linkage へ修正。short rerun で paper-interface validator pass を確認。
+- escalation_risk: `medium`
+- status: `absorbed`
