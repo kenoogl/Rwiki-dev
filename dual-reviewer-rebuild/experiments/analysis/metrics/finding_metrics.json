@@ -16,6 +16,43 @@
         "judgment_ref_present": 1,
         "unresolved_judgment_labels": 1
       }
+    },
+    {
+      "run_id": "run-20260509T223551Z-b0c4612d",
+      "phase_profile": "tasks",
+      "treatment": "single",
+      "severity_distribution": {
+        "high": 1,
+        "medium": 1
+      },
+      "source_role_distribution": {
+        "primary_reviewer": 2
+      },
+      "judgment_label_distribution": {
+        "resolved_labels": {
+        },
+        "judgment_ref_present": 2,
+        "unresolved_judgment_labels": 2
+      }
+    },
+    {
+      "run_id": "run-20260509T223551Z-447fcfa8",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "severity_distribution": {
+        "high": 1,
+        "medium": 2
+      },
+      "source_role_distribution": {
+        "primary_reviewer": 2,
+        "adversarial_reviewer": 1
+      },
+      "judgment_label_distribution": {
+        "resolved_labels": {
+        },
+        "judgment_ref_present": 3,
+        "unresolved_judgment_labels": 3
+      }
     }
   ]
 }

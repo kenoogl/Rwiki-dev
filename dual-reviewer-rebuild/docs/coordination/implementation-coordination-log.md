@@ -1005,3 +1005,341 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: `Claim 1-4` と評価 case の対応を直交表として固定し、どの claim にどの case class が必須か、`intent` がない case を main paper から除外する rule を明文化した。あわせて paper index に matrix を組み込み、case 選定の主線を `intent` 先行に固定した
 - status: completed
+
+### 6.52 2026-05-09 phase-field intent authoring
+
+- 日付: 2026-05-09
+- 対象 feature: `phase-field-reverse-spec`
+- 対象 task: upstream intent formalization
+- touched artifacts:
+  - `.kiro/specs/phase-field-reverse-spec/intent.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/claim-case-matrix.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field-reverse-spec` に明示的な intent 正本を追加し、scientific clean-room reconstruction case の目的、非目的、制約、成功条件、論文上の役割を固定した。あわせて paper 側の case 文書を更新し、`phase-field` を `intent` 参照済みの `Spec Track / Implementation Track` case として扱うように整理した
+- status: completed
+
+### 6.53 2026-05-09 heat3d intent authoring
+
+- 日付: 2026-05-09
+- 対象 feature: `heat3d-spec`
+- 対象 task: upstream intent formalization
+- touched artifacts:
+  - `.kiro/specs/heat3d-spec/intent.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/claim-case-matrix.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `/Users/Daily/Development/Heat3ds_rework/docs/thermal_simulator_spec.md` を canonical source とする `heat3d` の短い intent を追加した。あわせて paper 側の case 文書を更新し、`heat3d` を intent 参照済みの `Spec Track / Implementation Track` case として扱うように整理した
+- status: completed
+
+### 6.54 2026-05-10 iot-arduino intent and requirements authoring
+
+- 日付: 2026-05-10
+- 対象 feature: `iot-arduino-spec`
+- 対象 task: upstream intent and minimal spec formalization
+- touched artifacts:
+  - `.kiro/specs/iot-arduino-spec/intent.md`
+  - `.kiro/specs/iot-arduino-spec/requirements.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/claim-case-matrix.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `/Users/Daily/Development/DR-IoT/src/Irrigation.ino` を canonical source とする `iot-arduino` の短い intent と最小 requirements を追加した。灌水スケジュール、流量計測、表示・通知、永続化、ネットワーク同期、deep sleep を仕様境界として抽出し、paper 側の case 文書も intent 参照済みの event-driven case に更新した
+- status: completed
+
+### 6.55 2026-05-10 spec track first case fixation
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: spec-driven acquisition preparation
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-run-plan.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `Spec Track` の最初の concrete case として `phase-field-reverse-spec` を `F1-spec-phase-field-reverse-spec` に固定し、intent-side anchor, spec-side anchor, downstream implementation reference, phase status, required outputs を明文化した。これにより `single review` と `dual-reviewer workflow` を同じ spec root に対して比較するための境界が定まった
+- status: completed
+
+### 6.56 2026-05-10 three core cases fixation
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: evaluation case stabilization
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-phase-field.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field / heat3d / iot-arduino` を論文化の 3 core case として固定し、各 case について intent ref、canonical source、supported track、paper role、stress characteristics を 1 文書ずつに整理した。manifest と index も更新し、core case 固定と first-run 固定を分けて辿れる構成にした
+- status: completed
+
+### 6.57 2026-05-10 claim-case matrix realignment
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: paper planning consistency correction
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `claim-case-matrix.md` を正本として扱い、`heat3d` と `iot-arduino` を fixed core case から provisional core case に戻した。matrix が要求する upstream spec / track 固定条件を満たすまで main paper の fixed case と見なさないことを manifest と index に反映した
+- status: completed
+
+### 6.58 2026-05-10 spec-driven data acquisition runner wiring
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: `spec-driven evaluation runner wiring`
+- touched artifacts:
+  - `runtime/writers/evidence_writer.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/track_runs/implementation_track_runner.rb`
+  - `scripts/run_intent_track_protocol.rb`
+  - `scripts/run_spec_track_protocol.rb`
+  - `scripts/run_implementation_track_protocol.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `Intent Track` / `Spec Track` の protocol writer を CLI から実行できる形に揃え、`Implementation Track` には protocol review mode から runtime treatment へ写像する runner と CLI を追加した。さらに 3 track の first-batch 実行基盤を tmpdir 上で mechanical に検証する validation script を実装し、protocol runner validation を通した
+- status: completed
+
+### 6.59 2026-05-10 spec-driven execution packet addition
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: `spec-driven execution packet scaffolding`
+- touched artifacts:
+  - `scripts/track_runs/intent_track_writer.rb`
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/track_runs/implementation_track_runner.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: 3 track すべての run artifact に `execution_packet.md` を追加し、review mode ごとに何を読み、どの artifact を更新し、何を success check とするかを run 単位で固定した。validation も更新し、execution packet を含めて mechanical に検証した
+- status: completed
+
+### 6.60 2026-05-10 phase-field-only pilot narrowing
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: `spec-driven first-batch scope correction`
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-first-run-plan.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: first batch を `phase-field` Implementation Track pilot のみに縮小し、`heat3d` と `iot-arduino` は provisional case のまま後続 scope expansion へ送るよう正本を修正した。これにより fixed core case だけで pilot readiness を評価する流れに揃えた
+- status: completed
+
+### 6.61 2026-05-10 implementation pilot seeded findings
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `Implementation Track phase-field pilot review seeding`
+- touched artifacts:
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `runtime/executors/step_c_judgment.rb`
+  - `runtime/executors/step_d_integration.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/track_runs/implementation_track_runner.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field` pilot 専用の deterministic finding/judgment seed を runtime step executor 群へ追加し、single review では 2 findings、dual-reviewer workflow では adversarial finding を追加した 3 findings が review_case と decision_units に残るようにした。validation も強化し、dual mode で adversarial finding が保存されることまで確認した
+- status: completed
+
+### 6.62 2026-05-10 phase-field pilot batch runner
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `phase-field implementation pilot orchestration`
+- touched artifacts:
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field` Implementation Track pilot を `single_review` と `dual_reviewer_workflow` の 2 run でまとめて回し、runtime run, bundle export, protocol notes, comparison summary, batch manifest を 1 コマンドで生成する batch runner を追加した
+- status: completed
+
+### 6.63 2026-05-10 phase-field pilot batch execution
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `phase-field implementation pilot first batch`
+- touched artifacts:
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/batch_manifest.yaml`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/protocol-runs/F1-phase-field-cpp-single/*`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/protocol-runs/F1-phase-field-cpp-dual/*`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260509T224244Z-8a9c4c62/*`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260509T224245Z-faca9d2b/*`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `run_phase_field_implementation_first_batch.rb` を実行し、`single_review` は 2 findings、`dual_reviewer_workflow` は adversarial finding を含む 3 findings を取得した。comparison summary では `dual_minus_single_findings = 1`、`dual_has_adversarial_role = true` を確認した。caveat として、Intent/Spec Track は未含有、primary/adversarial/integration prompt は runtime-owned placeholder のままであることを batch summary に保持した
+- status: completed
+
+### 6.64 2026-05-10 phase-field implementation pilot source-driven runtime
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `implementation-track phase-field pilot execution layer`
+- touched artifacts:
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `runtime/executors/step_c_judgment.rb`
+  - `runtime/executors/step_d_integration.rb`
+  - `runtime/prompts/primary/primary_reviewer.prompt.md`
+  - `runtime/prompts/adversarial/adversarial_reviewer.prompt.md`
+  - `runtime/prompts/integration/integration_reviewer.prompt.md`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: deterministic seed を廃し、`phase-field` implementation snapshot と upstream spec ref を実際に読んで boundary semantics / update ordering / parameter interpretation の cue を抽出する source-driven heuristic runtime に差し替えた。あわせて primary/adversarial/integration の prompt artifact を追加して prompt identity を resolved 化し、batch を再実行して `single_review=2 findings`, `dual_reviewer_workflow=3 findings`, `dual_minus_single_findings=1`, `dual_has_adversarial_role=true` を維持した。残る caveat は、これはまだ source-driven heuristic pilot であり、main-evidence-grade の review quality claim 前には true review execution layer への差し替え判断が必要な点である
+- status: completed
+
+### 6.65 2026-05-10 phase-field spec-track pilot execution
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `spec-track phase-field tasks pilot`
+- touched artifacts:
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/run_phase_field_spec_first_batch.rb`
+  - `experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/batch_manifest.yaml`
+  - `experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/comparison_summary.json`
+  - `experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/protocol-runs/F1-spec-phase-field-single/*`
+  - `experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/protocol-runs/F1-spec-phase-field-dual/*`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field-reverse-spec` の `tasks` case に対して、phase-local issue / cross-phase inconsistency / intent-attributed issue / reopen depth を source-driven heuristic で埋める Spec Track runner を追加し、`single_review` と `dual_reviewer_workflow` の pilot batch を取得した。summary では両 mode とも `reopen_required=true`、target reopen phases は `design, tasks`、dual mode では `phase_major_correction_count=1`、`phase_intent_attributed_issue_count=1` を確認した。残る caveat は、これも pilot acquisition evidence であり、main-evidence-grade claim 前には true review execution layer への差し替え判断が必要な点である
+- status: completed
+
+### 6.66 2026-05-10 dual-reviewer-rebuild intent-track pilot execution
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `intent-track dual-reviewer-rebuild bootstrap pilot`
+- touched artifacts:
+  - `scripts/track_runs/intent_track_writer.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_dual_reviewer_rebuild_intent_first_batch.rb`
+  - `experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/batch_manifest.yaml`
+  - `experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/comparison_summary.json`
+  - `experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/protocol-runs/F1-intent-dual-reviewer-rebuild-single/*`
+  - `experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/protocol-runs/F1-intent-dual-reviewer-rebuild-dual/*`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `dual-reviewer-rebuild` bootstrap case に対して、major gap / scope drift / counter-hypothesis / intent handback 要否 / downstream propagation target を source-driven heuristic で埋める Intent Track runner を追加し、`single_review` と `dual_reviewer_workflow` の pilot batch を取得した。summary では `single_intent_review_findings_count=2`, `dual_intent_review_findings_count=3`, `dual_intent_handback_count=1`, `dual_requires_intent_handback=true` を確認した。残る caveat は、これも pilot acquisition evidence であり、main-evidence-grade claim 前には true review execution layer への差し替え判断が必要な点である
+- status: completed
+
+### 6.67 2026-05-10 phase-field requirements pilot acquisition
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `spec-track phase-field requirements pilot`
+- touched artifacts:
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/run_phase_field_requirements_first_batch.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec/batch_manifest.yaml`
+  - `experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec/comparison_summary.json`
+  - `experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec/protocol-runs/F1-requirements-phase-field-single/*`
+  - `experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec/protocol-runs/F1-requirements-phase-field-dual/*`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field-reverse-spec` の `requirements` case に対して、clean-room boundary / acceptance bundle density / downstream approval gap / validation ownership を source-driven heuristic で埋める Spec Track runner を追加し、`single_review` と `dual_reviewer_workflow` の pilot batch を取得した。summary では両 mode とも `reopen_required=true`、target reopen phases は `requirements, design, tasks`、handback class `C=1` を確認し、dual mode では `phase_major_correction_count=1`、`phase_intent_attributed_issue_count=1` を確認した。worklist も更新し、次段を `design` phase acquisition に切り替えた。残る caveat は、これも pilot acquisition evidence であり、main-evidence-grade claim 前には true review execution layer への差し替え判断が必要な点である
+- status: completed
+
+### 6.68 2026-05-10 phase-field design pilot acquisition
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `spec-track phase-field design pilot`
+- touched artifacts:
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/run_phase_field_design_first_batch.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/batch_manifest.yaml`
+  - `experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/comparison_summary.json`
+  - `experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/protocol-runs/F1-design-phase-field-single/*`
+  - `experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/protocol-runs/F1-design-phase-field-dual/*`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field-reverse-spec` の `design` case に対して、component boundary density / failure contract preservation / design-tasks readiness gap / validation ownership spread を source-driven heuristic で埋める Spec Track runner を追加し、`single_review` と `dual_reviewer_workflow` の pilot batch を取得した。summary では両 mode とも `reopen_required=true`、target reopen phases は `design, tasks`、handback class `B=1` を確認し、dual mode では `phase_major_correction_count=1`、`phase_intent_attributed_issue_count=1` を確認した。worklist も更新し、all-phase pilot coverage 完了後の next step を `phase-field pilot only` の main-evidence 昇格条件整理に切り替えた。残る caveat は、これも pilot acquisition evidence であり、main-evidence-grade claim 前には true review execution layer への差し替え判断が必要な点である
+- status: completed
+
+### 6.69 2026-05-10 generic execution layer rethink
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-runtime`
+- 対象 task: `pilot execution strategy correction`
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `B`
+- reopen 要否: 要
+- action: `phase-field` pilot で導入した case-specific heuristic 実装は、新しい case へ一般化できず、実装差し替え時に同一 case の結果も変動しうるため、方法論として不安定であると判断した。`ACTIVE_WORKLIST` を更新し、次段を「main-evidence 昇格条件整理」から「generic review execution layer redesign」へ変更した。以後は case profile ごとに rule を増やすのではなく、track 共通の generic input/output/taxonomy を先に定義し、その上で pilot を取り直す方針とする
+- status: completed
+
+### 6.70 2026-05-10 active worklist role clarification
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-implementation-governance`
+- 対象 task: `ACTIVE_WORKLIST role redefinition`
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: 試行錯誤の新規 finding として、`LLM + spec-driven development` では static spec だけでは進行制御が足りず、`ACTIVE_WORKLIST` のような execution-control artifact が必須であること、また実態としては `intent` を最上位に置く intent-governed development であることを `ACTIVE_WORKLIST` に明記した。以後この文書は TODO ではなく、現在地 / 次の 1 手 / stop rule / reopen 状態を固定する dynamic control board として扱う
+- status: completed
