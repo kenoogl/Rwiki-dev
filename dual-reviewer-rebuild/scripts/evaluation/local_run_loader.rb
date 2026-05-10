@@ -13,7 +13,15 @@ module DualReviewer
         "review_case" => "review_case.json",
         "decision_units" => "decisions/decision_units.json",
         "validator_result" => "validation/validator_result.json",
-        "invalidation_markers" => "validation/invalidation_markers.json"
+        "invalidation_markers" => "validation/invalidation_markers.json",
+        "comparison_eligibility_note" => "derived/comparison_eligibility_note.json"
+      }.freeze
+
+      OPTIONAL_ARTIFACTS = {
+        "v2_review_artifact" => "v2/review_artifact.json",
+        "v2_metric_snapshot" => "v2/metric_snapshot.json",
+        "v2_trace_note" => "v2/trace_note.json",
+        "v2_signal_linkage_note" => "v2/signal_linkage_note.json"
       }.freeze
 
       attr_reader :repo_root
@@ -36,9 +44,15 @@ module DualReviewer
           end
         end
 
+        OPTIONAL_ARTIFACTS.each do |artifact_name, relative_path|
+          artifact_path = root.join(relative_path)
+          artifacts[artifact_name] = load_artifact(artifact_path) if artifact_path.exist?
+        end
+
         {
           "run_root" => root.to_s,
           "required_artifacts" => REQUIRED_ARTIFACTS,
+          "optional_artifacts" => OPTIONAL_ARTIFACTS,
           "missing_artifacts" => missing_artifacts,
           "intake_status" => missing_artifacts.empty? ? "complete" : "incomplete",
           "artifacts" => artifacts,

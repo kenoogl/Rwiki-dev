@@ -1,0 +1,497 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "implementation",
+  "target_id": "implementation:phase-field-cpp",
+  "common_inputs": {
+    "target_id": "implementation:phase-field-cpp",
+    "target_artifact_hash": "sha256:61f9e79458f72ab4b1deb576870c73819b8dba5ece86aa7407be57a98ce90b0d",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0793808d9f15b7cd2cba5bea2461b973b45f20ed",
+    "phase_profile": "tasks",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+      ".kiro/specs/phase-field-reverse-spec/intent.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-phase-field-cpp.yaml",
+    "track": "implementation"
+  },
+  "track_inputs": {
+    "implementation_snapshot_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+    "upstream_spec_refs": [
+      ".kiro/specs/phase-field-reverse-spec/intent.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+    ]
+  },
+  "evidence_observations": [
+    {
+      "observation_id": "observation:step-01-finding-boundary",
+      "taxonomy_path": "implementation.blocking.detected_issue",
+      "summary": "Boundary-condition semantics are review-critical because the upstream spec and snapshot explicitly require periodic-edge consistency across simulation and rendering. Evidence excerpt: numerical update, boundary handling, visualization, I/O, error handling を含む implementation package である。",
+      "severity": "high",
+      "source_role": "primary_reviewer",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ]
+    },
+    {
+      "observation_id": "observation:step-01-finding-update-order",
+      "taxonomy_path": "implementation.nonblocking.detected_issue",
+      "summary": "Update ordering and state mutation risk should be inspected because the time-step sequence is explicitly fixed, so sequencing drift can change phase-field evolution. Evidence excerpt: algorithmic correctness, boundary semantics, parameter interpretation, update ordering, numerical caveat, implementation brittleness が同時に存在する。",
+      "severity": "medium",
+      "source_role": "primary_reviewer",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ],
+      "counter_evidence_refs": [
+
+      ]
+    },
+    {
+      "observation_id": "observation:step-02-finding-parameter-caveat",
+      "taxonomy_path": "implementation.nonblocking.counter_evidence",
+      "summary": "Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and clean-room reconstruction caveats can diverge unless the mapping from upstream spec to implementation snapshot is made explicit. Evidence excerpt: - clean-room C++ reconstruction",
+      "severity": "medium",
+      "source_role": "adversarial_reviewer",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/intent.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ]
+    }
+  ],
+  "review_issue_candidates": [
+    {
+      "candidate_id": "issue-candidate:step-01-finding-boundary",
+      "finding_id": "step-01-finding-boundary",
+      "taxonomy_path": "implementation.blocking.detected_issue",
+      "severity": "high",
+      "summary": "Boundary-condition semantics are review-critical because the upstream spec and snapshot explicitly require periodic-edge consistency across simulation and rendering. Evidence excerpt: numerical update, boundary handling, visualization, I/O, error handling を含む implementation package である。",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md"
+      ],
+      "failure_observation_refs": [
+        "implementation:boundary_condition_semantics"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-01-finding-update-order",
+      "finding_id": "step-01-finding-update-order",
+      "taxonomy_path": "implementation.nonblocking.detected_issue",
+      "severity": "medium",
+      "summary": "Update ordering and state mutation risk should be inspected because the time-step sequence is explicitly fixed, so sequencing drift can change phase-field evolution. Evidence excerpt: algorithmic correctness, boundary semantics, parameter interpretation, update ordering, numerical caveat, implementation brittleness が同時に存在する。",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ],
+      "failure_observation_refs": [
+        "implementation:update_ordering_state_mutation"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-02-finding-parameter-caveat",
+      "finding_id": "step-02-finding-parameter-caveat",
+      "taxonomy_path": "implementation.nonblocking.counter_evidence",
+      "severity": "medium",
+      "summary": "Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and clean-room reconstruction caveats can diverge unless the mapping from upstream spec to implementation snapshot is made explicit. Evidence excerpt: - clean-room C++ reconstruction",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/intent.md"
+      ],
+      "failure_observation_refs": [
+        "implementation:parameter_interpretation_drift"
+      ]
+    }
+  ],
+  "caveat_candidates": [
+    {
+      "candidate_id": "caveat-candidate:step-02-finding-parameter-caveat",
+      "kind": "counter_evidence_preserved",
+      "finding_id": "step-02-finding-parameter-caveat",
+      "summary": "Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and clean-room reconstruction caveats can diverge unless the mapping from upstream spec to implementation snapshot is made explicit. Evidence excerpt: - clean-room C++ reconstruction",
+      "counter_evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ]
+    }
+  ],
+  "reopen_candidates": [
+    {
+      "candidate_id": "reopen-candidate:step-01-finding-boundary",
+      "finding_id": "step-01-finding-boundary",
+      "taxonomy_path": "implementation.blocking.detected_issue",
+      "reopen_scope": "implementation_snapshot",
+      "reason": "Boundary-condition semantics are review-critical because the upstream spec and snapshot explicitly require periodic-edge consistency across simulation and rendering. Evidence excerpt: numerical update, boundary handling, visualization, I/O, error handling を含む implementation package である。"
+    }
+  ],
+  "signal_candidates": [
+    {
+      "signal_id": "signal:step-01-finding-boundary",
+      "signal_class": "workflow_failure_signal",
+      "taxonomy_path": "implementation.blocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-boundary",
+      "treatment": "dual+judgment"
+    },
+    {
+      "signal_id": "signal:step-01-finding-update-order",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "implementation.nonblocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-update-order",
+      "treatment": "dual+judgment"
+    },
+    {
+      "signal_id": "signal:step-02-finding-parameter-caveat",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "implementation.nonblocking.counter_evidence",
+      "decision_unit_id": "decision-unit-step-02-finding-parameter-caveat",
+      "treatment": "dual+judgment"
+    }
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260510T132228Z-134b3e49",
+    "finding_projection": [
+      {
+        "finding_ref": "review_case.json#step-01-finding-boundary",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-boundary",
+        "taxonomy_path": "implementation.blocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-boundary"
+        ],
+        "reopen_candidate_ref": "v2/review_artifact.json#reopen-candidate:step-01-finding-boundary"
+      },
+      {
+        "finding_ref": "review_case.json#step-01-finding-update-order",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-update-order",
+        "taxonomy_path": "implementation.nonblocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-update-order"
+        ],
+        "reopen_candidate_ref": null
+      },
+      {
+        "finding_ref": "review_case.json#step-02-finding-parameter-caveat",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-02-finding-parameter-caveat",
+        "taxonomy_path": "implementation.nonblocking.counter_evidence",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-parameter-caveat"
+        ],
+        "reopen_candidate_ref": null
+      }
+    ],
+    "decision_unit_projection": [
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-boundary",
+        "finding_refs": [
+          "review_case.json#step-01-finding-boundary"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-boundary"
+        ],
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-update-order",
+        "finding_refs": [
+          "review_case.json#step-01-finding-update-order"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-update-order"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-02-finding-parameter-caveat",
+        "finding_refs": [
+          "review_case.json#step-02-finding-parameter-caveat"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-parameter-caveat"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      }
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-92dd2696",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T132228Z-134b3e49"
+    }
+  },
+  "decision_context": {
+    "track": "implementation",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "implementation",
+      "evidence_observations": [
+        {
+          "observation_id": "observation:step-01-finding-boundary",
+          "taxonomy_path": "implementation.blocking.detected_issue",
+          "summary": "Boundary-condition semantics are review-critical because the upstream spec and snapshot explicitly require periodic-edge consistency across simulation and rendering. Evidence excerpt: numerical update, boundary handling, visualization, I/O, error handling を含む implementation package である。",
+          "severity": "high",
+          "source_role": "primary_reviewer",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md"
+          ],
+          "counter_evidence_refs": [
+
+          ]
+        },
+        {
+          "observation_id": "observation:step-01-finding-update-order",
+          "taxonomy_path": "implementation.nonblocking.detected_issue",
+          "summary": "Update ordering and state mutation risk should be inspected because the time-step sequence is explicitly fixed, so sequencing drift can change phase-field evolution. Evidence excerpt: algorithmic correctness, boundary semantics, parameter interpretation, update ordering, numerical caveat, implementation brittleness が同時に存在する。",
+          "severity": "medium",
+          "source_role": "primary_reviewer",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md"
+          ],
+          "counter_evidence_refs": [
+
+          ]
+        },
+        {
+          "observation_id": "observation:step-02-finding-parameter-caveat",
+          "taxonomy_path": "implementation.nonblocking.counter_evidence",
+          "summary": "Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and clean-room reconstruction caveats can diverge unless the mapping from upstream spec to implementation snapshot is made explicit. Evidence excerpt: - clean-room C++ reconstruction",
+          "severity": "medium",
+          "source_role": "adversarial_reviewer",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/specs/phase-field-reverse-spec/intent.md"
+          ],
+          "counter_evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md"
+          ]
+        }
+      ],
+      "review_issue_candidates": [
+        {
+          "candidate_id": "issue-candidate:step-01-finding-boundary",
+          "finding_id": "step-01-finding-boundary",
+          "taxonomy_path": "implementation.blocking.detected_issue",
+          "severity": "high",
+          "summary": "Boundary-condition semantics are review-critical because the upstream spec and snapshot explicitly require periodic-edge consistency across simulation and rendering. Evidence excerpt: numerical update, boundary handling, visualization, I/O, error handling を含む implementation package である。",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md"
+          ],
+          "failure_observation_refs": [
+            "implementation:boundary_condition_semantics"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-01-finding-update-order",
+          "finding_id": "step-01-finding-update-order",
+          "taxonomy_path": "implementation.nonblocking.detected_issue",
+          "severity": "medium",
+          "summary": "Update ordering and state mutation risk should be inspected because the time-step sequence is explicitly fixed, so sequencing drift can change phase-field evolution. Evidence excerpt: algorithmic correctness, boundary semantics, parameter interpretation, update ordering, numerical caveat, implementation brittleness が同時に存在する。",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md"
+          ],
+          "failure_observation_refs": [
+            "implementation:update_ordering_state_mutation"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-02-finding-parameter-caveat",
+          "finding_id": "step-02-finding-parameter-caveat",
+          "taxonomy_path": "implementation.nonblocking.counter_evidence",
+          "severity": "medium",
+          "summary": "Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and clean-room reconstruction caveats can diverge unless the mapping from upstream spec to implementation snapshot is made explicit. Evidence excerpt: - clean-room C++ reconstruction",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/specs/phase-field-reverse-spec/intent.md"
+          ],
+          "failure_observation_refs": [
+            "implementation:parameter_interpretation_drift"
+          ]
+        }
+      ],
+      "caveat_candidates": [
+        {
+          "candidate_id": "caveat-candidate:step-02-finding-parameter-caveat",
+          "kind": "counter_evidence_preserved",
+          "finding_id": "step-02-finding-parameter-caveat",
+          "summary": "Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and clean-room reconstruction caveats can diverge unless the mapping from upstream spec to implementation snapshot is made explicit. Evidence excerpt: - clean-room C++ reconstruction",
+          "counter_evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md"
+          ]
+        }
+      ],
+      "reopen_candidates": [
+        {
+          "candidate_id": "reopen-candidate:step-01-finding-boundary",
+          "finding_id": "step-01-finding-boundary",
+          "taxonomy_path": "implementation.blocking.detected_issue",
+          "reopen_scope": "implementation_snapshot",
+          "reason": "Boundary-condition semantics are review-critical because the upstream spec and snapshot explicitly require periodic-edge consistency across simulation and rendering. Evidence excerpt: numerical update, boundary handling, visualization, I/O, error handling を含む implementation package である。"
+        }
+      ],
+      "signal_candidates": [
+        {
+          "signal_id": "signal:step-01-finding-boundary",
+          "signal_class": "workflow_failure_signal",
+          "taxonomy_path": "implementation.blocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-boundary",
+          "treatment": "dual+judgment"
+        },
+        {
+          "signal_id": "signal:step-01-finding-update-order",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "implementation.nonblocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-update-order",
+          "treatment": "dual+judgment"
+        },
+        {
+          "signal_id": "signal:step-02-finding-parameter-caveat",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "implementation.nonblocking.counter_evidence",
+          "decision_unit_id": "decision-unit-step-02-finding-parameter-caveat",
+          "treatment": "dual+judgment"
+        }
+      ]
+    },
+    "decision_units": [
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-boundary",
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-boundary"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-update-order",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-update-order"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-02-finding-parameter-caveat",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-02-finding-parameter-caveat"
+        ],
+        "disposition_class": "accepted"
+      }
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ]
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 1,
+      "accepted_decision_unit_ids": [
+        "decision-unit-step-01-finding-boundary",
+        "decision-unit-step-01-finding-update-order",
+        "decision-unit-step-02-finding-parameter-caveat"
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F1-phase-field-cpp",
+    "track": "implementation",
+    "target_id": "implementation:phase-field-cpp",
+    "phase_profile": "tasks",
+    "implementation_snapshot_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+      ".kiro/specs/phase-field-reverse-spec/intent.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "upstream_spec_refs": [
+      ".kiro/specs/phase-field-reverse-spec/intent.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-phase-field-cpp.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-92dd2696",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T132228Z-134b3e49"
+  }
+}

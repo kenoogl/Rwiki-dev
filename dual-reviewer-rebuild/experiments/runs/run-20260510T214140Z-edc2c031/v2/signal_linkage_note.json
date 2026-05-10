@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260510T214140Z-edc2c031",
+  "track": "spec",
+  "linked_signal_ids": [
+    "signal:step-01-finding-clean-room-boundary-contract",
+    "signal:step-01-finding-acceptance-bundle-density",
+    "signal:step-02-finding-downstream-approval-gap"
+  ],
+  "validator_status": "passed",
+  "comparison_eligibility_status": "eligible_standard"
+}

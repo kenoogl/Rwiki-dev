@@ -19,6 +19,7 @@ options = {
     ".kiro/specs/phase-field-reverse-spec/design.md"
   ],
   "alignment_refs" => [],
+  "case_manifest_ref" => "experiments/protocols/case_manifests/F1-spec-phase-field-reverse-spec.yaml",
   "operator" => "pending"
 }
 
@@ -31,8 +32,10 @@ OptionParser.new do |opts|
   opts.on("--reviewed-phase-ref PATH", "Reviewed phase ref path") { |value| options["reviewed_phase_ref"] = value }
   opts.on("--adjacent-ref PATH", "Adjacent phase ref path (repeatable)") { |value| options["adjacent_phase_refs"] << value }
   opts.on("--alignment-ref PATH", "Alignment ref path (repeatable)") { |value| options["alignment_refs"] << value }
+  opts.on("--case-manifest-ref PATH", "Case manifest ref path") { |value| options["case_manifest_ref"] = value }
   opts.on("--operator NAME", "Operator name") { |value| options["operator"] = value }
   opts.on("--output-root PATH", "Custom output root") { |value| options["output_root"] = value }
+  opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |value| options["runtime_run_root_base"] = value }
 end.parse!(ARGV)
 
 writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
@@ -44,8 +47,10 @@ writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
   reviewed_phase_ref: options.fetch("reviewed_phase_ref"),
   adjacent_phase_refs: options.fetch("adjacent_phase_refs"),
   alignment_refs: options.fetch("alignment_refs"),
+  case_manifest_ref: options["case_manifest_ref"],
   operator: options.fetch("operator"),
-  output_root: options["output_root"]
+  output_root: options["output_root"],
+  runtime_run_root_base: options["runtime_run_root_base"]
 )
 
 puts JSON.pretty_generate(

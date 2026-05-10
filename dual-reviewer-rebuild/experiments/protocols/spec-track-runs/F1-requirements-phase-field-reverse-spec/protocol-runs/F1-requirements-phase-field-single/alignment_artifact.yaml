@@ -7,7 +7,6 @@ alignment_refs:
 - ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
 - dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md
 propagation_targets:
-- requirements
 - design
 - tasks
 reopen_required: true
@@ -50,5 +49,5 @@ intent_attributed_issues:
   source_refs:
   - ".kiro/specs/phase-field-reverse-spec/intent.md"
   - ".kiro/specs/phase-field-reverse-spec/requirements.md"
-note: Requirements-origin issues require a requirements/design/tasks recheck before
-  this case can be treated as fixed downstream evidence.
+note: Requirements-origin issues require downstream recheck before implementation-ready
+  evidence can be claimed.

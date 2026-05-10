@@ -124,6 +124,15 @@ generic execution layer v2 の design phase では、次の順を固定する。
 5. `dual-reviewer-self-improvement/design.md`
 6. `dual-reviewer-paper-interface/design.md`
 
+generic execution layer v2 の tasks phase では、次の順を固定する。
+
+1. `dual-reviewer-generic-execution-layer-v2/tasks.md`
+2. `dual-reviewer-foundation/tasks.md`
+3. `dual-reviewer-runtime/tasks.md`
+4. `dual-reviewer-evaluation/tasks.md`
+5. `dual-reviewer-self-improvement/tasks.md`
+6. `dual-reviewer-paper-interface/tasks.md`
+
 以後、次の手順説明では必ず
 
 - 現在の phase
@@ -306,6 +315,8 @@ status:
 - `dual-reviewer-generic-execution-layer-v2` requirements: approved
 - `dual-reviewer-generic-execution-layer-v2` design: approved
 - `dual-reviewer-generic-execution-layer-v2` design alignment: completed
+- `dual-reviewer-generic-execution-layer-v2` tasks: approved
+- `dual-reviewer-generic-execution-layer-v2` tasks alignment: completed
 
 refs:
 - [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
@@ -317,39 +328,44 @@ refs:
 
 ## 7. Current Workflow Step
 
-`tasks generation`
+`implementation replacement`
 
 authoritative workflow ref:
 - [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215)
 
 why this is the current step:
-- `dual-reviewer-generic-execution-layer-v2` requirements review では blocking finding が消えた
-- requirements-phase の feature 間調整結果を [cross-spec-generic-execution-layer-v2-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-requirements-alignment.md:1) に記録した
 - requirements は approve 済みになった
-- `design.md` 初版を生成した
-- design review を 6 feature 順で実施した
-- design alignment 結果を [cross-spec-generic-execution-layer-v2-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-design-alignment.md:1) に記録した
 - design は approve 済みになった
-- したがって、次は tasks 初版を作成する段階である
+- tasks 初版を生成した
+- tasks review と tasks alignment を完了した
+- tasks は approve 済みになった
+- したがって、次は approved tasks に従って implementation replacement を開始する段階である
 
 ---
 
 ## 8. Current Blocker
 
-- approved design を実装単位へ落とした `tasks.md` がまだ存在しない
-- implementation order と shared migration timing を task 単位で具体化していない
+- `runtime/execution_v2/`、manifest migration、profile-backed protocol analysis は立ち上がったが、
+  `implementation` 側は profile-backed になり、rule-match analyzer と seed-pattern vocabulary も共通化されたものの、まだ source-pattern heuristic に依存している
+- `phase-field` pilot rerun は再取得できたが、
+  generic execution layer replacement 完了と言い切るには remaining reopen item の整理と main-evidence 非昇格の維持が必要
 
 ---
 
 ## 9. Current Action
 
-`dual-reviewer-generic-execution-layer-v2` の `tasks.md` 初版を作成する。
+approved tasks に従って `dual-reviewer-generic-execution-layer-v2` の implementation replacement を継続し、
+first validation result と remaining reopen item を固定する。
 
 この action では、次を確認対象にする。
 
-- implementation order を切れること
-- shared artifact migration timing を task に落とせること
-- validator / rerun / comparison 再取得まで task 化できること
+- 3 track の pilot rerun が v2 path で再取得できること
+- comparison summary が再取得されていること
+- `spec` / `intent` の case payload が writer-local rule ではなく manifest/profile 入力に移っていること
+- `implementation` の heuristic payload も executor-local rule ではなく profile 入力に移っていること
+- `spec` / `intent` の `v2` internal artifact が runtime-mediated run から生成されていること
+- 残る reopen item を outcome note に固定すること
+- `main evidence` 未昇格を明示したまま step を閉じること
 
 この文書はここで tasks 手順自体を再定義しない。phase の進め方と gate の成立条件は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215) を正本とする。
 
@@ -359,9 +375,10 @@ why this is the current step:
 
 この step は、次が満たされたら完了とみなす。
 
-1. design approval の記録が feature 状態に反映されている
-2. `tasks.md` 初版が生成される
-3. tasks review に進める前提となる implementation order と shared migration timing が明示される
+1. `intent` / `spec` / `implementation` の pilot rerun が v2 path で再取得できている
+2. comparison summary と replacement outcome note が artifact として残っている
+3. remaining reopen item register が固定されている
+4. `main evidence` 未昇格が明記されている
 
 ---
 
@@ -369,6 +386,8 @@ why this is the current step:
 
 - [requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/requirements.md:1)
 - [design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/design.md:1)
+- [tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/tasks.md:1)
+- [spec.json](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/spec.json:1)
 - [cross-spec-generic-execution-layer-v2-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-requirements-alignment.md:1)
 - [cross-spec-generic-execution-layer-v2-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-design-alignment.md:1)
 - [execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1)
@@ -378,7 +397,7 @@ why this is the current step:
 
 ## 12. Next Handoff
 
-tasks 初版を起こした後に、workflow に従って tasks review と必要な tasks alignment へ進む。この文書では手順自体を再定義しない。
+first validation result を固定した後に、workflow に従って remaining reopen item の解消か、必要なら implementation review を行う。この文書では手順自体を再定義しない。
 
 ---
 

@@ -2,32 +2,46 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "digest"
 require "json"
 require "pathname"
 require "time"
 require "yaml"
+require_relative "../../runtime/support/foundation_asset_loader"
+require_relative "../../runtime/controller/session_controller"
+require_relative "../../runtime/execution_v2/manifests/case_manifest_loader"
+require_relative "../../runtime/execution_v2/protocol_track_session"
 
 module DualReviewer
   module TrackRuns
     class IntentTrackWriter
       attr_reader :repo_root, :run_label, :case_id, :review_mode, :intent_ref, :supporting_refs,
-                  :operator, :objective, :output_root
+                  :traceability_refs, :operator, :objective, :output_root, :case_manifest_ref, :loaded_case_manifest,
+                  :asset_loader, :protocol_track_session, :runtime_run_root_base
 
       def initialize(repo_root:, run_label:, case_id:, review_mode:, intent_ref:, supporting_refs:,
-                     operator:, objective:, output_root: nil)
+                     operator:, objective:, output_root: nil, case_manifest_ref: nil, traceability_refs: [],
+                     runtime_run_root_base: nil)
         @repo_root = Pathname(repo_root).expand_path
         @run_label = run_label
-        @case_id = case_id
         @review_mode = review_mode
-        @intent_ref = intent_ref
-        @supporting_refs = supporting_refs
         @operator = operator
-        @objective = objective
         @output_root = output_root ? Pathname(output_root).expand_path : default_output_root
+        @runtime_run_root_base = runtime_run_root_base ? Pathname(runtime_run_root_base).expand_path : repo_root.join("experiments/runs")
+        @case_manifest_ref = case_manifest_ref
+        @loaded_case_manifest = load_case_manifest(case_manifest_ref)
+        @case_id = loaded_case_manifest ? loaded_case_manifest.fetch("case_id") : case_id
+        @intent_ref = loaded_case_manifest ? loaded_case_manifest.fetch("intent_ref") : intent_ref
+        @supporting_refs = loaded_case_manifest ? loaded_case_manifest.fetch("supporting_refs") : supporting_refs
+        @traceability_refs = loaded_case_manifest ? loaded_case_manifest.fetch("traceability_refs") : traceability_refs
+        @objective = loaded_case_manifest ? loaded_case_manifest.fetch("objective") : objective
+        @asset_loader = DualReviewer::Runtime::FoundationAssetLoader.new(repo_root: @repo_root)
+        @protocol_track_session = DualReviewer::Runtime::ExecutionV2::ProtocolTrackSession.new(repo_root: @repo_root)
       end
 
       def write_all
         FileUtils.mkdir_p(run_root)
+        FileUtils.mkdir_p(run_root.join("v2"))
         analysis = analyze_case
 
         paths = {
@@ -35,6 +49,10 @@ module DualReviewer
           "intent_trace_note" => write_intent_trace_note(analysis: analysis),
           "phase_metric_snapshot" => write_phase_metric_snapshot(analysis: analysis),
           "signal_linkage_note" => write_signal_linkage_note(analysis: analysis),
+          "v2_review_artifact" => write_v2_review_artifact(analysis: analysis),
+          "v2_metric_snapshot" => write_v2_metric_snapshot(analysis: analysis),
+          "v2_trace_note" => write_v2_trace_note(analysis: analysis),
+          "v2_signal_linkage_note" => write_v2_signal_linkage_note(analysis: analysis),
           "execution_packet" => write_execution_packet
         }
         paths["run_manifest"] = write_run_manifest(paths: paths)
@@ -45,6 +63,12 @@ module DualReviewer
 
       def default_output_root
         repo_root.join("experiments/protocols/intent-track-runs")
+      end
+
+      def load_case_manifest(ref)
+        return nil unless ref
+
+        DualReviewer::Runtime::ExecutionV2::CaseManifestLoader.new(repo_root: repo_root).load(ref)
       end
 
       def run_root
@@ -80,14 +104,21 @@ module DualReviewer
           "operator" => operator,
           "generated_at" => Time.now.utc.iso8601,
           "objective" => objective,
+          "case_manifest_ref" => case_manifest_reference,
           "inputs" => {
             "intent_ref" => intent_ref,
-            "supporting_refs" => supporting_refs
+            "supporting_refs" => supporting_refs,
+            "traceability_refs" => traceability_refs
           },
           "references" => {
             "workflow_gate_status_ref" => workflow_gate_status_ref,
             "phase_metric_register_ref" => phase_metric_register_ref,
             "intent_review_template_ref" => intent_review_template_ref
+          },
+          "runtime" => {
+            "run_id" => runtime_session_result.fetch("run_id"),
+            "runtime_review_mode" => "runtime_mediated",
+            "treatment" => runtime_session_result.fetch("metadata").fetch("treatment")
           },
           "outputs" => paths.transform_values { |path| relative_to_repo(path) }
         }
@@ -113,6 +144,8 @@ module DualReviewer
           - case id: `#{case_id}`
           - review mode: `#{review_mode}`
           - operator: `#{operator}`
+          - case manifest ref:
+            - `#{case_manifest_reference}`
           - reviewed intent documents:
         #{reviewed_documents.map { |ref| "  - `#{ref}`" }.join("\n")}
           - reviewed traceability documents:
@@ -158,6 +191,7 @@ module DualReviewer
           "run_label" => run_label,
           "case_id" => case_id,
           "track" => "intent",
+          "case_manifest_ref" => case_manifest_reference,
           "intent_ref" => intent_ref,
           "supporting_refs" => supporting_refs,
           "downstream_propagation_targets" => analysis.fetch("downstream_propagation_targets"),
@@ -185,6 +219,38 @@ module DualReviewer
         }
 
         path = run_root.join("phase_metric_snapshot.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_review_artifact(analysis:)
+        payload = JSON.parse(Pathname(runtime_session_result.fetch("runtime_paths").fetch("v2_review_artifact")).read)
+
+        path = run_root.join("v2/review_artifact.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_metric_snapshot(analysis:)
+        payload = JSON.parse(Pathname(runtime_session_result.fetch("runtime_paths").fetch("v2_metric_snapshot")).read)
+
+        path = run_root.join("v2/metric_snapshot.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_trace_note(analysis:)
+        payload = JSON.parse(Pathname(runtime_session_result.fetch("runtime_paths").fetch("v2_trace_note")).read)
+
+        path = run_root.join("v2/trace_note.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_signal_linkage_note(analysis:)
+        payload = JSON.parse(Pathname(runtime_session_result.fetch("runtime_paths").fetch("v2_signal_linkage_note")).read)
+
+        path = run_root.join("v2/signal_linkage_note.json")
         path.write(JSON.pretty_generate(payload))
         path
       end
@@ -234,6 +300,8 @@ module DualReviewer
           - track: `intent`
           - review mode: `#{review_mode}`
           - operator: `#{operator}`
+          - case manifest ref:
+            - `#{case_manifest_reference}`
           - objective:
             - #{objective}
 
@@ -271,114 +339,155 @@ module DualReviewer
         path.relative_path_from(repo_root).to_s
       end
 
+      def case_manifest_reference
+        case_manifest_ref || "intent-track/#{case_id}"
+      end
+
+      def execution_contract
+        @execution_contract ||= runtime_session_result.fetch("execution_contract")
+      end
+
+      def mapped_treatment
+        execution_contract.fetch("common_inputs").fetch("treatment")
+      end
+
+      def intent_evidence_observations(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("evidence_observations")
+      end
+
+      def intent_issue_candidates(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("review_issue_candidates")
+      end
+
+      def intent_caveat_candidates(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("caveat_candidates")
+      end
+
+      def intent_reopen_candidates(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("reopen_candidates")
+      end
+
+      def intent_signal_candidates(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("signal_candidates")
+      end
+
       def analyze_case
-        return default_analysis unless dual_reviewer_rebuild_case?
+        protocol_runtime_case.fetch("analysis")
+      end
 
-        major_gap_candidates = [
-          {
-            "issue_id" => "intent-major-gap-phase-contract",
-            "severity" => "high",
-            "summary" => "The intent and paper plan strongly emphasize end-to-end support, but the bootstrap case still needs explicit phase-by-phase completion criteria to prevent downstream work from starting before governance gates are fixed.",
-            "source_refs" => [
-              intent_ref,
-              "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
-              "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+      def protocol_runtime_case
+        @protocol_runtime_case ||= protocol_track_session.build_intent_case(
+          case_id: case_id,
+          review_mode: review_mode,
+          analysis_profile_ref: loaded_case_manifest && loaded_case_manifest["analysis_profile_ref"],
+          intent_ref: intent_ref,
+          supporting_refs: supporting_refs,
+          traceability_refs: traceability_refs,
+          workflow_gate_status_ref: workflow_gate_status_ref,
+          case_manifest_ref: case_manifest_reference,
+          compatibility_projection: {
+            "protocol_artifact_refs" => [
+              relative_to_repo(run_root.join("intent_review.md")),
+              relative_to_repo(run_root.join("intent_trace_note.yaml")),
+              relative_to_repo(run_root.join("phase_metric_snapshot.json")),
+              relative_to_repo(run_root.join("signal_linkage_note.yaml"))
             ]
           }
-        ]
+        )
+      end
 
-        scope_drift_candidates = [
+      def runtime_session_result
+        @runtime_session_result ||= begin
+          controller = DualReviewer::Runtime::SessionController.new(
+            repo_root: repo_root,
+            run_root_base: runtime_run_root_base
+          )
+
+          target_id = "intent:#{case_id}"
+          target_artifact_hash = "sha256:#{Digest::SHA256.hexdigest(intent_ref)}"
+          source_refs = ([intent_ref] + supporting_refs + traceability_refs).uniq
+
+          initialized_run = controller.initialize_run(
+            target_id: target_id,
+            target_artifact_hash: target_artifact_hash,
+            phase_profile: "intent",
+            treatment: review_mode == "dual_reviewer_workflow" ? "dual+judgment" : "single",
+            review_mode: "runtime_mediated",
+            operator_id: operator
+          )
+
+          step_payloads = controller.emit_step_artifacts(
+            run_id: initialized_run.fetch("run_id"),
+            target_id: target_id,
+            phase_profile: "intent",
+            treatment: initialized_run.fetch("metadata").fetch("treatment"),
+            analysis_inputs: {
+              "source_refs" => source_refs,
+              "intent_ref" => intent_ref,
+              "supporting_refs" => supporting_refs,
+              "traceability_refs" => traceability_refs,
+              "heuristic_profile_ref" => loaded_case_manifest.fetch("heuristic_profile_ref")
+            }
+          )
+
+          review_case = controller.aggregate_review_case(
+            run_id: initialized_run.fetch("run_id"),
+            metadata: initialized_run.fetch("metadata"),
+            step_payloads: step_payloads
+          )
+
+          decision_artifacts = controller.emit_decision_artifacts(
+            run_id: initialized_run.fetch("run_id"),
+            step_payloads: step_payloads,
+            human_decision: "approved",
+            operator_id: operator,
+            review_case: review_case.fetch("review_case")
+          )
+
+          validation_close = controller.close_run(
+            run_id: initialized_run.fetch("run_id"),
+            metadata: initialized_run.fetch("metadata"),
+            human_signoff: decision_artifacts.fetch("human_signoff")
+          )
+
+          case_manifest = controller.build_case_manifest(loaded_case_manifest)
+          execution_v2_artifacts = controller.emit_execution_v2_artifacts(
+            run_id: initialized_run.fetch("run_id"),
+            track: "intent",
+            common_inputs: {
+              "target_id" => target_id,
+              "target_artifact_hash" => target_artifact_hash,
+              "source_repository_id" => initialized_run.fetch("metadata").fetch("source_repository_id"),
+              "source_revision" => initialized_run.fetch("metadata").fetch("source_revision"),
+              "phase_profile" => "intent",
+              "treatment" => initialized_run.fetch("metadata").fetch("treatment"),
+              "review_mode" => "runtime_mediated",
+              "source_refs" => source_refs,
+              "governance_refs" => [workflow_gate_status_ref]
+            },
+            track_inputs: {
+              "intent_ref" => intent_ref,
+              "supporting_refs" => supporting_refs,
+              "traceability_refs" => traceability_refs
+            },
+            case_manifest: case_manifest,
+            review_case: review_case.fetch("review_case"),
+            decision_artifacts: decision_artifacts,
+            validation_close: validation_close
+          )
+
           {
-            "issue_id" => "intent-scope-drift-code-review-collapse",
-            "severity" => "medium",
-            "summary" => "The bootstrap intent can drift toward a plain code-review framing unless the workflow documents keep `intent -> requirements -> design -> tasks -> implementation` as the governing path.",
-            "source_refs" => [
-              intent_ref,
-              "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md"
-            ]
-          }
-        ]
-
-        counter_hypotheses = []
-        caveats = [
-          {
-            "issue_id" => "intent-caveat-bootstrap-case",
-            "severity" => "low",
-            "summary" => "This is an internal bootstrap case with rich downstream context, so it validates governance tooling more directly than a blank-slate external intent-only case.",
-            "source_refs" => [
-              ".kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-first-case-dual-reviewer-rebuild.md"
-            ]
-          }
-        ]
-
-        if review_mode == "dual_reviewer_workflow"
-          counter_hypotheses << {
-            "issue_id" => "intent-counter-hypothesis-human-gate-collapse",
-            "severity" => "medium",
-            "summary" => "A dual reading should preserve the possibility that the system over-centralizes LLM guidance and weakens explicit human gate ownership unless approval, adoption, and conformance review remain separate.",
-            "source_refs" => [
-              intent_ref,
-              "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
-              "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md"
-            ]
+            "run_id" => initialized_run.fetch("run_id"),
+            "metadata" => initialized_run.fetch("metadata"),
+            "execution_contract" => execution_v2_artifacts.fetch("execution_contract"),
+            "runtime_paths" => {
+              "v2_review_artifact" => execution_v2_artifacts.fetch("review_artifact_path"),
+              "v2_metric_snapshot" => execution_v2_artifacts.fetch("metric_snapshot_path"),
+              "v2_trace_note" => execution_v2_artifacts.fetch("trace_note_path"),
+              "v2_signal_linkage_note" => execution_v2_artifacts.fetch("signal_linkage_note_path")
+            }
           }
         end
-
-        downstream_targets = %w[requirements design tasks]
-        intent_attributed_issue_refs = [
-          "intent-major-gap-phase-contract",
-          "intent-scope-drift-code-review-collapse"
-        ]
-        linked_signal_ids = [
-          "intent-track-phase-contract-gap",
-          "intent-track-scope-drift-risk"
-        ]
-
-        {
-          "major_gap_candidates" => major_gap_candidates,
-          "scope_drift_candidates" => scope_drift_candidates,
-          "counter_hypotheses" => counter_hypotheses,
-          "caveats" => caveats,
-          "intent_handback_required" => review_mode == "dual_reviewer_workflow",
-          "downstream_propagation_targets" => downstream_targets,
-          "intent_attributed_issue_refs" => intent_attributed_issue_refs,
-          "downstream_implication" => "requirements/design/tasks の各 phase で completion rule と reopen depth を明示しない限り、下流 evidence を main claim に昇格させない",
-          "next_action" => review_mode == "dual_reviewer_workflow" ? "requirements bootstrap に入る前に handback taxonomy と human gate separation を requirements wording に明示する" : "requirements bootstrap へ進みつつ、phase completion criteria を requirements candidate として先に起こす",
-          "trace_note" => "Bootstrap intent issues should propagate into requirements/design/tasks as phase contract and scope-drift controls rather than being silently absorbed.",
-          "linked_signal_ids" => linked_signal_ids,
-          "metrics" => {
-            "intent_revision_count" => 0,
-            "intent_handback_count" => review_mode == "dual_reviewer_workflow" ? 1 : 0,
-            "intent_review_findings_count" => major_gap_candidates.size + scope_drift_candidates.size + counter_hypotheses.size,
-            "review_artifact_presence_rate" => 1.0
-          }
-        }
-      end
-
-      def default_analysis
-        {
-          "major_gap_candidates" => [],
-          "scope_drift_candidates" => [],
-          "counter_hypotheses" => [],
-          "caveats" => [],
-          "intent_handback_required" => false,
-          "downstream_propagation_targets" => [],
-          "intent_attributed_issue_refs" => [],
-          "downstream_implication" => "manual population required",
-          "next_action" => "manual population required",
-          "trace_note" => "Populate after review with downstream propagation and intent-attributed issue refs.",
-          "linked_signal_ids" => [],
-          "metrics" => {
-            "intent_revision_count" => 0,
-            "intent_handback_count" => 0,
-            "intent_review_findings_count" => 0,
-            "review_artifact_presence_rate" => 1.0
-          }
-        }
-      end
-
-      def dual_reviewer_rebuild_case?
-        case_id == "F1-intent-dual-reviewer-rebuild" && intent_ref.include?("dual-reviewer-spec-driven-paper-plan.md")
       end
 
       def render_issue_lines(issues)

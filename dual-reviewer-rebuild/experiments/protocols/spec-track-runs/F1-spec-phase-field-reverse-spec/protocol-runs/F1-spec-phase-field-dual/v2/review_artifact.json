@@ -1,0 +1,265 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "spec",
+  "target_id": "spec:F1-spec-phase-field-reverse-spec",
+  "common_inputs": {
+    "target_id": "spec:F1-spec-phase-field-reverse-spec",
+    "target_artifact_hash": "sha256:77e04b77d229e4933dc6d070ce8feb46a42fb190fbafc2e5ef71580eae2068ea",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0793808d9f15b7cd2cba5bea2461b973b45f20ed",
+    "phase_profile": "tasks",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/specs/phase-field-reverse-spec/tasks.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md"
+    ],
+    "governance_refs": [
+      "docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-spec-phase-field-reverse-spec.yaml",
+    "track": "spec"
+  },
+  "track_inputs": {
+    "reviewed_phase": "tasks",
+    "reviewed_phase_ref": ".kiro/specs/phase-field-reverse-spec/tasks.md",
+    "adjacent_phase_refs": [
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md"
+    ],
+    "alignment_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md"
+    ]
+  },
+  "evidence_observations": [
+    {
+      "observation_id": "observation:step-02-finding-clean-room-boundary",
+      "taxonomy_path": "spec.nonblocking.counter_evidence",
+      "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+      "severity": "medium",
+      "source_role": "adversarial_reviewer",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ]
+    }
+  ],
+  "review_issue_candidates": [
+    {
+      "candidate_id": "issue-candidate:step-02-finding-clean-room-boundary",
+      "finding_id": "step-02-finding-clean-room-boundary",
+      "taxonomy_path": "spec.nonblocking.counter_evidence",
+      "severity": "medium",
+      "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "failure_observation_refs": [
+        "spec:clean_room_boundary_pressure"
+      ]
+    }
+  ],
+  "caveat_candidates": [
+    {
+      "candidate_id": "caveat-candidate:step-02-finding-clean-room-boundary",
+      "kind": "counter_evidence_preserved",
+      "finding_id": "step-02-finding-clean-room-boundary",
+      "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ]
+    }
+  ],
+  "reopen_candidates": [
+
+  ],
+  "signal_candidates": [
+    {
+      "signal_id": "signal:step-02-finding-clean-room-boundary",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "spec.nonblocking.counter_evidence",
+      "decision_unit_id": "decision-unit-step-02-finding-clean-room-boundary",
+      "treatment": "dual+judgment"
+    }
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260510T214246Z-dafcd80f",
+    "finding_projection": [
+      {
+        "finding_ref": "review_case.json#step-02-finding-clean-room-boundary",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-02-finding-clean-room-boundary",
+        "taxonomy_path": "spec.nonblocking.counter_evidence",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-clean-room-boundary"
+        ],
+        "reopen_candidate_ref": null
+      }
+    ],
+    "decision_unit_projection": [
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-02-finding-clean-room-boundary",
+        "finding_refs": [
+          "review_case.json#step-02-finding-clean-room-boundary"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-clean-room-boundary"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      }
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-8f22660b",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T214246Z-dafcd80f"
+    }
+  },
+  "decision_context": {
+    "track": "spec",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "spec",
+      "evidence_observations": [
+        {
+          "observation_id": "observation:step-02-finding-clean-room-boundary",
+          "taxonomy_path": "spec.nonblocking.counter_evidence",
+          "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+          "severity": "medium",
+          "source_role": "adversarial_reviewer",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+          ],
+          "counter_evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+          ]
+        }
+      ],
+      "review_issue_candidates": [
+        {
+          "candidate_id": "issue-candidate:step-02-finding-clean-room-boundary",
+          "finding_id": "step-02-finding-clean-room-boundary",
+          "taxonomy_path": "spec.nonblocking.counter_evidence",
+          "severity": "medium",
+          "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+          ],
+          "failure_observation_refs": [
+            "spec:clean_room_boundary_pressure"
+          ]
+        }
+      ],
+      "caveat_candidates": [
+        {
+          "candidate_id": "caveat-candidate:step-02-finding-clean-room-boundary",
+          "kind": "counter_evidence_preserved",
+          "finding_id": "step-02-finding-clean-room-boundary",
+          "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+          "counter_evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+          ]
+        }
+      ],
+      "reopen_candidates": [
+
+      ],
+      "signal_candidates": [
+        {
+          "signal_id": "signal:step-02-finding-clean-room-boundary",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "spec.nonblocking.counter_evidence",
+          "decision_unit_id": "decision-unit-step-02-finding-clean-room-boundary",
+          "treatment": "dual+judgment"
+        }
+      ]
+    },
+    "decision_units": [
+      {
+        "decision_unit_id": "decision-unit-step-02-finding-clean-room-boundary",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-02-finding-clean-room-boundary"
+        ],
+        "disposition_class": "accepted"
+      }
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ]
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 0,
+      "accepted_decision_unit_ids": [
+        "decision-unit-step-02-finding-clean-room-boundary"
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F1-spec-phase-field-reverse-spec",
+    "track": "spec",
+    "reviewed_phase": "tasks",
+    "reviewed_phase_ref": ".kiro/specs/phase-field-reverse-spec/tasks.md",
+    "source_refs": [
+      ".kiro/specs/phase-field-reverse-spec/tasks.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md"
+    ],
+    "adjacent_phase_refs": [
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md"
+    ],
+    "alignment_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md"
+    ],
+    "analysis_profile_ref": "dual-reviewer-rebuild/experiments/protocols/analysis_profiles/spec/F1-spec-phase-field-reverse-spec.yaml",
+    "heuristic_profile_ref": "dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/F1-spec-phase-field-reverse-spec.yaml",
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-spec-phase-field-reverse-spec.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-8f22660b",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T214246Z-dafcd80f"
+  }
+}

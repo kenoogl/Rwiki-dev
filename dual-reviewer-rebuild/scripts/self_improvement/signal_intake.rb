@@ -111,6 +111,60 @@ module DualReviewer
           )
         end
 
+        comparison_note = artifacts["comparison_eligibility_note"]
+        if comparison_note
+          signals << build_signal(
+            signal_source: "runtime",
+            signal_code: "comparison_eligibility_observed",
+            run_id: metadata["run_id"],
+            phase_profile: metadata["phase_profile"],
+            treatment: metadata["treatment"],
+            evidence_maturity: classification["classification"],
+            source_refs: ["derived/comparison_eligibility_note.json##{comparison_note['comparison_eligibility_note_id']}"],
+            summary: "Runtime recorded comparison eligibility state for this run.",
+            signal_value: {
+              "eligibility_status" => comparison_note["eligibility_status"],
+              "reason_codes" => comparison_note["reason_codes"]
+            }
+          )
+        end
+
+        trace_note = artifacts["v2_trace_note"]
+        if trace_note
+          signals << build_signal(
+            signal_source: "runtime",
+            signal_code: "v2_trace_note_available",
+            run_id: metadata["run_id"],
+            phase_profile: metadata["phase_profile"],
+            treatment: metadata["treatment"],
+            evidence_maturity: classification["classification"],
+            source_refs: ["v2/trace_note.json"],
+            summary: "V2 trace note is available for downstream replay or provenance tracing.",
+            signal_value: {
+              "track" => trace_note["track"],
+              "case_id" => trace_note["case_id"]
+            }
+          )
+        end
+
+        signal_linkage_note = artifacts["v2_signal_linkage_note"]
+        if signal_linkage_note
+          signals << build_signal(
+            signal_source: "runtime",
+            signal_code: "v2_signal_linkage_available",
+            run_id: metadata["run_id"],
+            phase_profile: metadata["phase_profile"],
+            treatment: metadata["treatment"],
+            evidence_maturity: classification["classification"],
+            source_refs: ["v2/signal_linkage_note.json"],
+            summary: "V2 signal linkage note is available for downstream signal extraction.",
+            signal_value: {
+              "linked_signal_ids" => signal_linkage_note["linked_signal_ids"],
+              "comparison_eligibility_status" => signal_linkage_note["comparison_eligibility_status"]
+            }
+          )
+        end
+
         if metadata["evidence_class"] == "exploratory"
           signals << build_signal(
             signal_source: "runtime",

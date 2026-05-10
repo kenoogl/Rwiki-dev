@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260510T214246Z-dafcd80f",
+  "track": "spec",
+  "case_id": "F1-spec-phase-field-reverse-spec",
+  "target_id": "spec:F1-spec-phase-field-reverse-spec",
+  "phase_profile": "tasks",
+  "source_refs": [
+    ".kiro/specs/phase-field-reverse-spec/tasks.md",
+    ".kiro/specs/phase-field-reverse-spec/requirements.md",
+    ".kiro/specs/phase-field-reverse-spec/design.md",
+    ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+    "dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md"
+  ],
+  "governance_refs": [
+    "docs/coordination/workflow-gate-status.md"
+  ]
+}

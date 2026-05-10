@@ -2,8 +2,16 @@
 
 require "securerandom"
 require "time"
-require "open3"
 require_relative "../support/foundation_asset_loader"
+require_relative "../support/source_provenance_resolver"
+require_relative "../execution_v2/contracts/common_execution_contract"
+require_relative "../execution_v2/contracts/track_contract_specializer"
+require_relative "../execution_v2/manifests/case_manifest"
+require_relative "../execution_v2/analyzers/base_analyzer"
+require_relative "../execution_v2/decisions/decision_context"
+require_relative "../execution_v2/writers/compatibility_projector"
+require_relative "../execution_v2/writers/review_artifact_writer"
+require_relative "../execution_v2/support/object_naming"
 require_relative "../executors/step_a_primary_detection"
 require_relative "../executors/step_b_adversarial_review"
 require_relative "../executors/step_c_judgment"
@@ -15,7 +23,18 @@ require_relative "../export/bundle_exporter"
 module DualReviewer
   module Runtime
     class SessionController
-      attr_reader :asset_loader, :evidence_writer, :validation_bridge, :bundle_exporter
+      attr_reader :asset_loader,
+                  :evidence_writer,
+                  :validation_bridge,
+                  :bundle_exporter,
+                  :source_provenance_resolver,
+                  :common_execution_contract,
+                  :track_contract_specializer,
+                  :case_manifest_builder,
+                  :decision_context_builder,
+                  :compatibility_projector,
+                  :review_artifact_writer,
+                  :execution_v2_object_naming
 
       def initialize(repo_root:, run_root_base: nil, export_root_base: nil)
         @asset_loader = FoundationAssetLoader.new(repo_root: repo_root)
@@ -29,6 +48,14 @@ module DualReviewer
           asset_loader: asset_loader,
           evidence_writer: evidence_writer
         )
+        @source_provenance_resolver = SourceProvenanceResolver.new(repo_root: repo_root)
+        @common_execution_contract = ExecutionV2::CommonExecutionContract.new(asset_loader: asset_loader)
+        @track_contract_specializer = ExecutionV2::TrackContractSpecializer.new
+        @case_manifest_builder = ExecutionV2::CaseManifest.new
+        @decision_context_builder = ExecutionV2::DecisionContext.new
+        @compatibility_projector = ExecutionV2::CompatibilityProjector.new
+        @review_artifact_writer = ExecutionV2::ReviewArtifactWriter.new
+        @execution_v2_object_naming = ExecutionV2::ObjectNaming.new
       end
 
       def step_executors
@@ -45,8 +72,29 @@ module DualReviewer
           "metadata_contract_version" => asset_loader.metadata_contract.fetch("version"),
           "prompt_frontmatter_contract_version" => asset_loader.prompt_frontmatter_contract.fetch("version"),
           "review_case_schema_id" => asset_loader.review_case_schema.fetch("$id"),
-          "canonical_run_subdirectories" => evidence_writer.canonical_subdirectories
+          "canonical_run_subdirectories" => evidence_writer.canonical_subdirectories,
+          "execution_v2_contract_version" => ExecutionV2::CommonExecutionContract::CONTRACT_VERSION
         }
+      end
+
+      def build_execution_contract(track:, common_inputs:, track_inputs:)
+        normalized_common_inputs = common_inputs.merge("track" => track)
+        contract = common_execution_contract.build(
+          common_inputs: normalized_common_inputs,
+          track_inputs: track_inputs
+        )
+
+        track_contract_specializer.specialize(
+          track: track,
+          common_inputs: contract.fetch("common_inputs"),
+          track_inputs: track_inputs
+        )
+
+        contract
+      end
+
+      def build_case_manifest(payload)
+        case_manifest_builder.build(payload)
       end
 
       def bootstrap_run_context(target_id:, phase_profile:, treatment:)
@@ -227,6 +275,17 @@ module DualReviewer
           run_id: run_id,
           payload: { "invalidation_markers" => validation_result.fetch("invalidation_markers") }
         )
+        comparison_eligibility_note = build_comparison_eligibility_note(
+          run_id: run_id,
+          metadata: metadata_for_validation,
+          validator_result: validation_result.fetch("validator_result"),
+          invalidation_markers: validation_result.fetch("invalidation_markers"),
+          human_signoff: human_signoff
+        )
+        comparison_eligibility_note_path = evidence_writer.write_comparison_eligibility_note(
+          run_id: run_id,
+          payload: comparison_eligibility_note
+        )
 
         final_validator_status = validation_result.fetch("validator_result").fetch("overall_status") == "passed" ? "passed" : "failed"
         final_evidence_class = if human_signoff.fetch("human_signoff_status") == "approved" && final_validator_status == "passed"
@@ -258,8 +317,74 @@ module DualReviewer
         {
           "validator_result_path" => validator_result_path.to_s,
           "invalidation_markers_path" => invalidation_markers_path.to_s,
+          "comparison_eligibility_note_path" => comparison_eligibility_note_path.to_s,
           "validator_result" => validation_result.fetch("validator_result"),
-          "invalidation_markers" => validation_result.fetch("invalidation_markers")
+          "invalidation_markers" => validation_result.fetch("invalidation_markers"),
+          "comparison_eligibility_note" => comparison_eligibility_note
+        }
+      end
+
+      def emit_execution_v2_artifacts(run_id:, track:, common_inputs:, track_inputs:, case_manifest:, review_case:, decision_artifacts:, validation_close:)
+        execution_contract = build_execution_contract(
+          track: track,
+          common_inputs: common_inputs.merge("case_manifest_ref" => case_manifest.fetch("case_manifest_ref")),
+          track_inputs: track_inputs
+        )
+        analyzer = ExecutionV2::BaseAnalyzer.new(track: track)
+        analysis_result = analyzer.analyze(
+          execution_contract,
+          review_case: review_case,
+          decision_artifacts: decision_artifacts,
+          validation_close: validation_close
+        )
+        decision_context = decision_context_builder.build(
+          execution_contract: execution_contract,
+          analysis_result: analysis_result,
+          decision_artifacts: decision_artifacts,
+          validation_close: validation_close
+        )
+        compatibility_projection = compatibility_projector.build(
+          review_case: review_case,
+          decision_artifacts: decision_artifacts,
+          analysis_result: analysis_result,
+          validation_close: validation_close
+        )
+        review_artifact_payload = review_artifact_writer.build(
+          execution_contract: execution_contract,
+          decision_context: decision_context,
+          compatibility_projection: compatibility_projection
+        ).merge(
+          "case_manifest" => case_manifest,
+          "validation" => {
+            "validator_result_ref" => "validation/validator_result.json##{validation_close.fetch('validator_result').fetch('validator_result_id')}",
+            "invalidation_marker_refs" => validation_close.fetch("invalidation_markers").map do |marker|
+              "validation/invalidation_markers.json##{marker.fetch('invalidation_marker_id')}"
+            end,
+            "comparison_eligibility_note_ref" => "derived/comparison_eligibility_note.json##{validation_close.fetch('comparison_eligibility_note').fetch('comparison_eligibility_note_id')}"
+          }
+        )
+        metric_snapshot_payload = build_metric_snapshot(run_id: run_id, review_case: review_case, decision_artifacts: decision_artifacts)
+        trace_note_payload = build_trace_note(run_id: run_id, track: track, case_manifest: case_manifest, common_inputs: common_inputs)
+        signal_linkage_note_payload = build_signal_linkage_note(
+          run_id: run_id,
+          track: track,
+          analysis_result: analysis_result,
+          validation_close: validation_close
+        )
+
+        review_artifact_path = evidence_writer.write_v2_review_artifact(run_id: run_id, payload: review_artifact_payload)
+        metric_snapshot_path = evidence_writer.write_v2_metric_snapshot(run_id: run_id, payload: metric_snapshot_payload)
+        trace_note_path = evidence_writer.write_v2_trace_note(run_id: run_id, payload: trace_note_payload)
+        signal_linkage_note_path = evidence_writer.write_v2_signal_linkage_note(run_id: run_id, payload: signal_linkage_note_payload)
+
+        {
+          "execution_contract" => execution_contract,
+          "analysis_result" => analysis_result,
+          "decision_context" => decision_context,
+          "review_artifact_path" => review_artifact_path.to_s,
+          "metric_snapshot_path" => metric_snapshot_path.to_s,
+          "trace_note_path" => trace_note_path.to_s,
+          "signal_linkage_note_path" => signal_linkage_note_path.to_s
         }
       end
 
@@ -317,21 +442,11 @@ module DualReviewer
       end
 
       def source_repository_id
-        @source_repository_id ||= begin
-          stdout, status = Open3.capture2("git", "config", "--get", "remote.origin.url", chdir: asset_loader.repo_root.to_s)
-          if status.success?
-            origin_url_to_repository_id(stdout.strip)
-          else
-            asset_loader.repo_root.basename.to_s
-          end
-        end
+        @source_repository_id ||= source_provenance_resolver.repository_id
       end
 
       def source_revision
-        @source_revision ||= begin
-          stdout, status = Open3.capture2("git", "rev-parse", "HEAD", chdir: asset_loader.repo_root.to_s)
-          status.success? ? stdout.strip : "UNKNOWN"
-        end
+        @source_revision ||= source_provenance_resolver.revision
       end
 
       def config_protocol_version
@@ -345,11 +460,70 @@ module DualReviewer
         "0.1.0"
       end
 
-      def origin_url_to_repository_id(origin_url)
-        return asset_loader.repo_root.basename.to_s if origin_url.empty?
+      def build_comparison_eligibility_note(run_id:, metadata:, validator_result:, invalidation_markers:, human_signoff:)
+        eligible = validator_result.fetch("overall_status") == "passed" &&
+          human_signoff.fetch("human_signoff_status") == "approved" &&
+          invalidation_markers.empty?
 
-        normalized = origin_url.sub(%r{\Ahttps://github\.com/}, "").sub(%r{\Agit@github\.com:}, "")
-        normalized.delete_suffix(".git")
+        {
+          "schema_version" => "1.0.0",
+          "comparison_eligibility_note_id" => "comparison-eligibility-#{run_id}",
+          "run_id" => run_id,
+          "eligibility_status" => eligible ? "eligible_standard" : "ineligible_standard",
+          "review_mode" => metadata.fetch("review_mode"),
+          "treatment" => metadata.fetch("treatment"),
+          "reason_codes" => comparison_eligibility_reason_codes(
+            validator_result: validator_result,
+            invalidation_markers: invalidation_markers,
+            human_signoff: human_signoff
+          )
+        }
+      end
+
+      def comparison_eligibility_reason_codes(validator_result:, invalidation_markers:, human_signoff:)
+        codes = []
+        codes << "validator_failed" unless validator_result.fetch("overall_status") == "passed"
+        codes << "human_signoff_not_approved" unless human_signoff.fetch("human_signoff_status") == "approved"
+        codes.concat(invalidation_markers.map { |marker| "invalidation:#{marker.fetch('reason_code')}" })
+        codes = ["eligible_standard"] if codes.empty?
+        codes
+      end
+
+      def build_metric_snapshot(run_id:, review_case:, decision_artifacts:)
+        decisions = decision_artifacts.fetch("decision_units").fetch("decision_units")
+        {
+          "schema_version" => "1.0.0",
+          "run_id" => run_id,
+          "finding_count" => review_case.fetch("findings", []).length,
+          "decision_unit_count" => decisions.length,
+          "approved_decision_count" => decisions.count { |entry| entry["human_decision"] == "approved" },
+          "rejected_decision_count" => decisions.count { |entry| entry["human_decision"] == "rejected" },
+          "deferred_decision_count" => decisions.count { |entry| entry["human_decision"] == "deferred" }
+        }
+      end
+
+      def build_trace_note(run_id:, track:, case_manifest:, common_inputs:)
+        {
+          "schema_version" => "1.0.0",
+          "run_id" => run_id,
+          "track" => track,
+          "case_id" => case_manifest.fetch("case_id"),
+          "target_id" => common_inputs.fetch("target_id"),
+          "phase_profile" => common_inputs.fetch("phase_profile"),
+          "source_refs" => common_inputs.fetch("source_refs"),
+          "governance_refs" => common_inputs.fetch("governance_refs")
+        }
+      end
+
+      def build_signal_linkage_note(run_id:, track:, analysis_result:, validation_close:)
+        {
+          "schema_version" => "1.0.0",
+          "run_id" => run_id,
+          "track" => track,
+          "linked_signal_ids" => analysis_result.fetch("signal_candidates", []).map { |entry| entry.fetch("signal_id") },
+          "validator_status" => validation_close.fetch("validator_result").fetch("overall_status"),
+          "comparison_eligibility_status" => validation_close.fetch("comparison_eligibility_note").fetch("eligibility_status")
+        }
       end
     end
   end

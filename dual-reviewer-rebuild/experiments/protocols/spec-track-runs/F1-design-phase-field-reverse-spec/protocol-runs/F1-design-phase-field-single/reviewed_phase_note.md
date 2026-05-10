@@ -8,6 +8,8 @@
           - review mode: `single_review`
           - reviewed phase: `design`
           - operator: `phase-field-design-pilot`
+          - case manifest ref:
+            - `experiments/protocols/case_manifests/F1-design-phase-field-reverse-spec.yaml`
           - reviewed phase ref:
             - `.kiro/specs/phase-field-reverse-spec/design.md`
           - adjacent phase refs:

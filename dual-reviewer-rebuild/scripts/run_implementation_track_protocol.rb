@@ -24,6 +24,7 @@ options = {
     "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
     "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
   ],
+  "case_manifest_ref" => "experiments/protocols/case_manifests/F1-phase-field-cpp.yaml",
   "operator" => "pending",
   "phase_profile" => "tasks",
   "target_id" => "implementation:phase-field-cpp"
@@ -37,6 +38,7 @@ OptionParser.new do |opts|
   opts.on("--snapshot-ref PATH", "Implementation snapshot ref path") { |value| options["implementation_snapshot_ref"] = value }
   opts.on("--upstream-spec-ref PATH", "Upstream spec ref path (repeatable)") { |value| options["upstream_spec_refs"] << value }
   opts.on("--governance-ref PATH", "Governance ref path (repeatable)") { |value| options["governance_refs"] << value }
+  opts.on("--case-manifest-ref PATH", "Case manifest ref path") { |value| options["case_manifest_ref"] = value }
   opts.on("--operator NAME", "Operator name") { |value| options["operator"] = value }
   opts.on("--phase-profile NAME", "Phase profile") { |value| options["phase_profile"] = value }
   opts.on("--target-id ID", "Runtime target id") { |value| options["target_id"] = value }
@@ -54,6 +56,7 @@ runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
   implementation_snapshot_ref: options.fetch("implementation_snapshot_ref"),
   upstream_spec_refs: options.fetch("upstream_spec_refs"),
   governance_refs: options.fetch("governance_refs"),
+  case_manifest_ref: options["case_manifest_ref"],
   operator: options.fetch("operator"),
   phase_profile: options.fetch("phase_profile"),
   target_id: options.fetch("target_id"),

@@ -1,0 +1,17 @@
+case_id: F1-intent-dual-reviewer-rebuild
+track: intent
+intent_ref: .kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md
+source_refs:
+  - .kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md
+  - dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md
+  - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+  - dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
+supporting_refs:
+  - dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md
+  - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+  - dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
+traceability_refs:
+  - docs/traceability/intent-to-requirements-trace-matrix.md
+objective: intent bootstrap pilot
+analysis_profile_ref: dual-reviewer-rebuild/experiments/protocols/analysis_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml
+heuristic_profile_ref: dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml

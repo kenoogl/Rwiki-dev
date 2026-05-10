@@ -10,8 +10,177 @@ reusable_seed_patterns:
       - design
       - tasks
     summary: Validation artifacts are referenced late or not wired into the execution path.
+    match_terms:
+      - validator invocation
+      - invalidation handling
+      - validation artifact
     signals:
       - validator invocation is deferred without an explicit run-close boundary
       - invalidation handling rewrites raw evidence instead of annotating it
     review_hint: Check whether validation and invalidation remain separate from raw evidence writes.
+  - pattern_id: seed.boundary-condition-semantics
+    status: active
+    applicable_phases:
+      - implementation
+    summary: Boundary-condition semantics may drift between upstream rules and implementation behavior.
+    match_terms:
+      - periodic boundary
+      - boundary handling
+      - boundary semantics
+      - 描画.*連続
+  - pattern_id: seed.update-ordering
+    status: active
+    applicable_phases:
+      - implementation
+    summary: Update ordering and state mutation sequence may diverge from the intended execution model.
+    match_terms:
+      - fixed order
+      - step \\(0\\)
+      - step \\(1\\)
+      - time step
+      - update ordering
+      - 時間発展手順
+  - pattern_id: seed.parameter-defaults
+    status: active
+    applicable_phases:
+      - implementation
+    summary: Default values and parameter semantics can drift across docs and implementation.
+    match_terms:
+      - input parameters
+      - parameter
+      - 既定値
+      - default value
+      - delt
+      - 平均組成
+  - pattern_id: seed.parameter-caveat-surface
+    status: active
+    applicable_phases:
+      - implementation
+    summary: Caveats and reconstruction constraints can change how parameters should be interpreted.
+    match_terms:
+      - caveat
+      - limitation
+      - clean-room
+      - digest
+      - constraint
+      - reconstruction
+  - pattern_id: seed.acceptance-batch-coupling
+    status: active
+    applicable_phases:
+      - tasks
+    summary: Acceptance execution and downstream observation recording are coupled too early.
+    match_terms:
+      - 100000-step
+      - acceptance run
+      - observation recording
+  - pattern_id: seed.downstream-readiness-gap
+    status: active
+    applicable_phases:
+      - tasks
+    summary: Downstream readiness is inferred before upstream approval conditions close.
+    match_terms:
+      - unapproved
+      - implementation-ready
+      - design/tasks recheck
+  - pattern_id: seed.clean-room-boundary
+    status: active
+    applicable_phases:
+      - tasks
+      - requirements
+    summary: Clean-room or canonical-source boundaries are under pressure.
+    match_terms:
+      - clean-room
+      - canonical-source
+      - evidence boundary
+  - pattern_id: seed.requirements-boundary-contract
+    status: active
+    applicable_phases:
+      - requirements
+    summary: Requirements bind the evidence boundary tightly enough that downstream phases must preserve it.
+    match_terms:
+      - DEVELOPMENT_SPEC
+      - wingxa.h
+      - clean-room
+  - pattern_id: seed.acceptance-bundle-density
+    status: active
+    applicable_phases:
+      - requirements
+    summary: Acceptance bundles are dense and need explicit downstream ownership.
+    match_terms:
+      - acceptance
+      - BMP
+      - rerender
+      - invariant
+  - pattern_id: seed.downstream-approval-gap
+    status: active
+    applicable_phases:
+      - requirements
+    summary: Downstream approval is still open even if current requirements are approved.
+    match_terms:
+      - unapproved
+      - downstream
+      - design
+      - tasks
+  - pattern_id: seed.validation-ownership
+    status: active
+    applicable_phases:
+      - requirements
+      - design
+    summary: Validation ownership and integration responsibility remain unclear.
+    match_terms:
+      - validation
+      - ownership
+      - integration
+      - tasks
+  - pattern_id: seed.design-boundary-density
+    status: active
+    applicable_phases:
+      - design
+    summary: Design introduces many tightly coupled boundaries and integration seams.
+    match_terms:
+      - component
+      - visualization
+      - snapshot
+      - executables
+  - pattern_id: seed.design-failure-contract
+    status: active
+    applicable_phases:
+      - design
+    summary: Failure-related design contracts need to survive downstream translation.
+    match_terms:
+      - static allocation
+      - clamp
+      - diagnostic
+      - failure
+  - pattern_id: seed.intent-phase-contract
+    status: active
+    applicable_phases:
+      - intent
+    summary: Phase-by-phase completion criteria are not explicit enough.
+    match_terms:
+      - end-to-end
+      - completion criteria
+      - governance gate
+  - pattern_id: seed.intent-scope-drift
+    status: active
+    applicable_phases:
+      - intent
+    summary: The governed phase chain can collapse into plain code review.
+    match_terms:
+      - code-review
+      - intent ->
+      - requirements ->
+      - design ->
+      - tasks ->
+      - implementation
+  - pattern_id: seed.human-gate-ownership
+    status: active
+    applicable_phases:
+      - intent
+    summary: Human approval and conformance checkpoints may collapse into one another.
+    match_terms:
+      - approval
+      - adoption
+      - conformance review
+      - human gate
 project_accumulated_patterns: []

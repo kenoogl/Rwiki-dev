@@ -7,6 +7,8 @@
           - case id: `F1-intent-dual-reviewer-rebuild`
           - review mode: `single_review`
           - operator: `intent-bootstrap-pilot`
+          - case manifest ref:
+            - `experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml`
           - reviewed intent documents:
           - `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md`
   - `dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md`

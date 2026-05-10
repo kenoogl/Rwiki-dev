@@ -1,0 +1,31 @@
+steps:
+  primary_detection:
+    rules:
+      - finding_suffix: finding-clean-room-boundary-contract
+        severity: high
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.requirements-boundary-contract
+        failure_observation_refs:
+          - spec:requirements_boundary_contract
+        summary_prefix: The requirements bind the clean-room evidence boundary tightly, so downstream phases must not blur requirement contract and implementation choice.
+      - finding_suffix: finding-acceptance-bundle-density
+        severity: medium
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.acceptance-bundle-density
+        failure_observation_refs:
+          - spec:acceptance_bundle_density
+        summary_prefix: The acceptance bundle is dense and cross-cutting, so validation ownership and breakdown need explicit downstream treatment.
+  adversarial_review:
+    rules:
+      - finding_suffix: finding-downstream-approval-gap
+        severity: high
+        source_role: adversarial_reviewer
+        source_pattern_ids:
+          - seed.downstream-approval-gap
+        counter_evidence_pattern_ids:
+          - seed.validation-ownership
+        failure_observation_refs:
+          - spec:downstream_approval_gap
+        summary_prefix: Even approved requirements should not be treated as implementation-ready when downstream approval and validation ownership remain unresolved.

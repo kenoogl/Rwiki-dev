@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260510T214140Z-911c48ab",
+  "track": "spec",
+  "linked_signal_ids": [
+    "signal:step-01-finding-boundary-density",
+    "signal:step-01-finding-failure-contract",
+    "signal:step-02-finding-validation-ownership"
+  ],
+  "validator_status": "passed",
+  "comparison_eligibility_status": "eligible_standard"
+}

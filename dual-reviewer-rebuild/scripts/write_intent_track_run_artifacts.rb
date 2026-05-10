@@ -22,6 +22,7 @@ parser = OptionParser.new do |opts|
   opts.on("--operator NAME", "Operator name") { |value| options["operator"] = value }
   opts.on("--objective TEXT", "Objective text") { |value| options["objective"] = value }
   opts.on("--output-root PATH", "Custom output root") { |value| options["output_root"] = value }
+  opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |value| options["runtime_run_root_base"] = value }
 end
 
 parser.parse!(ARGV)
@@ -40,7 +41,8 @@ writer = DualReviewer::TrackRuns::IntentTrackWriter.new(
   supporting_refs: options.fetch("supporting_refs"),
   operator: options.fetch("operator"),
   objective: options.fetch("objective"),
-  output_root: options["output_root"]
+  output_root: options["output_root"],
+  runtime_run_root_base: options["runtime_run_root_base"]
 )
 
 paths = writer.write_all

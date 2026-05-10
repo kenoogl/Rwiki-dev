@@ -7,6 +7,8 @@
   - track: `intent`
   - review mode: `dual_reviewer_workflow`
   - operator: `intent-bootstrap-pilot`
+  - case manifest ref:
+    - `experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml`
   - objective:
     - intent bootstrap pilot
 

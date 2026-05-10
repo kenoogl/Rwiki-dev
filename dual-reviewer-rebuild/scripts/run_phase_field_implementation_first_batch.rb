@@ -31,6 +31,7 @@ shared_options = {
     "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
     "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
   ],
+  case_manifest_ref: "experiments/protocols/case_manifests/F1-phase-field-cpp.yaml",
   operator: "phase-field-pilot",
   phase_profile: "tasks",
   target_id: "implementation:phase-field-cpp",

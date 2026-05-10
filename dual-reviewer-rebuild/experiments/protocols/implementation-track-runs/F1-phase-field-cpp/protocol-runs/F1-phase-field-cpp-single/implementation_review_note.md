@@ -11,6 +11,8 @@
   - operator: `phase-field-pilot`
   - implementation snapshot ref:
     - `.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md`
+  - case manifest ref:
+    - `experiments/protocols/case_manifests/F1-phase-field-cpp.yaml`
   - upstream spec refs:
   - `.kiro/specs/phase-field-reverse-spec/intent.md`
   - `.kiro/specs/phase-field-reverse-spec/requirements.md`
@@ -20,9 +22,9 @@
   ## 2. runtime artifact refs
 
   - review artifact:
-    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260509T225157Z-88d8dced/review_case.json`
+    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/review_case.json`
   - decision units:
-    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260509T225157Z-88d8dced/decisions/decision_units.json`
+    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/decisions/decision_units.json`
 
   ## 3. findings
 

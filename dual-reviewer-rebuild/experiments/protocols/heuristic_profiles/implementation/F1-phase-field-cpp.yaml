@@ -1,0 +1,32 @@
+steps:
+  primary_detection:
+    rules:
+      - finding_suffix: finding-boundary
+        severity: high
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.boundary-condition-semantics
+        failure_observation_refs:
+          - implementation:boundary_condition_semantics
+        summary_prefix: Boundary-condition semantics are review-critical because mismatches between upstream rules and implementation behavior can invalidate execution results or downstream interpretation.
+      - finding_suffix: finding-update-order
+        severity: medium
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.update-ordering
+        failure_observation_refs:
+          - implementation:update_ordering_state_mutation
+        summary_prefix: Update ordering and state mutation risk should be inspected because explicit execution sequences can drift from their upstream specification and silently change downstream behavior.
+  adversarial_review:
+    rules:
+      - finding_suffix: finding-parameter-caveat
+        severity: medium
+        source_role: adversarial_reviewer
+        source_pattern_ids:
+          - seed.parameter-defaults
+          - seed.parameter-caveat-surface
+        counter_evidence_pattern_ids:
+          - seed.parameter-defaults
+        failure_observation_refs:
+          - implementation:parameter_interpretation_drift
+        summary_prefix: Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and reconstruction caveats can diverge unless the mapping from upstream sources to implementation behavior is made explicit.

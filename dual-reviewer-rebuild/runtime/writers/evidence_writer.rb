@@ -21,7 +21,7 @@ module DualReviewer
       end
 
       def canonical_subdirectories
-        %w[steps decisions validation derived]
+        %w[steps decisions v2 validation derived]
       end
 
       def create_run_layout(run_id)
@@ -64,6 +64,30 @@ module DualReviewer
         path
       end
 
+      def write_v2_review_artifact(run_id:, payload:)
+        path = canonical_run_root(run_id).join("v2/review_artifact.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_metric_snapshot(run_id:, payload:)
+        path = canonical_run_root(run_id).join("v2/metric_snapshot.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_trace_note(run_id:, payload:)
+        path = canonical_run_root(run_id).join("v2/trace_note.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_signal_linkage_note(run_id:, payload:)
+        path = canonical_run_root(run_id).join("v2/signal_linkage_note.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
       def write_validator_result(run_id:, payload:)
         path = canonical_run_root(run_id).join("validation/validator_result.json")
         path.write(JSON.pretty_generate(payload))
@@ -72,6 +96,12 @@ module DualReviewer
 
       def write_invalidation_markers(run_id:, payload:)
         path = canonical_run_root(run_id).join("validation/invalidation_markers.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_comparison_eligibility_note(run_id:, payload:)
+        path = canonical_run_root(run_id).join("derived/comparison_eligibility_note.json")
         path.write(JSON.pretty_generate(payload))
         path
       end

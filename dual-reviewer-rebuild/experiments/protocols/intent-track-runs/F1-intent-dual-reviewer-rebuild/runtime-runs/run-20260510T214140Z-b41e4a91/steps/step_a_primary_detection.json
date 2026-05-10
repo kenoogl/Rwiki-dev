@@ -1,0 +1,53 @@
+{
+  "step_id": "step-01",
+  "step_name": "primary_detection",
+  "step_status": "completed",
+  "phase_profile": "intent",
+  "treatment": "dual+judgment",
+  "target_id": "intent:F1-intent-dual-reviewer-rebuild",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/primary/primary_reviewer.prompt.md",
+    "prompt_id": "foundation.primary_reviewer.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "findings": [
+    {
+      "finding_id": "step-01-finding-phase-contract-gap",
+      "severity": "high",
+      "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+      "source_role": "primary_reviewer",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "failure_observation_refs": [
+        "intent:phase_contract_gap"
+      ]
+    },
+    {
+      "finding_id": "step-01-finding-scope-drift-risk",
+      "severity": "medium",
+      "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+      "source_role": "primary_reviewer",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "failure_observation_refs": [
+        "intent:scope_drift_risk"
+      ]
+    }
+  ],
+  "counter_evidence": [
+
+  ]
+}

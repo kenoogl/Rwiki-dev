@@ -1,14 +1,14 @@
 {
   "batch_id": "F1-phase-field-cpp",
-  "generated_at": "2026-05-09T22:51:57Z",
+  "generated_at": "2026-05-10T21:54:35Z",
   "scope": "phase-field pilot only",
   "comparison_modes": [
     {
       "review_mode": "single_review",
-      "run_id": "run-20260509T225157Z-88d8dced",
-      "bundle_id": "bundle-run-20260509T225157Z-88d8dced",
+      "run_id": "run-20260510T215435Z-66f7b030",
+      "bundle_id": "bundle-run-20260510T215435Z-66f7b030",
       "run_metrics": {
-        "run_id": "run-20260509T225157Z-88d8dced",
+        "run_id": "run-20260510T215435Z-66f7b030",
         "phase_profile": "tasks",
         "treatment": "single",
         "total_findings": 2,
@@ -18,7 +18,7 @@
         "validation_outcome": "passed"
       },
       "finding_metrics": {
-        "run_id": "run-20260509T225157Z-88d8dced",
+        "run_id": "run-20260510T215435Z-66f7b030",
         "phase_profile": "tasks",
         "treatment": "single",
         "severity_distribution": {
@@ -38,10 +38,10 @@
     },
     {
       "review_mode": "dual_reviewer_workflow",
-      "run_id": "run-20260509T225157Z-207549ab",
-      "bundle_id": "bundle-run-20260509T225157Z-207549ab",
+      "run_id": "run-20260510T215435Z-42f86b08",
+      "bundle_id": "bundle-run-20260510T215435Z-42f86b08",
       "run_metrics": {
-        "run_id": "run-20260509T225157Z-207549ab",
+        "run_id": "run-20260510T215435Z-42f86b08",
         "phase_profile": "tasks",
         "treatment": "dual+judgment",
         "total_findings": 3,
@@ -51,7 +51,7 @@
         "validation_outcome": "passed"
       },
       "finding_metrics": {
-        "run_id": "run-20260509T225157Z-207549ab",
+        "run_id": "run-20260510T215435Z-42f86b08",
         "phase_profile": "tasks",
         "treatment": "dual+judgment",
         "severity_distribution": {

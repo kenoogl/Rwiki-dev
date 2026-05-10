@@ -63,6 +63,9 @@
 - runtime-derived signal loader
 - evaluation-derived signal loader
 - signal class classifier
+- `v2/signal_linkage_note.json` loader
+- `v2/trace_note.json` loader
+- `derived/comparison_eligibility_note.json` loader
 
 を実装する。
 
@@ -75,6 +78,7 @@
 完了条件:
 
 - valid / invalid / exploratory の signal value の違いが intake で保持される
+- v2 補助 artifact が signal 抽出補助入力として保持される
 
 ### Task 3: Implement signal inventory artifacts
 
@@ -155,13 +159,14 @@
 作業:
 
 - replay input resolver
-- `review_case.json`, `steps/*.json`, decision units, validation artifacts の selection logic
+- `review_case.json`, `steps/*.json`, decision units, validation artifacts, `v2/trace_note.json`, `v2/signal_linkage_note.json` の selection logic
 
 を実装する。
 
 完了条件:
 
 - Step B / Step C を中心とした proposal に対し step-level replay 準備ができる
+- v2 補助 artifact を使った replay 補助入力を切り出せる
 
 ### Task 7: Implement backtest artifact generation
 

@@ -2,6 +2,7 @@
 run_label: F1-intent-dual-reviewer-rebuild-single
 case_id: F1-intent-dual-reviewer-rebuild
 track: intent
+case_manifest_ref: experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml
 intent_ref: ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
 supporting_refs:
 - dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md

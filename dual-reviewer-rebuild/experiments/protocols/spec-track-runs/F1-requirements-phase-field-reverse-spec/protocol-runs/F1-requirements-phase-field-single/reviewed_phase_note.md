@@ -8,6 +8,8 @@
           - review mode: `single_review`
           - reviewed phase: `requirements`
           - operator: `phase-field-requirements-pilot`
+          - case manifest ref:
+            - `experiments/protocols/case_manifests/F1-requirements-phase-field-reverse-spec.yaml`
           - reviewed phase ref:
             - `.kiro/specs/phase-field-reverse-spec/requirements.md`
           - adjacent phase refs:
@@ -30,10 +32,10 @@
           ## 3. reopen assessment
 
           - reopen required: `true`
-          - target reopen phases: `requirements, design, tasks`
+          - target reopen phases: `design, tasks`
           - intent-attributed issues:
   - [medium] The scientific clean-room intent requires the downstream phases to preserve the narrow reference boundary and avoid silently broadening the reconstruction scope with extra materials or unstated implementation assumptions. (refs: `.kiro/specs/phase-field-reverse-spec/intent.md`, `.kiro/specs/phase-field-reverse-spec/requirements.md`)
 
           ## 4. next action
 
-          - next action: `requirements の clean-room boundary と acceptance bundle を再確認し、その前提で design/tasks の validation ownership と readiness gate を引き直す`
+          - next action: `requirements contract を保ったまま validation ownership と downstream approval gap を設計側へ引き渡す`

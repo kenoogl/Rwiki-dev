@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260510T132228Z-0e355482",
+  "track": "implementation",
+  "linked_signal_ids": [
+    "signal:step-01-finding-boundary",
+    "signal:step-01-finding-update-order"
+  ],
+  "validator_status": "passed",
+  "comparison_eligibility_status": "eligible_standard"
+}

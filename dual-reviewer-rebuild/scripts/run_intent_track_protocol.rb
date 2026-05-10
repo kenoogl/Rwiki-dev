@@ -19,7 +19,8 @@ options = {
     "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md"
   ],
   "operator" => "pending",
-  "objective" => "intent bootstrap pilot"
+  "objective" => "intent bootstrap pilot",
+  "case_manifest_ref" => "experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml"
 }
 
 OptionParser.new do |opts|
@@ -31,7 +32,9 @@ OptionParser.new do |opts|
   opts.on("--supporting-ref PATH", "Supporting ref path (repeatable)") { |value| options["supporting_refs"] << value }
   opts.on("--operator NAME", "Operator name") { |value| options["operator"] = value }
   opts.on("--objective TEXT", "Objective text") { |value| options["objective"] = value }
+  opts.on("--case-manifest-ref PATH", "Case manifest ref path") { |value| options["case_manifest_ref"] = value }
   opts.on("--output-root PATH", "Custom output root") { |value| options["output_root"] = value }
+  opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |value| options["runtime_run_root_base"] = value }
 end.parse!(ARGV)
 
 writer = DualReviewer::TrackRuns::IntentTrackWriter.new(
@@ -43,7 +46,9 @@ writer = DualReviewer::TrackRuns::IntentTrackWriter.new(
   supporting_refs: options.fetch("supporting_refs"),
   operator: options.fetch("operator"),
   objective: options.fetch("objective"),
-  output_root: options["output_root"]
+  output_root: options["output_root"],
+  case_manifest_ref: options["case_manifest_ref"],
+  runtime_run_root_base: options["runtime_run_root_base"]
 )
 
 puts JSON.pretty_generate(

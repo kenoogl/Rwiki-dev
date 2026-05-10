@@ -8,7 +8,7 @@
   "source_register_ref": "docs/coordination/phase-review-metric-register.md",
   "metrics": {
     "phase_blocking_issue_count": 1,
-    "phase_nonblocking_open_point_count": 0,
+    "phase_nonblocking_open_point_count": 1,
     "phase_recheck_count": 1,
     "phase_handback_count_by_class": {
       "A": 1,

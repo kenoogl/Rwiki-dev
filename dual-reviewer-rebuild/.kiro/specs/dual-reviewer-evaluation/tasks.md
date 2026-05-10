@@ -65,6 +65,7 @@
 - `decisions/decision_units.json`
 - `validation/validator_result.json`
 - `validation/invalidation_markers.json`
+- `derived/comparison_eligibility_note.json`
 
 を読む intake loader を実装する。
 
@@ -72,6 +73,13 @@
 
 - runtime fixture を入力にして local run intake が成立する
 - missing required artifact を識別できる
+- comparison eligibility 補助情報を比較前提に引き渡せる
+
+追加で扱ってよい補助入力:
+
+- `v2/review_artifact.json`
+- `v2/metric_snapshot.json`
+- `v2/trace_note.json`
 
 ### Task 3: Implement imported bundle ingestion
 
@@ -86,6 +94,7 @@
 - bundle checksum verifier
 - required provenance check
 - imported bundle materialization or in-memory intake path
+- optional v2 internal artifact resolver
 
 を実装する。
 
@@ -192,6 +201,7 @@
 
 - `single / dual / dual+judgment` の比較条件が machine-readable に残る
 - phase-aware comparison が `design / tasks` を中心に slice できる
+- comparison eligibility note と比較 exclusion reason が矛盾しない
 
 ### Task 8: Implement caveat and limitation artifacts
 

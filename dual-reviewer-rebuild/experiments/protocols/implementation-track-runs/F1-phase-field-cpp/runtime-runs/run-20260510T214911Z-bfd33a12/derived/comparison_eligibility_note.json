@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "comparison_eligibility_note_id": "comparison-eligibility-run-20260510T214911Z-bfd33a12",
+  "run_id": "run-20260510T214911Z-bfd33a12",
+  "eligibility_status": "eligible_standard",
+  "review_mode": "runtime_mediated",
+  "treatment": "dual+judgment",
+  "reason_codes": [
+    "eligible_standard"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "batch_id": "F1-spec-phase-field-reverse-spec",
-  "generated_at": "2026-05-09T22:56:04Z",
+  "generated_at": "2026-05-10T21:42:46Z",
   "scope": "phase-field spec-track pilot only",
   "comparison_modes": [
     {
@@ -8,7 +8,7 @@
       "run_label": "F1-spec-phase-field-single",
       "metrics": {
         "phase_blocking_issue_count": 1,
-        "phase_nonblocking_open_point_count": 0,
+        "phase_nonblocking_open_point_count": 1,
         "phase_recheck_count": 1,
         "phase_handback_count_by_class": {
           "A": 1,

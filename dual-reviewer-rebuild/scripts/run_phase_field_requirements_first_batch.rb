@@ -11,6 +11,7 @@ repo_root = Pathname(__dir__).join("..").expand_path
 
 batch_root = repo_root.join("experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec")
 output_root = batch_root.join("protocol-runs")
+runtime_run_root_base = batch_root.join("runtime-runs")
 
 shared_options = {
   repo_root: repo_root,
@@ -26,8 +27,10 @@ shared_options = {
     ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
     "dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md"
   ],
+  case_manifest_ref: "experiments/protocols/case_manifests/F1-requirements-phase-field-reverse-spec.yaml",
   operator: "phase-field-requirements-pilot",
-  output_root: output_root
+  output_root: output_root,
+  runtime_run_root_base: runtime_run_root_base
 }.freeze
 
 single_writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
@@ -95,6 +98,7 @@ batch_root.mkpath
       "batch_id" => "F1-requirements-phase-field-reverse-spec",
       "scope" => "phase-field requirements pilot only",
       "output_root" => output_root.relative_path_from(repo_root).to_s,
+      "runtime_run_root_base" => runtime_run_root_base.relative_path_from(repo_root).to_s,
       "run_labels" => [
         "F1-requirements-phase-field-single",
         "F1-requirements-phase-field-dual"

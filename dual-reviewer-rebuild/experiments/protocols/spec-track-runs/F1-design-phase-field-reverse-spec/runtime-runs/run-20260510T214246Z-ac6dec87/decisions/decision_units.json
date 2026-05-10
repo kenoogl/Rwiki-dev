@@ -1,0 +1,43 @@
+{
+  "decision_units": [
+    {
+      "decision_unit_id": "decision-unit-step-01-finding-boundary-density",
+      "finding_refs": [
+        "review_case.json#step-01-finding-boundary-density"
+      ],
+      "judgment_refs": [
+        "step_c_judgment.json#judgment-step-01-finding-boundary-density"
+      ],
+      "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-10T21:42:46Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    },
+    {
+      "decision_unit_id": "decision-unit-step-01-finding-failure-contract",
+      "finding_refs": [
+        "review_case.json#step-01-finding-failure-contract"
+      ],
+      "judgment_refs": [
+        "step_c_judgment.json#judgment-step-01-finding-failure-contract"
+      ],
+      "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-10T21:42:46Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    },
+    {
+      "decision_unit_id": "decision-unit-step-02-finding-validation-ownership",
+      "finding_refs": [
+        "review_case.json#step-02-finding-validation-ownership"
+      ],
+      "judgment_refs": [
+        "step_c_judgment.json#judgment-step-02-finding-validation-ownership"
+      ],
+      "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-10T21:42:46Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    }
+  ]
+}

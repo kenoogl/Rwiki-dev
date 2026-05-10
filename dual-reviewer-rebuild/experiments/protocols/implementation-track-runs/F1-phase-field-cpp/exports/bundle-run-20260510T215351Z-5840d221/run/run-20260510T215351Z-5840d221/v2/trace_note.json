@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260510T215351Z-5840d221",
+  "track": "implementation",
+  "case_id": "F1-phase-field-cpp",
+  "target_id": "implementation:phase-field-cpp",
+  "phase_profile": "tasks",
+  "source_refs": [
+    ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+    ".kiro/specs/phase-field-reverse-spec/intent.md",
+    ".kiro/specs/phase-field-reverse-spec/requirements.md",
+    ".kiro/specs/phase-field-reverse-spec/design.md",
+    ".kiro/specs/phase-field-reverse-spec/tasks.md"
+  ],
+  "governance_refs": [
+    "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+  ]
+}

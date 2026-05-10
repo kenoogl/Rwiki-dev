@@ -7,32 +7,37 @@ require "pathname"
 require "time"
 require "yaml"
 require_relative "../../runtime/controller/session_controller"
+require_relative "../../runtime/execution_v2/manifests/case_manifest_loader"
 
 module DualReviewer
   module TrackRuns
     class ImplementationTrackRunner
       attr_reader :repo_root, :run_label, :case_id, :review_mode, :implementation_snapshot_ref,
                   :upstream_spec_refs, :governance_refs, :operator, :phase_profile, :target_id,
-                  :target_artifact_hash, :protocol_output_root, :runtime_run_root_base, :export_root_base
+                  :target_artifact_hash, :protocol_output_root, :runtime_run_root_base, :export_root_base,
+                  :case_manifest_ref, :loaded_case_manifest, :heuristic_profile_ref
 
       def initialize(repo_root:, run_label:, case_id:, review_mode:, implementation_snapshot_ref:,
                      upstream_spec_refs:, governance_refs:, operator:, phase_profile:, target_id:,
                      target_artifact_hash: nil, protocol_output_root: nil, runtime_run_root_base: nil,
-                     export_root_base: nil)
+                     export_root_base: nil, case_manifest_ref: nil)
         @repo_root = Pathname(repo_root).expand_path
         @run_label = run_label
-        @case_id = case_id
         @review_mode = review_mode
-        @implementation_snapshot_ref = implementation_snapshot_ref
-        @upstream_spec_refs = upstream_spec_refs
-        @governance_refs = governance_refs
         @operator = operator
-        @phase_profile = phase_profile
-        @target_id = target_id
-        @target_artifact_hash = target_artifact_hash || derive_target_artifact_hash
         @protocol_output_root = protocol_output_root ? Pathname(protocol_output_root).expand_path : default_protocol_output_root
         @runtime_run_root_base = runtime_run_root_base ? Pathname(runtime_run_root_base).expand_path : repo_root.join("experiments/runs")
         @export_root_base = export_root_base ? Pathname(export_root_base).expand_path : repo_root.join("exports")
+        @case_manifest_ref = case_manifest_ref
+        @loaded_case_manifest = load_case_manifest(case_manifest_ref)
+        @case_id = loaded_case_manifest ? loaded_case_manifest.fetch("case_id") : case_id
+        @implementation_snapshot_ref = loaded_case_manifest ? loaded_case_manifest.fetch("implementation_snapshot_ref") : implementation_snapshot_ref
+        @upstream_spec_refs = loaded_case_manifest ? loaded_case_manifest.fetch("upstream_spec_refs") : upstream_spec_refs
+        @governance_refs = loaded_case_manifest ? loaded_case_manifest.fetch("governance_refs") : governance_refs
+        @phase_profile = loaded_case_manifest ? loaded_case_manifest.fetch("phase_profile") : phase_profile
+        @target_id = loaded_case_manifest ? loaded_case_manifest.fetch("target_id") : target_id
+        @heuristic_profile_ref = loaded_case_manifest && loaded_case_manifest["heuristic_profile_ref"]
+        @target_artifact_hash = target_artifact_hash || derive_target_artifact_hash
       end
 
       def run_all
@@ -61,7 +66,8 @@ module DualReviewer
           analysis_inputs: {
             "implementation_snapshot_ref" => implementation_snapshot_ref,
             "upstream_spec_refs" => upstream_spec_refs,
-            "governance_refs" => governance_refs
+            "governance_refs" => governance_refs,
+            "heuristic_profile_ref" => heuristic_profile_ref
           }
         )
 
@@ -85,6 +91,34 @@ module DualReviewer
           human_signoff: decision_artifacts.fetch("human_signoff")
         )
 
+        case_manifest = controller.build_case_manifest(
+          manifest_payload
+        )
+        execution_v2_artifacts = controller.emit_execution_v2_artifacts(
+          run_id: initialized_run.fetch("run_id"),
+          track: "implementation",
+          common_inputs: {
+            "target_id" => target_id,
+            "target_artifact_hash" => target_artifact_hash,
+            "source_repository_id" => initialized_run.fetch("metadata").fetch("source_repository_id"),
+            "source_revision" => initialized_run.fetch("metadata").fetch("source_revision"),
+            "phase_profile" => phase_profile,
+            "treatment" => initialized_run.fetch("metadata").fetch("treatment"),
+            "review_mode" => initialized_run.fetch("metadata").fetch("review_mode"),
+            "source_refs" => [implementation_snapshot_ref, *upstream_spec_refs].uniq,
+            "governance_refs" => governance_refs
+          },
+          track_inputs: {
+            "implementation_snapshot_ref" => implementation_snapshot_ref,
+            "upstream_spec_refs" => upstream_spec_refs,
+            "governance_refs" => governance_refs
+          },
+          case_manifest: case_manifest,
+          review_case: review_case.fetch("review_case"),
+          decision_artifacts: decision_artifacts,
+          validation_close: validation_close
+        )
+
         bundle_export = controller.export_run_bundle(
           run_id: initialized_run.fetch("run_id"),
           metadata: initialized_run.fetch("metadata").merge(
@@ -95,9 +129,14 @@ module DualReviewer
 
         runtime_paths = {
           "review_artifact" => Pathname(review_case.fetch("review_case_path")),
+          "v2_review_artifact" => Pathname(execution_v2_artifacts.fetch("review_artifact_path")),
+          "v2_metric_snapshot" => Pathname(execution_v2_artifacts.fetch("metric_snapshot_path")),
+          "v2_trace_note" => Pathname(execution_v2_artifacts.fetch("trace_note_path")),
+          "v2_signal_linkage_note" => Pathname(execution_v2_artifacts.fetch("signal_linkage_note_path")),
           "decision_units" => Pathname(decision_artifacts.fetch("decision_units_path")),
           "conformance_review_result" => Pathname(validation_close.fetch("validator_result_path")),
           "caveat_artifact" => Pathname(validation_close.fetch("invalidation_markers_path")),
+          "comparison_eligibility_note" => Pathname(validation_close.fetch("comparison_eligibility_note_path")),
           "bundle_manifest" => Pathname(bundle_export.fetch("bundle_manifest_path"))
         }
 
@@ -138,6 +177,12 @@ module DualReviewer
         repo_root.join("experiments/protocols/implementation-track-runs")
       end
 
+      def load_case_manifest(ref)
+        return nil unless ref
+
+        DualReviewer::Runtime::ExecutionV2::CaseManifestLoader.new(repo_root: repo_root).load(ref)
+      end
+
       def run_root
         protocol_output_root.join(sanitize(run_label))
       end
@@ -175,6 +220,7 @@ module DualReviewer
           "operator" => operator,
           "phase_profile" => phase_profile,
           "generated_at" => Time.now.utc.iso8601,
+          "case_manifest_ref" => case_manifest_reference,
           "inputs" => {
             "implementation_snapshot_ref" => implementation_snapshot_ref,
             "upstream_spec_refs" => upstream_spec_refs,
@@ -209,6 +255,8 @@ module DualReviewer
           - operator: `#{operator}`
           - implementation snapshot ref:
             - `#{implementation_snapshot_ref}`
+          - case manifest ref:
+            - `#{case_manifest_reference}`
           - upstream spec refs:
         #{upstream_spec_refs.map { |ref| "  - `#{ref}`" }.join("\n")}
 
@@ -355,6 +403,23 @@ module DualReviewer
 
       def relative_to_repo(path)
         Pathname(path).relative_path_from(repo_root).to_s
+      end
+
+      def manifest_payload
+        if loaded_case_manifest
+          loaded_case_manifest
+        else
+          {
+            "case_id" => case_id,
+            "target_id" => target_id,
+            "source_refs" => [implementation_snapshot_ref, *upstream_spec_refs].uniq,
+            "case_manifest_ref" => case_manifest_reference
+          }
+        end
+      end
+
+      def case_manifest_reference
+        case_manifest_ref || "implementation-track/#{case_id}"
       end
 
       def stringify_paths(hash)

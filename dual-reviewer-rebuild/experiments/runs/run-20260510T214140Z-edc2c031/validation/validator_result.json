@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "validator_result_id": "validator-result-521d8eb5",
+  "run_id": "run-20260510T214140Z-edc2c031",
+  "validator_name": "runtime-validation-bridge",
+  "validator_version": "0.1.0",
+  "review_mode": "runtime_mediated",
+  "overall_status": "passed",
+  "executed_at": "2026-05-10T21:41:40Z",
+  "checks": [
+    {
+      "check_id": "required-metadata",
+      "status": "passed",
+      "severity": "info",
+      "message": "All required metadata fields are present."
+    },
+    {
+      "check_id": "review-mode-vocabulary",
+      "status": "passed",
+      "severity": "info",
+      "message": "Review mode is in canonical vocabulary."
+    },
+    {
+      "check_id": "human-signoff-status",
+      "status": "passed",
+      "severity": "info",
+      "message": "Human sign-off is approved."
+    }
+  ],
+  "invalidation_marker_refs": [
+
+  ]
+}

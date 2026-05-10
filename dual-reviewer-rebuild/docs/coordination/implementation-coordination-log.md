@@ -218,6 +218,27 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - 対象 task: `Task 1`
 - touched artifacts:
   - `runtime/controller/session_controller.rb`
+
+### 6.x 2026-05-10 generic execution layer v2 replacement first validation
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `Task 12` / `Task 13`
+- touched artifacts:
+  - `runtime/execution_v2/`
+  - `scripts/track_runs/implementation_track_runner.rb`
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/track_runs/intent_track_writer.rb`
+  - `scripts/run_*_track_protocol.rb`
+  - `scripts/run_phase_field_*_first_batch.rb`
+  - `scripts/run_dual_reviewer_rebuild_intent_first_batch.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+- blocker:
+  implementation / spec / intent の case-specific analysis heuristic はまだ残っている
+- handback class: `A`
+- reopen 要否: 不要
+- action: manifest-backed rerun path と `v2/` internal artifact emission を 3 track へ拡張し、`phase-field` / `dual-reviewer-rebuild` first batch を再取得。comparison summary を再生成し、replacement outcome note に first validation result と remaining reopen items を固定
+- status: completed
   - `runtime/executors/base_step_executor.rb`
   - `runtime/executors/step_a_primary_detection.rb`
   - `runtime/executors/step_b_adversarial_review.rb`
@@ -1342,4 +1363,179 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - handback class: `A`
 - reopen 要否: 不要
 - action: 試行錯誤の新規 finding として、`LLM + spec-driven development` では static spec だけでは進行制御が足りず、`ACTIVE_WORKLIST` のような execution-control artifact が必須であること、また実態としては `intent` を最上位に置く intent-governed development であることを `ACTIVE_WORKLIST` に明記した。以後この文書は TODO ではなく、現在地 / 次の 1 手 / stop rule / reopen 状態を固定する dynamic control board として扱う
+- status: completed
+
+### 6.71 2026-05-10 generic execution layer replacement stabilization
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation replacement stabilization`
+- touched artifacts:
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `runtime/execution_v2/analyzers/analysis_profile_loader.rb`
+  - `runtime/execution_v2/analyzers/spec_protocol_analyzer.rb`
+  - `runtime/execution_v2/analyzers/intent_protocol_analyzer.rb`
+  - `runtime/execution_v2/manifests/case_manifest.rb`
+  - `experiments/protocols/case_manifests/F1-*.yaml`
+  - `experiments/protocols/analysis_profiles/**/*`
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/track_runs/intent_track_writer.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/run_dual_reviewer_rebuild_intent_first_batch.rb`
+  - `scripts/run_phase_field_spec_first_batch.rb`
+  - `scripts/run_phase_field_requirements_first_batch.rb`
+  - `scripts/run_phase_field_design_first_batch.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+  - `.kiro/specs/dual-reviewer-generic-execution-layer-v2/spec.json`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `implementation` executor から `target_id` による `phase-field` 専用分岐を除去し、source ref pattern が存在する場合にのみ finding を起こす target-agnostic 形へ寄せた。あわせて `spec` / `intent` の case-specific analysis payload を writer や analyzer のコードから外し、manifest が指す `analysis_profile_ref` を読む profile-backed analyzer へ切り替えた。`validate_protocol_runners.rb` と `validate_track_run_artifacts.rb` は通過し、`intent` / `spec` / `requirements` / `design` / `implementation` の first batch 再実行も再取得できた。残る caveat は、`implementation` 側がまだ source-pattern heuristic であり、`spec` / `intent` も `manual_dogfooding` の protocol path による parity なので、main-evidence 昇格はまだ不可である点である
+- status: completed
+
+### 6.72 2026-05-10 implementation heuristic profile externalization
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation heuristic externalization`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/heuristic_profile_loader.rb`
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `runtime/execution_v2/manifests/case_manifest.rb`
+  - `experiments/protocols/case_manifests/F1-phase-field-cpp.yaml`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/track_runs/implementation_track_runner.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `implementation` 側の boundary / update-order / parameter-caveat の検出条件と summary 文を executor から外し、manifest が指す `heuristic_profile_ref` 経由で YAML profile を読む形に置き換えた。これにより executor-local な case payload は削減され、`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` はすべて通過した。残る caveat は、profile-backed になってもなお source-pattern heuristic であること、および non-implementation track の runtime-mediated parity が未完了である点である
+- status: completed
+
+### 6.73 2026-05-10 protocol-track parity uplift
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `protocol-track parity uplift`
+- touched artifacts:
+  - `runtime/execution_v2/protocol_track_artifact_builder.rb`
+  - `runtime/support/source_provenance_resolver.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/track_runs/intent_track_writer.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `spec` / `intent` の `v2/review_artifact.json`、`metric_snapshot.json`、`trace_note.json`、`signal_linkage_note.json` の組み立てを runtime-owned helper へ寄せ、source repository id と source revision も runtime と同じ provenance resolver で取得するように統一した。これにより protocol-side track でも artifact assembly と provenance path の差は縮小した。`validate_protocol_runners.rb` と `validate_track_run_artifacts.rb` は通過している。残る caveat は、review mode 自体はまだ `manual_dogfooding` であり、full runtime-mediated parity には達していない点である
+- status: completed
+
+### 6.74 2026-05-10 protocol-track runtime session uplift
+
+- 日付: 2026-05-10
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `protocol-track runtime session uplift`
+- touched artifacts:
+  - `runtime/execution_v2/protocol_track_session.rb`
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/track_runs/intent_track_writer.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `spec` / `intent` の protocol-side writer から、analysis の読み出し、execution contract の組み立て、v2 bundle の生成をまとめて `runtime/execution_v2/protocol_track_session.rb` に寄せた。これにより writer の責務は人間向け artifact 更新に近づき、protocol-side でも runtime-owned session が orchestration の中心になった。`validate_protocol_runners.rb` と `validate_track_run_artifacts.rb` は通過している。残る caveat は、review mode 自体は依然 `manual_dogfooding` であり、Step A/B/C/D による full runtime-mediated path とはまだ一致していない点である
+- status: completed
+
+### 6.75 2026-05-11 protocol-track full runtime-mediated replacement
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `protocol-track full runtime-mediated replacement`
+- touched artifacts:
+  - `scripts/track_runs/intent_track_writer.rb`
+  - `scripts/track_runs/spec_track_writer.rb`
+  - `scripts/run_intent_track_protocol.rb`
+  - `scripts/write_intent_track_run_artifacts.rb`
+  - `scripts/run_spec_track_protocol.rb`
+  - `scripts/write_spec_track_run_artifacts.rb`
+  - `scripts/run_dual_reviewer_rebuild_intent_first_batch.rb`
+  - `scripts/run_phase_field_spec_first_batch.rb`
+  - `scripts/run_phase_field_requirements_first_batch.rb`
+  - `scripts/run_phase_field_design_first_batch.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/**/*`
+  - `experiments/protocols/spec-track-runs/F1-*-phase-field-reverse-spec/**/*`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `intent` writer にも runtime-owned `SessionController` run を導入し、`spec` / `intent` の `v2` internal artifact はどちらも `runtime_mediated` run から直接取得する形へ統一した。あわせて protocol script と first-batch script に runtime run root 指定を追加し、batch 配下の `runtime-runs/` に本体 run を残すようにした。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_dual_reviewer_rebuild_intent_first_batch.rb`、`run_phase_field_spec_first_batch.rb`、`run_phase_field_requirements_first_batch.rb`、`run_phase_field_design_first_batch.rb` は通過した。残る caveat は、`implementation` 側がまだ source-pattern heuristic に依存している点と、protocol artifact 自体は依然 pilot projection であって main evidence ではない点である
+- status: completed
+
+### 6.76 2026-05-11 implementation rule-match analyzer extraction
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation analysis-layer extraction`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: profile rule の pattern match と finding 組み立てを `Step A` / `Step B` executor から切り離し、`runtime/execution_v2/analyzers/rule_match_analyzer.rb` に集約した。これにより `implementation` の runtime path でも「判定ロジックは analysis layer に置き、executor は step orchestration に寄せる」形が進んだ。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、共通化は進んだが検出根拠自体はまだ source-pattern heuristic であり、意味理解ベースの generic analysis にはまだ達していない点である
+- status: completed
+
+### 6.77 2026-05-11 seed-pattern vocabulary uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `heuristic vocabulary uplift`
+- touched artifacts:
+  - `runtime/patterns/seed_patterns.yaml`
+  - `runtime/support/foundation_asset_loader.rb`
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/executors/base_step_executor.rb`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `experiments/protocols/heuristic_profiles/spec/F1-spec-phase-field-reverse-spec.yaml`
+  - `experiments/protocols/heuristic_profiles/spec/F1-requirements-phase-field-reverse-spec.yaml`
+  - `experiments/protocols/heuristic_profiles/spec/F1-design-phase-field-reverse-spec.yaml`
+  - `experiments/protocols/heuristic_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `scripts/run_phase_field_requirements_first_batch.rb`
+  - `scripts/run_phase_field_design_first_batch.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: heuristic profile が直接 regex 文字列を大量に埋め込まなくても済むよう、`runtime/patterns/seed_patterns.yaml` に reusable seed pattern vocabulary を追加し、`RuleMatchAnalyzer` が pattern ID を解決できるようにした。implementation / spec / intent の主要 profile は named pattern IDs を使う形へ寄せ、requirements / design first batch と implementation first batch の再取得も通過した。残る caveat は、語彙の共通化は進んだが観点自体はまだ source-pattern ベースであり、意味理解ベースの analyzer にはまだ達していない点である
 - status: completed

@@ -1,0 +1,31 @@
+steps:
+  primary_detection:
+    rules:
+      - finding_suffix: finding-acceptance-batch-coupling
+        severity: medium
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.acceptance-batch-coupling
+        failure_observation_refs:
+          - spec:acceptance_batch_coupling
+        summary_prefix: The tasks phase bundles a long-running acceptance run with downstream observation recording, which increases execution and review coupling before final approval.
+      - finding_suffix: finding-downstream-readiness-gap
+        severity: high
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.downstream-readiness-gap
+        failure_observation_refs:
+          - spec:downstream_readiness_gap
+        summary_prefix: Downstream readiness must not be inferred while design and tasks approval or recheck conditions remain open.
+  adversarial_review:
+    rules:
+      - finding_suffix: finding-clean-room-boundary
+        severity: medium
+        source_role: adversarial_reviewer
+        source_pattern_ids:
+          - seed.clean-room-boundary
+        counter_evidence_pattern_ids:
+          - seed.clean-room-boundary
+        failure_observation_refs:
+          - spec:clean_room_boundary_pressure
+        summary_prefix: Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface.

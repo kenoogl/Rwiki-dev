@@ -11,6 +11,7 @@ repo_root = Pathname(__dir__).join("..").expand_path
 
 batch_root = repo_root.join("experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild")
 output_root = batch_root.join("protocol-runs")
+runtime_run_root_base = batch_root.join("runtime-runs")
 
 shared_options = {
   repo_root: repo_root,
@@ -23,7 +24,9 @@ shared_options = {
   ],
   operator: "intent-bootstrap-pilot",
   objective: "intent bootstrap pilot",
-  output_root: output_root
+  output_root: output_root,
+  case_manifest_ref: "experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml",
+  runtime_run_root_base: runtime_run_root_base
 }.freeze
 
 single_writer = DualReviewer::TrackRuns::IntentTrackWriter.new(
@@ -88,6 +91,7 @@ batch_root.mkpath
       "batch_id" => "F1-intent-dual-reviewer-rebuild",
       "scope" => "dual-reviewer-rebuild intent-track pilot only",
       "output_root" => output_root.relative_path_from(repo_root).to_s,
+      "runtime_run_root_base" => runtime_run_root_base.relative_path_from(repo_root).to_s,
       "run_labels" => [
         "F1-intent-dual-reviewer-rebuild-single",
         "F1-intent-dual-reviewer-rebuild-dual"

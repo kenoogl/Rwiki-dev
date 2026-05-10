@@ -2,35 +2,47 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "digest"
 require "json"
 require "pathname"
 require "time"
 require "yaml"
 require "erb"
+require_relative "../../runtime/support/foundation_asset_loader"
+require_relative "../../runtime/controller/session_controller"
+require_relative "../../runtime/execution_v2/manifests/case_manifest_loader"
+require_relative "../../runtime/execution_v2/protocol_track_session"
 
 module DualReviewer
   module TrackRuns
     class SpecTrackWriter
       attr_reader :repo_root, :run_label, :case_id, :review_mode, :reviewed_phase,
                   :reviewed_phase_ref, :adjacent_phase_refs, :alignment_refs, :operator,
-                  :output_root
+                  :output_root, :runtime_run_root_base, :case_manifest_ref, :loaded_case_manifest,
+                  :asset_loader, :protocol_track_session
 
       def initialize(repo_root:, run_label:, case_id:, review_mode:, reviewed_phase:, reviewed_phase_ref:,
-                     adjacent_phase_refs:, alignment_refs:, operator:, output_root: nil)
+                     adjacent_phase_refs:, alignment_refs:, operator:, output_root: nil, runtime_run_root_base: nil, case_manifest_ref: nil)
         @repo_root = Pathname(repo_root).expand_path
         @run_label = run_label
-        @case_id = case_id
         @review_mode = review_mode
-        @reviewed_phase = reviewed_phase
-        @reviewed_phase_ref = reviewed_phase_ref
-        @adjacent_phase_refs = adjacent_phase_refs
-        @alignment_refs = alignment_refs
         @operator = operator
         @output_root = output_root ? Pathname(output_root).expand_path : default_output_root
+        @runtime_run_root_base = runtime_run_root_base ? Pathname(runtime_run_root_base).expand_path : repo_root.join("experiments/runs")
+        @case_manifest_ref = case_manifest_ref
+        @loaded_case_manifest = load_case_manifest(case_manifest_ref)
+        @case_id = loaded_case_manifest ? loaded_case_manifest.fetch("case_id") : case_id
+        @reviewed_phase = loaded_case_manifest ? loaded_case_manifest.fetch("reviewed_phase") : reviewed_phase
+        @reviewed_phase_ref = loaded_case_manifest ? loaded_case_manifest.fetch("reviewed_phase_ref") : reviewed_phase_ref
+        @adjacent_phase_refs = loaded_case_manifest ? loaded_case_manifest.fetch("adjacent_phase_refs") : adjacent_phase_refs
+        @alignment_refs = loaded_case_manifest ? loaded_case_manifest.fetch("alignment_refs") : alignment_refs
+        @asset_loader = DualReviewer::Runtime::FoundationAssetLoader.new(repo_root: @repo_root)
+        @protocol_track_session = DualReviewer::Runtime::ExecutionV2::ProtocolTrackSession.new(repo_root: @repo_root)
       end
 
       def write_all
         FileUtils.mkdir_p(run_root)
+        FileUtils.mkdir_p(run_root.join("v2"))
         analysis = analyze_case
 
         paths = {
@@ -38,6 +50,10 @@ module DualReviewer
           "alignment_artifact" => write_alignment_artifact(analysis: analysis),
           "phase_metric_snapshot" => write_phase_metric_snapshot(analysis: analysis),
           "signal_linkage_note" => write_signal_linkage_note(analysis: analysis),
+          "v2_review_artifact" => write_v2_review_artifact(analysis: analysis),
+          "v2_metric_snapshot" => write_v2_metric_snapshot(analysis: analysis),
+          "v2_trace_note" => write_v2_trace_note(analysis: analysis),
+          "v2_signal_linkage_note" => write_v2_signal_linkage_note(analysis: analysis),
           "execution_packet" => write_execution_packet
         }
         paths["run_manifest"] = write_run_manifest(paths: paths)
@@ -48,6 +64,12 @@ module DualReviewer
 
       def default_output_root
         repo_root.join("experiments/protocols/spec-track-runs")
+      end
+
+      def load_case_manifest(ref)
+        return nil unless ref
+
+        DualReviewer::Runtime::ExecutionV2::CaseManifestLoader.new(repo_root: repo_root).load(ref)
       end
 
       def run_root
@@ -79,6 +101,7 @@ module DualReviewer
           "reviewed_phase" => reviewed_phase,
           "operator" => operator,
           "generated_at" => Time.now.utc.iso8601,
+          "case_manifest_ref" => case_manifest_reference,
           "inputs" => {
             "reviewed_phase_ref" => reviewed_phase_ref,
             "adjacent_phase_refs" => adjacent_phase_refs,
@@ -87,6 +110,11 @@ module DualReviewer
           "references" => {
             "workflow_gate_status_ref" => workflow_gate_status_ref,
             "phase_metric_register_ref" => phase_metric_register_ref
+          },
+          "runtime" => {
+            "run_id" => runtime_session_result.fetch("run_id"),
+            "runtime_review_mode" => "runtime_mediated",
+            "treatment" => runtime_session_result.fetch("metadata").fetch("treatment")
           },
           "outputs" => paths.transform_values { |path| relative_to_repo(path) }
         }
@@ -113,6 +141,8 @@ module DualReviewer
           - review mode: `#{review_mode}`
           - reviewed phase: `#{reviewed_phase}`
           - operator: `#{operator}`
+          - case manifest ref:
+            - `#{case_manifest_reference}`
           - reviewed phase ref:
             - `#{reviewed_phase_ref}`
           - adjacent phase refs:
@@ -189,6 +219,38 @@ module DualReviewer
         }
 
         path = run_root.join("phase_metric_snapshot.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_review_artifact(analysis:)
+        payload = JSON.parse(Pathname(runtime_session_result.fetch("runtime_paths").fetch("v2_review_artifact")).read)
+
+        path = run_root.join("v2/review_artifact.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_metric_snapshot(analysis:)
+        payload = JSON.parse(Pathname(runtime_session_result.fetch("runtime_paths").fetch("v2_metric_snapshot")).read)
+
+        path = run_root.join("v2/metric_snapshot.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_trace_note(analysis:)
+        payload = JSON.parse(Pathname(runtime_session_result.fetch("runtime_paths").fetch("v2_trace_note")).read)
+
+        path = run_root.join("v2/trace_note.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
+      def write_v2_signal_linkage_note(analysis:)
+        payload = JSON.parse(Pathname(runtime_session_result.fetch("runtime_paths").fetch("v2_signal_linkage_note")).read)
+
+        path = run_root.join("v2/signal_linkage_note.json")
         path.write(JSON.pretty_generate(payload))
         path
       end
@@ -276,334 +338,160 @@ module DualReviewer
         path.relative_path_from(repo_root).to_s
       end
 
+      def case_manifest_reference
+        case_manifest_ref || "spec-track/#{case_id}"
+      end
+
+      def execution_contract
+        @execution_contract ||= runtime_session_result.fetch("execution_contract")
+      end
+
+      def mapped_treatment
+        execution_contract.fetch("common_inputs").fetch("treatment")
+      end
+
+      def spec_evidence_observations(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("evidence_observations")
+      end
+
+      def spec_issue_candidates(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("review_issue_candidates")
+      end
+
+      def spec_caveat_candidates(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("caveat_candidates")
+      end
+
+      def spec_reopen_candidates(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("reopen_candidates")
+      end
+
+      def spec_signal_candidates(analysis:)
+        protocol_runtime_case.fetch("analysis_result").fetch("signal_candidates")
+      end
+
       def analyze_case
-        return phase_field_design_analysis if phase_field_design_case?
-        return phase_field_requirements_analysis if phase_field_requirements_case?
-        return default_analysis unless phase_field_tasks_case?
+        protocol_runtime_case.fetch("analysis")
+      end
 
-        phase_local_issues = [
+      def protocol_v2_bundle(analysis:)
+        protocol_runtime_case.fetch("bundle")
+      end
+
+      def protocol_runtime_case
+        @protocol_runtime_case ||= protocol_track_session.build_spec_case(
+          case_id: case_id,
+          review_mode: review_mode,
+          analysis_profile_ref: loaded_case_manifest && loaded_case_manifest["analysis_profile_ref"],
+          reviewed_phase: reviewed_phase,
+          reviewed_phase_ref: reviewed_phase_ref,
+          adjacent_phase_refs: adjacent_phase_refs,
+          alignment_refs: alignment_refs,
+          workflow_gate_status_ref: workflow_gate_status_ref,
+          case_manifest_ref: case_manifest_reference,
+          compatibility_projection: {
+            "protocol_artifact_refs" => [
+              relative_to_repo(run_root.join("reviewed_phase_note.md")),
+              relative_to_repo(run_root.join("alignment_artifact.yaml")),
+              relative_to_repo(run_root.join("phase_metric_snapshot.json")),
+              relative_to_repo(run_root.join("signal_linkage_note.yaml"))
+            ]
+          }
+        )
+      end
+
+      def runtime_session_result
+        @runtime_session_result ||= begin
+          controller = DualReviewer::Runtime::SessionController.new(
+            repo_root: repo_root,
+            run_root_base: runtime_run_root_base
+          )
+
+          target_id = "spec:#{case_id}"
+          target_artifact_hash = "sha256:#{Digest::SHA256.hexdigest(reviewed_phase_ref)}"
+
+          initialized_run = controller.initialize_run(
+            target_id: target_id,
+            target_artifact_hash: target_artifact_hash,
+            phase_profile: reviewed_phase,
+            treatment: review_mode == "dual_reviewer_workflow" ? "dual+judgment" : "single",
+            review_mode: "runtime_mediated",
+            operator_id: operator
+          )
+
+          step_payloads = controller.emit_step_artifacts(
+            run_id: initialized_run.fetch("run_id"),
+            target_id: target_id,
+            phase_profile: reviewed_phase,
+            treatment: initialized_run.fetch("metadata").fetch("treatment"),
+            analysis_inputs: {
+              "source_refs" => ([reviewed_phase_ref] + adjacent_phase_refs + alignment_refs).uniq,
+              "reviewed_phase_ref" => reviewed_phase_ref,
+              "adjacent_phase_refs" => adjacent_phase_refs,
+              "alignment_refs" => alignment_refs,
+              "heuristic_profile_ref" => loaded_case_manifest.fetch("heuristic_profile_ref")
+            }
+          )
+
+          review_case = controller.aggregate_review_case(
+            run_id: initialized_run.fetch("run_id"),
+            metadata: initialized_run.fetch("metadata"),
+            step_payloads: step_payloads
+          )
+
+          decision_artifacts = controller.emit_decision_artifacts(
+            run_id: initialized_run.fetch("run_id"),
+            step_payloads: step_payloads,
+            human_decision: "approved",
+            operator_id: operator,
+            review_case: review_case.fetch("review_case")
+          )
+
+          validation_close = controller.close_run(
+            run_id: initialized_run.fetch("run_id"),
+            metadata: initialized_run.fetch("metadata"),
+            human_signoff: decision_artifacts.fetch("human_signoff")
+          )
+
+          case_manifest = controller.build_case_manifest(loaded_case_manifest)
+          execution_v2_artifacts = controller.emit_execution_v2_artifacts(
+            run_id: initialized_run.fetch("run_id"),
+            track: "spec",
+            common_inputs: {
+              "target_id" => target_id,
+              "target_artifact_hash" => target_artifact_hash,
+              "source_repository_id" => initialized_run.fetch("metadata").fetch("source_repository_id"),
+              "source_revision" => initialized_run.fetch("metadata").fetch("source_revision"),
+              "phase_profile" => reviewed_phase,
+              "treatment" => initialized_run.fetch("metadata").fetch("treatment"),
+              "review_mode" => "runtime_mediated",
+              "source_refs" => ([reviewed_phase_ref] + adjacent_phase_refs + alignment_refs).uniq,
+              "governance_refs" => [workflow_gate_status_ref]
+            },
+            track_inputs: {
+              "reviewed_phase" => reviewed_phase,
+              "reviewed_phase_ref" => reviewed_phase_ref,
+              "adjacent_phase_refs" => adjacent_phase_refs,
+              "alignment_refs" => alignment_refs
+            },
+            case_manifest: case_manifest,
+            review_case: review_case.fetch("review_case"),
+            decision_artifacts: decision_artifacts,
+            validation_close: validation_close
+          )
+
           {
-            "issue_id" => "spec-phase-local-acceptance-batch-coupling",
-            "severity" => "medium",
-            "summary" => "The tasks phase bundles a long-running 100000-step acceptance run with downstream observation recording, which increases execution and review coupling inside a phase that is still marked `tasks-generated` rather than approved.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              ".kiro/specs/phase-field-reverse-spec/spec.json"
-            ]
-          }
-        ]
-
-        cross_phase_inconsistencies = [
-          {
-            "issue_id" => "spec-cross-phase-unapproved-downstream-readiness",
-            "severity" => "high",
-            "summary" => "Tasks define final acceptance and downstream evidence append paths while `design` and `tasks` remain unapproved in `spec.json`, so implementation-readiness should not be inferred without a design/tasks recheck.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              ".kiro/specs/phase-field-reverse-spec/spec.json",
-              ".kiro/specs/phase-field-reverse-spec/design.md"
-            ]
-          }
-        ]
-
-        intent_attributed_issues = [
-          {
-            "issue_id" => "spec-intent-clean-room-propagation",
-            "severity" => "medium",
-            "summary" => "The clean-room intent and canonical-source limitation must stay explicit through tasks and acceptance, otherwise downstream implementation work can silently broaden the allowed evidence boundary.",
-            "source_refs" => [
-              ".kiro/specs/phase-field-reverse-spec/intent.md",
-              reviewed_phase_ref
-            ]
-          }
-        ]
-
-        caveats = []
-        linked_signal_ids = ["spec-track-phase-field-approval-gate", "spec-track-phase-field-clean-room-boundary"]
-        handback_class = review_mode == "dual_reviewer_workflow" ? "B" : "A"
-        major_correction_count = review_mode == "dual_reviewer_workflow" ? 1 : 0
-        minor_adjustment_count = review_mode == "dual_reviewer_workflow" ? 1 : 2
-
-        if review_mode == "dual_reviewer_workflow"
-          phase_local_issues << {
-            "issue_id" => "spec-phase-local-external-observation-write",
-            "severity" => "medium",
-            "summary" => "The tasks plan explicitly appends acceptance results into external methodology logs, so the review should preserve this as a caveat instead of treating it as a silent implementation detail.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              ".kiro/specs/phase-field-reverse-spec/design.md"
-            ]
-          }
-          caveats << {
-            "issue_id" => "spec-caveat-external-observation-side-effect",
-            "severity" => "low",
-            "summary" => "Cross-spec observation writes are allowed as a scoped exception, but they tighten provenance and should remain visible in downstream review memos.",
-            "source_refs" => [
-              reviewed_phase_ref
-            ]
+            "run_id" => initialized_run.fetch("run_id"),
+            "metadata" => initialized_run.fetch("metadata"),
+            "execution_contract" => execution_v2_artifacts.fetch("execution_contract"),
+            "runtime_paths" => {
+              "v2_review_artifact" => execution_v2_artifacts.fetch("review_artifact_path"),
+              "v2_metric_snapshot" => execution_v2_artifacts.fetch("metric_snapshot_path"),
+              "v2_trace_note" => execution_v2_artifacts.fetch("trace_note_path"),
+              "v2_signal_linkage_note" => execution_v2_artifacts.fetch("signal_linkage_note_path")
+            }
           }
         end
-
-        {
-          "phase_local_issues" => phase_local_issues,
-          "cross_phase_inconsistencies" => cross_phase_inconsistencies,
-          "intent_attributed_issues" => intent_attributed_issues,
-          "caveats" => caveats,
-          "reopen_required" => true,
-          "target_reopen_phases" => %w[design tasks],
-          "next_action" => "design/tasks alignment を再確認し、implementation readiness の前に approval gate と clean-room boundary を明示的に閉じる",
-          "alignment_note" => "Tasks-origin issues require at least a design/tasks recheck before this case can be treated as implementation-ready main evidence.",
-          "linked_signal_ids" => linked_signal_ids,
-          "metrics" => {
-            "phase_blocking_issue_count" => 1,
-            "phase_nonblocking_open_point_count" => phase_local_issues.size + caveats.size - 1,
-            "phase_recheck_count" => 1,
-            "phase_handback_count_by_class" => { "A" => handback_class == "A" ? 1 : 0, "B" => handback_class == "B" ? 1 : 0, "C" => 0, "D" => 0 },
-            "phase_reopen_required_count" => 1,
-            "phase_minor_adjustment_count" => minor_adjustment_count,
-            "phase_major_correction_count" => major_correction_count,
-            "phase_intent_attributed_issue_count" => intent_attributed_issues.size
-          }
-        }
-      end
-
-      def phase_field_design_analysis
-        phase_local_issues = [
-          {
-            "issue_id" => "spec-design-boundary-density",
-            "severity" => "high",
-            "summary" => "The design introduces a large number of tightly coupled component boundaries across Numerical Engine, clamp/correction helpers, snapshot I/O, visualization, and three executables, so downstream tasks must keep ownership and integration boundaries explicit to avoid silent coupling drift.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              ".kiro/specs/phase-field-reverse-spec/requirements.md"
-            ]
-          },
-          {
-            "issue_id" => "spec-design-static-allocation-and-failure-contract",
-            "severity" => "medium",
-            "summary" => "Static allocation, clamp non-convergence handling, and step-level diagnostic propagation are already fixed in design, so downstream implementation tasks need to preserve these failure contracts rather than reinterpreting them as local coding choices.",
-            "source_refs" => [
-              reviewed_phase_ref
-            ]
-          }
-        ]
-
-        cross_phase_inconsistencies = [
-          {
-            "issue_id" => "spec-design-unapproved-tasks-readiness-gap",
-            "severity" => "high",
-            "summary" => "The design is generated but not approved, and the tasks phase is also unapproved, so the current design should not be treated as implementation-ready without a design/tasks recheck against the approved requirements contract.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              ".kiro/specs/phase-field-reverse-spec/spec.json",
-              ".kiro/specs/phase-field-reverse-spec/tasks.md"
-            ]
-          }
-        ]
-
-        intent_attributed_issues = [
-          {
-            "issue_id" => "spec-design-intent-clean-room-preservation",
-            "severity" => "medium",
-            "summary" => "The clean-room scientific intent still constrains the design surface: component responsibilities and accepted dependencies must remain derivable from the narrow canonical sources instead of silently importing extra assumptions.",
-            "source_refs" => [
-              ".kiro/specs/phase-field-reverse-spec/intent.md",
-              reviewed_phase_ref
-            ]
-          }
-        ]
-
-        caveats = []
-        linked_signal_ids = [
-          "spec-track-design-boundary-density",
-          "spec-track-design-readiness-gap"
-        ]
-
-        if review_mode == "dual_reviewer_workflow"
-          cross_phase_inconsistencies << {
-            "issue_id" => "spec-design-validation-ownership-spread",
-            "severity" => "medium",
-            "summary" => "Validation responsibilities are distributed across component notes and integration plans, so the downstream tasks should make test ownership and acceptance routing explicit instead of leaving them as implicit cross-file expectations.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
-            ]
-          }
-          caveats << {
-            "issue_id" => "spec-design-caveat-component-granularity",
-            "severity" => "low",
-            "summary" => "The current design intentionally uses fine-grained component decomposition for reviewability, but this increases downstream task coordination cost and should remain visible as a design caveat.",
-            "source_refs" => [
-              reviewed_phase_ref
-            ]
-          }
-        end
-
-        handback_class = "B"
-        major_correction_count = review_mode == "dual_reviewer_workflow" ? 1 : 0
-        minor_adjustment_count = review_mode == "dual_reviewer_workflow" ? 1 : 2
-
-        {
-          "phase_local_issues" => phase_local_issues,
-          "cross_phase_inconsistencies" => cross_phase_inconsistencies,
-          "intent_attributed_issues" => intent_attributed_issues,
-          "caveats" => caveats,
-          "reopen_required" => true,
-          "target_reopen_phases" => %w[design tasks],
-          "next_action" => "design boundary と failure contract を再確認し、その前提で tasks 側の ownership と acceptance routing を引き直す",
-          "alignment_note" => "Design-origin issues require at least a design/tasks recheck before this case can be treated as implementation-ready pilot evidence.",
-          "linked_signal_ids" => linked_signal_ids,
-          "metrics" => {
-            "phase_blocking_issue_count" => 1,
-            "phase_nonblocking_open_point_count" => phase_local_issues.size + cross_phase_inconsistencies.size + caveats.size - 1,
-            "phase_recheck_count" => 1,
-            "phase_handback_count_by_class" => { "A" => 0, "B" => 1, "C" => 0, "D" => 0 },
-            "phase_reopen_required_count" => 1,
-            "phase_minor_adjustment_count" => minor_adjustment_count,
-            "phase_major_correction_count" => major_correction_count,
-            "phase_intent_attributed_issue_count" => intent_attributed_issues.size
-          }
-        }
-      end
-
-      def phase_field_requirements_analysis
-        phase_local_issues = [
-          {
-            "issue_id" => "spec-requirements-clean-room-boundary-contract",
-            "severity" => "high",
-            "summary" => "The requirements lock the clean-room evidence boundary to `DEVELOPMENT_SPEC.md` and `wingxa.h`, but they also embed implementation-shaping constraints such as static allocation and exact acceptance bundles, so downstream phases must preserve where requirement contract ends and implementation choice begins.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              ".kiro/specs/phase-field-reverse-spec/intent.md"
-            ]
-          },
-          {
-            "issue_id" => "spec-requirements-acceptance-bundle-density",
-            "severity" => "medium",
-            "summary" => "Requirement 7 aggregates build, initial output, rerender, BMP generation, log-domain safety, and post-correction invariants into one acceptance bundle, which increases verification coupling and should be reflected explicitly in downstream validation planning.",
-            "source_refs" => [
-              reviewed_phase_ref
-            ]
-          }
-        ]
-
-        cross_phase_inconsistencies = [
-          {
-            "issue_id" => "spec-requirements-downstream-approval-gap",
-            "severity" => "high",
-            "summary" => "Requirements are already approved, but `design` and `tasks` remain unapproved in `spec.json`; downstream phases therefore need a recheck before the accepted requirements can be treated as implementation-ready evidence.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              ".kiro/specs/phase-field-reverse-spec/spec.json",
-              ".kiro/specs/phase-field-reverse-spec/design.md",
-              ".kiro/specs/phase-field-reverse-spec/tasks.md"
-            ]
-          }
-        ]
-
-        intent_attributed_issues = [
-          {
-            "issue_id" => "spec-requirements-intent-scope-preservation",
-            "severity" => "medium",
-            "summary" => "The scientific clean-room intent requires the downstream phases to preserve the narrow reference boundary and avoid silently broadening the reconstruction scope with extra materials or unstated implementation assumptions.",
-            "source_refs" => [
-              ".kiro/specs/phase-field-reverse-spec/intent.md",
-              reviewed_phase_ref
-            ]
-          }
-        ]
-
-        caveats = []
-        linked_signal_ids = [
-          "spec-track-requirements-clean-room-boundary",
-          "spec-track-requirements-downstream-approval-gap"
-        ]
-
-        if review_mode == "dual_reviewer_workflow"
-          cross_phase_inconsistencies << {
-            "issue_id" => "spec-requirements-validation-surface-spillover",
-            "severity" => "medium",
-            "summary" => "The acceptance criteria enumerate output and invariant checks across simulation, rerender, and BMP paths, so the downstream design should make validation ownership and cross-module test boundaries explicit instead of leaving them implicit.",
-            "source_refs" => [
-              reviewed_phase_ref,
-              ".kiro/specs/phase-field-reverse-spec/design.md"
-            ]
-          }
-          caveats << {
-            "issue_id" => "spec-requirements-caveat-validation-ownership",
-            "severity" => "low",
-            "summary" => "Requirement-level acceptance remains intentionally dense for the pilot; the review should preserve this density as a caveat rather than flatten it into a single implementation task.",
-            "source_refs" => [
-              reviewed_phase_ref
-            ]
-          }
-        end
-
-        handback_class = "C"
-        major_correction_count = review_mode == "dual_reviewer_workflow" ? 1 : 0
-        minor_adjustment_count = review_mode == "dual_reviewer_workflow" ? 1 : 2
-
-        {
-          "phase_local_issues" => phase_local_issues,
-          "cross_phase_inconsistencies" => cross_phase_inconsistencies,
-          "intent_attributed_issues" => intent_attributed_issues,
-          "caveats" => caveats,
-          "reopen_required" => true,
-          "target_reopen_phases" => %w[requirements design tasks],
-          "next_action" => "requirements の clean-room boundary と acceptance bundle を再確認し、その前提で design/tasks の validation ownership と readiness gate を引き直す",
-          "alignment_note" => "Requirements-origin issues require a requirements/design/tasks recheck before this case can be treated as fixed downstream evidence.",
-          "linked_signal_ids" => linked_signal_ids,
-          "metrics" => {
-            "phase_blocking_issue_count" => 1,
-            "phase_nonblocking_open_point_count" => phase_local_issues.size + cross_phase_inconsistencies.size + caveats.size - 1,
-            "phase_recheck_count" => 1,
-            "phase_handback_count_by_class" => { "A" => 0, "B" => 0, "C" => 1, "D" => 0 },
-            "phase_reopen_required_count" => 1,
-            "phase_minor_adjustment_count" => minor_adjustment_count,
-            "phase_major_correction_count" => major_correction_count,
-            "phase_intent_attributed_issue_count" => intent_attributed_issues.size
-          }
-        }
-      end
-
-      def default_analysis
-        {
-          "phase_local_issues" => [],
-          "cross_phase_inconsistencies" => [],
-          "intent_attributed_issues" => [],
-          "caveats" => [],
-          "reopen_required" => false,
-          "target_reopen_phases" => [],
-          "next_action" => "manual population required",
-          "alignment_note" => "Populate with alignment findings, reopen targets, and propagation decisions after the run.",
-          "linked_signal_ids" => [],
-          "metrics" => {
-            "phase_blocking_issue_count" => 0,
-            "phase_nonblocking_open_point_count" => 0,
-            "phase_recheck_count" => 0,
-            "phase_handback_count_by_class" => { "A" => 0, "B" => 0, "C" => 0, "D" => 0 },
-            "phase_reopen_required_count" => 0,
-            "phase_minor_adjustment_count" => 0,
-            "phase_major_correction_count" => 0,
-            "phase_intent_attributed_issue_count" => 0
-          }
-        }
-      end
-
-      def phase_field_tasks_case?
-        case_id == "F1-spec-phase-field-reverse-spec" && reviewed_phase == "tasks" && reviewed_phase_ref.include?("phase-field-reverse-spec/tasks.md")
-      end
-
-      def phase_field_requirements_case?
-        case_id == "F1-requirements-phase-field-reverse-spec" &&
-          reviewed_phase == "requirements" &&
-          reviewed_phase_ref.include?("phase-field-reverse-spec/requirements.md")
-      end
-
-      def phase_field_design_case?
-        case_id == "F1-design-phase-field-reverse-spec" &&
-          reviewed_phase == "design" &&
-          reviewed_phase_ref.include?("phase-field-reverse-spec/design.md")
       end
 
       def render_issue_lines(issues)

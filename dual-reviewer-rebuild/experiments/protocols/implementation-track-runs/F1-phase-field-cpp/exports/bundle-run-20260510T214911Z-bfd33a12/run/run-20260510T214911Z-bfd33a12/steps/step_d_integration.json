@@ -1,0 +1,30 @@
+{
+  "step_id": "step-04",
+  "step_name": "integration",
+  "step_status": "completed",
+  "phase_profile": "tasks",
+  "treatment": "dual+judgment",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/integration/integration_reviewer.prompt.md",
+    "prompt_id": "foundation.integration.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "decision_units": [
+    {
+      "finding_id": "step-01-finding-boundary",
+      "final_label": "necessary",
+      "recommended_action": "Escalate into implementation review memo and mark for downstream rework consideration."
+    },
+    {
+      "finding_id": "step-01-finding-update-order",
+      "final_label": "optional",
+      "recommended_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix."
+    },
+    {
+      "finding_id": "step-02-finding-parameter-caveat",
+      "final_label": "optional",
+      "recommended_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix."
+    }
+  ]
+}

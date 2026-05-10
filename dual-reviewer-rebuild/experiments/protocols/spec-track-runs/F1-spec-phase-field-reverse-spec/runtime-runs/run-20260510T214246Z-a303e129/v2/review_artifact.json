@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "spec",
+  "target_id": "spec:F1-spec-phase-field-reverse-spec",
+  "common_inputs": {
+    "target_id": "spec:F1-spec-phase-field-reverse-spec",
+    "target_artifact_hash": "sha256:77e04b77d229e4933dc6d070ce8feb46a42fb190fbafc2e5ef71580eae2068ea",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0793808d9f15b7cd2cba5bea2461b973b45f20ed",
+    "phase_profile": "tasks",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/specs/phase-field-reverse-spec/tasks.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md"
+    ],
+    "governance_refs": [
+      "docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-spec-phase-field-reverse-spec.yaml",
+    "track": "spec"
+  },
+  "track_inputs": {
+    "reviewed_phase": "tasks",
+    "reviewed_phase_ref": ".kiro/specs/phase-field-reverse-spec/tasks.md",
+    "adjacent_phase_refs": [
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md"
+    ],
+    "alignment_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md"
+    ]
+  },
+  "evidence_observations": [
+
+  ],
+  "review_issue_candidates": [
+
+  ],
+  "caveat_candidates": [
+
+  ],
+  "reopen_candidates": [
+
+  ],
+  "signal_candidates": [
+
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260510T214246Z-a303e129",
+    "finding_projection": [
+
+    ],
+    "decision_unit_projection": [
+
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-1fcbada4",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T214246Z-a303e129"
+    }
+  },
+  "decision_context": {
+    "track": "spec",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "spec",
+      "evidence_observations": [
+
+      ],
+      "review_issue_candidates": [
+
+      ],
+      "caveat_candidates": [
+
+      ],
+      "reopen_candidates": [
+
+      ],
+      "signal_candidates": [
+
+      ]
+    },
+    "decision_units": [
+
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ]
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 0,
+      "accepted_decision_unit_ids": [
+
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F1-spec-phase-field-reverse-spec",
+    "track": "spec",
+    "reviewed_phase": "tasks",
+    "reviewed_phase_ref": ".kiro/specs/phase-field-reverse-spec/tasks.md",
+    "source_refs": [
+      ".kiro/specs/phase-field-reverse-spec/tasks.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md"
+    ],
+    "adjacent_phase_refs": [
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md"
+    ],
+    "alignment_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md"
+    ],
+    "analysis_profile_ref": "dual-reviewer-rebuild/experiments/protocols/analysis_profiles/spec/F1-spec-phase-field-reverse-spec.yaml",
+    "heuristic_profile_ref": "dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/F1-spec-phase-field-reverse-spec.yaml",
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-spec-phase-field-reverse-spec.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-1fcbada4",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T214246Z-a303e129"
+  }
+}

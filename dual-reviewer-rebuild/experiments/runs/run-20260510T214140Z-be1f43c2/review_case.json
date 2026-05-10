@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260510T214140Z-be1f43c2",
+  "metadata": {
+    "run_id": "run-20260510T214140Z-be1f43c2",
+    "target_id": "spec:F1-spec-phase-field-reverse-spec",
+    "target_artifact_hash": "sha256:77e04b77d229e4933dc6d070ce8feb46a42fb190fbafc2e5ef71580eae2068ea",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0793808d9f15b7cd2cba5bea2461b973b45f20ed",
+    "phase_profile": "tasks",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-10T21:41:40Z",
+    "closed_at": "2026-05-10T21:41:40Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "findings": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-02-finding-clean-room-boundary",
+      "run_id": "run-20260510T214140Z-be1f43c2",
+      "step_id": "step-02",
+      "source_role": "adversarial_reviewer",
+      "severity": "medium",
+      "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+      "source_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-02-finding-clean-room-boundary",
+      "decision_unit_id": "decision-unit-step-02-finding-clean-room-boundary",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-02-finding-clean-room-boundary",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "spec:clean_room_boundary_pressure"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    }
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-35010027"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

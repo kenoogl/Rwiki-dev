@@ -1,0 +1,128 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260510T214246Z-5ce026c2",
+  "metadata": {
+    "run_id": "run-20260510T214246Z-5ce026c2",
+    "target_id": "spec:F1-requirements-phase-field-reverse-spec",
+    "target_artifact_hash": "sha256:64cd31969ac9960280a4c2eb88e85d047a08788989d272f1117811507030a011",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0793808d9f15b7cd2cba5bea2461b973b45f20ed",
+    "phase_profile": "requirements",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-10T21:42:46Z",
+    "closed_at": "2026-05-10T21:42:46Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "skipped",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "findings": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-clean-room-boundary-contract",
+      "run_id": "run-20260510T214246Z-5ce026c2",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "The requirements bind the clean-room evidence boundary tightly, so downstream phases must not blur requirement contract and implementation choice. Evidence excerpt: 本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。",
+      "source_refs": [
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/intent.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-01-finding-clean-room-boundary-contract",
+      "decision_unit_id": "decision-unit-step-01-finding-clean-room-boundary-contract",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-clean-room-boundary-contract",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "spec:requirements_boundary_contract"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-acceptance-bundle-density",
+      "run_id": "run-20260510T214246Z-5ce026c2",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "medium",
+      "summary": "The acceptance bundle is dense and cross-cutting, so validation ownership and breakdown need explicit downstream treatment. Evidence excerpt: - 3 機能 = (1) シミュレーション実行、(2) 保存済み濃度データの再描画、(3) 保存済み濃度データからの BMP 書き出し (= `§3`)",
+      "source_refs": [
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-01-finding-acceptance-bundle-density",
+      "decision_unit_id": "decision-unit-step-01-finding-acceptance-bundle-density",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-acceptance-bundle-density",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "spec:acceptance_bundle_density"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    }
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-3d306b2a"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

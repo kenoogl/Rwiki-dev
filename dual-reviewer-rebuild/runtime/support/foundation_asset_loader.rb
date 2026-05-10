@@ -29,6 +29,10 @@ module DualReviewer
         @review_case_schema ||= load_json("runtime/schemas/review_case.schema.json")
       end
 
+      def seed_pattern_catalog
+        @seed_pattern_catalog ||= load_yaml("runtime/patterns/seed_patterns.yaml")
+      end
+
       def prompt_frontmatter(relative_path)
         text = foundation_asset_path(relative_path).read
         match = text.match(/\A---\n(.*?)\n---\n/m)

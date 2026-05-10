@@ -23,6 +23,7 @@ parser = OptionParser.new do |opts|
   opts.on("--alignment-ref PATH", "Alignment ref path (repeatable)") { |value| options["alignment_refs"] << value }
   opts.on("--operator NAME", "Operator name") { |value| options["operator"] = value }
   opts.on("--output-root PATH", "Custom output root") { |value| options["output_root"] = value }
+  opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |value| options["runtime_run_root_base"] = value }
 end
 
 parser.parse!(ARGV)
@@ -42,7 +43,8 @@ writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
   adjacent_phase_refs: options.fetch("adjacent_phase_refs"),
   alignment_refs: options.fetch("alignment_refs"),
   operator: options.fetch("operator"),
-  output_root: options["output_root"]
+  output_root: options["output_root"],
+  runtime_run_root_base: options["runtime_run_root_base"]
 )
 
 paths = writer.write_all

@@ -49,7 +49,40 @@ validation_close = controller.close_run(
   human_signoff: decision_artifacts.fetch("human_signoff")
 )
 
+case_manifest = controller.build_case_manifest(
+  "case_id" => "sample-runtime-session",
+  "target_id" => initialized_run.fetch("metadata").fetch("target_id"),
+  "source_refs" => ["scripts/run_review_session.rb"],
+  "case_manifest_ref" => "sample/runtime-session"
+)
+
+execution_v2_artifacts = controller.emit_execution_v2_artifacts(
+  run_id: initialized_run.fetch("run_id"),
+  track: "implementation",
+  common_inputs: {
+    "target_id" => initialized_run.fetch("metadata").fetch("target_id"),
+    "target_artifact_hash" => initialized_run.fetch("metadata").fetch("target_artifact_hash"),
+    "source_repository_id" => initialized_run.fetch("metadata").fetch("source_repository_id"),
+    "source_revision" => initialized_run.fetch("metadata").fetch("source_revision"),
+    "phase_profile" => initialized_run.fetch("metadata").fetch("phase_profile"),
+    "treatment" => initialized_run.fetch("metadata").fetch("treatment"),
+    "review_mode" => initialized_run.fetch("metadata").fetch("review_mode"),
+    "source_refs" => ["scripts/run_review_session.rb"],
+    "governance_refs" => ["runtime/foundation/metadata_contract.yaml"]
+  },
+  track_inputs: {
+    "implementation_snapshot_ref" => "scripts/run_review_session.rb",
+    "upstream_spec_refs" => [],
+    "governance_refs" => ["runtime/foundation/metadata_contract.yaml"]
+  },
+  case_manifest: case_manifest,
+  review_case: review_case.fetch("review_case"),
+  decision_artifacts: decision_artifacts,
+  validation_close: validation_close
+)
+
 summary["decision_artifacts"] = decision_artifacts
 summary["validation_close"] = validation_close
+summary["execution_v2_artifacts"] = execution_v2_artifacts
 
 puts JSON.pretty_generate(summary)

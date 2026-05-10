@@ -1,0 +1,116 @@
+review_modes:
+  single_review:
+    phase_local_issues:
+      - issue_id: spec-requirements-clean-room-boundary-contract
+        severity: high
+        summary: The requirements lock the clean-room evidence boundary to `DEVELOPMENT_SPEC.md` and `wingxa.h`, but they also embed implementation-shaping constraints such as static allocation and exact acceptance bundles, so downstream phases must preserve where requirement contract ends and implementation choice begins.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+          - .kiro/specs/phase-field-reverse-spec/intent.md
+      - issue_id: spec-requirements-acceptance-bundle-density
+        severity: medium
+        summary: Requirement 7 aggregates build, initial output, rerender, BMP generation, log-domain safety, and post-correction invariants into one acceptance bundle, which increases verification coupling and should be reflected explicitly in downstream validation planning.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+    cross_phase_inconsistencies:
+      - issue_id: spec-requirements-downstream-approval-gap
+        severity: high
+        summary: Requirements are already approved, but `design` and `tasks` remain unapproved in `spec.json`; downstream phases therefore need a recheck before the accepted requirements can be treated as implementation-ready evidence.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+          - .kiro/specs/phase-field-reverse-spec/spec.json
+          - .kiro/specs/phase-field-reverse-spec/design.md
+          - .kiro/specs/phase-field-reverse-spec/tasks.md
+    intent_attributed_issues:
+      - issue_id: spec-requirements-intent-scope-preservation
+        severity: medium
+        summary: The scientific clean-room intent requires the downstream phases to preserve the narrow reference boundary and avoid silently broadening the reconstruction scope with extra materials or unstated implementation assumptions.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/intent.md
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+    caveats: []
+    reopen_required: true
+    target_reopen_phases:
+      - design
+      - tasks
+    next_action: requirements contract を保ったまま validation ownership と downstream approval gap を設計側へ引き渡す
+    alignment_note: Requirements-origin issues require downstream recheck before implementation-ready evidence can be claimed.
+    linked_signal_ids:
+      - spec-track-requirements-clean-room-boundary
+      - spec-track-requirements-downstream-approval-gap
+    metrics:
+      phase_blocking_issue_count: 1
+      phase_nonblocking_open_point_count: 2
+      phase_recheck_count: 1
+      phase_handback_count_by_class:
+        A: 0
+        B: 0
+        C: 1
+        D: 0
+      phase_reopen_required_count: 1
+      phase_minor_adjustment_count: 2
+      phase_major_correction_count: 0
+      phase_intent_attributed_issue_count: 1
+  dual_reviewer_workflow:
+    phase_local_issues:
+      - issue_id: spec-requirements-clean-room-boundary-contract
+        severity: high
+        summary: The requirements lock the clean-room evidence boundary to `DEVELOPMENT_SPEC.md` and `wingxa.h`, but they also embed implementation-shaping constraints such as static allocation and exact acceptance bundles, so downstream phases must preserve where requirement contract ends and implementation choice begins.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+          - .kiro/specs/phase-field-reverse-spec/intent.md
+      - issue_id: spec-requirements-acceptance-bundle-density
+        severity: medium
+        summary: Requirement 7 aggregates build, initial output, rerender, BMP generation, log-domain safety, and post-correction invariants into one acceptance bundle, which increases verification coupling and should be reflected explicitly in downstream validation planning.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+    cross_phase_inconsistencies:
+      - issue_id: spec-requirements-downstream-approval-gap
+        severity: high
+        summary: Requirements are already approved, but `design` and `tasks` remain unapproved in `spec.json`; downstream phases therefore need a recheck before the accepted requirements can be treated as implementation-ready evidence.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+          - .kiro/specs/phase-field-reverse-spec/spec.json
+          - .kiro/specs/phase-field-reverse-spec/design.md
+          - .kiro/specs/phase-field-reverse-spec/tasks.md
+      - issue_id: spec-requirements-validation-surface-spillover
+        severity: medium
+        summary: The acceptance criteria enumerate output and invariant checks across simulation, rerender, and BMP paths, so the downstream design should make validation ownership and cross-module test boundaries explicit instead of leaving them implicit.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+          - .kiro/specs/phase-field-reverse-spec/design.md
+    intent_attributed_issues:
+      - issue_id: spec-requirements-intent-scope-preservation
+        severity: medium
+        summary: The scientific clean-room intent requires the downstream phases to preserve the narrow reference boundary and avoid silently broadening the reconstruction scope with extra materials or unstated implementation assumptions.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/intent.md
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+    caveats:
+      - issue_id: spec-requirements-caveat-validation-ownership
+        severity: low
+        summary: Requirement-level acceptance remains intentionally dense for the pilot; the review should preserve this density as a caveat rather than flatten it into a single implementation task.
+        source_refs:
+          - .kiro/specs/phase-field-reverse-spec/requirements.md
+    reopen_required: true
+    target_reopen_phases:
+      - design
+      - tasks
+    next_action: requirements contract を保ったまま validation ownership と downstream approval gap を設計側へ引き渡す
+    alignment_note: Requirements-origin issues require downstream recheck before implementation-ready evidence can be claimed.
+    linked_signal_ids:
+      - spec-track-requirements-clean-room-boundary
+      - spec-track-requirements-downstream-approval-gap
+    metrics:
+      phase_blocking_issue_count: 1
+      phase_nonblocking_open_point_count: 3
+      phase_recheck_count: 1
+      phase_handback_count_by_class:
+        A: 0
+        B: 0
+        C: 1
+        D: 0
+      phase_reopen_required_count: 1
+      phase_minor_adjustment_count: 1
+      phase_major_correction_count: 1
+      phase_intent_attributed_issue_count: 1

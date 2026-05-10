@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require "pathname"
+require_relative "../execution_v2/analyzers/heuristic_profile_loader"
+require_relative "../execution_v2/analyzers/rule_match_analyzer"
+
 module DualReviewer
   module Runtime
     class BaseStepExecutor
@@ -51,14 +55,18 @@ module DualReviewer
         }
       end
 
-      def phase_field_target?(context)
-        context.fetch(:target_id).include?("phase-field-cpp")
-      end
-
       def source_ref_list(context, extra_refs = [])
+        inputs = analysis_inputs(context)
         refs = []
-        refs << analysis_inputs(context)["implementation_snapshot_ref"]
-        refs.concat(Array(analysis_inputs(context)["upstream_spec_refs"]))
+        refs.concat(Array(inputs["source_refs"]))
+        refs << inputs["implementation_snapshot_ref"]
+        refs.concat(Array(inputs["upstream_spec_refs"]))
+        refs << inputs["reviewed_phase_ref"]
+        refs << inputs["intent_ref"]
+        refs.concat(Array(inputs["adjacent_phase_refs"]))
+        refs.concat(Array(inputs["alignment_refs"]))
+        refs.concat(Array(inputs["supporting_refs"]))
+        refs.concat(Array(inputs["traceability_refs"]))
         refs.concat(extra_refs)
         refs.compact.uniq
       end
@@ -67,38 +75,63 @@ module DualReviewer
         source_ref_list(context)
       end
 
-      def load_ref_text(ref)
-        ref_path = Pathname(ref.to_s.split("#").first)
-        absolute_path = if ref_path.absolute?
-                          ref_path
-                        else
-                          primary = asset_loader.repo_root.join(ref_path)
-                          primary.exist? ? primary : asset_loader.repo_root.parent.join(ref_path)
-                        end
-        return nil unless absolute_path.exist?
-
-        absolute_path.read
+      def heuristic_profile(context)
+        @heuristic_profiles ||= {}
+        ref = analysis_inputs(context)["heuristic_profile_ref"]
+        @heuristic_profiles[ref] ||= DualReviewer::Runtime::ExecutionV2::HeuristicProfileLoader.new(
+          repo_root: asset_loader.repo_root
+        ).load(ref: ref)
       end
 
-      def refs_matching(context, patterns)
-        source_document_refs(context).select do |ref|
-          text = load_ref_text(ref)
-          next false if text.nil? || text.empty?
+      def heuristic_rules_for(context)
+        heuristic_profile(context).fetch("steps", {}).fetch(step_name, {}).fetch("rules", [])
+      end
 
-          patterns.any? { |pattern| text.match?(pattern) }
+      def rule_match_analyzer
+        @rule_match_analyzer ||= DualReviewer::Runtime::ExecutionV2::RuleMatchAnalyzer.new(
+          repo_root: asset_loader.repo_root,
+          asset_loader: asset_loader
+        )
+      end
+
+      def build_rule_matched_findings(context)
+        raw_findings = rule_match_analyzer.build_findings(
+          step_name: step_name,
+          step_id: context.fetch(:step_id),
+          source_document_refs: source_document_refs(context),
+          rule_set: heuristic_rules_for(context)
+        )
+
+        raw_findings.map do |finding|
+          build_step_finding(
+            context: context,
+            finding_id: finding.fetch("finding_id"),
+            severity: finding.fetch("severity"),
+            summary: finding.fetch("summary"),
+            source_role: finding.fetch("source_role"),
+            source_refs: finding.fetch("source_refs"),
+            counter_evidence_refs: finding.fetch("counter_evidence_refs"),
+            failure_observation_refs: finding.fetch("failure_observation_refs")
+          ).merge(
+            "analysis_origin" => finding.fetch("analysis_origin")
+          )
         end
       end
 
-      def first_matching_excerpt(refs, patterns)
-        refs.each do |ref|
-          text = load_ref_text(ref)
-          next if text.nil? || text.empty?
+      def summary_for_rule(_rule, _refs)
+        raise NotImplementedError, "summary_for_rule is replaced by RuleMatchAnalyzer"
+      end
 
-          line = text.lines.find { |entry| patterns.any? { |pattern| entry.match?(pattern) } }
-          return line.strip unless line.nil?
-        end
+      def refs_for_rule(_context, _rule)
+        raise NotImplementedError, "refs_for_rule is replaced by RuleMatchAnalyzer"
+      end
 
-        nil
+      def compile_patterns(_patterns)
+        raise NotImplementedError, "compile_patterns is replaced by RuleMatchAnalyzer"
+      end
+
+      def load_ref_text(_ref)
+        raise NotImplementedError, "load_ref_text is replaced by RuleMatchAnalyzer"
       end
 
       def build_step_finding(context:, finding_id:, severity:, summary:, source_role:, source_refs:, counter_evidence_refs: [], failure_observation_refs: [])

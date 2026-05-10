@@ -2,6 +2,7 @@
 batch_id: F1-intent-dual-reviewer-rebuild
 scope: dual-reviewer-rebuild intent-track pilot only
 output_root: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/protocol-runs
+runtime_run_root_base: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/runtime-runs
 run_labels:
 - F1-intent-dual-reviewer-rebuild-single
 - F1-intent-dual-reviewer-rebuild-dual

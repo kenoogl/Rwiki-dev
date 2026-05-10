@@ -1,0 +1,31 @@
+steps:
+  primary_detection:
+    rules:
+      - finding_suffix: finding-boundary-density
+        severity: high
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.design-boundary-density
+        failure_observation_refs:
+          - spec:design_boundary_density
+        summary_prefix: The design creates many tightly coupled boundaries, so ownership and integration seams must remain explicit downstream.
+      - finding_suffix: finding-failure-contract
+        severity: medium
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.design-failure-contract
+        failure_observation_refs:
+          - spec:design_failure_contract
+        summary_prefix: Failure contracts fixed in design should be preserved downstream rather than reinterpreted as local implementation detail.
+  adversarial_review:
+    rules:
+      - finding_suffix: finding-validation-ownership
+        severity: medium
+        source_role: adversarial_reviewer
+        source_pattern_ids:
+          - seed.validation-ownership
+        counter_evidence_patterns:
+          - design
+        failure_observation_refs:
+          - spec:design_validation_ownership
+        summary_prefix: Validation ownership remains adversarially review-worthy because downstream tasks can leave cross-file expectations implicit.

@@ -1,0 +1,497 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "spec",
+  "target_id": "spec:F1-design-phase-field-reverse-spec",
+  "common_inputs": {
+    "target_id": "spec:F1-design-phase-field-reverse-spec",
+    "target_artifact_hash": "sha256:04eb0ed5ac1c1ea0e536030dd8f6eaa0eec6a90d39aeb04f4784da9f279e2a38",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0793808d9f15b7cd2cba5bea2461b973b45f20ed",
+    "phase_profile": "design",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md",
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+    ],
+    "governance_refs": [
+      "docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-design-phase-field-reverse-spec.yaml",
+    "track": "spec"
+  },
+  "track_inputs": {
+    "reviewed_phase": "design",
+    "reviewed_phase_ref": ".kiro/specs/phase-field-reverse-spec/design.md",
+    "adjacent_phase_refs": [
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "alignment_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+    ]
+  },
+  "evidence_observations": [
+    {
+      "observation_id": "observation:step-01-finding-boundary-density",
+      "taxonomy_path": "spec.blocking.detected_issue",
+      "summary": "The design creates many tightly coupled boundaries, so ownership and integration seams must remain explicit downstream. Evidence excerpt: - V4 review Round 1-5 適用に耐える明確な component boundary (= 単一責務 / 依存方向単一化)",
+      "severity": "high",
+      "source_role": "primary_reviewer",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ]
+    },
+    {
+      "observation_id": "observation:step-01-finding-failure-contract",
+      "taxonomy_path": "spec.nonblocking.detected_issue",
+      "summary": "Failure contracts fixed in design should be preserved downstream rather than reinterpreted as local implementation detail. Evidence excerpt: - 全 component 実装 = Numerical Engine / Initial Field Builder / Concentration Clamp / Mean Composition Corrector / Snapshot Writer / Snapshot Reader / Renderer / BMP Writer / Re-render Function / Simulation Module",
+      "severity": "medium",
+      "source_role": "primary_reviewer",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ],
+      "counter_evidence_refs": [
+
+      ]
+    },
+    {
+      "observation_id": "observation:step-02-finding-validation-ownership",
+      "taxonomy_path": "spec.nonblocking.counter_evidence",
+      "summary": "Validation ownership remains adversarially review-worthy because downstream tasks can leave cross-file expectations implicit. Evidence excerpt: # Design Document",
+      "severity": "medium",
+      "source_role": "adversarial_reviewer",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+        "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+        "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+      ]
+    }
+  ],
+  "review_issue_candidates": [
+    {
+      "candidate_id": "issue-candidate:step-01-finding-boundary-density",
+      "finding_id": "step-01-finding-boundary-density",
+      "taxonomy_path": "spec.blocking.detected_issue",
+      "severity": "high",
+      "summary": "The design creates many tightly coupled boundaries, so ownership and integration seams must remain explicit downstream. Evidence excerpt: - V4 review Round 1-5 適用に耐える明確な component boundary (= 単一責務 / 依存方向単一化)",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "failure_observation_refs": [
+        "spec:design_boundary_density"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-01-finding-failure-contract",
+      "finding_id": "step-01-finding-failure-contract",
+      "taxonomy_path": "spec.nonblocking.detected_issue",
+      "severity": "medium",
+      "summary": "Failure contracts fixed in design should be preserved downstream rather than reinterpreted as local implementation detail. Evidence excerpt: - 全 component 実装 = Numerical Engine / Initial Field Builder / Concentration Clamp / Mean Composition Corrector / Snapshot Writer / Snapshot Reader / Renderer / BMP Writer / Re-render Function / Simulation Module",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ],
+      "failure_observation_refs": [
+        "spec:design_failure_contract"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-02-finding-validation-ownership",
+      "finding_id": "step-02-finding-validation-ownership",
+      "taxonomy_path": "spec.nonblocking.counter_evidence",
+      "severity": "medium",
+      "summary": "Validation ownership remains adversarially review-worthy because downstream tasks can leave cross-file expectations implicit. Evidence excerpt: # Design Document",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+        "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+      ],
+      "failure_observation_refs": [
+        "spec:design_validation_ownership"
+      ]
+    }
+  ],
+  "caveat_candidates": [
+    {
+      "candidate_id": "caveat-candidate:step-02-finding-validation-ownership",
+      "kind": "counter_evidence_preserved",
+      "finding_id": "step-02-finding-validation-ownership",
+      "summary": "Validation ownership remains adversarially review-worthy because downstream tasks can leave cross-file expectations implicit. Evidence excerpt: # Design Document",
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+        "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+      ]
+    }
+  ],
+  "reopen_candidates": [
+    {
+      "candidate_id": "reopen-candidate:step-01-finding-boundary-density",
+      "finding_id": "step-01-finding-boundary-density",
+      "taxonomy_path": "spec.blocking.detected_issue",
+      "reopen_scope": "reviewed_phase",
+      "reason": "The design creates many tightly coupled boundaries, so ownership and integration seams must remain explicit downstream. Evidence excerpt: - V4 review Round 1-5 適用に耐える明確な component boundary (= 単一責務 / 依存方向単一化)"
+    }
+  ],
+  "signal_candidates": [
+    {
+      "signal_id": "signal:step-01-finding-boundary-density",
+      "signal_class": "workflow_failure_signal",
+      "taxonomy_path": "spec.blocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-boundary-density",
+      "treatment": "dual+judgment"
+    },
+    {
+      "signal_id": "signal:step-01-finding-failure-contract",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "spec.nonblocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-failure-contract",
+      "treatment": "dual+judgment"
+    },
+    {
+      "signal_id": "signal:step-02-finding-validation-ownership",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "spec.nonblocking.counter_evidence",
+      "decision_unit_id": "decision-unit-step-02-finding-validation-ownership",
+      "treatment": "dual+judgment"
+    }
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260510T215435Z-e2e6039f",
+    "finding_projection": [
+      {
+        "finding_ref": "review_case.json#step-01-finding-boundary-density",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-boundary-density",
+        "taxonomy_path": "spec.blocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-boundary-density"
+        ],
+        "reopen_candidate_ref": "v2/review_artifact.json#reopen-candidate:step-01-finding-boundary-density"
+      },
+      {
+        "finding_ref": "review_case.json#step-01-finding-failure-contract",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-failure-contract",
+        "taxonomy_path": "spec.nonblocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-failure-contract"
+        ],
+        "reopen_candidate_ref": null
+      },
+      {
+        "finding_ref": "review_case.json#step-02-finding-validation-ownership",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-02-finding-validation-ownership",
+        "taxonomy_path": "spec.nonblocking.counter_evidence",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-validation-ownership"
+        ],
+        "reopen_candidate_ref": null
+      }
+    ],
+    "decision_unit_projection": [
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-boundary-density",
+        "finding_refs": [
+          "review_case.json#step-01-finding-boundary-density"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-boundary-density"
+        ],
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-failure-contract",
+        "finding_refs": [
+          "review_case.json#step-01-finding-failure-contract"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-failure-contract"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-02-finding-validation-ownership",
+        "finding_refs": [
+          "review_case.json#step-02-finding-validation-ownership"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-validation-ownership"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      }
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-f314fe63",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T215435Z-e2e6039f"
+    }
+  },
+  "decision_context": {
+    "track": "spec",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "spec",
+      "evidence_observations": [
+        {
+          "observation_id": "observation:step-01-finding-boundary-density",
+          "taxonomy_path": "spec.blocking.detected_issue",
+          "summary": "The design creates many tightly coupled boundaries, so ownership and integration seams must remain explicit downstream. Evidence excerpt: - V4 review Round 1-5 適用に耐える明確な component boundary (= 単一責務 / 依存方向単一化)",
+          "severity": "high",
+          "source_role": "primary_reviewer",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+          ],
+          "counter_evidence_refs": [
+
+          ]
+        },
+        {
+          "observation_id": "observation:step-01-finding-failure-contract",
+          "taxonomy_path": "spec.nonblocking.detected_issue",
+          "summary": "Failure contracts fixed in design should be preserved downstream rather than reinterpreted as local implementation detail. Evidence excerpt: - 全 component 実装 = Numerical Engine / Initial Field Builder / Concentration Clamp / Mean Composition Corrector / Snapshot Writer / Snapshot Reader / Renderer / BMP Writer / Re-render Function / Simulation Module",
+          "severity": "medium",
+          "source_role": "primary_reviewer",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md"
+          ],
+          "counter_evidence_refs": [
+
+          ]
+        },
+        {
+          "observation_id": "observation:step-02-finding-validation-ownership",
+          "taxonomy_path": "spec.nonblocking.counter_evidence",
+          "summary": "Validation ownership remains adversarially review-worthy because downstream tasks can leave cross-file expectations implicit. Evidence excerpt: # Design Document",
+          "severity": "medium",
+          "source_role": "adversarial_reviewer",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+            "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+          ],
+          "counter_evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+            "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+          ]
+        }
+      ],
+      "review_issue_candidates": [
+        {
+          "candidate_id": "issue-candidate:step-01-finding-boundary-density",
+          "finding_id": "step-01-finding-boundary-density",
+          "taxonomy_path": "spec.blocking.detected_issue",
+          "severity": "high",
+          "summary": "The design creates many tightly coupled boundaries, so ownership and integration seams must remain explicit downstream. Evidence excerpt: - V4 review Round 1-5 適用に耐える明確な component boundary (= 単一責務 / 依存方向単一化)",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+          ],
+          "failure_observation_refs": [
+            "spec:design_boundary_density"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-01-finding-failure-contract",
+          "finding_id": "step-01-finding-failure-contract",
+          "taxonomy_path": "spec.nonblocking.detected_issue",
+          "severity": "medium",
+          "summary": "Failure contracts fixed in design should be preserved downstream rather than reinterpreted as local implementation detail. Evidence excerpt: - 全 component 実装 = Numerical Engine / Initial Field Builder / Concentration Clamp / Mean Composition Corrector / Snapshot Writer / Snapshot Reader / Renderer / BMP Writer / Re-render Function / Simulation Module",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md"
+          ],
+          "failure_observation_refs": [
+            "spec:design_failure_contract"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-02-finding-validation-ownership",
+          "finding_id": "step-02-finding-validation-ownership",
+          "taxonomy_path": "spec.nonblocking.counter_evidence",
+          "severity": "medium",
+          "summary": "Validation ownership remains adversarially review-worthy because downstream tasks can leave cross-file expectations implicit. Evidence excerpt: # Design Document",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+            "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+          ],
+          "failure_observation_refs": [
+            "spec:design_validation_ownership"
+          ]
+        }
+      ],
+      "caveat_candidates": [
+        {
+          "candidate_id": "caveat-candidate:step-02-finding-validation-ownership",
+          "kind": "counter_evidence_preserved",
+          "finding_id": "step-02-finding-validation-ownership",
+          "summary": "Validation ownership remains adversarially review-worthy because downstream tasks can leave cross-file expectations implicit. Evidence excerpt: # Design Document",
+          "counter_evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+            "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+          ]
+        }
+      ],
+      "reopen_candidates": [
+        {
+          "candidate_id": "reopen-candidate:step-01-finding-boundary-density",
+          "finding_id": "step-01-finding-boundary-density",
+          "taxonomy_path": "spec.blocking.detected_issue",
+          "reopen_scope": "reviewed_phase",
+          "reason": "The design creates many tightly coupled boundaries, so ownership and integration seams must remain explicit downstream. Evidence excerpt: - V4 review Round 1-5 適用に耐える明確な component boundary (= 単一責務 / 依存方向単一化)"
+        }
+      ],
+      "signal_candidates": [
+        {
+          "signal_id": "signal:step-01-finding-boundary-density",
+          "signal_class": "workflow_failure_signal",
+          "taxonomy_path": "spec.blocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-boundary-density",
+          "treatment": "dual+judgment"
+        },
+        {
+          "signal_id": "signal:step-01-finding-failure-contract",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "spec.nonblocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-failure-contract",
+          "treatment": "dual+judgment"
+        },
+        {
+          "signal_id": "signal:step-02-finding-validation-ownership",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "spec.nonblocking.counter_evidence",
+          "decision_unit_id": "decision-unit-step-02-finding-validation-ownership",
+          "treatment": "dual+judgment"
+        }
+      ]
+    },
+    "decision_units": [
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-boundary-density",
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-boundary-density"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-failure-contract",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-failure-contract"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-02-finding-validation-ownership",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-02-finding-validation-ownership"
+        ],
+        "disposition_class": "accepted"
+      }
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ]
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 1,
+      "accepted_decision_unit_ids": [
+        "decision-unit-step-01-finding-boundary-density",
+        "decision-unit-step-01-finding-failure-contract",
+        "decision-unit-step-02-finding-validation-ownership"
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F1-design-phase-field-reverse-spec",
+    "track": "spec",
+    "reviewed_phase": "design",
+    "reviewed_phase_ref": ".kiro/specs/phase-field-reverse-spec/design.md",
+    "source_refs": [
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "adjacent_phase_refs": [
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "alignment_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md"
+    ],
+    "analysis_profile_ref": "dual-reviewer-rebuild/experiments/protocols/analysis_profiles/spec/F1-design-phase-field-reverse-spec.yaml",
+    "heuristic_profile_ref": "dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/F1-design-phase-field-reverse-spec.yaml",
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-design-phase-field-reverse-spec.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-f314fe63",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T215435Z-e2e6039f"
+  }
+}

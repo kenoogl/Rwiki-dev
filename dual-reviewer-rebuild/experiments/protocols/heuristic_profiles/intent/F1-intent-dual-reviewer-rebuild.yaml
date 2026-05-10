@@ -1,0 +1,31 @@
+steps:
+  primary_detection:
+    rules:
+      - finding_suffix: finding-phase-contract-gap
+        severity: high
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.intent-phase-contract
+        failure_observation_refs:
+          - intent:phase_contract_gap
+        summary_prefix: The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed.
+      - finding_suffix: finding-scope-drift-risk
+        severity: medium
+        source_role: primary_reviewer
+        source_pattern_ids:
+          - seed.intent-scope-drift
+        failure_observation_refs:
+          - intent:scope_drift_risk
+        summary_prefix: The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit.
+  adversarial_review:
+    rules:
+      - finding_suffix: finding-human-gate-collapse
+        severity: medium
+        source_role: adversarial_reviewer
+        source_pattern_ids:
+          - seed.human-gate-ownership
+        counter_evidence_patterns:
+          - implementation-conformance-review
+        failure_observation_refs:
+          - intent:human_gate_collapse
+        summary_prefix: Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints.

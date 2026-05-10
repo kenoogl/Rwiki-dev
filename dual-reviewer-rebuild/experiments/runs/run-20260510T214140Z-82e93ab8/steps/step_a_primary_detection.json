@@ -1,0 +1,54 @@
+{
+  "step_id": "step-01",
+  "step_name": "primary_detection",
+  "step_status": "completed",
+  "phase_profile": "design",
+  "treatment": "single",
+  "target_id": "spec:F1-design-phase-field-reverse-spec",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/primary/primary_reviewer.prompt.md",
+    "prompt_id": "foundation.primary_reviewer.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "findings": [
+    {
+      "finding_id": "step-01-finding-boundary-density",
+      "severity": "high",
+      "summary": "The design creates many tightly coupled boundaries, so ownership and integration seams must remain explicit downstream. Evidence excerpt: - V4 review Round 1-5 適用に耐える明確な component boundary (= 単一責務 / 依存方向単一化)",
+      "source_role": "primary_reviewer",
+      "source_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "failure_observation_refs": [
+        "spec:design_boundary_density"
+      ]
+    },
+    {
+      "finding_id": "step-01-finding-failure-contract",
+      "severity": "medium",
+      "summary": "Failure contracts fixed in design should be preserved downstream rather than reinterpreted as local implementation detail. Evidence excerpt: - 全 component 実装 = Numerical Engine / Initial Field Builder / Concentration Clamp / Mean Composition Corrector / Snapshot Writer / Snapshot Reader / Renderer / BMP Writer / Re-render Function / Simulation Module",
+      "source_role": "primary_reviewer",
+      "source_refs": [
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "failure_observation_refs": [
+        "spec:design_failure_contract"
+      ]
+    }
+  ],
+  "counter_evidence": [
+
+  ]
+}

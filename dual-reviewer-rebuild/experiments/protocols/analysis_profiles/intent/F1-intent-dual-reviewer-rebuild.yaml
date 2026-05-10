@@ -1,0 +1,92 @@
+review_modes:
+  single_review:
+    major_gap_candidates:
+      - issue_id: intent-major-gap-phase-contract
+        severity: high
+        summary: The intent and paper plan strongly emphasize end-to-end support, but the bootstrap case still needs explicit phase-by-phase completion criteria to prevent downstream work from starting before governance gates are fixed.
+        source_refs:
+          - .kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md
+          - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+          - dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md
+    scope_drift_candidates:
+      - issue_id: intent-scope-drift-code-review-collapse
+        severity: medium
+        summary: The bootstrap intent can drift toward a plain code-review framing unless the workflow documents keep `intent -> requirements -> design -> tasks -> implementation` as the governing path.
+        source_refs:
+          - .kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md
+          - dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md
+    counter_hypotheses: []
+    caveats:
+      - issue_id: intent-caveat-bootstrap-case
+        severity: low
+        summary: This is an internal bootstrap case with rich downstream context, so it validates governance tooling more directly than a blank-slate external intent-only case.
+        source_refs:
+          - .kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-first-case-dual-reviewer-rebuild.md
+    intent_handback_required: false
+    downstream_propagation_targets:
+      - requirements
+      - design
+      - tasks
+    intent_attributed_issue_refs:
+      - intent-major-gap-phase-contract
+      - intent-scope-drift-code-review-collapse
+    downstream_implication: requirements/design/tasks の各 phase で completion rule と reopen depth を明示しない限り、下流 evidence を main claim に昇格させない
+    next_action: requirements bootstrap へ進みつつ、phase completion criteria を requirements candidate として先に起こす
+    trace_note: Bootstrap intent issues should propagate into requirements/design/tasks as phase contract and scope-drift controls rather than being silently absorbed.
+    linked_signal_ids:
+      - intent-track-phase-contract-gap
+      - intent-track-scope-drift-risk
+    metrics:
+      intent_revision_count: 0
+      intent_handback_count: 0
+      intent_review_findings_count: 2
+      review_artifact_presence_rate: 1.0
+  dual_reviewer_workflow:
+    major_gap_candidates:
+      - issue_id: intent-major-gap-phase-contract
+        severity: high
+        summary: The intent and paper plan strongly emphasize end-to-end support, but the bootstrap case still needs explicit phase-by-phase completion criteria to prevent downstream work from starting before governance gates are fixed.
+        source_refs:
+          - .kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md
+          - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+          - dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md
+    scope_drift_candidates:
+      - issue_id: intent-scope-drift-code-review-collapse
+        severity: medium
+        summary: The bootstrap intent can drift toward a plain code-review framing unless the workflow documents keep `intent -> requirements -> design -> tasks -> implementation` as the governing path.
+        source_refs:
+          - .kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md
+          - dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md
+    counter_hypotheses:
+      - issue_id: intent-counter-hypothesis-human-gate-collapse
+        severity: medium
+        summary: A dual reading should preserve the possibility that the system over-centralizes LLM guidance and weakens explicit human gate ownership unless approval, adoption, and conformance review remain separate.
+        source_refs:
+          - .kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md
+          - dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
+          - dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md
+    caveats:
+      - issue_id: intent-caveat-bootstrap-case
+        severity: low
+        summary: This is an internal bootstrap case with rich downstream context, so it validates governance tooling more directly than a blank-slate external intent-only case.
+        source_refs:
+          - .kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-first-case-dual-reviewer-rebuild.md
+    intent_handback_required: true
+    downstream_propagation_targets:
+      - requirements
+      - design
+      - tasks
+    intent_attributed_issue_refs:
+      - intent-major-gap-phase-contract
+      - intent-scope-drift-code-review-collapse
+    downstream_implication: requirements/design/tasks の各 phase で completion rule と reopen depth を明示しない限り、下流 evidence を main claim に昇格させない
+    next_action: requirements bootstrap に入る前に handback taxonomy と human gate separation を requirements wording に明示する
+    trace_note: Bootstrap intent issues should propagate into requirements/design/tasks as phase contract and scope-drift controls rather than being silently absorbed.
+    linked_signal_ids:
+      - intent-track-phase-contract-gap
+      - intent-track-scope-drift-risk
+    metrics:
+      intent_revision_count: 0
+      intent_handback_count: 1
+      intent_review_findings_count: 3
+      review_artifact_presence_rate: 1.0

@@ -1,0 +1,23 @@
+---
+manifest_version: 1.0.0
+runtime_feature: dual-reviewer-runtime
+operator_id: phase-field-requirements-pilot
+metadata:
+  run_id: run-20260510T214140Z-edc2c031
+  target_id: spec:F1-requirements-phase-field-reverse-spec
+  target_artifact_hash: sha256:64cd31969ac9960280a4c2eb88e85d047a08788989d272f1117811507030a011
+  source_repository_id: kenoogl/Rwiki-dev
+  source_revision: '0793808d9f15b7cd2cba5bea2461b973b45f20ed'
+  phase_profile: requirements
+  treatment: dual+judgment
+  review_mode: runtime_mediated
+  protocol_version: 1.0.0
+  runtime_version: 0.1.0
+  schema_set_version: 1.0.0
+  prompt_set_version: 1.0.0
+  run_status: closed
+  validator_status: passed
+  human_signoff_status: approved
+  evidence_class: valid
+  started_at: '2026-05-10T21:41:40Z'
+  closed_at: '2026-05-10T21:41:40Z'

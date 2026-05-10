@@ -1,0 +1,16 @@
+case_id: F1-spec-phase-field-reverse-spec
+track: spec
+reviewed_phase: tasks
+reviewed_phase_ref: .kiro/specs/phase-field-reverse-spec/tasks.md
+source_refs:
+  - .kiro/specs/phase-field-reverse-spec/tasks.md
+  - .kiro/specs/phase-field-reverse-spec/requirements.md
+  - .kiro/specs/phase-field-reverse-spec/design.md
+adjacent_phase_refs:
+  - .kiro/specs/phase-field-reverse-spec/requirements.md
+  - .kiro/specs/phase-field-reverse-spec/design.md
+alignment_refs:
+  - .kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md
+  - dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md
+analysis_profile_ref: dual-reviewer-rebuild/experiments/protocols/analysis_profiles/spec/F1-spec-phase-field-reverse-spec.yaml
+heuristic_profile_ref: dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/F1-spec-phase-field-reverse-spec.yaml

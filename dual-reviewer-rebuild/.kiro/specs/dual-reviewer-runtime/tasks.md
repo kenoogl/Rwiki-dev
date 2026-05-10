@@ -15,11 +15,11 @@
 
 ## 2. 実装順序
 
-1. runtime skeleton と config entrypoint を揃える
-2. run metadata / review_case emission を実装する
+1. runtime skeleton と `execution_v2` entrypoint を揃える
+2. run metadata / review_case emission と `v2/` internal artifact path を実装する
 3. Step A/B/C/D artifact emission を実装する
 4. decision unit と human sign-off artifact を実装する
-5. run close / validator integration を実装する
+5. run close / validator integration / comparison eligibility emission を実装する
 6. portable evidence bundle export を実装する
 7. runtime fixtures と tests を追加する
 
@@ -40,6 +40,7 @@
 作業:
 
 - runtime controller module
+- `runtime/execution_v2/` module skeleton
 - step executor modules
 - evidence writer module
 - validation bridge module
@@ -90,6 +91,7 @@
 - run directory create
 - `steps/`
 - `decisions/`
+- `v2/`
 - `validation/`
 - `derived/`
 
@@ -139,6 +141,7 @@
 - step refs aggregation
 - finding refs aggregation
 - validation / invalidation refs aggregation
+- `v2/` internal artifact refs aggregation
 
 を `review_case.json` にまとめる。
 
@@ -185,6 +188,7 @@
 - validator invocation
 - `validation/validator_result.json` write
 - `validation/invalidation_markers.json` write
+- `derived/comparison_eligibility_note.json` write
 - `run_manifest.yaml` / `review_case.json` metadata update
 
 を実装する。
@@ -193,6 +197,7 @@
 
 - validator failure と orchestration failure が区別される
 - invalidation marker が raw artifact を書き換えずに追加される
+- comparison eligibility が downstream 向け補助 artifact として残る
 
 ### Task 8: Implement portable evidence bundle export
 
@@ -272,7 +277,9 @@ runtime tasks 完了後に、次の feature が依存してよい artifact は�
 - `experiments/runs/<run_id>/review_case.json`
 - `experiments/runs/<run_id>/steps/*.json`
 - `experiments/runs/<run_id>/decisions/decision_units.json`
+- `experiments/runs/<run_id>/v2/*.json`
 - `experiments/runs/<run_id>/validation/*.json`
+- `experiments/runs/<run_id>/derived/comparison_eligibility_note.json`
 - `exports/<bundle_id>/bundle_manifest.yaml`
 - `exports/<bundle_id>/checksums/bundle_checksums.json`
 

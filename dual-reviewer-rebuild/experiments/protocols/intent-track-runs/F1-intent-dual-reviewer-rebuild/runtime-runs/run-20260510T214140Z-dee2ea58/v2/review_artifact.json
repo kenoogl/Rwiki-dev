@@ -1,0 +1,349 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "intent",
+  "target_id": "intent:F1-intent-dual-reviewer-rebuild",
+  "common_inputs": {
+    "target_id": "intent:F1-intent-dual-reviewer-rebuild",
+    "target_artifact_hash": "sha256:6ddd280b1c5ded4c373222b6d6f64078fe34ef175fea2a45d41e954dd49e3207",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0793808d9f15b7cd2cba5bea2461b973b45f20ed",
+    "phase_profile": "intent",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "docs/traceability/intent-to-requirements-trace-matrix.md"
+    ],
+    "governance_refs": [
+      "docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml",
+    "track": "intent"
+  },
+  "track_inputs": {
+    "intent_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+    "supporting_refs": [
+      "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md"
+    ],
+    "traceability_refs": [
+      "docs/traceability/intent-to-requirements-trace-matrix.md"
+    ]
+  },
+  "evidence_observations": [
+    {
+      "observation_id": "observation:step-01-finding-phase-contract-gap",
+      "taxonomy_path": "intent.blocking.detected_issue",
+      "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+      "severity": "high",
+      "source_role": "primary_reviewer",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+      ],
+      "counter_evidence_refs": [
+
+      ]
+    },
+    {
+      "observation_id": "observation:step-01-finding-scope-drift-risk",
+      "taxonomy_path": "intent.nonblocking.detected_issue",
+      "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+      "severity": "medium",
+      "source_role": "primary_reviewer",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "counter_evidence_refs": [
+
+      ]
+    }
+  ],
+  "review_issue_candidates": [
+    {
+      "candidate_id": "issue-candidate:step-01-finding-phase-contract-gap",
+      "finding_id": "step-01-finding-phase-contract-gap",
+      "taxonomy_path": "intent.blocking.detected_issue",
+      "severity": "high",
+      "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+      ],
+      "failure_observation_refs": [
+        "intent:phase_contract_gap"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-01-finding-scope-drift-risk",
+      "finding_id": "step-01-finding-scope-drift-risk",
+      "taxonomy_path": "intent.nonblocking.detected_issue",
+      "severity": "medium",
+      "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "failure_observation_refs": [
+        "intent:scope_drift_risk"
+      ]
+    }
+  ],
+  "caveat_candidates": [
+
+  ],
+  "reopen_candidates": [
+    {
+      "candidate_id": "reopen-candidate:step-01-finding-phase-contract-gap",
+      "finding_id": "step-01-finding-phase-contract-gap",
+      "taxonomy_path": "intent.blocking.detected_issue",
+      "reopen_scope": "intent",
+      "reason": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support"
+    }
+  ],
+  "signal_candidates": [
+    {
+      "signal_id": "signal:step-01-finding-phase-contract-gap",
+      "signal_class": "workflow_failure_signal",
+      "taxonomy_path": "intent.blocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-phase-contract-gap",
+      "treatment": "single"
+    },
+    {
+      "signal_id": "signal:step-01-finding-scope-drift-risk",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "intent.nonblocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-scope-drift-risk",
+      "treatment": "single"
+    }
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260510T214140Z-dee2ea58",
+    "finding_projection": [
+      {
+        "finding_ref": "review_case.json#step-01-finding-phase-contract-gap",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-phase-contract-gap",
+        "taxonomy_path": "intent.blocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-phase-contract-gap"
+        ],
+        "reopen_candidate_ref": "v2/review_artifact.json#reopen-candidate:step-01-finding-phase-contract-gap"
+      },
+      {
+        "finding_ref": "review_case.json#step-01-finding-scope-drift-risk",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-scope-drift-risk",
+        "taxonomy_path": "intent.nonblocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-scope-drift-risk"
+        ],
+        "reopen_candidate_ref": null
+      }
+    ],
+    "decision_unit_projection": [
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-phase-contract-gap",
+        "finding_refs": [
+          "review_case.json#step-01-finding-phase-contract-gap"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-phase-contract-gap"
+        ],
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-scope-drift-risk",
+        "finding_refs": [
+          "review_case.json#step-01-finding-scope-drift-risk"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-scope-drift-risk"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      }
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-2a34577f",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T214140Z-dee2ea58"
+    }
+  },
+  "decision_context": {
+    "track": "intent",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "intent",
+      "evidence_observations": [
+        {
+          "observation_id": "observation:step-01-finding-phase-contract-gap",
+          "taxonomy_path": "intent.blocking.detected_issue",
+          "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+          "severity": "high",
+          "source_role": "primary_reviewer",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+          ],
+          "counter_evidence_refs": [
+
+          ]
+        },
+        {
+          "observation_id": "observation:step-01-finding-scope-drift-risk",
+          "taxonomy_path": "intent.nonblocking.detected_issue",
+          "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+          "severity": "medium",
+          "source_role": "primary_reviewer",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+            "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+            "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+            "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+            "docs/traceability/intent-to-requirements-trace-matrix.md"
+          ],
+          "counter_evidence_refs": [
+
+          ]
+        }
+      ],
+      "review_issue_candidates": [
+        {
+          "candidate_id": "issue-candidate:step-01-finding-phase-contract-gap",
+          "finding_id": "step-01-finding-phase-contract-gap",
+          "taxonomy_path": "intent.blocking.detected_issue",
+          "severity": "high",
+          "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+          ],
+          "failure_observation_refs": [
+            "intent:phase_contract_gap"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-01-finding-scope-drift-risk",
+          "finding_id": "step-01-finding-scope-drift-risk",
+          "taxonomy_path": "intent.nonblocking.detected_issue",
+          "severity": "medium",
+          "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+            "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+            "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+            "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+            "docs/traceability/intent-to-requirements-trace-matrix.md"
+          ],
+          "failure_observation_refs": [
+            "intent:scope_drift_risk"
+          ]
+        }
+      ],
+      "caveat_candidates": [
+
+      ],
+      "reopen_candidates": [
+        {
+          "candidate_id": "reopen-candidate:step-01-finding-phase-contract-gap",
+          "finding_id": "step-01-finding-phase-contract-gap",
+          "taxonomy_path": "intent.blocking.detected_issue",
+          "reopen_scope": "intent",
+          "reason": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support"
+        }
+      ],
+      "signal_candidates": [
+        {
+          "signal_id": "signal:step-01-finding-phase-contract-gap",
+          "signal_class": "workflow_failure_signal",
+          "taxonomy_path": "intent.blocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-phase-contract-gap",
+          "treatment": "single"
+        },
+        {
+          "signal_id": "signal:step-01-finding-scope-drift-risk",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "intent.nonblocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-scope-drift-risk",
+          "treatment": "single"
+        }
+      ]
+    },
+    "decision_units": [
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-phase-contract-gap",
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-phase-contract-gap"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-scope-drift-risk",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-scope-drift-risk"
+        ],
+        "disposition_class": "accepted"
+      }
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ]
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 1,
+      "accepted_decision_unit_ids": [
+        "decision-unit-step-01-finding-phase-contract-gap",
+        "decision-unit-step-01-finding-scope-drift-risk"
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F1-intent-dual-reviewer-rebuild",
+    "track": "intent",
+    "intent_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md"
+    ],
+    "supporting_refs": [
+      "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md"
+    ],
+    "traceability_refs": [
+      "docs/traceability/intent-to-requirements-trace-matrix.md"
+    ],
+    "objective": "intent bootstrap pilot",
+    "analysis_profile_ref": "dual-reviewer-rebuild/experiments/protocols/analysis_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml",
+    "heuristic_profile_ref": "dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml",
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-2a34577f",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T214140Z-dee2ea58"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "batch_id": "F1-requirements-phase-field-reverse-spec",
-  "generated_at": "2026-05-09T23:14:47Z",
+  "generated_at": "2026-05-10T21:54:35Z",
   "scope": "phase-field requirements pilot only",
   "comparison_modes": [
     {
@@ -23,7 +23,6 @@
       },
       "reopen_required": true,
       "propagation_targets": [
-        "requirements",
         "design",
         "tasks"
       ],
@@ -37,7 +36,7 @@
       "run_label": "F1-requirements-phase-field-dual",
       "metrics": {
         "phase_blocking_issue_count": 1,
-        "phase_nonblocking_open_point_count": 4,
+        "phase_nonblocking_open_point_count": 3,
         "phase_recheck_count": 1,
         "phase_handback_count_by_class": {
           "A": 0,
@@ -52,7 +51,6 @@
       },
       "reopen_required": true,
       "propagation_targets": [
-        "requirements",
         "design",
         "tasks"
       ],

@@ -1,0 +1,361 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "spec",
+  "target_id": "spec:F1-requirements-phase-field-reverse-spec",
+  "common_inputs": {
+    "target_id": "spec:F1-requirements-phase-field-reverse-spec",
+    "target_artifact_hash": "sha256:64cd31969ac9960280a4c2eb88e85d047a08788989d272f1117811507030a011",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "0793808d9f15b7cd2cba5bea2461b973b45f20ed",
+    "phase_profile": "requirements",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/intent.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md",
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md"
+    ],
+    "governance_refs": [
+      "docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-requirements-phase-field-reverse-spec.yaml",
+    "track": "spec"
+  },
+  "track_inputs": {
+    "reviewed_phase": "requirements",
+    "reviewed_phase_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+    "adjacent_phase_refs": [
+      ".kiro/specs/phase-field-reverse-spec/intent.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "alignment_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md"
+    ]
+  },
+  "evidence_observations": [
+    {
+      "observation_id": "observation:step-01-finding-clean-room-boundary-contract",
+      "taxonomy_path": "spec.blocking.detected_issue",
+      "summary": "The requirements bind the clean-room evidence boundary tightly, so downstream phases must not blur requirement contract and implementation choice. Evidence excerpt: 本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。",
+      "severity": "high",
+      "source_role": "primary_reviewer",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/intent.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ]
+    },
+    {
+      "observation_id": "observation:step-01-finding-acceptance-bundle-density",
+      "taxonomy_path": "spec.nonblocking.detected_issue",
+      "summary": "The acceptance bundle is dense and cross-cutting, so validation ownership and breakdown need explicit downstream treatment. Evidence excerpt: - 3 機能 = (1) シミュレーション実行、(2) 保存済み濃度データの再描画、(3) 保存済み濃度データからの BMP 書き出し (= `§3`)",
+      "severity": "medium",
+      "source_role": "primary_reviewer",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ],
+      "counter_evidence_refs": [
+
+      ]
+    }
+  ],
+  "review_issue_candidates": [
+    {
+      "candidate_id": "issue-candidate:step-01-finding-clean-room-boundary-contract",
+      "finding_id": "step-01-finding-clean-room-boundary-contract",
+      "taxonomy_path": "spec.blocking.detected_issue",
+      "severity": "high",
+      "summary": "The requirements bind the clean-room evidence boundary tightly, so downstream phases must not blur requirement contract and implementation choice. Evidence excerpt: 本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/intent.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "failure_observation_refs": [
+        "spec:requirements_boundary_contract"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-01-finding-acceptance-bundle-density",
+      "finding_id": "step-01-finding-acceptance-bundle-density",
+      "taxonomy_path": "spec.nonblocking.detected_issue",
+      "severity": "medium",
+      "summary": "The acceptance bundle is dense and cross-cutting, so validation ownership and breakdown need explicit downstream treatment. Evidence excerpt: - 3 機能 = (1) シミュレーション実行、(2) 保存済み濃度データの再描画、(3) 保存済み濃度データからの BMP 書き出し (= `§3`)",
+      "evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/specs/phase-field-reverse-spec/tasks.md"
+      ],
+      "failure_observation_refs": [
+        "spec:acceptance_bundle_density"
+      ]
+    }
+  ],
+  "caveat_candidates": [
+
+  ],
+  "reopen_candidates": [
+    {
+      "candidate_id": "reopen-candidate:step-01-finding-clean-room-boundary-contract",
+      "finding_id": "step-01-finding-clean-room-boundary-contract",
+      "taxonomy_path": "spec.blocking.detected_issue",
+      "reopen_scope": "reviewed_phase",
+      "reason": "The requirements bind the clean-room evidence boundary tightly, so downstream phases must not blur requirement contract and implementation choice. Evidence excerpt: 本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。"
+    }
+  ],
+  "signal_candidates": [
+    {
+      "signal_id": "signal:step-01-finding-clean-room-boundary-contract",
+      "signal_class": "workflow_failure_signal",
+      "taxonomy_path": "spec.blocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-clean-room-boundary-contract",
+      "treatment": "single"
+    },
+    {
+      "signal_id": "signal:step-01-finding-acceptance-bundle-density",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "spec.nonblocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-acceptance-bundle-density",
+      "treatment": "single"
+    }
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260510T214140Z-72e4c7b6",
+    "finding_projection": [
+      {
+        "finding_ref": "review_case.json#step-01-finding-clean-room-boundary-contract",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-clean-room-boundary-contract",
+        "taxonomy_path": "spec.blocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-clean-room-boundary-contract"
+        ],
+        "reopen_candidate_ref": "v2/review_artifact.json#reopen-candidate:step-01-finding-clean-room-boundary-contract"
+      },
+      {
+        "finding_ref": "review_case.json#step-01-finding-acceptance-bundle-density",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-acceptance-bundle-density",
+        "taxonomy_path": "spec.nonblocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-acceptance-bundle-density"
+        ],
+        "reopen_candidate_ref": null
+      }
+    ],
+    "decision_unit_projection": [
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-clean-room-boundary-contract",
+        "finding_refs": [
+          "review_case.json#step-01-finding-clean-room-boundary-contract"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-clean-room-boundary-contract"
+        ],
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-acceptance-bundle-density",
+        "finding_refs": [
+          "review_case.json#step-01-finding-acceptance-bundle-density"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-acceptance-bundle-density"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      }
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-ffe60268",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T214140Z-72e4c7b6"
+    }
+  },
+  "decision_context": {
+    "track": "spec",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "spec",
+      "evidence_observations": [
+        {
+          "observation_id": "observation:step-01-finding-clean-room-boundary-contract",
+          "taxonomy_path": "spec.blocking.detected_issue",
+          "summary": "The requirements bind the clean-room evidence boundary tightly, so downstream phases must not blur requirement contract and implementation choice. Evidence excerpt: 本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。",
+          "severity": "high",
+          "source_role": "primary_reviewer",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/intent.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+          ],
+          "counter_evidence_refs": [
+
+          ]
+        },
+        {
+          "observation_id": "observation:step-01-finding-acceptance-bundle-density",
+          "taxonomy_path": "spec.nonblocking.detected_issue",
+          "summary": "The acceptance bundle is dense and cross-cutting, so validation ownership and breakdown need explicit downstream treatment. Evidence excerpt: - 3 機能 = (1) シミュレーション実行、(2) 保存済み濃度データの再描画、(3) 保存済み濃度データからの BMP 書き出し (= `§3`)",
+          "severity": "medium",
+          "source_role": "primary_reviewer",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md"
+          ],
+          "counter_evidence_refs": [
+
+          ]
+        }
+      ],
+      "review_issue_candidates": [
+        {
+          "candidate_id": "issue-candidate:step-01-finding-clean-room-boundary-contract",
+          "finding_id": "step-01-finding-clean-room-boundary-contract",
+          "taxonomy_path": "spec.blocking.detected_issue",
+          "severity": "high",
+          "summary": "The requirements bind the clean-room evidence boundary tightly, so downstream phases must not blur requirement contract and implementation choice. Evidence excerpt: 本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/intent.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md",
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+          ],
+          "failure_observation_refs": [
+            "spec:requirements_boundary_contract"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-01-finding-acceptance-bundle-density",
+          "finding_id": "step-01-finding-acceptance-bundle-density",
+          "taxonomy_path": "spec.nonblocking.detected_issue",
+          "severity": "medium",
+          "summary": "The acceptance bundle is dense and cross-cutting, so validation ownership and breakdown need explicit downstream treatment. Evidence excerpt: - 3 機能 = (1) シミュレーション実行、(2) 保存済み濃度データの再描画、(3) 保存済み濃度データからの BMP 書き出し (= `§3`)",
+          "evidence_refs": [
+            ".kiro/specs/phase-field-reverse-spec/requirements.md",
+            ".kiro/specs/phase-field-reverse-spec/design.md",
+            ".kiro/specs/phase-field-reverse-spec/tasks.md"
+          ],
+          "failure_observation_refs": [
+            "spec:acceptance_bundle_density"
+          ]
+        }
+      ],
+      "caveat_candidates": [
+
+      ],
+      "reopen_candidates": [
+        {
+          "candidate_id": "reopen-candidate:step-01-finding-clean-room-boundary-contract",
+          "finding_id": "step-01-finding-clean-room-boundary-contract",
+          "taxonomy_path": "spec.blocking.detected_issue",
+          "reopen_scope": "reviewed_phase",
+          "reason": "The requirements bind the clean-room evidence boundary tightly, so downstream phases must not blur requirement contract and implementation choice. Evidence excerpt: 本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。"
+        }
+      ],
+      "signal_candidates": [
+        {
+          "signal_id": "signal:step-01-finding-clean-room-boundary-contract",
+          "signal_class": "workflow_failure_signal",
+          "taxonomy_path": "spec.blocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-clean-room-boundary-contract",
+          "treatment": "single"
+        },
+        {
+          "signal_id": "signal:step-01-finding-acceptance-bundle-density",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "spec.nonblocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-acceptance-bundle-density",
+          "treatment": "single"
+        }
+      ]
+    },
+    "decision_units": [
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-clean-room-boundary-contract",
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-clean-room-boundary-contract"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-acceptance-bundle-density",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-acceptance-bundle-density"
+        ],
+        "disposition_class": "accepted"
+      }
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ]
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 1,
+      "accepted_decision_unit_ids": [
+        "decision-unit-step-01-finding-clean-room-boundary-contract",
+        "decision-unit-step-01-finding-acceptance-bundle-density"
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F1-requirements-phase-field-reverse-spec",
+    "track": "spec",
+    "reviewed_phase": "requirements",
+    "reviewed_phase_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+    "source_refs": [
+      ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      ".kiro/specs/phase-field-reverse-spec/intent.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "adjacent_phase_refs": [
+      ".kiro/specs/phase-field-reverse-spec/intent.md",
+      ".kiro/specs/phase-field-reverse-spec/design.md",
+      ".kiro/specs/phase-field-reverse-spec/tasks.md"
+    ],
+    "alignment_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md"
+    ],
+    "analysis_profile_ref": "dual-reviewer-rebuild/experiments/protocols/analysis_profiles/spec/F1-requirements-phase-field-reverse-spec.yaml",
+    "heuristic_profile_ref": "dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/F1-requirements-phase-field-reverse-spec.yaml",
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-requirements-phase-field-reverse-spec.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-ffe60268",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260510T214140Z-72e4c7b6"
+  }
+}
