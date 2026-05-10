@@ -86,6 +86,36 @@ graph TD
     RunStore --> Improve["self-improvement consumer"]
 ```
 
+### v2 Internal Structure
+
+generic execution layer v2 を取り込んだ後の runtime 内部構造は、
+Step A/B/C/D の実行順そのものとは別に、次の 4 層で責務分離する。
+
+- `Case Manifest`
+  - case binding、source refs、track specialization を解決する
+- `Analysis`
+  - input artifact を読み、evidence と candidate を作る
+- `Decision`
+  - severity、necessity、reopen、handback、signal linkage を判定する
+- `Writer`
+  - `review_case.json`、`decision_units.json`、validation artifact、v2 internal artifact を書き出す
+
+runtime design における関係は次の通りとする。
+
+- `session controller`
+  - run 開始、treatment、phase/profile、step 順序を制御する
+- `Case Manifest / Analysis / Decision / Writer`
+  - controller の内側で動く execution core とする
+- `validation bridge`
+  - writer 後に validator を呼び、run close 時の artifact を補完する
+
+平たく言うと、
+
+- 既存 runtime design は「どう順に動くか」を持つ
+- v2 design は「各 step の中で誰が何をするか」を持つ
+
+ので、両者は競合ではなく、runtime 内で上下に重なる設計として扱う。
+
 ### Components
 
 - `session controller`
@@ -113,11 +143,17 @@ experiments/runs/<run_id>/
 ├── decisions/
 │   ├── decision_units.json
 │   └── human_signoff.json
+├── v2/
+│   ├── review_artifact.json
+│   ├── metric_snapshot.json
+│   ├── trace_note.json
+│   └── signal_linkage_note.json
 ├── validation/
 │   ├── validator_result.json
 │   └── invalidation_markers.json
 └── derived/
-    └── runtime_summary.json
+    ├── runtime_summary.json
+    └── comparison_eligibility_note.json
 ```
 
 ### Placement Rationale
@@ -130,11 +166,36 @@ experiments/runs/<run_id>/
   - step-level replay の最小単位
 - `decisions/`
   - human decision integration を raw evidence から切り離して保存
+- `v2/`
+  - generic execution layer v2 の internal canonical artifact を保存
 - `validation/`
   - validator 結果と invalidation を別配置
 - `derived/`
   - runtime convenience artifact
   - evaluation の正本ではない
+
+### v2 Compatibility Rule
+
+v2 導入後も、downstream compatibility のため次を維持する。
+
+- `review_case.json`
+  - evaluation が読む machine-readable review record
+- `decisions/decision_units.json`
+  - human decision 単位の正本
+- `validation/validator_result.json`
+  - mechanical validation の正本
+- `validation/invalidation_markers.json`
+  - invalidation 事実の正本
+
+そのうえで、新たに次を追加する。
+
+- `v2/review_artifact.json`
+  - taxonomy-first internal canonical object
+- `derived/comparison_eligibility_note.json`
+  - standard comparison に直接入れるかどうかを downstream が判断する補助 note
+
+つまり、v2 は既存 artifact を置き換えるのではなく、
+互換入口を残したまま internal canonical artifact を追加する。
 
 portable export はこの raw run directory を置き換えず、別 artifact として扱う。runtime の正本は依然として `experiments/runs/<run_id>/` である。
 
@@ -318,6 +379,63 @@ foundation の `finding` schema にある `decision_unit_id` と `human_decision
 ## Evidence Writing Model
 
 ### Raw vs Derived Separation
+
+runtime は evidence を次の 3 層で書き分ける。
+
+- raw step evidence
+  - `steps/*.json`
+- human / decision integration evidence
+  - `decisions/decision_units.json`
+- v2 internal canonical evidence
+  - `v2/review_artifact.json`
+  - `v2/trace_note.json`
+  - `v2/signal_linkage_note.json`
+
+`review_case.json` は downstream compatibility のための machine-readable envelope とし、
+v2 内部では `review_artifact.json` を canonical object として保持する。
+
+### File Placement for v2 Runtime Core
+
+runtime 実装の code placement は次を正本とする。
+
+```text
+runtime/
+└── execution_v2/
+    ├── manifests/
+    ├── analyzers/
+    ├── decisions/
+    ├── writers/
+    └── contracts/
+
+scripts/
+├── protocol_runners/
+└── track_runs/
+```
+
+役割分担:
+
+- `runtime/execution_v2/manifests/`
+  - case manifest 読込
+  - track specialization 解決
+- `runtime/execution_v2/analyzers/`
+  - track-aware analyzer
+  - evidence extraction
+- `runtime/execution_v2/decisions/`
+  - necessity / reopen / handback / signal linkage 判定
+- `runtime/execution_v2/writers/`
+  - compatibility artifact と v2 internal artifact の write
+- `runtime/execution_v2/contracts/`
+  - layer 間 object shape
+- `scripts/protocol_runners/`
+  - run entrypoint
+- `scripts/track_runs/`
+  - comparison input や protocol artifact への adapter
+
+runtime design におけるルール:
+
+- analyzer logic を batch script に入れない
+- downstream 変換 logic を execution core に混ぜない
+- manifest logic を writer に混ぜない
 
 runtime は evidence を 3 層に分けて保存する。
 

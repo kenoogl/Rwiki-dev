@@ -105,8 +105,21 @@ evaluation が 1 run から読む最小 artifact は次とする。
 - `decisions/decision_units.json`
 - `validation/validator_result.json`
 - `validation/invalidation_markers.json`
+- `derived/comparison_eligibility_note.json`
 
 必要に応じて `steps/*.json` を読むが、標準的な aggregate は step raw body ではなく `review_case.json` と validation artifact を一次入力にする。
+
+v2-compatible optional intake:
+
+- `v2/review_artifact.json`
+- `v2/metric_snapshot.json`
+- `v2/trace_note.json`
+
+ここでのルール:
+
+- standard intake の正本は引き続き `review_case.json` と `decision_units.json` に置く
+- `v2/review_artifact.json` は taxonomy-first 比較や移行期の補助入力として使ってよい
+- optional intake を読めなくても standard analysis は成立する
 
 ### Portable Bundle Intake
 
@@ -120,6 +133,13 @@ portable bundle intake の最小入力:
 - exported `decisions/decision_units.json`
 - exported `validation/validator_result.json`
 - exported `validation/invalidation_markers.json`
+- exported `derived/comparison_eligibility_note.json`
+
+optional imported bundle input:
+
+- exported `v2/review_artifact.json`
+- exported `v2/metric_snapshot.json`
+- exported `v2/trace_note.json`
 
 bundle に required provenance が欠ける場合、evaluation は intake を継続しても standard admission を与えない。
 
@@ -150,6 +170,8 @@ evaluation は run を次の 4 状態で扱う。
   - required evaluation input の不足
 
 `analysis_blocked` は exclusion report には出すが、比較対象集団には入れない。
+
+`derived/comparison_eligibility_note.json` が存在する場合、evaluation はこれを classification 前の補助判断材料として読んでよい。ただし final の valid / invalid / exploratory 判定は、依然として metadata、validator 結果、invalidation artifact を基礎にする。
 
 ### Admission States for Imported Bundles
 
@@ -265,6 +287,7 @@ standard comparison 軸:
 - target condition が一致
 - phase/profile が比較可能
 - protocol/runtime/prompt/schema version が比較可能
+- `comparison_eligibility_note` に standard comparison 不可の理由があれば、それを先に尊重する
 
 不一致なら `comparison_invalid_reason` を出し、aggregate しない。
 

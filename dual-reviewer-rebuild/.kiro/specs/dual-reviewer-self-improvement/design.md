@@ -117,6 +117,25 @@ self-improvement は入力を 3 class に分ける。
 - `evidence_quality_signal`
   - analysis_blocked、missing metadata、caveat concentration など
 
+### 1.5 v2 Supporting Inputs
+
+generic execution layer v2 が存在する場合、self-improvement は次を supporting input として読んでよい。
+
+- `run_manifest.yaml`
+  - provenance、treatment、phase/profile の確認用
+- `v2/signal_linkage_note.json`
+  - runtime 側が見つけた signal linkage の補助情報
+- `v2/trace_note.json`
+  - motivating evidence へ遡るための trace 情報
+- `derived/comparison_eligibility_note.json`
+  - standard comparison へ入れなかった理由の補助情報
+
+ここでのルール:
+
+- primary signal owner は引き続き self-improvement / evaluation 側に置く
+- 上記 artifact は proposal-ready signal inventory の代わりではなく、signal extraction を助ける supporting input として使う
+- supporting input を読めなくても self-improvement の基本 flow は維持される
+
 ### 2. Valid vs Invalid Inputs
 
 input の価値は run validity と独立ではない。次のように扱う。
@@ -140,6 +159,7 @@ runtime 由来の signal 例:
 - high reject concentration
 - frequent skip-marker misuse
 - repeated invalidation categories
+- repeated signal linkage to the same unresolved gap
 
 ### 2. Evaluation-Derived Signals
 
@@ -149,6 +169,7 @@ evaluation 由来の signal 例:
 - phase-specific caveat concentration
 - low acceptance ratio in `design` or `tasks`
 - repeated `analysis_blocked`
+- repeated comparison-ineligible reasons
 
 `findings/recurring_failure_signals.json` は、こうした signal を proposal 前に整理した inventory とする。
 
@@ -159,6 +180,7 @@ self-improvement は、project 固有知識を repo 外 memory に蓄積する�
 初版の抽出 flow:
 
 1. runtime / evaluation から recurring signal を抽出
+   - 必要に応じて `v2/signal_linkage_note.json`、`v2/trace_note.json`、`derived/comparison_eligibility_note.json` を補助入力として使う
 2. signal を project-specific pattern candidate として整理
 3. 必要に応じて meta-pattern 候補へ抽象化
 4. proposal や将来の pattern asset 改訂へ接続
@@ -248,6 +270,9 @@ replay は runtime の step-level artifact を読む。
 - relevant `steps/*.json`
 - decision units
 - validator / invalidation artifacts
+- `run_manifest.yaml`
+- optional: `v2/trace_note.json`
+- optional: `v2/signal_linkage_note.json`
 
 imported external bundle を replay 入力に使う場合でも、proposal と backtest artifact には元の `source_repository_id`、`source_revision`、`admission_status` を残す。
 
@@ -267,6 +292,7 @@ backtest は evaluation output を読む。
 - `run_metrics.json`
 - `finding_metrics.json`
 - `caveat_register.json`
+- optional: `derived/comparison_eligibility_note.json`
 
 ### 4. Test Result Artifact
 

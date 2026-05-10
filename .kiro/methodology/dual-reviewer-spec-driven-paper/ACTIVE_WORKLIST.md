@@ -24,8 +24,9 @@ _purpose: 目先の実装で主線を見失わないための固定 worklist_
 1. `LLM + spec-driven development` では、static spec だけでは進行制御が足りない
 2. LLM は局所的未完に引っ張られ、上位拘束と順序を見失いやすい
 3. そのため、`ACTIVE_WORKLIST` のように
-   - 現在地
-   - 次の 1 手
+   - workflow 上の現在地
+   - 現在の blocker
+   - exit condition
    - stop rule
    - reopen 状態
    を固定する artifact が必要
@@ -48,8 +49,10 @@ _purpose: 目先の実装で主線を見失わないための固定 worklist_
 この文書の責務は、
 
 - workflow 上の現在地点
+- 現在の実行単位
 - 現在の blocker
-- 次の実行単位
+- その step の exit condition
+- 現在参照している作業 artifact
 - stop rule
 
 を固定することに限る。
@@ -59,7 +62,75 @@ _purpose: 目先の実装で主線を見失わないための固定 worklist_
 1. 新しい作業に入る前にこの文書を確認する
 2. `claim-case-matrix.md` に反する作業は進めない
 3. 未完了 phase を飛ばして `main evidence` 議論へ進まない
-4. 次の 1 手は、この文書の `Current Next Step` に従う
+4. 次の行動は、この文書の `Current Workflow Step` と `Exit Condition` に従う
+
+---
+
+## 1.5 運用境界
+
+この試行で確認された重要点:
+
+- `HUMAN_WORKFLOW.md` は procedure の正本である
+- `ACTIVE_WORKLIST.md` は procedure を再記述せず、現在地と現在の実行単位を指す control board である
+- `execution-control-ledger.md` は redesign input ledger であり、進行順序や gate 判定の正本ではない
+
+したがって運用は次の分担で行う。
+
+- workflow が順序と gate を決める
+- `ACTIVE_WORKLIST` が current step, current action, blocker, exit condition を指す
+- `ECL` が generic execution layer v2 再設計の入力制約を供給する
+
+この 3 者の責務を混ぜてはならない。
+
+- `ACTIVE_WORKLIST` が workflow 手順を再定義しない
+- `ECL` が current next step を持たない
+- workflow の gate 判定を `ACTIVE_WORKLIST` や `ECL` に移さない
+
+---
+
+## 1.6 次手判断ルール
+
+次の手順を提案したり review 対象を挙げたりする前に、必ず次の 3 点を先に固定する。
+
+1. `Current Workflow Step` は何か
+2. 今 review / 修正すべき文書種別は何か
+3. どの feature 順で見るか
+
+この 3 点を飛ばして、会話だけで「次は何か」を決めてはならない。
+
+文書種別の判定規則:
+
+- `requirements review wave` 中は `requirements.md` を見る
+- `requirements alignment gate` 中は各 feature の `requirements.md` を依存順で見る
+- `requirements approval gate` 中は `requirements.md` と alignment artifact を見る
+- `design review wave` 中は `design.md` を見る
+- `design alignment gate` 中は各 feature の `design.md` を依存順で見る
+- `design approval gate` 中は `design.md` と alignment artifact を見る
+- `tasks review wave` 中は `tasks.md` を見る
+- `tasks alignment gate` 中は各 feature の `tasks.md` を依存順で見る
+
+依存順の判定規則:
+
+- 共通契約 owner を先に見る
+- 実行本体を次に見る
+- 下流 consumer は後で見る
+
+generic execution layer v2 の design phase では、次の順を固定する。
+
+1. `dual-reviewer-generic-execution-layer-v2/design.md`
+2. `dual-reviewer-foundation/design.md`
+3. `dual-reviewer-runtime/design.md`
+4. `dual-reviewer-evaluation/design.md`
+5. `dual-reviewer-self-improvement/design.md`
+6. `dual-reviewer-paper-interface/design.md`
+
+以後、次の手順説明では必ず
+
+- 現在の phase
+- 現在見る文書種別
+- feature 順
+
+を明示してから、具体的な action を述べる。
 
 ---
 
@@ -232,7 +303,9 @@ pilot acquisition 条件は満たした。
 status:
 - `case-specific hardcode inventory`: completed
 - `generic execution layer v2` 上位仕様: completed
-- `dual-reviewer-generic-execution-layer-v2` requirements: generated
+- `dual-reviewer-generic-execution-layer-v2` requirements: approved
+- `dual-reviewer-generic-execution-layer-v2` design: approved
+- `dual-reviewer-generic-execution-layer-v2` design alignment: completed
 
 refs:
 - [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
@@ -242,36 +315,74 @@ refs:
 
 ---
 
-## 7. Current Next Step
+## 7. Current Workflow Step
 
-**workflow に従い、`dual-reviewer-generic-execution-layer-v2` requirements を review し、feature 間調整と承認 gate を通す。**
+`tasks generation`
 
-具体的には次の順。
+authoritative workflow ref:
+- [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215)
 
-1. `requirements review wave` の対象として v2 requirements を review する
-2. workflow に従って feature 間調整の要否を確認する
-3. requirements approval gate を通す
-4. approve 後に design へ進む
-
----
-
-## 8. After That
-
-workflow 上の requirements gate を通過した後に、design、tasks、implementation replacement、pilot rerun へ進む。
-
-順序は固定:
-
-1. requirements review / feature 間調整 / approval gate
-2. design
-3. tasks
-4. implementation replacement
-5. `phase-field` で pilot 再取得
-6. 再取得結果の安定性確認
-7. その後に main-evidence 昇格条件を固定
+why this is the current step:
+- `dual-reviewer-generic-execution-layer-v2` requirements review では blocking finding が消えた
+- requirements-phase の feature 間調整結果を [cross-spec-generic-execution-layer-v2-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-requirements-alignment.md:1) に記録した
+- requirements は approve 済みになった
+- `design.md` 初版を生成した
+- design review を 6 feature 順で実施した
+- design alignment 結果を [cross-spec-generic-execution-layer-v2-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-design-alignment.md:1) に記録した
+- design は approve 済みになった
+- したがって、次は tasks 初版を作成する段階である
 
 ---
 
-## 9. Stop Rules
+## 8. Current Blocker
+
+- approved design を実装単位へ落とした `tasks.md` がまだ存在しない
+- implementation order と shared migration timing を task 単位で具体化していない
+
+---
+
+## 9. Current Action
+
+`dual-reviewer-generic-execution-layer-v2` の `tasks.md` 初版を作成する。
+
+この action では、次を確認対象にする。
+
+- implementation order を切れること
+- shared artifact migration timing を task に落とせること
+- validator / rerun / comparison 再取得まで task 化できること
+
+この文書はここで tasks 手順自体を再定義しない。phase の進め方と gate の成立条件は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215) を正本とする。
+
+---
+
+## 10. Exit Condition
+
+この step は、次が満たされたら完了とみなす。
+
+1. design approval の記録が feature 状態に反映されている
+2. `tasks.md` 初版が生成される
+3. tasks review に進める前提となる implementation order と shared migration timing が明示される
+
+---
+
+## 11. Working Artifact
+
+- [requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/requirements.md:1)
+- [design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/design.md:1)
+- [cross-spec-generic-execution-layer-v2-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-requirements-alignment.md:1)
+- [cross-spec-generic-execution-layer-v2-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-design-alignment.md:1)
+- [execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1)
+- [generic-execution-layer-v2-spec.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/generic-execution-layer-v2-spec.md:1)
+
+---
+
+## 12. Next Handoff
+
+tasks 初版を起こした後に、workflow に従って tasks review と必要な tasks alignment へ進む。この文書では手順自体を再定義しない。
+
+---
+
+## 13. Stop Rules
 
 次の場合は作業を止めて確認する。
 
@@ -279,6 +390,6 @@ workflow 上の requirements gate を通過した後に、design、tasks、imple
 2. main-evidence 昇格を言いたくなったが、generic execution layer が未定義
 3. provisional case を fixed 扱いしたくなった
 4. `claim-case-matrix.md` にない case を main evidence 側へ入れたくなった
-5. 直前の作業が `Current Next Step` と一致しない
+5. 直前の作業が `Current Workflow Step`、`Current Action`、または `Exit Condition` と一致しない
 6. `requirements/design/tasks` だけを見て、`intent` との整合確認を飛ばしたくなった
 7. static spec があるので worklist は不要だ、と考えた
