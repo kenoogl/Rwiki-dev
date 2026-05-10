@@ -62,28 +62,44 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
 
 ### C-2: phase-field reverse-spec / phase-field-cpp
 
+- core case note:
+  - [core-case-phase-field.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-phase-field.md:1)
 - category:
   - scientific / numerical case
 - track:
-  - `B/C`
+  - `Spec Track / Implementation Track`
+- intent ref:
+  - [phase-field-reverse-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/phase-field-reverse-spec/intent.md:1)
 - role in paper:
   - high-cognitive-load downstream case
 
 ### C-3: heat3d
 
+- core case note:
+  - [core-case-heat3d.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md:1)
+- status:
+  - provisional
 - category:
   - PDE / simulation case
 - track:
-  - `B/C` を想定
+  - `Spec Track / Implementation Track` を想定
+- intent ref:
+  - [heat3d-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/intent.md:1)
 - role in paper:
   - simulation implementation case
 
 ### C-4: iot-arduino
 
+- core case note:
+  - [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:1)
+- status:
+  - provisional
 - category:
   - embedded / event-driven case
 - track:
-  - `C` を中心に、可能なら上流 spec を追加
+  - `Implementation Track` を中心に、intent/spec 作成後は `Spec Track` も追加
+- intent ref:
+  - [iot-arduino-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/iot-arduino-spec/intent.md:1)
 - role in paper:
   - operational / event-driven downstream case
 

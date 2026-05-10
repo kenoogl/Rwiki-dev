@@ -13,7 +13,7 @@ _purpose: first evaluation batch の取得条件固定_
 
 ここでの first-run は、
 code review 単独の pilot ではなく、
-**仕様駆動開発支援評価のうち Implementation Track を先に小さく回す batch**
+**仕様駆動開発支援評価のうち `phase-field` Implementation Track を先に小さく回す batch**
 として扱う。
 
 ---
@@ -39,14 +39,14 @@ paper 本番の main evidence ではなく Implementation Track acquisition の�
 first-run の順序は次とする。
 
 1. `phase-field` implementation phase
-2. `heat3d` implementation phase
-3. `iot-arduino` implementation phase
+
+この pilot で protocol / artifact / workflow の成立を確認した後に、
+scope を順次 `heat3d` と `iot-arduino` へ拡大する。
 
 理由:
 
 - `phase-field` が最も高認知負荷で、implementation/review phase の stress test になる
-- `heat3d` で simulation 系の別パターンを取れる
-- `iot-arduino` で event-driven / operational stress に移る
+- provisional case を混ぜずに fixed core case だけで pilot を閉じられる
 
 ---
 
@@ -77,27 +77,14 @@ review-output success condition:
 1. algorithmic / boundary / parameter / mutation ordering のいずれかで meaningful finding が出る
 2. implementation issue と specification issue を混同せず扱える
 
-### 4.2 `heat3d` implementation phase
+### 4.2 Scope expansion after the pilot
 
-- batch label: `F1-heat3d-julia`
-- initial comparison modes:
-  - `single review`
-  - `dual-reviewer workflow`
-- optional:
-  - `manual reference`
-- minimum batch:
-  - `1 implementation snapshot x 2 review modes`
+pilot 結果を確認した後に、次の順で scope を拡大する。
 
-### 4.3 `iot-arduino` implementation phase
+1. `heat3d` implementation phase
+2. `iot-arduino` implementation phase
 
-- batch label: `F1-iot-arduino-c`
-- initial comparison modes:
-  - `single review`
-  - `dual-reviewer workflow`
-- optional:
-  - `manual reference`
-- minimum batch:
-  - `1 implementation snapshot x 2 review modes`
+どちらも provisional case が fixed に上がった後に first batch 対象へ入れる。
 
 ---
 
@@ -157,7 +144,7 @@ first-run の結果は、優劣を強く主張するために使わない。
 
 first-run では次を確認する。
 
-- implementation/review phase で workflow が成立するか
+- `phase-field` implementation/review phase で workflow が成立するか
 - `single` と `dual-reviewer` で process/evidence 差が見えるか
 - target-specific caveat が properly retained されるか
 - upstream spec と review artifact が切れないか
@@ -176,11 +163,12 @@ main batch の前に潰す。
    - status:
      - fixed as `F1-phase-field-cpp-s1`
 2. `single review` と `dual-reviewer workflow` の run template を作る
-3. Intent Track / Spec Track 用の first-run も別文書で定義する
+3. `phase-field` pilot の review logic と acquisition runner を整える
+4. Intent Track / Spec Track 用の first-run も別文書で定義する
    - status:
      - [intent-track-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-first-run-plan.md:1)
      - [spec-track-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-run-plan.md:1)
-4. 3 track の run template を作る
+5. 3 track の run template を作る
    - status:
      - [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-run-template.md:1)
      - [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-run-template.md:1)

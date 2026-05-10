@@ -40,7 +40,7 @@ first-run では、少なくとも次の条件を満たす case を使う。
 
 推奨 first case:
 
-- `phase-field-reverse-spec`
+- [spec-track-first-case-phase-field-reverse-spec.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md:1)
 
 ---
 
@@ -120,5 +120,11 @@ Spec Track first-run の結果は、
 この plan の直後に必要なのは次である。
 
 1. `phase-field-reverse-spec` を Spec Track first case として固定する
+   - status:
+     - fixed as `F1-spec-phase-field-reverse-spec`
 2. `single review` と `dual-reviewer workflow` の spec-run template を作る
+   - status:
+     - [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-run-template.md:1)
 3. phase-review metric snapshot の採取手順を run template に落とす
+   - status:
+     - reflected in [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-run-template.md:1)

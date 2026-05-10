@@ -139,8 +139,8 @@ main evidence は code quality ではなく evidence reusability である。
   - `Spec-origin` / `Implementation-origin`
 - primary language:
   - C++ (implementation phase)
-- prerequisite:
-  - explicit `intent` must be authored first
+- intent ref:
+  - [phase-field-reverse-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/phase-field-reverse-spec/intent.md:1)
 - supports after intent creation:
   - `Claim 2`
   - `Claim 3`
@@ -152,8 +152,8 @@ main evidence は code quality ではなく evidence reusability である。
   - `Spec-origin` / `Implementation-origin`
 - primary language:
   - Julia
-- prerequisite:
-  - explicit `intent` must be authored first
+- intent ref:
+  - [heat3d-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/intent.md:1)
 - supports after intent creation:
   - `Claim 2`
   - `Claim 3`
@@ -165,8 +165,8 @@ main evidence は code quality ではなく evidence reusability である。
   - `Spec-origin` / `Implementation-origin`
 - primary language:
   - C
-- prerequisite:
-  - explicit `intent` must be authored first
+- intent ref:
+  - [iot-arduino-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/iot-arduino-spec/intent.md:1)
 - supports after intent creation:
   - `Claim 2`
   - `Claim 3`
