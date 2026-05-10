@@ -36,6 +36,24 @@ _purpose: 目先の実装で主線を見失わないための固定 worklist_
 **「仕様駆動開発の作業メモ」ではなく、「意図駆動開発を LLM で運用するための制御板」**
 として扱う。
 
+ただし、この文書は workflow 手順そのものの正本ではない。
+
+- phase の順序
+- review wave の順序
+- feature 間調整
+- 承認 gate
+
+の正本は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1) とする。
+
+この文書の責務は、
+
+- workflow 上の現在地点
+- 現在の blocker
+- 次の実行単位
+- stop rule
+
+を固定することに限る。
+
 以後の作業では、次を必ず守る。
 
 1. 新しい作業に入る前にこの文書を確認する
@@ -61,6 +79,7 @@ _purpose: 目先の実装で主線を見失わないための固定 worklist_
 - ここでの `spec-driven` は、実態としては `intent` に統治された spec 運用である
 - spec は正本だが最上位ではない
 - 最上位拘束は `intent` と、それに整合する claim / case / workflow である
+- workflow の phase 順序と承認 gate は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1) を正本とする
 
 ---
 
@@ -212,39 +231,43 @@ pilot acquisition 条件は満たした。
 
 status:
 - `case-specific hardcode inventory`: completed
-- `generic execution layer v2` 上位仕様: in progress
+- `generic execution layer v2` 上位仕様: completed
+- `dual-reviewer-generic-execution-layer-v2` requirements: generated
 
 refs:
+- [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
 - [execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1)
 - [generic-execution-layer-v2-spec.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/generic-execution-layer-v2-spec.md:1)
+- [requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/requirements.md:1)
 
 ---
 
 ## 7. Current Next Step
 
-**`generic execution layer v2` の上位仕様を正本化し、spec-driven で v2 を起こす。**
+**workflow に従い、`dual-reviewer-generic-execution-layer-v2` requirements を review し、feature 間調整と承認 gate を通す。**
 
 具体的には次の順。
 
-1. `ECL` を v2 再設計入力台帳として固定する
-2. generic execution layer v2 の入力 / 出力 / taxonomy / layer boundary を定義する
-3. その仕様を `requirements/design/tasks` に落とす
-4. 置換順を固定する
-5. その後に `phase-field` pilot を取り直す
+1. `requirements review wave` の対象として v2 requirements を review する
+2. workflow に従って feature 間調整の要否を確認する
+3. requirements approval gate を通す
+4. approve 後に design へ進む
 
 ---
 
 ## 8. After That
 
-generic execution layer を定義した後に、pilot を取り直す。
+workflow 上の requirements gate を通過した後に、design、tasks、implementation replacement、pilot rerun へ進む。
 
 順序は固定:
 
-1. generic execution layer redesign
-2. `phase-field` で pilot 再取得
-3. 再取得結果の安定性確認
-4. その後に main-evidence 昇格条件を固定
-5. さらに scope を拡大
+1. requirements review / feature 間調整 / approval gate
+2. design
+3. tasks
+4. implementation replacement
+5. `phase-field` で pilot 再取得
+6. 再取得結果の安定性確認
+7. その後に main-evidence 昇格条件を固定
 
 ---
 
