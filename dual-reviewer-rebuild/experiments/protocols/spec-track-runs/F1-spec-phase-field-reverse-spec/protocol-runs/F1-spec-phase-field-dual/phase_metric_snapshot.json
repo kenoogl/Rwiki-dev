@@ -1,0 +1,24 @@
+{
+  "run_label": "F1-spec-phase-field-dual",
+  "case_id": "F1-spec-phase-field-reverse-spec",
+  "track": "spec",
+  "review_mode": "dual_reviewer_workflow",
+  "reviewed_phase": "tasks",
+  "collection_status": "populated_by_runner",
+  "source_register_ref": "docs/coordination/phase-review-metric-register.md",
+  "metrics": {
+    "phase_blocking_issue_count": 1,
+    "phase_nonblocking_open_point_count": 2,
+    "phase_recheck_count": 1,
+    "phase_handback_count_by_class": {
+      "A": 0,
+      "B": 1,
+      "C": 0,
+      "D": 0
+    },
+    "phase_reopen_required_count": 1,
+    "phase_minor_adjustment_count": 1,
+    "phase_major_correction_count": 1,
+    "phase_intent_attributed_issue_count": 1
+  }
+}

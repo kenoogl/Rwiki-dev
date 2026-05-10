@@ -1,0 +1,20 @@
+{
+  "step_id": "step-02",
+  "step_name": "adversarial_review",
+  "step_status": "skipped",
+  "phase_profile": "tasks",
+  "treatment": "single",
+  "skip_reason": "treatment_single_skips_adversarial_review",
+  "prompt_identity": {
+    "prompt_artifact_path": null,
+    "prompt_id": "runtime.adversarial_reviewer.adversarial_review.deferred",
+    "prompt_version": null,
+    "resolution_status": "deferred"
+  },
+  "findings": [
+
+  ],
+  "counter_evidence": [
+
+  ]
+}

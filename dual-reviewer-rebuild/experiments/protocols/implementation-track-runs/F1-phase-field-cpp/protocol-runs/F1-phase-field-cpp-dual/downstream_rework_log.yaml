@@ -1,0 +1,9 @@
+---
+run_label: F1-phase-field-cpp-dual
+case_id: F1-phase-field-cpp
+track: implementation
+run_id: run-20260509T225157Z-207549ab
+rework_events: []
+status: pending_manual_population
+note: Populate when implementation review findings trigger downstream rework or reopen
+  actions.

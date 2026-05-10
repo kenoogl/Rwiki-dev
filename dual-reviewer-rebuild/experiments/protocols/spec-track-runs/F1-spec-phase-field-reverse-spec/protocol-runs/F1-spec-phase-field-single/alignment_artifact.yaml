@@ -1,0 +1,43 @@
+---
+run_label: F1-spec-phase-field-single
+case_id: F1-spec-phase-field-reverse-spec
+track: spec
+reviewed_phase: tasks
+alignment_refs:
+- ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+- dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md
+propagation_targets:
+- design
+- tasks
+reopen_required: true
+status: populated_by_runner
+phase_local_issues:
+- issue_id: spec-phase-local-acceptance-batch-coupling
+  severity: medium
+  summary: The tasks phase bundles a long-running 100000-step acceptance run with
+    downstream observation recording, which increases execution and review coupling
+    inside a phase that is still marked `tasks-generated` rather than approved.
+  source_refs:
+  - ".kiro/specs/phase-field-reverse-spec/tasks.md"
+  - ".kiro/specs/phase-field-reverse-spec/spec.json"
+cross_phase_inconsistencies:
+- issue_id: spec-cross-phase-unapproved-downstream-readiness
+  severity: high
+  summary: Tasks define final acceptance and downstream evidence append paths while
+    `design` and `tasks` remain unapproved in `spec.json`, so implementation-readiness
+    should not be inferred without a design/tasks recheck.
+  source_refs:
+  - ".kiro/specs/phase-field-reverse-spec/tasks.md"
+  - ".kiro/specs/phase-field-reverse-spec/spec.json"
+  - ".kiro/specs/phase-field-reverse-spec/design.md"
+intent_attributed_issues:
+- issue_id: spec-intent-clean-room-propagation
+  severity: medium
+  summary: The clean-room intent and canonical-source limitation must stay explicit
+    through tasks and acceptance, otherwise downstream implementation work can silently
+    broaden the allowed evidence boundary.
+  source_refs:
+  - ".kiro/specs/phase-field-reverse-spec/intent.md"
+  - ".kiro/specs/phase-field-reverse-spec/tasks.md"
+note: Tasks-origin issues require at least a design/tasks recheck before this case
+  can be treated as implementation-ready main evidence.

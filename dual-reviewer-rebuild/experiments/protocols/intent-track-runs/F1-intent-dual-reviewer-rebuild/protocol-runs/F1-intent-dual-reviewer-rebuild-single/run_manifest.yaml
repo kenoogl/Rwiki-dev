@@ -1,0 +1,24 @@
+---
+run_label: F1-intent-dual-reviewer-rebuild-single
+case_id: F1-intent-dual-reviewer-rebuild
+track: intent
+review_mode: single_review
+operator: intent-bootstrap-pilot
+generated_at: '2026-05-09T23:03:29Z'
+objective: intent bootstrap pilot
+inputs:
+  intent_ref: ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+  supporting_refs:
+  - dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md
+  - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+  - dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
+references:
+  workflow_gate_status_ref: docs/coordination/workflow-gate-status.md
+  phase_metric_register_ref: docs/coordination/phase-review-metric-register.md
+  intent_review_template_ref: docs/reviews/templates/intent-review-template.md
+outputs:
+  intent_review_artifact: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/protocol-runs/F1-intent-dual-reviewer-rebuild-single/intent_review.md
+  intent_trace_note: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/protocol-runs/F1-intent-dual-reviewer-rebuild-single/intent_trace_note.yaml
+  phase_metric_snapshot: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/protocol-runs/F1-intent-dual-reviewer-rebuild-single/phase_metric_snapshot.json
+  signal_linkage_note: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/protocol-runs/F1-intent-dual-reviewer-rebuild-single/signal_linkage_note.yaml
+  execution_packet: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/protocol-runs/F1-intent-dual-reviewer-rebuild-single/execution_packet.md

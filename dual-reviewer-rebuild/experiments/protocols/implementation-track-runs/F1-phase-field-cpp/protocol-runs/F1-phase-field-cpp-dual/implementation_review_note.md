@@ -1,0 +1,35 @@
+  # implementation review note
+
+  ## 1. run scope
+
+  - run label: `F1-phase-field-cpp-dual`
+  - case id: `F1-phase-field-cpp`
+  - track: `implementation`
+  - review mode: `dual_reviewer_workflow`
+  - runtime review mode: `runtime_mediated`
+  - treatment: `dual+judgment`
+  - operator: `phase-field-pilot`
+  - implementation snapshot ref:
+    - `.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md`
+  - upstream spec refs:
+  - `.kiro/specs/phase-field-reverse-spec/intent.md`
+  - `.kiro/specs/phase-field-reverse-spec/requirements.md`
+  - `.kiro/specs/phase-field-reverse-spec/design.md`
+  - `.kiro/specs/phase-field-reverse-spec/tasks.md`
+
+  ## 2. runtime artifact refs
+
+  - review artifact:
+    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260509T225157Z-207549ab/review_case.json`
+  - decision units:
+    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260509T225157Z-207549ab/decisions/decision_units.json`
+
+  ## 3. findings
+
+  <!-- Populate implementation-local issues, upstream inconsistencies, disagreements, and caveats after the run. -->
+
+  ## 4. reopen assessment
+
+  - reopen required:
+  - target reopen phases:
+  - caveats:

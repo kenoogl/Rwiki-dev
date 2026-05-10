@@ -1,0 +1,12 @@
+---
+run_label: F1-requirements-phase-field-dual
+case_id: F1-requirements-phase-field-reverse-spec
+track: spec
+reviewed_phase: requirements
+signal_register_ref: docs/coordination/implementation-signal-register.md
+linked_signal_ids:
+- spec-track-requirements-clean-room-boundary
+- spec-track-requirements-downstream-approval-gap
+status: populated_by_runner
+note: Spec-track issues are preserved as runner-populated candidate signals for downstream
+  implementation and governance review.

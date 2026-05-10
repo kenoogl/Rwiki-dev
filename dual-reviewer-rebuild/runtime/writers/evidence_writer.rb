@@ -8,14 +8,16 @@ require "yaml"
 module DualReviewer
   module Runtime
     class EvidenceWriter
-      attr_reader :repo_root
+      attr_reader :repo_root, :run_root_base, :export_root_base
 
-      def initialize(repo_root:)
+      def initialize(repo_root:, run_root_base: nil, export_root_base: nil)
         @repo_root = Pathname(repo_root).expand_path
+        @run_root_base = run_root_base ? Pathname(run_root_base).expand_path : @repo_root.join("experiments/runs")
+        @export_root_base = export_root_base ? Pathname(export_root_base).expand_path : @repo_root.join("exports")
       end
 
       def canonical_run_root(run_id)
-        repo_root.join("experiments/runs", run_id)
+        run_root_base.join(run_id)
       end
 
       def canonical_subdirectories
@@ -91,7 +93,7 @@ module DualReviewer
       end
 
       def export_root(bundle_id)
-        repo_root.join("exports", bundle_id)
+        export_root_base.join(bundle_id)
       end
 
       def prepare_export_layout(bundle_id)

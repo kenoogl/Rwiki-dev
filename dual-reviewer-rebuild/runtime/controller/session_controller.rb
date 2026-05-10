@@ -17,9 +17,13 @@ module DualReviewer
     class SessionController
       attr_reader :asset_loader, :evidence_writer, :validation_bridge, :bundle_exporter
 
-      def initialize(repo_root:)
+      def initialize(repo_root:, run_root_base: nil, export_root_base: nil)
         @asset_loader = FoundationAssetLoader.new(repo_root: repo_root)
-        @evidence_writer = EvidenceWriter.new(repo_root: repo_root)
+        @evidence_writer = EvidenceWriter.new(
+          repo_root: repo_root,
+          run_root_base: run_root_base,
+          export_root_base: export_root_base
+        )
         @validation_bridge = ValidationBridge.new(asset_loader: asset_loader)
         @bundle_exporter = BundleExporter.new(
           asset_loader: asset_loader,
@@ -77,23 +81,56 @@ module DualReviewer
         }
       end
 
-      def emit_step_artifacts(run_id:, target_id:, phase_profile:, treatment:)
-        step_payloads = step_executors.each_with_index.map do |executor, index|
+      def emit_step_artifacts(run_id:, target_id:, phase_profile:, treatment:, analysis_inputs: {})
+        step_payloads = []
+        step_executors.each_with_index do |executor, index|
           step_id = format("step-%02d", index + 1)
           payload = executor.execute(
             step_id: step_id,
             target_id: target_id,
             phase_profile: phase_profile,
-            treatment: treatment
+            treatment: treatment,
+            analysis_inputs: analysis_inputs,
+            prior_step_payloads: step_payloads
           )
           evidence_writer.write_step_artifact(run_id: run_id, step_name: executor.step_name, payload: payload)
-          payload
+          step_payloads << payload
         end
 
         step_payloads
       end
 
       def aggregate_review_case(run_id:, metadata:, step_payloads:)
+        judgment_index = step_payloads
+          .select { |payload| payload.fetch("step_name") == "judgment" }
+          .flat_map { |payload| payload.fetch("judgments", []) }
+          .each_with_object({}) { |judgment, acc| acc[judgment.fetch("finding_id")] = judgment }
+
+        findings = step_payloads
+          .flat_map { |payload| payload.fetch("findings", []) }
+          .map do |finding|
+            judgment = judgment_index[finding.fetch("finding_id")]
+            {
+              "schema_version" => "1.0.0",
+              "finding_id" => finding.fetch("finding_id"),
+              "run_id" => run_id,
+              "step_id" => finding.fetch("finding_id").split("-finding-").first,
+              "source_role" => finding.fetch("source_role"),
+              "severity" => finding.fetch("severity"),
+              "summary" => finding.fetch("summary"),
+              "source_refs" => finding.fetch("source_refs"),
+              "counter_evidence_refs" => finding.fetch("counter_evidence_refs"),
+              "judgment_ref" => judgment ? "steps/#{evidence_writer.step_filename('judgment')}.json##{judgment.fetch('necessity_judgment_id')}" : nil,
+              "decision_unit_id" => nil,
+              "human_decision_ref" => nil,
+              "impact_score_ref" => nil,
+              "failure_observation_refs" => finding.fetch("failure_observation_refs", []),
+              "validation_refs" => {
+                "invalidation_marker_refs" => []
+              }
+            }
+          end
+
         payload = {
           "schema_version" => "1.0.0",
           "review_case_id" => "review-case-#{run_id}",
@@ -108,7 +145,7 @@ module DualReviewer
               "step_closed_at" => nil
             }
           end,
-          "findings" => [],
+          "findings" => findings,
           "validation_artifacts" => {
             "validator_result_refs" => [],
             "invalidation_marker_refs" => []
@@ -122,21 +159,25 @@ module DualReviewer
         }
       end
 
-      def emit_decision_artifacts(run_id:, step_payloads:, human_decision:, operator_id:)
+      def emit_decision_artifacts(run_id:, step_payloads:, human_decision:, operator_id:, review_case: nil)
+        judgments = step_payloads
+          .select { |payload| payload.fetch("step_name") == "judgment" }
+          .flat_map { |payload| payload.fetch("judgments", []) }
+        findings = review_case ? review_case.fetch("findings", []) : []
+
         decision_units_payload = {
-          "decision_units" => [
+          "decision_units" => findings.map do |finding|
+            judgment = judgments.find { |entry| entry.fetch("finding_id") == finding.fetch("finding_id") }
             {
-              "decision_unit_id" => "decision-unit-001",
-              "finding_refs" => [],
-              "judgment_refs" => step_payloads
-                .select { |payload| payload.fetch("step_name") == "judgment" }
-                .map { |payload| "#{evidence_writer.step_filename(payload.fetch('step_name'))}.json##{payload.fetch('step_id')}" },
-              "proposed_action" => "no_action_yet",
+              "decision_unit_id" => "decision-unit-#{finding.fetch('finding_id')}",
+              "finding_refs" => ["review_case.json##{finding.fetch('finding_id')}"],
+              "judgment_refs" => judgment ? ["#{evidence_writer.step_filename('judgment')}.json##{judgment.fetch('necessity_judgment_id')}"] : [],
+              "proposed_action" => judgment ? judgment.fetch("recommended_action") : "manual_review_required",
               "human_decision" => human_decision,
               "human_decision_timestamp" => Time.now.utc.iso8601,
-              "human_decision_note" => "Skeleton runtime decision artifact."
+              "human_decision_note" => "Protocol pilot decision artifact."
             }
-          ]
+          end
         }
         human_signoff_payload = {
           "run_id" => run_id,
@@ -148,6 +189,14 @@ module DualReviewer
 
         decision_units_path = evidence_writer.write_decision_units(run_id: run_id, payload: decision_units_payload)
         human_signoff_path = evidence_writer.write_human_signoff(run_id: run_id, payload: human_signoff_payload)
+
+        evidence_writer.update_review_case(run_id: run_id) do |review_case_payload|
+          review_case_payload["findings"].each do |finding|
+            decision_unit_id = "decision-unit-#{finding.fetch('finding_id')}"
+            finding["decision_unit_id"] = decision_unit_id
+            finding["human_decision_ref"] = "decisions/decision_units.json##{decision_unit_id}"
+          end
+        end
 
         {
           "decision_units_path" => decision_units_path.to_s,

@@ -1,0 +1,25 @@
+---
+run_label: F1-design-phase-field-single
+case_id: F1-design-phase-field-reverse-spec
+track: spec
+review_mode: single_review
+reviewed_phase: design
+operator: phase-field-design-pilot
+generated_at: '2026-05-09T23:17:14Z'
+inputs:
+  reviewed_phase_ref: ".kiro/specs/phase-field-reverse-spec/design.md"
+  adjacent_phase_refs:
+  - ".kiro/specs/phase-field-reverse-spec/requirements.md"
+  - ".kiro/specs/phase-field-reverse-spec/tasks.md"
+  alignment_refs:
+  - ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+  - dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md
+references:
+  workflow_gate_status_ref: docs/coordination/workflow-gate-status.md
+  phase_metric_register_ref: docs/coordination/phase-review-metric-register.md
+outputs:
+  reviewed_phase_note: experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/protocol-runs/F1-design-phase-field-single/reviewed_phase_note.md
+  alignment_artifact: experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/protocol-runs/F1-design-phase-field-single/alignment_artifact.yaml
+  phase_metric_snapshot: experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/protocol-runs/F1-design-phase-field-single/phase_metric_snapshot.json
+  signal_linkage_note: experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/protocol-runs/F1-design-phase-field-single/signal_linkage_note.yaml
+  execution_packet: experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/protocol-runs/F1-design-phase-field-single/execution_packet.md

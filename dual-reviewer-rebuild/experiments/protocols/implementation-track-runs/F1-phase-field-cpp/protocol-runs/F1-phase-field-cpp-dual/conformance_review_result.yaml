@@ -1,0 +1,8 @@
+---
+run_label: F1-phase-field-cpp-dual
+case_id: F1-phase-field-cpp
+track: implementation
+run_id: run-20260509T225157Z-207549ab
+validator_result_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260509T225157Z-207549ab/validation/validator_result.json
+invalidation_markers_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260509T225157Z-207549ab/validation/invalidation_markers.json
+overall_status: passed

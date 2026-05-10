@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260509T225120Z-c2a6b64c",
+  "metadata": {
+    "run_id": "run-20260509T225120Z-c2a6b64c",
+    "target_id": "implementation:phase-field-cpp",
+    "target_artifact_hash": "sha256:61f9e79458f72ab4b1deb576870c73819b8dba5ece86aa7407be57a98ce90b0d",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "7fbeda8be7e86d1003a057c40ad851189087ff16",
+    "phase_profile": "tasks",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-09T22:51:20Z",
+    "closed_at": "2026-05-09T22:51:20Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "findings": [
+
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-c622b839"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

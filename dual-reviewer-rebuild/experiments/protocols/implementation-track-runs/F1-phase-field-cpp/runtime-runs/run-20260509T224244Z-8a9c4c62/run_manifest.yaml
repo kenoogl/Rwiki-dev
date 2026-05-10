@@ -1,0 +1,23 @@
+---
+manifest_version: 1.0.0
+runtime_feature: dual-reviewer-runtime
+operator_id: phase-field-pilot
+metadata:
+  run_id: run-20260509T224244Z-8a9c4c62
+  target_id: implementation:phase-field-cpp
+  target_artifact_hash: sha256:61f9e79458f72ab4b1deb576870c73819b8dba5ece86aa7407be57a98ce90b0d
+  source_repository_id: kenoogl/Rwiki-dev
+  source_revision: 7fbeda8be7e86d1003a057c40ad851189087ff16
+  phase_profile: tasks
+  treatment: single
+  review_mode: runtime_mediated
+  protocol_version: 1.0.0
+  runtime_version: 0.1.0
+  schema_set_version: 1.0.0
+  prompt_set_version: 1.0.0
+  run_status: closed
+  validator_status: passed
+  human_signoff_status: approved
+  evidence_class: valid
+  started_at: '2026-05-09T22:42:44Z'
+  closed_at: '2026-05-09T22:42:45Z'

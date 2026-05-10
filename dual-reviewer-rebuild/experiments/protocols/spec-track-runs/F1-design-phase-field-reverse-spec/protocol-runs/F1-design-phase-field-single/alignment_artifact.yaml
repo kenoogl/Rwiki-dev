@@ -1,0 +1,52 @@
+---
+run_label: F1-design-phase-field-single
+case_id: F1-design-phase-field-reverse-spec
+track: spec
+reviewed_phase: design
+alignment_refs:
+- ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+- dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md
+propagation_targets:
+- design
+- tasks
+reopen_required: true
+status: populated_by_runner
+phase_local_issues:
+- issue_id: spec-design-boundary-density
+  severity: high
+  summary: The design introduces a large number of tightly coupled component boundaries
+    across Numerical Engine, clamp/correction helpers, snapshot I/O, visualization,
+    and three executables, so downstream tasks must keep ownership and integration
+    boundaries explicit to avoid silent coupling drift.
+  source_refs:
+  - ".kiro/specs/phase-field-reverse-spec/design.md"
+  - ".kiro/specs/phase-field-reverse-spec/requirements.md"
+- issue_id: spec-design-static-allocation-and-failure-contract
+  severity: medium
+  summary: Static allocation, clamp non-convergence handling, and step-level diagnostic
+    propagation are already fixed in design, so downstream implementation tasks need
+    to preserve these failure contracts rather than reinterpreting them as local coding
+    choices.
+  source_refs:
+  - ".kiro/specs/phase-field-reverse-spec/design.md"
+cross_phase_inconsistencies:
+- issue_id: spec-design-unapproved-tasks-readiness-gap
+  severity: high
+  summary: The design is generated but not approved, and the tasks phase is also unapproved,
+    so the current design should not be treated as implementation-ready without a
+    design/tasks recheck against the approved requirements contract.
+  source_refs:
+  - ".kiro/specs/phase-field-reverse-spec/design.md"
+  - ".kiro/specs/phase-field-reverse-spec/spec.json"
+  - ".kiro/specs/phase-field-reverse-spec/tasks.md"
+intent_attributed_issues:
+- issue_id: spec-design-intent-clean-room-preservation
+  severity: medium
+  summary: 'The clean-room scientific intent still constrains the design surface:
+    component responsibilities and accepted dependencies must remain derivable from
+    the narrow canonical sources instead of silently importing extra assumptions.'
+  source_refs:
+  - ".kiro/specs/phase-field-reverse-spec/intent.md"
+  - ".kiro/specs/phase-field-reverse-spec/design.md"
+note: Design-origin issues require at least a design/tasks recheck before this case
+  can be treated as implementation-ready pilot evidence.

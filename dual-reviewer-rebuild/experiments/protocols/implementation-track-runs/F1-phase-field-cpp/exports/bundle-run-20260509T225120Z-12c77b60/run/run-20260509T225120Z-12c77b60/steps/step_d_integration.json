@@ -1,0 +1,16 @@
+{
+  "step_id": "step-04",
+  "step_name": "integration",
+  "step_status": "completed",
+  "phase_profile": "tasks",
+  "treatment": "single",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/integration/integration_reviewer.prompt.md",
+    "prompt_id": "foundation.integration.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "decision_units": [
+
+  ]
+}

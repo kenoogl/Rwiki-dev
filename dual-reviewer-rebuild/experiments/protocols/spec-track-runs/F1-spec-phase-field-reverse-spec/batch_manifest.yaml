@@ -1,0 +1,7 @@
+---
+batch_id: F1-spec-phase-field-reverse-spec
+scope: phase-field spec-track pilot only
+output_root: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/protocol-runs
+run_labels:
+- F1-spec-phase-field-single
+- F1-spec-phase-field-dual
