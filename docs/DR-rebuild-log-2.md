@@ -2809,6 +2809,13 @@ design note として格上げしました。
 
 
 ```
-
+Rwikiのメインに未コミットをコミット
 ```
+
+Rwiki 側の未コミット 5 ファイルを commit しました。commit は `dbda25f` (`Add Rwiki dual-reviewer rebuild logs`) です。
+
+含めたのは `.claude/settings.local.json`、`docs/dual-reviewer-log-10.md`、`docs/DR-rebuild-log-1.md`、`docs/DR-rebuild-log-2.md`、`docs/dual-reviewer-rebuild-plan.md` です。
+
+::git-stage{cwd="/Users/Daily/Development/Rwiki-dev"}
+::git-commit{cwd="/Users/Daily/Development/Rwiki-dev"}
 
