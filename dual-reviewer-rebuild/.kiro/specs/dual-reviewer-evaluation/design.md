@@ -110,6 +110,8 @@ evaluation の default analysis population は、任意の run 寄せ集めで�
 
 これにより、paper-interface や self-improvement が protocol-backed analysis population を共有できるようにする。
 
+運用上は、この selection policy を selection manifest と refresh workflow に落としてよい。manifest には少なくとも `track`、`case_id`、`phase_profile`、review mode / treatment filter、protocol summary coverage 要件を固定できるようにする。
+
 ## Intake Model
 
 evaluation が 1 run から読む最小 artifact は次とする。

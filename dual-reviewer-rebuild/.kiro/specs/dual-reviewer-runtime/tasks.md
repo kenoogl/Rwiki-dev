@@ -189,6 +189,7 @@
 - `validation/validator_result.json` write
 - `validation/invalidation_markers.json` write
 - `derived/comparison_eligibility_note.json` write
+- `derived/invalid_run_triage_note.json` write
 - `run_manifest.yaml` / `review_case.json` metadata update
 
 を実装する。
@@ -198,6 +199,7 @@
 - validator failure と orchestration failure が区別される
 - invalidation marker が raw artifact を書き換えずに追加される
 - comparison eligibility が downstream 向け補助 artifact として残る
+- invalid-run triage note が failed check / marker / operator hint を machine-readable に残す
 
 ### Task 8: Implement portable evidence bundle export
 

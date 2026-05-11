@@ -107,6 +107,8 @@
 4. The runtime shall distinguish validator failure from orchestration failure.
 5. The runtime shall prevent downstream “valid run” handling when required validation fails.
 6. The runtime shall mark runtime-produced evidence with the canonical runtime-mediated review mode rather than relying on downstream inference.
+7. The runtime shall emit a machine-readable invalid-run triage artifact when validation or invalidation indicates workflow failure.
+8. The runtime shall preserve linkage between failed validator checks, invalidation markers, and operator-facing remediation hints.
 
 ### Requirement 7: Replay-Friendly Runtime Records
 

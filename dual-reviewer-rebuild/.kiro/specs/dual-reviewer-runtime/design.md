@@ -153,7 +153,8 @@ experiments/runs/<run_id>/
 │   └── invalidation_markers.json
 └── derived/
     ├── runtime_summary.json
-    └── comparison_eligibility_note.json
+    ├── comparison_eligibility_note.json
+    └── invalid_run_triage_note.json
 ```
 
 ### Placement Rationale
@@ -173,6 +174,7 @@ experiments/runs/<run_id>/
 - `derived/`
   - runtime convenience artifact
   - evaluation の正本ではない
+  - invalid-run triage のような workflow support artifact を含んでよい
 
 ### v2 Compatibility Rule
 
@@ -193,6 +195,8 @@ v2 導入後も、downstream compatibility のため次を維持する。
   - taxonomy-first internal canonical object
 - `derived/comparison_eligibility_note.json`
   - standard comparison に直接入れるかどうかを downstream が判断する補助 note
+- `derived/invalid_run_triage_note.json`
+  - invalid run の primary failure、linked checks、operator action hint を downstream が再利用する補助 note
 
 つまり、v2 は既存 artifact を置き換えるのではなく、
 互換入口を残したまま internal canonical artifact を追加する。
@@ -470,7 +474,8 @@ run close の後に行うこと:
 2. validator invocation
 3. `validator_result.json` 保存
 4. invalidation marker 付与
-5. `run_manifest.yaml` と `review_case.json` の metadata 更新
+5. `invalid_run_triage_note.json` 生成
+6. `run_manifest.yaml` と `review_case.json` の metadata 更新
 
 この順序を崩さない。
 
@@ -496,6 +501,15 @@ runtime が自動で出せる典型は次の通り。
 - treatment/step mismatch
 
 contamination や hidden intervention のような人間判断が必要なものは、human-issued marker として同じ artifact 形式に追加する。
+
+invalid run が発生した場合、runtime は `derived/invalid_run_triage_note.json` を生成してよい。ここには少なくとも次を含める。
+
+- primary failure code
+- failed validator check ids
+- invalidation marker linkage
+- operator action hint
+
+この triage note は runtime convenience artifact だが、self-improvement や protocol review が workflow failure の再発パターンを扱うための正規補助入力として使ってよい。
 
 ## Portable Evidence Bundle Export
 
@@ -576,6 +590,7 @@ evaluation は少なくとも次を読む。
 - `review_case.json`
 - `validation/validator_result.json`
 - `validation/invalidation_markers.json`
+- `derived/comparison_eligibility_note.json`
 
 evaluation は `derived/runtime_summary.json` に依存しない。
 
@@ -586,6 +601,7 @@ self-improvement は少なくとも次を読む。
 - step files
 - decision units
 - validator/invalidation artifacts
+- `derived/invalid_run_triage_note.json`
 
 特に Step B と Step C の artifact を replay 入力として扱えるようにする。
 
