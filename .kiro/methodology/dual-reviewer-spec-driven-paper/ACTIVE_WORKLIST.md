@@ -360,14 +360,17 @@ why this is the current step:
 ## 8. Current Blocker
 
 - current blocker はない
-- remaining track の first batch も取得済みで、caveat の置き場所と editorial redundancy の圧縮も完了したので、次は追加比較と集計の planning に入れる
+- remaining track の first batch も取得済みで、caveat の置き場所と editorial redundancy の圧縮も完了した
+- additional comparison / metric aggregation の planning note と `heat3d` supplementary behavioral note を追加した
+- first aggregation package も作成した
+- compressed reading も claim prose へ反映したので、次は residual redundancy を落としつつ supporting note との役割を固定する段階に進める
 
 ---
 
 ## 9. Current Action
 
 直近の action は、固定済み prose と caveat 配置を保ったまま
-**additional comparison / metric aggregation の planning に戻ること**
+**claim prose に入れた compressed reading と supporting note の役割分担を固定すること**
 である。
 
 直近の action は次の 4 点である。
@@ -396,6 +399,9 @@ why this is the current step:
 - `remaining-track-acquisition-execution-preparation.md` を concrete execution prep の正本として扱う
 - `remaining-track-first-batch-acquisition-summary.md` を fresh provenance summary として扱う
 - `heat3d-main-paper-observation-note.md` を `heat3d` caveat placement の source note として扱う
+- `cross-track-metric-aggregation-plan.md` を追加比較と集計設計の正本として扱う
+- `cross-track-metric-aggregation-first-package.md` を最小比較 package の正本として扱う
+- `heat3d-supplementary-behavioral-evidence-note.md` を supplementary behavioral boundary の正本として扱う
 
 この action では、次を確認対象にする。
 
@@ -407,6 +413,9 @@ why this is the current step:
 - fresh `Intent Track / Spec Track` batch の読みを preliminary report, paper plan, synthesis note に無理なく接続できるか
 - `first-batch level` の限定と `v3` 委譲文が本文と補助文書で矛盾していないか
 - additional case / additional metric をどこに足すと main paper の弱点を最も減らせるか
+- `Claim 2 / 3 / 4` に入れる最小集計 package を 1 表または 1 段落まで圧縮できるか
+- その compressed reading を existing claim prose に重複なく統合できるか
+- integrated prose と supporting table の重複をどこまで残すか
 
 ---
 
@@ -421,6 +430,9 @@ why this is the current step:
 5. validation 留保を supplementary behavioral evidence として main paper の書き方へ落とせる
 6. `first-batch level` と `v3` delegation の caveat placement が report / note 間で揃う
 7. 次の step を additional comparison planning に移せる
+8. minimal aggregation package の source metric と supplementary note の置き場所を固定できる
+9. first aggregation package の compressed reading を本文へ再利用できる
+10. report 本文と supporting note の役割分担を固定できる
 
 ---
 
@@ -448,6 +460,9 @@ why this is the current step:
 - [heat3d-v3-evaluation-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-v3-evaluation-note.md:1)
 - [heat3d-case-fixation-decision.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-case-fixation-decision.md:1)
 - [heat3d-main-paper-observation-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-main-paper-observation-note.md:1)
+- [cross-track-metric-aggregation-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/cross-track-metric-aggregation-plan.md:1)
+- [cross-track-metric-aggregation-first-package.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/cross-track-metric-aggregation-first-package.md:1)
+- [heat3d-supplementary-behavioral-evidence-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-supplementary-behavioral-evidence-note.md:1)
 - [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F2-heat3d-julia/comparison_summary.json:1)
 - [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1)
 - [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1)

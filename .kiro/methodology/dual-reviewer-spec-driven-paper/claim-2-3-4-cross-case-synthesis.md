@@ -35,6 +35,7 @@ refs:
 - fresh `dual-reviewer-rebuild` / `phase-field-reverse-spec` batch では、`intent handback`, `propagation obligation`, `reopen required`, `intent-attributed issue`, `major correction` を implementation 以前の層で artifact に残せた
 - `heat3d` では requirements/design/tasks の summary、review acquisition、implementation evidence を同じ case id で縦に接続できた
 - したがって `dual-reviewer` は、少なくとも first-batch / fixed-core-case level では、finding 件数だけでなく caveat, disposition, reopen depth, evidence summary を track 横断で traceable に残せる
+- 最小集計 package で見ると、fresh `Intent Track` では dual only で handback depth が残り、fresh `Spec Track` では reopen を維持したまま dual only で major correction が残った
 
 paper sentence candidate:
 
@@ -74,6 +75,7 @@ short caveat:
 - 共通の 2 件は `boundary` と `update-order`
 - `single -> dual` で増えた 1 件は両 case とも `parameter-caveat`
 - ただし `heat3d` では reduced validation pass と reference behavior mismatch が共存し、その差は first-order では implementation defect ではなく `spec/design underconstraint exposure` として再利用された
+- さらに `heat3d` では actual coding 中の blocking issue `3` 件が upstream reopen `0` のまま implementation local に閉じた
 
 paper sentence candidate:
 

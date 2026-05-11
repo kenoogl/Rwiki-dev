@@ -102,7 +102,7 @@ paper-facing reading:
 
 この case は main paper の fixed core case として固定する。
 
-ただし、main evidence に使うのは Ruby 版 `dual-reviewer v1` で新たに取得した review artifact と、それに結びつく upstream artifact に限る。
+ただし、main evidence に使うのは `dual-reviewer v2` で新たに取得した review artifact と、それに結びつく upstream artifact に限る。
 
 ---
 

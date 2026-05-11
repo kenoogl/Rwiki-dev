@@ -19,7 +19,7 @@ prose role:
 
 前段で既に得られているもの:
 
-- `dual-reviewer-rebuild` 上で v1 prototype を構築した
+- `dual-reviewer-rebuild` 上で `dual-reviewer v2` を構築した
 - implementation governance を formalize した
 - manual `implementation conformance review` を 1 サイクル通した
 - review finding の修正と rerun を evidence として残した
@@ -36,6 +36,8 @@ prose role:
 
 へ下る仕様駆動開発プロセス全体を、
 `dual-reviewer` がどう支えるかを主対象に置く。
+
+現行システム名は `dual-reviewer v2` とする。`v3` は future code-conformance evaluation line とする。
 
 ---
 
@@ -232,6 +234,12 @@ note:
 
 implementation track では、`phase-field` と `heat3d` の両方で `boundary`, `update-order`, `parameter-caveat` という finding pattern が再現した。一方 `heat3d` は、reduced validation pass と reference behavior mismatch の併存を通じて、review evidence を downstream reporting と future code-conformance evaluation の両方へ再利用できることを示した。
 
+supporting compressed reading:
+
+- fresh `Intent Track` では dual only で handback depth が残った
+- fresh `Spec Track` では reopen を維持したまま dual only で major correction が残った
+- `heat3d` では actual coding 中の blocking issue `3` 件が upstream reopen `0` のまま implementation local に閉じた
+
 planning caveat:
 
 - behavior mismatch の責任分解は本文で断定せず、`v3` に委譲する
@@ -291,7 +299,7 @@ main evaluation evidence として使わない。
 ### 9.2 main evaluation evidence
 
 論文で主に使うのは、
-Ruby 版 `dual-reviewer v1` で新たに取得する evidence のみである。
+`dual-reviewer v2` で新たに取得する evidence のみである。
 
 ### 9.3 implementation artifact の扱い
 

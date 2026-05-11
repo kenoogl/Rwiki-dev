@@ -92,4 +92,4 @@ fixed core case に上げる条件:
 2. `Spec Track` の concrete case が固定される
 3. `Implementation Track` の protocol が固定される
 
-main evidence に使うのは、Ruby 版 `dual-reviewer v1` で新たに取得する review artifact のみである。
+main evidence に使うのは、`dual-reviewer v2` で新たに取得する review artifact のみである。

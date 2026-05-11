@@ -67,7 +67,7 @@ main evaluation evidence として使わない。
 - Python 系 implementation process の観測値
 
 main evaluation に使うのは、
-Ruby 版 `dual-reviewer v1` で新たに取得する evidence のみである。
+`dual-reviewer v2` で新たに取得する evidence のみである。
 
 ---
 

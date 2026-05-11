@@ -128,7 +128,7 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
 ## 5. Evidence Rule
 
 main evaluation に含める evidence は、
-**Ruby 版 `dual-reviewer v1` で新たに取得するものだけ** とする。
+**`dual-reviewer v2` で新たに取得するものだけ** とする。
 
 過去バージョンで得た観測値は、
 

@@ -80,4 +80,4 @@ canonical source constraint:
 ## 7. Operational Note
 
 この case は main paper の core case として固定する。
-ただし main evidence に使うのは、Ruby 版 `dual-reviewer v1` で新たに取得する review artifact のみである。
+ただし main evidence に使うのは、`dual-reviewer v2` で新たに取得する review artifact のみである。

@@ -58,7 +58,7 @@ flowchart TD
 |---|---|
 | current_phase | `post-report comparison planning` |
 | current_gate | `completed` |
-| status | `remaining track first batch completed` |
+| status | `first aggregation package prepared` |
 | reopen_state | `requirements reopen closed` |
 | blocker | `none` |
 
@@ -165,6 +165,10 @@ flowchart TD
 | 97 | `2026-05-11` | `Codex` | `claim prose synchronization` | `summary completed` | `completed` | `implementation-completed` | paper plan, case manifest, claim synthesis note を fresh batch 取得済み前提に同期した |
 | 98 | `2026-05-11` | `Codex` | `claim prose synchronization` | `summary completed` | `completed` | `implementation-completed` | `first-batch level` 限定と `v3` delegation の caveat placement を report / note 間で同期した |
 | 99 | `2026-05-11` | `Codex` | `report editorial consolidation` | `summary completed` | `completed` | `implementation-completed` | preliminary report の古い TODO を整理し、plan / synthesis / observation note の editorial redundancy を圧縮した |
+| 100 | `2026-05-11` | `Codex` | `post-report comparison planning` | `summary completed` | `completed` | `implementation-completed` | cross-track metric aggregation plan を追加し、追加比較と最小集計 package の入口を固定した |
+| 101 | `2026-05-11` | `Codex` | `post-report comparison planning` | `summary completed` | `completed` | `implementation-completed` | `heat3d` supplementary behavioral evidence note を追加し、canonical-scale 実行結果の本文外配置を固定した |
+| 102 | `2026-05-11` | `Codex` | `post-report comparison planning` | `summary completed` | `completed` | `implementation-completed` | cross-track first aggregation package を作成し、track-level preservation と implementation downstream rework の最小表を固定した |
+| 103 | `2026-05-11` | `Codex` | `post-report comparison planning` | `summary completed` | `completed` | `implementation-completed` | first aggregation package の compressed reading を `Claim 2 / 4` prose と planning note に反映した |
 
 ## 4. Update Rule
 
