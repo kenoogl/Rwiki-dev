@@ -8,8 +8,9 @@ require "yaml"
 module DualReviewer
   module PaperInterface
     class EvaluationIntakeLoader
+      ANALYSIS_MANIFEST_REF = "manifests/analysis_run_manifest.yaml"
       REQUIRED_ARTIFACTS = {
-        "analysis_run_manifest" => "manifests/analysis_run_manifest.yaml",
+        "analysis_run_manifest" => ANALYSIS_MANIFEST_REF,
         "treatment_comparisons" => "comparisons/treatment_comparisons.json",
         "phase_comparisons" => "comparisons/phase_comparisons.json",
         "exclusion_report" => "classifications/exclusion_report.json",
@@ -22,6 +23,10 @@ module DualReviewer
         "treatment_metrics" => "metrics/treatment_metrics.json"
       }.freeze
 
+      OPTIONAL_DISCOVERED_ARTIFACTS = {
+        "runtime_validation_summaries" => "discovered from experiments/protocols/**/runtime_validation_summary.yaml and experiments/protocols/**/conformance_review_result.yaml using analysis_run_manifest.input_run_set"
+      }.freeze
+
       attr_reader :repo_root
 
       def initialize(repo_root:)
@@ -32,16 +37,53 @@ module DualReviewer
         root = Pathname(analysis_root).expand_path
         required_artifacts, missing_required = load_artifact_group(root: root, artifact_map: REQUIRED_ARTIFACTS)
         optional_artifacts, missing_optional = load_artifact_group(root: root, artifact_map: OPTIONAL_ARTIFACTS)
+        runtime_validation_summaries = discover_runtime_validation_summaries(
+          run_ids: Array(required_artifacts.dig("analysis_run_manifest", "input_run_set"))
+        )
+        optional_artifacts["runtime_validation_summaries"] = runtime_validation_summaries
 
         {
           "analysis_root" => root.to_s,
           "required_artifacts" => REQUIRED_ARTIFACTS,
-          "optional_artifacts" => OPTIONAL_ARTIFACTS,
+          "optional_artifacts" => OPTIONAL_ARTIFACTS.merge(OPTIONAL_DISCOVERED_ARTIFACTS),
           "missing_required_artifacts" => missing_required,
           "missing_optional_artifacts" => missing_optional,
           "intake_status" => missing_required.empty? ? "complete" : "incomplete",
           "artifacts" => required_artifacts.merge(optional_artifacts),
           "summary" => build_summary(required_artifacts: required_artifacts, optional_artifacts: optional_artifacts)
+        }
+      end
+
+      def discover_runtime_validation_summaries(run_ids:)
+        normalized_run_ids = Array(run_ids).compact
+        refs = [
+          repo_root.join("experiments/protocols/**/runtime_validation_summary.yaml"),
+          repo_root.join("experiments/protocols/**/conformance_review_result.yaml")
+        ]
+
+        entries = refs.flat_map do |glob_path|
+          Dir.glob(glob_path.to_s).sort.map do |path|
+            artifact_path = Pathname(path)
+            payload = YAML.load_file(artifact_path)
+            run_id = payload["run_id"]
+            next if run_id.nil?
+            next if normalized_run_ids.any? && !normalized_run_ids.include?(run_id)
+
+            {
+              "artifact_ref" => relative_ref(artifact_path),
+              "run_id" => run_id,
+              "track" => payload["track"],
+              "case_id" => payload["case_id"],
+              "overall_status" => payload["overall_status"],
+              "primary_failure_code" => payload["primary_failure_code"],
+              "operator_action_hint" => payload["operator_action_hint"]
+            }
+          end.compact
+        end
+
+        {
+          "entries" => entries,
+          "index_by_run_id" => entries.group_by { |entry| entry.fetch("run_id") }
         }
       end
 
@@ -81,6 +123,7 @@ module DualReviewer
         exclusion_report = required_artifacts.fetch("exclusion_report", {})
         caveat_register = required_artifacts.fetch("caveat_register", {})
         treatment_metrics = optional_artifacts.fetch("treatment_metrics", {})
+        runtime_validation_summaries = optional_artifacts.fetch("runtime_validation_summaries", {})
 
         {
           "analysis_logic_version" => manifest["analysis_logic_version"],
@@ -90,8 +133,13 @@ module DualReviewer
           "phase_comparison_status" => phase_comparisons["comparison_status"],
           "excluded_entry_count" => exclusion_report.fetch("entries", []).length,
           "caveat_count" => caveat_register.fetch("entries", []).length,
-          "treatment_metric_count" => treatment_metrics.fetch("entries", []).length
+          "treatment_metric_count" => treatment_metrics.fetch("entries", []).length,
+          "runtime_validation_summary_count" => runtime_validation_summaries.fetch("entries", []).length
         }
+      end
+
+      def relative_ref(path)
+        path.relative_path_from(repo_root).to_s
       end
     end
   end

@@ -46,6 +46,9 @@ module DualReviewer
                   else
                     { top_level_key => [] }
                   end
+        if entry["run_id"]
+          payload[top_level_key].reject! { |existing| existing["run_id"] == entry["run_id"] }
+        end
         payload[top_level_key] << entry
         register_path.write(JSON.pretty_generate(payload))
         register_path

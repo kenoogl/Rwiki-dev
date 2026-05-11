@@ -234,6 +234,8 @@ paper-interface は evaluation の主要 consumer である。少なくとも次
 - `exclusion_report.json`
 - `caveat_register.json`
 
+必要なら、`analysis_run_manifest.yaml` の `input_run_set` に対応する protocol-facing validation summary を provenance convenience として追加 intake してよい。対象は `runtime_validation_summary.yaml` または `conformance_review_result.yaml` のような upstream が既に生成した summary artifact に限る。
+
 ### Self-Improvement
 
 paper-interface は self-improvement の adopted history を、必要なら「system revision history」として参照できる。ただし runtime quality claim の一次根拠にしない。
@@ -241,6 +243,8 @@ paper-interface は self-improvement の adopted history を、必要なら「sy
 ### Runtime
 
 runtime とは直接結合しない。runtime は paper-interface の field convenience のために artifact shape を変えない。
+
+paper-interface が参照できる runtime 由来情報は、evaluation や protocol layer が既に versioned artifact として固定した summary に限る。これらは methodology/provenance context であり、claim-supporting primary evidence にはしない。
 
 ## Key Decisions
 

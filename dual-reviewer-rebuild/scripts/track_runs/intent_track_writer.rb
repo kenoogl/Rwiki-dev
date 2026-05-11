@@ -11,13 +11,14 @@ require_relative "../../runtime/support/foundation_asset_loader"
 require_relative "../../runtime/controller/session_controller"
 require_relative "../../runtime/execution_v2/manifests/case_manifest_loader"
 require_relative "../../runtime/execution_v2/protocol_track_session"
+require_relative "runtime_validation_summary_builder"
 
 module DualReviewer
   module TrackRuns
     class IntentTrackWriter
       attr_reader :repo_root, :run_label, :case_id, :review_mode, :intent_ref, :supporting_refs,
                   :traceability_refs, :operator, :objective, :output_root, :case_manifest_ref, :loaded_case_manifest,
-                  :asset_loader, :protocol_track_session, :runtime_run_root_base
+                  :asset_loader, :protocol_track_session, :runtime_run_root_base, :runtime_validation_summary_builder
 
       def initialize(repo_root:, run_label:, case_id:, review_mode:, intent_ref:, supporting_refs:,
                      operator:, objective:, output_root: nil, case_manifest_ref: nil, traceability_refs: [],
@@ -30,6 +31,7 @@ module DualReviewer
         @runtime_run_root_base = runtime_run_root_base ? Pathname(runtime_run_root_base).expand_path : repo_root.join("experiments/runs")
         @case_manifest_ref = case_manifest_ref
         @loaded_case_manifest = load_case_manifest(case_manifest_ref)
+        @runtime_validation_summary_builder = RuntimeValidationSummaryBuilder.new(repo_root: @repo_root)
         @case_id = loaded_case_manifest ? loaded_case_manifest.fetch("case_id") : case_id
         @intent_ref = loaded_case_manifest ? loaded_case_manifest.fetch("intent_ref") : intent_ref
         @supporting_refs = loaded_case_manifest ? loaded_case_manifest.fetch("supporting_refs") : supporting_refs
@@ -49,6 +51,7 @@ module DualReviewer
           "intent_trace_note" => write_intent_trace_note(analysis: analysis),
           "phase_metric_snapshot" => write_phase_metric_snapshot(analysis: analysis),
           "signal_linkage_note" => write_signal_linkage_note(analysis: analysis),
+          "runtime_validation_summary" => write_runtime_validation_summary,
           "v2_review_artifact" => write_v2_review_artifact(analysis: analysis),
           "v2_metric_snapshot" => write_v2_metric_snapshot(analysis: analysis),
           "v2_trace_note" => write_v2_trace_note(analysis: analysis),
@@ -271,6 +274,20 @@ module DualReviewer
         path
       end
 
+      def write_runtime_validation_summary
+        payload = runtime_validation_summary_builder.build(
+          run_label: run_label,
+          case_id: case_id,
+          track: "intent",
+          run_id: runtime_session_result.fetch("run_id"),
+          runtime_paths: runtime_session_result.fetch("runtime_paths")
+        )
+
+        path = run_root.join("runtime_validation_summary.yaml")
+        path.write(YAML.dump(payload))
+        path
+      end
+
       def write_execution_packet
         steps = if review_mode == "single_review"
                   [
@@ -322,6 +339,7 @@ module DualReviewer
           - `#{relative_to_repo(run_root.join("intent_trace_note.yaml"))}`
           - `#{relative_to_repo(run_root.join("phase_metric_snapshot.json"))}`
           - `#{relative_to_repo(run_root.join("signal_linkage_note.yaml"))}`
+          - `#{relative_to_repo(run_root.join("runtime_validation_summary.yaml"))}`
 
           ## 5. success check
 
@@ -481,6 +499,10 @@ module DualReviewer
             "metadata" => initialized_run.fetch("metadata"),
             "execution_contract" => execution_v2_artifacts.fetch("execution_contract"),
             "runtime_paths" => {
+              "validator_result" => validation_close.fetch("validator_result_path"),
+              "invalidation_markers" => validation_close.fetch("invalidation_markers_path"),
+              "comparison_eligibility_note" => validation_close.fetch("comparison_eligibility_note_path"),
+              "invalid_run_triage_note" => validation_close.fetch("invalid_run_triage_note_path"),
               "v2_review_artifact" => execution_v2_artifacts.fetch("review_artifact_path"),
               "v2_metric_snapshot" => execution_v2_artifacts.fetch("metric_snapshot_path"),
               "v2_trace_note" => execution_v2_artifacts.fetch("trace_note_path"),
@@ -498,6 +520,7 @@ module DualReviewer
           "  - [#{issue.fetch("severity")}] #{issue.fetch("summary")} (refs: #{refs})"
         end.join("\n")
       end
+
     end
   end
 end

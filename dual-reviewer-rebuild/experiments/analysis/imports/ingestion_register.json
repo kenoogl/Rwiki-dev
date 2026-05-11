@@ -1,16 +1,5 @@
 {
   "entries": [
-    {
-      "bundle_id": "bundle-run-fixture-001",
-      "run_id": "run-fixture-001",
-      "source_repository_id": "kenoogl/Rwiki-dev",
-      "source_revision": "0943943",
-      "review_mode": "runtime_mediated",
-      "ingested_at": "2026-05-08T13:34:18Z",
-      "ingestion_status": "complete",
-      "missing_fields": [
 
-      ]
-    }
   ]
 }

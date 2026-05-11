@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-05-11T13:55:45Z",
+  "entries": [
+    {
+      "template_id": "workflow-remediation-invalidation-marker-present",
+      "failure_mode_code": "invalidation_marker_present",
+      "candidate_ref": "learning/findings/pattern_candidates.json#pattern-invalid-run-triage-invalidation-marker-present",
+      "linked_proposal_ids": [
+        "proposal-workflow-invalid-run-guard-gap-run-invalid-001"
+      ],
+      "recommended_actions": [
+        "Review the invalidation marker reason before rerunning or excluding the run.",
+        "Check whether the cited invalidation reason is mirrored by validator check failures.",
+        "Decide whether this should be treated as a rerun candidate or a permanently excluded run."
+      ],
+      "operator_checklist": [
+        "Inspect supporting workflow signals: runtime:run-invalid-001:validator_failed:validation-validator-result-json, runtime:run-invalid-001:invalidation_marker_issued:validation-invalidation-markers-json-invalid-invalid-001",
+        "Inspect triage reason codes: manual_invalidation",
+        "Inspect linked check ids: manual-invalidation",
+        "Confirm whether the invalidation scope is run-level or finding-level before deciding remediation."
+      ],
+      "supporting_signal_ids": [
+        "runtime:run-invalid-001:validator_failed:validation-validator-result-json",
+        "runtime:run-invalid-001:invalidation_marker_issued:validation-invalidation-markers-json-invalid-invalid-001"
+      ],
+      "created_at": "2026-05-11T13:55:45Z"
+    }
+  ]
+}

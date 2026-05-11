@@ -74,13 +74,16 @@ self-improvement の正本出力先は `learning/` 配下とする。
 learning/
 ├── findings/
 │   ├── recurring_failure_signals.json
-│   └── workflow_failure_signals.json
+│   ├── workflow_failure_signals.json
+│   └── pattern_candidates.json
 ├── proposals/
 │   ├── proposal_index.json
 │   └── <proposal_id>.yaml
 ├── backtests/
 │   ├── backtest_index.json
 │   └── <proposal_id>.json
+├── templates/
+│   └── workflow_remediation_templates.json
 ├── approved-updates/
 │   └── adoption_register.json
 ├── rejected-updates/
@@ -97,6 +100,8 @@ learning/
   - proposal 正本
 - `backtests/`
   - 検証 artifact
+- `templates/`
+  - recurring workflow failure mode に対する remediation template
 - `approved-updates/`
   - 採用履歴
 - `rejected-updates/`
@@ -173,6 +178,16 @@ evaluation 由来の signal 例:
 
 `findings/recurring_failure_signals.json` は、こうした signal を proposal 前に整理した inventory とする。
 
+### 2.5 Proposal Normalization Rules
+
+self-improvement は signal 1 件ごとに必ず proposal 1 件を作る必要はない。proposal builder は review ergonomics を保つため、次の正規化を行ってよい。
+
+- 同一 run に由来する closely-coupled workflow failure signal は 1 proposal に統合してよい
+- 典型例として `validator_failed` と `invalidation_marker_issued` は、同一 invalid run で同時に出た場合 `invalid-run prevention / invalidation handling` の 1 workflow proposal にまとめてよい
+- 逆に aggregate caveat signal は caveat code ごとに proposal identity を分ける
+
+この正規化の目的は、同じ remediation surface を複数 proposal に分断しないことと、独立に判断すべき aggregate caveat を過度に併合しないことにある
+
 ### 3. Project-Specific Pattern Extraction
 
 self-improvement は、project 固有知識を repo 外 memory に蓄積するのではなく、runtime / evaluation artifact から抽出して repo 内 artifact に固定する役割も持つ。
@@ -184,6 +199,10 @@ self-improvement は、project 固有知識を repo 外 memory に蓄積する�
 2. signal を project-specific pattern candidate として整理
 3. 必要に応じて meta-pattern 候補へ抽象化
 4. proposal や将来の pattern asset 改訂へ接続
+
+project-specific / meta-pattern candidate が十分に安定した場合、self-improvement はそこから operator-facing remediation template を派生させてよい。初版では、invalid-run triage の recurring failure mode を `learning/templates/workflow_remediation_templates.json` に落とし、次回 triage の再利用可能な checklist と recommended action を保存する。
+
+downstream protocol artifact が runtime validation summary を持つ場合、その summary payload は共通 contract に従うべきである。初版では `scripts/track_runs/contracts/runtime_validation_summary.schema.json` を canonical contract とし、track ごとの artifact 名が異なっても payload shape は揃える。
 
 このとき区別するもの:
 
@@ -246,6 +265,19 @@ proposal state は次を採る。
 - `rejected`
 - `adopted`
 - `rolled_back`
+
+### 4. Review Prioritization Notes
+
+proposal review の初期優先順は次を推奨する。
+
+- workflow proposal
+  - invalid run 防止、analysis intake 完全性、close 条件の明確化を優先
+- schema / evidence proposal
+  - downstream analysis の解像度に直接効くものを次点とする
+- prompt / policy proposal
+  - exploratory-only evidence 由来のものは hold 候補として扱う
+
+aggregate caveat proposal では、`single_treatment_only` のような comparison impossibility 系 caveat を、`low_sample_size` のような cautionary caveat より先に review してよい
 
 ## Replay and Backtest Model
 

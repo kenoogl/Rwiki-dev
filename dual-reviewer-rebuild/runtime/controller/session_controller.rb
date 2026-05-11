@@ -23,6 +23,8 @@ require_relative "../export/bundle_exporter"
 module DualReviewer
   module Runtime
     class SessionController
+      TERMINAL_HUMAN_SIGNOFF_STATUSES = %w[approved rejected deferred].freeze
+
       attr_reader :asset_loader,
                   :evidence_writer,
                   :validation_bridge,
@@ -276,7 +278,7 @@ module DualReviewer
         }
         human_signoff_payload = {
           "run_id" => run_id,
-          "human_signoff_status" => human_decision == "approved" ? "approved" : "pending",
+          "human_signoff_status" => terminal_human_signoff_status(human_decision),
           "operator_id" => operator_id,
           "signoff_timestamp" => Time.now.utc.iso8601,
           "note" => "Skeleton runtime sign-off artifact."
@@ -333,13 +335,24 @@ module DualReviewer
           run_id: run_id,
           payload: comparison_eligibility_note
         )
+        invalid_run_triage_note = build_invalid_run_triage_note(
+          run_id: run_id,
+          validator_result: validation_result.fetch("validator_result"),
+          invalidation_markers: validation_result.fetch("invalidation_markers"),
+          human_signoff: human_signoff
+        )
+        invalid_run_triage_note_path = evidence_writer.write_invalid_run_triage_note(
+          run_id: run_id,
+          payload: invalid_run_triage_note
+        )
 
         final_validator_status = validation_result.fetch("validator_result").fetch("overall_status") == "passed" ? "passed" : "failed"
-        final_evidence_class = if human_signoff.fetch("human_signoff_status") == "approved" && final_validator_status == "passed"
-                                 "valid"
-                               else
-                                 "invalid"
-                               end
+        final_evidence_class =
+          if final_validator_status == "passed" && TERMINAL_HUMAN_SIGNOFF_STATUSES.include?(human_signoff.fetch("human_signoff_status"))
+            metadata["evidence_class"] == "exploratory" ? "exploratory" : "valid"
+          else
+            "invalid"
+          end
 
         evidence_writer.update_run_manifest(run_id: run_id) do |manifest|
           manifest.fetch("metadata")["run_status"] = "closed"
@@ -365,9 +378,11 @@ module DualReviewer
           "validator_result_path" => validator_result_path.to_s,
           "invalidation_markers_path" => invalidation_markers_path.to_s,
           "comparison_eligibility_note_path" => comparison_eligibility_note_path.to_s,
+          "invalid_run_triage_note_path" => invalid_run_triage_note_path.to_s,
           "validator_result" => validation_result.fetch("validator_result"),
           "invalidation_markers" => validation_result.fetch("invalidation_markers"),
-          "comparison_eligibility_note" => comparison_eligibility_note
+          "comparison_eligibility_note" => comparison_eligibility_note,
+          "invalid_run_triage_note" => invalid_run_triage_note
         }
       end
 
@@ -407,7 +422,8 @@ module DualReviewer
             "invalidation_marker_refs" => validation_close.fetch("invalidation_markers").map do |marker|
               "validation/invalidation_markers.json##{marker.fetch('invalidation_marker_id')}"
             end,
-            "comparison_eligibility_note_ref" => "derived/comparison_eligibility_note.json##{validation_close.fetch('comparison_eligibility_note').fetch('comparison_eligibility_note_id')}"
+            "comparison_eligibility_note_ref" => "derived/comparison_eligibility_note.json##{validation_close.fetch('comparison_eligibility_note').fetch('comparison_eligibility_note_id')}",
+            "invalid_run_triage_note_ref" => "derived/invalid_run_triage_note.json##{validation_close.fetch('invalid_run_triage_note').fetch('invalid_run_triage_note_id')}"
           }
         )
         metric_snapshot_payload = build_metric_snapshot(run_id: run_id, review_case: review_case, decision_artifacts: decision_artifacts)
@@ -527,6 +543,47 @@ module DualReviewer
         }
       end
 
+      def build_invalid_run_triage_note(run_id:, validator_result:, invalidation_markers:, human_signoff:)
+        failed_checks = validator_result.fetch("checks", []).select { |check| check.fetch("status") == "failed" }
+        primary_failure_code = if invalidation_markers.any?
+                                 "invalidation_marker_present"
+                               elsif failed_checks.any?
+                                 "validator_check_failed"
+                               else
+                                 "no_invalid_run_condition_detected"
+                               end
+
+        {
+          "schema_version" => "1.0.0",
+          "invalid_run_triage_note_id" => "invalid-run-triage-#{run_id}",
+          "run_id" => run_id,
+          "validator_status" => validator_result.fetch("overall_status"),
+          "human_signoff_status" => human_signoff.fetch("human_signoff_status"),
+          "primary_failure_code" => primary_failure_code,
+          "failed_checks" => failed_checks.map do |check|
+            {
+              "check_id" => check.fetch("check_id"),
+              "message" => check.fetch("message"),
+              "severity" => check.fetch("severity")
+            }
+          end,
+          "invalidation_marker_summary" => invalidation_markers.map do |marker|
+            {
+              "invalidation_marker_id" => marker.fetch("invalidation_marker_id"),
+              "reason_code" => marker.fetch("reason_code"),
+              "reason_detail" => marker.fetch("reason_detail"),
+              "scope" => marker.fetch("scope"),
+              "issued_by" => marker.fetch("issued_by"),
+              "linked_check_ids" => marker.fetch("linked_check_ids", [])
+            }
+          end,
+          "operator_action_hint" => operator_action_hint(
+            failed_checks: failed_checks,
+            invalidation_markers: invalidation_markers
+          )
+        }
+      end
+
       def comparison_eligibility_reason_codes(validator_result:, invalidation_markers:, human_signoff:)
         codes = []
         codes << "validator_failed" unless validator_result.fetch("overall_status") == "passed"
@@ -534,6 +591,20 @@ module DualReviewer
         codes.concat(invalidation_markers.map { |marker| "invalidation:#{marker.fetch('reason_code')}" })
         codes = ["eligible_standard"] if codes.empty?
         codes
+      end
+
+      def operator_action_hint(failed_checks:, invalidation_markers:)
+        if invalidation_markers.any?
+          "Review invalidation marker reasons first, then decide whether the run should be rerun or formally excluded from downstream analysis."
+        elsif failed_checks.any?
+          "Resolve validator check failures before treating this run as analysis-ready."
+        else
+          "No invalid-run triage action is required."
+        end
+      end
+
+      def terminal_human_signoff_status(human_decision)
+        TERMINAL_HUMAN_SIGNOFF_STATUSES.include?(human_decision) ? human_decision : "pending"
       end
 
       def build_metric_snapshot(run_id:, review_case:, decision_artifacts:)

@@ -20,7 +20,8 @@ module DualReviewer
               "invalidation_marker_refs" => validation_close.fetch("invalidation_markers").map do |marker|
                 "validation/invalidation_markers.json##{marker.fetch('invalidation_marker_id')}"
               end,
-              "comparison_eligibility_note_ref" => "derived/comparison_eligibility_note.json##{validation_close.fetch('comparison_eligibility_note').fetch('comparison_eligibility_note_id')}"
+              "comparison_eligibility_note_ref" => "derived/comparison_eligibility_note.json##{validation_close.fetch('comparison_eligibility_note').fetch('comparison_eligibility_note_id')}",
+              "invalid_run_triage_note_ref" => "derived/invalid_run_triage_note.json##{validation_close.fetch('invalid_run_triage_note').fetch('invalid_run_triage_note_id')}"
             }
           }
         end

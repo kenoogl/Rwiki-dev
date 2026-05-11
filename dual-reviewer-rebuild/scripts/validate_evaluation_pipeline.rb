@@ -56,10 +56,13 @@ assert(valid_classification.fetch("classification") == "valid", "valid fixture s
 assert(invalid_classification.fetch("classification") == "invalid", "invalid fixture should classify as invalid")
 assert(blocked_classification.fetch("classification") == "analysis_blocked", "blocked fixture should classify as analysis_blocked")
 assert(bundle_classification.fetch("classification") == "valid", "admitted imported bundle should classify as valid")
+assert(blocked_classification.fetch("reason_codes").include?("required_artifact_missing"), "blocked fixture should preserve missing-artifact reason")
 
 metrics = metric_extractor.extract_from_run_intake(run_intake: valid_run)
 assert(metrics.fetch("run_metrics").fetch("total_findings") == 1, "run metrics should count findings")
 assert(metrics.fetch("finding_metrics").fetch("severity_distribution").fetch("medium") == 1, "finding metrics should count severity")
+assert(metrics.fetch("finding_metrics").fetch("judgment_label_distribution").fetch("resolved_labels").fetch("approved") == 1, "finding metrics should resolve decision labels from decision units")
+assert(metrics.fetch("finding_metrics").fetch("judgment_label_distribution").fetch("unresolved_judgment_labels") == 0, "finding metrics should not leave decision labels unresolved when refs are present")
 
 comparison_result = comparison_builder.build(
   run_metrics_entries: [metrics.fetch("run_metrics")],
@@ -109,6 +112,13 @@ Dir.mktmpdir("dual-reviewer-eval-smoke") do |tmpdir|
   assert(tmp_root.join("experiments/analysis/comparisons/treatment_comparisons.json").exist?, "treatment comparisons should be written")
   assert(tmp_root.join("experiments/analysis/caveats/caveat_register.json").exist?, "caveat register should be written")
   assert(tmp_root.join("experiments/analysis/manifests/analysis_run_manifest.yaml").exist?, "analysis manifest should be written")
+
+  manifest_payload = YAML.load_file(tmp_root.join("experiments/analysis/manifests/analysis_run_manifest.yaml"))
+  coverage = manifest_payload.fetch("runtime_validation_summary_coverage")
+  assert(coverage.fetch("input_run_count") == 1, "manifest should report input run count")
+  assert(coverage.fetch("covered_run_count") == 0, "fixture manifest should allow zero validation summaries")
+  assert(coverage.fetch("missing_run_ids") == ["run-fixture-001"], "fixture manifest should report uncovered run ids")
+  assert(coverage.fetch("summary_artifact_refs") == [], "fixture manifest should report empty summary refs when none exist")
 end
 
 puts "evaluation pipeline validation passed"

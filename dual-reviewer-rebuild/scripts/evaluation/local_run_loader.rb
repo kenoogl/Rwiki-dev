@@ -13,11 +13,12 @@ module DualReviewer
         "review_case" => "review_case.json",
         "decision_units" => "decisions/decision_units.json",
         "validator_result" => "validation/validator_result.json",
-        "invalidation_markers" => "validation/invalidation_markers.json",
-        "comparison_eligibility_note" => "derived/comparison_eligibility_note.json"
+        "invalidation_markers" => "validation/invalidation_markers.json"
       }.freeze
 
       OPTIONAL_ARTIFACTS = {
+        "comparison_eligibility_note" => "derived/comparison_eligibility_note.json",
+        "invalid_run_triage_note" => "derived/invalid_run_triage_note.json",
         "v2_review_artifact" => "v2/review_artifact.json",
         "v2_metric_snapshot" => "v2/metric_snapshot.json",
         "v2_trace_note" => "v2/trace_note.json",
@@ -82,6 +83,7 @@ module DualReviewer
           "phase_profile" => run_manifest_metadata["phase_profile"] || review_case_metadata["phase_profile"],
           "treatment" => run_manifest_metadata["treatment"] || review_case_metadata["treatment"],
           "review_mode" => run_manifest_metadata["review_mode"] || review_case_metadata["review_mode"],
+          "run_status" => run_manifest_metadata["run_status"] || review_case_metadata["run_status"],
           "validator_status" => run_manifest_metadata["validator_status"] || review_case_metadata["validator_status"],
           "human_signoff_status" => run_manifest_metadata["human_signoff_status"] || review_case_metadata["human_signoff_status"],
           "evidence_class" => run_manifest_metadata["evidence_class"] || review_case_metadata["evidence_class"]

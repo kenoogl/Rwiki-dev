@@ -146,10 +146,13 @@ module DualReviewer
         experiments_root = repo_root.join("experiments/runs")
         candidates.concat(experiments_root.children.select(&:directory?)) if experiments_root.exist?
 
+        protocol_runtime_roots = Dir[repo_root.join("experiments/protocols/**/runtime-runs/*")]
+        candidates.concat(protocol_runtime_roots.map { |path| Pathname(path) })
+
         fixture_root = repo_root.join("tests/fixtures/evaluation/local_runs")
         candidates.concat(fixture_root.children.select(&:directory?)) if fixture_root.exist?
 
-        candidates.select { |path| path.join("run_manifest.yaml").exist? }
+        candidates.uniq.select { |path| path.join("run_manifest.yaml").exist? }
       end
     end
   end

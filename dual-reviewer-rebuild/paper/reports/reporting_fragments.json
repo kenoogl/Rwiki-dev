@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T22:30:46Z",
+  "generated_at": "2026-05-11T14:51:17Z",
   "entries": [
     {
       "fragment_id": "fragment-claim-phase-comparison-summary",
@@ -20,11 +20,11 @@
         "experiments/analysis/comparisons/treatment_comparisons.json",
         "experiments/analysis/caveats/caveat_register.json"
       ],
-      "maturity_label": "preliminary",
+      "maturity_label": "mature",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ],
-      "text_stub": "Treatment comparison is not yet supportable for the current analysis set because insufficient_variant_count. This fragment should be reported with caveat context."
+      "text_stub": "Treatment comparison is available for the current analysis set. No caveat is currently attached to this fragment."
     },
     {
       "fragment_id": "fragment-claim-analysis-population-transparency",
@@ -35,35 +35,24 @@
       ],
       "maturity_label": "preliminary",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ],
-      "text_stub": "Current analysis population contains only valid entries, but exclusion reporting remains part of the evidence trail. This fragment should be reported with caveat context."
-    },
-    {
-      "fragment_id": "fragment-paper-caveat-single_treatment_only",
-      "fragment_type": "limitation_note",
-      "source_artifact_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only",
-        "paper/tables/table_source_bundle.json#table-analysis-summary-v1",
-        "paper/figures/figure_source_bundle.json#figure-phase-treatment-overview-v1"
-      ],
-      "maturity_label": "preliminary",
-      "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
-      ],
-      "text_stub": "Paper-facing limitation: Only one treatment is present in valid population, so treatment comparison is not meaningful. This caveat should remain attached to any claim or artifact that depends on treatment_comparison."
+      "text_stub": "Current analysis population contains only valid entries, but exclusion reporting remains part of the evidence trail. No caveat is currently attached to this fragment."
     },
     {
       "fragment_id": "fragment-method-analysis-provenance",
       "fragment_type": "method_note",
       "source_artifact_refs": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
       ],
       "maturity_label": "mature",
       "caveat_refs": [
 
       ],
-      "text_stub": "Analysis was generated with logic version 0.1.0 over input runs run-fixture-001."
+      "text_stub": "Analysis was generated with logic version 0.1.0 over input runs run-20260511T062535Z-70acf852, run-20260511T062535Z-d6c4618a, run-20260511T062535Z-e945dac7. Supporting runtime validation summaries are available for 3 protocol artifacts and should be treated as methodology/provenance context only."
     }
   ]
 }

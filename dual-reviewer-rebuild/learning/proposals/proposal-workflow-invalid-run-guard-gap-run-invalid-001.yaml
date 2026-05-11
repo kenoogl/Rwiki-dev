@@ -1,11 +1,13 @@
 ---
-proposal_id: proposal-workflow-invalidation-marker-issued-run-invalid-001
-status: draft
+proposal_id: proposal-workflow-invalid-run-guard-gap-run-invalid-001
+status: approved
 target_layer: workflow
 motivation_class: workflow_quality
-source_signal_id: runtime:run-invalid-001:invalidation_marker_issued:validation-invalidation-markers-json-invalid-invalid-001
+source_signal_id: runtime:run-invalid-001:invalid_run_guard_gap:merged-validator-and-invalidation
 source_signal_class: workflow_failure_signal
 source_evidence_refs:
+- validation/validator_result.json
+- derived/invalid_run_triage_note.json#invalid-run-triage-run-invalid-001
 - validation/invalidation_markers.json#invalid-invalid-001
 source_origin: central_local_run
 source_repository_refs:
@@ -17,12 +19,14 @@ source_provenance_status: central_local
 evidence_maturity_context: invalid
 phase_context: tasks
 treatment_context: dual+judgment
-problem_statement: Runtime invalidation marker issued for this run. Signal invalidation_marker_issued
+problem_statement: Runtime invalid-run workflow signals indicate validator failure
+  and invalidation handling should be reviewed together. Signal invalid_run_guard_gap
   was observed in self-improvement intake.
-proposed_change_summary: Harden workflow checks and closure conditions so invalid
-  or incomplete runs are prevented earlier.
+proposed_change_summary: Unify validator failure handling and invalidation-marker
+  handling into one workflow guard so invalid runs are blocked, explained, and triaged
+  consistently.
 expected_benefit: Reduce invalid or contaminated runs before they reach evaluation.
 possible_risks:
 - May optimize for invalid-run cleanup without improving review quality.
 required_test_mode: manual_review
-created_at: '2026-05-08T21:28:58Z'
+created_at: '2026-05-11T13:42:35Z'

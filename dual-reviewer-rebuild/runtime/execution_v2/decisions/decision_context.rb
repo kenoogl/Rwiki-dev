@@ -9,6 +9,7 @@ module DualReviewer
           invalidation_markers = validation_close.fetch("invalidation_markers", [])
           validator_result = validation_close.fetch("validator_result")
           comparison_note = validation_close.fetch("comparison_eligibility_note")
+          triage_note = validation_close.fetch("invalid_run_triage_note")
 
           {
             "track" => execution_contract.fetch("common_inputs").fetch("track"),
@@ -20,7 +21,9 @@ module DualReviewer
               "validator_status" => validator_result.fetch("overall_status"),
               "invalidation_count" => invalidation_markers.length,
               "comparison_eligibility_status" => comparison_note.fetch("eligibility_status"),
-              "comparison_reason_codes" => comparison_note.fetch("reason_codes")
+              "comparison_reason_codes" => comparison_note.fetch("reason_codes"),
+              "invalid_run_primary_failure_code" => triage_note.fetch("primary_failure_code"),
+              "invalid_run_action_hint" => triage_note.fetch("operator_action_hint")
             },
             "reopen_summary" => build_reopen_summary(analysis_result: analysis_result, decision_units: decision_units)
           }

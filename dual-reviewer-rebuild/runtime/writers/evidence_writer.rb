@@ -106,6 +106,12 @@ module DualReviewer
         path
       end
 
+      def write_invalid_run_triage_note(run_id:, payload:)
+        path = canonical_run_root(run_id).join("derived/invalid_run_triage_note.json")
+        path.write(JSON.pretty_generate(payload))
+        path
+      end
+
       def update_run_manifest(run_id:)
         path = canonical_run_root(run_id).join("run_manifest.yaml")
         manifest = YAML.load_file(path)

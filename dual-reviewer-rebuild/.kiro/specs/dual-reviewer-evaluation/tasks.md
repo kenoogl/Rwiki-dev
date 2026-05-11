@@ -219,6 +219,26 @@
 
 などの caveat emission を実装する。
 
+### Task 9: Extend analysis manifest coverage metadata
+
+目的:
+
+- downstream consumer が `input_run_set` に対する protocol-facing validation summary coverage を確認できるようにする
+
+作業:
+
+- `analysis_run_manifest.yaml` に
+  - `input_run_count`
+  - `covered_run_count`
+  - `missing_run_ids`
+  - `summary_artifact_refs`
+
+を含む `runtime_validation_summary_coverage` block を追加する。
+
+完了条件:
+
+- paper-interface などの downstream が protocol summary の coverage 欠落を黙って見落とさない
+
 完了条件:
 
 - paper-interface と self-improvement が raw archive 再読なしに caveat を継承できる

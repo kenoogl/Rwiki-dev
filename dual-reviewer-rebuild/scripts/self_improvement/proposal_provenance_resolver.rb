@@ -109,7 +109,8 @@ module DualReviewer
       def local_manifest_refs_by_run_id
         @local_manifest_refs_by_run_id ||= begin
           manifest_paths = Dir[repo_root.join("tests/fixtures/evaluation/local_runs/*/run_manifest.yaml")] +
-                           Dir[repo_root.join("experiments/runs/*/run_manifest.yaml")]
+                           Dir[repo_root.join("experiments/runs/*/run_manifest.yaml")] +
+                           Dir[repo_root.join("experiments/protocols/**/runtime-runs/*/run_manifest.yaml")]
           manifest_paths.each_with_object({}) do |manifest_path, acc|
             payload = YAML.load_file(manifest_path)
             metadata = payload.fetch("metadata", {})

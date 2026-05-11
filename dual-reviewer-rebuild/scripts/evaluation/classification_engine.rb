@@ -10,6 +10,17 @@ module DualReviewer
         metadata = run_intake.fetch("metadata")
         missing_artifacts = run_intake.fetch("missing_artifacts")
 
+        unless metadata["run_status"] == "closed"
+          return classification_result(
+            run_id: metadata["run_id"],
+            classification: "analysis_blocked",
+            phase_profile: metadata["phase_profile"],
+            treatment: metadata["treatment"],
+            reason_codes: ["run_not_closed"],
+            reason_details: ["Run lifecycle is #{metadata['run_status'] || 'unknown'} and is not ready for analysis."]
+          )
+        end
+
         if missing_artifacts.any?
           return classification_result(
             run_id: metadata["run_id"],

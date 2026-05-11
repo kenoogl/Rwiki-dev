@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T22:24:41Z",
+  "generated_at": "2026-05-11T14:51:17Z",
   "entries": [
     {
       "claim_id": "claim-phase-comparison-summary",
@@ -14,24 +14,30 @@
       "provenance_refs": [
         "experiments/analysis/manifests/analysis_run_manifest.yaml",
         "analysis_logic_version:0.1.0",
-        "input_run_set:run-fixture-001"
+        "input_run_set:run-20260511T062535Z-70acf852,run-20260511T062535Z-d6c4618a,run-20260511T062535Z-e945dac7",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
       ]
     },
     {
       "claim_id": "claim-treatment-comparison-status",
-      "claim_text": "Treatment comparison is not yet supportable for the current analysis set because insufficient_variant_count.",
+      "claim_text": "Treatment comparison is available for the current analysis set.",
       "supporting_artifact_refs": [
         "experiments/analysis/comparisons/treatment_comparisons.json",
         "experiments/analysis/caveats/caveat_register.json"
       ],
-      "maturity_label": "preliminary",
+      "maturity_label": "mature",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ],
       "provenance_refs": [
         "experiments/analysis/manifests/analysis_run_manifest.yaml",
         "analysis_logic_version:0.1.0",
-        "input_run_set:run-fixture-001"
+        "input_run_set:run-20260511T062535Z-70acf852,run-20260511T062535Z-d6c4618a,run-20260511T062535Z-e945dac7",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
       ]
     },
     {
@@ -43,12 +49,15 @@
       ],
       "maturity_label": "preliminary",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ],
       "provenance_refs": [
         "experiments/analysis/manifests/analysis_run_manifest.yaml",
         "analysis_logic_version:0.1.0",
-        "input_run_set:run-fixture-001"
+        "input_run_set:run-20260511T062535Z-70acf852,run-20260511T062535Z-d6c4618a,run-20260511T062535Z-e945dac7",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
       ]
     }
   ]

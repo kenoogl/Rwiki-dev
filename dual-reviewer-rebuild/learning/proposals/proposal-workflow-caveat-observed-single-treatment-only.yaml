@@ -1,5 +1,5 @@
 ---
-proposal_id: proposal-workflow-caveat-observed-aggregate
+proposal_id: proposal-workflow-caveat-observed-single-treatment-only
 status: draft
 target_layer: workflow
 motivation_class: evidence_quality
@@ -23,4 +23,4 @@ expected_benefit: Improve evidence usability for downstream evaluation and adopt
 possible_risks:
 - Aggregate caveat signals may hide run-level causes.
 required_test_mode: backtest
-created_at: '2026-05-08T21:28:58Z'
+created_at: '2026-05-11T13:42:35Z'

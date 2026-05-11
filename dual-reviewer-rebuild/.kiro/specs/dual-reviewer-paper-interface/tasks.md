@@ -65,12 +65,14 @@
 - `exclusion_report.json`
 - `caveat_register.json`
 - 必要に応じて `metrics/*.json`
+- 必要なら `input_run_set` に対応する `runtime_validation_summary.yaml` / `conformance_review_result.yaml`
 
 を読む intake loader を実装する。
 
 完了条件:
 
 - paper-interface が runtime raw artifact を再読せずに必要 input を得られる
+- validation summary を読んでも、それが claim の primary evidence に昇格しない
 
 ### Task 3: Implement `claim_map.json`
 

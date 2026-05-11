@@ -85,6 +85,7 @@ experiments/analysis/
 
 - `manifests/`
   - どの evaluation logic version で analysis を作ったかを記録
+  - `input_run_set` に対する protocol-facing runtime validation summary coverage を記録
 - `imports/`
   - imported bundle の intake / admission 履歴を保存
 - `classifications/`
@@ -95,6 +96,19 @@ experiments/analysis/
   - treatment / phase ごとの aggregate を分離
 - `caveats/`
   - paper-interface や self-improvement が使う caveat registry を保持
+
+### Analysis Population Selection
+
+evaluation の default analysis population は、任意の run 寄せ集めではなく、再現可能な selection policy に基づいて選ぶ。
+
+優先条件:
+
+- `run_status=closed`
+- standard intake complete
+- protocol-facing validation summary available
+- 同一 `case_id` / `phase_profile` 内で比較対象 treatment が揃う
+
+これにより、paper-interface や self-improvement が protocol-backed analysis population を共有できるようにする。
 
 ## Intake Model
 
@@ -168,8 +182,15 @@ evaluation は run を次の 4 状態で扱う。
   - `evidence_class=exploratory`
 - `analysis_blocked`
   - required evaluation input の不足
+  - または `run_status != closed`
 
 `analysis_blocked` は exclusion report には出すが、比較対象集団には入れない。
+
+運用上の補足:
+
+- `run_status != closed` の run は raw evidence が存在していても standard analysis population に入れない
+- `created` や途中中断 run は `invalid` ではなく `analysis_blocked` として扱う
+- `analysis_blocked` の主目的は「評価不能 run を valid/invalid 判定と混同しない」ことにある
 
 `derived/comparison_eligibility_note.json` が存在する場合、evaluation はこれを classification 前の補助判断材料として読んでよい。ただし final の valid / invalid / exploratory 判定は、依然として metadata、validator 結果、invalidation artifact を基礎にする。
 

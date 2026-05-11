@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dual-reviewer:track-runs:runtime-validation-summary:1.0.0",
+  "title": "runtime_validation_summary",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "run_label",
+    "case_id",
+    "track",
+    "run_id",
+    "validator_result_ref",
+    "invalidation_markers_ref",
+    "comparison_eligibility_note_ref",
+    "invalid_run_triage_note_ref",
+    "overall_status",
+    "primary_failure_code",
+    "operator_action_hint",
+    "remediation_templates"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "run_label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "track": {
+      "type": "string",
+      "enum": [
+        "intent",
+        "spec",
+        "implementation"
+      ]
+    },
+    "reviewed_phase": {
+      "type": "string",
+      "enum": [
+        "intent",
+        "requirements",
+        "design",
+        "tasks"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "validator_result_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invalidation_markers_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "comparison_eligibility_note_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invalid_run_triage_note_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "overall_status": {
+      "type": "string",
+      "enum": [
+        "passed",
+        "failed"
+      ]
+    },
+    "primary_failure_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operator_action_hint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "remediation_templates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/remediationTemplate"
+      }
+    }
+  },
+  "$defs": {
+    "remediationTemplate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "template_id",
+        "template_ref",
+        "recommended_actions",
+        "operator_checklist"
+      ],
+      "properties": {
+        "template_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "template_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recommended_actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "operator_checklist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

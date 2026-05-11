@@ -1,8 +1,18 @@
 ---
 analysis_logic_version: 0.1.0
 input_run_set:
-- run-fixture-001
-generated_at: '2026-05-08T14:10:55Z'
+- run-20260511T062535Z-70acf852
+- run-20260511T062535Z-d6c4618a
+- run-20260511T062535Z-e945dac7
+generated_at: '2026-05-11T14:51:17Z'
 metric_set_version: 0.1.0
 phase_metric_profile_version: overlay-v1
 comparison_contract_version: 0.1.0
+runtime_validation_summary_coverage:
+  input_run_count: 3
+  covered_run_count: 3
+  missing_run_ids: []
+  summary_artifact_refs:
+  - experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml
+  - experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml
+  - experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml

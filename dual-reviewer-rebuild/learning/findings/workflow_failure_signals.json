@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T21:18:36Z",
+  "generated_at": "2026-05-11T13:41:09Z",
   "entries": [
     {
       "signal_id": "runtime:run-invalid-001:validator_failed:validation-validator-result-json",
@@ -7,7 +7,8 @@
       "signal_code": "validator_failed",
       "signal_source": "runtime",
       "source_refs": [
-        "validation/validator_result.json"
+        "validation/validator_result.json",
+        "derived/invalid_run_triage_note.json#invalid-run-triage-run-invalid-001"
       ],
       "summary": "Runtime validator failed for this run.",
       "validity_context": "invalid",
@@ -16,7 +17,12 @@
       "run_id": "run-invalid-001",
       "signal_value": {
         "validator_status": "failed",
-        "human_signoff_status": "approved"
+        "human_signoff_status": "approved",
+        "primary_failure_code": "invalidation_marker_present",
+        "failed_check_ids": [
+          "manual-invalidation"
+        ],
+        "operator_action_hint": "Review invalidation marker reasons first, then decide whether the run should be rerun or formally excluded from downstream analysis."
       }
     },
     {
@@ -25,7 +31,8 @@
       "signal_code": "invalidation_marker_issued",
       "signal_source": "runtime",
       "source_refs": [
-        "validation/invalidation_markers.json#invalid-invalid-001"
+        "validation/invalidation_markers.json#invalid-invalid-001",
+        "derived/invalid_run_triage_note.json#invalid-run-triage-run-invalid-001"
       ],
       "summary": "Runtime invalidation marker issued for this run.",
       "validity_context": "invalid",
@@ -35,7 +42,12 @@
       "signal_value": {
         "reason_code": "manual_invalidation",
         "scope": "run",
-        "issued_by": "human_operator"
+        "issued_by": "human_operator",
+        "primary_failure_code": "invalidation_marker_present",
+        "linked_check_ids": [
+          "manual-invalidation"
+        ],
+        "operator_action_hint": "Review invalidation marker reasons first, then decide whether the run should be rerun or formally excluded from downstream analysis."
       }
     }
   ]

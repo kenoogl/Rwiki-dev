@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T21:18:36Z",
+  "generated_at": "2026-05-11T13:41:09Z",
   "entries": [
     {
       "signal_id": "runtime:run-blocked-001:analysis_precondition_gap:required-artifact-missing",
@@ -62,40 +62,22 @@
       }
     },
     {
-      "signal_id": "runtime:run-fixture-001:human_decision_mix:decisions-decision-units-json",
-      "signal_class": "review_quality_signal",
-      "signal_code": "human_decision_mix",
-      "signal_source": "runtime",
-      "source_refs": [
-        "decisions/decision_units.json"
-      ],
-      "summary": "Runtime decision distribution captured for self-improvement intake.",
-      "validity_context": "valid",
-      "phase_profile": "tasks",
-      "treatment": "dual+judgment",
-      "run_id": "run-fixture-001",
-      "signal_value": {
-        "approved_count": 1,
-        "rejected_count": 0,
-        "deferred_count": 0
-      }
-    },
-    {
-      "signal_id": "evaluation:run-fixture-001:unresolved_judgment_labels:metrics-finding-metrics-json-run-fixture-001",
+      "signal_id": "evaluation:aggregate:caveat_observed:caveats-caveat-register-json-low-sample-size",
       "signal_class": "evidence_quality_signal",
-      "signal_code": "unresolved_judgment_labels",
+      "signal_code": "caveat_observed",
       "signal_source": "evaluation",
       "source_refs": [
-        "metrics/finding_metrics.json#run-fixture-001"
+        "caveats/caveat_register.json#low_sample_size"
       ],
-      "summary": "Evaluation metric extraction could not resolve judgment labels directly.",
-      "validity_context": "valid",
-      "phase_profile": "tasks",
-      "treatment": "dual+judgment",
-      "run_id": "run-fixture-001",
+      "summary": "Evaluation emitted a caveat relevant to self-improvement intake.",
+      "validity_context": "aggregate_analysis",
+      "phase_profile": null,
+      "treatment": null,
+      "run_id": null,
       "signal_value": {
-        "judgment_ref_present": 1,
-        "unresolved_judgment_labels": 1
+        "caveat_code": "low_sample_size",
+        "severity": "warning",
+        "affected_scope": "global"
       }
     },
     {

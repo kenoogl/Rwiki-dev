@@ -8,6 +8,7 @@ require "time"
 require "yaml"
 require_relative "../../runtime/controller/session_controller"
 require_relative "../../runtime/execution_v2/manifests/case_manifest_loader"
+require_relative "runtime_validation_summary_builder"
 
 module DualReviewer
   module TrackRuns
@@ -15,7 +16,7 @@ module DualReviewer
       attr_reader :repo_root, :run_label, :case_id, :review_mode, :implementation_snapshot_ref,
                   :upstream_spec_refs, :governance_refs, :operator, :phase_profile, :target_id,
                   :target_artifact_hash, :protocol_output_root, :runtime_run_root_base, :export_root_base,
-                  :case_manifest_ref, :loaded_case_manifest, :heuristic_profile_ref
+                  :case_manifest_ref, :loaded_case_manifest, :heuristic_profile_ref, :runtime_validation_summary_builder
 
       def initialize(repo_root:, run_label:, case_id:, review_mode:, implementation_snapshot_ref:,
                      upstream_spec_refs:, governance_refs:, operator:, phase_profile:, target_id:,
@@ -30,6 +31,7 @@ module DualReviewer
         @export_root_base = export_root_base ? Pathname(export_root_base).expand_path : repo_root.join("exports")
         @case_manifest_ref = case_manifest_ref
         @loaded_case_manifest = load_case_manifest(case_manifest_ref)
+        @runtime_validation_summary_builder = RuntimeValidationSummaryBuilder.new(repo_root: @repo_root)
         @case_id = loaded_case_manifest ? loaded_case_manifest.fetch("case_id") : case_id
         @implementation_snapshot_ref = loaded_case_manifest ? loaded_case_manifest.fetch("implementation_snapshot_ref") : implementation_snapshot_ref
         @upstream_spec_refs = loaded_case_manifest ? loaded_case_manifest.fetch("upstream_spec_refs") : upstream_spec_refs
@@ -137,6 +139,7 @@ module DualReviewer
           "conformance_review_result" => Pathname(validation_close.fetch("validator_result_path")),
           "caveat_artifact" => Pathname(validation_close.fetch("invalidation_markers_path")),
           "comparison_eligibility_note" => Pathname(validation_close.fetch("comparison_eligibility_note_path")),
+          "invalid_run_triage_note" => Pathname(validation_close.fetch("invalid_run_triage_note_path")),
           "bundle_manifest" => Pathname(bundle_export.fetch("bundle_manifest_path"))
         }
 
@@ -318,15 +321,18 @@ module DualReviewer
       end
 
       def write_conformance_review_result_note(initialized_run:, validation_close:)
-        payload = {
-          "run_label" => run_label,
-          "case_id" => case_id,
-          "track" => "implementation",
-          "run_id" => initialized_run.fetch("run_id"),
-          "validator_result_ref" => relative_to_repo(Pathname(validation_close.fetch("validator_result_path"))),
-          "invalidation_markers_ref" => relative_to_repo(Pathname(validation_close.fetch("invalidation_markers_path"))),
-          "overall_status" => validation_close.fetch("validator_result").fetch("overall_status")
-        }
+        payload = runtime_validation_summary_builder.build(
+          run_label: run_label,
+          case_id: case_id,
+          track: "implementation",
+          run_id: initialized_run.fetch("run_id"),
+          runtime_paths: {
+            "validator_result" => validation_close.fetch("validator_result_path"),
+            "invalidation_markers" => validation_close.fetch("invalidation_markers_path"),
+            "comparison_eligibility_note" => validation_close.fetch("comparison_eligibility_note_path"),
+            "invalid_run_triage_note" => validation_close.fetch("invalid_run_triage_note_path")
+          }
+        )
 
         path = run_root.join("conformance_review_result.yaml")
         path.write(YAML.dump(payload))
@@ -392,6 +398,8 @@ module DualReviewer
           - `#{relative_to_repo(runtime_paths.fetch("decision_units"))}`
           - `#{relative_to_repo(runtime_paths.fetch("conformance_review_result"))}`
           - `#{relative_to_repo(runtime_paths.fetch("caveat_artifact"))}`
+          - `#{relative_to_repo(runtime_paths.fetch("comparison_eligibility_note"))}`
+          - `#{relative_to_repo(runtime_paths.fetch("invalid_run_triage_note"))}`
 
           ## 5. protocol artifacts to update
 

@@ -10,9 +10,11 @@
     {
       "phase_profile": "tasks",
       "overlay_metric_profile": "tasks_overlay_v1",
-      "run_count": 1,
+      "run_count": 3,
       "treatments_present": [
-        "dual+judgment"
+        "dual",
+        "dual+judgment",
+        "single"
       ]
     }
   ]

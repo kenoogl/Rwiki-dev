@@ -1,65 +1,100 @@
 {
-  "generated_at": "2026-05-08T22:25:50Z",
+  "generated_at": "2026-05-11T14:51:17Z",
   "entries": [
     {
       "artifact_ref": "experiments/analysis/comparisons/phase_comparisons.json",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-fixture-001"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
+      ],
+      "runtime_validation_summary_refs": [
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
       ],
       "maturity_label": "mature",
       "caveat_refs": [
 
       ],
-      "generated_at": "2026-05-08T22:25:50Z"
+      "generated_at": "2026-05-11T14:51:17Z"
     },
     {
       "artifact_ref": "experiments/analysis/comparisons/treatment_comparisons.json",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-fixture-001"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
       ],
-      "maturity_label": "preliminary",
+      "runtime_validation_summary_refs": [
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+      ],
+      "maturity_label": "mature",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ],
-      "generated_at": "2026-05-08T22:25:50Z"
+      "generated_at": "2026-05-11T14:51:17Z"
     },
     {
       "artifact_ref": "experiments/analysis/caveats/caveat_register.json",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-fixture-001"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
       ],
-      "maturity_label": "preliminary",
+      "runtime_validation_summary_refs": [
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+      ],
+      "maturity_label": "mature",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ],
-      "generated_at": "2026-05-08T22:25:50Z"
+      "generated_at": "2026-05-11T14:51:17Z"
     },
     {
       "artifact_ref": "experiments/analysis/classifications/exclusion_report.json",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-fixture-001"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
+      ],
+      "runtime_validation_summary_refs": [
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
       ],
       "maturity_label": "preliminary",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ],
-      "generated_at": "2026-05-08T22:25:50Z"
+      "generated_at": "2026-05-11T14:51:17Z"
     },
     {
       "artifact_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-fixture-001"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
+      ],
+      "runtime_validation_summary_refs": [
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
       ],
       "maturity_label": "preliminary",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ],
-      "generated_at": "2026-05-08T22:25:50Z"
+      "generated_at": "2026-05-11T14:51:17Z"
     }
   ]
 }

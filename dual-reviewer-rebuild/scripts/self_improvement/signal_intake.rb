@@ -55,25 +55,30 @@ module DualReviewer
         metadata = run_intake.fetch("metadata")
         artifacts = run_intake.fetch("artifacts")
         signals = []
+        invalid_run_triage_note = artifacts["invalid_run_triage_note"]
 
         decision_units = artifacts.fetch("decision_units", {}).fetch("decision_units", [])
         if decision_units.any?
           decisions = decision_units.map { |unit| unit["human_decision"] }
-          signals << build_signal(
-            signal_source: "runtime",
-            signal_code: "human_decision_mix",
-            run_id: metadata["run_id"],
-            phase_profile: metadata["phase_profile"],
-            treatment: metadata["treatment"],
-            evidence_maturity: classification["classification"],
-            source_refs: ["decisions/decision_units.json"],
-            summary: "Runtime decision distribution captured for self-improvement intake.",
-            signal_value: {
-              "approved_count" => decisions.count("approved"),
-              "rejected_count" => decisions.count("rejected"),
-              "deferred_count" => decisions.count("deferred")
-            }
-          )
+          decision_counts = {
+            "approved_count" => decisions.count("approved"),
+            "rejected_count" => decisions.count("rejected"),
+            "deferred_count" => decisions.count("deferred")
+          }
+
+          if decision_counts["rejected_count"].positive? || decision_counts["deferred_count"].positive?
+            signals << build_signal(
+              signal_source: "runtime",
+              signal_code: "human_decision_mix",
+              run_id: metadata["run_id"],
+              phase_profile: metadata["phase_profile"],
+              treatment: metadata["treatment"],
+              evidence_maturity: classification["classification"],
+              source_refs: ["decisions/decision_units.json"],
+              summary: "Runtime decision distribution captured for self-improvement intake.",
+              signal_value: decision_counts
+            )
+          end
         end
 
         if metadata["validator_status"] == "failed"
@@ -84,11 +89,17 @@ module DualReviewer
             phase_profile: metadata["phase_profile"],
             treatment: metadata["treatment"],
             evidence_maturity: classification["classification"],
-            source_refs: ["validation/validator_result.json"],
+            source_refs: workflow_signal_refs(
+              primary_ref: "validation/validator_result.json",
+              invalid_run_triage_note: invalid_run_triage_note
+            ),
             summary: "Runtime validator failed for this run.",
             signal_value: {
               "validator_status" => metadata["validator_status"],
-              "human_signoff_status" => metadata["human_signoff_status"]
+              "human_signoff_status" => metadata["human_signoff_status"],
+              "primary_failure_code" => invalid_run_triage_note && invalid_run_triage_note["primary_failure_code"],
+              "failed_check_ids" => invalid_run_triage_note ? invalid_run_triage_note.fetch("failed_checks", []).map { |check| check["check_id"] } : [],
+              "operator_action_hint" => invalid_run_triage_note && invalid_run_triage_note["operator_action_hint"]
             }
           )
         end
@@ -101,66 +112,21 @@ module DualReviewer
             phase_profile: metadata["phase_profile"],
             treatment: metadata["treatment"],
             evidence_maturity: classification["classification"],
-            source_refs: ["validation/invalidation_markers.json##{marker['invalidation_marker_id']}"],
+            source_refs: workflow_signal_refs(
+              primary_ref: "validation/invalidation_markers.json##{marker['invalidation_marker_id']}",
+              invalid_run_triage_note: invalid_run_triage_note
+            ),
             summary: "Runtime invalidation marker issued for this run.",
             signal_value: {
               "reason_code" => marker["reason_code"],
               "scope" => marker["scope"],
-              "issued_by" => marker["issued_by"]
-            }
-          )
-        end
-
-        comparison_note = artifacts["comparison_eligibility_note"]
-        if comparison_note
-          signals << build_signal(
-            signal_source: "runtime",
-            signal_code: "comparison_eligibility_observed",
-            run_id: metadata["run_id"],
-            phase_profile: metadata["phase_profile"],
-            treatment: metadata["treatment"],
-            evidence_maturity: classification["classification"],
-            source_refs: ["derived/comparison_eligibility_note.json##{comparison_note['comparison_eligibility_note_id']}"],
-            summary: "Runtime recorded comparison eligibility state for this run.",
-            signal_value: {
-              "eligibility_status" => comparison_note["eligibility_status"],
-              "reason_codes" => comparison_note["reason_codes"]
-            }
-          )
-        end
-
-        trace_note = artifacts["v2_trace_note"]
-        if trace_note
-          signals << build_signal(
-            signal_source: "runtime",
-            signal_code: "v2_trace_note_available",
-            run_id: metadata["run_id"],
-            phase_profile: metadata["phase_profile"],
-            treatment: metadata["treatment"],
-            evidence_maturity: classification["classification"],
-            source_refs: ["v2/trace_note.json"],
-            summary: "V2 trace note is available for downstream replay or provenance tracing.",
-            signal_value: {
-              "track" => trace_note["track"],
-              "case_id" => trace_note["case_id"]
-            }
-          )
-        end
-
-        signal_linkage_note = artifacts["v2_signal_linkage_note"]
-        if signal_linkage_note
-          signals << build_signal(
-            signal_source: "runtime",
-            signal_code: "v2_signal_linkage_available",
-            run_id: metadata["run_id"],
-            phase_profile: metadata["phase_profile"],
-            treatment: metadata["treatment"],
-            evidence_maturity: classification["classification"],
-            source_refs: ["v2/signal_linkage_note.json"],
-            summary: "V2 signal linkage note is available for downstream signal extraction.",
-            signal_value: {
-              "linked_signal_ids" => signal_linkage_note["linked_signal_ids"],
-              "comparison_eligibility_status" => signal_linkage_note["comparison_eligibility_status"]
+              "issued_by" => marker["issued_by"],
+              "primary_failure_code" => invalid_run_triage_note && invalid_run_triage_note["primary_failure_code"],
+              "linked_check_ids" => linked_check_ids_for_marker(
+                marker: marker,
+                invalid_run_triage_note: invalid_run_triage_note
+              ),
+              "operator_action_hint" => invalid_run_triage_note && invalid_run_triage_note["operator_action_hint"]
             }
           )
         end
@@ -353,6 +319,24 @@ module DualReviewer
 
       def dedupe_signals(signals)
         signals.uniq { |signal| signal["signal_id"] }
+      end
+
+      def workflow_signal_refs(primary_ref:, invalid_run_triage_note:)
+        refs = [primary_ref]
+        if invalid_run_triage_note && invalid_run_triage_note["invalid_run_triage_note_id"]
+          refs << "derived/invalid_run_triage_note.json##{invalid_run_triage_note['invalid_run_triage_note_id']}"
+        end
+        refs
+      end
+
+      def linked_check_ids_for_marker(marker:, invalid_run_triage_note:)
+        return marker["linked_check_ids"] if marker["linked_check_ids"].is_a?(Array) && marker["linked_check_ids"].any?
+        return [] unless invalid_run_triage_note
+
+        triage_entry = invalid_run_triage_note.fetch("invalidation_marker_summary", []).find do |entry|
+          entry["invalidation_marker_id"] == marker["invalidation_marker_id"]
+        end
+        triage_entry ? triage_entry.fetch("linked_check_ids", []) : []
       end
     end
   end

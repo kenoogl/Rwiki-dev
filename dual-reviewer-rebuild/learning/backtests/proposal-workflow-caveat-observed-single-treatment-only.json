@@ -1,5 +1,5 @@
 {
-  "proposal_id": "proposal-workflow-caveat-observed-aggregate",
+  "proposal_id": "proposal-workflow-caveat-observed-single-treatment-only",
   "test_mode": "backtest",
   "input_refs": [
     "experiments/analysis/caveats/caveat_register.json"
@@ -12,5 +12,5 @@
   "risk_observations": [
     "No additional backtest risk observed."
   ],
-  "tested_at": "2026-05-08T21:50:58Z"
+  "tested_at": "2026-05-11T13:41:49Z"
 }

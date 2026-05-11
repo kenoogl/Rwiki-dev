@@ -4,6 +4,7 @@
 require "json"
 require "pathname"
 require "time"
+require "yaml"
 require_relative "proposal_provenance_resolver"
 
 module DualReviewer
@@ -20,7 +21,7 @@ module DualReviewer
         signals = load_inventory(repo_root.join("learning/findings/recurring_failure_signals.json")) +
                   load_inventory(repo_root.join("learning/findings/workflow_failure_signals.json"))
 
-        signals.map { |signal| build_proposal(signal: signal) }
+        normalize_signals(signals).map { |signal| build_proposal(signal: signal) }
       end
 
       private
@@ -33,12 +34,12 @@ module DualReviewer
 
       def build_proposal(signal:)
         mapping = proposal_mapping(signal.fetch("signal_code"))
-        provenance = provenance_resolver.resolve(signal: signal)
         proposal_id = build_proposal_id(signal: signal, target_layer: mapping.fetch("target_layer"))
+        provenance = provenance_resolver.resolve(signal: signal)
 
         {
           "proposal_id" => proposal_id,
-          "status" => "draft",
+          "status" => existing_status_for(proposal_id: proposal_id),
           "target_layer" => mapping.fetch("target_layer"),
           "motivation_class" => mapping.fetch("motivation_class"),
           "source_signal_id" => signal.fetch("signal_id"),
@@ -62,6 +63,11 @@ module DualReviewer
 
       def proposal_mapping(signal_code)
         {
+          "invalid_run_guard_gap" => {
+            "target_layer" => "workflow",
+            "motivation_class" => "workflow_quality",
+            "required_test_mode" => "manual_review"
+          },
           "human_decision_mix" => {
             "target_layer" => "prompt",
             "motivation_class" => "review_quality",
@@ -121,12 +127,52 @@ module DualReviewer
       end
 
       def build_proposal_id(signal:, target_layer:)
+        identity = signal["run_id"] || aggregate_signal_identity(signal)
         slug = [
           target_layer,
           signal.fetch("signal_code"),
-          signal["run_id"] || "aggregate"
+          identity
         ].join("-").gsub(/[^a-zA-Z0-9]+/, "-").downcase.gsub(/^-|-$/, "")
         "proposal-#{slug}"
+      end
+
+      def aggregate_signal_identity(signal)
+        source_ref = signal.fetch("source_refs", []).first
+        signal_value = signal.fetch("signal_value", {})
+        signal_value["caveat_code"] || source_ref || "aggregate"
+      end
+
+      def existing_status_for(proposal_id:)
+        register_status = status_from_history_registers(proposal_id: proposal_id)
+        return register_status if register_status
+
+        path = repo_root.join("learning/proposals/#{proposal_id}.yaml")
+        return "draft" unless path.exist?
+
+        proposal = YAML.load_file(path)
+        proposal["status"] || "draft"
+      end
+
+      def status_from_history_registers(proposal_id:)
+        rollback_entries = load_register_entries(repo_root.join("learning/rollback/rollback_register.json"))
+        return "rolled_back" if rollback_entries.any? { |entry| entry["proposal_id"] == proposal_id }
+
+        adoption_entries = load_register_entries(repo_root.join("learning/approved-updates/adoption_register.json")).select do |entry|
+          entry["proposal_id"] == proposal_id
+        end
+        return "adopted" if adoption_entries.any? { |entry| entry["decision_state"] == "adopted" }
+        return "approved" if adoption_entries.any? { |entry| entry["decision_state"] == "approved" }
+
+        rejection_entries = load_register_entries(repo_root.join("learning/rejected-updates/rejection_register.json"))
+        return "rejected" if rejection_entries.any? { |entry| entry["proposal_id"] == proposal_id }
+
+        nil
+      end
+
+      def load_register_entries(path)
+        return [] unless path.exist?
+
+        JSON.parse(path.read).fetch("entries", [])
       end
 
       def problem_statement(signal:)
@@ -135,6 +181,8 @@ module DualReviewer
 
       def proposed_change_summary(signal:, mapping:, provenance:)
         base = case signal.fetch("signal_code")
+               when "invalid_run_guard_gap"
+                 "Unify validator failure handling and invalidation-marker handling into one workflow guard so invalid runs are blocked, explained, and triaged consistently."
                when "human_decision_mix"
                  "Tighten reviewer or judgment prompt criteria so decision outcomes become easier to resolve consistently."
                when "validator_failed", "invalidation_marker_issued", "analysis_precondition_gap"
@@ -179,6 +227,48 @@ module DualReviewer
         end
 
         risks.empty? ? ["No special risk flagged at proposal generation time."] : risks
+      end
+
+      def normalize_signals(signals)
+        passthrough = []
+        workflow_merge_groups = Hash.new { |acc, key| acc[key] = [] }
+
+        signals.each do |signal|
+          if %w[validator_failed invalidation_marker_issued].include?(signal["signal_code"]) && signal["run_id"]
+            workflow_merge_groups[signal["run_id"]] << signal
+          else
+            passthrough << signal
+          end
+        end
+
+        merged = workflow_merge_groups.values.map do |group|
+          merge_invalid_run_workflow_group(group)
+        end.compact
+
+        passthrough + merged
+      end
+
+      def merge_invalid_run_workflow_group(group)
+        return group.first if group.length == 1
+
+        first = group.first
+        {
+          "signal_id" => "runtime:#{first.fetch('run_id')}:invalid_run_guard_gap:merged-validator-and-invalidation",
+          "signal_class" => "workflow_failure_signal",
+          "signal_code" => "invalid_run_guard_gap",
+          "signal_source" => "runtime",
+          "source_refs" => group.flat_map { |signal| signal.fetch("source_refs") }.uniq,
+          "summary" => "Runtime invalid-run workflow signals indicate validator failure and invalidation handling should be reviewed together.",
+          "validity_context" => first.fetch("validity_context"),
+          "phase_profile" => first["phase_profile"],
+          "treatment" => first["treatment"],
+          "run_id" => first.fetch("run_id"),
+          "signal_value" => {
+            "merged_signal_codes" => group.map { |signal| signal.fetch("signal_code") }.uniq,
+            "reason_codes" => group.map { |signal| signal.dig("signal_value", "reason_code") }.compact.uniq,
+            "validator_statuses" => group.map { |signal| signal.dig("signal_value", "validator_status") }.compact.uniq
+          }
+        }
       end
     end
   end

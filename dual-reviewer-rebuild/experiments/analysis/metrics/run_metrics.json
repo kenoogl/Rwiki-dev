@@ -1,17 +1,17 @@
 {
   "entries": [
     {
-      "run_id": "run-fixture-001",
+      "run_id": "run-20260511T062535Z-70acf852",
       "phase_profile": "tasks",
       "treatment": "dual+judgment",
-      "total_findings": 1,
-      "accepted_findings": 1,
+      "total_findings": 3,
+      "accepted_findings": 3,
       "rejected_findings": 0,
       "deferred_findings": 0,
       "validation_outcome": "passed"
     },
     {
-      "run_id": "run-20260509T223551Z-b0c4612d",
+      "run_id": "run-20260511T062535Z-d6c4618a",
       "phase_profile": "tasks",
       "treatment": "single",
       "total_findings": 2,
@@ -21,9 +21,9 @@
       "validation_outcome": "passed"
     },
     {
-      "run_id": "run-20260509T223551Z-447fcfa8",
+      "run_id": "run-20260511T062535Z-e945dac7",
       "phase_profile": "tasks",
-      "treatment": "dual+judgment",
+      "treatment": "dual",
       "total_findings": 3,
       "accepted_findings": 3,
       "rejected_findings": 0,

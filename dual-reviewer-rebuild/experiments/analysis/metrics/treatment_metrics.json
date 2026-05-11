@@ -1,9 +1,23 @@
 {
   "entries": [
     {
+      "treatment": "dual",
+      "run_count": 1,
+      "findings_per_run": 3.0,
+      "acceptance_ratio": 1.0,
+      "judgment_invocation_coverage": 0.0
+    },
+    {
       "treatment": "dual+judgment",
       "run_count": 1,
-      "findings_per_run": 1.0,
+      "findings_per_run": 3.0,
+      "acceptance_ratio": 1.0,
+      "judgment_invocation_coverage": 1.0
+    },
+    {
+      "treatment": "single",
+      "run_count": 1,
+      "findings_per_run": 2.0,
       "acceptance_ratio": 1.0,
       "judgment_invocation_coverage": 1.0
     }

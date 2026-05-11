@@ -6,6 +6,8 @@ require "time"
 module DualReviewer
   module Runtime
     class ValidationBridge
+      TERMINAL_HUMAN_SIGNOFF_STATUSES = %w[approved rejected deferred].freeze
+
       attr_reader :asset_loader
 
       def initialize(asset_loader:)
@@ -26,22 +28,23 @@ module DualReviewer
         checks << required_metadata_check(metadata)
         checks << review_mode_check(metadata.fetch("review_mode"))
 
-        if human_signoff.fetch("human_signoff_status") != "approved"
+        if TERMINAL_HUMAN_SIGNOFF_STATUSES.include?(human_signoff.fetch("human_signoff_status"))
+          checks << passed_check(
+            check_id: "human-signoff-status",
+            message: "Human sign-off is in a terminal state."
+          )
+        else
           checks << failed_check(
             check_id: "human-signoff-status",
-            message: "Run cannot be treated as ready because human sign-off is not approved."
+            message: "Run cannot be treated as ready because human sign-off is not terminal."
           )
           invalidation_markers << invalidation_marker(
             run_id: run_id,
             reason_code: "human_signoff_missing",
-            reason_detail: "Run close was attempted without approved human sign-off.",
+            reason_detail: "Run close was attempted without terminal human sign-off.",
             scope: "run",
-            issued_by: "validator"
-          )
-        else
-          checks << passed_check(
-            check_id: "human-signoff-status",
-            message: "Human sign-off is approved."
+            issued_by: "validator",
+            linked_check_ids: ["human-signoff-status"]
           )
         end
 
@@ -103,7 +106,7 @@ module DualReviewer
         }
       end
 
-      def invalidation_marker(run_id:, reason_code:, reason_detail:, scope:, issued_by:)
+      def invalidation_marker(run_id:, reason_code:, reason_detail:, scope:, issued_by:, linked_check_ids: [])
         {
           "schema_version" => "1.0.0",
           "invalidation_marker_id" => "invalid-#{SecureRandom.hex(4)}",
@@ -114,6 +117,7 @@ module DualReviewer
           "reason_detail" => reason_detail,
           "scope" => scope,
           "issued_by" => issued_by,
+          "linked_check_ids" => linked_check_ids,
           "issued_at" => Time.now.utc.iso8601
         }
       end

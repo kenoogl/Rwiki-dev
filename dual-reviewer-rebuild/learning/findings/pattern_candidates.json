@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T22:12:08Z",
+  "generated_at": "2026-05-11T13:55:45Z",
   "entries": [
     {
       "candidate_id": "pattern-runtime-run-blocked-001-analysis-precondition-gap-required-artifact-missing",
@@ -13,7 +13,7 @@
       "linked_proposal_ids": [
         "proposal-workflow-analysis-precondition-gap-run-blocked-001"
       ],
-      "created_at": "2026-05-08T22:12:08Z"
+      "created_at": "2026-05-11T13:55:45Z"
     },
     {
       "candidate_id": "pattern-runtime-run-exploratory-001-human-decision-mix-decisions-decision-units-json",
@@ -27,7 +27,7 @@
       "linked_proposal_ids": [
         "proposal-prompt-human-decision-mix-run-exploratory-001"
       ],
-      "created_at": "2026-05-08T22:12:08Z"
+      "created_at": "2026-05-11T13:55:45Z"
     },
     {
       "candidate_id": "pattern-runtime-run-exploratory-001-exploratory-evidence-mode-run-manifest-yaml",
@@ -41,35 +41,21 @@
       "linked_proposal_ids": [
         "proposal-policy-exploratory-evidence-mode-run-exploratory-001"
       ],
-      "created_at": "2026-05-08T22:12:08Z"
+      "created_at": "2026-05-11T13:55:45Z"
     },
     {
-      "candidate_id": "pattern-runtime-run-fixture-001-human-decision-mix-decisions-decision-units-json",
-      "source_signal_id": "runtime:run-fixture-001:human_decision_mix:decisions-decision-units-json",
-      "candidate_scope": "project_specific_concrete",
-      "abstraction_basis": "single-project-runtime-observation",
-      "signal_class": "review_quality_signal",
-      "phase_profile": "tasks",
-      "treatment": "dual+judgment",
-      "summary": "Project-specific pattern candidate: Runtime decision distribution captured for self-improvement intake.",
-      "linked_proposal_ids": [
-        "proposal-prompt-human-decision-mix-run-fixture-001"
-      ],
-      "created_at": "2026-05-08T22:12:08Z"
-    },
-    {
-      "candidate_id": "pattern-evaluation-run-fixture-001-unresolved-judgment-labels-metrics-finding-metrics-json-run-fixture-001",
-      "source_signal_id": "evaluation:run-fixture-001:unresolved_judgment_labels:metrics-finding-metrics-json-run-fixture-001",
+      "candidate_id": "pattern-evaluation-aggregate-caveat-observed-caveats-caveat-register-json-low-sample-size",
+      "source_signal_id": "evaluation:aggregate:caveat_observed:caveats-caveat-register-json-low-sample-size",
       "candidate_scope": "meta_pattern_candidate",
       "abstraction_basis": "cross-run-or-aggregate-analysis",
       "signal_class": "evidence_quality_signal",
-      "phase_profile": "tasks",
-      "treatment": "dual+judgment",
-      "summary": "Abstractable pattern candidate: Evaluation metric extraction could not resolve judgment labels directly.",
+      "phase_profile": null,
+      "treatment": null,
+      "summary": "Abstractable pattern candidate: Evaluation emitted a caveat relevant to self-improvement intake.",
       "linked_proposal_ids": [
-        "proposal-schema-unresolved-judgment-labels-run-fixture-001"
+        "proposal-workflow-caveat-observed-low-sample-size"
       ],
-      "created_at": "2026-05-08T22:12:08Z"
+      "created_at": "2026-05-11T13:55:45Z"
     },
     {
       "candidate_id": "pattern-evaluation-aggregate-caveat-observed-caveats-caveat-register-json-single-treatment-only",
@@ -81,9 +67,9 @@
       "treatment": null,
       "summary": "Abstractable pattern candidate: Evaluation emitted a caveat relevant to self-improvement intake.",
       "linked_proposal_ids": [
-        "proposal-workflow-caveat-observed-aggregate"
+        "proposal-workflow-caveat-observed-single-treatment-only"
       ],
-      "created_at": "2026-05-08T22:12:08Z"
+      "created_at": "2026-05-11T13:55:45Z"
     },
     {
       "candidate_id": "pattern-runtime-run-invalid-001-validator-failed-validation-validator-result-json",
@@ -95,9 +81,9 @@
       "treatment": "dual+judgment",
       "summary": "Project-specific pattern candidate: Runtime validator failed for this run.",
       "linked_proposal_ids": [
-        "proposal-workflow-validator-failed-run-invalid-001"
+        "proposal-workflow-invalid-run-guard-gap-run-invalid-001"
       ],
-      "created_at": "2026-05-08T22:12:08Z"
+      "created_at": "2026-05-11T13:55:45Z"
     },
     {
       "candidate_id": "pattern-runtime-run-invalid-001-invalidation-marker-issued-validation-invalidation-markers-json-invalid-invalid-001",
@@ -109,9 +95,33 @@
       "treatment": "dual+judgment",
       "summary": "Project-specific pattern candidate: Runtime invalidation marker issued for this run.",
       "linked_proposal_ids": [
-        "proposal-workflow-invalidation-marker-issued-run-invalid-001"
+        "proposal-workflow-invalid-run-guard-gap-run-invalid-001"
       ],
-      "created_at": "2026-05-08T22:12:08Z"
+      "created_at": "2026-05-11T13:55:45Z"
+    },
+    {
+      "candidate_id": "pattern-invalid-run-triage-invalidation-marker-present",
+      "source_signal_id": "aggregate:invalid_run_triage:invalidation_marker_present",
+      "candidate_scope": "meta_pattern_candidate",
+      "abstraction_basis": "cross-run-invalid-triage-cluster",
+      "signal_class": "workflow_failure_signal",
+      "phase_profile": null,
+      "treatment": null,
+      "summary": "Abstractable pattern candidate: invalid-run triage repeatedly points to `invalidation_marker_present` as the primary failure mode.",
+      "linked_proposal_ids": [
+        "proposal-workflow-invalid-run-guard-gap-run-invalid-001"
+      ],
+      "supporting_signal_ids": [
+        "runtime:run-invalid-001:validator_failed:validation-validator-result-json",
+        "runtime:run-invalid-001:invalidation_marker_issued:validation-invalidation-markers-json-invalid-invalid-001"
+      ],
+      "triage_reason_codes": [
+        "manual_invalidation"
+      ],
+      "triage_check_ids": [
+        "manual-invalidation"
+      ],
+      "created_at": "2026-05-11T13:55:45Z"
     }
   ]
 }

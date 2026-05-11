@@ -7,12 +7,14 @@ require "tmpdir"
 require "yaml"
 require_relative "track_runs/intent_track_writer"
 require_relative "track_runs/spec_track_writer"
+require_relative "track_runs/runtime_validation_summary_contract"
 
 def assert(condition, message)
   raise message unless condition
 end
 
 repo_root = Pathname(File.expand_path("..", __dir__))
+runtime_validation_summary_contract = DualReviewer::TrackRuns::RuntimeValidationSummaryContract.new(repo_root: repo_root)
 
 Dir.mktmpdir("dual-reviewer-track-runs") do |tmpdir|
   tmp_root = Pathname(tmpdir)
@@ -41,7 +43,7 @@ Dir.mktmpdir("dual-reviewer-track-runs") do |tmpdir|
   intent_manifest = YAML.load_file(intent_paths.fetch("run_manifest"))
   assert(intent_manifest.fetch("track") == "intent", "intent manifest should record intent track")
   assert(intent_manifest.dig("runtime", "runtime_review_mode") == "runtime_mediated", "intent manifest should record runtime-mediated review mode")
-  assert(intent_manifest.fetch("outputs").keys.sort == %w[execution_packet intent_review_artifact intent_trace_note phase_metric_snapshot signal_linkage_note v2_metric_snapshot v2_review_artifact v2_signal_linkage_note v2_trace_note], "intent manifest outputs should match required artifacts")
+  assert(intent_manifest.fetch("outputs").keys.sort == %w[execution_packet intent_review_artifact intent_trace_note phase_metric_snapshot runtime_validation_summary signal_linkage_note v2_metric_snapshot v2_review_artifact v2_signal_linkage_note v2_trace_note], "intent manifest outputs should match required artifacts")
 
   intent_metrics = JSON.parse(intent_paths.fetch("phase_metric_snapshot").read)
   assert(intent_metrics.fetch("metrics").key?("intent_revision_count"), "intent metrics should include intent_revision_count")
@@ -53,6 +55,10 @@ Dir.mktmpdir("dual-reviewer-track-runs") do |tmpdir|
   intent_v2_review = JSON.parse(intent_paths.fetch("v2_review_artifact").read)
   assert(intent_v2_review.fetch("track") == "intent", "intent v2 review artifact should record intent track")
   assert(intent_v2_review.fetch("review_issue_candidates").any?, "intent v2 review artifact should include issue candidates")
+  intent_validation_summary = YAML.load_file(intent_paths.fetch("runtime_validation_summary"))
+  runtime_validation_summary_contract.validate!(payload: intent_validation_summary)
+  assert(intent_validation_summary.key?("invalid_run_triage_note_ref"), "intent validation summary should include triage note ref")
+  assert(intent_validation_summary.fetch("remediation_templates").is_a?(Array), "intent validation summary should include remediation template array")
 
   spec_writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
     repo_root: repo_root,
@@ -81,7 +87,7 @@ Dir.mktmpdir("dual-reviewer-track-runs") do |tmpdir|
   spec_manifest = YAML.load_file(spec_paths.fetch("run_manifest"))
   assert(spec_manifest.fetch("track") == "spec", "spec manifest should record spec track")
   assert(spec_manifest.dig("runtime", "runtime_review_mode") == "runtime_mediated", "spec manifest should record runtime-mediated review mode")
-  assert(spec_manifest.fetch("outputs").keys.sort == %w[alignment_artifact execution_packet phase_metric_snapshot reviewed_phase_note signal_linkage_note v2_metric_snapshot v2_review_artifact v2_signal_linkage_note v2_trace_note], "spec manifest outputs should match required artifacts")
+  assert(spec_manifest.fetch("outputs").keys.sort == %w[alignment_artifact execution_packet phase_metric_snapshot reviewed_phase_note runtime_validation_summary signal_linkage_note v2_metric_snapshot v2_review_artifact v2_signal_linkage_note v2_trace_note], "spec manifest outputs should match required artifacts")
 
   spec_metrics = JSON.parse(spec_paths.fetch("phase_metric_snapshot").read)
   assert(spec_metrics.fetch("metrics").key?("phase_blocking_issue_count"), "spec metrics should include phase_blocking_issue_count")
@@ -93,6 +99,10 @@ Dir.mktmpdir("dual-reviewer-track-runs") do |tmpdir|
   spec_v2_review = JSON.parse(spec_paths.fetch("v2_review_artifact").read)
   assert(spec_v2_review.fetch("track") == "spec", "spec v2 review artifact should record spec track")
   assert(spec_v2_review.fetch("review_issue_candidates").any?, "spec v2 review artifact should include issue candidates")
+  spec_validation_summary = YAML.load_file(spec_paths.fetch("runtime_validation_summary"))
+  runtime_validation_summary_contract.validate!(payload: spec_validation_summary, require_reviewed_phase: true)
+  assert(spec_validation_summary.key?("invalid_run_triage_note_ref"), "spec validation summary should include triage note ref")
+  assert(spec_validation_summary.fetch("remediation_templates").is_a?(Array), "spec validation summary should include remediation template array")
 
   requirements_spec_writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
     repo_root: repo_root,

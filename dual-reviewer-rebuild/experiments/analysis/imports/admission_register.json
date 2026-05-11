@@ -1,14 +1,5 @@
 {
   "entries": [
-    {
-      "bundle_id": "bundle-run-fixture-001",
-      "run_id": "run-fixture-001",
-      "admission_status": "admitted_standard",
-      "admission_reason_codes": [
-        "standard_runtime_mode"
-      ],
-      "eligible_for_standard_comparison": true,
-      "eligible_for_exploratory_analysis": true
-    }
+
   ]
 }

@@ -1,0 +1,14 @@
+---
+selection_policy_version: 1.0.0
+track: implementation
+case_id: F2-heat3d-julia
+phase_profile: tasks
+require_protocol_summary: true
+review_modes:
+  - single_review
+  - dual_review
+  - dual_reviewer_workflow
+treatments:
+  - single
+  - dual
+  - dual+judgment

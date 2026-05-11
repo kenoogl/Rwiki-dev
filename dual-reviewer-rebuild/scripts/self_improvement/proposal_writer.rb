@@ -15,12 +15,17 @@ module DualReviewer
       end
 
       def write_proposals(proposals:)
+        expected_paths = proposals.map { |proposal| repo_root.join("learning/proposals/#{proposal.fetch('proposal_id')}.yaml") }
         index_payload = {
           "generated_at" => proposals.first && proposals.first["created_at"],
           "entries" => proposals.map { |proposal| index_entry(proposal) }
         }
 
         repo_root.join("learning/proposals/proposal_index.json").write(JSON.pretty_generate(index_payload))
+        Dir[repo_root.join("learning/proposals/proposal-*.yaml")].each do |path|
+          proposal_path = Pathname(path)
+          proposal_path.delete unless expected_paths.include?(proposal_path)
+        end
         proposals.each do |proposal|
           repo_root.join("learning/proposals/#{proposal.fetch('proposal_id')}.yaml").write(YAML.dump(proposal))
         end

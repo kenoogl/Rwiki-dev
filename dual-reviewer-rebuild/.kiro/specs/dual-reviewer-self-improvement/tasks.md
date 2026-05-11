@@ -251,12 +251,15 @@
 
 - signal -> pattern candidate summarization helper
 - project-specific / meta-pattern candidate distinction field
+- recurring workflow failure mode から remediation template を派生する helper
+- runtime validation summary payload を track 横断で検証する contract と validator helper
 
 を inventory or proposal 周辺に追加する。
 
 完了条件:
 
 - self-improvement が単なる proposal registry で終わらず、pattern layer 成長の入口を持つ
+- invalid-run triage の recurring failure mode から operator-facing remediation template を生成できる
 
 ### Task 11: Add self-improvement fixtures
 

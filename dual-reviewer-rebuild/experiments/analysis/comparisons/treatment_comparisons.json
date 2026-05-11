@@ -1,12 +1,43 @@
 {
-  "comparison_status": "invalid",
+  "comparison_status": "valid",
   "comparison_invalid_reason": [
-    "insufficient_variant_count"
+
   ],
   "available_treatments": [
-    "dual+judgment"
+    "dual",
+    "dual+judgment",
+    "single"
   ],
   "comparisons": [
+    {
+      "left_treatment": "dual",
+      "right_treatment": "dual+judgment",
+      "comparison_status": "valid",
+      "comparison_invalid_reason": [
 
+      ],
+      "left_run_count": 1,
+      "right_run_count": 1
+    },
+    {
+      "left_treatment": "dual",
+      "right_treatment": "single",
+      "comparison_status": "valid",
+      "comparison_invalid_reason": [
+
+      ],
+      "left_run_count": 1,
+      "right_run_count": 1
+    },
+    {
+      "left_treatment": "dual+judgment",
+      "right_treatment": "single",
+      "comparison_status": "valid",
+      "comparison_invalid_reason": [
+
+      ],
+      "left_run_count": 1,
+      "right_run_count": 1
+    }
   ]
 }

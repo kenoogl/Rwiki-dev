@@ -1,3 +1,14 @@
 {
-  "entries": []
+  "entries": [
+    {
+      "proposal_id": "proposal-workflow-invalid-run-guard-gap-run-invalid-001",
+      "decision_state": "approved",
+      "target_layer": "workflow",
+      "required_test_mode": "manual_review",
+      "linked_repo_change_ref": null,
+      "backtest_ref": "learning/backtests/proposal-workflow-invalid-run-guard-gap-run-invalid-001.json",
+      "approved_at": "2026-05-11T13:36:24Z",
+      "reviewer_note": "approved for invalid-run workflow hardening"
+    }
+  ]
 }

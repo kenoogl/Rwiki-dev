@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "invalid_run_triage_note_id": "invalid-run-triage-run-invalid-001",
+  "run_id": "run-invalid-001",
+  "validator_status": "failed",
+  "human_signoff_status": "approved",
+  "primary_failure_code": "invalidation_marker_present",
+  "failed_checks": [
+    {
+      "check_id": "manual-invalidation",
+      "message": "Fixture invalidation marker present.",
+      "severity": "error"
+    }
+  ],
+  "invalidation_marker_summary": [
+    {
+      "invalidation_marker_id": "invalid-invalid-001",
+      "reason_code": "manual_invalidation",
+      "reason_detail": "Fixture invalid run for evaluation classification.",
+      "scope": "run",
+      "issued_by": "human_operator",
+      "linked_check_ids": [
+        "manual-invalidation"
+      ]
+    }
+  ],
+  "operator_action_hint": "Review invalidation marker reasons first, then decide whether the run should be rerun or formally excluded from downstream analysis."
+}

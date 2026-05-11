@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T22:28:13Z",
+  "generated_at": "2026-05-11T14:51:17Z",
   "entries": [
     {
       "figure_id": "figure-phase-treatment-overview-v1",
@@ -28,9 +28,9 @@
           }
         ]
       },
-      "maturity_label": "preliminary",
+      "maturity_label": "mature",
       "caveat_refs": [
-        "experiments/analysis/caveats/caveat_register.json#single_treatment_only"
+
       ]
     }
   ]

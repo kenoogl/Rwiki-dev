@@ -1,8 +1,10 @@
 {
-  "proposal_id": "proposal-workflow-validator-failed-run-invalid-001",
+  "proposal_id": "proposal-workflow-invalid-run-guard-gap-run-invalid-001",
   "test_mode": "manual_review",
   "input_refs": [
-    "validation/validator_result.json"
+    "validation/validator_result.json",
+    "derived/invalid_run_triage_note.json#invalid-run-triage-run-invalid-001",
+    "validation/invalidation_markers.json#invalid-invalid-001"
   ],
   "input_origin_refs": [
     {
@@ -17,5 +19,5 @@
     "Result remains untested until a human review gate is performed.",
     "Evidence maturity is invalid."
   ],
-  "tested_at": "2026-05-08T21:50:58Z"
+  "tested_at": "2026-05-11T13:41:49Z"
 }

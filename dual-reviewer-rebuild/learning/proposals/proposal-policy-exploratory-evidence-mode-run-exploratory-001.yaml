@@ -27,4 +27,4 @@ expected_benefit: Improve evidence usability for downstream evaluation and adopt
 possible_risks:
 - May overfit to exploratory-only observations.
 required_test_mode: backtest
-created_at: '2026-05-08T21:28:58Z'
+created_at: '2026-05-11T13:42:35Z'

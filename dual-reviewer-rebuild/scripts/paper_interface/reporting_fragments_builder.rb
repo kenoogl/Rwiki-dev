@@ -23,6 +23,7 @@ module DualReviewer
         claim_map = JSON.parse(repo_root.join(CLAIM_MAP_REF).read)
         paper_caveats = JSON.parse(repo_root.join(PAPER_CAVEAT_REF).read)
         manifest = YAML.load_file(repo_root.join(ANALYSIS_MANIFEST_REF))
+        validation_summary_refs = evidence_register_validation_summary_refs
 
         claim_fragments = claim_map.fetch("entries").map do |claim|
           {
@@ -49,10 +50,10 @@ module DualReviewer
         method_note_fragment = {
           "fragment_id" => "fragment-method-analysis-provenance",
           "fragment_type" => "method_note",
-          "source_artifact_refs" => [ANALYSIS_MANIFEST_REF],
+          "source_artifact_refs" => [ANALYSIS_MANIFEST_REF, *validation_summary_refs],
           "maturity_label" => "mature",
           "caveat_refs" => [],
-          "text_stub" => "Analysis was generated with logic version #{manifest['analysis_logic_version']} over input runs #{Array(manifest['input_run_set']).join(', ')}."
+          "text_stub" => method_note_text(manifest: manifest, validation_summary_refs: validation_summary_refs)
         }
 
         {
@@ -79,6 +80,20 @@ module DualReviewer
                    "This fragment should be reported with caveat context."
                  end
         "#{claim.fetch('claim_text')} #{suffix}"
+      end
+
+      def evidence_register_validation_summary_refs
+        evidence_register = JSON.parse(repo_root.join("paper/reports/evidence_register.json").read)
+        evidence_register.fetch("entries")
+                         .flat_map { |entry| entry.fetch("runtime_validation_summary_refs", []) }
+                         .uniq
+      end
+
+      def method_note_text(manifest:, validation_summary_refs:)
+        text = "Analysis was generated with logic version #{manifest['analysis_logic_version']} over input runs #{Array(manifest['input_run_set']).join(', ')}."
+        return text if validation_summary_refs.empty?
+
+        "#{text} Supporting runtime validation summaries are available for #{validation_summary_refs.length} protocol artifacts and should be treated as methodology/provenance context only."
       end
     end
   end

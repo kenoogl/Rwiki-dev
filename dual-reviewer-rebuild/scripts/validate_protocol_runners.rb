@@ -8,12 +8,14 @@ require "yaml"
 require_relative "track_runs/intent_track_writer"
 require_relative "track_runs/spec_track_writer"
 require_relative "track_runs/implementation_track_runner"
+require_relative "track_runs/runtime_validation_summary_contract"
 
 def assert(condition, message)
   raise message unless condition
 end
 
 repo_root = Pathname(File.expand_path("..", __dir__))
+runtime_validation_summary_contract = DualReviewer::TrackRuns::RuntimeValidationSummaryContract.new(repo_root: repo_root)
 
 Dir.mktmpdir("dual-reviewer-protocol-runs") do |tmpdir|
   tmp_root = Pathname(tmpdir)
@@ -42,6 +44,10 @@ Dir.mktmpdir("dual-reviewer-protocol-runs") do |tmpdir|
   assert(intent_manifest.fetch("case_id") == "F1-intent-dual-reviewer-rebuild", "intent protocol should source case_id from manifest")
   assert(intent_manifest.dig("inputs", "intent_ref") == ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md", "intent protocol should source intent_ref from manifest")
   assert(intent_manifest.dig("runtime", "runtime_review_mode") == "runtime_mediated", "intent protocol should record runtime-mediated review mode")
+  intent_validation_summary = YAML.load_file(intent_paths.fetch("runtime_validation_summary"))
+  runtime_validation_summary_contract.validate!(payload: intent_validation_summary)
+  assert(intent_validation_summary.key?("invalid_run_triage_note_ref"), "intent protocol should emit runtime validation summary")
+  assert(intent_validation_summary.fetch("remediation_templates").is_a?(Array), "intent protocol remediation templates should be an array")
 
   spec_writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
     repo_root: repo_root,
@@ -70,6 +76,10 @@ Dir.mktmpdir("dual-reviewer-protocol-runs") do |tmpdir|
   assert(spec_manifest.fetch("case_id") == "F1-spec-phase-field-reverse-spec", "spec protocol should source case_id from manifest")
   assert(spec_manifest.fetch("reviewed_phase") == "tasks", "spec protocol should source reviewed_phase from manifest")
   assert(spec_manifest.dig("runtime", "runtime_review_mode") == "runtime_mediated", "spec protocol should record runtime-mediated review mode")
+  spec_validation_summary = YAML.load_file(spec_paths.fetch("runtime_validation_summary"))
+  runtime_validation_summary_contract.validate!(payload: spec_validation_summary, require_reviewed_phase: true)
+  assert(spec_validation_summary.key?("invalid_run_triage_note_ref"), "spec protocol should emit runtime validation summary")
+  assert(spec_validation_summary.fetch("remediation_templates").is_a?(Array), "spec protocol remediation templates should be an array")
 
   implementation_single_runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
     repo_root: repo_root,
@@ -179,6 +189,10 @@ Dir.mktmpdir("dual-reviewer-protocol-runs") do |tmpdir|
 
   validator_result = JSON.parse(runtime_paths.fetch("conformance_review_result").read)
   assert(validator_result.fetch("overall_status") == "passed", "implementation validation should pass in protocol runner check")
+  conformance_note = YAML.load_file(protocol_paths.fetch("conformance_review_result_note"))
+  runtime_validation_summary_contract.validate!(payload: conformance_note)
+  assert(conformance_note.key?("invalid_run_triage_note_ref"), "conformance review note should record invalid-run triage note ref")
+  assert(conformance_note.fetch("remediation_templates").is_a?(Array), "conformance review note should record remediation templates array")
 end
 
 puts "protocol runner validation passed"

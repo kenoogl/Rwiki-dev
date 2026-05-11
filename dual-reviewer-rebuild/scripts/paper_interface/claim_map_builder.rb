@@ -53,7 +53,7 @@ module DualReviewer
           "supporting_artifact_refs" => [PHASE_COMPARISON_REF],
           "maturity_label" => phase_comparisons["comparison_status"] == "valid" ? "mature" : "preliminary",
           "caveat_refs" => caveat_refs_for_scope(caveat_entries, "phase_comparison"),
-          "provenance_refs" => provenance_refs(manifest)
+          "provenance_refs" => provenance_refs(artifacts: artifacts, manifest: manifest)
         }
       end
 
@@ -70,7 +70,7 @@ module DualReviewer
           "supporting_artifact_refs" => [TREATMENT_COMPARISON_REF, CAVEAT_REGISTER_REF],
           "maturity_label" => treatment_comparisons["comparison_status"] == "valid" ? "mature" : "preliminary",
           "caveat_refs" => caveat_refs_for_scope(caveat_entries, "treatment_comparison"),
-          "provenance_refs" => provenance_refs(manifest)
+          "provenance_refs" => provenance_refs(artifacts: artifacts, manifest: manifest)
         }
       end
 
@@ -87,16 +87,21 @@ module DualReviewer
           "supporting_artifact_refs" => [EXCLUSION_REPORT_REF, ANALYSIS_MANIFEST_REF],
           "maturity_label" => has_nonvalid ? "mature" : "preliminary",
           "caveat_refs" => caveat_entries.map { |entry| "#{CAVEAT_REGISTER_REF}##{entry['caveat_code']}" },
-          "provenance_refs" => provenance_refs(manifest)
+          "provenance_refs" => provenance_refs(artifacts: artifacts, manifest: manifest)
         }
       end
 
-      def provenance_refs(manifest)
+      def provenance_refs(artifacts:, manifest:)
+        runtime_validation_summary_refs = artifacts
+          .fetch("runtime_validation_summaries", {})
+          .fetch("entries", [])
+          .map { |entry| entry.fetch("artifact_ref") }
+
         [
           ANALYSIS_MANIFEST_REF,
           "analysis_logic_version:#{manifest['analysis_logic_version']}",
           "input_run_set:#{Array(manifest['input_run_set']).join(',')}"
-        ]
+        ] + runtime_validation_summary_refs
       end
 
       def caveat_refs_for_scope(caveat_entries, scope)

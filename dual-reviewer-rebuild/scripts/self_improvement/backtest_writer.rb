@@ -14,11 +14,16 @@ module DualReviewer
       end
 
       def write_backtests(backtests:)
+        expected_paths = backtests.map { |backtest| repo_root.join("learning/backtests/#{backtest.fetch('proposal_id')}.json") }
         payload = {
           "generated_at" => backtests.first && backtests.first["tested_at"],
           "entries" => backtests.map { |backtest| index_entry(backtest) }
         }
         repo_root.join("learning/backtests/backtest_index.json").write(JSON.pretty_generate(payload))
+        Dir[repo_root.join("learning/backtests/proposal-*.json")].each do |path|
+          backtest_path = Pathname(path)
+          backtest_path.delete unless expected_paths.include?(backtest_path)
+        end
         backtests.each do |backtest|
           repo_root.join("learning/backtests/#{backtest.fetch('proposal_id')}.json").write(JSON.pretty_generate(backtest))
         end
