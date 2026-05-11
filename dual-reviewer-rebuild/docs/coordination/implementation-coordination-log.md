@@ -2009,3 +2009,31 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: `phase-field-cpp` の representative 3-treatment acquisition から、`dual` と `dual+judgment` は finding 件数・本文・severity は同じだが、`dual+judgment` では `judgment_ref`、`necessary/optional`、`proposed_action` が付くため、差は件数ではなく disposition quality にあることを短い evidence note として固定した。後の論文化では `judgment` を recall 増分ではなく candidate disposition / action shaping の mechanism として説明する根拠に使う
 - status: completed
+
+### 6.104 2026-05-11 pruning-trace deletion incident
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `phase-field pruning trace retention`
+- touched artifacts:
+  - `dual-reviewer-rebuild/EVIDENCE_PROTOCOL.md`
+  - `dual-reviewer-rebuild/docs/coordination/phase-field-pruning-trace-reconstruction-note.md`
+  - `dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `runtime-runs/` と `exports/` の未追跡 rerun artifact を事前承認なしに物理削除し、rule pruning 過程の raw evidence を一部失った。追跡済み artifact は復元したが、未追跡 raw trace は Git から戻せないため、重大な運用ミスとして記録する。あわせて reconstruction note を追加し、何が失われ、何が文書と tracked artifact から再構成できるかを固定した。今後は pruning / ablation / rollback の raw run を evidence 候補として扱い、削除前に `must keep / hold for decision / safe to discard` の一覧を出して承認を得るルールを `EVIDENCE_PROTOCOL.md` に追加した
+- status: completed
+
+### 6.105 2026-05-11 deployment-stage naming review note
+
+- 日付: 2026-05-11
+- 対象 feature: `future deployment naming`
+- 対象 task: `public-facing name review`
+- touched artifacts:
+  - `dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: 現在の `dual-reviewer` という名称は、もともとの review 機能中心のスコープを強く示す一方で、現行実体は workflow / evidence / gate / handback / self-improvement / reporting まで含むため、公開時の名称としては狭く見える可能性がある、という判断を future note として記録した。現段階では rename 作業を始めず、デプロイ段階で public-facing name を再検討する方針とする。内部実装名と公開名を分ける選択肢も許容する
+- status: recorded-for-future
