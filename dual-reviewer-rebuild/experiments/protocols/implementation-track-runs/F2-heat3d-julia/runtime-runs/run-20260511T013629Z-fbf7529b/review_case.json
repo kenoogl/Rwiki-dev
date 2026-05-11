@@ -1,0 +1,490 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260511T013629Z-fbf7529b",
+  "metadata": {
+    "run_id": "run-20260511T013629Z-fbf7529b",
+    "target_id": "implementation:heat3d-julia",
+    "target_artifact_hash": "sha256:27d86fb7e173ce6ce5544e2277b4fb274eab4d972a406417ebd2805ac5821c74",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "afc2beadf5625a2e8531c6b794a5736954e734fc",
+    "phase_profile": "tasks",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-11T01:36:29Z",
+    "closed_at": "2026-05-11T01:36:29Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "skipped",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-01-evidence-finding-boundary-1",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.boundary_condition_semantics",
+      "review_focus": "boundary_condition",
+      "section_heading": "9.4 温度場への反映",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 285,
+      "line_numbers": [
+        285
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 等温境界: 対象境界の `mask = 0` とし、隣接物理セルの温度を指定温度で固定してよい"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-boundary-2",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.boundary_condition_semantics",
+      "review_focus": "boundary_condition",
+      "section_heading": "9.4 温度場への反映",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 286,
+      "line_numbers": [
+        286
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 熱流束境界: 対象境界の `mask = 0` とし、流束寄与を RHS へ加える"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-boundary-3",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.boundary_condition_semantics",
+      "review_focus": "boundary_condition",
+      "section_heading": "9.4 温度場への反映",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 287,
+      "line_numbers": [
+        287
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 熱伝達境界: 対象境界の `mask = 0` とし、対流寄与を係数と RHS に反映する"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-boundary-4",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.boundary_condition_semantics",
+      "review_focus": "boundary_condition",
+      "section_heading": "9.5 符号規約",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 291,
+      "line_numbers": [
+        291
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `x_minus`, `y_minus`, `z_minus` は領域内向きに正寄与"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-boundary-5",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.boundary_condition_semantics",
+      "review_focus": "boundary_condition",
+      "section_heading": "9.5 符号規約",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 292,
+      "line_numbers": [
+        292
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `x_plus`, `y_plus`, `z_plus` は領域外向きに正流出として負寄与"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-1",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "5.4 Z 計算範囲",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 151,
+      "line_numbers": [
+        151
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "上下境界条件に応じて、実際に更新する Z 範囲を決める。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-2",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "5.4 Z 計算範囲",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 153,
+      "line_numbers": [
+        153
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 下側が等温: `z_start = 3`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-3",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "5.4 Z 計算範囲",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 154,
+      "line_numbers": [
+        154
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 下側が熱流束または熱伝達: `z_start = 2`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-4",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "5.4 Z 計算範囲",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 155,
+      "line_numbers": [
+        155
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 上側が等温: `z_end = NZ`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-5",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "5.4 Z 計算範囲",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 156,
+      "line_numbers": [
+        156
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 上側が熱流束または熱伝達: `z_end = NZ+1`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-6",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "10.1 時間積分",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 298,
+      "line_numbers": [
+        298
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 初期温度: 全セル `300.0 K`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-7",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "10.1 時間積分",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 299,
+      "line_numbers": [
+        299
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 時間刻み: `Δt = 1000.0 s`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-8",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "10.1 時間積分",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 300,
+      "line_numbers": [
+        300
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- MVP の実行ステップ数: `1`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-update-order-9",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.update_ordering_state_mutation",
+      "review_focus": "update_ordering",
+      "section_heading": "10.2 RHS 構築",
+      "section_class": "upstream_spec_misc",
+      "first_line_number": 304,
+      "line_numbers": [
+        304,
+        306,
+        307,
+        308,
+        310
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "各更新セルで RHS は次で構築する。 ```text rhs = - ( T_old / Δt + (qvol + q_boundary) / (ρ Cp) ) ``` ここで `q_boundary` は熱流束境界から入る項である。"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "step-01-observation-finding-boundary",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior.",
+      "source_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-boundary-1",
+        "review_case.json#step-01-evidence-finding-boundary-2",
+        "review_case.json#step-01-evidence-finding-boundary-3",
+        "review_case.json#step-01-evidence-finding-boundary-4",
+        "review_case.json#step-01-evidence-finding-boundary-5"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.boundary_condition_semantics"
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+        "boundary_condition"
+      ],
+      "source_kinds": [
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+        "upstream_spec_misc"
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-01-observation-finding-update-order",
+      "source_role": "primary_reviewer",
+      "severity": "medium",
+      "summary": "Update ordering and state mutation risk should be inspected because z-range selection, one-step backward Euler execution, and RHS construction together define the implementation-phase execution model.",
+      "source_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-update-order-1",
+        "review_case.json#step-01-evidence-finding-update-order-2",
+        "review_case.json#step-01-evidence-finding-update-order-3",
+        "review_case.json#step-01-evidence-finding-update-order-4",
+        "review_case.json#step-01-evidence-finding-update-order-5",
+        "review_case.json#step-01-evidence-finding-update-order-6",
+        "review_case.json#step-01-evidence-finding-update-order-7",
+        "review_case.json#step-01-evidence-finding-update-order-8",
+        "review_case.json#step-01-evidence-finding-update-order-9"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.update_ordering_state_mutation"
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+        "update_ordering"
+      ],
+      "source_kinds": [
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+        "upstream_spec_misc"
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-boundary",
+      "run_id": "run-20260511T013629Z-fbf7529b",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior.",
+      "source_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-01-finding-boundary",
+      "decision_unit_id": "decision-unit-step-01-finding-boundary",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-boundary",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-01-observation-finding-boundary",
+        "implementation:boundary_condition_semantics"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-update-order",
+      "run_id": "run-20260511T013629Z-fbf7529b",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "medium",
+      "summary": "Update ordering and state mutation risk should be inspected because z-range selection, one-step backward Euler execution, and RHS construction together define the implementation-phase execution model.",
+      "source_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-01-finding-update-order",
+      "decision_unit_id": "decision-unit-step-01-finding-update-order",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-update-order",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-01-observation-finding-update-order",
+        "implementation:update_ordering_state_mutation"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    }
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-2723897f"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "batch_id": "F1-intent-dual-reviewer-rebuild-narrative",
+  "generated_at": "2026-05-11T11:11:52Z",
+  "scope": "dual-reviewer-rebuild intent-track narrative batch",
+  "comparison_modes": [
+    {
+      "review_mode": "single_review",
+      "run_label": "F1-intent-dual-reviewer-rebuild-narrative-single",
+      "metrics": {
+        "intent_revision_count": 0,
+        "intent_handback_count": 0,
+        "intent_review_findings_count": 2,
+        "review_artifact_presence_rate": 1.0
+      },
+      "intent_handback_required": false,
+      "downstream_propagation_targets": [
+        "requirements",
+        "design",
+        "tasks"
+      ],
+      "linked_signal_ids": [
+        "intent-track-phase-contract-gap",
+        "intent-track-scope-drift-risk"
+      ]
+    },
+    {
+      "review_mode": "dual_reviewer_workflow",
+      "run_label": "F1-intent-dual-reviewer-rebuild-narrative-dual",
+      "metrics": {
+        "intent_revision_count": 0,
+        "intent_handback_count": 1,
+        "intent_review_findings_count": 3,
+        "review_artifact_presence_rate": 1.0
+      },
+      "intent_handback_required": true,
+      "downstream_propagation_targets": [
+        "requirements",
+        "design",
+        "tasks"
+      ],
+      "linked_signal_ids": [
+        "intent-track-phase-contract-gap",
+        "intent-track-scope-drift-risk"
+      ]
+    }
+  ],
+  "comparison_observations": {
+    "single_intent_review_findings_count": 2,
+    "dual_intent_review_findings_count": 3,
+    "single_intent_handback_count": 0,
+    "dual_intent_handback_count": 1,
+    "dual_requires_intent_handback": true
+  },
+  "caveats": [
+    "This batch is a fresh narrative-connected acquisition and preserves the older pilot batch as separate provenance.",
+    "Intent-track outputs remain bootstrap evidence; they do not by themselves claim correct downstream artifact generation."
+  ]
+}

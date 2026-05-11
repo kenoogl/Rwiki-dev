@@ -59,6 +59,8 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
 - role in paper:
   - workflow construction validity
   - intent-only start case の代表
+- fresh first batch:
+  - [F1-intent-dual-reviewer-rebuild-narrative comparison summary](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/comparison_summary.json:1)
 
 ### C-2: phase-field reverse-spec / phase-field-cpp
 
@@ -72,13 +74,17 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
   - [phase-field-reverse-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/phase-field-reverse-spec/intent.md:1)
 - role in paper:
   - high-cognitive-load downstream case
+  - spec-present refinement / reopen case の代表
+- fresh spec-track batch:
+  - [F1-spec-phase-field-reverse-spec-narrative comparison summary](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/comparison_summary.json:1)
 
 ### C-3: heat3d
 
 - core case note:
   - [core-case-heat3d.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md:1)
 - status:
-  - provisional
+  - fixed core case
+  - preserved v3 evaluation case
 - category:
   - PDE / simulation case
 - track:
@@ -87,6 +93,8 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
   - [heat3d-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/intent.md:1)
 - role in paper:
   - simulation implementation case
+- role in v3:
+  - code-conformance vs spec-underconstraint evaluation case
 
 ### C-4: iot-arduino
 

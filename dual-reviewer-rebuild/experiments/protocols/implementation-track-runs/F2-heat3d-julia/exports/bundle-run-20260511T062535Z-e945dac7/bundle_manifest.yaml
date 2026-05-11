@@ -1,0 +1,24 @@
+---
+bundle_id: bundle-run-20260511T062535Z-e945dac7
+run_id: run-20260511T062535Z-e945dac7
+source_repository_id: kenoogl/Rwiki-dev
+source_revision: afc2beadf5625a2e8531c6b794a5736954e734fc
+review_mode: runtime_mediated
+exported_at: '2026-05-11T06:25:35Z'
+export_runtime_version: 0.1.0
+included_artifact_refs:
+- decisions/decision_units.json
+- decisions/human_signoff.json
+- derived/comparison_eligibility_note.json
+- review_case.json
+- run_manifest.yaml
+- steps/step_a_primary_detection.json
+- steps/step_b_adversarial_review.json
+- steps/step_c_judgment.json
+- steps/step_d_integration.json
+- v2/metric_snapshot.json
+- v2/review_artifact.json
+- v2/signal_linkage_note.json
+- v2/trace_note.json
+- validation/invalidation_markers.json
+- validation/validator_result.json

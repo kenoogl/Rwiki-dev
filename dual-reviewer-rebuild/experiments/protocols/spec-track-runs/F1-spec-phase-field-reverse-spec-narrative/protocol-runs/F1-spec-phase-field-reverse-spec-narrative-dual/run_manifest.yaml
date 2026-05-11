@@ -1,0 +1,34 @@
+---
+run_label: F1-spec-phase-field-reverse-spec-narrative-dual
+case_id: F1-spec-phase-field-reverse-spec
+track: spec
+review_mode: dual_reviewer_workflow
+reviewed_phase: tasks
+operator: spec-track-narrative-batch
+generated_at: '2026-05-11T11:11:52Z'
+case_manifest_ref: experiments/protocols/case_manifests/F1-spec-phase-field-reverse-spec.yaml
+inputs:
+  reviewed_phase_ref: ".kiro/specs/phase-field-reverse-spec/tasks.md"
+  adjacent_phase_refs:
+  - ".kiro/specs/phase-field-reverse-spec/requirements.md"
+  - ".kiro/specs/phase-field-reverse-spec/design.md"
+  alignment_refs:
+  - ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+  - dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md
+references:
+  workflow_gate_status_ref: docs/coordination/workflow-gate-status.md
+  phase_metric_register_ref: docs/coordination/phase-review-metric-register.md
+runtime:
+  run_id: run-20260511T111152Z-7737ae49
+  runtime_review_mode: runtime_mediated
+  treatment: dual+judgment
+outputs:
+  reviewed_phase_note: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/reviewed_phase_note.md
+  alignment_artifact: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/alignment_artifact.yaml
+  phase_metric_snapshot: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/phase_metric_snapshot.json
+  signal_linkage_note: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/signal_linkage_note.yaml
+  v2_review_artifact: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/v2/review_artifact.json
+  v2_metric_snapshot: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/v2/metric_snapshot.json
+  v2_trace_note: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/v2/trace_note.json
+  v2_signal_linkage_note: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/v2/signal_linkage_note.json
+  execution_packet: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs/F1-spec-phase-field-reverse-spec-narrative-dual/execution_packet.md

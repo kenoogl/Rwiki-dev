@@ -1,0 +1,21 @@
+---
+run_label: F1-intent-dual-reviewer-rebuild-narrative-single
+case_id: F1-intent-dual-reviewer-rebuild
+track: intent
+case_manifest_ref: experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml
+intent_ref: ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+supporting_refs:
+- dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md
+- dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+- dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
+downstream_propagation_targets:
+- requirements
+- design
+- tasks
+intent_attributed_issue_refs:
+- intent-major-gap-phase-contract
+- intent-scope-drift-code-review-collapse
+status: populated_by_runner
+intent_handback_required: false
+note: Bootstrap intent issues should propagate into requirements/design/tasks as phase
+  contract and scope-drift controls rather than being silently absorbed.

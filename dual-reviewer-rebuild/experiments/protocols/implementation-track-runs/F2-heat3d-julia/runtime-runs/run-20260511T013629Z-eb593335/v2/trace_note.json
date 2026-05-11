@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260511T013629Z-eb593335",
+  "track": "implementation",
+  "case_id": "F2-heat3d-julia",
+  "target_id": "implementation:heat3d-julia",
+  "phase_profile": "tasks",
+  "source_refs": [
+    ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+    ".kiro/specs/heat3d-spec/intent.md",
+    "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+  ],
+  "governance_refs": [
+    "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+  ]
+}

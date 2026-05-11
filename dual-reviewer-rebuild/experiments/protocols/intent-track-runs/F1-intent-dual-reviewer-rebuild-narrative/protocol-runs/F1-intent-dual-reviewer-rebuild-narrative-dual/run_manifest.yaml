@@ -1,0 +1,35 @@
+---
+run_label: F1-intent-dual-reviewer-rebuild-narrative-dual
+case_id: F1-intent-dual-reviewer-rebuild
+track: intent
+review_mode: dual_reviewer_workflow
+operator: intent-track-narrative-batch
+generated_at: '2026-05-11T11:11:52Z'
+objective: intent bootstrap acquisition for cross-track narrative
+case_manifest_ref: experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml
+inputs:
+  intent_ref: ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+  supporting_refs:
+  - dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md
+  - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+  - dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
+  traceability_refs:
+  - docs/traceability/intent-to-requirements-trace-matrix.md
+references:
+  workflow_gate_status_ref: docs/coordination/workflow-gate-status.md
+  phase_metric_register_ref: docs/coordination/phase-review-metric-register.md
+  intent_review_template_ref: docs/reviews/templates/intent-review-template.md
+runtime:
+  run_id: run-20260511T111152Z-13a75b67
+  runtime_review_mode: runtime_mediated
+  treatment: dual+judgment
+outputs:
+  intent_review_artifact: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/intent_review.md
+  intent_trace_note: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/intent_trace_note.yaml
+  phase_metric_snapshot: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/phase_metric_snapshot.json
+  signal_linkage_note: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/signal_linkage_note.yaml
+  v2_review_artifact: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/v2/review_artifact.json
+  v2_metric_snapshot: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/v2/metric_snapshot.json
+  v2_trace_note: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/v2/trace_note.json
+  v2_signal_linkage_note: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/v2/signal_linkage_note.json
+  execution_packet: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs/F1-intent-dual-reviewer-rebuild-narrative-dual/execution_packet.md

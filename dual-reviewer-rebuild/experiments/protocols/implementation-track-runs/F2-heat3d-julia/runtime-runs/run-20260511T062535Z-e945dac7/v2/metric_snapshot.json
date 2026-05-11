@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260511T062535Z-e945dac7",
+  "finding_count": 3,
+  "decision_unit_count": 3,
+  "approved_decision_count": 3,
+  "rejected_decision_count": 0,
+  "deferred_decision_count": 0
+}

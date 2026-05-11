@@ -4,6 +4,8 @@ _作成: 2026-05-10_
 _status: draft v0.1_  
 _purpose: generic execution layer v2 仕様再設計の入力として、case-specific hardcode を正本化して固定する_
 
+_scope note: 起点は `phase-field` pilot で露出した hardcode inventory だが、現在の役割は case 一般化後の execution/control constraint ledger である。current workflow control board ではない。_
+
 ---
 
 ## 1. この文書の役割
@@ -46,6 +48,12 @@ _purpose: generic execution layer v2 仕様再設計の入力として、case-sp
 **redesign input artifact**
 として従属する。
 
+補足:
+
+- `heat3d` gate-only trial では、この文書は workflow current step の正本にはならない
+- 同 trial では gate 運用確認が主目的であり、`ECL` は一般化済み execution/control rule の制約台帳として参照する
+- trial の前進条件や承認条件は `ACTIVE_WORKLIST` と trial protocol 側で保持する
+
 ---
 
 ## 2. 判定基準
@@ -81,15 +89,33 @@ _purpose: generic execution layer v2 仕様再設計の入力として、case-sp
 それらは後続の v2 仕様正本で扱う。
 この文書は、その前提となる除去対象と移送対象を固定する。
 
+### 2.4 現在フェーズでの使い方
+
+この文書の成立起点は `phase-field` pilot だが、
+現在フェーズで確認したいのは
+**一般化された execution/control scheme が別 case でも運用できるか**
+である。
+
+したがって、この文書は今は次の意味で使う。
+
+- `phase-field` で抽出した constraint の記録
+- 他 case へ持ち越してよい一般則の明示
+- 新 case で workflow を回す際に逸脱検知へ使う constraint source
+
+逆に、今のフェーズでは次の意味では使わない。
+
+- `phase-field` 専用問題の棚卸しを続けるための current task board
+- current workflow step を決める control board
+
 ---
 
 ## 3. Inventory Summary
 
 | id | layer | artifact | current hardcode shape | disposition |
 |---|---|---|---|---|
-| `ECL-R1` | runtime | `BaseStepExecutor` | `target_id` に `phase-field-cpp` を含むかで case 判定 | remove |
-| `ECL-R2` | runtime | `StepAPrimaryDetection` | `phase-field` 向け pattern / summary / failure observation | remove |
-| `ECL-R3` | runtime | `StepBAdversarialReview` | `phase-field` 向け pattern / summary / failure observation | remove |
+| `ECL-R1` | runtime | `RuleMatchAnalyzer` | `phase-field-implementation-phase-first-snapshot.md` basename を特判して section class を決める | remove |
+| `ECL-R2` | runtime | `runtime/patterns/seed_patterns.yaml` | `phase-field-cpp first snapshot` を parent heading に持つ fragment cue 群 | remove |
+| `ECL-R3` | runtime | `runtime/patterns/seed_patterns.yaml` | `Requirement 1/2/6` など `phase-field` acceptance structure 前提の upstream cue 群 | remove |
 | `ECL-S1` | spec track | `SpecTrackWriter` | `phase-field` 3 case 向け分析 payload をコード埋め込み | remove |
 | `ECL-S2` | spec track | `SpecTrackWriter` | `case_id` と `reviewed_phase_ref` で branch 判定 | remove |
 | `ECL-I1` | intent track | `IntentTrackWriter` | `dual-reviewer-rebuild` bootstrap case 専用分析 payload | remove |
@@ -105,50 +131,47 @@ _purpose: generic execution layer v2 仕様再設計の入力として、case-sp
 ### `ECL-R1` Runtime target predicate
 
 - artifact:
-  [base_step_executor.rb](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/executors/base_step_executor.rb:54)
+  [rule_match_analyzer.rb](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/execution_v2/analyzers/rule_match_analyzer.rb:518)
 - current behavior:
-  `phase_field_target?` が `target_id.include?("phase-field-cpp")` で真偽を返す
+  `classify_section` が basename `phase-field-implementation-phase-first-snapshot.md` を特判し、
+  `implementation_snapshot_note` を返す
 - why this is a hardcode:
-  runtime の finding 生成可否が target 名に直接依存している
+  section class の決定が generic rule ではなく特定 snapshot filename に依存している
 - blocker:
-  新しい implementation case を追加しても、execution rule が増殖しない限り何も起きない
+  新しい snapshot を追加するたびに analyzer 側へ filename 例外を足す誘惑が残る
 - replacement direction:
-  `target_id` 判定ではなく、input artifact から抽出した reviewable evidence profile を使う
+  basename 特判ではなく、heading / source kind / manifest-provided schema から section class を決める
 
-### `ECL-R2` Primary detection heuristic
+### `ECL-R2` Snapshot fragment cue hardcode
 
 - artifact:
-  [step_a_primary_detection.rb](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/executors/step_a_primary_detection.rb:8)
+  [seed_patterns.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/patterns/seed_patterns.yaml:1)
 - current behavior:
-  `BOUNDARY_PATTERNS` / `UPDATE_ORDER_PATTERNS` と summary 文面が
-  `phase-field` の periodic boundary と update ordering に寄っている
+  `clean-room-caveat-note`、`digest-fixity-caveat-note`、
+  `operational-digest-check-note`、`evidence-exclusion-note` などの cue が
+  parent heading `^phase-field-cpp first snapshot$` を前提にしている
 - why this is a hardcode:
-  gap type ではなく domain content が executor に埋まっている
+  fragment class 判定が特定 snapshot 文書の heading 構造に依存している
 - blocker:
-  finding taxonomy が `boundary` / `update order` の case-specific wording に固定される
+  `heat3d` のように別 snapshot title / heading を持つ case で cue 再利用性が落ちる
 - replacement direction:
-  executor は
-  `constraint mismatch`
-  `ordered-state-transition risk`
-  のような generic gap type だけを出し、case 固有性は excerpt と evidence に残す
+  heading title 固定ではなく、manifest または profile から supplied される structural role で cue を解決する
 
-### `ECL-R3` Adversarial review heuristic
+### `ECL-R3` Upstream contract cue hardcode
 
 - artifact:
-  [step_b_adversarial_review.rb](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/executors/step_b_adversarial_review.rb:8)
+  [seed_patterns.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/patterns/seed_patterns.yaml:1)
 - current behavior:
-  parameter / clean-room caveat を `phase-field` 向け cue と summary で生成する
+  `parameter_contract`、`boundary_contract`、`update_order_contract` の cue が
+  `Requirement 1:`、`Requirement 2:`、`Requirement 6:` など
+  `phase-field` acceptance structure を前提にしている
 - why this is a hardcode:
-  adversarial pass の論点候補が case content で固定されている
+  upstream contract 判定が generic acceptance model ではなく特定 case の requirement numbering に依存している
 - blocker:
-  adversarial role が generic disagreement surface ではなく
-  `phase-field` 用の second opinion に縮退している
+  upstream spec の節構成が異なる case では rule をそのまま適用できない
 - replacement direction:
-  adversarial executor は
-  `parameter interpretation drift`
-  `scope-boundary caveat`
-  `input-to-implementation mapping ambiguity`
-  のような generic contradiction class を扱う
+  contract cue は fixed requirement numbers ではなく、
+  profile-provided structural requirements または normalized spec schema で判定する
 
 ### `ECL-S1` Spec-track analysis payload embedding
 
@@ -278,7 +301,21 @@ _purpose: generic execution layer v2 仕様再設計の入力として、case-sp
 - `ECL-I1`
 - `ECL-I2`
 
-これらは generic execution layer の正本化前に必ず除去対象とする。
+意味:
+
+- generic execution/control scheme の一般性を直接壊す項目である
+- 残したままでは case を替えた瞬間に analyzer / writer の挙動が変質しうる
+- main evidence 以前に、cross-case operational validity を壊す
+
+現在フェーズでの扱い:
+
+- `heat3d` trial 中は「即時全面改修」よりも「逸脱検知の最優先監視対象」として扱う
+- これらに触れる修正や、これらを増やす方向の判断が必要になった場合は stop reason として記録する
+- trial 後に generic layer 正本化へ戻る際、最優先で除去・置換する
+
+exit criterion:
+
+- case identity や特定 case の文書構造に依存しなくても同等の runtime / review output contract を維持できること
 
 ### P1: case manifest への移送
 
@@ -286,7 +323,35 @@ _purpose: generic execution layer v2 仕様再設計の入力として、case-sp
 - `ECL-B2`
 - `ECL-B3`
 
-これらは runtime / analyzer の generic 化と並行して整理する。
+意味:
+
+- execution rule そのものではなく、sample invocation や case wiring の残骸である
+- generic 化の blocker ではあるが、P0 ほど直接的に review logic を汚染しない
+
+現在フェーズでの扱い:
+
+- `heat3d` trial では immediate blocker ではない
+- ただし新 case 追加のたびに script 増殖が起きるなら、manifest への移送を前倒しする
+
+exit criterion:
+
+- protocol runner が sample default なしでも成立し、
+- case binding が script 本体ではなく manifest / batch definition で完結すること
+
+### Operational Reading Rule
+
+この priority は「今この瞬間の実装順」をそのまま命じるものではない。
+
+- `ACTIVE_WORKLIST` が current step を決める
+- `ECL` の priority は、その step の中で何を最も危険な逸脱として監視するかを決める
+
+したがって `heat3d` gate-only trial では、
+
+1. current action は workflow gate の運用確認
+2. その最中に最優先で監視するのは `P0`
+3. trial を通した後に構造整理へ戻すときの次順位が `P1`
+
+という読み方を取る。
 
 ---
 
@@ -304,6 +369,12 @@ _purpose: generic execution layer v2 仕様再設計の入力として、case-sp
 1. `ACTIVE_WORKLIST` が次の 1 手を固定する
 2. その次の 1 手が `hardcode inventory` である間、この文書が正本になる
 3. inventory 完了後は、この文書を入力にして v2 上位仕様へ handoff する
+
+補足:
+
+- `heat3d` gate-only trial では、`ACTIVE_WORKLIST` が current control を持つ
+- この文書は `phase-field` を起点に抽出した constraint を、他 case に対しても適用可能か検証するための履歴・制約台帳である
+- したがって、この文書に `phase-field` が残るのは origin 記録として自然だが、current scope は `phase-field` 固有 inventory に閉じない
 
 したがって、この文書を作成しただけでは作業完了ではない。
 `ACTIVE_WORKLIST` 上で次段へ進み、v2 仕様と後続 spec を起こす必要がある。
@@ -347,3 +418,21 @@ generic execution layer 設計では、少なくとも次を満たす必要が�
 3. analyzer と writer を分離する
 4. case manifest 層を定義する
 5. その後に `phase-field` pilot を generic layer で再取得する
+
+現在フェーズでは、これに加えて次も含意する。
+
+6. 一般化された execution/control scheme を `heat3d` のような次ケースで運用し、gate と control artifact が実際に回るかを確認する
+
+---
+
+## 10. Relation To heat3d Gate-Only Trial
+
+`heat3d` trial では、次を明示する。
+
+1. trial の主目的は `ECL` 除去作業そのものではなく、一般化済み execution/control scheme の運用確認である
+2. `ECL` は「generic layer へ進む際に何を除去対象と見るか」だけでなく、「一般化済み rule から逸脱していないか」を見る参照台帳として使う
+3. trial 中に case-specific rule を増やしたくなった場合は、workflow 上の stop reason として扱い、この ledger の constraint に反する兆候として記録する
+
+つまり `ECL` は trial の steering artifact ではなく、
+**trial 中に逸脱を検知するための constraint artifact**
+として使う。

@@ -1,0 +1,8 @@
+---
+batch_id: F1-spec-phase-field-reverse-spec-narrative
+scope: phase-field reverse-spec narrative batch
+output_root: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/protocol-runs
+runtime_run_root_base: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/runtime-runs
+run_labels:
+- F1-spec-phase-field-reverse-spec-narrative-single
+- F1-spec-phase-field-reverse-spec-narrative-dual

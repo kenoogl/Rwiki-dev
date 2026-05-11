@@ -1,0 +1,43 @@
+{
+  "decision_units": [
+    {
+      "decision_unit_id": "decision-unit-step-01-finding-boundary",
+      "finding_refs": [
+        "review_case.json#step-01-finding-boundary"
+      ],
+      "judgment_refs": [
+
+      ],
+      "proposed_action": "manual_review_required",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-11T06:25:35Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    },
+    {
+      "decision_unit_id": "decision-unit-step-01-finding-update-order",
+      "finding_refs": [
+        "review_case.json#step-01-finding-update-order"
+      ],
+      "judgment_refs": [
+
+      ],
+      "proposed_action": "manual_review_required",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-11T06:25:35Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    },
+    {
+      "decision_unit_id": "decision-unit-step-02-finding-parameter-caveat",
+      "finding_refs": [
+        "review_case.json#step-02-finding-parameter-caveat"
+      ],
+      "judgment_refs": [
+
+      ],
+      "proposed_action": "manual_review_required",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-11T06:25:35Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    }
+  ]
+}

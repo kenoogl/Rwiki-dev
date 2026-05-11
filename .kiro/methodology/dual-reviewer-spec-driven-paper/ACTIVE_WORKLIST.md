@@ -100,13 +100,19 @@ _purpose: 目先の実装で主線を見失わないための固定 worklist_
 
 文書種別の判定規則:
 
-- `requirements review wave` 中は `requirements.md` を見る
+- `requirements draft` 後はまず feature ごとの local review を行う
+- `requirements review wave` 中は揃った active feature の `requirements.md` を横断して見る
+- `requirements gate` 前には対応する `requirements review wave` 完了を確認する
 - `requirements alignment gate` 中は各 feature の `requirements.md` を依存順で見る
 - `requirements approval gate` 中は `requirements.md` と alignment artifact を見る
-- `design review wave` 中は `design.md` を見る
+- `design draft` 後はまず feature ごとの local review を行う
+- `design review wave` 中は揃った active feature の `design.md` を横断して見る
+- `design gate` 前には対応する `design review wave` 完了を確認する
 - `design alignment gate` 中は各 feature の `design.md` を依存順で見る
 - `design approval gate` 中は `design.md` と alignment artifact を見る
-- `tasks review wave` 中は `tasks.md` を見る
+- `tasks draft` 後はまず feature ごとの local review を行う
+- `tasks review wave` 中は揃った active feature の `tasks.md` を横断して見る
+- `tasks gate` 前には対応する `tasks review wave` 完了を確認する
 - `tasks alignment gate` 中は各 feature の `tasks.md` を依存順で見る
 
 依存順の判定規則:
@@ -165,33 +171,46 @@ generic execution layer v2 の tasks phase では、次の順を固定する。
 
 ## 3. 現在の前提
 
+### 3.1 Current Control Assumptions
+
 - 今は **main evidence 取得段階ではない**
-- 今は **acquisition tooling と pilot acquisition を全 phase に通す段階** である
-- fixed core case は現状 `phase-field`
-- `heat3d` と `iot-arduino` は provisional のまま
-- `phase-field pilot only` の範囲で tooling を揃えている
-- `phase-field-cpp` は representative implementation case として
-  `single / dual / dual+judgment` の 3 treatment を先に取る
-- ただし、現在の `phase-field` pilot は **case-specific heuristic 実装** を含む
-- この case-specific 実装は
-  - 新しい case へ一般化できない
-  - 実装を書き換えると同じ case でも結果が変わりうる
-  - main evidence だけでなく reusable pilot method としても不適切
-- したがって、**case profile ごとに review rule を増やす方向では進めない**
+- 今は **workflow operation validation と case expansion の段階** である
+- current control target は `C-3 heat3d` の gate-only trial である
+- この trial では `intent -> discovery checkpoint -> requirements -> design -> tasks -> implementation` の順序を保てるかを first-class に確認する
+- 人間は gate の承認者であり、Codex は gate の代行者ではない
+- `requirements/design/tasks` は中間媒体であり、`intent` に照らして reopen / handback / 再解釈されうる
+- よって、phase 完了だけでなく `Current Next Step` と `Stop Rules` による実行制御が必要である
+- restart 後の current step では、single-feature 前提を固定せず、discovery checkpoint で active feature set を確認する
+- multi-feature alignment gate は feature set 確定後に適用有無を判定する
 
-追加前提:
+### 3.2 Historical Baseline
 
-- 本開発は、狭義の「仕様駆動開発」ではなく
-  **intent-governed spec-driven development**
-  として扱う
-- `requirements/design/tasks` は中間媒体であり、
-  `intent` に照らして reopen / handback / 再解釈されうる
-- よって、phase 完了だけでなく
-  `Current Next Step` と `Stop Rules` による実行制御が必要
+- `phase-field` 系で intent / spec / implementation の pilot acquisition は取得済みである
+- `phase-field-cpp` は representative implementation baseline として `single / dual / dual+judgment` の 3 treatment を取得済みである
+- ただし、`phase-field` pilot は **case-specific heuristic 実装** を含む
+- この baseline は比較用・履歴用には有効だが、そのまま main evidence や generic method の正本には昇格させない
+
+### 3.3 Operational Constraint
+
+- case-specific heuristic を積み増して新 case を通す方向では進めない
+- `heat3d` trial で workflow を通す際も、case 固有 rule 追加ではなく gate operation の成立を優先して見る
 
 ---
 
 ## 4. Phase Coverage Status
+
+### 4.1 Current Trial Coverage (`heat3d`)
+
+| phase | current status | approval status | note |
+|---|---|---|---|
+| `intent` | fixed input | approved | [intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/intent.md:1) と canonical source を固定済み |
+| `requirements` | approved | approved | active feature の requirements draft、local review、requirements review wave、alignment gate、evidence summary を経て human requirements gate を通過 |
+| `design` | approved | approved | active feature 4 本の `design.md` 初稿、local design review、design review wave、alignment gate、evidence summary を経て human design gate を通過 |
+| `tasks` | approved | approved | active feature 4 本の tasks draft、local review、tasks review wave、alignment gate、evidence summary を経て human tasks gate を通過 |
+| `review acquisition` | acquired | approved | gate-approved boundary で `single / dual / dual+judgment` を再取得し comparison summary を更新 |
+| `implementation` | completed | approved | `/Users/Daily/Development/DR-heat3d` に source tree を起こし、unit/smoke validation を通過 |
+
+### 4.2 Historical Pilot Coverage (`phase-field` baseline)
 
 | phase | current status | evidence type | note |
 |---|---|---|---|
@@ -205,112 +224,88 @@ generic execution layer v2 の tasks phase では、次の順を固定する。
 
 ## 5. Done
 
-### 5.1 Implementation Track
+### 5.1 Current Trial Setup (`heat3d`)
+
+- `heat3d-spec` intent を canonical source 付きで固定
+- gate-only trial protocol を追加
+- workflow path trace artifact を追加
+- `heat3d-spec/spec.json` を初期化
+- `heat3d-julia` implementation pilot を別取得済み baseline として保持
+- discovery artifact として `brief.md` / `research.md` を追加
+- active feature spec として `heat3d-foundation`, `heat3d-linear-solver`, `heat3d-case-model`, `heat3d-main` を起票
+- active feature requirements draft / local review / requirements review wave / alignment artifact を取得
+- `requirements-evidence-summary.md` を gate package derived artifact として取得
+- human gate で指摘された readability issue を requirements recheck と alignment recheck で吸収
+- human `requirements gate` を通過し、requirements phase を approved に固定
+- active feature 4 本の `design.md` 初稿を作成し、design phase を generated に進めた
+- active feature 4 本の local design review artifact を作成し、feature-local blocking issue を解消した
+- design review wave / alignment gate / design-evidence-summary を取得し、design gate package を固定した
+- human `design gate` を通過し、design phase を approved に固定した
+- active feature 4 本の `tasks.md` 初稿を作成し、tasks phase を generated に進めた
+- active feature 4 本の local tasks review artifact を作成し、feature-local blocking issue を解消した
+- tasks review wave / alignment gate / tasks-evidence-summary を取得し、tasks gate package を固定した
+- human `tasks gate` を通過し、tasks phase を approved に固定した
+- review acquisition preparation memo と review acquisition gate summary を作成し、review acquisition gate package を固定した
+- `ready_for_review_acquisition` を true に更新し、review acquisition 入力境界を current state に反映した
+- gate-approved upstream bundle で review acquisition batch を再実行し、`single / dual / dual+judgment` の comparison summary を更新した
+- `/Users/Daily/Development/DR-heat3d` に actual implementation を追加し、`Project.toml`, `src/`, `test/` を新規作成した
+- implementation 中の blocking issue 3 件を coding layer 内で解消し、upstream phase への reopen なしで閉じた
+- `julia --project=. test/runtests.jl` を実行し、`grid and boundary contract`, `case-model contract`, `solver invariants`, `main integration` を pass させた
+
+refs:
+- [intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/intent.md:1)
+- [spec.json](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/spec.json:1)
+- [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1)
+- [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1)
+- [review-acquisition-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/reviews/review-acquisition-summary.md:1)
+- [implementation-evidence-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/reviews/implementation-evidence-summary.md:1)
+
+### 5.2 Historical Pilot Baseline (`phase-field`)
 
 - `phase-field` implementation pilot runner
 - `single_review` / `dual_review` / `dual_reviewer_workflow` batch execution
-- non-empty findings
-- comparison summary
-- representative 3-treatment acquisition completed
+- `phase-field-reverse-spec` requirements / design / tasks pilot acquisition
+- `dual-reviewer-rebuild` bootstrap intent pilot acquisition
 
 refs:
-- [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json:1)
-
-### 5.2 Spec Track (`tasks`)
-
-- `phase-field-reverse-spec` tasks case runner
-- reopen / recheck / intent-attributed issue / metrics
-- comparison summary
-
-refs:
-- [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/comparison_summary.json:1)
-
-### 5.3 Intent Track
-
-- `dual-reviewer-rebuild` bootstrap case runner
-- major gap / scope drift / counter-hypothesis / handback / propagation
-- comparison summary
-
-refs:
-- [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/comparison_summary.json:1)
-
-### 5.4 Spec Track (`requirements` / `design`)
-
-- `phase-field-reverse-spec` requirements case runner
-- `phase-field-reverse-spec` design case runner
-- reopen / recheck / intent-attributed issue / metrics
-- comparison summaries
-
-refs:
+- [implementation comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json:1)
+- [tasks comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/comparison_summary.json:1)
 - [requirements comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec/comparison_summary.json:1)
 - [design comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/comparison_summary.json:1)
+- [intent comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/comparison_summary.json:1)
 
 ---
 
 ## 6. Not Done
 
-### 6.1 Requirements Phase
+### 6.1 Current Trial Gap (`heat3d`)
 
-- `phase-field-reverse-spec` requirements execution layer
-- `single_review` / `dual_reviewer_workflow` pilot batch
-- requirements-specific metrics snapshot
-- comparison summary
+- `heat3d` を v3 code-conformance evaluation case として保存する判断は記録済みである
+- canonical full-case acceptance `13.4` は main evidence 必須条件にはせず、supplementary behavioral evidence として扱う
 
-status:
-- completed as pilot acquisition
+### 6.2 Trial Success Still Unproven
 
-refs:
-- [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec/comparison_summary.json:1)
+まだ未証明なのは次である。
 
-### 6.2 Design Phase
+1. gate-only 承認モデルで workflow が破綻しないか
+2. 人間判断が必要な局面で Codex が適切に停止できるか
+3. reopen / query / gate trace を artifact として残せるか
+4. `heat3d` が `C-3` の `Spec-origin / Implementation-origin` を一つの流れで満たせるか
 
-- `phase-field-reverse-spec` design execution layer
-- `single_review` / `dual_reviewer_workflow` pilot batch
-- design-specific metrics snapshot
-- comparison summary
+### 6.3 Historical Baseline Limit
 
-status:
-- completed as pilot acquisition
+`phase-field` baseline は参考にはなるが、
+current control target の正本ではない。
 
-refs:
-- [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/comparison_summary.json:1)
+理由:
 
-### 6.3 Main-Evidence Readiness
-
-pilot acquisition 条件は満たした。  
-ただし main evidence へはまだ昇格しない。
-
-次に必要なのは:
-
-1. case-specific heuristic 実装を除去する方針を固める
-2. case 非依存の generic review execution layer を定義する
-3. pilot artifact schema を保ったまま generic layer に差し替える
-4. その後に main-evidence 昇格条件を議論する
+1. `phase-field` は case-specific heuristic を含む
+2. `heat3d` trial で見たいのは finding 数よりも gate operation の成立である
+3. current step の意思決定を historical baseline に引っ張られてはならない
 
 ### 6.4 Generic Execution Layer Redesign
 
-ここが現在の最優先 blocker。
-
-解くべき問題:
-
-1. `phase-field` 固有の finding 文面や cue に依存している
-2. `Spec Track` の analysis が case id / file ref で直分岐している
-3. 同じ case でも実装変更で結果が変わり、比較基盤として不安定
-
-必要な方向:
-
-1. 入力 artifact から generic に review prompt / review observation を作る
-2. finding は case 名ではなく
-   - gap type
-   - inconsistency type
-   - caveat type
-   - handback / reopen class
-   の taxonomy で表現する
-3. case 固有性は
-   - input artifact
-   - extracted evidence
-   - final finding text
-   にのみ残し、execution rule 自体には埋め込まない
+generic execution layer v2 は未完了であり、trial 中も open constraint として保持する。
 
 status:
 - `case-specific hardcode inventory`: completed
@@ -325,54 +320,93 @@ refs:
 - [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
 - [execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1)
 - [generic-execution-layer-v2-spec.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/generic-execution-layer-v2-spec.md:1)
-- [requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/requirements.md:1)
 
 ---
 
 ## 7. Current Workflow Step
 
-`implementation replacement`
+`post-report comparison planning`
 
 authoritative workflow ref:
 - [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215)
 
 why this is the current step:
-- requirements は approve 済みになった
-- design は approve 済みになった
-- tasks 初版を生成した
-- tasks review と tasks alignment を完了した
-- tasks は approve 済みになった
-- したがって、次は approved tasks に従って implementation replacement を開始する段階である
+- `F2-heat3d-julia` の implementation pilot は取得済みである
+- gate-approved boundary での review acquisition も再取得済みである
+- `phase-field` baseline との比較 note は取得済みである
+- `C-3 heat3d` evidence bundle も取得済みである
+- `heat3d` の fixed core case judgment は文書化済みである
+- `/Users/Daily/Development/DR-heat3d` で actual implementation も完了し、implementation-local rework data も取得済みである
+- main paper 用の observation note は作成済みである
+- preliminary report と paper plan への一次統合も完了した
+- `core-case-heat3d` と `heat3d-c3-evidence-bundle` への claim-supporting text 追加も完了した
+- `phase-field` と `heat3d` を並べた cross-case synthesis note も作成済みである
+- `dual-reviewer-spec-driven-paper-plan.md` の `Claim 2 / 3 / 4` に paragraph candidate も追加済みである
+- `dual-reviewer-spec-driven-preliminary-report.md` の `Claim 2 / 3 / 4` も cross-case prose に更新済みである
+- preliminary report を本文正本、paper plan を planning source とする役割分担は固定済みである
+- cross-track narrative note も作成済みである
+- preliminary report の Main Evaluation Tracks に cross-track continuity paragraph も追加済みである
+- preliminary report の Threats to Validity に `heat3d` の interpretation boundary も追加済みである
+- `Intent Track / Spec Track` の未取得分を narrative gap として整理した bridge note も作成済みである
+- `Intent Track / Spec Track / first-run` 計画文書にも narrative role を反映済みである
+- execution preparation note も作成済みである
+- `Intent Track / Spec Track` の fresh narrative batch 実行も完了した
+- first-batch acquisition summary により、旧 pilot と current narrative batch の provenance 分離もできた
+- したがって次に必要なのは、同期済み prose を固定したうえで、追加比較と集計の planning に戻ることである
+- 今回の試行では、gate operation、review acquisition、actual implementation、spec underconstraint reading を分けて記録する必要がある
 
 ---
 
 ## 8. Current Blocker
 
-- `phase-field` の representative 3-treatment acquisition は完了した。結果は `single=2 findings`、`dual=3 findings`、`dual+judgment=3 findings` であり、現 pilot では `adversarial` は finding を 1 件増やしたが、`judgment` は finding 数を追加で増やしていない。したがって次の blocker は `dual only` の未取得ではなく、`parameter` の `snapshot rationale` 依存が phase-field 固有かどうか未確認な点である
-- `implementation` 側は `evidence record -> observation -> finding` の三段構えになり、evidence record も section-scoped になった。observation には evidence type、review focus、source kind、section class、fragment class が入り、rule 側もそれらの組み合わせで gating できる。boundary と update-order は `upstream contract` だけで立ち、parameter は `snapshot rationale + upstream parameter contract` で立つ。一方で parameter から `snapshot rationale` を外すと adversarial observation 自体が消えるため、この依存は現時点では必要と判断される。残る heuristic の中心は、この依存が phase-field 固有かどうかである
-- `phase-field` pilot rerun は再取得できており replacement outcome も固定済みだが、generic execution layer replacement を main-evidence 級と言うにはまだ早い
+- current blocker はない
+- remaining track の first batch も取得済みで、caveat の置き場所と editorial redundancy の圧縮も完了したので、次は追加比較と集計の planning に入れる
 
 ---
 
 ## 9. Current Action
 
-approved tasks に従った `phase-field` representative 3-treatment acquisition は完了した。次は、`parameter` の `snapshot rationale` 依存が phase-field 固有かどうかを確かめるため、**第 2 implementation case として `heat3d-julia` を起こす準備** を進める。
+直近の action は、固定済み prose と caveat 配置を保ったまま
+**additional comparison / metric aggregation の planning に戻ること**
+である。
 
 直近の action は次の 4 点である。
 
-- `heat3d` implementation snapshot 文書を固定する
-- `heat3d` implementation case manifest を起こす
-- 最小の heuristic / profile を作る
-- `single / dual+judgment` を先に 1 回ずつ通し、必要なら `dual only` を追加して dependency を比較する
+- `brief.md` / `research.md` を discovery artifact として維持する
+- active feature set を spec artifact として維持する
+- approved upstream bundle と review acquisition gate package を acquisition boundary の正本として維持する
+- evidence bundle と comparison note を claim drafting の入口として使う
+- implementation evidence summary を coding-layer rework の正本として維持する
+- `tasks` phase の finding 数と carry-over risk を review acquisition result の読み筋に接続する
+- implementation-local rework 3 件が upstream reopen を起こしていないことを judgment に反映する
+- `heat3d-v3-evaluation-note.md` を v3 保存記録として維持する
+- `heat3d-case-fixation-decision.md` を fixed-case judgment の正本として維持する
+- `heat3d-main-paper-observation-note.md` を paper-facing summary として維持する
+- preliminary report と paper plan の heat3d 記述を claim-supporting sentence の候補として扱う
+- `core-case-heat3d.md` と `heat3d-c3-evidence-bundle.md` の claim-supporting text を claim 本文の source paragraph として扱う
+- `claim-2-3-4-cross-case-synthesis.md` を final phrasing の source note として扱う
+- `dual-reviewer-spec-driven-paper-plan.md` の `current paragraph candidate` を正式 claim prose の叩き台として扱う
+- `dual-reviewer-spec-driven-preliminary-report.md` の `Claim 2 / 3 / 4` を現時点の canonical prose として扱う
+- `dual-reviewer-spec-driven-paper-plan.md` は planning source / fallback source として扱う
+- `heat3d-validation-boundary-decision.md` を validation boundary の正本判断として扱う
+- `cross-track-narrative-note.md` を track 横断 story の source note として扱う
+- `dual-reviewer-spec-driven-preliminary-report.md` の Threats 節を `heat3d` interpretation boundary の canonical placement として扱う
+- `remaining-track-acquisition-bridge-note.md` を残り acquisition の narrative role 定義として扱う
+- `intent-track-first-run-plan.md` と `spec-track-first-run-plan.md` を narrative-connected execution plan として扱う
+- `remaining-track-acquisition-execution-preparation.md` を concrete execution prep の正本として扱う
+- `remaining-track-first-batch-acquisition-summary.md` を fresh provenance summary として扱う
+- `heat3d-main-paper-observation-note.md` を `heat3d` caveat placement の source note として扱う
 
 この action では、次を確認対象にする。
 
-- `phase-field` で見えた `parameter` の rationale 依存が `heat3d` でも再現するか
-- `boundary` / `update-order` がやはり upstream contract だけで立つか
-- rerun と validation script が新 case でも通るか
-- `phase-field` 特有の調整をそのまま持ち込んでいないか
-
-この文書はここで tasks 手順自体を再定義しない。phase の進め方と gate の成立条件は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215) を正本とする。
+- gate-approved acquisition 結果を claim narrative に十分写せているか
+- implementation issue と upstream spec issue の切り分けを artifact に残せているか
+- `single / dual / dual+judgment` の差分を中身で説明できるか
+- clean-room exclusion が acquisition 中に破られていないか
+- implementation validation の current boundary を main evidence でどう扱うかを明示できるか
+- fresh `Intent Track / Spec Track` batch の読みを preliminary report, paper plan, synthesis note に無理なく接続できるか
+- `first-batch level` の限定と `v3` 委譲文が本文と補助文書で矛盾していないか
+- additional case / additional metric をどこに足すと main paper の弱点を最も減らせるか
 
 ---
 
@@ -380,36 +414,66 @@ approved tasks に従った `phase-field` representative 3-treatment acquisition
 
 この step は、次が満たされたら完了とみなす。
 
-1. `intent` / `spec` / `implementation` の pilot rerun が v2 path で再取得できている
-2. comparison summary と replacement outcome note が artifact として残っている
-3. `implementation` で observation-first path が runtime artifact に反映されている
-4. representative implementation case で `single / dual / dual+judgment` の比較が取得済みである
-5. remaining reopen item register が固定されている
-6. `main evidence` 未昇格が明記されている
+1. fresh `Intent Track / Spec Track` batch が provenance 分離された形で残る
+2. `remaining-track-first-batch-acquisition-summary.md` で 2 track の result を 1 枚で読める
+3. preliminary report 側で `Intent / Spec / Implementation` の 3-track story が acquisition-backed と書ける
+4. implementation issue と upstream spec issue の切り分けを claim 文面へ残せる
+5. validation 留保を supplementary behavioral evidence として main paper の書き方へ落とせる
+6. `first-batch level` と `v3` delegation の caveat placement が report / note 間で揃う
+7. 次の step を additional comparison planning に移せる
 
 ---
 
 ## 11. Working Artifact
 
-- [requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/requirements.md:1)
-- [design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/design.md:1)
-- [tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/tasks.md:1)
-- [spec.json](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/spec.json:1)
-- [cross-spec-generic-execution-layer-v2-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-requirements-alignment.md:1)
-- [cross-spec-generic-execution-layer-v2-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-generic-execution-layer-v2-design-alignment.md:1)
+- [intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/intent.md:1)
+- [spec.json](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/spec.json:1)
+- [heat3d-foundation/design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-foundation/design.md:1)
+- [heat3d-linear-solver/design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-linear-solver/design.md:1)
+- [heat3d-case-model/design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-case-model/design.md:1)
+- [heat3d-main/design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-main/design.md:1)
+- [heat3d-foundation/tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-foundation/tasks.md:1)
+- [heat3d-linear-solver/tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-linear-solver/tasks.md:1)
+- [heat3d-case-model/tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-case-model/tasks.md:1)
+- [heat3d-main/tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-main/tasks.md:1)
+- [tasks-review-wave-2026-05-11.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/reviews/tasks-review-wave-2026-05-11.md:1)
+- [tasks-alignment-2026-05-11.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/reviews/tasks-alignment-2026-05-11.md:1)
+- [tasks-evidence-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/reviews/tasks-evidence-summary.md:1)
+- [heat3d-review-acquisition-preparation.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-review-acquisition-preparation.md:1)
+- [review-acquisition-gate-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/reviews/review-acquisition-gate-summary.md:1)
+- [review-acquisition-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/reviews/review-acquisition-summary.md:1)
+- [heat3d-implementation-execution-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-implementation-execution-note.md:1)
+- [heat3d-phase-field-implementation-comparison-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-phase-field-implementation-comparison-note.md:1)
+- [heat3d-c3-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-c3-evidence-bundle.md:1)
+- [heat3d-v3-evaluation-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-v3-evaluation-note.md:1)
+- [heat3d-case-fixation-decision.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-case-fixation-decision.md:1)
+- [heat3d-main-paper-observation-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-main-paper-observation-note.md:1)
+- [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F2-heat3d-julia/comparison_summary.json:1)
+- [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1)
+- [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1)
 - [execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1)
-- [generic-execution-layer-v2-spec.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/generic-execution-layer-v2-spec.md:1)
+- [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
 
 ---
 
 ## 12. Next Handoff
 
-`phase-field` representative acquisition の次は、`heat3d-julia` を第 2 implementation case として起こし、`parameter` の rationale 依存が一般則か局所則かを比較する。この文書では手順自体を再定義しない。
+この trial 整備の次は、claim prose の正本と residual caveat の書き方を固定する。
+
+その際は、
+
+1. `intent` を最上位拘束として使う
+2. canonical source を `/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md` に固定する
+3. discovery checkpoint で固定した active feature set と dependency order を保つ
+4. gate-approved upstream bundle と review acquisition gate package を acquisition boundary の正本として使う
+5. ambiguity が残ったら停止して問い合わせる
+
+を守る。
 
 補足:
 
 - 実装完了後に「生成物が `intent / requirements / design / tasks` と一致しているか」を検査する conformance 評価は、有益な後続テーマとして認識された
-- ただしこれは `generic execution layer v2` の完了条件には含めず、今の開発が終わった後に `v3` 候補として扱う
+- ただしこれは `generic execution layer v2` の完了条件には含めず、今の開発が終わった後に `v3` の主評価テーマとして扱う
 - したがって現段階では、`v2` の残課題と混ぜず、future handoff item としてのみ保持する
 
 ---
@@ -425,3 +489,5 @@ approved tasks に従った `phase-field` representative 3-treatment acquisition
 5. 直前の作業が `Current Workflow Step`、`Current Action`、または `Exit Condition` と一致しない
 6. `requirements/design/tasks` だけを見て、`intent` との整合確認を飛ばしたくなった
 7. static spec があるので worklist は不要だ、と考えた
+8. 人間承認がまだないのに次 phase へ進みたくなった
+9. runtime-affecting な選択肢を問い合わせなしで決めたくなった

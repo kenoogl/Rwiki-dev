@@ -1,0 +1,349 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260511T111152Z-7737ae49",
+  "metadata": {
+    "run_id": "run-20260511T111152Z-7737ae49",
+    "target_id": "spec:F1-spec-phase-field-reverse-spec",
+    "target_artifact_hash": "sha256:77e04b77d229e4933dc6d070ce8feb46a42fb190fbafc2e5ef71580eae2068ea",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "afc2beadf5625a2e8531c6b794a5736954e734fc",
+    "phase_profile": "tasks",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-11T11:11:52Z",
+    "closed_at": "2026-05-11T11:11:52Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-1",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/tasks.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Plan",
+      "section_class": null,
+      "first_line_number": 3,
+      "line_numbers": [
+        3
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "> 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-2",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Introduction",
+      "section_class": null,
+      "first_line_number": 5,
+      "line_numbers": [
+        5
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-3",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Boundary Context",
+      "section_class": "boundary_context",
+      "first_line_number": 26,
+      "line_numbers": [
+        26
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "- **Reference materials limitation (= `§2`)**: 実装時の参照物は SSoT 仕様書 (= `DEVELOPMENT_SPEC.md`) と描画 API ヘッダ (= `wingxa.h`) のみに限定する (= clean-room 制約の根幹規定、論文 Claim D evidence 取得の前提条件)"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-4",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/design.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Overview",
+      "section_class": null,
+      "first_line_number": 5,
+      "line_numbers": [
+        5,
+        11
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "本設計は `requirements.md` の 6 requirements (= シミュレーション実行 / 数値モデル / 濃度制約 invariant / 入出力 / 可視化 / エラー処理) を実現する三相分解フェーズフィールドコード C++ clean-room 実装の構造を定める。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-5",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "4. Why This Case",
+      "section_class": null,
+      "first_line_number": 97,
+      "line_numbers": [
+        97
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "数値モデル、境界条件、可視化、入出力、clean-room 制約が同時に存在する。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-6",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/tasks.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Plan",
+      "section_class": null,
+      "first_line_number": 3,
+      "line_numbers": [
+        3
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "> 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-7",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Introduction",
+      "section_class": null,
+      "first_line_number": 5,
+      "line_numbers": [
+        5
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "本仕様は、三相分解フェーズフィールドコード (= 3 成分濃度場 `c1`, `c2`, `c3` の連成 Cahn-Hilliard 型 PDE solver、`c2`, `c3` を独立変数として時間発展させ `c1 = 1 - c2 - c3` を従属変数とする) の C++ clean-room 再実装を対象とする。実装者は SSoT 仕様書 `DR-pfm/spec_seed/DEVELOPMENT_SPEC.md` (= 22 章 9007 byte) と描画 API ヘッダ `wingxa.h` のみを参照し、等価なプログラム群を構築する。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-8",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Boundary Context",
+      "section_class": "boundary_context",
+      "first_line_number": 26,
+      "line_numbers": [
+        26
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "- **Reference materials limitation (= `§2`)**: 実装時の参照物は SSoT 仕様書 (= `DEVELOPMENT_SPEC.md`) と描画 API ヘッダ (= `wingxa.h`) のみに限定する (= clean-room 制約の根幹規定、論文 Claim D evidence 取得の前提条件)"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-9",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/design.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Overview",
+      "section_class": null,
+      "first_line_number": 5,
+      "line_numbers": [
+        5,
+        11
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "本設計は `requirements.md` の 6 requirements (= シミュレーション実行 / 数値モデル / 濃度制約 invariant / 入出力 / 可視化 / エラー処理) を実現する三相分解フェーズフィールドコード C++ clean-room 実装の構造を定める。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-clean-room-boundary-10",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.clean-room-boundary",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "4. Why This Case",
+      "section_class": null,
+      "first_line_number": 97,
+      "line_numbers": [
+        97
+      ],
+      "matched_terms": [
+        "clean-room"
+      ],
+      "matched_excerpt": "数値モデル、境界条件、可視化、入出力、clean-room 制約が同時に存在する。"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "step-02-observation-finding-clean-room-boundary",
+      "source_role": "adversarial_reviewer",
+      "severity": "medium",
+      "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+      "source_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-1",
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-2",
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-3",
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-4",
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-5"
+      ],
+      "counter_evidence_record_refs": [
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-6",
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-7",
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-8",
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-9",
+        "review_case.json#step-02-evidence-finding-clean-room-boundary-10"
+      ],
+      "matched_pattern_ids": [
+        "seed.clean-room-boundary"
+      ],
+      "counter_evidence_pattern_ids": [
+        "seed.clean-room-boundary"
+      ],
+      "evidence_types": [
+
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+
+      ],
+      "source_kinds": [
+        "case_source"
+      ],
+      "counter_evidence_source_kinds": [
+        "case_source"
+      ],
+      "section_classes": [
+        "boundary_context"
+      ],
+      "counter_evidence_section_classes": [
+        "boundary_context"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-02-finding-clean-room-boundary",
+      "run_id": "run-20260511T111152Z-7737ae49",
+      "step_id": "step-02",
+      "source_role": "adversarial_reviewer",
+      "severity": "medium",
+      "summary": "Clean-room and canonical-source boundaries remain adversarially review-worthy because downstream tasks can silently widen the allowed evidence surface. Evidence excerpt: > 本 plan は `/Users/Daily/Development/DR-pfm/` 直下 (= 別 git、local only) で実行する C++ clean-room 再実装の作業を定める。`spec_seed/` (= `DEVELOPMENT_SPEC.md` + `wingxa.h`) は touch 禁止、本 plan で参照のみ行う。各 sub-task は CLAUDE.md TDD 規律 (= test first → fail 確認 → impl → pass 確認) に準拠する。",
+      "source_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/tasks.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md",
+        ".kiro/specs/phase-field-reverse-spec/design.md",
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-case-phase-field-reverse-spec.md"
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-02-finding-clean-room-boundary",
+      "decision_unit_id": "decision-unit-step-02-finding-clean-room-boundary",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-02-finding-clean-room-boundary",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-02-observation-finding-clean-room-boundary",
+        "spec:clean_room_boundary_pressure"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    }
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-6be1c631"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

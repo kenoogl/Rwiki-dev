@@ -33,5 +33,5 @@
 
 ## Constraints
 
-1. canonical source は [thermal_simulator_spec.md](/Users/Daily/Development/Heat3ds_rework/docs/thermal_simulator_spec.md:1)
+1. canonical source は [thermal_simulator_spec.md](/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md:1)
 2. 仕様書案を起点に self-contained に構築できること

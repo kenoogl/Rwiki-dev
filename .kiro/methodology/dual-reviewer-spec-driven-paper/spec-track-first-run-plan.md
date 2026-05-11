@@ -28,6 +28,11 @@ Spec Track first-run の目的は、大規模比較ではない。
 3. phase-review metrics を case 単位で取得できることを確認する
 4. main batch 前に alignment memo や reopen 記録の欠落を潰す
 
+narrative role:
+
+- cross-track story の「中流 refinement と reopen / alignment」を acquisition-backed にする
+- implementation-centered に見えやすい current paper prose の中流層を埋める
+
 ---
 
 ## 3. First-Run Case Shape
@@ -113,6 +118,12 @@ Spec Track first-run の結果は、
 - phase 間伝播を適切に扱えたか
 - reopen depth を evidence として残せたか
 
+つまり、この track の value は
+`正しい spec を自動生成できたこと`
+ではなく、
+`spec-present refinement evidence を main narrative に供給できること`
+にある。
+
 ---
 
 ## 9. Immediate Next Step
@@ -128,3 +139,6 @@ Spec Track first-run の結果は、
 3. phase-review metric snapshot の採取手順を run template に落とす
    - status:
      - reflected in [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-run-template.md:1)
+4. current cross-track story における narrative role を固定する
+   - status:
+     - reflected in [remaining-track-acquisition-bridge-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-acquisition-bridge-note.md:1)

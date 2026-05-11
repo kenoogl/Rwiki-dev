@@ -1,0 +1,1422 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260511T111152Z-f56f730f",
+  "metadata": {
+    "run_id": "run-20260511T111152Z-f56f730f",
+    "target_id": "intent:F1-intent-dual-reviewer-rebuild",
+    "target_artifact_hash": "sha256:6ddd280b1c5ded4c373222b6d6f64078fe34ef175fea2a45d41e954dd49e3207",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "afc2beadf5625a2e8531c6b794a5736954e734fc",
+    "phase_profile": "intent",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-11T11:11:52Z",
+    "closed_at": "2026-05-11T11:11:52Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "skipped",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-01-evidence-finding-phase-contract-gap-1",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-phase-contract",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation phase を含む end-to-end support",
+      "section_class": null,
+      "first_line_number": 147,
+      "line_numbers": [
+        147
+      ],
+      "matched_terms": [
+        "end-to-end"
+      ],
+      "matched_excerpt": "の end-to-end を同じ workflow contract で扱える点を訴求する。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-1",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "1. この計画の位置付け",
+      "section_class": null,
+      "first_line_number": 23,
+      "line_numbers": [
+        23
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation governance を formalize した"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-2",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "1. この計画の位置付け",
+      "section_class": null,
+      "first_line_number": 24,
+      "line_numbers": [
+        24
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- manual `implementation conformance review` を 1 サイクル通した"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-3",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "1. この計画の位置付け",
+      "section_class": null,
+      "first_line_number": 34,
+      "line_numbers": [
+        34
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `implementation`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-4",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "2. 研究目的",
+      "section_class": null,
+      "first_line_number": 55,
+      "line_numbers": [
+        55
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation / review phase では disagreement や caveat が落ちやすい"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-5",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Track",
+      "section_class": null,
+      "first_line_number": 100,
+      "line_numbers": [
+        100,
+        109
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "implementation code が存在するケース。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-6",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Track",
+      "section_class": null,
+      "first_line_number": 104,
+      "line_numbers": [
+        104
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation / conformance review を dual-reviewer がどう支えるか"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-7",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Track",
+      "section_class": null,
+      "first_line_number": 107,
+      "line_numbers": [
+        107
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- spec-conformant implementation と spec/design underconstraint を切り分けられるか"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-8",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation phase を含む end-to-end support",
+      "section_class": null,
+      "first_line_number": 146,
+      "line_numbers": [
+        146
+      ],
+      "matched_terms": [
+        "intent ->",
+        "requirements ->",
+        "design ->",
+        "tasks ->",
+        "implementation"
+      ],
+      "matched_excerpt": "`intent -> requirements -> design -> tasks -> implementation -> review`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-9",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5. 論文の主訴求点",
+      "section_class": null,
+      "first_line_number": 168,
+      "line_numbers": [
+        168
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "4. intent-only / spec-present / implementation-present の複数開始条件を同じ workflow contract で扱える"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-10",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Claim 3",
+      "section_class": null,
+      "first_line_number": 201,
+      "line_numbers": [
+        201,
+        211
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "`dual-reviewer` は、`intent-only`, `spec-present`, `implementation-present` の異なる開始条件でも workflow を維持できる。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-11",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Claim 4",
+      "section_class": null,
+      "first_line_number": 225,
+      "line_numbers": [
+        225
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "implementation track では、`phase-field` と `heat3d` の両方で `boundary`, `update-order`, `parameter-caveat` という finding pattern が再現した。一方 `heat3d` は、reduced validation pass と reference behavior mismatch の併存を通じて、review evidence を downstream reporting と future code-conformance evaluation の両方へ再利用できることを示した。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-12",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Track cases",
+      "section_class": null,
+      "first_line_number": 248,
+      "line_numbers": [
+        248,
+        258
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "ただし Implementation Track の code artifact は、"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-13",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Track cases",
+      "section_class": null,
+      "first_line_number": 253,
+      "line_numbers": [
+        253
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `Spec-origin / Implementation-origin` の fixed core case"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-14",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Track cases",
+      "section_class": null,
+      "first_line_number": 255,
+      "line_numbers": [
+        255
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- actual clean-room implementation と reduced validation まで取得済み"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-15",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "9.3 implementation artifact の扱い",
+      "section_class": null,
+      "first_line_number": 282,
+      "line_numbers": [
+        282,
+        286
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "implementation code は review object ではあるが、"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-16",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "10. Immediate Next Work",
+      "section_class": null,
+      "first_line_number": 316,
+      "line_numbers": [
+        316
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "1. case manifest を `intent/spec/implementation` の 3 track で再整理する"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-17",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "10. Immediate Next Work",
+      "section_class": null,
+      "first_line_number": 317,
+      "line_numbers": [
+        317
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "2. target-specific protocol を「code review protocol」から「implementation-phase protocol」に修正する"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-18",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "10. Immediate Next Work",
+      "section_class": null,
+      "first_line_number": 319,
+      "line_numbers": [
+        319
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "4. first-run plan を Implementation Track pilot として書き換える"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-19",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "10. Immediate Next Work",
+      "section_class": null,
+      "first_line_number": 321,
+      "line_numbers": [
+        321
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "6. その後に `heat3d-julia` を第 2 implementation case として起こす"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-20",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "3.3 `cc-sdd` review process",
+      "section_class": null,
+      "first_line_number": 91,
+      "line_numbers": [
+        91
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation への流入制御"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-21",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "tasks alignment gate",
+      "section_class": null,
+      "first_line_number": 239,
+      "line_numbers": [
+        239
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation order"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-22",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "tasks alignment gate",
+      "section_class": null,
+      "first_line_number": 244,
+      "line_numbers": [
+        244
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "を横断確認し、implementation フェーズへ進む"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-23",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "section_class": null,
+      "first_line_number": 308,
+      "line_numbers": [
+        308,
+        312,
+        318
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "この workflow でいう `implementation` は、通常どおり"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-24",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "section_class": null,
+      "first_line_number": 314,
+      "line_numbers": [
+        314
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `ready_for_implementation = true` は"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-25",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "section_class": null,
+      "first_line_number": 325,
+      "line_numbers": [
+        325
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "3. Codex が implementation 横断調整事項を `docs/coordination/implementation-coordination-log.md` に記録する"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-26",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "section_class": null,
+      "first_line_number": 330,
+      "line_numbers": [
+        330
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation フェーズでも Codex は approved tasks の範囲を越えて scope を広げない"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-27",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "section_class": null,
+      "first_line_number": 331,
+      "line_numbers": [
+        331
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation 中に新しい要件や境界変更が必要と判明した場合は、requirements または design に戻す"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-28",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "section_class": null,
+      "first_line_number": 333,
+      "line_numbers": [
+        333
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- multi-feature 実装では shared file 競合、validator 順序、integration blocker を `docs/coordination/implementation-coordination-log.md` に残す"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-29",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "section_class": null,
+      "first_line_number": 334,
+      "line_numbers": [
+        334
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation 中に requirement 不足や intent 未接続 requirement が見つかった場合は、trace matrix と requirements spec を同時に reopen する"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-30",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "section_class": null,
+      "first_line_number": 335,
+      "line_numbers": [
+        335
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation handback の判定は `docs/coordination/implementation-coordination-log.md` の `Handback Decision Rule` を正本とする"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-31",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition preparation",
+      "section_class": null,
+      "first_line_number": 358,
+      "line_numbers": [
+        358
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation snapshot / review acquisition boundary"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-32",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition preparation",
+      "section_class": null,
+      "first_line_number": 359,
+      "line_numbers": [
+        359
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation order / shared artifact owner"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-33",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition preparation",
+      "section_class": null,
+      "first_line_number": 366,
+      "line_numbers": [
+        366
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- source of truth は approved `requirements / design / tasks`, implementation snapshot ref, workflow gate status とする"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-34",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition preparation",
+      "section_class": null,
+      "first_line_number": 368,
+      "line_numbers": [
+        368
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- multi-feature case では、shared file owner と implementation order を preparation で再確認する"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-35",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition preparation",
+      "section_class": null,
+      "first_line_number": 369,
+      "line_numbers": [
+        369
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- clean-room case では、除外すべき implementation source を preparation で明示する"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-36",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition gate summary",
+      "section_class": null,
+      "first_line_number": 380,
+      "line_numbers": [
+        380
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation snapshot ref"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-37",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition gate summary",
+      "section_class": null,
+      "first_line_number": 383,
+      "line_numbers": [
+        383
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation-order statement"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-38",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "8. Codex に委ねる深さ",
+      "section_class": null,
+      "first_line_number": 466,
+      "line_numbers": [
+        466
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `implementation` は Codex 主導、人間 review"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-39",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "9. 逸脱防止ルール",
+      "section_class": null,
+      "first_line_number": 473,
+      "line_numbers": [
+        473
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- requirements / design / tasks を飛ばして implementation に進む"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-40",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 3: 影響範囲を特定する",
+      "section_class": null,
+      "first_line_number": 50,
+      "line_numbers": [
+        50
+      ],
+      "matched_terms": [
+        "requirements ->",
+        "design ->"
+      ],
+      "matched_excerpt": "- `D` の場合は、少なくとも `requirements -> design -> tasks` を連鎖 reopen 対象とする"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-41",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 6: 証跡を残す",
+      "section_class": null,
+      "first_line_number": 79,
+      "line_numbers": [
+        79
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `docs/coordination/implementation-coordination-log.md`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-42",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 6: 証跡を残す",
+      "section_class": null,
+      "first_line_number": 81,
+      "line_numbers": [
+        81
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `docs/coordination/implementation-signal-register.md`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-43",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 7: 該当 gate を再実施する",
+      "section_class": null,
+      "first_line_number": 95,
+      "line_numbers": [
+        95
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `implementation conformance review`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-44",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 9: approved / rechecked 済み phase から再開する",
+      "section_class": null,
+      "first_line_number": 111,
+      "line_numbers": [
+        111
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "gate 再通過後にのみ implementation や次 review wave に進む。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-45",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 10: implementation close を再判定する",
+      "section_class": null,
+      "first_line_number": 115,
+      "line_numbers": [
+        115
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "implementation checkpoint は次でのみ閉じる。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-46",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 10: implementation close を再判定する",
+      "section_class": null,
+      "first_line_number": 119,
+      "line_numbers": [
+        119
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "3. implementation conformance review 実施"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-47",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "3. 状態遷移表",
+      "section_class": null,
+      "first_line_number": 130,
+      "line_numbers": [
+        130,
+        131,
+        132,
+        133,
+        134
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "| `implementation in_progress` | task-local 微修正で吸収可能 | `A` | coordination log 記録、実装継続 | `implementation in_progress` |"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-48",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5. intent handback の特記事項",
+      "section_class": null,
+      "first_line_number": 164,
+      "line_numbers": [
+        164
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- 必要なら implementation も invalidated とみなす"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-49",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "1. この文書の役割",
+      "section_class": null,
+      "first_line_number": 6,
+      "line_numbers": [
+        6,
+        15
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "`implementation conformance review` の工程定義である。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-50",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "2. なぜ必要か",
+      "section_class": null,
+      "first_line_number": 21,
+      "line_numbers": [
+        21
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- spec 上は分離されている state が implementation convenience で混線する"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-51",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "3. 実施タイミング",
+      "section_class": null,
+      "first_line_number": 34,
+      "line_numbers": [
+        34
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `implementation-signal-register` に `medium` 以上の signal が蓄積した時点"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-52",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "4. review scope",
+      "section_class": null,
+      "first_line_number": 45,
+      "line_numbers": [
+        45
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation-coordination / signal register の未解消項目"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-53",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.1 仕様準拠性",
+      "section_class": null,
+      "first_line_number": 53,
+      "line_numbers": [
+        53
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- phase boundary が implementation convenience で崩れていないか"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-54",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "6. required outputs",
+      "section_class": null,
+      "first_line_number": 74,
+      "line_numbers": [
+        74
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- 必要なら `implementation-signal-register` への finding 起票"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-55",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "6. required outputs",
+      "section_class": null,
+      "first_line_number": 75,
+      "line_numbers": [
+        75
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- 必要なら `implementation-coordination-log` への review entry"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-56",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "6. required outputs",
+      "section_class": null,
+      "first_line_number": 76,
+      "line_numbers": [
+        76
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `implementation-conformance-metric-register.md` に定義された metric の current snapshot"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-57",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "9. signal / handback 連携",
+      "section_class": null,
+      "first_line_number": 101,
+      "line_numbers": [
+        101
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation-only 修正で吸収できる finding は `A`"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-58",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "10. completion rule",
+      "section_class": null,
+      "first_line_number": 115,
+      "line_numbers": [
+        115
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "3. implementation conformance review 実施"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-59",
+      "source_ref": "docs/traceability/intent-to-requirements-trace-matrix.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "1. この文書の役割",
+      "section_class": null,
+      "first_line_number": 13,
+      "line_numbers": [
+        13
+      ],
+      "matched_terms": [
+        "intent ->"
+      ],
+      "matched_excerpt": "この文書は [TRACEABILITY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/TRACEABILITY.md) の補助的正本であり、`intent -> requirements` の具体対応を保持する。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-60",
+      "source_ref": "docs/traceability/intent-to-requirements-trace-matrix.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "2. 更新必須トリガー",
+      "section_class": null,
+      "first_line_number": 26,
+      "line_numbers": [
+        26
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- implementation 中に requirement 不足または intent 未接続 requirement が発見され、spec を reopen した場合"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-scope-drift-risk-61",
+      "source_ref": "docs/traceability/intent-to-requirements-trace-matrix.md",
+      "source_kind": "case_source",
+      "pattern_id": "seed.intent-scope-drift",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5. 現時点のギャップ",
+      "section_class": null,
+      "first_line_number": 93,
+      "line_numbers": [
+        93
+      ],
+      "matched_terms": [
+        "implementation"
+      ],
+      "matched_excerpt": "- `implementation-oriented review` を正式な phase として requirements に入れるか"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "step-01-observation-finding-phase-contract-gap",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-phase-contract-gap-1"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+        "seed.intent-phase-contract"
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+
+      ],
+      "source_kinds": [
+        "case_source"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-01-observation-finding-scope-drift-risk",
+      "source_role": "primary_reviewer",
+      "severity": "medium",
+      "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-1",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-2",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-3",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-4",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-5",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-6",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-7",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-8",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-9",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-10",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-11",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-12",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-13",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-14",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-15",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-16",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-17",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-18",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-19",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-20",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-21",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-22",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-23",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-24",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-25",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-26",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-27",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-28",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-29",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-30",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-31",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-32",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-33",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-34",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-35",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-36",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-37",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-38",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-39",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-40",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-41",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-42",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-43",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-44",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-45",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-46",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-47",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-48",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-49",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-50",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-51",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-52",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-53",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-54",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-55",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-56",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-57",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-58",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-59",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-60",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-61"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+        "seed.intent-scope-drift"
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+
+      ],
+      "source_kinds": [
+        "case_source"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-phase-contract-gap",
+      "run_id": "run-20260511T111152Z-f56f730f",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-01-finding-phase-contract-gap",
+      "decision_unit_id": "decision-unit-step-01-finding-phase-contract-gap",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-phase-contract-gap",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-01-observation-finding-phase-contract-gap",
+        "intent:phase_contract_gap"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-scope-drift-risk",
+      "run_id": "run-20260511T111152Z-f56f730f",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "medium",
+      "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-01-finding-scope-drift-risk",
+      "decision_unit_id": "decision-unit-step-01-finding-scope-drift-risk",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-scope-drift-risk",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-01-observation-finding-scope-drift-risk",
+        "intent:scope_drift_risk"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    }
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-08fb0f33"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

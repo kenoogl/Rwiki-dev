@@ -1,0 +1,23 @@
+---
+manifest_version: 1.0.0
+runtime_feature: dual-reviewer-runtime
+operator_id: intent-track-narrative-batch
+metadata:
+  run_id: run-20260511T111152Z-13a75b67
+  target_id: intent:F1-intent-dual-reviewer-rebuild
+  target_artifact_hash: sha256:6ddd280b1c5ded4c373222b6d6f64078fe34ef175fea2a45d41e954dd49e3207
+  source_repository_id: kenoogl/Rwiki-dev
+  source_revision: afc2beadf5625a2e8531c6b794a5736954e734fc
+  phase_profile: intent
+  treatment: dual+judgment
+  review_mode: runtime_mediated
+  protocol_version: 1.0.0
+  runtime_version: 0.1.0
+  schema_set_version: 1.0.0
+  prompt_set_version: 1.0.0
+  run_status: closed
+  validator_status: passed
+  human_signoff_status: approved
+  evidence_class: valid
+  started_at: '2026-05-11T11:11:52Z'
+  closed_at: '2026-05-11T11:11:52Z'

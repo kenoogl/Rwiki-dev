@@ -1,0 +1,8 @@
+---
+batch_id: F1-intent-dual-reviewer-rebuild-narrative
+scope: dual-reviewer-rebuild intent-track narrative batch
+output_root: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/protocol-runs
+runtime_run_root_base: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/runtime-runs
+run_labels:
+- F1-intent-dual-reviewer-rebuild-narrative-single
+- F1-intent-dual-reviewer-rebuild-narrative-dual

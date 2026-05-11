@@ -12,6 +12,6 @@ supporting_refs:
   - dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
 traceability_refs:
   - docs/traceability/intent-to-requirements-trace-matrix.md
-objective: intent bootstrap pilot
+objective: intent bootstrap acquisition for cross-track narrative
 analysis_profile_ref: dual-reviewer-rebuild/experiments/protocols/analysis_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml
 heuristic_profile_ref: dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml

@@ -17,6 +17,7 @@ metric 定義台帳である。
 - report 用の baseline 値は、必ず artifact に残っている evidence から引く
 - `intent` phase 自体の指標と、下流 phase で観測された `intent-attributed` 問題を分ける
 - `intent` は専用 review artifact がない場合のみ `未計測` を許容する
+- `phase evidence summary` は derived artifact として使ってよいが、source of truth の代替にはしない
 
 ## 3. metric 定義
 
@@ -51,6 +52,7 @@ metric 定義台帳である。
 
 - cross-spec requirements alignment memo
 - recheck artifact
+- requirements evidence summary
 - blocking issue count
 - intent-attributed issue count
 - downstream design reopen の有無
@@ -58,6 +60,7 @@ metric 定義台帳である。
 ### 4.3 `design`
 
 - cross-spec design alignment memo
+- design evidence summary
 - blocking issue count
 - open alignment point count
 - intent-attributed issue count
@@ -66,6 +69,7 @@ metric 定義台帳である。
 ### 4.4 `tasks`
 
 - cross-spec tasks alignment memo
+- tasks evidence summary
 - ordering conflict count
 - shared artifact timing correction count
 - intent-attributed issue count
@@ -105,6 +109,6 @@ v1 completion report では次の簡略ルールで集計した。
 ## 6. 今後の補強
 
 - intent 変更ごとに review artifact を更新し、`intent_revision_count` と `intent_handback_count` を継続記録する
-- `requirements / design / tasks` について、alignment memo から機械抽出できる最小 field を固定する
+- `requirements / design / tasks` について、alignment memo と review artifact から phase evidence summary へ機械抽出できる最小 field を固定する
 - issue の原因分類として `intent-attributed` を各 phase artifact に埋め込めるようにする
 - `workflow-gate-status.md` と phase metrics を接続し、`completed_with_open_findings` を phase 別に追跡できるようにする

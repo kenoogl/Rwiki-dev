@@ -1,0 +1,693 @@
+{
+  "step_id": "step-02",
+  "step_name": "adversarial_review",
+  "step_status": "completed",
+  "phase_profile": "intent",
+  "treatment": "dual+judgment",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/adversarial/adversarial_reviewer.prompt.md",
+    "prompt_id": "foundation.adversarial_reviewer.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-1",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "1. この計画の位置付け",
+      "parent_section_heading": "dual-reviewer 論文化計画 — intent-origin spec-driven development edition",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 24,
+      "line_numbers": [
+        24
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "- manual `implementation conformance review` を 1 サイクル通した"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-2",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "2. 研究目的",
+      "parent_section_heading": "dual-reviewer 論文化計画 — intent-origin spec-driven development edition",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 8,
+      "first_line_number": 63,
+      "line_numbers": [
+        63
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "- conformance review"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-3",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Implementation Track",
+      "parent_section_heading": "3. 評価の主線",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 1,
+      "first_line_number": 104,
+      "line_numbers": [
+        104
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "- implementation / conformance review を dual-reviewer がどう支えるか"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-4",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.1 intent 起点の workflow-governed review system",
+      "parent_section_heading": "4. 論文の新規性",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 4,
+      "first_line_number": 127,
+      "line_numbers": [
+        127
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "- conformance review"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-5",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "2. 基本方針",
+      "parent_section_heading": "HUMAN_WORKFLOW",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 21,
+      "line_numbers": [
+        21
+      ],
+      "matched_terms": [
+        "approval"
+      ],
+      "matched_excerpt": "- ただし `cc-sdd` の phase approval は人間が行う"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-6",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.2.7 phase evidence summary",
+      "parent_section_heading": "5. 開発 workflow",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 280,
+      "line_numbers": [
+        280
+      ],
+      "matched_terms": [
+        "human gate"
+      ],
+      "matched_excerpt": "`requirements / design / tasks` の human gate に進む前に、本 repo では phase ごとに"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-7",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.2.7 phase evidence summary",
+      "parent_section_heading": "5. 開発 workflow",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 12,
+      "first_line_number": 302,
+      "line_numbers": [
+        302
+      ],
+      "matched_terms": [
+        "human gate"
+      ],
+      "matched_excerpt": "- human gate request は、原則としてこの summary を入口に行う"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-8",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 implementation フェーズ",
+      "parent_section_heading": "5. 開発 workflow",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 320,
+      "line_numbers": [
+        320
+      ],
+      "matched_terms": [
+        "approval"
+      ],
+      "matched_excerpt": "- tasks gate approval を通過した時点で true にしてよい"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-9",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.4 optional review acquisition extension",
+      "parent_section_heading": "5. 開発 workflow",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 341,
+      "line_numbers": [
+        341
+      ],
+      "matched_terms": [
+        "approval"
+      ],
+      "matched_excerpt": "を tasks approval 後に差し込むことがある。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-10",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition gate summary",
+      "parent_section_heading": "5.4 optional review acquisition extension",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 11,
+      "first_line_number": 394,
+      "line_numbers": [
+        394
+      ],
+      "matched_terms": [
+        "approval"
+      ],
+      "matched_excerpt": "- `approvals.review_acquisition.generated`"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-11",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "review acquisition gate summary",
+      "parent_section_heading": "5.4 optional review acquisition extension",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 12,
+      "first_line_number": 395,
+      "line_numbers": [
+        395
+      ],
+      "matched_terms": [
+        "approval"
+      ],
+      "matched_excerpt": "- `approvals.review_acquisition.approved`"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-12",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "9. 逸脱防止ルール",
+      "parent_section_heading": "HUMAN_WORKFLOW",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 5,
+      "first_line_number": 477,
+      "line_numbers": [
+        477
+      ],
+      "matched_terms": [
+        "approval"
+      ],
+      "matched_excerpt": "- Codex が approval 済みとみなして進む"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-13",
+      "source_ref": "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "10. この文書の完成条件",
+      "parent_section_heading": "HUMAN_WORKFLOW",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 488,
+      "line_numbers": [
+        488
+      ],
+      "matched_terms": [
+        "approval"
+      ],
+      "matched_excerpt": "- phase approval の責任が曖昧でない"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-14",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 7: 該当 gate を再実施する",
+      "parent_section_heading": "2. 手続き一覧",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 5,
+      "first_line_number": 95,
+      "line_numbers": [
+        95
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "- `implementation conformance review`"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-15",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "Step 10: implementation close を再判定する",
+      "parent_section_heading": "2. 手続き一覧",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 119,
+      "line_numbers": [
+        119
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "3. implementation conformance review 実施"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-16",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "3. 状態遷移表",
+      "parent_section_heading": "workflow-repair-procedure",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 135,
+      "line_numbers": [
+        135,
+        136,
+        137,
+        138
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "| `smoke completed` | conformance review 未実施 | なし | review artifact、finding、metric snapshot 記録 | `conformance review in_progress` |"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-17",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "1. この文書の役割",
+      "parent_section_heading": "implementation-conformance-review",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 6,
+      "line_numbers": [
+        6,
+        8
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "`implementation conformance review` の工程定義である。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-18",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "3. 実施タイミング",
+      "parent_section_heading": "implementation-conformance-review",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 5,
+      "first_line_number": 35,
+      "line_numbers": [
+        35
+      ],
+      "matched_terms": [
+        "approval",
+        "adoption"
+      ],
+      "matched_excerpt": "- trust boundary、invalidation、provenance、approval/adoption の境界を触った後"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-19",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "4. review scope",
+      "parent_section_heading": "implementation-conformance-review",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 39,
+      "line_numbers": [
+        39
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "conformance review では、少なくとも次を対象にする。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-20",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "5.3 証跡性",
+      "parent_section_heading": "5. review 観点",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 67,
+      "line_numbers": [
+        67
+      ],
+      "matched_terms": [
+        "adoption"
+      ],
+      "matched_excerpt": "- provenance / caveat / adoption / rollback が source ref で追えるか"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-21",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "6. required outputs",
+      "parent_section_heading": "implementation-conformance-review",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 71,
+      "line_numbers": [
+        71
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "conformance review 実施時は、少なくとも次を残す。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-22",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "7. finding severity",
+      "parent_section_heading": "implementation-conformance-review",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 2,
+      "first_line_number": 81,
+      "line_numbers": [
+        81
+      ],
+      "matched_terms": [
+        "approval",
+        "adoption"
+      ],
+      "matched_excerpt": "- approval/adoption、trust boundary、invalidation、provenance を破る"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-23",
+      "source_ref": "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "10. completion rule",
+      "parent_section_heading": "implementation-conformance-review",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 115,
+      "line_numbers": [
+        115
+      ],
+      "matched_terms": [
+        "conformance review"
+      ],
+      "matched_excerpt": "3. implementation conformance review 実施"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-human-gate-collapse-24",
+      "source_ref": "docs/traceability/intent-to-requirements-trace-matrix.md",
+      "source_kind": "case_source",
+      "evidence_side": "primary",
+      "pattern_id": "seed.human-gate-ownership",
+      "evidence_type": null,
+      "review_focus": null,
+      "section_heading": "4. Matrix",
+      "parent_section_heading": "intent-to-requirements-trace-matrix",
+      "section_class": null,
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 65,
+      "line_numbers": [
+        65,
+        75
+      ],
+      "matched_terms": [
+        "approval",
+        "adoption"
+      ],
+      "matched_excerpt": "| 自己改善を ad-hoc memory ではなく formal loop にする | self-improvement | Requirement 4 `Approval and Adoption Flow` | direct | human approval と version update を必須化 |"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "step-02-observation-finding-human-gate-collapse",
+      "observation_class": "rule_matched_observation",
+      "taxonomy_path": null,
+      "severity": "medium",
+      "summary": "Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints. Evidence excerpt: - manual `implementation conformance review` を 1 サイクル通した",
+      "source_role": "adversarial_reviewer",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "evidence_record_ids": [
+        "step-02-evidence-finding-human-gate-collapse-1",
+        "step-02-evidence-finding-human-gate-collapse-2",
+        "step-02-evidence-finding-human-gate-collapse-3",
+        "step-02-evidence-finding-human-gate-collapse-4",
+        "step-02-evidence-finding-human-gate-collapse-5",
+        "step-02-evidence-finding-human-gate-collapse-6",
+        "step-02-evidence-finding-human-gate-collapse-7",
+        "step-02-evidence-finding-human-gate-collapse-8",
+        "step-02-evidence-finding-human-gate-collapse-9",
+        "step-02-evidence-finding-human-gate-collapse-10",
+        "step-02-evidence-finding-human-gate-collapse-11",
+        "step-02-evidence-finding-human-gate-collapse-12",
+        "step-02-evidence-finding-human-gate-collapse-13",
+        "step-02-evidence-finding-human-gate-collapse-14",
+        "step-02-evidence-finding-human-gate-collapse-15",
+        "step-02-evidence-finding-human-gate-collapse-16",
+        "step-02-evidence-finding-human-gate-collapse-17",
+        "step-02-evidence-finding-human-gate-collapse-18",
+        "step-02-evidence-finding-human-gate-collapse-19",
+        "step-02-evidence-finding-human-gate-collapse-20",
+        "step-02-evidence-finding-human-gate-collapse-21",
+        "step-02-evidence-finding-human-gate-collapse-22",
+        "step-02-evidence-finding-human-gate-collapse-23",
+        "step-02-evidence-finding-human-gate-collapse-24"
+      ],
+      "counter_evidence_record_ids": [
+
+      ],
+      "matched_pattern_ids": [
+        "seed.human-gate-ownership"
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+
+      ],
+      "source_kinds": [
+        "case_source"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+
+      ],
+      "counter_evidence_section_classes": [
+
+      ],
+      "fragment_classes": [
+
+      ],
+      "counter_evidence_fragment_classes": [
+
+      ],
+      "supporting_pattern_ids": [
+        "seed.human-gate-ownership"
+      ],
+      "analysis_origin": {
+        "analysis_kind": "rule_match",
+        "step_name": "adversarial_review"
+      }
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "step-02-finding-human-gate-collapse",
+      "severity": "medium",
+      "summary": "Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints. Evidence excerpt: - manual `implementation conformance review` を 1 サイクル通した",
+      "source_role": "adversarial_reviewer",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "failure_observation_refs": [
+        "step-02-observation-finding-human-gate-collapse",
+        "intent:human_gate_collapse"
+      ],
+      "analysis_origin": {
+        "analysis_kind": "rule_match",
+        "step_name": "adversarial_review"
+      }
+    }
+  ],
+  "counter_evidence": [
+
+  ]
+}

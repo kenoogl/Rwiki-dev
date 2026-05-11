@@ -1,0 +1,8 @@
+---
+run_label: F2-heat3d-julia-dual-only
+case_id: F2-heat3d-julia
+track: implementation
+run_id: run-20260511T062535Z-e945dac7
+validator_result_ref: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-e945dac7/validation/validator_result.json
+invalidation_markers_ref: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-e945dac7/validation/invalidation_markers.json
+overall_status: passed

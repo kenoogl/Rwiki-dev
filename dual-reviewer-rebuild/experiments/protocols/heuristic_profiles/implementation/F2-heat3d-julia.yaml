@@ -1,0 +1,103 @@
+steps:
+  primary_detection:
+    rules:
+      - finding_suffix: finding-boundary
+        severity: high
+        source_role: primary_reviewer
+        required_evidence_types:
+          - implementation.boundary_condition_semantics
+        required_source_kinds:
+          - upstream_spec
+        required_section_classes:
+          - upstream_spec_misc
+        structural_source_requirements:
+          - source_kind: upstream_spec
+            section_class: upstream_spec_misc
+            section_heading_patterns:
+              - "^9\\.4 温度場への反映$"
+              - "^9\\.5 符号規約$"
+            evidence_type: implementation.boundary_condition_semantics
+            review_focus: boundary_condition
+        failure_observation_refs:
+          - implementation:boundary_condition_semantics
+        summary_prefix: Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior.
+      - finding_suffix: finding-update-order
+        severity: medium
+        source_role: primary_reviewer
+        required_evidence_types:
+          - implementation.update_ordering_state_mutation
+        required_source_kinds:
+          - upstream_spec
+        required_section_classes:
+          - upstream_spec_misc
+        structural_source_requirements:
+          - source_kind: upstream_spec
+            section_class: upstream_spec_misc
+            section_heading_patterns:
+              - "^5\\.4 Z 計算範囲$"
+              - "^10\\.1 時間積分$"
+              - "^10\\.2 RHS 構築$"
+            evidence_type: implementation.update_ordering_state_mutation
+            review_focus: update_ordering
+        failure_observation_refs:
+          - implementation:update_ordering_state_mutation
+        summary_prefix: Update ordering and state mutation risk should be inspected because z-range selection, one-step backward Euler execution, and RHS construction together define the implementation-phase execution model.
+  adversarial_review:
+    rules:
+      - finding_suffix: finding-parameter-caveat
+        severity: medium
+        source_role: adversarial_reviewer
+        required_evidence_types:
+          - implementation.parameter_default_semantics
+          - implementation.parameter_caveat_surface
+        required_counter_evidence_types:
+          - implementation.parameter_default_semantics
+        required_source_kinds:
+          - implementation_snapshot
+          - upstream_spec
+        required_counter_source_kinds:
+          - upstream_spec
+        required_section_classes:
+          - snapshot_rationale
+          - upstream_spec_misc
+        required_counter_section_classes:
+          - upstream_spec_misc
+        structural_source_requirements:
+          - source_kind: implementation_snapshot
+            section_class: snapshot_rationale
+            section_heading_patterns:
+              - "^4\\. Why This Snapshot$"
+            line_prefix_patterns:
+              - "^3$"
+            evidence_type: implementation.parameter_default_semantics
+            review_focus: parameter_interpretation
+          - source_kind: implementation_snapshot
+            section_class: snapshot_rationale
+            section_heading_patterns:
+              - "^4\\. Why This Snapshot$"
+            line_prefix_patterns:
+              - "^3$"
+            evidence_type: implementation.parameter_caveat_surface
+            review_focus: parameter_interpretation
+          - source_kind: upstream_spec
+            section_class: upstream_spec_misc
+            section_heading_patterns:
+              - "^9\\.3 MVP の固定境界条件$"
+              - "^10\\.1 時間積分$"
+              - "^10\\.6 前処理$"
+              - "^10\\.7 収束判定$"
+            evidence_type: implementation.parameter_default_semantics
+            review_focus: parameter_interpretation
+        structural_counter_requirements:
+          - source_kind: upstream_spec
+            section_class: upstream_spec_misc
+            section_heading_patterns:
+              - "^9\\.3 MVP の固定境界条件$"
+              - "^10\\.1 時間積分$"
+              - "^10\\.6 前処理$"
+              - "^10\\.7 収束判定$"
+            evidence_type: implementation.parameter_default_semantics
+            review_focus: parameter_interpretation
+        failure_observation_refs:
+          - implementation:parameter_interpretation_drift
+        summary_prefix: Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.

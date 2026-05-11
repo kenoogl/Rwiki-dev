@@ -1,0 +1,11 @@
+---
+run_label: F1-intent-dual-reviewer-rebuild-narrative-dual
+case_id: F1-intent-dual-reviewer-rebuild
+track: intent
+signal_register_ref: docs/coordination/implementation-signal-register.md
+linked_signal_ids:
+- intent-track-phase-contract-gap
+- intent-track-scope-drift-risk
+status: populated_by_runner
+note: Intent-track findings are preserved as runner-populated candidate signals for
+  downstream spec and governance review.

@@ -1,0 +1,746 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "implementation",
+  "target_id": "implementation:heat3d-julia",
+  "common_inputs": {
+    "target_id": "implementation:heat3d-julia",
+    "target_artifact_hash": "sha256:27d86fb7e173ce6ce5544e2277b4fb274eab4d972a406417ebd2805ac5821c74",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "afc2beadf5625a2e8531c6b794a5736954e734fc",
+    "phase_profile": "tasks",
+    "treatment": "dual",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+      ".kiro/specs/heat3d-spec/intent.md",
+      "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F2-heat3d-julia.yaml",
+    "track": "implementation"
+  },
+  "track_inputs": {
+    "implementation_snapshot_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+    "upstream_spec_refs": [
+      ".kiro/specs/heat3d-spec/intent.md",
+      "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+    ]
+  },
+  "evidence_observations": [
+    {
+      "observation_id": "step-01-observation-finding-boundary",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior.",
+      "source_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-boundary-1",
+        "review_case.json#step-01-evidence-finding-boundary-2",
+        "review_case.json#step-01-evidence-finding-boundary-3",
+        "review_case.json#step-01-evidence-finding-boundary-4",
+        "review_case.json#step-01-evidence-finding-boundary-5"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.boundary_condition_semantics"
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+        "boundary_condition"
+      ],
+      "source_kinds": [
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+        "upstream_spec_misc"
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-01-observation-finding-update-order",
+      "source_role": "primary_reviewer",
+      "severity": "medium",
+      "summary": "Update ordering and state mutation risk should be inspected because z-range selection, one-step backward Euler execution, and RHS construction together define the implementation-phase execution model.",
+      "source_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-update-order-1",
+        "review_case.json#step-01-evidence-finding-update-order-2",
+        "review_case.json#step-01-evidence-finding-update-order-3",
+        "review_case.json#step-01-evidence-finding-update-order-4",
+        "review_case.json#step-01-evidence-finding-update-order-5",
+        "review_case.json#step-01-evidence-finding-update-order-6",
+        "review_case.json#step-01-evidence-finding-update-order-7",
+        "review_case.json#step-01-evidence-finding-update-order-8",
+        "review_case.json#step-01-evidence-finding-update-order-9"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.update_ordering_state_mutation"
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+        "update_ordering"
+      ],
+      "source_kinds": [
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+        "upstream_spec_misc"
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-02-observation-finding-parameter-caveat",
+      "source_role": "adversarial_reviewer",
+      "severity": "medium",
+      "summary": "Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-02-evidence-finding-parameter-caveat-1",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-2",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-3",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-4",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-5",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-6",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-7",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-8",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-9",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-10",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-11",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-12",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-13",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-14",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-15",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-16"
+      ],
+      "counter_evidence_record_refs": [
+        "review_case.json#step-02-evidence-finding-parameter-caveat-17",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-18",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-19",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-20",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-21",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-22",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-23",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-24",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-25",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-26",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-27",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-28",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-29",
+        "review_case.json#step-02-evidence-finding-parameter-caveat-30"
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.parameter_default_semantics",
+        "implementation.parameter_caveat_surface"
+      ],
+      "counter_evidence_types": [
+        "implementation.parameter_default_semantics"
+      ],
+      "review_focuses": [
+        "parameter_interpretation"
+      ],
+      "source_kinds": [
+        "implementation_snapshot",
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+        "upstream_spec"
+      ],
+      "section_classes": [
+        "snapshot_rationale",
+        "upstream_spec_misc"
+      ],
+      "counter_evidence_section_classes": [
+        "upstream_spec_misc"
+      ]
+    }
+  ],
+  "review_issue_candidates": [
+    {
+      "candidate_id": "issue-candidate:step-01-finding-boundary",
+      "finding_id": "step-01-finding-boundary",
+      "taxonomy_path": "implementation.blocking.detected_issue",
+      "severity": "high",
+      "summary": "Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior.",
+      "evidence_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "failure_observation_refs": [
+        "step-01-observation-finding-boundary",
+        "implementation:boundary_condition_semantics"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-01-finding-update-order",
+      "finding_id": "step-01-finding-update-order",
+      "taxonomy_path": "implementation.nonblocking.detected_issue",
+      "severity": "medium",
+      "summary": "Update ordering and state mutation risk should be inspected because z-range selection, one-step backward Euler execution, and RHS construction together define the implementation-phase execution model.",
+      "evidence_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "failure_observation_refs": [
+        "step-01-observation-finding-update-order",
+        "implementation:update_ordering_state_mutation"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-02-finding-parameter-caveat",
+      "finding_id": "step-02-finding-parameter-caveat",
+      "taxonomy_path": "implementation.nonblocking.counter_evidence",
+      "severity": "medium",
+      "summary": "Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "failure_observation_refs": [
+        "step-02-observation-finding-parameter-caveat",
+        "implementation:parameter_interpretation_drift"
+      ]
+    }
+  ],
+  "caveat_candidates": [
+    {
+      "candidate_id": "caveat-candidate:step-02-finding-parameter-caveat",
+      "kind": "counter_evidence_preserved",
+      "finding_id": "step-02-finding-parameter-caveat",
+      "summary": "Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.",
+      "counter_evidence_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ]
+    }
+  ],
+  "reopen_candidates": [
+    {
+      "candidate_id": "reopen-candidate:step-01-finding-boundary",
+      "finding_id": "step-01-finding-boundary",
+      "taxonomy_path": "implementation.blocking.detected_issue",
+      "reopen_scope": "implementation_snapshot",
+      "reason": "Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior."
+    }
+  ],
+  "signal_candidates": [
+    {
+      "signal_id": "signal:step-01-finding-boundary",
+      "signal_class": "workflow_failure_signal",
+      "taxonomy_path": "implementation.blocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-boundary",
+      "treatment": "dual"
+    },
+    {
+      "signal_id": "signal:step-01-finding-update-order",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "implementation.nonblocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-update-order",
+      "treatment": "dual"
+    },
+    {
+      "signal_id": "signal:step-02-finding-parameter-caveat",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "implementation.nonblocking.counter_evidence",
+      "decision_unit_id": "decision-unit-step-02-finding-parameter-caveat",
+      "treatment": "dual"
+    }
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260511T013629Z-17f404bb",
+    "finding_projection": [
+      {
+        "finding_ref": "review_case.json#step-01-finding-boundary",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-boundary",
+        "taxonomy_path": "implementation.blocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-boundary"
+        ],
+        "reopen_candidate_ref": "v2/review_artifact.json#reopen-candidate:step-01-finding-boundary"
+      },
+      {
+        "finding_ref": "review_case.json#step-01-finding-update-order",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-update-order",
+        "taxonomy_path": "implementation.nonblocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-update-order"
+        ],
+        "reopen_candidate_ref": null
+      },
+      {
+        "finding_ref": "review_case.json#step-02-finding-parameter-caveat",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-02-finding-parameter-caveat",
+        "taxonomy_path": "implementation.nonblocking.counter_evidence",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-parameter-caveat"
+        ],
+        "reopen_candidate_ref": null
+      }
+    ],
+    "decision_unit_projection": [
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-boundary",
+        "finding_refs": [
+          "review_case.json#step-01-finding-boundary"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-boundary"
+        ],
+        "proposed_action": "manual_review_required",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-update-order",
+        "finding_refs": [
+          "review_case.json#step-01-finding-update-order"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-update-order"
+        ],
+        "proposed_action": "manual_review_required",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-02-finding-parameter-caveat",
+        "finding_refs": [
+          "review_case.json#step-02-finding-parameter-caveat"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-parameter-caveat"
+        ],
+        "proposed_action": "manual_review_required",
+        "human_decision": "approved"
+      }
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-14cd0115",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260511T013629Z-17f404bb"
+    }
+  },
+  "decision_context": {
+    "track": "implementation",
+    "treatment": "dual",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "implementation",
+      "evidence_observations": [
+        {
+          "observation_id": "step-01-observation-finding-boundary",
+          "source_role": "primary_reviewer",
+          "severity": "high",
+          "summary": "Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior.",
+          "source_refs": [
+            "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+          ],
+          "counter_evidence_refs": [
+
+          ],
+          "taxonomy_path": null,
+          "observation_class": "rule_matched_observation",
+          "evidence_record_refs": [
+            "review_case.json#step-01-evidence-finding-boundary-1",
+            "review_case.json#step-01-evidence-finding-boundary-2",
+            "review_case.json#step-01-evidence-finding-boundary-3",
+            "review_case.json#step-01-evidence-finding-boundary-4",
+            "review_case.json#step-01-evidence-finding-boundary-5"
+          ],
+          "counter_evidence_record_refs": [
+
+          ],
+          "matched_pattern_ids": [
+
+          ],
+          "counter_evidence_pattern_ids": [
+
+          ],
+          "evidence_types": [
+            "implementation.boundary_condition_semantics"
+          ],
+          "counter_evidence_types": [
+
+          ],
+          "review_focuses": [
+            "boundary_condition"
+          ],
+          "source_kinds": [
+            "upstream_spec"
+          ],
+          "counter_evidence_source_kinds": [
+
+          ],
+          "section_classes": [
+            "upstream_spec_misc"
+          ],
+          "counter_evidence_section_classes": [
+
+          ]
+        },
+        {
+          "observation_id": "step-01-observation-finding-update-order",
+          "source_role": "primary_reviewer",
+          "severity": "medium",
+          "summary": "Update ordering and state mutation risk should be inspected because z-range selection, one-step backward Euler execution, and RHS construction together define the implementation-phase execution model.",
+          "source_refs": [
+            "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+          ],
+          "counter_evidence_refs": [
+
+          ],
+          "taxonomy_path": null,
+          "observation_class": "rule_matched_observation",
+          "evidence_record_refs": [
+            "review_case.json#step-01-evidence-finding-update-order-1",
+            "review_case.json#step-01-evidence-finding-update-order-2",
+            "review_case.json#step-01-evidence-finding-update-order-3",
+            "review_case.json#step-01-evidence-finding-update-order-4",
+            "review_case.json#step-01-evidence-finding-update-order-5",
+            "review_case.json#step-01-evidence-finding-update-order-6",
+            "review_case.json#step-01-evidence-finding-update-order-7",
+            "review_case.json#step-01-evidence-finding-update-order-8",
+            "review_case.json#step-01-evidence-finding-update-order-9"
+          ],
+          "counter_evidence_record_refs": [
+
+          ],
+          "matched_pattern_ids": [
+
+          ],
+          "counter_evidence_pattern_ids": [
+
+          ],
+          "evidence_types": [
+            "implementation.update_ordering_state_mutation"
+          ],
+          "counter_evidence_types": [
+
+          ],
+          "review_focuses": [
+            "update_ordering"
+          ],
+          "source_kinds": [
+            "upstream_spec"
+          ],
+          "counter_evidence_source_kinds": [
+
+          ],
+          "section_classes": [
+            "upstream_spec_misc"
+          ],
+          "counter_evidence_section_classes": [
+
+          ]
+        },
+        {
+          "observation_id": "step-02-observation-finding-parameter-caveat",
+          "source_role": "adversarial_reviewer",
+          "severity": "medium",
+          "summary": "Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.",
+          "source_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+            "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+          ],
+          "counter_evidence_refs": [
+            "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+          ],
+          "taxonomy_path": null,
+          "observation_class": "rule_matched_observation",
+          "evidence_record_refs": [
+            "review_case.json#step-02-evidence-finding-parameter-caveat-1",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-2",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-3",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-4",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-5",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-6",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-7",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-8",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-9",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-10",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-11",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-12",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-13",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-14",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-15",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-16"
+          ],
+          "counter_evidence_record_refs": [
+            "review_case.json#step-02-evidence-finding-parameter-caveat-17",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-18",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-19",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-20",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-21",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-22",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-23",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-24",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-25",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-26",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-27",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-28",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-29",
+            "review_case.json#step-02-evidence-finding-parameter-caveat-30"
+          ],
+          "matched_pattern_ids": [
+
+          ],
+          "counter_evidence_pattern_ids": [
+
+          ],
+          "evidence_types": [
+            "implementation.parameter_default_semantics",
+            "implementation.parameter_caveat_surface"
+          ],
+          "counter_evidence_types": [
+            "implementation.parameter_default_semantics"
+          ],
+          "review_focuses": [
+            "parameter_interpretation"
+          ],
+          "source_kinds": [
+            "implementation_snapshot",
+            "upstream_spec"
+          ],
+          "counter_evidence_source_kinds": [
+            "upstream_spec"
+          ],
+          "section_classes": [
+            "snapshot_rationale",
+            "upstream_spec_misc"
+          ],
+          "counter_evidence_section_classes": [
+            "upstream_spec_misc"
+          ]
+        }
+      ],
+      "review_issue_candidates": [
+        {
+          "candidate_id": "issue-candidate:step-01-finding-boundary",
+          "finding_id": "step-01-finding-boundary",
+          "taxonomy_path": "implementation.blocking.detected_issue",
+          "severity": "high",
+          "summary": "Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior.",
+          "evidence_refs": [
+            "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+          ],
+          "failure_observation_refs": [
+            "step-01-observation-finding-boundary",
+            "implementation:boundary_condition_semantics"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-01-finding-update-order",
+          "finding_id": "step-01-finding-update-order",
+          "taxonomy_path": "implementation.nonblocking.detected_issue",
+          "severity": "medium",
+          "summary": "Update ordering and state mutation risk should be inspected because z-range selection, one-step backward Euler execution, and RHS construction together define the implementation-phase execution model.",
+          "evidence_refs": [
+            "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+          ],
+          "failure_observation_refs": [
+            "step-01-observation-finding-update-order",
+            "implementation:update_ordering_state_mutation"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-02-finding-parameter-caveat",
+          "finding_id": "step-02-finding-parameter-caveat",
+          "taxonomy_path": "implementation.nonblocking.counter_evidence",
+          "severity": "medium",
+          "summary": "Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+            "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+          ],
+          "failure_observation_refs": [
+            "step-02-observation-finding-parameter-caveat",
+            "implementation:parameter_interpretation_drift"
+          ]
+        }
+      ],
+      "caveat_candidates": [
+        {
+          "candidate_id": "caveat-candidate:step-02-finding-parameter-caveat",
+          "kind": "counter_evidence_preserved",
+          "finding_id": "step-02-finding-parameter-caveat",
+          "summary": "Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.",
+          "counter_evidence_refs": [
+            "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+          ]
+        }
+      ],
+      "reopen_candidates": [
+        {
+          "candidate_id": "reopen-candidate:step-01-finding-boundary",
+          "finding_id": "step-01-finding-boundary",
+          "taxonomy_path": "implementation.blocking.detected_issue",
+          "reopen_scope": "implementation_snapshot",
+          "reason": "Boundary-condition semantics are review-critical because the heat3d spec binds mask handling, RHS contribution, and sign convention tightly enough that implementation drift would change simulation behavior."
+        }
+      ],
+      "signal_candidates": [
+        {
+          "signal_id": "signal:step-01-finding-boundary",
+          "signal_class": "workflow_failure_signal",
+          "taxonomy_path": "implementation.blocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-boundary",
+          "treatment": "dual"
+        },
+        {
+          "signal_id": "signal:step-01-finding-update-order",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "implementation.nonblocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-update-order",
+          "treatment": "dual"
+        },
+        {
+          "signal_id": "signal:step-02-finding-parameter-caveat",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "implementation.nonblocking.counter_evidence",
+          "decision_unit_id": "decision-unit-step-02-finding-parameter-caveat",
+          "treatment": "dual"
+        }
+      ]
+    },
+    "decision_units": [
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-boundary",
+        "proposed_action": "manual_review_required",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-boundary"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-update-order",
+        "proposed_action": "manual_review_required",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-update-order"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-02-finding-parameter-caveat",
+        "proposed_action": "manual_review_required",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-02-finding-parameter-caveat"
+        ],
+        "disposition_class": "accepted"
+      }
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ]
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 1,
+      "accepted_decision_unit_ids": [
+        "decision-unit-step-01-finding-boundary",
+        "decision-unit-step-01-finding-update-order",
+        "decision-unit-step-02-finding-parameter-caveat"
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F2-heat3d-julia",
+    "track": "implementation",
+    "target_id": "implementation:heat3d-julia",
+    "phase_profile": "tasks",
+    "implementation_snapshot_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+      ".kiro/specs/heat3d-spec/intent.md",
+      "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+    ],
+    "upstream_spec_refs": [
+      ".kiro/specs/heat3d-spec/intent.md",
+      "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
+    ],
+    "heuristic_profile_ref": "dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/implementation/F2-heat3d-julia.yaml",
+    "case_manifest_ref": "experiments/protocols/case_manifests/F2-heat3d-julia.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-14cd0115",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260511T013629Z-17f404bb"
+  }
+}

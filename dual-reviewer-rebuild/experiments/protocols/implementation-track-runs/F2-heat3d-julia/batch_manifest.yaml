@@ -1,0 +1,10 @@
+---
+batch_id: F2-heat3d-julia
+scope: heat3d gate-approved implementation acquisition
+protocol_output_root: experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs
+runtime_run_root_base: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs
+export_root_base: experiments/protocols/implementation-track-runs/F2-heat3d-julia/exports
+run_labels:
+- F2-heat3d-julia-single
+- F2-heat3d-julia-dual-only
+- F2-heat3d-julia-dual

@@ -1,0 +1,31 @@
+{
+  "feature_name": "heat3d-case-model",
+  "created_at": "2026-05-11T13:10:00+09:00",
+  "updated_at": "2026-05-11T19:05:00+09:00",
+  "language": "ja",
+  "phase": "implementation-completed",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    },
+    "review_acquisition": {
+      "generated": true,
+      "approved": true
+    },
+    "implementation": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true,
+  "ready_for_review_acquisition": true
+}

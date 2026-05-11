@@ -275,7 +275,50 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - 再調整未実施のまま次 phase へ進むことは workflow 逸脱とみなす
 - `INTENT` と `requirements` の意味対応を管理する trace matrix がある場合、更新トリガーは [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) を正本とし、該当時点で同 matrix も更新対象に含める
 
+### 5.2.7 phase evidence summary
+
+`requirements / design / tasks` の human gate に進む前に、本 repo では phase ごとに
+`phase evidence summary` を 1 つ作成する。
+
+これは review artifact, alignment memo, workflow gate status を gate package として読むための
+**derived artifact** であり、正本そのものではない。
+
+最低限含めるもの:
+
+- reviewed feature set
+- feature-local review artifact refs
+- phase-level review wave artifact ref
+- phase alignment memo ref
+- workflow gate status ref
+- metric snapshot
+- open point carried forward
+- gate readiness statement
+
+ルール:
+
+- source of truth は review artifact / alignment memo / workflow gate status であり、summary はそれらの参照と集約に徹する
+- summary と source artifact が衝突した場合、source artifact を優先する
+- findings が `0` 件でも summary は作成する
+- human gate request は、原則としてこの summary を入口に行う
+- `intent` と `requirements` の gate input 文書は、人間が意味を追える平易な文章で書かれていなければならない
+- `design` と `tasks` は、責務・依存・実装順序が追える限り、ソフトウェア工学的なフォーマットを許容する
+
 ### 5.3 implementation フェーズ
+
+この workflow でいう `implementation` は、通常どおり
+**approved tasks に基づいて実際にコードを書く execution phase**
+を指す。
+
+`ready_for_implementation` の意味もここで固定する。
+
+- `ready_for_implementation = true` は
+  `approved tasks に基づいて coding を開始してよい`
+  を意味する
+- これは
+  `implementation source tree complete`
+  を意味しない
+- tasks gate approval を通過した時点で true にしてよい
+- review acquisition の可否とは別に扱う
 
 1. approved tasks に基づいて Codex が実装する
 2. Codex が validator / tests / local checks を実施する
@@ -290,6 +333,75 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - multi-feature 実装では shared file 競合、validator 順序、integration blocker を `docs/coordination/implementation-coordination-log.md` に残す
 - implementation 中に requirement 不足や intent 未接続 requirement が見つかった場合は、trace matrix と requirements spec を同時に reopen する
 - implementation handback の判定は `docs/coordination/implementation-coordination-log.md` の `Handback Decision Rule` を正本とする
+
+### 5.4 optional review acquisition extension
+
+reverse-engineered case や clean-room case では、coding そのものとは別に
+**review acquisition**
+を tasks approval 後に差し込むことがある。
+
+この extension を使うときは、
+`review acquisition gate package`
+を 1 回作成する。
+
+この package は少なくとも次の 2 artifact からなる。
+
+1. `review acquisition preparation`
+2. `review acquisition gate summary`
+
+#### review acquisition preparation
+
+これは human `review acquisition gate` 前に、
+
+- review target statement
+- approved upstream spec set
+- implementation snapshot / review acquisition boundary
+- implementation order / shared artifact owner
+- validation / conformance entrypoint
+
+を固定するための memo である。
+
+ルール:
+
+- source of truth は approved `requirements / design / tasks`, implementation snapshot ref, workflow gate status とする
+- preparation memo はそれらの固定と参照に徹し、新しい要件を暗黙追加してはならない
+- multi-feature case では、shared file owner と implementation order を preparation で再確認する
+- clean-room case では、除外すべき implementation source を preparation で明示する
+
+#### review acquisition gate summary
+
+これは `phase evidence summary` と同様の derived artifact であり、
+human `review acquisition gate` の入口とする。
+
+最低限含めるもの:
+
+- target / case id
+- review acquisition preparation ref
+- implementation snapshot ref
+- upstream approved spec refs
+- fixed boundary statement
+- implementation-order statement
+- gate readiness statement
+
+ルール:
+
+- source of truth は review acquisition preparation, approved spec refs, workflow gate status とする
+- summary と source artifact が衝突した場合は source artifact を優先する
+- review acquisition gate request は、原則としてこの summary を入口に行う
+
+この extension を使う case では、追加 state として次を使ってよい。
+
+- `approvals.review_acquisition.generated`
+- `approvals.review_acquisition.approved`
+- `ready_for_review_acquisition`
+
+意味は次である。
+
+- `ready_for_review_acquisition = true` は
+  `review acquisition boundary is ready`
+  を意味する
+- これは coding readiness と別物である
+- approved tasks と review acquisition gate package が揃った時点で true にする
 
 ## 6. review session 実行時の人間関与
 
@@ -361,6 +473,7 @@ Codex は「実装担当」であって「意思決定の代替」ではない�
 - requirements / design / tasks を飛ばして implementation に進む
 - 遡上修正後に対応する alignment gate を再実施せず前進する
 - multi-feature なのに phase 終端の alignment gate を飛ばして次 phase に進む
+- `requirements / design / tasks` gate を phase evidence summary または同等の gate package なしで人間へ回す
 - Codex が approval 済みとみなして進む
 - 旧 repo の暫定判断を新 repo の正本として扱う
 - review output unit と human decision unit がずれる

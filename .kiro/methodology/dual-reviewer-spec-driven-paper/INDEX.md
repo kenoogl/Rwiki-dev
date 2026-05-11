@@ -73,6 +73,10 @@ active 文書だけを辿れるようにする index である。
   - generic execution layer v2 再設計の入力となる hardcode inventory 台帳。
 - [generic-execution-layer-v2-spec.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/generic-execution-layer-v2-spec.md:1)
   - `ECL` を入力にした v2 上位仕様。後続の `requirements/design/tasks` の起点。
+- [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1)
+  - `heat3d` を gate-only 承認モデルで通す trial protocol。
+- [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1)
+  - `heat3d` trial の workflow path 可視化と gate trace。
 
 ### Intent Track
 
@@ -102,6 +106,14 @@ active 文書だけを辿れるようにする index である。
   - `phase-field` first snapshot 固定。
 - [heat3d-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-implementation-phase-protocol.md:1)
   - `heat3d` implementation phase protocol。
+- [heat3d-julia-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md:1)
+  - `heat3d-julia` first snapshot 固定。
+- [heat3d-review-acquisition-preparation.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-review-acquisition-preparation.md:1)
+  - `heat3d` review acquisition gate 前の preparation memo。
+- [review-acquisition-preparation-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/review-acquisition-preparation-template.md:1)
+  - review acquisition gate package の generic preparation template。
+- [review-acquisition-gate-summary-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/review-acquisition-gate-summary-template.md:1)
+  - review acquisition gate package の generic summary template。
 - [iot-arduino-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-protocol.md:1)
   - `iot-arduino` implementation phase protocol。
 

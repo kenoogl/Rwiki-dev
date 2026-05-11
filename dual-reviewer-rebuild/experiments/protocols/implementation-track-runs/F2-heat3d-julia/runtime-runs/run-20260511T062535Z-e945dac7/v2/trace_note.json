@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260511T062535Z-e945dac7",
+  "track": "implementation",
+  "case_id": "F2-heat3d-julia",
+  "target_id": "implementation:heat3d-julia",
+  "phase_profile": "tasks",
+  "source_refs": [
+    ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+    ".kiro/specs/heat3d-spec/intent.md",
+    ".kiro/specs/heat3d-spec/brief.md",
+    ".kiro/specs/heat3d-spec/research.md",
+    ".kiro/specs/heat3d-foundation/requirements.md",
+    ".kiro/specs/heat3d-linear-solver/requirements.md",
+    ".kiro/specs/heat3d-case-model/requirements.md",
+    ".kiro/specs/heat3d-main/requirements.md",
+    ".kiro/specs/heat3d-foundation/design.md",
+    ".kiro/specs/heat3d-linear-solver/design.md",
+    ".kiro/specs/heat3d-case-model/design.md",
+    ".kiro/specs/heat3d-main/design.md",
+    ".kiro/specs/heat3d-foundation/tasks.md",
+    ".kiro/specs/heat3d-linear-solver/tasks.md",
+    ".kiro/specs/heat3d-case-model/tasks.md",
+    ".kiro/specs/heat3d-main/tasks.md",
+    "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+  ],
+  "governance_refs": [
+    "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md",
+    ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-implementation-preparation.md",
+    ".kiro/specs/heat3d-spec/reviews/implementation-gate-summary.md"
+  ]
+}

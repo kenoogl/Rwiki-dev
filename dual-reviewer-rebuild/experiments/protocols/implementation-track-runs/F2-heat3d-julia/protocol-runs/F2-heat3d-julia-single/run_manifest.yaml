@@ -1,0 +1,55 @@
+---
+run_label: F2-heat3d-julia-single
+case_id: F2-heat3d-julia
+track: implementation
+review_mode: single_review
+operator: heat3d-gate-approved
+phase_profile: tasks
+generated_at: '2026-05-11T06:25:35Z'
+case_manifest_ref: experiments/protocols/case_manifests/F2-heat3d-julia.yaml
+inputs:
+  implementation_snapshot_ref: ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md"
+  upstream_spec_refs:
+  - ".kiro/specs/heat3d-spec/intent.md"
+  - ".kiro/specs/heat3d-spec/brief.md"
+  - ".kiro/specs/heat3d-spec/research.md"
+  - ".kiro/specs/heat3d-foundation/requirements.md"
+  - ".kiro/specs/heat3d-linear-solver/requirements.md"
+  - ".kiro/specs/heat3d-case-model/requirements.md"
+  - ".kiro/specs/heat3d-main/requirements.md"
+  - ".kiro/specs/heat3d-foundation/design.md"
+  - ".kiro/specs/heat3d-linear-solver/design.md"
+  - ".kiro/specs/heat3d-case-model/design.md"
+  - ".kiro/specs/heat3d-main/design.md"
+  - ".kiro/specs/heat3d-foundation/tasks.md"
+  - ".kiro/specs/heat3d-linear-solver/tasks.md"
+  - ".kiro/specs/heat3d-case-model/tasks.md"
+  - ".kiro/specs/heat3d-main/tasks.md"
+  - "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+  governance_refs:
+  - dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
+  - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+  - dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md
+  - ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-implementation-preparation.md"
+  - ".kiro/specs/heat3d-spec/reviews/implementation-gate-summary.md"
+runtime:
+  run_id: run-20260511T062535Z-d6c4618a
+  runtime_review_mode: runtime_mediated
+  treatment: single
+  bundle_id: bundle-run-20260511T062535Z-d6c4618a
+outputs:
+  review_artifact: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/review_case.json
+  v2_review_artifact: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/v2/review_artifact.json
+  v2_metric_snapshot: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/v2/metric_snapshot.json
+  v2_trace_note: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/v2/trace_note.json
+  v2_signal_linkage_note: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/v2/signal_linkage_note.json
+  decision_units: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/decisions/decision_units.json
+  conformance_review_result: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/validation/validator_result.json
+  caveat_artifact: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/validation/invalidation_markers.json
+  comparison_eligibility_note: experiments/protocols/implementation-track-runs/F2-heat3d-julia/runtime-runs/run-20260511T062535Z-d6c4618a/derived/comparison_eligibility_note.json
+  bundle_manifest: experiments/protocols/implementation-track-runs/F2-heat3d-julia/exports/bundle-run-20260511T062535Z-d6c4618a/bundle_manifest.yaml
+  implementation_review_note: experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/implementation_review_note.md
+  signal_linkage_note: experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/signal_linkage_note.yaml
+  downstream_rework_log: experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/downstream_rework_log.yaml
+  conformance_review_result_note: experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml
+  execution_packet: experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/execution_packet.md

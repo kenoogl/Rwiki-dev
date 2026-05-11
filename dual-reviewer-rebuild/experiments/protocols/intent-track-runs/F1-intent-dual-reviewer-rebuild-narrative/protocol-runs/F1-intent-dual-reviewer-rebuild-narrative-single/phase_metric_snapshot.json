@@ -1,0 +1,15 @@
+{
+  "run_label": "F1-intent-dual-reviewer-rebuild-narrative-single",
+  "case_id": "F1-intent-dual-reviewer-rebuild",
+  "track": "intent",
+  "review_mode": "single_review",
+  "phase": "intent",
+  "collection_status": "populated_by_runner",
+  "source_register_ref": "docs/coordination/phase-review-metric-register.md",
+  "metrics": {
+    "intent_revision_count": 0,
+    "intent_handback_count": 0,
+    "intent_review_findings_count": 2,
+    "review_artifact_presence_rate": 1.0
+  }
+}

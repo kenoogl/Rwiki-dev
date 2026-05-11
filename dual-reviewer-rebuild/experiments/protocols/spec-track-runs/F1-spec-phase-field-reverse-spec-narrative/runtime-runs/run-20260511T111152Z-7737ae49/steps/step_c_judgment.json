@@ -1,0 +1,52 @@
+{
+  "step_id": "step-03",
+  "step_name": "judgment",
+  "step_status": "completed",
+  "phase_profile": "tasks",
+  "treatment": "dual+judgment",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/judgment/judgment_reviewer.prompt.md",
+    "prompt_id": "foundation.judgment_reviewer.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "evidence_records": [
+
+  ],
+  "observations": [
+
+  ],
+  "judgments": [
+    {
+      "schema_version": "1.0.0",
+      "necessity_judgment_id": "judgment-step-02-finding-clean-room-boundary",
+      "finding_id": "step-02-finding-clean-room-boundary",
+      "step_id": "step-03",
+      "necessity_dimensions": {
+        "issue_validity": {
+          "score": 0.8,
+          "rationale": "The concern is grounded in the implementation-phase snapshot and upstream spec refs."
+        },
+        "issue_materiality": {
+          "score": 0.7,
+          "rationale": "Materiality is derived from the seeded severity label."
+        },
+        "actionability": {
+          "score": 0.7,
+          "rationale": "The issue can be carried into a concrete review memo and downstream rework log."
+        },
+        "fix_readiness": {
+          "score": 0.6,
+          "rationale": "The current pilot can identify the issue even if the final remediation remains implementation-specific."
+        },
+        "adoption_priority": {
+          "score": 0.75,
+          "rationale": "Priority tracks the pilot severity ranking."
+        }
+      },
+      "final_label": "optional",
+      "recommended_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+      "override_reason": null
+    }
+  ]
+}

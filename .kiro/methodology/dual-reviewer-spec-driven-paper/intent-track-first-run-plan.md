@@ -28,6 +28,11 @@ Intent Track first-run の目的は、大規模比較ではない。
 3. `requirements / design / tasks` への伝播境界が追跡可能であることを確認する
 4. main batch 前に intent-review artifact や traceability 欠落を潰す
 
+narrative role:
+
+- cross-track story の「上流 bootstrap と downstream propagation」を acquisition-backed にする
+- `Implementation Track` 側に偏っている current paper prose の前半を埋める
+
 ---
 
 ## 3. First-Run Case Shape
@@ -113,6 +118,12 @@ Intent Track first-run の結果は、
 - upstream の不確実性を無理に閉じなかったか
 - downstream phase に伝播すべき issue を記録できたか
 
+つまり、この track の value は
+`requirements を自動生成できたこと`
+ではなく、
+`intent を最上位入力にした bootstrap evidence を main narrative に供給できること`
+にある。
+
 ---
 
 ## 9. Immediate Next Step
@@ -128,3 +139,6 @@ Intent Track first-run の結果は、
 3. intent review artifact の最小 field を run template に落とす
    - status:
      - reflected in [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-run-template.md:1)
+4. current cross-track story における narrative role を固定する
+   - status:
+     - reflected in [remaining-track-acquisition-bridge-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-acquisition-bridge-note.md:1)

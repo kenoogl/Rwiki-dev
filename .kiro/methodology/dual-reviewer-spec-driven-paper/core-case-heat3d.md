@@ -1,7 +1,7 @@
 # Core Case: heat3d
 
 _作成: 2026-05-10_  
-_status: provisional core case v0.1_  
+_status: fixed core case / preserved v3 evaluation case v0.3_  
 _role: thermal simulation representative case_
 
 ---
@@ -20,13 +20,29 @@ _role: thermal simulation representative case_
 
 - intent:
   - [heat3d-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/intent.md:1)
+- requirements:
+  - [heat3d-foundation/requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-foundation/requirements.md:1)
+  - [heat3d-linear-solver/requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-linear-solver/requirements.md:1)
+  - [heat3d-case-model/requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-case-model/requirements.md:1)
+  - [heat3d-main/requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-main/requirements.md:1)
+- design:
+  - [heat3d-foundation/design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-foundation/design.md:1)
+  - [heat3d-linear-solver/design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-linear-solver/design.md:1)
+  - [heat3d-case-model/design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-case-model/design.md:1)
+  - [heat3d-main/design.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-main/design.md:1)
+- tasks:
+  - [heat3d-foundation/tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-foundation/tasks.md:1)
+  - [heat3d-linear-solver/tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-linear-solver/tasks.md:1)
+  - [heat3d-case-model/tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-case-model/tasks.md:1)
+  - [heat3d-main/tasks.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-main/tasks.md:1)
 - canonical source:
-  - [thermal_simulator_spec.md](/Users/Daily/Development/Heat3ds_rework/docs/thermal_simulator_spec.md:1)
+  - [thermal_simulator_spec.md](/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md:1)
 
 current note:
 
-- 現時点では intent は fixed
-- downstream `requirements / design / tasks` はこれから formalize する
+- intent は fixed
+- downstream `requirements / design / tasks` は formalized 済み
+- actual implementation と reduced validation まで取得済み
 
 ---
 
@@ -34,8 +50,8 @@ current note:
 
 - implementation-phase protocol:
   - [heat3d-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-implementation-phase-protocol.md:1)
-
-implementation snapshot は今後 fixed する。
+- implementation snapshot:
+  - [heat3d-julia-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md:1)
 
 ---
 
@@ -59,6 +75,15 @@ implementation snapshot は今後 fixed する。
 - `Claim 4`
   - thermal simulation artifact の再利用可能性を示す補助 case とする
 
+paper-facing reading:
+
+- `Claim 2`
+  - requirements/design/tasks の summary、review acquisition、implementation evidence を縦に接続できるため、finding だけでなく caveat, disposition, reopen depth を traceable に残せることを示す
+- `Claim 3`
+  - restart, reopen, readability recheck, review acquisition, actual implementation を含む end-to-end path が成立しており、`Spec-origin / Implementation-origin` の workflow maintenance case として読める
+- `Claim 4`
+  - reduced validation pass と reference behavior mismatch を併記したまま、`spec/design underconstraint exposure` を report-facing note と `v3` 保存記録へ再利用できる
+
 ---
 
 ## 6. Stress Characteristics
@@ -75,12 +100,47 @@ implementation snapshot は今後 fixed する。
 
 ## 7. Operational Note
 
-この case は、現時点では provisional case である。
+この case は main paper の fixed core case として固定する。
 
-fixed core case に上げる条件:
+ただし、main evidence に使うのは Ruby 版 `dual-reviewer v1` で新たに取得した review artifact と、それに結びつく upstream artifact に限る。
 
-1. `requirements / design / tasks` が固定される
-2. `Spec Track` の concrete case が固定される
-3. `Implementation Track` の protocol / snapshot が固定される
+---
 
-main evidence に使うのは、Ruby 版 `dual-reviewer v1` で新たに取得する review artifact のみである。
+## 8. Current Assessment
+
+`heat3d` では、approved upstream artifact を根拠に clean-room implementation を作成し、実際に実行できることを確認した。
+
+ただし、reference behavior との一致までは確認できていない。現時点で first-order に読むべき観測は、
+
+- implementation が動いたこと
+- workflow / review acquisition / implementation まで trace できたこと
+- behavioral mismatch が出たこと
+
+である。
+
+この mismatch は、現時点では implementation defect と即断せず、spec/design insufficiency を露出したケースとして扱う。
+
+main paper では、この点を
+
+- implementation failure proof
+  ではなく
+- approved upstream artifact だけでは所望挙動を十分拘束できなかった可能性
+
+として書く。
+
+---
+
+## 9. v3 Role
+
+この case は、main paper の fixed core case 判定とは別に、**v3 の code-conformance evaluation case** として保存する。
+
+参照:
+
+- [heat3d-v3-evaluation-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-v3-evaluation-note.md:1)
+- [heat3d-case-fixation-decision.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-case-fixation-decision.md:1)
+
+v3 で見たいこと:
+
+1. code と approved `tasks/design/requirements` が一致しているか
+2. 一致しているのに behavior mismatch が残るなら spec/design insufficiency と言えるか
+3. 一致していなければ implementation deviation と言えるか

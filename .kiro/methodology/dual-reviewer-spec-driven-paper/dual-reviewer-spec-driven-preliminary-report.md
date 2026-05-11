@@ -4,6 +4,11 @@ _作成: 2026-05-09_
 _status: draft v0.2_  
 _position: intent-origin 仕様駆動開発支援論文の preliminary preview_
 
+prose role:
+
+- `Claim 2 / 3 / 4` の現時点 canonical prose
+- paper-facing summary の一次正本
+
 ---
 
 ## 1. Executive Summary
@@ -19,6 +24,8 @@ _position: intent-origin 仕様駆動開発支援論文の preliminary preview_
 2. manual dogfooding evidence は system construction validity の証拠として利用できる
 3. 次の主評価は `Intent Track`, `Spec Track`, `Implementation Track` の 3 分類で整理する
 4. code review は主線ではなく implementation/review phase の一部として扱う
+
+この 3 track は独立 benchmark ではなく、`intent` から implementation まで下る 1 本の workflow story として読む。特に `heat3d` は、その後半を代表する bridge case として、workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を同時に示す。
 
 ---
 
@@ -45,6 +52,17 @@ LLM code review に複数 agent を入れること自体ではない。
 - evidence retention
 
 を組み合わせた workflow system として設計されている。
+
+現時点の paper-facing story は、3 track を次のように連結する。
+
+- `Intent Track`
+  - 上流 bootstrap と downstream propagation
+- `Spec Track`
+  - downstream refinement と reopen / alignment
+- `Implementation Track`
+  - approved upstream artifact に結びついた review acquisition と implementation trace
+
+この連結の後半を代表する bridge case が `heat3d` であり、workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を 1 case にまとめて示す。
 
 ---
 
@@ -91,17 +109,32 @@ LLM code review に複数 agent を入れること自体ではない。
 - finding fix + rerun evidence
 - phase metrics baseline
 - intent review baseline
+- `heat3d` fixed core case package
+- `heat3d` actual implementation + reduced validation evidence
+- `heat3d` implementation-origin second-case acquisition (`single / dual / dual+judgment = 2 / 3 / 3`)
+- `heat3d` spec/design underconstraint exposure evidence
+- `Intent Track` fresh first batch (`dual-reviewer-rebuild`)
+- `Spec Track` fresh first batch (`phase-field-reverse-spec`)
 
 これらは main evaluation ではなく、
 `system construction validity` と `evaluation readiness` を支える evidence として使う。
 
-### 4.2 Not yet acquired
+特に `heat3d` では、
 
-- Intent Track (`intent-only`) の追加 run
-- Spec Track (`spec-present`) の cross-case comparison
-- Implementation Track (`implementation/review`) の new Ruby-based review run
-- downstream rework data across cases
-- disagreement preservation metrics across tracks
+- gate-based workflow が restart / reopen / recheck を含めて回った
+- approved upstream artifact から clean-room implementation まで到達できた
+- implementation-local rework は `3` 件で upstream reopen は `0` 件だった
+- reduced validation は通る一方で reference behavior との差が残った
+
+という 4 点が確認できている。
+
+### 4.2 Remaining gaps
+
+- downstream rework data across additional cases
+- disagreement preservation metrics aggregated across tracks
+- track 間の large-N comparison
+
+`Intent Track` と `Spec Track` の first batch 自体は取得済みである。これにより、3-track story の前半も first-batch level では acquisition-backed になった。残っているのは、より広い比較と集計である。
 
 ---
 
@@ -131,6 +164,20 @@ LLM code review に複数 agent を入れること自体ではない。
   - caveat retention
   - disagreement preservation
   - downstream rework traceability
+  - implementation issue と spec/design underconstraint の切り分け
+
+### 5.1 Track continuity
+
+この 3 track は、別々の benchmark 群として置くのではなく、1 本の workflow story として連結して読む。
+
+- `Intent Track`
+  - 上流 bootstrap と downstream propagation
+- `Spec Track`
+  - downstream refinement と reopen / alignment
+- `Implementation Track`
+  - approved upstream artifact に結びついた review acquisition と implementation trace
+
+この連結の後半を代表する bridge case が `heat3d` である。`heat3d` は `Spec-origin / Implementation-origin` の両方を持ち、restart, reopen, readability recheck, review acquisition, actual implementation, validation-boundary judgment まで含む長い trace を 1 case に束ねている。したがって本論文では、`heat3d` を implementation-oriented second case としてだけでなく、workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を同時に示す bridge case として扱う。
 
 ---
 
@@ -144,13 +191,21 @@ LLM code review に複数 agent を入れること自体ではない。
 
 `dual-reviewer` は、finding だけでなく disagreement, caveat, disposition, handback depth を traceable に残す。
 
+`phase-field` と `heat3d` の 2 case では、review artifact は finding の列挙に留まらず、caveat, disposition, reopen depth, phase evidence summary を同じ case lineage 上に保持した。したがって `dual-reviewer` は、指摘品質だけでなく traceability 自体を成果物として残す workflow system として読める。
+
+さらに fresh `Intent Track / Spec Track` batch でも、`intent handback`, `propagation obligation`, `reopen required`, `intent-attributed issue`, `major correction` が artifact に残った。したがってこの traceability は implementation-present case に限られない。ただし upstream 2 track については、現時点では first-batch level の成立確認として読む。
+
 ### Claim 3
 
 `dual-reviewer` は、`intent-only`, `spec-present`, `implementation-present` の複数開始条件でも workflow を維持できる。
 
+fresh `Intent Track` の `dual-reviewer-rebuild`, fresh `Spec Track` の `phase-field-reverse-spec`, そして bridge case `heat3d` を合わせると、`dual-reviewer` は少なくとも first-batch level では `intent-only`, `spec-present`, `implementation-present` の 3 開始条件で artifact-preserving workflow を成立させた。特に `heat3d` では restart, reopen, readability recheck, review acquisition, actual implementation まで含む長い経路を破綻なく通した。これは `dual-reviewer` が、開始条件や途中手戻りの差を吸収しながら workflow を維持できることの cross-track evidence である。
+
 ### Claim 4
 
 `dual-reviewer` は、review 後の evidence を self-improvement / reporting に再利用可能な形で残す。
+
+implementation track では、`phase-field` と `heat3d` の両方で `boundary`, `update-order`, `parameter-caveat` という finding pattern が再現した。一方 `heat3d` は、reduced validation pass と reference behavior mismatch の併存を通じて、review evidence を downstream reporting と future code-conformance evaluation の両方へ再利用できることを示した。behavior mismatch の責任分解そのものは本文で断定せず、`v3` の code-conformance evaluation に委ねる。
 
 ---
 
@@ -192,19 +247,45 @@ LLM code review に複数 agent を入れること自体ではない。
 現時点で見えている主な threat は次である。
 
 - Intent Track / Spec Track / Implementation Track の case 数がまだ少ない
+- `Intent Track` と `Spec Track` の acquisition-backed support は、まだ first-batch level に留まる
 - implementation-phase case が scientific / embedded 側に寄っている
 - manual reference は補助比較に留まる
 - ground truth を absolute oracle としない
 - model drift の影響がある
+- `heat3d` は reduced validation pass と reference behavior mismatch が同居しており、behavioral adequacy と spec conformance を分けて読む必要がある
+
+### 8.1 Interpretation boundary for `heat3d`
+
+`heat3d` の読みには、本文側で明示しておくべき解釈境界が 3 つある。
+
+1. reference behavior mismatch は first-order で implementation defect を意味しない  
+   approved upstream artifact だけでは所望挙動を十分拘束できていなかった可能性を残す。
+
+2. canonical full-case acceptance `13.4` は main evidence の admission gate ではない  
+   これは behavioral adequacy を見る supplementary evidence であり、workflow / evidence claim の成立条件ではない。
+
+3. responsibility split は `v3` に委ねる  
+   `code ↔ tasks/design/requirements` の conformance を別に調べることで、implementation deviation か spec/design underconstraint かを切り分ける。
+
+したがって本報告では、`heat3d` を correctness proof case としてではなく、workflow validity, implementation-origin evidence, evidence reusability, spec underconstraint exposure を束ねた bridge case として扱う。
+
+### 8.2 First-Batch Boundary For `Intent` / `Spec`
+
+`Intent Track` と `Spec Track` は fresh first batch を取得済みだが、本文で強く言うのは次までに留める。
+
+1. `intent-only` と `spec-present` の開始条件でも artifact-preserving workflow が成立した  
+2. handback / propagation / reopen / major correction のような process evidence が残った  
+3. ただし large-N comparison や domain-general regularity まではまだ主張しない
+
+したがって、この 2 track の本文上の役割は first-batch level の workflow support evidence であり、成熟した benchmark 比較ではない。
 
 ---
 
 ## 9. Immediate Next Work
 
-1. case manifest を正本化する
-2. Intent Track / Spec Track / Implementation Track の acquisition protocol を分離する
-3. Implementation Track pilot run を small batch で開始する
-4. Intent Track / Spec Track 側の first-run も別途定義する
+1. downstream rework data を additional case で増やす
+2. disagreement preservation 指標を track 横断で集計する
+3. large-N comparison を追加して first-batch boundary を越える
 
 ---
 
@@ -214,9 +295,9 @@ LLM code review に複数 agent を入れること自体ではない。
 |------|--------|------|
 | system construction validity | `ready` | v1 completion and governance evidence available |
 | track framing | `ready` | intent-origin framing restored |
-| implementation-phase setup | `partially ready` | phase-field first snapshot fixed, run data not yet acquired |
-| main paper evidence | `not yet ready` | new Ruby-based multi-track batch pending |
+| implementation-phase setup | `ready` | `phase-field` baseline と `heat3d` second-case acquisition を取得済み |
+| main paper evidence | `partially ready` | cross-track first-batch prose は統合済み、追加比較が残る |
 
 現時点では、
-「論文の主張構成は整ったが、main evaluation data はこれから取得する」
+「論文の主張構成は整い、`heat3d` の core evidence と cross-track first-batch prose は main paper に統合済みだが、追加比較と集計はまだ残っている」
 という状態である。

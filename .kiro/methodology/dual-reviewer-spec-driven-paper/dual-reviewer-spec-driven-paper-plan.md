@@ -4,6 +4,11 @@ _作成: 2026-05-09_
 _status: draft v0.2_  
 _focus: code review 単体ではなく、intent 起点の仕様駆動開発支援_
 
+prose role:
+
+- claim structure と case allocation の planning source
+- `Claim 2 / 3 / 4` prose の candidate / fallback source
+
 ---
 
 ## 1. この計画の位置付け
@@ -99,6 +104,7 @@ implementation code が存在するケース。
 - implementation / conformance review を dual-reviewer がどう支えるか
 - disagreement, caveat, reopen depth を evidence として残せるか
 - code review を workflow 全体の末尾 phase として扱えるか
+- spec-conformant implementation と spec/design underconstraint を切り分けられるか
 
 **重要**: code review は主線そのものではなく、Implementation Track に属する downstream phase である。
 
@@ -180,13 +186,55 @@ implementation code が存在するケース。
 
 `dual-reviewer` は、finding だけでなく disagreement, caveat, disposition, handback depth を traceable に残す。
 
+current paragraph candidate:
+
+note:
+
+- 現時点の canonical prose は
+  [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1)
+  側に固定している
+
+`phase-field` と `heat3d` の 2 case では、review artifact は finding の列挙に留まらず、caveat, disposition, reopen depth, phase evidence summary を同じ case lineage 上に保持した。さらに fresh `Intent Track / Spec Track` batch でも、`intent handback`, `propagation obligation`, `reopen required`, `intent-attributed issue`, `major correction` が artifact に残った。したがって `dual-reviewer` は、指摘品質だけでなく traceability 自体を成果物として残す workflow system として読める。
+
+planning caveat:
+
+- `Intent / Spec` 側の support は first-batch level に留まる
+
 ### Claim 3
 
 `dual-reviewer` は、`intent-only`, `spec-present`, `implementation-present` の異なる開始条件でも workflow を維持できる。
 
+current paragraph candidate:
+
+note:
+
+- 現時点の canonical prose は
+  [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1)
+  側に固定している
+
+fresh `Intent Track` の `dual-reviewer-rebuild`, fresh `Spec Track` の `phase-field-reverse-spec`, そして bridge case `heat3d` を合わせると、`dual-reviewer` は `intent-only`, `spec-present`, `implementation-present` の 3 開始条件で artifact-preserving workflow を成立させた。特に `heat3d` では restart, reopen, readability recheck, review acquisition, actual implementation まで含む長い経路を破綻なく通した。これは `dual-reviewer` が、開始条件や途中手戻りの差を吸収しながら workflow を維持できることの cross-track evidence である。
+
+planning caveat:
+
+- stronger claim は large-N comparison 後に限る
+
 ### Claim 4
 
 `dual-reviewer` は、review 後の evidence を self-improvement / reporting に再利用可能な形で残す。
+
+current paragraph candidate:
+
+note:
+
+- 現時点の canonical prose は
+  [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1)
+  側に固定している
+
+implementation track では、`phase-field` と `heat3d` の両方で `boundary`, `update-order`, `parameter-caveat` という finding pattern が再現した。一方 `heat3d` は、reduced validation pass と reference behavior mismatch の併存を通じて、review evidence を downstream reporting と future code-conformance evaluation の両方へ再利用できることを示した。
+
+planning caveat:
+
+- behavior mismatch の責任分解は本文で断定せず、`v3` に委譲する
 
 ---
 
@@ -196,12 +244,16 @@ implementation code が存在するケース。
 
 - `dual-reviewer-rebuild` 自体の再構築過程
 - intent-only または spec-bootstrap case として使う
+- fresh first batch:
+  - [F1-intent-dual-reviewer-rebuild-narrative comparison summary](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/comparison_summary.json:1)
 
 ### Spec Track cases
 
 - `phase-field-reverse-spec`
 - `heat3d` 系の spec-present case
 - 必要なら他の spec-present sample
+- fresh first batch:
+  - [F1-spec-phase-field-reverse-spec-narrative comparison summary](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/comparison_summary.json:1)
 
 ### Implementation Track cases
 
@@ -211,6 +263,15 @@ implementation code が存在するケース。
 
 ただし Implementation Track の code artifact は、
 対応する `intent/spec/design/tasks` を伴う downstream sample としてのみ扱う。
+
+`heat3d` はここで特に重要である。
+
+- `Spec-origin / Implementation-origin` の fixed core case
+- review acquisition (`single / dual / dual+judgment = 2 / 3 / 3`) を取得済み
+- actual clean-room implementation と reduced validation まで取得済み
+- reference behavior mismatch を通じて `spec/design underconstraint` を露出した case
+
+したがって `heat3d` は、main paper では workflow validity と implementation-origin evidence を支える一方、`v3` では `code ↔ tasks/design/requirements` conformance evaluation case としても保存する。
 
 ---
 
@@ -237,6 +298,8 @@ Ruby 版 `dual-reviewer v1` で新たに取得する evidence のみである。
 implementation code は review object ではあるが、
 論文の主対象はコードそのものではなく、
 そのコードに至る workflow と review process である。
+
+ただし `heat3d` が示したように、approved upstream artifact から作られた clean-room implementation が reduced validation を通っても reference behavior と一致しないことはありうる。したがって implementation artifact は、code correctness の絶対 oracle ではなく、spec conformance と behavioral adequacy を分けて読む対象として扱う。
 
 ### 9.4 treatment decomposition
 

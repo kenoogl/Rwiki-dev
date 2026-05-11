@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260511T111152Z-f56f730f",
+  "track": "intent",
+  "case_id": "F1-intent-dual-reviewer-rebuild",
+  "target_id": "intent:F1-intent-dual-reviewer-rebuild",
+  "phase_profile": "intent",
+  "source_refs": [
+    ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+    "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+    "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+    "docs/traceability/intent-to-requirements-trace-matrix.md"
+  ],
+  "governance_refs": [
+    "docs/coordination/workflow-gate-status.md"
+  ]
+}

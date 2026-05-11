@@ -1,0 +1,853 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "intent",
+  "target_id": "intent:F1-intent-dual-reviewer-rebuild",
+  "common_inputs": {
+    "target_id": "intent:F1-intent-dual-reviewer-rebuild",
+    "target_artifact_hash": "sha256:6ddd280b1c5ded4c373222b6d6f64078fe34ef175fea2a45d41e954dd49e3207",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "afc2beadf5625a2e8531c6b794a5736954e734fc",
+    "phase_profile": "intent",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "docs/traceability/intent-to-requirements-trace-matrix.md"
+    ],
+    "governance_refs": [
+      "docs/coordination/workflow-gate-status.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml",
+    "track": "intent"
+  },
+  "track_inputs": {
+    "intent_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+    "supporting_refs": [
+      "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md"
+    ],
+    "traceability_refs": [
+      "docs/traceability/intent-to-requirements-trace-matrix.md"
+    ]
+  },
+  "evidence_observations": [
+    {
+      "observation_id": "step-01-observation-finding-phase-contract-gap",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-phase-contract-gap-1"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+        "seed.intent-phase-contract"
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+
+      ],
+      "source_kinds": [
+        "case_source"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-01-observation-finding-scope-drift-risk",
+      "source_role": "primary_reviewer",
+      "severity": "medium",
+      "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-1",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-2",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-3",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-4",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-5",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-6",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-7",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-8",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-9",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-10",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-11",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-12",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-13",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-14",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-15",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-16",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-17",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-18",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-19",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-20",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-21",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-22",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-23",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-24",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-25",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-26",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-27",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-28",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-29",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-30",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-31",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-32",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-33",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-34",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-35",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-36",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-37",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-38",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-39",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-40",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-41",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-42",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-43",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-44",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-45",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-46",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-47",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-48",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-49",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-50",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-51",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-52",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-53",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-54",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-55",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-56",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-57",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-58",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-59",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-60",
+        "review_case.json#step-01-evidence-finding-scope-drift-risk-61"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+        "seed.intent-scope-drift"
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+
+      ],
+      "source_kinds": [
+        "case_source"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-02-observation-finding-human-gate-collapse",
+      "source_role": "adversarial_reviewer",
+      "severity": "medium",
+      "summary": "Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints. Evidence excerpt: - manual `implementation conformance review` を 1 サイクル通した",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-1",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-2",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-3",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-4",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-5",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-6",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-7",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-8",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-9",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-10",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-11",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-12",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-13",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-14",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-15",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-16",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-17",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-18",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-19",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-20",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-21",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-22",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-23",
+        "review_case.json#step-02-evidence-finding-human-gate-collapse-24"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+        "seed.human-gate-ownership"
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+
+      ],
+      "source_kinds": [
+        "case_source"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    }
+  ],
+  "review_issue_candidates": [
+    {
+      "candidate_id": "issue-candidate:step-01-finding-phase-contract-gap",
+      "finding_id": "step-01-finding-phase-contract-gap",
+      "taxonomy_path": "intent.blocking.detected_issue",
+      "severity": "high",
+      "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+      ],
+      "failure_observation_refs": [
+        "step-01-observation-finding-phase-contract-gap",
+        "intent:phase_contract_gap"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-01-finding-scope-drift-risk",
+      "finding_id": "step-01-finding-scope-drift-risk",
+      "taxonomy_path": "intent.nonblocking.detected_issue",
+      "severity": "medium",
+      "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "failure_observation_refs": [
+        "step-01-observation-finding-scope-drift-risk",
+        "intent:scope_drift_risk"
+      ]
+    },
+    {
+      "candidate_id": "issue-candidate:step-02-finding-human-gate-collapse",
+      "finding_id": "step-02-finding-human-gate-collapse",
+      "taxonomy_path": "intent.nonblocking.counter_evidence",
+      "severity": "medium",
+      "summary": "Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints. Evidence excerpt: - manual `implementation conformance review` を 1 サイクル通した",
+      "evidence_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+        "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+        "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+        "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+        "docs/traceability/intent-to-requirements-trace-matrix.md"
+      ],
+      "failure_observation_refs": [
+        "step-02-observation-finding-human-gate-collapse",
+        "intent:human_gate_collapse"
+      ]
+    }
+  ],
+  "caveat_candidates": [
+    {
+      "candidate_id": "caveat-candidate:step-02-finding-human-gate-collapse",
+      "kind": "counter_evidence_preserved",
+      "finding_id": "step-02-finding-human-gate-collapse",
+      "summary": "Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints. Evidence excerpt: - manual `implementation conformance review` を 1 サイクル通した",
+      "counter_evidence_refs": [
+
+      ]
+    }
+  ],
+  "reopen_candidates": [
+    {
+      "candidate_id": "reopen-candidate:step-01-finding-phase-contract-gap",
+      "finding_id": "step-01-finding-phase-contract-gap",
+      "taxonomy_path": "intent.blocking.detected_issue",
+      "reopen_scope": "intent",
+      "reason": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support"
+    }
+  ],
+  "signal_candidates": [
+    {
+      "signal_id": "signal:step-01-finding-phase-contract-gap",
+      "signal_class": "workflow_failure_signal",
+      "taxonomy_path": "intent.blocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-phase-contract-gap",
+      "treatment": "dual+judgment"
+    },
+    {
+      "signal_id": "signal:step-01-finding-scope-drift-risk",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "intent.nonblocking.detected_issue",
+      "decision_unit_id": "decision-unit-step-01-finding-scope-drift-risk",
+      "treatment": "dual+judgment"
+    },
+    {
+      "signal_id": "signal:step-02-finding-human-gate-collapse",
+      "signal_class": "quality_signal",
+      "taxonomy_path": "intent.nonblocking.counter_evidence",
+      "decision_unit_id": "decision-unit-step-02-finding-human-gate-collapse",
+      "treatment": "dual+judgment"
+    }
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260511T111152Z-13a75b67",
+    "finding_projection": [
+      {
+        "finding_ref": "review_case.json#step-01-finding-phase-contract-gap",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-phase-contract-gap",
+        "taxonomy_path": "intent.blocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-phase-contract-gap"
+        ],
+        "reopen_candidate_ref": "v2/review_artifact.json#reopen-candidate:step-01-finding-phase-contract-gap"
+      },
+      {
+        "finding_ref": "review_case.json#step-01-finding-scope-drift-risk",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-01-finding-scope-drift-risk",
+        "taxonomy_path": "intent.nonblocking.detected_issue",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-scope-drift-risk"
+        ],
+        "reopen_candidate_ref": null
+      },
+      {
+        "finding_ref": "review_case.json#step-02-finding-human-gate-collapse",
+        "candidate_ref": "v2/review_artifact.json#issue-candidate:step-02-finding-human-gate-collapse",
+        "taxonomy_path": "intent.nonblocking.counter_evidence",
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-human-gate-collapse"
+        ],
+        "reopen_candidate_ref": null
+      }
+    ],
+    "decision_unit_projection": [
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-phase-contract-gap",
+        "finding_refs": [
+          "review_case.json#step-01-finding-phase-contract-gap"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-phase-contract-gap"
+        ],
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-01-finding-scope-drift-risk",
+        "finding_refs": [
+          "review_case.json#step-01-finding-scope-drift-risk"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-01-finding-scope-drift-risk"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      },
+      {
+        "decision_unit_ref": "decisions/decision_units.json#decision-unit-step-02-finding-human-gate-collapse",
+        "finding_refs": [
+          "review_case.json#step-02-finding-human-gate-collapse"
+        ],
+        "linked_signal_refs": [
+          "v2/review_artifact.json#signal:step-02-finding-human-gate-collapse"
+        ],
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved"
+      }
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-f4cc0e12",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260511T111152Z-13a75b67"
+    }
+  },
+  "decision_context": {
+    "track": "intent",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "intent",
+      "evidence_observations": [
+        {
+          "observation_id": "step-01-observation-finding-phase-contract-gap",
+          "source_role": "primary_reviewer",
+          "severity": "high",
+          "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+          "source_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+          ],
+          "counter_evidence_refs": [
+
+          ],
+          "taxonomy_path": null,
+          "observation_class": "rule_matched_observation",
+          "evidence_record_refs": [
+            "review_case.json#step-01-evidence-finding-phase-contract-gap-1"
+          ],
+          "counter_evidence_record_refs": [
+
+          ],
+          "matched_pattern_ids": [
+            "seed.intent-phase-contract"
+          ],
+          "counter_evidence_pattern_ids": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "counter_evidence_types": [
+
+          ],
+          "review_focuses": [
+
+          ],
+          "source_kinds": [
+            "case_source"
+          ],
+          "counter_evidence_source_kinds": [
+
+          ],
+          "section_classes": [
+
+          ],
+          "counter_evidence_section_classes": [
+
+          ]
+        },
+        {
+          "observation_id": "step-01-observation-finding-scope-drift-risk",
+          "source_role": "primary_reviewer",
+          "severity": "medium",
+          "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+          "source_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+            "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+            "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+            "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+            "docs/traceability/intent-to-requirements-trace-matrix.md"
+          ],
+          "counter_evidence_refs": [
+
+          ],
+          "taxonomy_path": null,
+          "observation_class": "rule_matched_observation",
+          "evidence_record_refs": [
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-1",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-2",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-3",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-4",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-5",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-6",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-7",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-8",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-9",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-10",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-11",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-12",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-13",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-14",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-15",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-16",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-17",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-18",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-19",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-20",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-21",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-22",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-23",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-24",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-25",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-26",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-27",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-28",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-29",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-30",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-31",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-32",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-33",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-34",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-35",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-36",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-37",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-38",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-39",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-40",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-41",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-42",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-43",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-44",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-45",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-46",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-47",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-48",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-49",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-50",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-51",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-52",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-53",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-54",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-55",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-56",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-57",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-58",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-59",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-60",
+            "review_case.json#step-01-evidence-finding-scope-drift-risk-61"
+          ],
+          "counter_evidence_record_refs": [
+
+          ],
+          "matched_pattern_ids": [
+            "seed.intent-scope-drift"
+          ],
+          "counter_evidence_pattern_ids": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "counter_evidence_types": [
+
+          ],
+          "review_focuses": [
+
+          ],
+          "source_kinds": [
+            "case_source"
+          ],
+          "counter_evidence_source_kinds": [
+
+          ],
+          "section_classes": [
+
+          ],
+          "counter_evidence_section_classes": [
+
+          ]
+        },
+        {
+          "observation_id": "step-02-observation-finding-human-gate-collapse",
+          "source_role": "adversarial_reviewer",
+          "severity": "medium",
+          "summary": "Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints. Evidence excerpt: - manual `implementation conformance review` を 1 サイクル通した",
+          "source_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+            "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+            "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+            "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+            "docs/traceability/intent-to-requirements-trace-matrix.md"
+          ],
+          "counter_evidence_refs": [
+
+          ],
+          "taxonomy_path": null,
+          "observation_class": "rule_matched_observation",
+          "evidence_record_refs": [
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-1",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-2",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-3",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-4",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-5",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-6",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-7",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-8",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-9",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-10",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-11",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-12",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-13",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-14",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-15",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-16",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-17",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-18",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-19",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-20",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-21",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-22",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-23",
+            "review_case.json#step-02-evidence-finding-human-gate-collapse-24"
+          ],
+          "counter_evidence_record_refs": [
+
+          ],
+          "matched_pattern_ids": [
+            "seed.human-gate-ownership"
+          ],
+          "counter_evidence_pattern_ids": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "counter_evidence_types": [
+
+          ],
+          "review_focuses": [
+
+          ],
+          "source_kinds": [
+            "case_source"
+          ],
+          "counter_evidence_source_kinds": [
+
+          ],
+          "section_classes": [
+
+          ],
+          "counter_evidence_section_classes": [
+
+          ]
+        }
+      ],
+      "review_issue_candidates": [
+        {
+          "candidate_id": "issue-candidate:step-01-finding-phase-contract-gap",
+          "finding_id": "step-01-finding-phase-contract-gap",
+          "taxonomy_path": "intent.blocking.detected_issue",
+          "severity": "high",
+          "summary": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md"
+          ],
+          "failure_observation_refs": [
+            "step-01-observation-finding-phase-contract-gap",
+            "intent:phase_contract_gap"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-01-finding-scope-drift-risk",
+          "finding_id": "step-01-finding-scope-drift-risk",
+          "taxonomy_path": "intent.nonblocking.detected_issue",
+          "severity": "medium",
+          "summary": "The bootstrap intent can drift toward plain code review unless the governed phase chain stays explicit. Evidence excerpt: - implementation governance を formalize した",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+            "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+            "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+            "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+            "docs/traceability/intent-to-requirements-trace-matrix.md"
+          ],
+          "failure_observation_refs": [
+            "step-01-observation-finding-scope-drift-risk",
+            "intent:scope_drift_risk"
+          ]
+        },
+        {
+          "candidate_id": "issue-candidate:step-02-finding-human-gate-collapse",
+          "finding_id": "step-02-finding-human-gate-collapse",
+          "taxonomy_path": "intent.nonblocking.counter_evidence",
+          "severity": "medium",
+          "summary": "Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints. Evidence excerpt: - manual `implementation conformance review` を 1 サイクル通した",
+          "evidence_refs": [
+            ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+            "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+            "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+            "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+            "docs/traceability/intent-to-requirements-trace-matrix.md"
+          ],
+          "failure_observation_refs": [
+            "step-02-observation-finding-human-gate-collapse",
+            "intent:human_gate_collapse"
+          ]
+        }
+      ],
+      "caveat_candidates": [
+        {
+          "candidate_id": "caveat-candidate:step-02-finding-human-gate-collapse",
+          "kind": "counter_evidence_preserved",
+          "finding_id": "step-02-finding-human-gate-collapse",
+          "summary": "Human gate ownership remains adversarially review-worthy because centralized LLM guidance can collapse distinct approval and conformance checkpoints. Evidence excerpt: - manual `implementation conformance review` を 1 サイクル通した",
+          "counter_evidence_refs": [
+
+          ]
+        }
+      ],
+      "reopen_candidates": [
+        {
+          "candidate_id": "reopen-candidate:step-01-finding-phase-contract-gap",
+          "finding_id": "step-01-finding-phase-contract-gap",
+          "taxonomy_path": "intent.blocking.detected_issue",
+          "reopen_scope": "intent",
+          "reason": "The bootstrap intent needs explicit phase-by-phase completion criteria so downstream work does not start before governance gates are fixed. Evidence excerpt: ### 5.3 implementation phase を含む end-to-end support"
+        }
+      ],
+      "signal_candidates": [
+        {
+          "signal_id": "signal:step-01-finding-phase-contract-gap",
+          "signal_class": "workflow_failure_signal",
+          "taxonomy_path": "intent.blocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-phase-contract-gap",
+          "treatment": "dual+judgment"
+        },
+        {
+          "signal_id": "signal:step-01-finding-scope-drift-risk",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "intent.nonblocking.detected_issue",
+          "decision_unit_id": "decision-unit-step-01-finding-scope-drift-risk",
+          "treatment": "dual+judgment"
+        },
+        {
+          "signal_id": "signal:step-02-finding-human-gate-collapse",
+          "signal_class": "quality_signal",
+          "taxonomy_path": "intent.nonblocking.counter_evidence",
+          "decision_unit_id": "decision-unit-step-02-finding-human-gate-collapse",
+          "treatment": "dual+judgment"
+        }
+      ]
+    },
+    "decision_units": [
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-phase-contract-gap",
+        "proposed_action": "Escalate into implementation review memo and mark for downstream rework consideration.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-phase-contract-gap"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-01-finding-scope-drift-risk",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-01-finding-scope-drift-risk"
+        ],
+        "disposition_class": "accepted"
+      },
+      {
+        "decision_unit_id": "decision-unit-step-02-finding-human-gate-collapse",
+        "proposed_action": "Preserve as caveat and inspect alongside upstream spec consistency before forcing a fix.",
+        "human_decision": "approved",
+        "finding_refs": [
+          "review_case.json#step-02-finding-human-gate-collapse"
+        ],
+        "disposition_class": "accepted"
+      }
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ]
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 1,
+      "accepted_decision_unit_ids": [
+        "decision-unit-step-01-finding-phase-contract-gap",
+        "decision-unit-step-01-finding-scope-drift-risk",
+        "decision-unit-step-02-finding-human-gate-collapse"
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F1-intent-dual-reviewer-rebuild",
+    "track": "intent",
+    "intent_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
+      "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md"
+    ],
+    "supporting_refs": [
+      "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md"
+    ],
+    "traceability_refs": [
+      "docs/traceability/intent-to-requirements-trace-matrix.md"
+    ],
+    "objective": "intent bootstrap acquisition for cross-track narrative",
+    "analysis_profile_ref": "dual-reviewer-rebuild/experiments/protocols/analysis_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml",
+    "heuristic_profile_ref": "dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/intent/F1-intent-dual-reviewer-rebuild.yaml",
+    "case_manifest_ref": "experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-f4cc0e12",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260511T111152Z-13a75b67"
+  }
+}

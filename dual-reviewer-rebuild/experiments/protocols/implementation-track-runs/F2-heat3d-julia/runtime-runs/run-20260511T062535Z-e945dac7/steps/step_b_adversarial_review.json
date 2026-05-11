@@ -1,0 +1,863 @@
+{
+  "step_id": "step-02",
+  "step_name": "adversarial_review",
+  "step_status": "completed",
+  "phase_profile": "tasks",
+  "treatment": "dual",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/adversarial/adversarial_reviewer.prompt.md",
+    "prompt_id": "foundation.adversarial_reviewer.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-1",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "4. Why This Snapshot",
+      "parent_section_heading": "heat3d-julia first snapshot",
+      "section_class": "snapshot_rationale",
+      "fragment_class": "boundary_review_rationale",
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 94,
+      "line_numbers": [
+        94,
+        95
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. parameter and caveat surface が review-critical MVP fixed case、boundary sign convention、z-range rule、solver tolerance の解釈を silent にずらすと downstream behavior が変わるため、default と caveat を finding に残せるかを見たい。",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-2",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_caveat_surface",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "4. Why This Snapshot",
+      "parent_section_heading": "heat3d-julia first snapshot",
+      "section_class": "snapshot_rationale",
+      "fragment_class": "boundary_review_rationale",
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 94,
+      "line_numbers": [
+        94,
+        95
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. parameter and caveat surface が review-critical MVP fixed case、boundary sign convention、z-range rule、solver tolerance の解釈を silent にずらすと downstream behavior が変わるため、default と caveat を finding に残せるかを見たい。",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-3",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 1,
+      "first_line_number": 276,
+      "line_numbers": [
+        276
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `x_minus = CONVECTION(h=5.0, T_amb=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-4",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 2,
+      "first_line_number": 277,
+      "line_numbers": [
+        277
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `x_plus  = CONVECTION(h=5.0, T_amb=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-5",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 278,
+      "line_numbers": [
+        278
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `y_minus = CONVECTION(h=5.0, T_amb=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-6",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 4,
+      "first_line_number": 279,
+      "line_numbers": [
+        279
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `y_plus  = CONVECTION(h=5.0, T_amb=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-7",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 5,
+      "first_line_number": 280,
+      "line_numbers": [
+        280
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `z_minus = ISOTHERMAL(T=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-8",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 6,
+      "first_line_number": 281,
+      "line_numbers": [
+        281
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `z_plus  = HEAT_FLUX(q=100000.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-9",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.1 時間積分",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 1,
+      "first_line_number": 298,
+      "line_numbers": [
+        298
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 初期温度: 全セル `300.0 K`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-10",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.1 時間積分",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 2,
+      "first_line_number": 299,
+      "line_numbers": [
+        299
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 時間刻み: `Δt = 1000.0 s`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-11",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.1 時間積分",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 300,
+      "line_numbers": [
+        300
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- MVP の実行ステップ数: `1`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-12",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.6 前処理",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 364,
+      "line_numbers": [
+        364
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "MVP では `GS smoother` を必須とする。",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-13",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.7 収束判定",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 1,
+      "first_line_number": 368,
+      "line_numbers": [
+        368
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 最大反復数: `8000`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-14",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.7 収束判定",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 2,
+      "first_line_number": 369,
+      "line_numbers": [
+        369
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 許容誤差: `1.0e-4`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-15",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.7 収束判定",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 370,
+      "line_numbers": [
+        370,
+        372,
+        373,
+        374
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 相対残差: ```text relative_residual = residual_rms / initial_residual_rms ```",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-16",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.7 収束判定",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 4,
+      "first_line_number": 376,
+      "line_numbers": [
+        376
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `relative_residual < tolerance` で収束",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-17",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 1,
+      "first_line_number": 276,
+      "line_numbers": [
+        276
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `x_minus = CONVECTION(h=5.0, T_amb=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-18",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 2,
+      "first_line_number": 277,
+      "line_numbers": [
+        277
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `x_plus  = CONVECTION(h=5.0, T_amb=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-19",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 278,
+      "line_numbers": [
+        278
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `y_minus = CONVECTION(h=5.0, T_amb=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-20",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 4,
+      "first_line_number": 279,
+      "line_numbers": [
+        279
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `y_plus  = CONVECTION(h=5.0, T_amb=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-21",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 5,
+      "first_line_number": 280,
+      "line_numbers": [
+        280
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `z_minus = ISOTHERMAL(T=300.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-22",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "9.3 MVP の固定境界条件",
+      "parent_section_heading": "9. 境界条件仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 6,
+      "first_line_number": 281,
+      "line_numbers": [
+        281
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `z_plus  = HEAT_FLUX(q=100000.0)`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-23",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.1 時間積分",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 1,
+      "first_line_number": 298,
+      "line_numbers": [
+        298
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 初期温度: 全セル `300.0 K`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-24",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.1 時間積分",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 2,
+      "first_line_number": 299,
+      "line_numbers": [
+        299
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 時間刻み: `Δt = 1000.0 s`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-25",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.1 時間積分",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 300,
+      "line_numbers": [
+        300
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- MVP の実行ステップ数: `1`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-26",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.6 前処理",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": null,
+      "bullet_ordinal": null,
+      "first_line_number": 364,
+      "line_numbers": [
+        364
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "MVP では `GS smoother` を必須とする。",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-27",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.7 収束判定",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 1,
+      "first_line_number": 368,
+      "line_numbers": [
+        368
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 最大反復数: `8000`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-28",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.7 収束判定",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 2,
+      "first_line_number": 369,
+      "line_numbers": [
+        369
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 許容誤差: `1.0e-4`",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-29",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.7 収束判定",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 3,
+      "first_line_number": 370,
+      "line_numbers": [
+        370,
+        372,
+        373,
+        374
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- 相対残差: ```text relative_residual = residual_rms / initial_residual_rms ```",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-30",
+      "source_ref": "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "10.7 収束判定",
+      "parent_section_heading": "10. 数値解法仕様",
+      "section_class": "upstream_spec_misc",
+      "fragment_class": null,
+      "line_marker": "-",
+      "bullet_ordinal": 4,
+      "first_line_number": 376,
+      "line_numbers": [
+        376
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `relative_residual < tolerance` で収束",
+      "structural_support": true
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "step-02-observation-finding-parameter-caveat",
+      "observation_class": "rule_matched_observation",
+      "taxonomy_path": null,
+      "severity": "medium",
+      "summary": "Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.",
+      "source_role": "adversarial_reviewer",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "evidence_record_ids": [
+        "step-02-evidence-finding-parameter-caveat-1",
+        "step-02-evidence-finding-parameter-caveat-2",
+        "step-02-evidence-finding-parameter-caveat-3",
+        "step-02-evidence-finding-parameter-caveat-4",
+        "step-02-evidence-finding-parameter-caveat-5",
+        "step-02-evidence-finding-parameter-caveat-6",
+        "step-02-evidence-finding-parameter-caveat-7",
+        "step-02-evidence-finding-parameter-caveat-8",
+        "step-02-evidence-finding-parameter-caveat-9",
+        "step-02-evidence-finding-parameter-caveat-10",
+        "step-02-evidence-finding-parameter-caveat-11",
+        "step-02-evidence-finding-parameter-caveat-12",
+        "step-02-evidence-finding-parameter-caveat-13",
+        "step-02-evidence-finding-parameter-caveat-14",
+        "step-02-evidence-finding-parameter-caveat-15",
+        "step-02-evidence-finding-parameter-caveat-16"
+      ],
+      "counter_evidence_record_ids": [
+        "step-02-evidence-finding-parameter-caveat-17",
+        "step-02-evidence-finding-parameter-caveat-18",
+        "step-02-evidence-finding-parameter-caveat-19",
+        "step-02-evidence-finding-parameter-caveat-20",
+        "step-02-evidence-finding-parameter-caveat-21",
+        "step-02-evidence-finding-parameter-caveat-22",
+        "step-02-evidence-finding-parameter-caveat-23",
+        "step-02-evidence-finding-parameter-caveat-24",
+        "step-02-evidence-finding-parameter-caveat-25",
+        "step-02-evidence-finding-parameter-caveat-26",
+        "step-02-evidence-finding-parameter-caveat-27",
+        "step-02-evidence-finding-parameter-caveat-28",
+        "step-02-evidence-finding-parameter-caveat-29",
+        "step-02-evidence-finding-parameter-caveat-30"
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.parameter_default_semantics",
+        "implementation.parameter_caveat_surface"
+      ],
+      "counter_evidence_types": [
+        "implementation.parameter_default_semantics"
+      ],
+      "review_focuses": [
+        "parameter_interpretation"
+      ],
+      "source_kinds": [
+        "implementation_snapshot",
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+        "upstream_spec"
+      ],
+      "section_classes": [
+        "snapshot_rationale",
+        "upstream_spec_misc"
+      ],
+      "counter_evidence_section_classes": [
+        "upstream_spec_misc"
+      ],
+      "fragment_classes": [
+        "boundary_review_rationale"
+      ],
+      "counter_evidence_fragment_classes": [
+
+      ],
+      "supporting_pattern_ids": [
+
+      ],
+      "analysis_origin": {
+        "analysis_kind": "rule_match",
+        "step_name": "adversarial_review"
+      }
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "step-02-finding-parameter-caveat",
+      "severity": "medium",
+      "summary": "Parameter interpretation remains adversarially review-worthy because the fixed MVP case and solver defaults are part of the review boundary, while the clean-room constraint raises the cost of silent default drift.",
+      "source_role": "adversarial_reviewer",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md",
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "counter_evidence_refs": [
+        "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+      ],
+      "failure_observation_refs": [
+        "step-02-observation-finding-parameter-caveat",
+        "implementation:parameter_interpretation_drift"
+      ],
+      "analysis_origin": {
+        "analysis_kind": "rule_match",
+        "step_name": "adversarial_review"
+      }
+    }
+  ],
+  "counter_evidence": [
+    "/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md"
+  ]
+}

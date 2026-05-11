@@ -1,0 +1,9 @@
+---
+run_label: F2-heat3d-julia-dual
+case_id: F2-heat3d-julia
+track: implementation
+run_id: run-20260511T062535Z-70acf852
+linked_signal_ids: []
+status: pending_manual_population
+note: Populate when implementation-track findings are linked into evaluation or self-improvement
+  signal inventories.

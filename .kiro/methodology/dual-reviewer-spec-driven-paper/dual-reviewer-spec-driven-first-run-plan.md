@@ -48,6 +48,11 @@ scope を順次 `heat3d` と `iot-arduino` へ拡大する。
 - `phase-field` が最も高認知負荷で、implementation/review phase の stress test になる
 - provisional case を混ぜずに fixed core case だけで pilot を閉じられる
 
+current note:
+
+- implementation-side pilot と `heat3d` second-case integration は取得済みである
+- したがって今後の first-run priority は、`Intent Track` と `Spec Track` を acquisition-backed narrative に接続することへ移る
+
 ---
 
 ## 4. Per-Case First Batch
@@ -149,6 +154,10 @@ first-run では次を確認する。
 - target-specific caveat が properly retained されるか
 - upstream spec と review artifact が切れないか
 
+現在フェーズでは、これに加えて
+`3-track story のどの narrative gap を埋める acquisition か`
+を明示する必要がある。
+
 ここで問題が出た場合は、
 まず protocol / artifact / workflow を修正し、
 main batch の前に潰す。
@@ -173,3 +182,6 @@ main batch の前に潰す。
      - [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-run-template.md:1)
      - [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-run-template.md:1)
      - [implementation-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-track-run-template.md:1)
+6. `Intent Track / Spec Track` の未取得分を cross-track narrative の前半 gap として位置づける
+   - status:
+     - reflected in [remaining-track-acquisition-bridge-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-acquisition-bridge-note.md:1)
