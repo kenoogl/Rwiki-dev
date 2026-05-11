@@ -30,6 +30,8 @@ module DualReviewer
           "phase_profile" => context.fetch(:phase_profile),
           "treatment" => context.fetch(:treatment),
           "prompt_identity" => resolved_prompt_identity(FOUNDATION_PROMPT_RELATIVE_PATH),
+          "evidence_records" => [],
+          "observations" => [],
           "decision_units" => decision_units
         }
       end

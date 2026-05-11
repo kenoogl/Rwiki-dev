@@ -22,9 +22,9 @@
   ## 2. runtime artifact refs
 
   - review artifact:
-    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-42f86b08/review_case.json`
+    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/review_case.json`
   - decision units:
-    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-42f86b08/decisions/decision_units.json`
+    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/decisions/decision_units.json`
 
   ## 3. findings
 

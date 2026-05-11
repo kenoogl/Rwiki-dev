@@ -153,6 +153,12 @@ module DualReviewer
           .select { |payload| payload.fetch("step_name") == "judgment" }
           .flat_map { |payload| payload.fetch("judgments", []) }
           .each_with_object({}) { |judgment, acc| acc[judgment.fetch("finding_id")] = judgment }
+        step_observation_index = step_payloads
+          .flat_map { |payload| payload.fetch("observations", []) }
+          .each_with_object({}) { |observation, acc| acc[observation.fetch("observation_id")] = observation }
+        step_evidence_record_index = step_payloads
+          .flat_map { |payload| payload.fetch("evidence_records", []) }
+          .each_with_object({}) { |record, acc| acc[record.fetch("evidence_record_id")] = record }
 
         findings = step_payloads
           .flat_map { |payload| payload.fetch("findings", []) }
@@ -178,6 +184,45 @@ module DualReviewer
               }
             }
           end
+        observations = step_observation_index.values.map do |observation|
+          {
+            "observation_id" => observation.fetch("observation_id"),
+            "source_role" => observation.fetch("source_role"),
+            "severity" => observation.fetch("severity"),
+            "summary" => observation.fetch("summary"),
+            "source_refs" => observation.fetch("source_refs"),
+            "counter_evidence_refs" => observation.fetch("counter_evidence_refs", []),
+            "taxonomy_path" => observation["taxonomy_path"],
+            "observation_class" => observation["observation_class"],
+            "evidence_record_refs" => observation.fetch("evidence_record_ids", []).map { |id| "review_case.json##{id}" },
+            "counter_evidence_record_refs" => observation.fetch("counter_evidence_record_ids", []).map { |id| "review_case.json##{id}" },
+            "matched_pattern_ids" => observation.fetch("matched_pattern_ids", []),
+            "counter_evidence_pattern_ids" => observation.fetch("counter_evidence_pattern_ids", []),
+            "evidence_types" => observation.fetch("evidence_types", []),
+            "counter_evidence_types" => observation.fetch("counter_evidence_types", []),
+            "review_focuses" => observation.fetch("review_focuses", []),
+            "source_kinds" => observation.fetch("source_kinds", []),
+            "counter_evidence_source_kinds" => observation.fetch("counter_evidence_source_kinds", []),
+            "section_classes" => observation.fetch("section_classes", []),
+            "counter_evidence_section_classes" => observation.fetch("counter_evidence_section_classes", [])
+          }
+        end
+        evidence_records = step_evidence_record_index.values.map do |record|
+          {
+            "evidence_record_id" => record.fetch("evidence_record_id"),
+            "source_ref" => record.fetch("source_ref"),
+            "source_kind" => record["source_kind"],
+            "pattern_id" => record["pattern_id"],
+            "evidence_type" => record["evidence_type"],
+            "review_focus" => record["review_focus"],
+            "section_heading" => record["section_heading"],
+            "section_class" => record["section_class"],
+            "first_line_number" => record["first_line_number"],
+            "line_numbers" => record["line_numbers"],
+            "matched_terms" => record["matched_terms"],
+            "matched_excerpt" => record["matched_excerpt"]
+          }
+        end
 
         payload = {
           "schema_version" => "1.0.0",
@@ -193,6 +238,8 @@ module DualReviewer
               "step_closed_at" => nil
             }
           end,
+          "evidence_records" => evidence_records,
+          "observations" => observations,
           "findings" => findings,
           "validation_artifacts" => {
             "validator_result_refs" => [],

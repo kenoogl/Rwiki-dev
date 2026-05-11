@@ -12,12 +12,13 @@ module DualReviewer
 
         def analyze(execution_contract, review_case:, decision_artifacts:, validation_close:)
           findings = review_case.fetch("findings", [])
+          observations = review_case.fetch("observations", [])
           decision_units = decision_artifacts.fetch("decision_units").fetch("decision_units", [])
           invalidation_markers = validation_close.fetch("invalidation_markers", [])
 
           {
             "track" => track,
-            "evidence_observations" => build_evidence_observations(findings: findings),
+            "evidence_observations" => build_evidence_observations(findings: findings, observations: observations),
             "review_issue_candidates" => build_review_issue_candidates(findings: findings),
             "caveat_candidates" => build_caveat_candidates(findings: findings, invalidation_markers: invalidation_markers),
             "reopen_candidates" => build_reopen_candidates(findings: findings),
@@ -32,7 +33,9 @@ module DualReviewer
 
         private
 
-        def build_evidence_observations(findings:)
+        def build_evidence_observations(findings:, observations:)
+          return Array(observations) unless Array(observations).empty?
+
           findings.map do |finding|
             {
               "observation_id" => "observation:#{finding.fetch('finding_id')}",

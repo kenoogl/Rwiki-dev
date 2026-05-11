@@ -12,7 +12,8 @@ module DualReviewer
       end
 
       def execute(context)
-        findings = build_rule_matched_findings(context)
+        analysis = build_rule_matched_analysis(context)
+        findings = analysis.fetch("findings")
 
         {
           "step_id" => context.fetch(:step_id),
@@ -22,6 +23,8 @@ module DualReviewer
           "treatment" => context.fetch(:treatment),
           "target_id" => context.fetch(:target_id),
           "prompt_identity" => resolved_prompt_identity(FOUNDATION_PROMPT_RELATIVE_PATH),
+          "evidence_records" => analysis.fetch("evidence_records"),
+          "observations" => analysis.fetch("observations"),
           "findings" => findings,
           "counter_evidence" => findings.flat_map { |finding| finding.fetch("counter_evidence_refs") }
         }

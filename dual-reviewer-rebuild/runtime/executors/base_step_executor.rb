@@ -56,19 +56,23 @@ module DualReviewer
       end
 
       def source_ref_list(context, extra_refs = [])
+        source_document_entries(context, extra_refs).map { |entry| entry.fetch("ref") }
+      end
+
+      def source_document_entries(context, extra_refs = [])
         inputs = analysis_inputs(context)
-        refs = []
-        refs.concat(Array(inputs["source_refs"]))
-        refs << inputs["implementation_snapshot_ref"]
-        refs.concat(Array(inputs["upstream_spec_refs"]))
-        refs << inputs["reviewed_phase_ref"]
-        refs << inputs["intent_ref"]
-        refs.concat(Array(inputs["adjacent_phase_refs"]))
-        refs.concat(Array(inputs["alignment_refs"]))
-        refs.concat(Array(inputs["supporting_refs"]))
-        refs.concat(Array(inputs["traceability_refs"]))
-        refs.concat(extra_refs)
-        refs.compact.uniq
+        entries = []
+        entries.concat(Array(inputs["source_refs"]).map { |ref| build_source_entry(ref, "case_source") })
+        entries << build_source_entry(inputs["implementation_snapshot_ref"], "implementation_snapshot")
+        entries.concat(Array(inputs["upstream_spec_refs"]).map { |ref| build_source_entry(ref, "upstream_spec") })
+        entries << build_source_entry(inputs["reviewed_phase_ref"], "reviewed_phase")
+        entries << build_source_entry(inputs["intent_ref"], "intent")
+        entries.concat(Array(inputs["adjacent_phase_refs"]).map { |ref| build_source_entry(ref, "adjacent_phase") })
+        entries.concat(Array(inputs["alignment_refs"]).map { |ref| build_source_entry(ref, "alignment") })
+        entries.concat(Array(inputs["supporting_refs"]).map { |ref| build_source_entry(ref, "supporting") })
+        entries.concat(Array(inputs["traceability_refs"]).map { |ref| build_source_entry(ref, "traceability") })
+        entries.concat(Array(extra_refs).map { |ref| build_source_entry(ref, "extra") })
+        dedupe_source_entries(entries)
       end
 
       def source_document_refs(context)
@@ -94,15 +98,29 @@ module DualReviewer
         )
       end
 
-      def build_rule_matched_findings(context)
-        raw_findings = rule_match_analyzer.build_findings(
+      def build_rule_matched_analysis(context)
+        rules = heuristic_rules_for(context)
+        evidence_records = rule_match_analyzer.build_evidence_records(
+          step_id: context.fetch(:step_id),
+          source_document_refs: source_document_refs(context),
+          source_document_entries: source_document_entries(context),
+          rule_set: rules
+        )
+        observations = rule_match_analyzer.build_observations(
           step_name: step_name,
           step_id: context.fetch(:step_id),
           source_document_refs: source_document_refs(context),
-          rule_set: heuristic_rules_for(context)
+          source_document_entries: source_document_entries(context),
+          rule_set: rules
+        )
+        raw_findings = rule_match_analyzer.build_findings(
+          step_name: step_name,
+          step_id: context.fetch(:step_id),
+          observations: observations,
+          rule_set: rules
         )
 
-        raw_findings.map do |finding|
+        findings = raw_findings.map do |finding|
           build_step_finding(
             context: context,
             finding_id: finding.fetch("finding_id"),
@@ -116,6 +134,12 @@ module DualReviewer
             "analysis_origin" => finding.fetch("analysis_origin")
           )
         end
+
+        {
+          "evidence_records" => evidence_records,
+          "observations" => observations,
+          "findings" => findings
+        }
       end
 
       def summary_for_rule(_rule, _refs)
@@ -144,6 +168,23 @@ module DualReviewer
           "counter_evidence_refs" => counter_evidence_refs,
           "failure_observation_refs" => failure_observation_refs
         }
+      end
+
+      def build_source_entry(ref, source_kind)
+        return nil if ref.nil?
+
+        {
+          "ref" => ref,
+          "source_kind" => source_kind
+        }
+      end
+
+      def dedupe_source_entries(entries)
+        Array(entries).compact.each_with_object([]) do |entry, acc|
+          next if acc.any? { |existing| existing.fetch("ref") == entry.fetch("ref") }
+
+          acc << entry
+        end
       end
     end
   end

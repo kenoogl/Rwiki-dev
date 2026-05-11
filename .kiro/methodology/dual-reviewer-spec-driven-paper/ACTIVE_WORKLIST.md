@@ -345,27 +345,29 @@ why this is the current step:
 
 ## 8. Current Blocker
 
-- `runtime/execution_v2/`、manifest migration、profile-backed protocol analysis は立ち上がったが、
-  `implementation` 側は profile-backed になり、rule-match analyzer と seed-pattern vocabulary も共通化されたものの、まだ source-pattern heuristic に依存している
-- `phase-field` pilot rerun は再取得できたが、
-  generic execution layer replacement 完了と言い切るには remaining reopen item の整理と main-evidence 非昇格の維持が必要
+- `implementation` 側は `evidence record -> observation -> finding` の三段構えになり、evidence record も section-scoped になった。observation には evidence type、review focus、source kind、section class、fragment class が入り、rule 側もそれらの組み合わせで gating できる。primary の一部は document-role + fragment-class だけで成立する `structure-first` 経路に移った。upstream spec 側の fragment cue の一部は親 Requirement と行番号で分類でき、snapshot rationale 側も numbered fragment として扱えるようになった。`implementation_snapshot_note` 側も `clean-room 制約`、`local provenance`、`digest fixedness`、`operational digest check`、`evidence exclusion` のような note role に分かれてきており、parameter rule からは `local provenance` と `operational digest check` を外しても rerun が維持できた。残る heuristic の中心は、note 側 cue をどこまで意味論的に安定した role として切れるかである
+- `phase-field` pilot rerun は再取得できており replacement outcome も固定済みだが、
+  generic execution layer replacement を main-evidence 級と言うにはまだ早い
 
 ---
 
 ## 9. Current Action
 
 approved tasks に従って `dual-reviewer-generic-execution-layer-v2` の implementation replacement を継続し、
-first validation result と remaining reopen item を固定する。
+`implementation_snapshot_note` 系 cue を
+`clean-room 制約 / local provenance / digest fixedness / operational check / evidence exclusion`
+のような note role にさらに分ける。
+
+そのうえで、各 rule が本当に必要とする note role だけを残し、
+不要な role は allowed fragment / structural requirement から外す。
 
 この action では、次を確認対象にする。
 
-- 3 track の pilot rerun が v2 path で再取得できること
-- comparison summary が再取得されていること
-- `spec` / `intent` の case payload が writer-local rule ではなく manifest/profile 入力に移っていること
-- `implementation` の heuristic payload も executor-local rule ではなく profile 入力に移っていること
-- `spec` / `intent` の `v2` internal artifact が runtime-mediated run から生成されていること
-- 残る reopen item を outcome note に固定すること
-- `main evidence` 未昇格を明示したまま step を閉じること
+- `implementation` step payload に observation が残っていること
+- `review_case.json` と `v2/review_artifact.json` が observation を正本として受け取ること
+- finding が observation を経由して生成されること
+- pilot rerun と validation script が引き続き通ること
+- remaining reopen item を `implementation_snapshot_note` 系 cue の意味安定性に関する一点へ絞って維持できること
 
 この文書はここで tasks 手順自体を再定義しない。phase の進め方と gate の成立条件は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215) を正本とする。
 
@@ -377,8 +379,9 @@ first validation result と remaining reopen item を固定する。
 
 1. `intent` / `spec` / `implementation` の pilot rerun が v2 path で再取得できている
 2. comparison summary と replacement outcome note が artifact として残っている
-3. remaining reopen item register が固定されている
-4. `main evidence` 未昇格が明記されている
+3. `implementation` で observation-first path が runtime artifact に反映されている
+4. remaining reopen item register が固定されている
+5. `main evidence` 未昇格が明記されている
 
 ---
 
@@ -397,7 +400,13 @@ first validation result と remaining reopen item を固定する。
 
 ## 12. Next Handoff
 
-first validation result を固定した後に、workflow に従って remaining reopen item の解消か、必要なら implementation review を行う。この文書では手順自体を再定義しない。
+observation-first path を固定した後に、workflow に従って remaining reopen item の解消か、必要なら implementation review を行う。この文書では手順自体を再定義しない。
+
+補足:
+
+- 実装完了後に「生成物が `intent / requirements / design / tasks` と一致しているか」を検査する conformance 評価は、有益な後続テーマとして認識された
+- ただしこれは `generic execution layer v2` の完了条件には含めず、今の開発が終わった後に `v3` 候補として扱う
+- したがって現段階では、`v2` の残課題と混ぜず、future handoff item としてのみ保持する
 
 ---
 

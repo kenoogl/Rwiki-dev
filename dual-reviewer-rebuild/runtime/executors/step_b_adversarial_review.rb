@@ -21,12 +21,15 @@ module DualReviewer
             "treatment" => context.fetch(:treatment),
             "skip_reason" => "treatment_single_skips_adversarial_review",
             "prompt_identity" => resolved_prompt_identity(FOUNDATION_PROMPT_RELATIVE_PATH),
+            "evidence_records" => [],
+            "observations" => [],
             "findings" => [],
             "counter_evidence" => []
           }
         end
 
-        findings = build_rule_matched_findings(context)
+        analysis = build_rule_matched_analysis(context)
+        findings = analysis.fetch("findings")
 
         {
           "step_id" => context.fetch(:step_id),
@@ -35,6 +38,8 @@ module DualReviewer
           "phase_profile" => context.fetch(:phase_profile),
           "treatment" => context.fetch(:treatment),
           "prompt_identity" => resolved_prompt_identity(FOUNDATION_PROMPT_RELATIVE_PATH),
+          "evidence_records" => analysis.fetch("evidence_records"),
+          "observations" => analysis.fetch("observations"),
           "findings" => findings,
           "counter_evidence" => findings.flat_map { |finding| finding.fetch("counter_evidence_refs") }
         }

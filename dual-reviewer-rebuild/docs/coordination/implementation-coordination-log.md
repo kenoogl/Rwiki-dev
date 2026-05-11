@@ -1539,3 +1539,355 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: heuristic profile が直接 regex 文字列を大量に埋め込まなくても済むよう、`runtime/patterns/seed_patterns.yaml` に reusable seed pattern vocabulary を追加し、`RuleMatchAnalyzer` が pattern ID を解決できるようにした。implementation / spec / intent の主要 profile は named pattern IDs を使う形へ寄せ、requirements / design first batch と implementation first batch の再取得も通過した。残る caveat は、語彙の共通化は進んだが観点自体はまだ source-pattern ベースであり、意味理解ベースの analyzer にはまだ達していない点である
 - status: completed
+
+### 6.78 2026-05-11 implementation observation-first uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation observation-first uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/execution_v2/analyzers/base_analyzer.rb`
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `runtime/executors/step_c_judgment.rb`
+  - `runtime/executors/step_d_integration.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `RuleMatchAnalyzer` が直接 finding を返すだけでなく、まず observation を作り、そこから finding を組み立てる形へ進めた。`Step A` / `Step B` payload には `observations` が追加され、`review_case.json` と `v2/review_artifact.json` も observation を正本として保持するように更新した。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、observation-first にはなったが observation の根拠自体はまだ source-pattern heuristic である点である
+- status: completed
+
+### 6.79 2026-05-11 implementation evidence-type uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation evidence-type uplift`
+- touched artifacts:
+  - `runtime/patterns/seed_patterns.yaml`
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/generic-execution-layer-v2-replacement-outcome.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: implementation 用 seed pattern に `evidence_type` と `review_focus` を付与し、runtime observation が `matched_pattern_ids`、`evidence_types`、`counter_evidence_types`、`review_focuses` を持つようにした。これにより observation は単なる term hit ではなく、「どの種類の懸念を拾ったか」を artifact 上で表現できる。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、観点の型付けは入ったが、trigger 自体はまだ source-pattern heuristic である点である
+- status: completed
+
+### 6.80 2026-05-11 future v3 note: artifact-to-spec conformance evaluation
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `future-handoff note`
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: 実装完了後に「生成物が `intent / requirements / design / tasks` と一致しているか」を検査する conformance evaluation の必要性を確認した。ただしこれは現在の `v2` 完了条件に混ぜず、今の開発完了後に検討する `v3` 候補として future handoff に記録した
+- status: completed
+
+### 6.81 2026-05-11 implementation evidence-gating uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation evidence gating uplift`
+- touched artifacts:
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: implementation heuristic rule に `required_evidence_types` と `required_counter_evidence_types` を追加し、`RuleMatchAnalyzer` が「語が当たった」だけではなく「必要な種類の根拠がそろった」場合にだけ observation を作るようにした。boundary / update-order / parameter-caveat の 3 rule でこの gating を適用し、`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、成立条件は evidence type ベースへ一段進んだが、その evidence type 自体の抽出はまだ source-pattern heuristic に依存している点である
+- status: completed
+
+### 6.82 2026-05-11 implementation source-kind gating uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation source-kind gating uplift`
+- touched artifacts:
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: source ref を `implementation_snapshot` や `upstream_spec` などの source kind 付き entry として runtime analyzer へ渡し、implementation rule が `required_source_kinds` と `required_counter_source_kinds` を要求できるようにした。これにより observation は「必要な evidence type がある」だけでなく、「必要な種類の文書から根拠が得られている」場合にだけ成立する。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、source kind 条件は入ったが、個々の kind 内での evidence extraction 自体はまだ source-pattern heuristic に依存している点である
+- status: completed
+
+### 6.83 2026-05-11 implementation evidence-record uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation evidence-record uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/executors/base_step_executor.rb`
+  - `runtime/executors/step_a_primary_detection.rb`
+  - `runtime/executors/step_b_adversarial_review.rb`
+  - `runtime/executors/step_c_judgment.rb`
+  - `runtime/executors/step_d_integration.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: runtime analyzer が pattern hit ごとに `evidence_record` を作り、その evidence を束ねて observation を作る形へ進めた。step payload と `review_case.json` に `evidence_records` を追加し、observation には `evidence_record_ids` を残すようにした。これにより実装の内部表現は `evidence record -> observation -> finding` になり、finding がさらに一段下流の表現となった。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、evidence record 生成自体はまだ source-pattern heuristic に依存している点である
+- status: completed
+
+### 6.84 2026-05-11 implementation section-scoped evidence uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation section-scoped evidence uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/controller/session_controller.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: evidence record を「term 1 回ヒットごと」ではなく「同一 section / same evidence type ごと」に集約する形へ進めた。record には `section_heading`、`first_line_number`、`line_numbers`、`matched_terms` が入り、runtime artifact が「どの節でどの種類の根拠を拾ったか」を表現できるようになった。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、section 単位へは進んだが record 生成の入口はまだ source-pattern heuristic である点である
+- status: completed
+
+### 6.85 2026-05-11 implementation section-class gating uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation section-class gating uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/controller/session_controller.rb`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `section_heading` から `section_class` を導出し、implementation rule が `required_section_classes` と `required_counter_section_classes` を要求できるようにした。これにより observation は evidence type / source kind に加えて、「snapshot rationale」「acceptance criteria」などの文書構造クラスも満たした場合にだけ成立する。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、section class まで入っても evidence record を起こす入口自体はまだ source-pattern heuristic である点である
+- status: completed
+
+### 6.86 2026-05-11 implementation structural-evidence uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation structural-evidence uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: rule が `structural_source_requirements` と `structural_counter_requirements` を持てるようにし、pattern hit がなくても `implementation_snapshot + snapshot_rationale` や `upstream_spec + acceptance_criteria` のような文書構造条件だけで補助 evidence record を作れるようにした。これにより evidence record 生成は完全な pattern-only ではなくなった。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、構造的補助 evidence は入ったが、主要な evidence extraction の多くはなお source-pattern heuristic に依存している点である
+- status: completed
+
+### 6.87 2026-05-11 implementation structure-first evidence gating uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation structure-first evidence gating uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: evidence / observation の required field を pattern 定義ではなく実際の evidence record から集計するように直し、boundary と update-order の primary path は `implementation_snapshot + snapshot_rationale` と `upstream_spec + acceptance_criteria` の構造条件だけで observation を成立させる形に進めた。あわせて fragment class を導入し、parameter 系では `parameter_review_rationale` / `parameter_caveat_note` / `parameter_contract` のような文の役割を指定して broad な section hit を絞り込んだ。途中で single / dual finding 数が壊れる regressions が出たが、snapshot rationale と caveat note の優先順位を修正して `validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は再び通過した。残る caveat は、structure-first path は入ったが fragment class の判定そのものはまだ語句ベースである点である
+- status: completed
+
+### 6.88 2026-05-11 implementation fragment-cue externalization uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation fragment-cue externalization uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/patterns/seed_patterns.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: fragment class 判定に使う cue を Ruby コードから `runtime/patterns/seed_patterns.yaml` へ移した。これにより `boundary_review_rationale`、`parameter_contract`、`parameter_caveat_note` などの文役割判定も data-driven になり、runtime analyzer は cue catalog を読むだけの形へ寄った。移行時に structure extraction 側で review focus を要求しすぎて single finding が消える regression が出たが、cue lookup を補正して `validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は再び通過した。残る caveat は、cue が data 側へ移っても cue 自体はまだ語句ベースである点である
+- status: completed
+
+### 6.89 2026-05-11 implementation hierarchical-structure cue uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation hierarchical-structure cue uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/patterns/seed_patterns.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: fragment に `parent_section_heading` と `line_marker` を追加し、cue が parent Requirement と numbered acceptance item でも判定できるようにした。upstream spec の `parameter_contract` / `boundary_contract` / `update_order_contract` は、`Acceptance Criteria` の本文語句だけでなく `Requirement N` と item 番号で分類できるようになり、一部の fragment cue は structure-first に進んだ。途中で heading 階層の扱いを入れた関係で patch を入れ直したが、最終的に `validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、snapshot 側の rationale / caveat cue はまだ語句ベースである点である
+- status: completed
+
+### 6.90 2026-05-11 implementation snapshot-numbered-fragment uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation snapshot-numbered-fragment uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/patterns/seed_patterns.yaml`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: snapshot 文書の numbered list を continuation line 付き fragment として扱うようにし、`Why This Snapshot` の 3 番を single line ではなく numbered fragment として拾えるようにした。あわせて cue に `section_heading_patterns`、`parent_heading_patterns`、`line_prefix_patterns` を持たせ、upstream spec に加えて snapshot rationale でも structure-first 条件を rule から直接要求できるようにした。途中で dual finding 数が single を上回らない regression が数回出たが、`parameter` ルール側の allowed fragment class を見直して `validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は再び通過した。残る caveat は、`implementation_snapshot_note` 系 cue はなお語句ベースである点である
+- status: completed
+
+### 6.91 2026-05-11 implementation snapshot-note structure-first uplift
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation snapshot-note structure-first uplift`
+- touched artifacts:
+  - `runtime/patterns/seed_patterns.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `implementation_snapshot_note` 系の `parameter_caveat_note` cue から surface-term 依存を外し、`Code-Side Anchor` / `Caveats` / `Immediate Operational Rule` の section heading と bullet / item 位置だけで立つようにした。これにより少なくとも parameter caveat note は structure-first になった。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、structure-first になった反面、note 節全体の cue 範囲が広く、どこまで細く絞るべきかがまだ残っている点である
+- status: completed
+
+### 6.92 2026-05-12 implementation note-scope narrowing uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation note-scope narrowing uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `implementation_snapshot_note` の `parameter_caveat_note` について、`Code-Side Anchor` 全体を丸ごと取るのではなく bullet ordinal を持たせて必要な bullet だけを structural requirement で許可するようにした。さらに同じ根拠が pattern 由来と structural 由来で二重に出る record を圧縮した。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過した。残る caveat は、scope は細くなったが note 側 cue の意味的切り分けはまだ十分ではない点である
+- status: completed
+
+### 6.93 2026-05-12 implementation note-role split uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation note-role split uplift`
+- touched artifacts:
+  - `runtime/execution_v2/analyzers/rule_match_analyzer.rb`
+  - `runtime/patterns/seed_patterns.yaml`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: pattern-side evidence record も bullet ordinal を持てるようにして、`implementation_snapshot_note` の cue を section 単位ではなく bullet / item 単位で fragment class へ分け直した。具体的には note-side cue を `clean_room_constraint_note`、`provenance_fixity_note`、`operational_digest_check_note`、`evidence_exclusion_note` に分解し、parameter rule はそのうち必要な note role だけを structural requirement と allowed fragment class に残した。これにより note 側の残課題は「語句依存」ではなく「意味役割の粒度」へ移った。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過し、dual-over-single も維持された
+- status: completed
+
+### 6.94 2026-05-12 implementation provenance-fixity split uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation provenance-fixity split uplift`
+- touched artifacts:
+  - `runtime/patterns/seed_patterns.yaml`
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: note-side の `provenance / fixity` をさらに `local_provenance_note` と `digest_fixity_note` に分割した。これにより `local-only git / no commit` と `digest-based fixity / reproducibility` を別 role として扱えるようになり、parameter rule も clean-room / local provenance / digest fixedness / operational check を区別して参照できるようになった。`validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` は通過し、dual-over-single も維持された
+- status: completed
+
+### 6.95 2026-05-12 implementation unnecessary-note-role pruning uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation unnecessary-note-role pruning uplift`
+- touched artifacts:
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `parameter` adversarial rule から `local_provenance_note` を外して rerun を確認した。結果として dual-over-single は維持され、observation の fragment class からも `local provenance` を除いて成立した。これにより note role を増やすだけでなく、「この rule に不要な role を削る」方向でも意味境界を詰められることが確認できた
+- status: completed
+
+### 6.96 2026-05-12 implementation operational-check pruning uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation operational-check pruning uplift`
+- touched artifacts:
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `parameter` adversarial rule から `operational_digest_check_note` も外して rerun を確認した。結果として dual-over-single は維持され、observation の fragment class は `clean_room_constraint_note`、`digest_fixity_note`、`parameter_contract`、`boundary_review_rationale` で成立した。これにより `parameter` rule の note-side 根拠はさらに絞られ、運用手順メモは少なくとも現行 pilot では必須でないことが確認できた
+- status: completed
