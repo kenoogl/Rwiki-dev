@@ -1891,3 +1891,121 @@ implementation 中に次を見つけた場合、下流修正で済ませず spec
 - reopen 要否: 不要
 - action: `parameter` adversarial rule から `operational_digest_check_note` も外して rerun を確認した。結果として dual-over-single は維持され、observation の fragment class は `clean_room_constraint_note`、`digest_fixity_note`、`parameter_contract`、`boundary_review_rationale` で成立した。これにより `parameter` rule の note-side 根拠はさらに絞られ、運用手順メモは少なくとも現行 pilot では必須でないことが確認できた
 - status: completed
+
+### 6.97 2026-05-12 implementation digest-fixity pruning uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation digest-fixity pruning uplift`
+- touched artifacts:
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `parameter` adversarial rule から `digest_fixity_note` も外して rerun を確認した。結果として dual-over-single は維持され、observation の fragment class は `clean_room_constraint_note`、`parameter_contract`、`boundary_review_rationale` で成立した。これにより現行 pilot では parameter rule の note-side 主要根拠は clean-room 系にかなり寄っていることが確認できた
+- status: completed
+
+### 6.98 2026-05-12 implementation clean-room pruning uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation clean-room pruning uplift`
+- touched artifacts:
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `parameter` adversarial rule から `clean_room_constraint_note` も外して rerun を確認した。結果として dual-over-single は維持され、observation の fragment class は `parameter_contract` と `boundary_review_rationale` だけで成立した。これにより現行 pilot では parameter rule は note-side cue 非依存で成立し、snapshot rationale と upstream contract を主根拠として持てることが確認できた
+- status: completed
+
+### 6.99 2026-05-12 implementation parameter-pattern pruning uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation parameter-pattern pruning uplift`
+- touched artifacts:
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `parameter` adversarial rule から未使用の fragment class、`evidence_exclusion_note` 経路、pattern-based support (`source_pattern_ids` / `counter_evidence_pattern_ids`) をまとめて外して rerun を確認した。結果として dual-over-single は維持され、observation の fragment class は `boundary_review_rationale` と `parameter_contract` だけ、matched pattern ids は空で成立した。これにより現行 pilot では parameter rule は `snapshot rationale + upstream parameter contract` の structure-first 根拠だけで立つことが確認できた
+- status: completed
+
+### 6.100 2026-05-12 implementation primary-rule upstream-only pruning uplift
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation primary-rule upstream-only pruning uplift`
+- touched artifacts:
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `boundary` と `update-order` の primary rule から `snapshot rationale` 側 requirement を外し、`upstream contract` だけで rerun を確認した。結果として dual-over-single は維持され、`boundary` は `boundary_contract`、`update-order` は `update_order_contract` のみで observation が成立した。これにより primary rule の一部も upstream-side contract だけで立つことが確認できた
+- status: completed
+
+### 6.101 2026-05-12 implementation parameter-rationale dependency check
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation parameter-rationale dependency check`
+- touched artifacts:
+  - `experiments/protocols/heuristic_profiles/implementation/F1-phase-field-cpp.yaml`
+  - `scripts/validate_protocol_runners.rb`
+  - `scripts/validate_track_run_artifacts.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `docs/coordination/implementation-coordination-log.md`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `parameter` adversarial rule から `snapshot rationale` requirement を一度外して確認したところ、dual 実行で adversarial observation が消え、`dual implementation protocol should emit more findings than single` の validation が失敗した。そのためこの変更は rollback し、現時点では `parameter` に対する `snapshot rationale` 依存は必要と判断した。validation rollback 後は再度 `validate_protocol_runners.rb`、`validate_track_run_artifacts.rb`、`run_phase_field_implementation_first_batch.rb` が通過し、`single=2 / dual=3` を回復した
+- status: completed
+
+### 6.102 2026-05-12 implementation dual-only representative acquisition
+
+- 日付: 2026-05-12
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `implementation dual-only representative acquisition`
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/claim-case-matrix.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-protocol.md`
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md`
+  - `scripts/track_runs/implementation_track_runner.rb`
+  - `scripts/run_phase_field_implementation_first_batch.rb`
+  - `scripts/validate_protocol_runners.rb`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json`
+- blocker: あり
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field-cpp` を representative implementation case として `single / dual / dual+judgment` の 3 treatment 取得を追加した。実行系に `dual_review -> treatment: dual` を正式に追加し、`phase-field` first batch を 3 treatment で再取得した。結果は `single=2 findings`、`dual=3 findings`、`dual+judgment=3 findings` であり、現 pilot では `adversarial` が 1 件の finding 増を生み、`judgment` は finding 数の追加増分ではなく disposition evidence を担っていることが確認できた。次の主課題は `parameter` の `snapshot rationale` 依存が phase-field 固有かどうかを別 implementation case で確認することである
+- status: completed
+
+### 6.103 2026-05-11 dual-vs-judgment evidence note
+
+- 日付: 2026-05-11
+- 対象 feature: `dual-reviewer-generic-execution-layer-v2`
+- 対象 task: `dual vs dual+judgment pilot interpretation capture`
+- touched artifacts:
+  - `.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-dual-treatment-observation.md`
+- blocker: なし
+- handback class: `A`
+- reopen 要否: 不要
+- action: `phase-field-cpp` の representative 3-treatment acquisition から、`dual` と `dual+judgment` は finding 件数・本文・severity は同じだが、`dual+judgment` では `judgment_ref`、`necessary/optional`、`proposed_action` が付くため、差は件数ではなく disposition quality にあることを短い evidence note として固定した。後の論文化では `judgment` を recall 増分ではなく candidate disposition / action shaping の mechanism として説明する根拠に使う
+- status: completed

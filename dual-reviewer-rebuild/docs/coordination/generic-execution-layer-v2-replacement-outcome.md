@@ -53,9 +53,14 @@ pilot reacquisition 完了までを閉じるための記録である。
   reacquired through v2 runtime path
 - key observations:
   - `single_review` findings: `2`
+  - `dual_review` findings: `3`
   - `dual_reviewer_workflow` findings: `3`
+  - `dual_only_minus_single_findings`: `1`
   - `dual_minus_single_findings`: `1`
+  - `dual_plus_judgment_minus_dual_only_findings`: `0`
   - adversarial role is preserved in dual run
+  - in the current `phase-field` pilot, `judgment` adds disposition evidence but does not add extra findings over `dual only`
+  - [phase-field dual-treatment observation](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-dual-treatment-observation.md:1) captures this difference explicitly for later paper use
   - `v2/review_artifact.json`, `v2/metric_snapshot.json`, `v2/trace_note.json`, `v2/signal_linkage_note.json` are emitted with compatibility projection
 
 ## 3. What Was Replaced
@@ -112,7 +117,7 @@ pilot reacquisition 完了までを閉じるための記録である。
 
 ## 5. Remaining Reopen Item Register
 
-1. `implementation` analyzer now emits `evidence_records -> observations -> findings`, those records are section-scoped and observations carry evidence-type / review-focus / source-kind / section-class / fragment-class metadata. Part of the primary path is now structure-first, fragment-class cues are now data-backed, some upstream-spec fragment classes can be assigned from parent heading + item marker, snapshot rationale can be read as numbered fragments, and `implementation_snapshot_note` cues can be assigned from section + bullet/item position while splitting into `clean-room`, `local provenance`, `digest fixedness`, `operational check`, and `evidence exclusion` roles. Duplicate note-side evidence is also compacted, and both `local provenance` and `operational digest check` can already be removed from the parameter adversarial rule without losing the current dual-over-single pilot result. The remaining strongest heuristic concentration is the semantic stability of those note roles, which is not yet semantics-aware generic review logic.
+1. `implementation` analyzer now emits `evidence_records -> observations -> findings`, those records are section-scoped and observations carry evidence-type / review-focus / source-kind / section-class / fragment-class metadata. Part of the primary path is now structure-first, fragment-class cues are now data-backed, some upstream-spec fragment classes can be assigned from parent heading + item marker, snapshot rationale can be read as numbered fragments, and `implementation_snapshot_note` cues can be assigned from section + bullet/item position while splitting into `clean-room`, `local provenance`, `digest fixedness`, `operational check`, and `evidence exclusion` roles. Duplicate note-side evidence is also compacted, and `local provenance`、`operational digest check`、`digest fixedness`、`clean-room` can already be removed from the parameter adversarial rule without losing the current dual-over-single pilot result. The parameter adversarial rule can also drop pattern-based support entirely, so the current parameter observation now stands on `snapshot rationale` plus `upstream parameter contract` alone. Boundary and update-order can also drop `snapshot rationale` support and still stand on upstream contracts alone. `single / dual / dual+judgment` comparison is now reacquired, and in this pilot `dual only` and `dual+judgment` produce the same finding count while `judgment` adds disposition evidence. Attempting to remove `snapshot rationale` from the parameter rule collapses the adversarial observation, so that dependency is currently treated as necessary. The remaining strongest heuristic concentration is whether this dependency is phase-field specific or generally required.
 2. comparison summaries are reacquired, but the result is still pilot evidence rather than reusable main-evidence-grade acquisition.
 
 ## 6. Main-Evidence Status

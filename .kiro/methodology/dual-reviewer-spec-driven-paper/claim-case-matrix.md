@@ -116,6 +116,24 @@ main evidence は code quality ではなく evidence reusability である。
 - self-improvement linkage
 - paper-facing traceability
 
+### Rule 5
+
+`adversarial` と `judgment` の寄与を分けて示したい claim では、
+少なくとも 1 つの代表 case で
+
+1. `single`
+2. `dual`
+3. `dual+judgment`
+
+の 3 treatment を取る。
+
+理由:
+- `dual` だけで増える候補
+- `judgment` を入れると整理される差
+を分解して示すため。
+
+現時点の代表 case は `phase-field-cpp` とする。
+
 ---
 
 ## 6. Current Candidate Mapping
@@ -145,6 +163,9 @@ main evidence は code quality ではなく evidence reusability である。
   - `Claim 2`
   - `Claim 3`
   - `Claim 4`
+- treatment role:
+  - representative 3-treatment case
+  - `single / dual / dual+judgment` を取得して `adversarial` と `judgment` の寄与を分ける
 
 ### C-3 `heat3d`
 
@@ -198,6 +219,8 @@ main paper で使う case は、次の条件を満たすものに限定する。
 2. `heat3d` の intent を作る
 3. `iot-arduino` の intent を作る
 4. その後に `Spec Track` / `Implementation Track` case を正式固定する
+5. `phase-field-cpp` を代表 implementation case として `single / dual / dual+judgment` を先に取得する
+6. その後に `heat3d-julia` を第 2 implementation case として起こす
 
 つまり、今後の case 追加は
 **intent 作成が先、track 固定が後**

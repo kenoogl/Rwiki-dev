@@ -195,6 +195,8 @@ module DualReviewer
         case review_mode
         when "single_review"
           "single"
+        when "dual_review"
+          "dual"
         when "dual_reviewer_workflow"
           "dual+judgment"
         else
@@ -332,22 +334,31 @@ module DualReviewer
       end
 
       def write_execution_packet(initialized_run:, runtime_paths:)
-        steps = if review_mode == "single_review"
-                  [
-                    "implementation snapshot と upstream spec refs を読む",
-                    "implementation-local issue と upstream spec inconsistency を分離して列挙する",
-                    "runtime 生成済み artifact を参照し、`implementation_review_note.md` を更新する",
-                    "`signal_linkage_note.yaml`, `downstream_rework_log.yaml`, `conformance_review_result.yaml` を埋める"
-                  ]
-                else
-                  [
-                    "primary reading を作る",
-                    "adversarial pass で counter-hypothesis と caveat を出す",
-                    "judgment で must-fix / should-fix / leave-as-is を分ける",
-                    "reopen target を決め、runtime artifact と protocol note を更新する",
-                    "`implementation_review_note.md`, `signal_linkage_note.yaml`, `downstream_rework_log.yaml`, `conformance_review_result.yaml` を埋める"
-                  ]
-                end
+        steps =
+          case review_mode
+          when "single_review"
+            [
+              "implementation snapshot と upstream spec refs を読む",
+              "implementation-local issue と upstream spec inconsistency を分離して列挙する",
+              "runtime 生成済み artifact を参照し、`implementation_review_note.md` を更新する",
+              "`signal_linkage_note.yaml`, `downstream_rework_log.yaml`, `conformance_review_result.yaml` を埋める"
+            ]
+          when "dual_review"
+            [
+              "primary reading を作る",
+              "adversarial pass で counter-hypothesis と caveat を出す",
+              "judgment なしで reopen target を決め、runtime artifact と protocol note を更新する",
+              "`implementation_review_note.md`, `signal_linkage_note.yaml`, `downstream_rework_log.yaml`, `conformance_review_result.yaml` を埋める"
+            ]
+          else
+            [
+              "primary reading を作る",
+              "adversarial pass で counter-hypothesis と caveat を出す",
+              "judgment で must-fix / should-fix / leave-as-is を分ける",
+              "reopen target を決め、runtime artifact と protocol note を更新する",
+              "`implementation_review_note.md`, `signal_linkage_note.yaml`, `downstream_rework_log.yaml`, `conformance_review_result.yaml` を埋める"
+            ]
+          end
 
         content = <<~MARKDOWN
           # execution packet

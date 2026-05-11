@@ -34,10 +34,10 @@
 
   ## 4. runtime artifacts to inspect
 
-  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/review_case.json`
-  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/decisions/decision_units.json`
-  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/validation/validator_result.json`
-  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/validation/invalidation_markers.json`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/review_case.json`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/decisions/decision_units.json`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/validation/validator_result.json`
+  - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/validation/invalidation_markers.json`
 
   ## 5. protocol artifacts to update
 

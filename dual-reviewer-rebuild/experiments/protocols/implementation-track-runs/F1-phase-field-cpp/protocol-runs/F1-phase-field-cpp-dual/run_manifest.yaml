@@ -5,7 +5,7 @@ track: implementation
 review_mode: dual_reviewer_workflow
 operator: phase-field-pilot
 phase_profile: tasks
-generated_at: '2026-05-11T00:16:10Z'
+generated_at: '2026-05-11T00:50:03Z'
 case_manifest_ref: experiments/protocols/case_manifests/F1-phase-field-cpp.yaml
 inputs:
   implementation_snapshot_ref: ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md"
@@ -19,21 +19,21 @@ inputs:
   - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
   - dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md
 runtime:
-  run_id: run-20260511T001610Z-940ea83f
+  run_id: run-20260511T005003Z-4b7f9ca1
   runtime_review_mode: runtime_mediated
   treatment: dual+judgment
-  bundle_id: bundle-run-20260511T001610Z-940ea83f
+  bundle_id: bundle-run-20260511T005003Z-4b7f9ca1
 outputs:
-  review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/review_case.json
-  v2_review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/v2/review_artifact.json
-  v2_metric_snapshot: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/v2/metric_snapshot.json
-  v2_trace_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/v2/trace_note.json
-  v2_signal_linkage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/v2/signal_linkage_note.json
-  decision_units: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/decisions/decision_units.json
-  conformance_review_result: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/validation/validator_result.json
-  caveat_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/validation/invalidation_markers.json
-  comparison_eligibility_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-940ea83f/derived/comparison_eligibility_note.json
-  bundle_manifest: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/exports/bundle-run-20260511T001610Z-940ea83f/bundle_manifest.yaml
+  review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/review_case.json
+  v2_review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/v2/review_artifact.json
+  v2_metric_snapshot: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/v2/metric_snapshot.json
+  v2_trace_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/v2/trace_note.json
+  v2_signal_linkage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/v2/signal_linkage_note.json
+  decision_units: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/decisions/decision_units.json
+  conformance_review_result: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/validation/validator_result.json
+  caveat_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/validation/invalidation_markers.json
+  comparison_eligibility_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/derived/comparison_eligibility_note.json
+  bundle_manifest: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/exports/bundle-run-20260511T005003Z-4b7f9ca1/bundle_manifest.yaml
   implementation_review_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/protocol-runs/F1-phase-field-cpp-dual/implementation_review_note.md
   signal_linkage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/protocol-runs/F1-phase-field-cpp-dual/signal_linkage_note.yaml
   downstream_rework_log: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/protocol-runs/F1-phase-field-cpp-dual/downstream_rework_log.yaml

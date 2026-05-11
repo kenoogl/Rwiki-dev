@@ -46,6 +46,12 @@ single_runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
   review_mode: "single_review"
 )
 
+dual_only_runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
+  **shared_options,
+  run_label: "F1-phase-field-cpp-dual-only",
+  review_mode: "dual_review"
+)
+
 dual_runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
   **shared_options,
   run_label: "F1-phase-field-cpp-dual",
@@ -53,6 +59,7 @@ dual_runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
 )
 
 single_result = single_runner.run_all
+dual_only_result = dual_only_runner.run_all
 dual_result = dual_runner.run_all
 
 loader = DualReviewer::Evaluation::LocalRunLoader.new(repo_root: repo_root)
@@ -61,12 +68,18 @@ extractor = DualReviewer::Evaluation::MetricExtractor.new
 single_intake = loader.load_run(run_root: single_result.fetch("runtime_paths").fetch("review_artifact")).tap do |intake|
   intake["run_root"] = Pathname(single_result.fetch("runtime_paths").fetch("review_artifact")).dirname.to_s
 end
+dual_only_intake = loader.load_run(run_root: dual_only_result.fetch("runtime_paths").fetch("review_artifact")).tap do |intake|
+  intake["run_root"] = Pathname(dual_only_result.fetch("runtime_paths").fetch("review_artifact")).dirname.to_s
+end
 dual_intake = loader.load_run(run_root: dual_result.fetch("runtime_paths").fetch("review_artifact")).tap do |intake|
   intake["run_root"] = Pathname(dual_result.fetch("runtime_paths").fetch("review_artifact")).dirname.to_s
 end
 
 single_metrics = extractor.extract_from_run_intake(
   run_intake: loader.load_run(run_root: Pathname(single_result.fetch("runtime_paths").fetch("review_artifact")).dirname)
+)
+dual_only_metrics = extractor.extract_from_run_intake(
+  run_intake: loader.load_run(run_root: Pathname(dual_only_result.fetch("runtime_paths").fetch("review_artifact")).dirname)
 )
 dual_metrics = extractor.extract_from_run_intake(
   run_intake: loader.load_run(run_root: Pathname(dual_result.fetch("runtime_paths").fetch("review_artifact")).dirname)
@@ -85,6 +98,13 @@ comparison_summary = {
       "finding_metrics" => single_metrics.fetch("finding_metrics")
     },
     {
+      "review_mode" => "dual_review",
+      "run_id" => dual_only_result.fetch("run_id"),
+      "bundle_id" => dual_only_result.fetch("bundle_id"),
+      "run_metrics" => dual_only_metrics.fetch("run_metrics"),
+      "finding_metrics" => dual_only_metrics.fetch("finding_metrics")
+    },
+    {
       "review_mode" => "dual_reviewer_workflow",
       "run_id" => dual_result.fetch("run_id"),
       "bundle_id" => dual_result.fetch("bundle_id"),
@@ -94,8 +114,12 @@ comparison_summary = {
   ],
   "comparison_observations" => {
     "single_total_findings" => single_metrics.dig("run_metrics", "total_findings"),
+    "dual_only_total_findings" => dual_only_metrics.dig("run_metrics", "total_findings"),
     "dual_total_findings" => dual_metrics.dig("run_metrics", "total_findings"),
+    "dual_only_minus_single_findings" => dual_only_metrics.dig("run_metrics", "total_findings") - single_metrics.dig("run_metrics", "total_findings"),
     "dual_minus_single_findings" => dual_metrics.dig("run_metrics", "total_findings") - single_metrics.dig("run_metrics", "total_findings"),
+    "dual_plus_judgment_minus_dual_only_findings" => dual_metrics.dig("run_metrics", "total_findings") - dual_only_metrics.dig("run_metrics", "total_findings"),
+    "dual_only_has_adversarial_role" => dual_only_metrics.dig("finding_metrics", "source_role_distribution", "adversarial_reviewer").to_i.positive?,
     "dual_has_adversarial_role" => dual_metrics.dig("finding_metrics", "source_role_distribution", "adversarial_reviewer").to_i.positive?
   },
   "caveats" => [
@@ -115,6 +139,7 @@ batch_root.mkpath
       "export_root_base" => export_root_base.relative_path_from(repo_root).to_s,
       "run_labels" => [
         "F1-phase-field-cpp-single",
+        "F1-phase-field-cpp-dual-only",
         "F1-phase-field-cpp-dual"
       ]
     }
@@ -127,6 +152,7 @@ puts JSON.pretty_generate(
     "batch_id" => "F1-phase-field-cpp",
     "batch_root" => batch_root.to_s,
     "single_run_id" => single_result.fetch("run_id"),
+    "dual_only_run_id" => dual_only_result.fetch("run_id"),
     "dual_run_id" => dual_result.fetch("run_id"),
     "comparison_summary_path" => batch_root.join("comparison_summary.json").to_s
   }

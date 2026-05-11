@@ -77,9 +77,12 @@ implementation/review phase で最低限の比較軸:
 
 1. `single review`
    - implementation phase に対する単独 reviewer 相当
-2. `dual-reviewer workflow`
+2. `dual only`
+   - primary + adversarial
+   - judgment なし
+3. `dual-reviewer workflow`
    - adversarial / judgment / governance を含む標準系
-3. `manual reference`
+4. `manual reference`
    - optional
 
 解釈ルール:
@@ -87,6 +90,8 @@ implementation/review phase で最低限の比較軸:
 - `manual reference` は absolute ground truth としない
 - `dual-reviewer` の評価は finding count 単独で行わない
 - process / evidence metrics を必ず併記する
+- `phase-field-cpp` は representative implementation case として `single / dual / dual+judgment` を取得する
+- ここでの `dual-reviewer workflow` は treatment 名としては `dual+judgment` を指す
 
 ---
 
@@ -147,4 +152,3 @@ implementation/review phase で最低限の比較軸:
 2. adversarial/judgment の寄与が evidence に残らない
 3. review artifact はあるが reopening logic が不明
 4. upstream spec との traceability が切れる
-

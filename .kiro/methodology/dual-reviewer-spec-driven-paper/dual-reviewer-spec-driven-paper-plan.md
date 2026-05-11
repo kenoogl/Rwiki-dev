@@ -238,6 +238,30 @@ implementation code は review object ではあるが、
 論文の主対象はコードそのものではなく、
 そのコードに至る workflow と review process である。
 
+### 9.4 treatment decomposition
+
+`dual-reviewer` の効果は、少なくとも次の 3 treatment を区別して観測する。
+
+1. `single`
+   - primary review のみ
+2. `dual`
+   - primary + adversarial
+   - judgment なし
+3. `dual+judgment`
+   - primary + adversarial + judgment
+
+この分解を入れる理由は次の 2 つである。
+
+1. `adversarial` の寄与と `judgment` の寄与を分けて示すため
+2. 「2 reviewer で十分ではないか」という反論に答えられるようにするため
+
+ただし、全 case で 3 treatment を必須にするわけではない。
+
+- 少なくとも 1 つの代表 case では `single / dual / dual+judgment` を取る
+- 他の case では `single / dual+judgment` を主比較としてよい
+
+現時点では、代表 case は `phase-field-cpp` とする。
+
 ---
 
 ## 10. Immediate Next Work
@@ -246,3 +270,5 @@ implementation code は review object ではあるが、
 2. target-specific protocol を「code review protocol」から「implementation-phase protocol」に修正する
 3. `phase-field-cpp` snapshot 文書から prior observed metrics を外す
 4. first-run plan を Implementation Track pilot として書き換える
+5. `phase-field-cpp` を代表 case として `single / dual / dual+judgment` を取得する
+6. その後に `heat3d-julia` を第 2 implementation case として起こす

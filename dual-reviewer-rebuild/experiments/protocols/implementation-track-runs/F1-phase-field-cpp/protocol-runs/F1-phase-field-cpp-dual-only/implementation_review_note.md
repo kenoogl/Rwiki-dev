@@ -2,12 +2,12 @@
 
   ## 1. run scope
 
-  - run label: `F1-phase-field-cpp-single`
+  - run label: `F1-phase-field-cpp-dual-only`
   - case id: `F1-phase-field-cpp`
   - track: `implementation`
-  - review mode: `single_review`
+  - review mode: `dual_review`
   - runtime review mode: `runtime_mediated`
-  - treatment: `single`
+  - treatment: `dual`
   - operator: `phase-field-pilot`
   - implementation snapshot ref:
     - `.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md`
@@ -22,9 +22,9 @@
   ## 2. runtime artifact refs
 
   - review artifact:
-    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/review_case.json`
+    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-91c5445a/review_case.json`
   - decision units:
-    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/decisions/decision_units.json`
+    - `experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-91c5445a/decisions/decision_units.json`
 
   ## 3. findings
 

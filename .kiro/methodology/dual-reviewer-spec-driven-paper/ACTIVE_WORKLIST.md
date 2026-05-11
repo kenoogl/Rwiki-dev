@@ -170,6 +170,8 @@ generic execution layer v2 の tasks phase では、次の順を固定する。
 - fixed core case は現状 `phase-field`
 - `heat3d` と `iot-arduino` は provisional のまま
 - `phase-field pilot only` の範囲で tooling を揃えている
+- `phase-field-cpp` は representative implementation case として
+  `single / dual / dual+judgment` の 3 treatment を先に取る
 - ただし、現在の `phase-field` pilot は **case-specific heuristic 実装** を含む
 - この case-specific 実装は
   - 新しい case へ一般化できない
@@ -206,9 +208,10 @@ generic execution layer v2 の tasks phase では、次の順を固定する。
 ### 5.1 Implementation Track
 
 - `phase-field` implementation pilot runner
-- `single_review` / `dual_reviewer_workflow` batch execution
+- `single_review` / `dual_review` / `dual_reviewer_workflow` batch execution
 - non-empty findings
 - comparison summary
+- representative 3-treatment acquisition completed
 
 refs:
 - [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json:1)
@@ -345,29 +348,29 @@ why this is the current step:
 
 ## 8. Current Blocker
 
-- `implementation` 側は `evidence record -> observation -> finding` の三段構えになり、evidence record も section-scoped になった。observation には evidence type、review focus、source kind、section class、fragment class が入り、rule 側もそれらの組み合わせで gating できる。primary の一部は document-role + fragment-class だけで成立する `structure-first` 経路に移った。upstream spec 側の fragment cue の一部は親 Requirement と行番号で分類でき、snapshot rationale 側も numbered fragment として扱えるようになった。`implementation_snapshot_note` 側も `clean-room 制約`、`local provenance`、`digest fixedness`、`operational digest check`、`evidence exclusion` のような note role に分かれてきており、parameter rule からは `local provenance` と `operational digest check` を外しても rerun が維持できた。残る heuristic の中心は、note 側 cue をどこまで意味論的に安定した role として切れるかである
-- `phase-field` pilot rerun は再取得できており replacement outcome も固定済みだが、
-  generic execution layer replacement を main-evidence 級と言うにはまだ早い
+- `phase-field` の representative 3-treatment acquisition は完了した。結果は `single=2 findings`、`dual=3 findings`、`dual+judgment=3 findings` であり、現 pilot では `adversarial` は finding を 1 件増やしたが、`judgment` は finding 数を追加で増やしていない。したがって次の blocker は `dual only` の未取得ではなく、`parameter` の `snapshot rationale` 依存が phase-field 固有かどうか未確認な点である
+- `implementation` 側は `evidence record -> observation -> finding` の三段構えになり、evidence record も section-scoped になった。observation には evidence type、review focus、source kind、section class、fragment class が入り、rule 側もそれらの組み合わせで gating できる。boundary と update-order は `upstream contract` だけで立ち、parameter は `snapshot rationale + upstream parameter contract` で立つ。一方で parameter から `snapshot rationale` を外すと adversarial observation 自体が消えるため、この依存は現時点では必要と判断される。残る heuristic の中心は、この依存が phase-field 固有かどうかである
+- `phase-field` pilot rerun は再取得できており replacement outcome も固定済みだが、generic execution layer replacement を main-evidence 級と言うにはまだ早い
 
 ---
 
 ## 9. Current Action
 
-approved tasks に従って `dual-reviewer-generic-execution-layer-v2` の implementation replacement を継続し、
-`implementation_snapshot_note` 系 cue を
-`clean-room 制約 / local provenance / digest fixedness / operational check / evidence exclusion`
-のような note role にさらに分ける。
+approved tasks に従った `phase-field` representative 3-treatment acquisition は完了した。次は、`parameter` の `snapshot rationale` 依存が phase-field 固有かどうかを確かめるため、**第 2 implementation case として `heat3d-julia` を起こす準備** を進める。
 
-そのうえで、各 rule が本当に必要とする note role だけを残し、
-不要な role は allowed fragment / structural requirement から外す。
+直近の action は次の 4 点である。
+
+- `heat3d` implementation snapshot 文書を固定する
+- `heat3d` implementation case manifest を起こす
+- 最小の heuristic / profile を作る
+- `single / dual+judgment` を先に 1 回ずつ通し、必要なら `dual only` を追加して dependency を比較する
 
 この action では、次を確認対象にする。
 
-- `implementation` step payload に observation が残っていること
-- `review_case.json` と `v2/review_artifact.json` が observation を正本として受け取ること
-- finding が observation を経由して生成されること
-- pilot rerun と validation script が引き続き通ること
-- remaining reopen item を `implementation_snapshot_note` 系 cue の意味安定性に関する一点へ絞って維持できること
+- `phase-field` で見えた `parameter` の rationale 依存が `heat3d` でも再現するか
+- `boundary` / `update-order` がやはり upstream contract だけで立つか
+- rerun と validation script が新 case でも通るか
+- `phase-field` 特有の調整をそのまま持ち込んでいないか
 
 この文書はここで tasks 手順自体を再定義しない。phase の進め方と gate の成立条件は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215) を正本とする。
 
@@ -380,8 +383,9 @@ approved tasks に従って `dual-reviewer-generic-execution-layer-v2` の imple
 1. `intent` / `spec` / `implementation` の pilot rerun が v2 path で再取得できている
 2. comparison summary と replacement outcome note が artifact として残っている
 3. `implementation` で observation-first path が runtime artifact に反映されている
-4. remaining reopen item register が固定されている
-5. `main evidence` 未昇格が明記されている
+4. representative implementation case で `single / dual / dual+judgment` の比較が取得済みである
+5. remaining reopen item register が固定されている
+6. `main evidence` 未昇格が明記されている
 
 ---
 
@@ -400,7 +404,7 @@ approved tasks に従って `dual-reviewer-generic-execution-layer-v2` の imple
 
 ## 12. Next Handoff
 
-observation-first path を固定した後に、workflow に従って remaining reopen item の解消か、必要なら implementation review を行う。この文書では手順自体を再定義しない。
+`phase-field` representative acquisition の次は、`heat3d-julia` を第 2 implementation case として起こし、`parameter` の rationale 依存が一般則か局所則かを比較する。この文書では手順自体を再定義しない。
 
 補足:
 

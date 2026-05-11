@@ -2,7 +2,7 @@
 run_label: F1-phase-field-cpp-single
 case_id: F1-phase-field-cpp
 track: implementation
-run_id: run-20260511T001610Z-1a9f6a3e
-validator_result_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-1a9f6a3e/validation/validator_result.json
-invalidation_markers_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T001610Z-1a9f6a3e/validation/invalidation_markers.json
+run_id: run-20260511T005003Z-1f9fc703
+validator_result_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/validation/validator_result.json
+invalidation_markers_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/validation/invalidation_markers.json
 overall_status: passed
