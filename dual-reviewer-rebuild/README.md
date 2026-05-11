@@ -2,6 +2,12 @@
 
 Review system 再構築用 repository。
 
+## Start Here
+
+初見の利用者は、まず [dual-reviewer-v2-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v2-user-guide.md:1) を読む。
+
+その次に、役割分担は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)、信頼境界は [TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md:1) を読む。
+
 ## Purpose
 
 - dual-reviewer runtime を repo 内完結で再構築する

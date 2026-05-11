@@ -174,7 +174,8 @@
 
 | Path | Role | Status |
 |------|------|--------|
-| [dual-reviewer-v1-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v1-user-guide.md) | dual-reviewer v1 の目的と使い方をまとめた利用者向けガイド | user guide |
+| [dual-reviewer-v2-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v2-user-guide.md) | dual-reviewer v2 の全体像、使い方、判断ポイントをまとめた利用者向けガイド | current user guide |
+| [dual-reviewer-v1-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v1-user-guide.md) | dual-reviewer v1 の目的と使い方をまとめた参照用ガイド | legacy reference |
 
 ### 8.6 `docs/traceability/`
 
