@@ -405,6 +405,7 @@ foundation は prompt の canonical placement と identity rule を定義する�
   - 初期は reusable seed knowledge
   - 中長期的には meta layer pattern asset の置き場
   - mutable だが version 増分必須
+  - reusable fragment cue は section heading、section class、review focus、bullet ordinal のような structural cue に anchored し、pilot-case basename に依存しない
 - `fatal_patterns.yaml`
   - policy-sensitive baseline
   - 初期再構築では stable baseline として扱う
@@ -421,6 +422,7 @@ foundation は prompt の canonical placement と identity rule を定義する�
   - review log から抽出された concrete pattern
 
 初期段階では `seed_patterns.yaml` を meta layer 寄りの asset として扱い、project-specific concrete は後続の self-improvement / learning artifact で蓄積する。
+つまり foundation-owned pattern asset には generic seed だけを置き、pilot-case で得た concrete cue や learned pattern を generic runtime の hidden default にしない。
 
 ### 8. Validation and Invalidation Model
 

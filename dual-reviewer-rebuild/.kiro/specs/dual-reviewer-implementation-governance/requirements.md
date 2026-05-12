@@ -120,3 +120,15 @@ paper export を定義しているが、prototype 実装後に
 4. The feature shall define that issues observed in downstream phases may be recorded as `intent-attributed` without reclassifying them as intent-phase issues.
 5. The feature shall define a canonical phase-review metric register that covers at minimum `intent`, `requirements`, `design`, `tasks`, and `implementation`.
 6. The feature shall require the governance artifact validator to check the presence of the intent review template, a concrete intent review artifact, and the phase-review metric register.
+
+### Requirement 8: Reference-Free Case Bootstrap and Minimal Heuristic Policy
+
+**Objective:** As a maintainer starting a new case, I want a reference-free bootstrap path and minimal heuristic defaults, so that workflow entry does not depend on copying an older pilot case.
+
+#### Acceptance Criteria
+
+1. The governance feature shall define a reference-free bootstrap path as a first-class workflow entry for new cases.
+2. The feature shall define repo-contained bootstrap artifacts or scripts that create the minimum case-control artifacts needed to begin from `intent`.
+3. The feature shall define that reusable templates and gate structure may be reused, while case content must be derived from the provided source documents rather than copied from a pilot case.
+4. The feature shall define a minimal heuristic policy in which `heuristic_profile_ref` may be omitted and the runtime uses track-specific repo-contained minimal templates by default.
+5. The feature shall define canonical references for the bootstrap guide, bootstrap script, implementation protocol/snapshot templates, heuristic policy note, and track-level minimal heuristic templates.

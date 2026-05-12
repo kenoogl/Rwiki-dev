@@ -10,11 +10,14 @@
 具体的には次を repo-contained artifact として固定する。
 
 - intent review procedure linkage
+- reference-free case bootstrap linkage
 - conformance review procedure
 - conformance metric register
 - phase-review metric register
 - intent review template
 - conformance review template
+- reference-free bootstrap guide
+- implementation protocol/snapshot templates
 - concrete intent review artifacts
 - concrete review artifacts
 - governance artifact validator
@@ -80,6 +83,18 @@ graph TD
   - current workflow gate status
 - `docs/alignment/cross-spec-implementation-governance-alignment.md`
   - governance-specific alignment memo
+- `scripts/bootstrap_reference_free_case.rb`
+  - reference-free bootstrap entrypoint
+- `.kiro/methodology/dual-reviewer-spec-driven-paper/reference-free-case-bootstrap-guide.md`
+  - new case bootstrap procedure
+- `.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-phase-protocol-template.md`
+  - reference-free implementation protocol template
+- `.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-phase-snapshot-template.md`
+  - reference-free implementation snapshot template
+- `experiments/protocols/heuristic_profiles/README.md`
+  - minimal heuristic policy note
+- `experiments/protocols/heuristic_profiles/*/_minimal_template.yaml`
+  - track-default heuristic templates
 
 ### Boundary Clarification
 
@@ -91,6 +106,26 @@ graph TD
   - review procedure と evidence contract の owner
 
 ## Workflow Model
+
+### Stage -1: Reference-Free Case Bootstrap
+
+新しい case は、既存 pilot case のコピーから始めない。
+
+bootstrap stage では次を固定する。
+
+- upstream intent source
+- canonical source
+- umbrella `intent.md`
+- umbrella `spec.json`
+- case workflow overlay
+- active worklist
+- workflow path
+
+この stage の役割は case content を完成させることではなく、
+`intent gate` に入るための最小 control artifact を repo 内に作ることにある。
+
+bootstrap で再利用してよいのは template と gate structure だけであり、
+case 固有の stress、scope、risk は supplied source document から書き起こす。
 
 ### Stage 0: Intent Review
 
@@ -106,6 +141,19 @@ reviewer は次を行う。
 `intent review` は下流 phase issue の総件数を吸い上げない。
 下流 phase で見つかった issue のうち、原因が intent の再解釈や不整合にあるものだけを
 `intent-attributed issue` として downstream artifact 側に残す。
+
+### Minimal Heuristic Default Rule
+
+workflow owner としての governance は、heuristic profile の増殖を抑える。
+
+- case manifest に `heuristic_profile_ref` が無い場合
+  - runtime は track-specific minimal template を使ってよい
+- case 固有 heuristic は
+  - approved source に anchored した review-critical contract が明確なときだけ追加する
+- minimal template の canonical source は `experiments/protocols/heuristic_profiles/*/_minimal_template.yaml` とする
+
+これにより、新規 case の最初の run は pilot-case copied heuristic ではなく、
+repo-contained minimal default から始まる。
 
 ### Stage 1: Implementation
 

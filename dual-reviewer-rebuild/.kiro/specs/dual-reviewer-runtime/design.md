@@ -38,6 +38,16 @@ runtime が所有するもの:
 
 runtime は foundation contract を上書きせず、その内側で concrete execution を定義する。
 
+### Reference-Free Runtime Entry Principle
+
+runtime は pilot case を前提にしない。
+
+- 新しい case は workflow/bootstrap 側で初期化してよい
+- runtime entrypoint は、その bootstrap で作られた case manifest か、同等に明示された入力群だけを受ける
+- generic runtime code は特定 case の basename や case id を hidden default にしない
+
+つまり、`reference-free bootstrap` は workflow owner の責務だが、runtime 側もそれを受けられる explicit input model を持たなければならない。
+
 ## Goals
 
 - foundation contract に従う review orchestration を提供する
@@ -440,6 +450,53 @@ runtime design におけるルール:
 - analyzer logic を batch script に入れない
 - downstream 変換 logic を execution core に混ぜない
 - manifest logic を writer に混ぜない
+
+### Case Manifest and Heuristic Resolution Model
+
+v2 runtime は case manifest を track-aware object として扱う。
+
+- base required fields
+  - `case_id`
+  - `track`
+  - `source_refs`
+  - `case_manifest_ref`
+- track-required fields
+  - `implementation`
+  - `spec`
+  - `intent`
+  それぞれは track 固有の required field set を持つ
+- optional fields
+  - `heuristic_profile_ref` のような tuning input は optional にしてよい
+
+heuristic resolution rule:
+
+- case manifest に `heuristic_profile_ref` がある場合
+  - その ref を使う
+- ない場合
+  - `scripts/track_runs/default_heuristic_profile_ref.rb` が返す track ごとの minimal template を使う
+
+このとき重要なのは、default fallback を hidden behavior にしないことだ。resolved heuristic ref は analysis input と protocol manifest の双方から辿れるように残す。
+
+### Generic Protocol Entrypoint Rule
+
+`scripts/run_*_track_protocol.rb` の generic wrapper は、pilot case を既定値に持たない。
+
+- `case_manifest_ref` がある場合
+  - wrapper は manifest を読む
+- `case_manifest_ref` がない場合
+  - track ごとの required input を明示させる
+- どちらも満たさない場合
+  - fail fast する
+
+これにより、reference-free case でも runtime entry が `heat3d` や `phase-field` の既存 run label に暗黙依存しない。
+
+### Generic Fragment Cue Rule
+
+runtime の reusable analyzer / pattern cue は、implementation snapshot や upstream spec を読むときに
+section heading、section class、review focus、bullet ordinal のような structural cue を優先する。
+
+case 固有の basename や pilot-case heading を generic analyzer の条件に埋め込まない。
+pilot-case から得た learned cue を使いたい場合は、foundation seed pattern ではなく project/case 側 artifact に置く。
 
 runtime は evidence を 3 層に分けて保存する。
 

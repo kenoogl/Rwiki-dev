@@ -16,12 +16,13 @@
 ## 2. 実装順序
 
 1. runtime skeleton と `execution_v2` entrypoint を揃える
-2. run metadata / review_case emission と `v2/` internal artifact path を実装する
-3. Step A/B/C/D artifact emission を実装する
-4. decision unit と human sign-off artifact を実装する
-5. run close / validator integration / comparison eligibility emission を実装する
-6. portable evidence bundle export を実装する
-7. runtime fixtures と tests を追加する
+2. track-aware case manifest / heuristic fallback / generic entrypoint rule を実装する
+3. run metadata / review_case emission と `v2/` internal artifact path を実装する
+4. Step A/B/C/D artifact emission を実装する
+5. decision unit と human sign-off artifact を実装する
+6. run close / validator integration / comparison eligibility emission を実装する
+7. portable evidence bundle export を実装する
+8. runtime fixtures と tests を追加する
 
 理由:
 
@@ -270,6 +271,42 @@
 完了条件:
 
 - runtime から evaluation / self-improvement への handoff 条件が mechanical に確認できる
+
+### Task 11: Implement track-aware case manifest loading and heuristic fallback
+
+目的:
+
+- reference-free case でも runtime が manifest と default heuristic を deterministic に解決できるようにする
+
+作業:
+
+- track-aware case manifest validator を実装する
+- `heuristic_profile_ref` を optional field として扱う
+- `heuristic_profile_ref` が無い場合の track-specific minimal fallback map を実装する
+- resolved heuristic ref を analysis input と protocol manifest に残す
+
+完了条件:
+
+- case manifest が track ごとの required field で検証される
+- heuristic profile 未指定でも runtime が repo-contained default で起動できる
+- 後から explicit heuristic と default heuristic を区別できる
+
+### Task 12: Remove pilot-case assumptions from generic runtime entrypoints
+
+目的:
+
+- generic runtime path が historical pilot case の hidden default に依存しないようにする
+
+作業:
+
+- `run_*_track_protocol.rb` を explicit input or manifest-required にする
+- generic analyzer と reusable seed pattern cue を structural cue ベースに寄せる
+- case basename や pilot-case heading を generic runtime 条件から外す
+
+完了条件:
+
+- generic protocol wrapper が pilot case 固定値なしで動く
+- reusable analyzer / seed pattern matching が case-agnostic になる
 
 ## 4. Downstream Handoff
 

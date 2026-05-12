@@ -163,6 +163,7 @@
 - reusable seed pattern
 - project-accumulated pattern
 - terminology entries structure
+- generic fragment cue と pilot-case learned cue の区別
 
 の distinction は明示する。
 
@@ -170,6 +171,7 @@
 
 - self-improvement と runtime が pattern assets の canonical placement を参照できる
 - terminology template が empty でも schema-complete である
+- foundation-owned seed pattern が case basename 前提なしで再利用できる
 
 ### Task 6: Create validator-facing contract artifacts
 

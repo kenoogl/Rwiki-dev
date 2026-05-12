@@ -24,6 +24,7 @@ governance feature は feature logic ではなく workflow contract を所有す
 6. governance artifact validator を実装する
 7. workflow gate status と cross-spec alignment を実装する
 8. intent review と phase-review metrics を正式化する
+9. reference-free bootstrap と minimal heuristic default を正式化する
 
 理由:
 
@@ -191,3 +192,23 @@ validator が確認すること:
 
 - intent review と phase-review metrics が governance spec の正式範囲として説明できる
 - governance artifact validation が新しい owner artifact を検査する
+
+### Task 9: Formalize reference-free case bootstrap and minimal heuristic defaults
+
+目的:
+
+- 新しい case が pilot-case copy に依存せず、minimal heuristic から始められることを workflow contract にする
+
+作業:
+
+- `operations/HUMAN_WORKFLOW.md` に reference-free bootstrap を正式手順として反映する
+- `.kiro/methodology/dual-reviewer-spec-driven-paper/reference-free-case-bootstrap-guide.md` を owner artifact として固定する
+- `scripts/bootstrap_reference_free_case.rb` を bootstrap entrypoint として明記する
+- implementation protocol / snapshot template を reference-free template として明記する
+- `experiments/protocols/heuristic_profiles/README.md` と track-level `_minimal_template.yaml` 群を minimal heuristic policy の正本として明記する
+
+完了条件:
+
+- 新規 case の開始手順が既存 case 参照なしで説明できる
+- heuristic default policy が workflow owner artifact として明示される
+- runtime の default heuristic fallback が governance rule と矛盾しない

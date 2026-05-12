@@ -108,7 +108,9 @@
 2. The foundation shall preserve the distinction between reusable seed patterns and project-accumulated patterns.
 3. The foundation shall define a terminology template artifact with explicit versioning and an empty initial entries structure.
 4. The foundation shall define pattern assets as data sources, not embedded constants in runtime code.
-5. The foundation shall leave matching logic and quota logic out of scope for this spec.
+5. The foundation shall define reusable seed pattern cues in a case-agnostic form that does not depend on pilot-case file basenames or case identifiers for generic matching.
+6. The foundation shall preserve the boundary where pilot- or project-specific learned patterns live outside the foundation-owned seed asset.
+7. The foundation shall leave matching logic and quota logic out of scope for this spec.
 
 ### Requirement 6: Validator-Oriented Metadata Contract
 
