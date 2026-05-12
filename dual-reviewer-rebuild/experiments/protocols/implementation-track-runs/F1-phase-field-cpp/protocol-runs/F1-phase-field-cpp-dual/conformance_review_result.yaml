@@ -1,8 +1,14 @@
 ---
+schema_version: 1.0.0
 run_label: F1-phase-field-cpp-dual
 case_id: F1-phase-field-cpp
 track: implementation
-run_id: run-20260511T005003Z-4b7f9ca1
-validator_result_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/validation/validator_result.json
-invalidation_markers_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-4b7f9ca1/validation/invalidation_markers.json
+run_id: run-20260510T215435Z-42f86b08
+validator_result_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-42f86b08/validation/validator_result.json
+invalidation_markers_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-42f86b08/validation/invalidation_markers.json
+comparison_eligibility_note_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-42f86b08/derived/comparison_eligibility_note.json
+invalid_run_triage_note_ref: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-42f86b08/derived/invalid_run_triage_note.json
 overall_status: passed
+primary_failure_code: no_invalid_run_condition_detected
+operator_action_hint: No invalid-run triage action is required.
+remediation_templates: []

@@ -1,0 +1,47 @@
+{
+  "feature_name": "iot-arduino-spec",
+  "created_at": "2026-05-10T06:42:00+09:00",
+  "updated_at": "2026-05-12T10:38:54+09:00",
+  "language": "ja",
+  "phase": "tasks-approved",
+  "approvals": {
+    "intent": {
+      "generated": true,
+      "approved": true
+    },
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    },
+    "review_acquisition": {
+      "generated": true,
+      "approved": true
+    },
+    "implementation": {
+      "generated": false,
+      "approved": false
+    }
+  },
+  "ready_for_implementation": true,
+  "ready_for_review_acquisition": true,
+  "custom": {
+    "case_id": "C-4-iot-arduino",
+    "tracks": [
+      "Spec Track",
+      "Implementation Track"
+    ],
+    "current_mode": "generalized-first-case-test",
+    "implementation_workspace": "/Users/Daily/Development/DR-IoT",
+    "implementation_source_present": true,
+    "spec_phase_guard": "strict",
+    "active_feature_count": 2
+  }
+}

@@ -1,10 +1,10 @@
 ---
 analysis_logic_version: 0.1.0
 input_run_set:
-- run-20260511T062535Z-70acf852
-- run-20260511T062535Z-d6c4618a
-- run-20260511T062535Z-e945dac7
-generated_at: '2026-05-11T14:51:17Z'
+- run-20260512T124938Z-8b651e3c
+- run-20260512T124939Z-0b72fa40
+- run-20260512T124939Z-f564def5
+generated_at: '2026-05-12T12:52:13Z'
 metric_set_version: 0.1.0
 phase_metric_profile_version: overlay-v1
 comparison_contract_version: 0.1.0
@@ -13,6 +13,6 @@ runtime_validation_summary_coverage:
   covered_run_count: 3
   missing_run_ids: []
   summary_artifact_refs:
-  - experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml
-  - experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml
-  - experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml
+  - experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml
+  - experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml
+  - experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml

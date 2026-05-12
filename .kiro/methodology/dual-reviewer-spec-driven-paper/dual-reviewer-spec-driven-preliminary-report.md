@@ -28,7 +28,7 @@ prose role:
 
 本報告では、現行システム名を `dual-reviewer v2` とする。`v3` は future code-conformance evaluation line を指す。
 
-この 3 track は独立 benchmark ではなく、`intent` から implementation まで下る 1 本の workflow story として読む。特に `heat3d` は、その後半を代表する bridge case として、workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を同時に示す。
+この 3 track は独立 benchmark ではなく、`intent` から implementation まで下る 1 本の workflow story として読む。implementation 側では、`F1-phase-field-cpp-r2` を clean 3-treatment comparison case、`heat3d` をその後半を代表する bridge case として併置する。`heat3d` は workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を同時に示す。
 
 ---
 
@@ -96,9 +96,9 @@ LLM code review に複数 agent を入れること自体ではない。
 
 訴求点は次の 3 層で組み立てる。
 
-1. human cognitive load support
-2. governed spec-driven workflow
-3. evidence-preserving downstream support
+1. governed intent-driven workflow
+2. evidence-preserving downstream support
+3. human cognitive load support as a secondary design aim
 
 ---
 
@@ -116,7 +116,10 @@ LLM code review に複数 agent を入れること自体ではない。
 - `heat3d` fixed core case package
 - `heat3d` actual implementation + reduced validation evidence
 - `heat3d` implementation-origin second-case acquisition (`single / dual / dual+judgment = 2 / 3 / 3`)
+- `F1-phase-field-cpp-r2` fresh reacquisition (`single / dual / dual+judgment = 2 / 3 / 3`)
 - `heat3d` spec/design underconstraint exposure evidence
+- `iot-arduino` generalized first-case pipeline from external intent/spec seed
+- `iot-arduino` two-snapshot implementation acquisition with preserved `2 / 3 / 3`
 - `Intent Track` fresh first batch (`dual-reviewer-rebuild`)
 - `Spec Track` fresh first batch (`phase-field-reverse-spec`)
 
@@ -132,11 +135,30 @@ LLM code review に複数 agent を入れること自体ではない。
 
 という 4 点が確認できている。
 
+`F1-phase-field-cpp-r2` では、
+
+- original first snapshot を fresh protocol root に再取得できた
+- `single / dual / dual+judgment` の 3 treatment が runtime-backed に揃った
+- `dual` は `single` より `+1` finding を持った
+- `dual+judgment` は `dual` の finding count を増やさず、judgment-bearing trace を追加した
+
+という 4 点が確認できている。
+
+`iot-arduino` では、
+
+- external `intent.md` と `仕様.md` から generalized case を起動できた
+- first implementation snapshot と refined second snapshot の両方で `2 / 3 / 3` を取得できた
+- `restart boundary` と `relay fail-safe` は stable safety finding として残った
+- `telemetry caveat` は preserved caveat として残った
+
+という 4 点が確認できている。
+
 ### 4.2 Remaining gaps
 
 - downstream rework data across additional cases
 - disagreement preservation metrics aggregated across tracks
 - track 間の large-N comparison
+- hardware-ready event-driven implementation evidence
 
 `Intent Track` と `Spec Track` の first batch 自体は取得済みである。これにより、3-track story の前半も first-batch level では acquisition-backed になった。残っているのは、より広い比較と集計である。
 
@@ -181,7 +203,7 @@ LLM code review に複数 agent を入れること自体ではない。
 - `Implementation Track`
   - approved upstream artifact に結びついた review acquisition と implementation trace
 
-この連結の後半を代表する bridge case が `heat3d` である。`heat3d` は `Spec-origin / Implementation-origin` の両方を持ち、restart, reopen, readability recheck, review acquisition, actual implementation, validation-boundary judgment まで含む長い trace を 1 case に束ねている。したがって本論文では、`heat3d` を implementation-oriented second case としてだけでなく、workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を同時に示す bridge case として扱う。
+implementation 側の読みは 2 層に分ける。`F1-phase-field-cpp-r2` は clean 3-treatment implementation comparison case であり、`single / dual / dual+judgment` の差を最も素直に見せる。一方 `heat3d` は `Spec-origin / Implementation-origin` の両方を持ち、restart, reopen, readability recheck, review acquisition, actual implementation, validation-boundary judgment まで含む長い trace を 1 case に束ねている。したがって本論文では、`F1-phase-field-cpp-r2` を treatment-comparison の main implementation case、`heat3d` を workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を同時に示す bridge case として扱う。
 
 ---
 
@@ -189,13 +211,15 @@ LLM code review に複数 agent を入れること自体ではない。
 
 ### Claim 1
 
-`dual-reviewer` は、仕様駆動開発の下流工程における cognitive brittleness を減らす。
+`dual-reviewer` は、意図駆動開発の下流工程で review attention を構造化し、cognitive brittleness を緩和するよう設計されている。
 
 ### Claim 2
 
 `dual-reviewer` は、finding だけでなく disagreement, caveat, disposition, handback depth を traceable に残す。
 
 `phase-field` と `heat3d` の 2 case では、review artifact は finding の列挙に留まらず、caveat, disposition, reopen depth, phase evidence summary を同じ case lineage 上に保持した。したがって `dual-reviewer` は、指摘品質だけでなく traceability 自体を成果物として残す workflow system として読める。
+
+`iot-arduino` では、implementation-local refinement を 1 回挟んだ second acquisition 後も `restart boundary`, `relay fail-safe`, `telemetry caveat` が artifact 上に保持された。したがって traceability は first-batch novelty に依存せず、refinement 後の signal persistence としても読める。
 
 さらに fresh `Intent Track / Spec Track` batch でも、`intent handback`, `propagation obligation`, `reopen required`, `intent-attributed issue`, `major correction` が artifact に残った。したがってこの traceability は implementation-present case に限られない。ただし upstream 2 track については、現時点では first-batch level の成立確認として読む。
 
@@ -205,15 +229,17 @@ LLM code review に複数 agent を入れること自体ではない。
 
 `dual-reviewer` は、`intent-only`, `spec-present`, `implementation-present` の複数開始条件でも workflow を維持できる。
 
-fresh `Intent Track` の `dual-reviewer-rebuild`, fresh `Spec Track` の `phase-field-reverse-spec`, そして bridge case `heat3d` を合わせると、`dual-reviewer` は少なくとも first-batch level では `intent-only`, `spec-present`, `implementation-present` の 3 開始条件で artifact-preserving workflow を成立させた。特に `heat3d` では restart, reopen, readability recheck, review acquisition, actual implementation まで含む長い経路を破綻なく通した。これは `dual-reviewer` が、開始条件や途中手戻りの差を吸収しながら workflow を維持できることの cross-track evidence である。
+fresh `Intent Track` の `dual-reviewer-rebuild`, fresh `Spec Track` の `phase-field-reverse-spec`, generalized implementation-first case `iot-arduino`, そして bridge case `heat3d` を合わせると、`dual-reviewer` は少なくとも first-batch level では `intent-only`, `spec-present`, `implementation-present` の 3 開始条件で artifact-preserving workflow を成立させた。`iot-arduino` は external intent/spec seed から start し、requirements defer/reopen, design/tasks gate, review acquisition, two-snapshot implementation acquisition まで 1 本の case lineage で通した。これは `dual-reviewer` が、開始条件や途中手戻りの差を吸収しながら workflow を維持できることの cross-track evidence である。
 
 ### Claim 4
 
 `dual-reviewer` は、review 後の evidence を self-improvement / reporting に再利用可能な形で残す。
 
-implementation track では、`phase-field` と `heat3d` の両方で `boundary`, `update-order`, `parameter-caveat` という finding pattern が再現した。一方 `heat3d` は、reduced validation pass と reference behavior mismatch の併存を通じて、review evidence を downstream reporting と future code-conformance evaluation の両方へ再利用できることを示した。behavior mismatch の責任分解そのものは本文で断定せず、`v3` の code-conformance evaluation に委ねる。
+implementation track では、`F1-phase-field-cpp-r2` と `heat3d` の両方で `boundary`, `update-order`, `parameter-caveat` という finding pattern が再現した。`F1-phase-field-cpp-r2` は clean 3-treatment runtime-backed package として `adversarial` と `judgment` の差を分けて読める。一方 `heat3d` は、reduced validation pass と reference behavior mismatch の併存を通じて、review evidence を downstream reporting と future code-conformance evaluation の両方へ再利用できることを示した。behavior mismatch の責任分解そのものは本文で断定せず、`v3` の code-conformance evaluation に委ねる。
 
 さらに `heat3d` では、actual coding 中の blocking issue `3` 件が upstream reopen `0` のまま implementation local に閉じた。このため implementation track の evidence は、review acquisition の finding pattern だけでなく、downstream rework trace を reporting / self-improvement に再利用できる形でも残ったと読める。
+
+`iot-arduino` では、implementation-local refinement を入れた second snapshot 後も `2 / 3 / 3` が維持された。これは finding count が減らなかったという意味ではなく、`restart boundary` と `relay fail-safe` のような safety-sensitive contract と、`telemetry caveat` のような operational caveat が refinement 後も silent に失われなかった、という evidence として読むべきである。したがって implementation track の evidence は、fix 成功だけでなく signal stability と caveat retention の reporting 再利用にも使える。
 
 ---
 
@@ -257,6 +283,7 @@ implementation track では、`phase-field` と `heat3d` の両方で `boundary`
 - Intent Track / Spec Track / Implementation Track の case 数がまだ少ない
 - `Intent Track` と `Spec Track` の acquisition-backed support は、まだ first-batch level に留まる
 - implementation-phase case が scientific / embedded 側に寄っている
+- `iot-arduino` は still hardware-ready implementation ではなく snapshot-based evidence に留まる
 - manual reference は補助比較に留まる
 - ground truth を absolute oracle としない
 - model drift の影響がある

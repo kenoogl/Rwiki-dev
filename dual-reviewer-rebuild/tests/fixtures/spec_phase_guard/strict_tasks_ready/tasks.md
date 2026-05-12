@@ -1,0 +1,1 @@
+# strict tasks ready

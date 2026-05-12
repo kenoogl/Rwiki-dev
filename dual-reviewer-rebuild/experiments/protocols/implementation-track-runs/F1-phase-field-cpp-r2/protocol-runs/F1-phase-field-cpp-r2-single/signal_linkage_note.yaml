@@ -1,0 +1,9 @@
+---
+run_label: F1-phase-field-cpp-r2-single
+case_id: F1-phase-field-cpp-r2
+track: implementation
+run_id: run-20260512T124938Z-8b651e3c
+linked_signal_ids: []
+status: pending_manual_population
+note: Populate when implementation-track findings are linked into evaluation or self-improvement
+  signal inventories.

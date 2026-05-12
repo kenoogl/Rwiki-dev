@@ -32,15 +32,19 @@ runtime 配下の deeply nested JSON をここで全部再列挙はしない。
    現時点の本文正本。`Claim 2 / 3 / 4` の canonical prose 。
 2. [dual-reviewer-spec-driven-paper-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md:1)  
    planning source / fallback source。
-3. [dual-reviewer-spec-driven-case-manifest.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md:1)  
+3. [dual-reviewer-spec-driven-manuscript-outline.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-manuscript-outline.md:1)  
+   本文起草のための章・節・段落アウトライン正本。
+4. [dual-reviewer-spec-driven-manuscript-draft.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-manuscript-draft.md:1)  
+   現在進行中の本文草稿。まず `Chapter 4-5` を収録。
+5. [dual-reviewer-spec-driven-case-manifest.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md:1)  
    `Intent / Spec / Implementation` の case 配置。
-4. [claim-case-matrix.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/claim-case-matrix.md:1)  
+6. [claim-case-matrix.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/claim-case-matrix.md:1)  
    `Claim` と case の対応表。
-5. [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1)  
+7. [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1)  
    current step と next step の制御板。
-6. [heat3d-c3-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-c3-evidence-bundle.md:1)  
+8. [heat3d-c3-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-c3-evidence-bundle.md:1)  
    `C-3 heat3d` の証拠束。
-7. [remaining-track-first-batch-acquisition-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-first-batch-acquisition-summary.md:1)  
+9. [remaining-track-first-batch-acquisition-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-first-batch-acquisition-summary.md:1)  
    fresh `Intent / Spec` batch の集約。
 
 ---
@@ -53,6 +57,10 @@ runtime 配下の deeply nested JSON をここで全部再列挙はしない。
   本文正本。claim prose、track framing、threats、解釈境界。
 - [dual-reviewer-spec-driven-paper-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md:1)  
   planning source。claim candidate と case allocation。
+- [dual-reviewer-spec-driven-manuscript-outline.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-manuscript-outline.md:1)  
+  本文起草用の章・節・段落アウトライン。
+- [dual-reviewer-spec-driven-manuscript-draft.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-manuscript-draft.md:1)  
+  現在の本文草稿。`Chapter 4-5` を先行収録。
 - [dual-reviewer-spec-driven-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-first-run-plan.md:1)  
   旧来の first-run planning 文書。現状は historical plan 参照用。
 - [dual-reviewer-spec-driven-case-manifest.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md:1)  

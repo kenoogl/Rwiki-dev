@@ -23,7 +23,7 @@ _purpose: claim と評価 case の対応を固定する_
 
 ### Claim 1
 
-`dual-reviewer` は、仕様駆動開発の下流工程における cognitive brittleness を減らす。
+`dual-reviewer` は、意図駆動開発の下流工程で review attention を構造化し、cognitive brittleness を緩和するよう設計されている。
 
 ### Claim 2
 
@@ -68,10 +68,10 @@ _purpose: claim と評価 case の対応を固定する_
 
 | claim | required case class | primary case | secondary case | not acceptable as main evidence |
 |---|---|---|---|---|
-| `Claim 1` | `Intent-origin` | `dual-reviewer-rebuild` | intent を新設した `phase-field` / `heat3d` / `iot-arduino` | `intent` がない case |
-| `Claim 2` | `Intent-origin` または `Spec-origin`、補助として `Implementation-origin` | `dual-reviewer-rebuild`, intent 付き `phase-field-reverse-spec` | intent 付き `heat3d`, intent 付き `iot-arduino` | intent なし code-only case |
-| `Claim 3` | `Intent-origin` + `Spec-origin` + `Implementation-origin` の組 | `dual-reviewer-rebuild` + intent 付き `phase-field-reverse-spec` + intent 付き `phase-field-cpp` | intent 付き `heat3d`, intent 付き `iot-arduino` | `intent-absent reconstruction` を主 case にすること |
-| `Claim 4` | `Implementation-origin`、ただし upstream `intent/spec` が必須 | intent 付き `phase-field-cpp` | intent 付き `heat3d-julia`, intent 付き `iot-arduino-c` | upstream を持たない implementation-only case |
+| `Claim 1` | `Intent-origin` | `dual-reviewer-rebuild` | intent 付き `phase-field-reverse-spec`, intent 付き `heat3d`, intent 付き `iot-arduino` | `intent` がない case |
+| `Claim 2` | `Intent-origin` または `Spec-origin`、補助として `Implementation-origin` | `dual-reviewer-rebuild`, intent 付き `phase-field-reverse-spec` | `F1-phase-field-cpp-r2`, intent 付き `heat3d`, intent 付き `iot-arduino` | intent なし code-only case |
+| `Claim 3` | `Intent-origin` + `Spec-origin` + `Implementation-origin` の組 | `dual-reviewer-rebuild` + intent 付き `phase-field-reverse-spec` + `F1-phase-field-cpp-r2` | `heat3d`, `iot-arduino` | `intent-absent reconstruction` を主 case にすること |
+| `Claim 4` | `Implementation-origin`、ただし upstream `intent/spec` が必須 | `F1-phase-field-cpp-r2`, `heat3d-julia` | `iot-arduino` | upstream を持たない implementation-only case |
 
 ---
 
@@ -82,7 +82,7 @@ _purpose: claim と評価 case の対応を固定する_
 `Claim 1` の主証拠は `Intent-origin case` に限る。
 
 理由:
-- 認知負荷軽減の主張は、`intent` から下流へ降りる局面で最も強く観測されるため。
+- cognitive burden support の主張は、`intent` から下流へ降りる局面で最も強く観測されるため。
 
 ### Rule 2
 
@@ -132,7 +132,7 @@ main evidence は code quality ではなく evidence reusability である。
 - `judgment` を入れると整理される差
 を分解して示すため。
 
-現時点の代表 case は `phase-field-cpp` とする。
+現時点の代表 case は `F1-phase-field-cpp-r2` とする。
 
 ---
 
@@ -164,7 +164,11 @@ main evidence は code quality ではなく evidence reusability である。
   - `Claim 3`
   - `Claim 4`
 - treatment role:
-  - representative 3-treatment case
+  - upstream package:
+    - `phase-field-reverse-spec`
+  - implementation package:
+    - `F1-phase-field-cpp-r2`
+  - `F1-phase-field-cpp-r2` を representative 3-treatment implementation case として使う
   - `single / dual / dual+judgment` を取得して `adversarial` と `judgment` の寄与を分ける
 
 ### C-3 `heat3d`
@@ -179,6 +183,13 @@ main evidence は code quality ではなく evidence reusability である。
   - `Claim 2`
   - `Claim 3`
   - `Claim 4`
+- paper role:
+  - bridge implementation case
+- reading:
+  - workflow validity
+  - implementation-origin evidence
+  - evidence reusability
+  - spec/design underconstraint exposure
 
 ### C-4 `iot-arduino`
 
@@ -192,6 +203,11 @@ main evidence は code quality ではなく evidence reusability である。
   - `Claim 2`
   - `Claim 3`
   - `Claim 4`
+- paper role:
+  - snapshot-based supporting case
+- reading:
+  - generalized first implementation case
+  - stable safety finding / preserved caveat evidence
 
 ---
 
@@ -215,13 +231,13 @@ main paper で使う case は、次の条件を満たすものに限定する。
 
 この matrix から導かれる次の作業は次である。
 
-1. `phase-field` の intent を作る
-2. `heat3d` の intent を作る
-3. `iot-arduino` の intent を作る
-4. その後に `Spec Track` / `Implementation Track` case を正式固定する
-5. `phase-field-cpp` を代表 implementation case として `single / dual / dual+judgment` を先に取得する
-6. その後に `heat3d-julia` を第 2 implementation case として起こす
+1. `dual-reviewer-rebuild` を `Intent-origin` の主証拠に固定する
+2. `phase-field-reverse-spec` を `Spec-origin` の主証拠に固定する
+3. `F1-phase-field-cpp-r2` を clean 3-treatment implementation comparison case として扱う
+4. `heat3d-julia` を bridge implementation case として扱う
+5. `iot-arduino` を generalized supporting case として扱う
+6. 追加 case は、この tiering を崩さない範囲で supporting evidence として足す
 
-つまり、今後の case 追加は
-**intent 作成が先、track 固定が後**
-で進める。
+つまり、現時点の main line は
+**`F1 upstream` + `F1-phase-field-cpp-r2` + `F2 heat3d`**
+であり、`iot-arduino` は supporting line として読む。

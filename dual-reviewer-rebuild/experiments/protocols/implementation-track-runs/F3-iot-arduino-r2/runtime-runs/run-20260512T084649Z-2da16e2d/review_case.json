@@ -1,0 +1,664 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260512T084649Z-2da16e2d",
+  "metadata": {
+    "run_id": "run-20260512T084649Z-2da16e2d",
+    "target_id": "implementation:iot-arduino-c",
+    "target_artifact_hash": "sha256:3bf812ecf4293c8865b576cb2892d479c45b14fd3b966a69ef4d028ce1b977ff",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "e584a5c1c3f351e0e80b66c1fd903d1b2fc3e7b8",
+    "phase_profile": "tasks",
+    "treatment": "dual",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-12T08:46:49Z",
+    "closed_at": "2026-05-12T08:46:49Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "skipped",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-01-evidence-finding-restart-boundary-1",
+      "source_ref": ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.restart_time_boundary",
+      "review_focus": "restart_boundary",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 51,
+      "line_numbers": [
+        51
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. full power loss restart では RTC memory が失われてもよく、EEPROM の `last_watering_unix_time` と成功した時刻同期結果から duplicate prevention を再判定すること。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-restart-boundary-2",
+      "source_ref": ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.restart_time_boundary",
+      "review_focus": "restart_boundary",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 52,
+      "line_numbers": [
+        52
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "5. current time が利用できない場合、full power loss restart 後は `no-run` に倒せること。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-stop-failsafe-1",
+      "source_ref": ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.stop_fail_safe_contract",
+      "review_focus": "stop_safety",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 34,
+      "line_numbers": [
+        34
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "2. loop の終了理由が `threshold_reached` でも `timeout` でも、終了前に relay を OFF にすること。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-stop-failsafe-2",
+      "source_ref": ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.stop_fail_safe_contract",
+      "review_focus": "stop_safety",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 35,
+      "line_numbers": [
+        35
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. loop 途中で異常が起きても、最終的な exit path に relay OFF が含まれること。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-stop-failsafe-3",
+      "source_ref": ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.stop_fail_safe_contract",
+      "review_focus": "stop_safety",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 36,
+      "line_numbers": [
+        36
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. `should_water = false` の場合は relay を ON にしないこと。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-1",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 79,
+      "line_numbers": [
+        79
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `TimeSyncGateway` が success path と `network_unavailable / time_unavailable` path を両方持つこと"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-2",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 80,
+      "line_numbers": [
+        80
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `StateStore` が no-op ではなく、stub でも persistence boundary を持つこと"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-3",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 81,
+      "line_numbers": [
+        81
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `LoopOutsideController` が retryable no-run と post-run commit の境界を明示していること"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-4",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 82,
+      "line_numbers": [
+        82
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `WateringLoopRunner` が relay finalization を 1 つの path に寄せていること"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-5",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 83,
+      "line_numbers": [
+        83,
+        85
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- telemetry failure が watering completion を覆さず、`TelemetryWarning` に残ること ---"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-6",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 91,
+      "line_numbers": [
+        91
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- real WiFi / NTP sync"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-7",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 92,
+      "line_numbers": [
+        92
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- real EEPROM / RTC memory integration"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-8",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 93,
+      "line_numbers": [
+        93
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- real OLED / Blynk publish"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-9",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 94,
+      "line_numbers": [
+        94
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- real ISR-driven pulse input"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-10",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 95,
+      "line_numbers": [
+        95,
+        97,
+        98,
+        99,
+        101
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- board-specific deep sleep entry ただし first snapshot と違い、second snapshot では `restart boundary / relay fail-safe / telemetry warning boundary` の code seam は explicit になっている。 ---"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-11",
+      "source_ref": ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.telemetry_nonblocking_policy",
+      "review_focus": "telemetry_policy",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 73,
+      "line_numbers": [
+        73
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. telemetry failure は warning として扱い、灌水判定、loop stop、sleep planning を block しないこと。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-12",
+      "source_ref": ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.telemetry_nonblocking_policy",
+      "review_focus": "telemetry_policy",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 74,
+      "line_numbers": [
+        74
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. `no-run`、`threshold stop`、`timeout stop` のいずれでも、final status に telemetry warning の有無を含められること。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-13",
+      "source_ref": ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.telemetry_nonblocking_policy",
+      "review_focus": "telemetry_policy",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 73,
+      "line_numbers": [
+        73
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. telemetry failure は warning として扱い、灌水判定、loop stop、sleep planning を block しないこと。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-14",
+      "source_ref": ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.telemetry_nonblocking_policy",
+      "review_focus": "telemetry_policy",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 74,
+      "line_numbers": [
+        74
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. `no-run`、`threshold stop`、`timeout stop` のいずれでも、final status に telemetry warning の有無を含められること。"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "step-01-observation-finding-restart-boundary",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Restart and duplicate-prevention behavior are review-critical because the upstream contract explicitly ties power-loss recovery to EEPROM state, time re-sync, and a no-run fallback when time is unavailable.",
+      "source_refs": [
+        ".kiro/specs/iot-arduino-loop-outside-control/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-restart-boundary-1",
+        "review_case.json#step-01-evidence-finding-restart-boundary-2"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.restart_time_boundary"
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+        "restart_boundary"
+      ],
+      "source_kinds": [
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+        "acceptance_criteria"
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-01-observation-finding-stop-failsafe",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Relay shutdown safety is review-critical because every threshold, timeout, or abnormal exit path must converge on a reliable relay-off contract.",
+      "source_refs": [
+        ".kiro/specs/iot-arduino-watering-loop/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-stop-failsafe-1",
+        "review_case.json#step-01-evidence-finding-stop-failsafe-2",
+        "review_case.json#step-01-evidence-finding-stop-failsafe-3"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.stop_fail_safe_contract"
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+        "stop_safety"
+      ],
+      "source_kinds": [
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+        "acceptance_criteria"
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-02-observation-finding-telemetry-caveat",
+      "source_role": "adversarial_reviewer",
+      "severity": "medium",
+      "summary": "Telemetry policy remains adversarially review-worthy because the upstream rule is intentionally non-blocking while the first snapshot still relies on observability stubs and warning-only handling.",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+        ".kiro/specs/iot-arduino-loop-outside-control/requirements.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/iot-arduino-loop-outside-control/requirements.md"
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-1",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-2",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-3",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-4",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-5",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-6",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-7",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-8",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-9",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-10",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-11",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-12"
+      ],
+      "counter_evidence_record_refs": [
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-13",
+        "review_case.json#step-02-evidence-finding-telemetry-caveat-14"
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.snapshot_stub_boundary",
+        "implementation.telemetry_nonblocking_policy"
+      ],
+      "counter_evidence_types": [
+        "implementation.telemetry_nonblocking_policy"
+      ],
+      "review_focuses": [
+        "telemetry_policy"
+      ],
+      "source_kinds": [
+        "implementation_snapshot",
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+        "upstream_spec"
+      ],
+      "section_classes": [
+        "implementation_snapshot_misc",
+        "acceptance_criteria"
+      ],
+      "counter_evidence_section_classes": [
+        "acceptance_criteria"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-restart-boundary",
+      "run_id": "run-20260512T084649Z-2da16e2d",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Restart and duplicate-prevention behavior are review-critical because the upstream contract explicitly ties power-loss recovery to EEPROM state, time re-sync, and a no-run fallback when time is unavailable.",
+      "source_refs": [
+        ".kiro/specs/iot-arduino-loop-outside-control/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": null,
+      "decision_unit_id": "decision-unit-step-01-finding-restart-boundary",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-restart-boundary",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-01-observation-finding-restart-boundary",
+        "implementation:restart_time_boundary"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-stop-failsafe",
+      "run_id": "run-20260512T084649Z-2da16e2d",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Relay shutdown safety is review-critical because every threshold, timeout, or abnormal exit path must converge on a reliable relay-off contract.",
+      "source_refs": [
+        ".kiro/specs/iot-arduino-watering-loop/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": null,
+      "decision_unit_id": "decision-unit-step-01-finding-stop-failsafe",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-stop-failsafe",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-01-observation-finding-stop-failsafe",
+        "implementation:stop_fail_safe_contract"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-02-finding-telemetry-caveat",
+      "run_id": "run-20260512T084649Z-2da16e2d",
+      "step_id": "step-02",
+      "source_role": "adversarial_reviewer",
+      "severity": "medium",
+      "summary": "Telemetry policy remains adversarially review-worthy because the upstream rule is intentionally non-blocking while the first snapshot still relies on observability stubs and warning-only handling.",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md",
+        ".kiro/specs/iot-arduino-loop-outside-control/requirements.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/iot-arduino-loop-outside-control/requirements.md"
+      ],
+      "judgment_ref": null,
+      "decision_unit_id": "decision-unit-step-02-finding-telemetry-caveat",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-02-finding-telemetry-caveat",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-02-observation-finding-telemetry-caveat",
+        "implementation:telemetry_nonblocking_boundary"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    }
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-5d2f78ab"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

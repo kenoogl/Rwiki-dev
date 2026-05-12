@@ -1,0 +1,13 @@
+---
+selection_policy_version: 1.0.0
+track: spec
+case_id: F1-requirements-phase-field-reverse-spec
+protocol_root: experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec
+phase_profile: requirements
+require_protocol_summary: true
+review_modes:
+  - single_review
+  - dual_reviewer_workflow
+treatments:
+  - single
+  - dual+judgment

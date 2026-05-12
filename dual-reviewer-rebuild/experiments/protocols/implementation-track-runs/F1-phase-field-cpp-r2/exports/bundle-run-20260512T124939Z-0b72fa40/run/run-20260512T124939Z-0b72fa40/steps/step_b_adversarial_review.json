@@ -1,0 +1,658 @@
+{
+  "step_id": "step-02",
+  "step_name": "adversarial_review",
+  "step_status": "completed",
+  "phase_profile": "tasks",
+  "treatment": "dual",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/adversarial/adversarial_reviewer.prompt.md",
+    "prompt_id": "foundation.adversarial_reviewer.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-1",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "4. Why This Snapshot",
+      "parent_section_heading": "phase-field-cpp first snapshot",
+      "section_class": "snapshot_rationale",
+      "fragment_class": "boundary_review_rationale",
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 109,
+      "line_numbers": [
+        109,
+        110
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. stress point が十分に含まれる algorithmic correctness, boundary semantics, parameter interpretation, update ordering, numerical caveat, implementation brittleness が同時に存在する。",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-2",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_caveat_surface",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "4. Why This Snapshot",
+      "parent_section_heading": "phase-field-cpp first snapshot",
+      "section_class": "snapshot_rationale",
+      "fragment_class": "boundary_review_rationale",
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 109,
+      "line_numbers": [
+        109,
+        110
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. stress point が十分に含まれる algorithmic correctness, boundary semantics, parameter interpretation, update ordering, numerical caveat, implementation brittleness が同時に存在する。",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-3",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "1",
+      "bullet_ordinal": null,
+      "first_line_number": 36,
+      "line_numbers": [
+        36
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "1. When the user starts the simulation, the Simulation Module shall accept the following input parameters per `§13`: 平均組成 `c2a`, 平均組成 `c3a`, 時間刻み `delt`, 最大ステップ数, 濃度データ保存間隔, BMP 保存間隔, 出力ディレクトリ. 各 parameter の値域 / 型は `0 < c2a < 1`, `0 < c3a < 1`, `c2a + c3a < 1`, `delt > 0` の double、最大ステップ数 / 濃度データ保存間隔 / BMP 保存間隔は正整数 (`> 0`)、出力ディレクトリは文字列。`delt` は必須引数 (= 省略不可、未指定時は AC10 / Req 6 AC1 に従い非 0 終了)。Note: `c2a`, `c3a` は SSoT `§13` 文言「平均組成 `c2`」「平均組成 `c3`」の Kiro req 内正規名 (= `§9`/`§12` 系命名と統一)。",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-4",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "2",
+      "bullet_ordinal": null,
+      "first_line_number": 37,
+      "line_numbers": [
+        37
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "2. When the maximum step count is not specified, the Simulation Module shall use the default value `100000` per `§13`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-5",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 38,
+      "line_numbers": [
+        38
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. When the concentration data save interval is not specified, the Simulation Module shall use the default value `2000` per `§13`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-6",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "4",
+      "bullet_ordinal": null,
+      "first_line_number": 39,
+      "line_numbers": [
+        39
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. When the BMP save interval is not specified, the Simulation Module shall use the default value `2000` per `§13`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-7",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "5",
+      "bullet_ordinal": null,
+      "first_line_number": 40,
+      "line_numbers": [
+        40
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "5. When the output directory is not specified, the Simulation Module shall use the default value `\"output\"` per `§13`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-8",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "1",
+      "bullet_ordinal": null,
+      "first_line_number": 122,
+      "line_numbers": [
+        122
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "1. If invalid input arguments are detected at startup (= Req 1 AC1 値域違反 = `c2a ≤ 0` or `c2a ≥ 1` or `c3a ≤ 0` or `c3a ≥ 1` or `c2a + c3a ≥ 1` or `delt ≤ 0` or 最大ステップ数 / 保存間隔 が非正整数 / 必須 `delt` 引数欠落), the Simulation Module shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-9",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "2",
+      "bullet_ordinal": null,
+      "first_line_number": 123,
+      "line_numbers": [
+        123
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "2. If numeric conversion of input parameters fails, the Simulation Module shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-10",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 124,
+      "line_numbers": [
+        124
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. If output directory creation fails, the Simulation Module shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-11",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "4",
+      "bullet_ordinal": null,
+      "first_line_number": 125,
+      "line_numbers": [
+        125
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. If the concentration data file fails to open during read or write, the affected component (= Simulation Module / Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function) shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-12",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "primary",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "5",
+      "bullet_ordinal": null,
+      "first_line_number": 126,
+      "line_numbers": [
+        126
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "5. If concentration data parsing fails, the affected component shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-13",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "1",
+      "bullet_ordinal": null,
+      "first_line_number": 36,
+      "line_numbers": [
+        36
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "1. When the user starts the simulation, the Simulation Module shall accept the following input parameters per `§13`: 平均組成 `c2a`, 平均組成 `c3a`, 時間刻み `delt`, 最大ステップ数, 濃度データ保存間隔, BMP 保存間隔, 出力ディレクトリ. 各 parameter の値域 / 型は `0 < c2a < 1`, `0 < c3a < 1`, `c2a + c3a < 1`, `delt > 0` の double、最大ステップ数 / 濃度データ保存間隔 / BMP 保存間隔は正整数 (`> 0`)、出力ディレクトリは文字列。`delt` は必須引数 (= 省略不可、未指定時は AC10 / Req 6 AC1 に従い非 0 終了)。Note: `c2a`, `c3a` は SSoT `§13` 文言「平均組成 `c2`」「平均組成 `c3`」の Kiro req 内正規名 (= `§9`/`§12` 系命名と統一)。",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-14",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "2",
+      "bullet_ordinal": null,
+      "first_line_number": 37,
+      "line_numbers": [
+        37
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "2. When the maximum step count is not specified, the Simulation Module shall use the default value `100000` per `§13`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-15",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 38,
+      "line_numbers": [
+        38
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. When the concentration data save interval is not specified, the Simulation Module shall use the default value `2000` per `§13`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-16",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "4",
+      "bullet_ordinal": null,
+      "first_line_number": 39,
+      "line_numbers": [
+        39
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. When the BMP save interval is not specified, the Simulation Module shall use the default value `2000` per `§13`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-17",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 1: シミュレーション実行機能 (= `§3` 機能 1, `§13`-`§15`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "5",
+      "bullet_ordinal": null,
+      "first_line_number": 40,
+      "line_numbers": [
+        40
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "5. When the output directory is not specified, the Simulation Module shall use the default value `\"output\"` per `§13`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-18",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "1",
+      "bullet_ordinal": null,
+      "first_line_number": 122,
+      "line_numbers": [
+        122
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "1. If invalid input arguments are detected at startup (= Req 1 AC1 値域違反 = `c2a ≤ 0` or `c2a ≥ 1` or `c3a ≤ 0` or `c3a ≥ 1` or `c2a + c3a ≥ 1` or `delt ≤ 0` or 最大ステップ数 / 保存間隔 が非正整数 / 必須 `delt` 引数欠落), the Simulation Module shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-19",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "2",
+      "bullet_ordinal": null,
+      "first_line_number": 123,
+      "line_numbers": [
+        123
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "2. If numeric conversion of input parameters fails, the Simulation Module shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-20",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "3",
+      "bullet_ordinal": null,
+      "first_line_number": 124,
+      "line_numbers": [
+        124
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. If output directory creation fails, the Simulation Module shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-21",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "4",
+      "bullet_ordinal": null,
+      "first_line_number": 125,
+      "line_numbers": [
+        125
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. If the concentration data file fails to open during read or write, the affected component (= Simulation Module / Snapshot Writer / Snapshot Reader / BMP Writer / Re-render Function) shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-parameter-caveat-22",
+      "source_ref": ".kiro/specs/phase-field-reverse-spec/requirements.md",
+      "source_kind": "upstream_spec",
+      "evidence_side": "counter",
+      "pattern_id": null,
+      "evidence_type": "implementation.parameter_default_semantics",
+      "review_focus": "parameter_interpretation",
+      "section_heading": "Acceptance Criteria",
+      "parent_section_heading": "Requirement 6: エラー処理 + 異常終了 (= `§20`)",
+      "section_class": "acceptance_criteria",
+      "fragment_class": "parameter_contract",
+      "line_marker": "5",
+      "bullet_ordinal": null,
+      "first_line_number": 126,
+      "line_numbers": [
+        126
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "5. If concentration data parsing fails, the affected component shall terminate with a non-zero exit code per `§20`.",
+      "structural_support": true
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "step-02-observation-finding-parameter-caveat",
+      "observation_class": "rule_matched_observation",
+      "taxonomy_path": null,
+      "severity": "medium",
+      "summary": "Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and reconstruction caveats can diverge unless the mapping from upstream sources to implementation behavior is made explicit.",
+      "source_role": "adversarial_reviewer",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/requirements.md"
+      ],
+      "evidence_record_ids": [
+        "step-02-evidence-finding-parameter-caveat-1",
+        "step-02-evidence-finding-parameter-caveat-2",
+        "step-02-evidence-finding-parameter-caveat-3",
+        "step-02-evidence-finding-parameter-caveat-4",
+        "step-02-evidence-finding-parameter-caveat-5",
+        "step-02-evidence-finding-parameter-caveat-6",
+        "step-02-evidence-finding-parameter-caveat-7",
+        "step-02-evidence-finding-parameter-caveat-8",
+        "step-02-evidence-finding-parameter-caveat-9",
+        "step-02-evidence-finding-parameter-caveat-10",
+        "step-02-evidence-finding-parameter-caveat-11",
+        "step-02-evidence-finding-parameter-caveat-12"
+      ],
+      "counter_evidence_record_ids": [
+        "step-02-evidence-finding-parameter-caveat-13",
+        "step-02-evidence-finding-parameter-caveat-14",
+        "step-02-evidence-finding-parameter-caveat-15",
+        "step-02-evidence-finding-parameter-caveat-16",
+        "step-02-evidence-finding-parameter-caveat-17",
+        "step-02-evidence-finding-parameter-caveat-18",
+        "step-02-evidence-finding-parameter-caveat-19",
+        "step-02-evidence-finding-parameter-caveat-20",
+        "step-02-evidence-finding-parameter-caveat-21",
+        "step-02-evidence-finding-parameter-caveat-22"
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.parameter_default_semantics",
+        "implementation.parameter_caveat_surface"
+      ],
+      "counter_evidence_types": [
+        "implementation.parameter_default_semantics"
+      ],
+      "review_focuses": [
+        "parameter_interpretation"
+      ],
+      "source_kinds": [
+        "implementation_snapshot",
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+        "upstream_spec"
+      ],
+      "section_classes": [
+        "snapshot_rationale",
+        "acceptance_criteria"
+      ],
+      "counter_evidence_section_classes": [
+        "acceptance_criteria"
+      ],
+      "fragment_classes": [
+        "boundary_review_rationale",
+        "parameter_contract"
+      ],
+      "counter_evidence_fragment_classes": [
+        "parameter_contract"
+      ],
+      "supporting_pattern_ids": [
+
+      ],
+      "analysis_origin": {
+        "analysis_kind": "rule_match",
+        "step_name": "adversarial_review"
+      }
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "step-02-finding-parameter-caveat",
+      "severity": "medium",
+      "summary": "Parameter interpretation remains adversarially review-worthy because defaults, CLI meaning, and reconstruction caveats can diverge unless the mapping from upstream sources to implementation behavior is made explicit.",
+      "source_role": "adversarial_reviewer",
+      "source_refs": [
+        ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
+        ".kiro/specs/phase-field-reverse-spec/requirements.md"
+      ],
+      "counter_evidence_refs": [
+        ".kiro/specs/phase-field-reverse-spec/requirements.md"
+      ],
+      "failure_observation_refs": [
+        "step-02-observation-finding-parameter-caveat",
+        "implementation:parameter_interpretation_drift"
+      ],
+      "analysis_origin": {
+        "analysis_kind": "rule_match",
+        "step_name": "adversarial_review"
+      }
+    }
+  ],
+  "counter_evidence": [
+    ".kiro/specs/phase-field-reverse-spec/requirements.md"
+  ]
+}

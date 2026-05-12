@@ -17,7 +17,7 @@ _対象: `dual-reviewer-rebuild` 全体_
 
 - `tasks wave` を feature ごとに無秩序に起こさない
 - `requirements` / `design` / `tasks` の各段で何が先行条件かを明確にする
-- `cc-sdd` の multi-feature 開発で、どの gate をどの順で通すべきかを迷わないようにする
+- 意図駆動ワークフローの multi-feature 開発で、どの gate をどの順で通すべきかを迷わないようにする
 
 本書は `/kiro-discovery` 相当の役割を、この repo の current process に合わせて明文化した補助正本である。
 
@@ -36,7 +36,7 @@ _対象: `dual-reviewer-rebuild` 全体_
 
 ## 3.1 Spec Progression
 
-`cc-sdd` の正方向依存は次の通り。
+意図駆動ワークフローの正方向依存は次の通り。
 
 1. `intent`
 2. `requirements`

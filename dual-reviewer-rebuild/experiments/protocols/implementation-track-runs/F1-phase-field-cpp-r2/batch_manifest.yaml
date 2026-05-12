@@ -1,0 +1,10 @@
+---
+batch_id: F1-phase-field-cpp-r2
+scope: phase-field implementation reacquisition batch
+protocol_output_root: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs
+runtime_run_root_base: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs
+export_root_base: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/exports
+run_labels:
+- F1-phase-field-cpp-r2-single
+- F1-phase-field-cpp-r2-dual-only
+- F1-phase-field-cpp-r2-dual

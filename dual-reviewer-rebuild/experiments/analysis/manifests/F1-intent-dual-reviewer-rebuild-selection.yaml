@@ -1,0 +1,12 @@
+---
+selection_policy_version: 1.0.0
+track: intent
+case_id: F1-intent-dual-reviewer-rebuild
+protocol_root: experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild
+require_protocol_summary: true
+review_modes:
+  - single_review
+  - dual_reviewer_workflow
+treatments:
+  - single
+  - dual+judgment

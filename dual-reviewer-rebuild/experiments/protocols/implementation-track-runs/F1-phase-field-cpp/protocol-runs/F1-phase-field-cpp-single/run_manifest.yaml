@@ -19,21 +19,21 @@ inputs:
   - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
   - dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md
 runtime:
-  run_id: run-20260511T005003Z-1f9fc703
+  run_id: run-20260510T215435Z-66f7b030
   runtime_review_mode: runtime_mediated
   treatment: single
-  bundle_id: bundle-run-20260511T005003Z-1f9fc703
+  bundle_id: bundle-run-20260510T215435Z-66f7b030
 outputs:
-  review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/review_case.json
-  v2_review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/v2/review_artifact.json
-  v2_metric_snapshot: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/v2/metric_snapshot.json
-  v2_trace_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/v2/trace_note.json
-  v2_signal_linkage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/v2/signal_linkage_note.json
-  decision_units: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/decisions/decision_units.json
-  conformance_review_result: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/validation/validator_result.json
-  caveat_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/validation/invalidation_markers.json
-  comparison_eligibility_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260511T005003Z-1f9fc703/derived/comparison_eligibility_note.json
-  bundle_manifest: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/exports/bundle-run-20260511T005003Z-1f9fc703/bundle_manifest.yaml
+  review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/review_case.json
+  v2_review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/v2/review_artifact.json
+  v2_metric_snapshot: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/v2/metric_snapshot.json
+  v2_trace_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/v2/trace_note.json
+  v2_signal_linkage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/v2/signal_linkage_note.json
+  decision_units: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/decisions/decision_units.json
+  conformance_review_result: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/validation/validator_result.json
+  caveat_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/validation/invalidation_markers.json
+  comparison_eligibility_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/runtime-runs/run-20260510T215435Z-66f7b030/derived/comparison_eligibility_note.json
+  bundle_manifest: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/exports/bundle-run-20260510T215435Z-66f7b030/bundle_manifest.yaml
   implementation_review_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/protocol-runs/F1-phase-field-cpp-single/implementation_review_note.md
   signal_linkage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/protocol-runs/F1-phase-field-cpp-single/signal_linkage_note.yaml
   downstream_rework_log: experiments/protocols/implementation-track-runs/F1-phase-field-cpp/protocol-runs/F1-phase-field-cpp-single/downstream_rework_log.yaml

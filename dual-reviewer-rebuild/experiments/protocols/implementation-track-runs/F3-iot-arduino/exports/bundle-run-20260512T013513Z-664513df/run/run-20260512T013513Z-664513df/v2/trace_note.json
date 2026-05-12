@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-20260512T013513Z-664513df",
+  "track": "implementation",
+  "case_id": "F3-iot-arduino",
+  "target_id": "implementation:iot-arduino-c",
+  "phase_profile": "tasks",
+  "source_refs": [
+    ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+    ".kiro/specs/iot-arduino-spec/intent.md",
+    ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+    ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+    ".kiro/specs/iot-arduino-loop-outside-control/design.md",
+    ".kiro/specs/iot-arduino-watering-loop/design.md",
+    ".kiro/specs/iot-arduino-loop-outside-control/tasks.md",
+    ".kiro/specs/iot-arduino-watering-loop/tasks.md",
+    "/Users/Daily/Development/DR-IoT/intent.md",
+    "/Users/Daily/Development/DR-IoT/仕様.md"
+  ],
+  "governance_refs": [
+    "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+    "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md",
+    ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-review-acquisition-preparation.md",
+    ".kiro/specs/iot-arduino-spec/reviews/review-acquisition-gate-summary.md"
+  ]
+}

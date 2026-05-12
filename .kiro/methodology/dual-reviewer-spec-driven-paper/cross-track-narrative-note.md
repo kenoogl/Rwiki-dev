@@ -32,7 +32,7 @@ refs:
 
 1. `Intent Track` では、`dual-reviewer-rebuild` を使って、`intent` を最上位入力にした bootstrap と downstream propagation の loop が artifact に残るかを見る
 2. `Spec Track` では、`phase-field-reverse-spec` を使って、既存 `requirements / design / tasks` に対する refinement, reopen, alignment の loop が artifact に残るかを見る
-3. `Implementation Track` では、`phase-field-cpp` と `heat3d-julia` を使って、approved upstream artifact に結びついた implementation/review acquisition と downstream implementation trace が成立するかを見る
+3. `Implementation Track` では、`F1-phase-field-cpp-r2`, `heat3d-julia`, `iot-arduino` を使って、approved upstream artifact に結びついた implementation/review acquisition と downstream implementation trace が成立するかを見る
 
 したがって paper 全体では、
 
@@ -46,16 +46,24 @@ refs:
 
 ## 3. role of heat3d in this story
 
-`heat3d` は、この 3-track story の後半を強くする case である。
+`F1-phase-field-cpp-r2` は clean 3-treatment implementation comparison case であり、`heat3d` はこの 3-track story の後半を強くする bridge case である。一方 `iot-arduino` は、event-driven domain でも implementation-local refinement 後の signal stability を観測できる implementation-first case である。
 
 理由は次である。
 
-1. `Spec-origin / Implementation-origin` の両方を 1 case で持つ
-2. restart, reopen, readability recheck, review acquisition, actual implementation まで含む長い trace を残した
-3. implementation-local rework と upstream underconstraint exposure を分けて記述できた
-4. `13.4` を admission gate にせず、behavioral adequacy probe として読む判断まで記録できた
+1. `F1-phase-field-cpp-r2` は `single / dual / dual+judgment` を runtime-backed に揃え、implementation comparison の clean basis を提供した
+2. `heat3d` は `Spec-origin / Implementation-origin` の両方を 1 case で持つ
+3. `heat3d` は restart, reopen, readability recheck, review acquisition, actual implementation まで含む長い trace を残した
+4. `heat3d` では implementation-local rework と upstream underconstraint exposure を分けて記述できた
+5. `heat3d` では `13.4` を admission gate にせず、behavioral adequacy probe として読む判断まで記録できた
 
-そのため `heat3d` は、単なる second implementation case ではなく、
+そのため implementation track では、
+
+- `F1-phase-field-cpp-r2`
+  - clean 3-treatment comparison case
+- `heat3d`
+  - bridge case
+
+という 2 層構成を取れる。そのうえで `heat3d` は、単なる second implementation case ではなく、
 
 - workflow validity
 - implementation-origin evidence
@@ -70,7 +78,7 @@ refs:
 
 paper-facing に短く書くなら、cross-track story は次になる。
 
-`dual-reviewer` の主対象は code review 単体ではなく、intent から implementation まで下る仕様駆動開発 workflow である。`Intent Track` では上流 bootstrap と propagation、`Spec Track` では downstream refinement と reopen/alignment、`Implementation Track` では approved upstream artifact に結びついた review acquisition と implementation trace を観測する。`heat3d` はこの後半を代表する bridge case として、workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を同時に示す。
+`dual-reviewer` の主対象は code review 単体ではなく、intent から implementation まで下る意図駆動開発 workflow である。`Intent Track` では上流 bootstrap と propagation、`Spec Track` では downstream refinement と reopen/alignment、`Implementation Track` では approved upstream artifact に結びついた review acquisition と implementation trace を観測する。implementation 側では `F1-phase-field-cpp-r2` が clean 3-treatment comparison を担い、`heat3d` はこの後半を代表する bridge case として workflow validity、implementation-origin evidence、evidence reusability、spec/design underconstraint exposure を同時に示す。`iot-arduino` は event-driven implementation-first case として stable safety finding と preserved caveat を補う。
 
 ---
 
@@ -80,8 +88,10 @@ paper-facing に短く書くなら、cross-track story は次になる。
 
 1. track ごとの case 数が十分に多い
 2. `heat3d` の behavior mismatch の責任所在が確定した
-3. simulation 以外の domain でも同じ finding pattern が出る
+3. simulation 以外の domain でも同じ finding pattern が一般に出る
 4. canonical full-case acceptance `13.4` が correctness oracle として使える
+
+`iot-arduino` は event-driven domain への transfer を補うが、現時点では hardware-ready adequacy ではなく snapshot-based signal stability と caveat retention を示すに留まる。
 
 したがって本文では、
 

@@ -1,0 +1,178 @@
+{
+  "schema_version": "1.0.0",
+  "contract_version": "v2-draft-1",
+  "track": "implementation",
+  "target_id": "implementation:iot-arduino-c",
+  "common_inputs": {
+    "target_id": "implementation:iot-arduino-c",
+    "target_artifact_hash": "sha256:41ad9c1d64cb65a23679a786380abb59a80942910e32c2740c672abc118a79bb",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "e584a5c1c3f351e0e80b66c1fd903d1b2fc3e7b8",
+    "phase_profile": "tasks",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      ".kiro/specs/iot-arduino-spec/intent.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/design.md",
+      ".kiro/specs/iot-arduino-watering-loop/design.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/tasks.md",
+      ".kiro/specs/iot-arduino-watering-loop/tasks.md",
+      "/Users/Daily/Development/DR-IoT/intent.md",
+      "/Users/Daily/Development/DR-IoT/仕様.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md",
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-review-acquisition-preparation.md",
+      ".kiro/specs/iot-arduino-spec/reviews/review-acquisition-gate-summary.md"
+    ],
+    "case_manifest_ref": "experiments/protocols/case_manifests/F3-iot-arduino.yaml",
+    "track": "implementation"
+  },
+  "track_inputs": {
+    "implementation_snapshot_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+    "upstream_spec_refs": [
+      ".kiro/specs/iot-arduino-spec/intent.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/design.md",
+      ".kiro/specs/iot-arduino-watering-loop/design.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/tasks.md",
+      ".kiro/specs/iot-arduino-watering-loop/tasks.md",
+      "/Users/Daily/Development/DR-IoT/intent.md",
+      "/Users/Daily/Development/DR-IoT/仕様.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md",
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-review-acquisition-preparation.md",
+      ".kiro/specs/iot-arduino-spec/reviews/review-acquisition-gate-summary.md"
+    ]
+  },
+  "evidence_observations": [
+
+  ],
+  "review_issue_candidates": [
+
+  ],
+  "caveat_candidates": [
+
+  ],
+  "reopen_candidates": [
+
+  ],
+  "signal_candidates": [
+
+  ],
+  "compatibility_projection": {
+    "review_case_ref": "review_case.json#review-case-run-20260512T013513Z-96173579",
+    "finding_projection": [
+
+    ],
+    "decision_unit_projection": [
+
+    ],
+    "validation_projection": {
+      "validator_result_ref": "validation/validator_result.json#validator-result-13aaad94",
+      "invalidation_marker_refs": [
+
+      ],
+      "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260512T013513Z-96173579",
+      "invalid_run_triage_note_ref": "derived/invalid_run_triage_note.json#invalid-run-triage-run-20260512T013513Z-96173579"
+    }
+  },
+  "decision_context": {
+    "track": "implementation",
+    "treatment": "dual+judgment",
+    "review_mode": "runtime_mediated",
+    "analysis_result": {
+      "track": "implementation",
+      "evidence_observations": [
+
+      ],
+      "review_issue_candidates": [
+
+      ],
+      "caveat_candidates": [
+
+      ],
+      "reopen_candidates": [
+
+      ],
+      "signal_candidates": [
+
+      ]
+    },
+    "decision_units": [
+
+    ],
+    "validation_summary": {
+      "validator_status": "passed",
+      "invalidation_count": 0,
+      "comparison_eligibility_status": "eligible_standard",
+      "comparison_reason_codes": [
+        "eligible_standard"
+      ],
+      "invalid_run_primary_failure_code": "no_invalid_run_condition_detected",
+      "invalid_run_action_hint": "No invalid-run triage action is required."
+    },
+    "reopen_summary": {
+      "reopen_candidate_count": 0,
+      "accepted_decision_unit_ids": [
+
+      ]
+    }
+  },
+  "case_manifest": {
+    "case_id": "F3-iot-arduino",
+    "track": "implementation",
+    "target_id": "implementation:iot-arduino-c",
+    "phase_profile": "tasks",
+    "implementation_snapshot_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+    "source_refs": [
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      ".kiro/specs/iot-arduino-spec/intent.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/design.md",
+      ".kiro/specs/iot-arduino-watering-loop/design.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/tasks.md",
+      ".kiro/specs/iot-arduino-watering-loop/tasks.md",
+      "/Users/Daily/Development/DR-IoT/intent.md",
+      "/Users/Daily/Development/DR-IoT/仕様.md"
+    ],
+    "upstream_spec_refs": [
+      ".kiro/specs/iot-arduino-spec/intent.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/design.md",
+      ".kiro/specs/iot-arduino-watering-loop/design.md",
+      ".kiro/specs/iot-arduino-loop-outside-control/tasks.md",
+      ".kiro/specs/iot-arduino-watering-loop/tasks.md",
+      "/Users/Daily/Development/DR-IoT/intent.md",
+      "/Users/Daily/Development/DR-IoT/仕様.md"
+    ],
+    "governance_refs": [
+      "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
+      "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md",
+      ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-review-acquisition-preparation.md",
+      ".kiro/specs/iot-arduino-spec/reviews/review-acquisition-gate-summary.md"
+    ],
+    "heuristic_profile_ref": "dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/implementation/F3-iot-arduino.yaml",
+    "case_manifest_ref": "experiments/protocols/case_manifests/F3-iot-arduino.yaml"
+  },
+  "validation": {
+    "validator_result_ref": "validation/validator_result.json#validator-result-13aaad94",
+    "invalidation_marker_refs": [
+
+    ],
+    "comparison_eligibility_note_ref": "derived/comparison_eligibility_note.json#comparison-eligibility-run-20260512T013513Z-96173579",
+    "invalid_run_triage_note_ref": "derived/invalid_run_triage_note.json#invalid-run-triage-run-20260512T013513Z-96173579"
+  }
+}

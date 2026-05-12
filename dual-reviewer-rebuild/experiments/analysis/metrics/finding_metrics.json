@@ -1,27 +1,7 @@
 {
   "entries": [
     {
-      "run_id": "run-20260511T062535Z-70acf852",
-      "phase_profile": "tasks",
-      "treatment": "dual+judgment",
-      "severity_distribution": {
-        "high": 1,
-        "medium": 2
-      },
-      "source_role_distribution": {
-        "primary_reviewer": 2,
-        "adversarial_reviewer": 1
-      },
-      "judgment_label_distribution": {
-        "resolved_labels": {
-          "approved": 3
-        },
-        "judgment_ref_present": 3,
-        "unresolved_judgment_labels": 0
-      }
-    },
-    {
-      "run_id": "run-20260511T062535Z-d6c4618a",
+      "run_id": "run-20260512T124938Z-8b651e3c",
       "phase_profile": "tasks",
       "treatment": "single",
       "severity_distribution": {
@@ -40,7 +20,7 @@
       }
     },
     {
-      "run_id": "run-20260511T062535Z-e945dac7",
+      "run_id": "run-20260512T124939Z-0b72fa40",
       "phase_profile": "tasks",
       "treatment": "dual",
       "severity_distribution": {
@@ -56,6 +36,26 @@
           "approved": 3
         },
         "judgment_ref_present": 0,
+        "unresolved_judgment_labels": 0
+      }
+    },
+    {
+      "run_id": "run-20260512T124939Z-f564def5",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "severity_distribution": {
+        "high": 1,
+        "medium": 2
+      },
+      "source_role_distribution": {
+        "primary_reviewer": 2,
+        "adversarial_reviewer": 1
+      },
+      "judgment_label_distribution": {
+        "resolved_labels": {
+          "approved": 3
+        },
+        "judgment_ref_present": 3,
         "unresolved_judgment_labels": 0
       }
     }

@@ -1,0 +1,315 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260512T084649Z-a35f28aa",
+  "metadata": {
+    "run_id": "run-20260512T084649Z-a35f28aa",
+    "target_id": "implementation:iot-arduino-c",
+    "target_artifact_hash": "sha256:3bf812ecf4293c8865b576cb2892d479c45b14fd3b966a69ef4d028ce1b977ff",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "e584a5c1c3f351e0e80b66c1fd903d1b2fc3e7b8",
+    "phase_profile": "tasks",
+    "treatment": "single",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-12T08:46:49Z",
+    "closed_at": "2026-05-12T08:46:49Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "skipped",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-01-evidence-finding-restart-boundary-1",
+      "source_ref": ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.restart_time_boundary",
+      "review_focus": "restart_boundary",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 51,
+      "line_numbers": [
+        51
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. full power loss restart では RTC memory が失われてもよく、EEPROM の `last_watering_unix_time` と成功した時刻同期結果から duplicate prevention を再判定すること。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-restart-boundary-2",
+      "source_ref": ".kiro/specs/iot-arduino-loop-outside-control/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.restart_time_boundary",
+      "review_focus": "restart_boundary",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 52,
+      "line_numbers": [
+        52
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "5. current time が利用できない場合、full power loss restart 後は `no-run` に倒せること。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-stop-failsafe-1",
+      "source_ref": ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.stop_fail_safe_contract",
+      "review_focus": "stop_safety",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 34,
+      "line_numbers": [
+        34
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "2. loop の終了理由が `threshold_reached` でも `timeout` でも、終了前に relay を OFF にすること。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-stop-failsafe-2",
+      "source_ref": ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.stop_fail_safe_contract",
+      "review_focus": "stop_safety",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 35,
+      "line_numbers": [
+        35
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "3. loop 途中で異常が起きても、最終的な exit path に relay OFF が含まれること。"
+    },
+    {
+      "evidence_record_id": "step-01-evidence-finding-stop-failsafe-3",
+      "source_ref": ".kiro/specs/iot-arduino-watering-loop/requirements.md",
+      "source_kind": "upstream_spec",
+      "pattern_id": null,
+      "evidence_type": "implementation.stop_fail_safe_contract",
+      "review_focus": "stop_safety",
+      "section_heading": "Acceptance Criteria",
+      "section_class": "acceptance_criteria",
+      "first_line_number": 36,
+      "line_numbers": [
+        36
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "4. `should_water = false` の場合は relay を ON にしないこと。"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "step-01-observation-finding-restart-boundary",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Restart and duplicate-prevention behavior are review-critical because the upstream contract explicitly ties power-loss recovery to EEPROM state, time re-sync, and a no-run fallback when time is unavailable.",
+      "source_refs": [
+        ".kiro/specs/iot-arduino-loop-outside-control/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-restart-boundary-1",
+        "review_case.json#step-01-evidence-finding-restart-boundary-2"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.restart_time_boundary"
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+        "restart_boundary"
+      ],
+      "source_kinds": [
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+        "acceptance_criteria"
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    },
+    {
+      "observation_id": "step-01-observation-finding-stop-failsafe",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Relay shutdown safety is review-critical because every threshold, timeout, or abnormal exit path must converge on a reliable relay-off contract.",
+      "source_refs": [
+        ".kiro/specs/iot-arduino-watering-loop/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "taxonomy_path": null,
+      "observation_class": "rule_matched_observation",
+      "evidence_record_refs": [
+        "review_case.json#step-01-evidence-finding-stop-failsafe-1",
+        "review_case.json#step-01-evidence-finding-stop-failsafe-2",
+        "review_case.json#step-01-evidence-finding-stop-failsafe-3"
+      ],
+      "counter_evidence_record_refs": [
+
+      ],
+      "matched_pattern_ids": [
+
+      ],
+      "counter_evidence_pattern_ids": [
+
+      ],
+      "evidence_types": [
+        "implementation.stop_fail_safe_contract"
+      ],
+      "counter_evidence_types": [
+
+      ],
+      "review_focuses": [
+        "stop_safety"
+      ],
+      "source_kinds": [
+        "upstream_spec"
+      ],
+      "counter_evidence_source_kinds": [
+
+      ],
+      "section_classes": [
+        "acceptance_criteria"
+      ],
+      "counter_evidence_section_classes": [
+
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-restart-boundary",
+      "run_id": "run-20260512T084649Z-a35f28aa",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Restart and duplicate-prevention behavior are review-critical because the upstream contract explicitly ties power-loss recovery to EEPROM state, time re-sync, and a no-run fallback when time is unavailable.",
+      "source_refs": [
+        ".kiro/specs/iot-arduino-loop-outside-control/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-01-finding-restart-boundary",
+      "decision_unit_id": "decision-unit-step-01-finding-restart-boundary",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-restart-boundary",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-01-observation-finding-restart-boundary",
+        "implementation:restart_time_boundary"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "step-01-finding-stop-failsafe",
+      "run_id": "run-20260512T084649Z-a35f28aa",
+      "step_id": "step-01",
+      "source_role": "primary_reviewer",
+      "severity": "high",
+      "summary": "Relay shutdown safety is review-critical because every threshold, timeout, or abnormal exit path must converge on a reliable relay-off contract.",
+      "source_refs": [
+        ".kiro/specs/iot-arduino-watering-loop/requirements.md"
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "steps/step_c_judgment.json#judgment-step-01-finding-stop-failsafe",
+      "decision_unit_id": "decision-unit-step-01-finding-stop-failsafe",
+      "human_decision_ref": "decisions/decision_units.json#decision-unit-step-01-finding-stop-failsafe",
+      "impact_score_ref": null,
+      "failure_observation_refs": [
+        "step-01-observation-finding-stop-failsafe",
+        "implementation:stop_fail_safe_contract"
+      ],
+      "validation_refs": {
+        "invalidation_marker_refs": [
+
+        ]
+      }
+    }
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-f34fa58d"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

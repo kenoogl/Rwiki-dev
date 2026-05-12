@@ -68,7 +68,7 @@ deploy 可能とは、public release 可能という意味ではない。まず�
 
 ### 5.1.5 開発運用前提
 
-- この repo の開発は `cc-sdd` の phase gate に従う
+- この repo の開発は意図駆動ワークフローの phase gate に従う
 - Codex は文書具体化、実装、検証の主担当として動いてよい
 - ただし deploy 可能状態の定義変更や scope change は人間承認を要する
 

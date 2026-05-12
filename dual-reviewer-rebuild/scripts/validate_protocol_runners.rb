@@ -193,6 +193,56 @@ Dir.mktmpdir("dual-reviewer-protocol-runs") do |tmpdir|
   runtime_validation_summary_contract.validate!(payload: conformance_note)
   assert(conformance_note.key?("invalid_run_triage_note_ref"), "conformance review note should record invalid-run triage note ref")
   assert(conformance_note.fetch("remediation_templates").is_a?(Array), "conformance review note should record remediation templates array")
+
+  strict_spec_root = tmp_root.join("strict-spec")
+  strict_spec_root.mkpath
+  strict_spec_root.join("spec.json").write(
+    JSON.pretty_generate(
+      "feature_name" => "strict-blocked-implementation",
+      "created_at" => "2026-05-12T00:00:00+09:00",
+      "updated_at" => "2026-05-12T00:00:00+09:00",
+      "language" => "ja",
+      "phase" => "tasks-generated",
+      "approvals" => {
+        "requirements" => { "generated" => true, "approved" => true },
+        "design" => { "generated" => true, "approved" => false },
+        "tasks" => { "generated" => true, "approved" => false }
+      },
+      "ready_for_implementation" => false,
+      "custom" => {
+        "spec_phase_guard" => "strict"
+      }
+    )
+  )
+  strict_tasks_ref = strict_spec_root.join("tasks.md")
+  strict_tasks_ref.write("# blocked tasks\n")
+
+  blocked_runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
+    repo_root: repo_root,
+    run_label: "blocked-implementation-track",
+    case_id: "blocked-implementation-case",
+    review_mode: "single_review",
+    implementation_snapshot_ref: "placeholder/implementation.md",
+    upstream_spec_refs: [
+      strict_tasks_ref.to_s
+    ],
+    governance_refs: [
+      "placeholder/governance.md"
+    ],
+    operator: "validator",
+    phase_profile: "placeholder-phase",
+    target_id: "implementation:blocked",
+    protocol_output_root: tmp_root.join("implementation-track-runs"),
+    runtime_run_root_base: tmp_root.join("runtime-runs"),
+    export_root_base: tmp_root.join("exports")
+  )
+
+  begin
+    blocked_runner.run_all
+    raise "strict upstream spec should block implementation entry"
+  rescue DualReviewer::TrackRuns::SpecPhaseGuard::GuardError => e
+    assert(e.message.include?("blocks implementation entry") || e.message.include?("violates spec phase guard"), "strict upstream spec should fail via spec phase guard")
+  end
 end
 
 puts "protocol runner validation passed"

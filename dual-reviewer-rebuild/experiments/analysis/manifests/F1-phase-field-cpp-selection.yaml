@@ -1,0 +1,13 @@
+---
+selection_policy_version: 1.0.0
+track: implementation
+case_id: F1-phase-field-cpp
+phase_profile: tasks
+require_protocol_summary: true
+protocol_root: experiments/protocols/implementation-track-runs/F1-phase-field-cpp
+review_modes:
+  - single_review
+  - dual_reviewer_workflow
+treatments:
+  - single
+  - dual+judgment

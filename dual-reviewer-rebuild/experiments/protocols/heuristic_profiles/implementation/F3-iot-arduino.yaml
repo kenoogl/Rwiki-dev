@@ -1,0 +1,108 @@
+steps:
+  primary_detection:
+    rules:
+      - finding_suffix: finding-restart-boundary
+        severity: high
+        source_role: primary_reviewer
+        required_evidence_types:
+          - implementation.restart_time_boundary
+        required_source_kinds:
+          - upstream_spec
+        required_section_classes:
+          - acceptance_criteria
+        structural_source_requirements:
+          - source_kind: upstream_spec
+            section_class: acceptance_criteria
+            section_heading_patterns:
+              - "^Acceptance Criteria$"
+            parent_heading_patterns:
+              - "^Requirement 2: 状態保持と restart 境界を 1 か所に固定する$"
+            line_prefix_patterns:
+              - "^4$"
+              - "^5$"
+            evidence_type: implementation.restart_time_boundary
+            review_focus: restart_boundary
+        failure_observation_refs:
+          - implementation:restart_time_boundary
+        summary_prefix: Restart and duplicate-prevention behavior are review-critical because the upstream contract explicitly ties power-loss recovery to EEPROM state, time re-sync, and a no-run fallback when time is unavailable.
+      - finding_suffix: finding-stop-failsafe
+        severity: high
+        source_role: primary_reviewer
+        required_evidence_types:
+          - implementation.stop_fail_safe_contract
+        required_source_kinds:
+          - upstream_spec
+        required_section_classes:
+          - acceptance_criteria
+        structural_source_requirements:
+          - source_kind: upstream_spec
+            section_class: acceptance_criteria
+            section_heading_patterns:
+              - "^Acceptance Criteria$"
+            parent_heading_patterns:
+              - "^Requirement 1: 灌水 loop は relay を確実に閉じる$"
+            line_prefix_patterns:
+              - "^2$"
+              - "^3$"
+              - "^4$"
+            evidence_type: implementation.stop_fail_safe_contract
+            review_focus: stop_safety
+        failure_observation_refs:
+          - implementation:stop_fail_safe_contract
+        summary_prefix: Relay shutdown safety is review-critical because every threshold, timeout, or abnormal exit path must converge on a reliable relay-off contract.
+  adversarial_review:
+    rules:
+      - finding_suffix: finding-telemetry-caveat
+        severity: medium
+        source_role: adversarial_reviewer
+        required_evidence_types:
+          - implementation.snapshot_stub_boundary
+          - implementation.telemetry_nonblocking_policy
+        required_counter_evidence_types:
+          - implementation.telemetry_nonblocking_policy
+        required_source_kinds:
+          - implementation_snapshot
+          - upstream_spec
+        required_counter_source_kinds:
+          - upstream_spec
+        required_section_classes:
+          - implementation_snapshot_misc
+          - acceptance_criteria
+        required_counter_section_classes:
+          - acceptance_criteria
+        structural_source_requirements:
+          - source_kind: implementation_snapshot
+            section_class: implementation_snapshot_misc
+            section_heading_patterns:
+              - "^4\\. Fixed Snapshot Reading$"
+              - "^5\\. Known Incompleteness$"
+            line_prefix_patterns:
+              - "^-$"
+            evidence_type: implementation.snapshot_stub_boundary
+            review_focus: telemetry_policy
+          - source_kind: upstream_spec
+            section_class: acceptance_criteria
+            section_heading_patterns:
+              - "^Acceptance Criteria$"
+            parent_heading_patterns:
+              - "^Requirement 4: telemetry failure は non-blocking とする$"
+            line_prefix_patterns:
+              - "^3$"
+              - "^4$"
+            evidence_type: implementation.telemetry_nonblocking_policy
+            review_focus: telemetry_policy
+        structural_counter_requirements:
+          - source_kind: upstream_spec
+            section_class: acceptance_criteria
+            section_heading_patterns:
+              - "^Acceptance Criteria$"
+            parent_heading_patterns:
+              - "^Requirement 4: telemetry failure は non-blocking とする$"
+            line_prefix_patterns:
+              - "^3$"
+              - "^4$"
+            evidence_type: implementation.telemetry_nonblocking_policy
+            review_focus: telemetry_policy
+        failure_observation_refs:
+          - implementation:telemetry_nonblocking_boundary
+        summary_prefix: Telemetry policy remains adversarially review-worthy because the upstream rule is intentionally non-blocking while the first snapshot still relies on observability stubs and warning-only handling.

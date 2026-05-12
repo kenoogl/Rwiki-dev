@@ -1,0 +1,44 @@
+---
+run_label: F3-iot-arduino-dual
+case_id: F3-iot-arduino
+track: implementation
+run_id: run-20260512T013548Z-4f530012
+rework_events:
+- rework_id: R1-restart-boundary-hardening
+  source_finding_ref: review_case.json#step-01-finding-restart-boundary
+  decision_unit_ref: decisions/decision_units.json#decision-unit-step-01-finding-restart-boundary
+  class: implementation_local_refinement
+  status: planned
+  upstream_reopen_required: false
+  target_files:
+  - /Users/Daily/Development/DR-IoT/src/loop_outside_control/time_sync_gateway.cpp
+  - /Users/Daily/Development/DR-IoT/src/loop_outside_control/eligibility_gate.cpp
+  - /Users/Daily/Development/DR-IoT/src/loop_outside_control/post_run_committer.cpp
+  - /Users/Daily/Development/DR-IoT/src/loop_outside_control/loop_outside_controller.cpp
+  summary: Harden restart and duplicate-prevention behavior so time-sync success, no-run fallback, and post-run persistence boundaries are explicit in code.
+- rework_id: R2-relay-failsafe-hardening
+  source_finding_ref: review_case.json#step-01-finding-stop-failsafe
+  decision_unit_ref: decisions/decision_units.json#decision-unit-step-01-finding-stop-failsafe
+  class: implementation_local_refinement
+  status: planned
+  upstream_reopen_required: false
+  target_files:
+  - /Users/Daily/Development/DR-IoT/src/watering_loop/watering_loop.cpp
+  - /Users/Daily/Development/DR-IoT/src/watering_loop/watering_loop.h
+  - /Users/Daily/Development/DR-IoT/src/watering_loop/relay_driver.cpp
+  - /Users/Daily/Development/DR-IoT/src/watering_loop/stop_condition_judge.h
+  summary: Turn relay shutdown into a single finalization contract that holds for threshold, timeout, and abnormal exits.
+- rework_id: R3-telemetry-caveat-clarification
+  source_finding_ref: review_case.json#step-02-finding-telemetry-caveat
+  decision_unit_ref: decisions/decision_units.json#decision-unit-step-02-finding-telemetry-caveat
+  class: caveat_preserving_refinement
+  status: planned
+  upstream_reopen_required: false
+  target_files:
+  - /Users/Daily/Development/DR-IoT/src/loop_outside_control/status_reporter.cpp
+  - /Users/Daily/Development/DR-IoT/src/loop_outside_control/status_reporter.h
+  - /Users/Daily/Development/DR-IoT/src/loop_outside_control/loop_outside_controller.cpp
+  - /Users/Daily/Development/DR-IoT/src/loop_outside_control/loop_outside_controller.h
+  summary: Keep telemetry non-blocking while making warning-return behavior explicit and preserving the caveat in the second snapshot.
+status: refinement_planned
+note: First implementation batch findings were converted into implementation-local refinement tasks. No upstream reopen is required at the current reading.

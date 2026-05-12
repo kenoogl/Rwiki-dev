@@ -1,0 +1,9 @@
+---
+run_label: F3-iot-arduino-r2-single
+case_id: F3-iot-arduino-r2
+track: implementation
+run_id: run-20260512T084649Z-a35f28aa
+linked_signal_ids: []
+status: pending_manual_population
+note: Populate when implementation-track findings are linked into evaluation or self-improvement
+  signal inventories.

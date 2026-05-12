@@ -1,0 +1,125 @@
+{
+  "batch_id": "F1-phase-field-cpp-r2",
+  "generated_at": "2026-05-12T12:49:39Z",
+  "scope": "phase-field implementation reacquisition batch",
+  "comparison_modes": [
+    {
+      "review_mode": "single_review",
+      "run_id": "run-20260512T124938Z-8b651e3c",
+      "bundle_id": "bundle-run-20260512T124938Z-8b651e3c",
+      "run_metrics": {
+        "run_id": "run-20260512T124938Z-8b651e3c",
+        "phase_profile": "tasks",
+        "treatment": "single",
+        "total_findings": 2,
+        "accepted_findings": 2,
+        "rejected_findings": 0,
+        "deferred_findings": 0,
+        "validation_outcome": "passed"
+      },
+      "finding_metrics": {
+        "run_id": "run-20260512T124938Z-8b651e3c",
+        "phase_profile": "tasks",
+        "treatment": "single",
+        "severity_distribution": {
+          "high": 1,
+          "medium": 1
+        },
+        "source_role_distribution": {
+          "primary_reviewer": 2
+        },
+        "judgment_label_distribution": {
+          "resolved_labels": {
+            "approved": 2
+          },
+          "judgment_ref_present": 2,
+          "unresolved_judgment_labels": 0
+        }
+      }
+    },
+    {
+      "review_mode": "dual_review",
+      "run_id": "run-20260512T124939Z-0b72fa40",
+      "bundle_id": "bundle-run-20260512T124939Z-0b72fa40",
+      "run_metrics": {
+        "run_id": "run-20260512T124939Z-0b72fa40",
+        "phase_profile": "tasks",
+        "treatment": "dual",
+        "total_findings": 3,
+        "accepted_findings": 3,
+        "rejected_findings": 0,
+        "deferred_findings": 0,
+        "validation_outcome": "passed"
+      },
+      "finding_metrics": {
+        "run_id": "run-20260512T124939Z-0b72fa40",
+        "phase_profile": "tasks",
+        "treatment": "dual",
+        "severity_distribution": {
+          "high": 1,
+          "medium": 2
+        },
+        "source_role_distribution": {
+          "primary_reviewer": 2,
+          "adversarial_reviewer": 1
+        },
+        "judgment_label_distribution": {
+          "resolved_labels": {
+            "approved": 3
+          },
+          "judgment_ref_present": 0,
+          "unresolved_judgment_labels": 0
+        }
+      }
+    },
+    {
+      "review_mode": "dual_reviewer_workflow",
+      "run_id": "run-20260512T124939Z-f564def5",
+      "bundle_id": "bundle-run-20260512T124939Z-f564def5",
+      "run_metrics": {
+        "run_id": "run-20260512T124939Z-f564def5",
+        "phase_profile": "tasks",
+        "treatment": "dual+judgment",
+        "total_findings": 3,
+        "accepted_findings": 3,
+        "rejected_findings": 0,
+        "deferred_findings": 0,
+        "validation_outcome": "passed"
+      },
+      "finding_metrics": {
+        "run_id": "run-20260512T124939Z-f564def5",
+        "phase_profile": "tasks",
+        "treatment": "dual+judgment",
+        "severity_distribution": {
+          "high": 1,
+          "medium": 2
+        },
+        "source_role_distribution": {
+          "primary_reviewer": 2,
+          "adversarial_reviewer": 1
+        },
+        "judgment_label_distribution": {
+          "resolved_labels": {
+            "approved": 3
+          },
+          "judgment_ref_present": 3,
+          "unresolved_judgment_labels": 0
+        }
+      }
+    }
+  ],
+  "comparison_observations": {
+    "single_total_findings": 2,
+    "dual_only_total_findings": 3,
+    "dual_total_findings": 3,
+    "dual_only_minus_single_findings": 1,
+    "dual_minus_single_findings": 1,
+    "dual_plus_judgment_minus_dual_only_findings": 0,
+    "dual_only_has_adversarial_role": true,
+    "dual_has_adversarial_role": true
+  },
+  "caveats": [
+    "This batch is a reacquisition of the original phase-field implementation snapshot, not a revised implementation cycle.",
+    "Intent Track and Spec Track are not part of this batch; use F1 upstream manifests for those tracks."
+  ]
+}

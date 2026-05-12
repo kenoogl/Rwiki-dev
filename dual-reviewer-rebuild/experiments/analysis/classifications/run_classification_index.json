@@ -1,19 +1,7 @@
 {
   "entries": [
     {
-      "run_id": "run-20260511T062535Z-70acf852",
-      "classification": "valid",
-      "reason_codes": [
-        "valid_population_member"
-      ],
-      "reason_details": [
-        "Run satisfies validator, sign-off, and evidence-class conditions for valid analysis population."
-      ],
-      "phase_profile": "tasks",
-      "treatment": "dual+judgment"
-    },
-    {
-      "run_id": "run-20260511T062535Z-d6c4618a",
+      "run_id": "run-20260512T124938Z-8b651e3c",
       "classification": "valid",
       "reason_codes": [
         "valid_population_member"
@@ -25,7 +13,7 @@
       "treatment": "single"
     },
     {
-      "run_id": "run-20260511T062535Z-e945dac7",
+      "run_id": "run-20260512T124939Z-0b72fa40",
       "classification": "valid",
       "reason_codes": [
         "valid_population_member"
@@ -35,6 +23,18 @@
       ],
       "phase_profile": "tasks",
       "treatment": "dual"
+    },
+    {
+      "run_id": "run-20260512T124939Z-f564def5",
+      "classification": "valid",
+      "reason_codes": [
+        "valid_population_member"
+      ],
+      "reason_details": [
+        "Run satisfies validator, sign-off, and evidence-class conditions for valid analysis population."
+      ],
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment"
     }
   ]
 }

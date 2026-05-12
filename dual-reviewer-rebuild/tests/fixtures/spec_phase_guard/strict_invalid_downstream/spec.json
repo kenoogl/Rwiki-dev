@@ -1,0 +1,25 @@
+{
+  "feature_name": "strict-invalid-downstream",
+  "created_at": "2026-05-12T00:00:00+09:00",
+  "updated_at": "2026-05-12T00:00:00+09:00",
+  "language": "ja",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": false
+    },
+    "design": {
+      "generated": true,
+      "approved": false
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false
+    }
+  },
+  "ready_for_implementation": false,
+  "custom": {
+    "spec_phase_guard": "strict"
+  }
+}

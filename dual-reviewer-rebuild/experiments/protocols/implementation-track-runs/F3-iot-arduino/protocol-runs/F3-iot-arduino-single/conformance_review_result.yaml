@@ -1,0 +1,14 @@
+---
+schema_version: 1.0.0
+run_label: F3-iot-arduino-single
+case_id: F3-iot-arduino
+track: implementation
+run_id: run-20260512T013547Z-bc86d715
+validator_result_ref: experiments/protocols/implementation-track-runs/F3-iot-arduino/runtime-runs/run-20260512T013547Z-bc86d715/validation/validator_result.json
+invalidation_markers_ref: experiments/protocols/implementation-track-runs/F3-iot-arduino/runtime-runs/run-20260512T013547Z-bc86d715/validation/invalidation_markers.json
+comparison_eligibility_note_ref: experiments/protocols/implementation-track-runs/F3-iot-arduino/runtime-runs/run-20260512T013547Z-bc86d715/derived/comparison_eligibility_note.json
+invalid_run_triage_note_ref: experiments/protocols/implementation-track-runs/F3-iot-arduino/runtime-runs/run-20260512T013547Z-bc86d715/derived/invalid_run_triage_note.json
+overall_status: passed
+primary_failure_code: no_invalid_run_condition_detected
+operator_action_hint: No invalid-run triage action is required.
+remediation_templates: []

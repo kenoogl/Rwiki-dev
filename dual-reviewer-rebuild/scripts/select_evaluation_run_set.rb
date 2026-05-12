@@ -64,6 +64,7 @@ allowed_review_modes = ["single_review", "dual_review", "dual_reviewer_workflow"
 allowed_treatments = nil
 selection_manifest_path = nil
 explicit_allow_missing_summary = false
+protocol_root_override = nil
 
 argv = ARGV.dup
 until argv.empty?
@@ -81,6 +82,8 @@ until argv.empty?
     allowed_treatments = argv.shift.to_s.split(",").map(&:strip).reject(&:empty?)
   when "--selection-manifest"
     selection_manifest_path = argv.shift
+  when "--protocol-root"
+    protocol_root_override = argv.shift
   when "--allow-missing-summary"
     require_protocol_summary = false
     explicit_allow_missing_summary = true
@@ -97,9 +100,10 @@ if selection_manifest_path
   require_protocol_summary = manifest_payload.fetch("require_protocol_summary", true) unless explicit_allow_missing_summary
   allowed_review_modes = Array(manifest_payload["review_modes"]).map(&:to_s) if manifest_payload["review_modes"]
   allowed_treatments = Array(manifest_payload["treatments"]).map(&:to_s) if manifest_payload["treatments"]
+  protocol_root_override ||= manifest_payload["protocol_root"]
 end
 
-abort "usage: ruby scripts/select_evaluation_run_set.rb --track <track> --case-id <case_id> [--phase-profile <phase>] [--review-mode <modes>] [--treatment <treatments>] [--selection-manifest <path>] [--allow-missing-summary]" if case_id.nil? || track.nil?
+abort "usage: ruby scripts/select_evaluation_run_set.rb --track <track> --case-id <case_id> [--phase-profile <phase>] [--review-mode <modes>] [--treatment <treatments>] [--protocol-root <path>] [--selection-manifest <path>] [--allow-missing-summary]" if case_id.nil? || track.nil?
 
 summary_filename =
   case track
@@ -112,16 +116,22 @@ summary_filename =
   end
 
 protocol_root =
-  case track
-  when "implementation"
-    repo_root.join("experiments/protocols/implementation-track-runs")
-  when "intent"
-    repo_root.join("experiments/protocols/intent-track-runs")
-  when "spec"
-    repo_root.join("experiments/protocols/spec-track-runs")
+  if protocol_root_override
+    Pathname(protocol_root_override).absolute? ? Pathname(protocol_root_override) : repo_root.join(protocol_root_override)
+  else
+    case track
+    when "implementation"
+      repo_root.join("experiments/protocols/implementation-track-runs")
+    when "intent"
+      repo_root.join("experiments/protocols/intent-track-runs")
+    when "spec"
+      repo_root.join("experiments/protocols/spec-track-runs")
+    end
   end
 
-entries = Dir.glob(protocol_root.join("**/protocol-runs/*/run_manifest.yaml").to_s).sort.map do |manifest_path|
+entries = []
+
+Dir.glob(protocol_root.join("**/protocol-runs/*/run_manifest.yaml").to_s).sort.each do |manifest_path|
   manifest = YAML.load_file(manifest_path)
   next unless manifest["case_id"] == case_id
   next unless allowed_review_modes.include?(manifest["review_mode"])
@@ -136,10 +146,15 @@ entries = Dir.glob(protocol_root.join("**/protocol-runs/*/run_manifest.yaml").to
   summary_path = Pathname(manifest_path).dirname.join(summary_filename)
   next if require_protocol_summary && !summary_path.exist?
 
-  runtime_root = repo_root.join(summary_path.exist? ? runtime_root_from_summary(summary_path: summary_path, repo_root: repo_root) : runtime_root_fallback(case_id: case_id, track: track, run_id: run_id, repo_root: repo_root))
+  runtime_root =
+    if summary_path.exist?
+      repo_root.join(runtime_root_from_summary(summary_path: summary_path, repo_root: repo_root))
+    else
+      repo_root.join(runtime_root_fallback(case_id: case_id, track: track, run_id: run_id, repo_root: repo_root))
+    end
   next unless runtime_root.exist?
 
-  {
+  entries << {
     "run_id" => run_id,
     "review_mode" => manifest["review_mode"],
     "treatment" => treatment,
@@ -148,7 +163,7 @@ entries = Dir.glob(protocol_root.join("**/protocol-runs/*/run_manifest.yaml").to
     "protocol_summary_ref" => summary_path.exist? ? summary_path.relative_path_from(repo_root).to_s : nil,
     "runtime_run_root" => runtime_root.relative_path_from(repo_root).to_s
   }
-end.compact
+end
 
 ordered_entries = entries.sort_by do |entry|
   [
@@ -161,10 +176,11 @@ end
 puts JSON.pretty_generate(
   {
     "selection_policy_version" => "1.0.0",
-    "track" => track,
-    "case_id" => case_id,
-    "phase_profile" => phase_profile,
-    "require_protocol_summary" => require_protocol_summary,
+      "track" => track,
+      "case_id" => case_id,
+      "phase_profile" => phase_profile,
+      "protocol_root" => protocol_root.relative_path_from(repo_root).to_s,
+      "require_protocol_summary" => require_protocol_summary,
     "review_modes" => allowed_review_modes,
     "treatments" => allowed_treatments,
     "selected_run_count" => ordered_entries.length,

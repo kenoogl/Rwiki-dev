@@ -37,6 +37,11 @@ _purpose: 目先の実装で主線を見失わないための固定 worklist_
 **「仕様駆動開発の作業メモ」ではなく、「意図駆動開発を LLM で運用するための制御板」**
 として扱う。
 
+また、この文書は reusable protocol ではなく **case instance** である。  
+新しい case では、この全文をコピーするのではなく、
+[active-worklist-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/active-worklist-template.md:1)
+から最小 control board を生成して使う。
+
 ただし、この文書は workflow 手順そのものの正本ではない。
 
 - phase の順序

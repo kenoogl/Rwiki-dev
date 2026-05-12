@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-11T14:51:17Z",
+  "generated_at": "2026-05-12T12:52:13Z",
   "entries": [
     {
       "claim_id": "claim-phase-comparison-summary",
@@ -14,10 +14,10 @@
       "provenance_refs": [
         "experiments/analysis/manifests/analysis_run_manifest.yaml",
         "analysis_logic_version:0.1.0",
-        "input_run_set:run-20260511T062535Z-70acf852,run-20260511T062535Z-d6c4618a,run-20260511T062535Z-e945dac7",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+        "input_run_set:run-20260512T124938Z-8b651e3c,run-20260512T124939Z-0b72fa40,run-20260512T124939Z-f564def5",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml"
       ]
     },
     {
@@ -34,10 +34,10 @@
       "provenance_refs": [
         "experiments/analysis/manifests/analysis_run_manifest.yaml",
         "analysis_logic_version:0.1.0",
-        "input_run_set:run-20260511T062535Z-70acf852,run-20260511T062535Z-d6c4618a,run-20260511T062535Z-e945dac7",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+        "input_run_set:run-20260512T124938Z-8b651e3c,run-20260512T124939Z-0b72fa40,run-20260512T124939Z-f564def5",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml"
       ]
     },
     {
@@ -54,10 +54,10 @@
       "provenance_refs": [
         "experiments/analysis/manifests/analysis_run_manifest.yaml",
         "analysis_logic_version:0.1.0",
-        "input_run_set:run-20260511T062535Z-70acf852,run-20260511T062535Z-d6c4618a,run-20260511T062535Z-e945dac7",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+        "input_run_set:run-20260512T124938Z-8b651e3c,run-20260512T124939Z-0b72fa40,run-20260512T124939Z-f564def5",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml"
       ]
     }
   ]

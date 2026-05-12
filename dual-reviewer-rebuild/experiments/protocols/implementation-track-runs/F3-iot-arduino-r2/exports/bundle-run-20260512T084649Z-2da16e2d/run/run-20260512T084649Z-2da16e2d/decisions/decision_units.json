@@ -1,0 +1,43 @@
+{
+  "decision_units": [
+    {
+      "decision_unit_id": "decision-unit-step-01-finding-restart-boundary",
+      "finding_refs": [
+        "review_case.json#step-01-finding-restart-boundary"
+      ],
+      "judgment_refs": [
+
+      ],
+      "proposed_action": "manual_review_required",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-12T08:46:49Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    },
+    {
+      "decision_unit_id": "decision-unit-step-01-finding-stop-failsafe",
+      "finding_refs": [
+        "review_case.json#step-01-finding-stop-failsafe"
+      ],
+      "judgment_refs": [
+
+      ],
+      "proposed_action": "manual_review_required",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-12T08:46:49Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    },
+    {
+      "decision_unit_id": "decision-unit-step-02-finding-telemetry-caveat",
+      "finding_refs": [
+        "review_case.json#step-02-finding-telemetry-caveat"
+      ],
+      "judgment_refs": [
+
+      ],
+      "proposed_action": "manual_review_required",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-12T08:46:49Z",
+      "human_decision_note": "Protocol pilot decision artifact."
+    }
+  ]
+}

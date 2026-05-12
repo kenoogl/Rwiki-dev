@@ -31,7 +31,15 @@
 - shared file owner:
 - validation entrypoint:
 
-## 5. gate readiness statement
+## 5. human decision guide
+
+- decide now:
+- current proposal:
+- do not decide yet:
+- approve means:
+- reject or defer means:
+
+## 6. gate readiness statement
 
 - readiness:
 - remaining caveat:

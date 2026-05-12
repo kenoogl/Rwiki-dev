@@ -1,0 +1,13 @@
+---
+selection_policy_version: 1.0.0
+track: spec
+case_id: F1-spec-phase-field-reverse-spec
+phase_profile: tasks
+require_protocol_summary: true
+protocol_root: experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative
+review_modes:
+  - single_review
+  - dual_reviewer_workflow
+treatments:
+  - single
+  - dual+judgment

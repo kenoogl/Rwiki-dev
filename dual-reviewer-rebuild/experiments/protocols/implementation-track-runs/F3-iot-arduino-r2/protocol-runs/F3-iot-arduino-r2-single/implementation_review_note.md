@@ -1,0 +1,42 @@
+  # implementation review note
+
+  ## 1. run scope
+
+  - run label: `F3-iot-arduino-r2-single`
+  - case id: `F3-iot-arduino-r2`
+  - track: `implementation`
+  - review mode: `single_review`
+  - runtime review mode: `runtime_mediated`
+  - treatment: `single`
+  - operator: `iot-arduino-refinement-r2`
+  - implementation snapshot ref:
+    - `.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md`
+  - case manifest ref:
+    - `experiments/protocols/case_manifests/F3-iot-arduino-r2.yaml`
+  - upstream spec refs:
+  - `.kiro/specs/iot-arduino-spec/intent.md`
+  - `.kiro/specs/iot-arduino-loop-outside-control/requirements.md`
+  - `.kiro/specs/iot-arduino-watering-loop/requirements.md`
+  - `.kiro/specs/iot-arduino-loop-outside-control/design.md`
+  - `.kiro/specs/iot-arduino-watering-loop/design.md`
+  - `.kiro/specs/iot-arduino-loop-outside-control/tasks.md`
+  - `.kiro/specs/iot-arduino-watering-loop/tasks.md`
+  - `/Users/Daily/Development/DR-IoT/intent.md`
+  - `/Users/Daily/Development/DR-IoT/仕様.md`
+
+  ## 2. runtime artifact refs
+
+  - review artifact:
+    - `experiments/protocols/implementation-track-runs/F3-iot-arduino-r2/runtime-runs/run-20260512T084649Z-a35f28aa/review_case.json`
+  - decision units:
+    - `experiments/protocols/implementation-track-runs/F3-iot-arduino-r2/runtime-runs/run-20260512T084649Z-a35f28aa/decisions/decision_units.json`
+
+  ## 3. findings
+
+  <!-- Populate implementation-local issues, upstream inconsistencies, disagreements, and caveats after the run. -->
+
+  ## 4. reopen assessment
+
+  - reopen required:
+  - target reopen phases:
+  - caveats:

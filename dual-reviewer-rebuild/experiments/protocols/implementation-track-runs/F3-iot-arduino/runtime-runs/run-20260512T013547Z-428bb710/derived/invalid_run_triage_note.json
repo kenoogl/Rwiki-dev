@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "invalid_run_triage_note_id": "invalid-run-triage-run-20260512T013547Z-428bb710",
+  "run_id": "run-20260512T013547Z-428bb710",
+  "validator_status": "passed",
+  "human_signoff_status": "approved",
+  "primary_failure_code": "no_invalid_run_condition_detected",
+  "failed_checks": [
+
+  ],
+  "invalidation_marker_summary": [
+
+  ],
+  "operator_action_hint": "No invalid-run triage action is required."
+}

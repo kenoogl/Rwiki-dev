@@ -101,15 +101,20 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
 - core case note:
   - [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:1)
 - status:
-  - provisional
+  - snapshot-based supporting case
+  - closed
 - category:
   - embedded / event-driven case
 - track:
   - `Implementation Track` を中心に、intent/spec 作成後は `Spec Track` も追加
 - intent ref:
   - [iot-arduino-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/iot-arduino-spec/intent.md:1)
+- evidence bundle:
+  - [iot-arduino-c4-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-c4-evidence-bundle.md:1)
+- decision note:
+  - [iot-arduino-case-decision.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-case-decision.md:1)
 - role in paper:
-  - operational / event-driven downstream case
+  - operational / event-driven downstream supporting case
 
 ---
 

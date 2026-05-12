@@ -1,0 +1,294 @@
+{
+  "schema_version": "1.0.0",
+  "review_case_id": "review-case-run-20260512T013513Z-664513df",
+  "metadata": {
+    "run_id": "run-20260512T013513Z-664513df",
+    "target_id": "implementation:iot-arduino-c",
+    "target_artifact_hash": "sha256:41ad9c1d64cb65a23679a786380abb59a80942910e32c2740c672abc118a79bb",
+    "source_repository_id": "kenoogl/Rwiki-dev",
+    "source_revision": "e584a5c1c3f351e0e80b66c1fd903d1b2fc3e7b8",
+    "phase_profile": "tasks",
+    "treatment": "dual",
+    "review_mode": "runtime_mediated",
+    "protocol_version": "1.0.0",
+    "runtime_version": "0.1.0",
+    "schema_set_version": "1.0.0",
+    "prompt_set_version": "1.0.0",
+    "run_status": "closed",
+    "validator_status": "passed",
+    "human_signoff_status": "approved",
+    "evidence_class": "valid",
+    "started_at": "2026-05-12T01:35:13Z",
+    "closed_at": "2026-05-12T01:35:13Z"
+  },
+  "step_records": [
+    {
+      "step_id": "step-01",
+      "step_name": "primary_detection",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-02",
+      "step_name": "adversarial_review",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-03",
+      "step_name": "judgment",
+      "step_status": "skipped",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step-04",
+      "step_name": "integration",
+      "step_status": "completed",
+      "step_prompt_artifact_id": "foundation.integration.default",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "evidence_records": [
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-1",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 75,
+      "line_numbers": [
+        75
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "この snapshot で読ませたいことは次である。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-2",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 77,
+      "line_numbers": [
+        77
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `.ino` が thin entrypoint であること"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-3",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 78,
+      "line_numbers": [
+        78
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `loop-outside-control` が policy / orchestration owner であること"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-4",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 79,
+      "line_numbers": [
+        79
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `watering-loop` が execution owner であること"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-5",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 80,
+      "line_numbers": [
+        80
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- `LoopEntryDecision -> LoopInput -> LoopOutcome -> FinalStatus / SleepPlan` の handoff chain"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-6",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "4. Fixed Snapshot Reading",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 81,
+      "line_numbers": [
+        81
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- EEPROM / time sync / telemetry / loop runner が stub であっても owner boundary が崩れていないこと"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-7",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 85,
+      "line_numbers": [
+        85
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "この snapshot では、次はまだ未実装である。"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-8",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 87,
+      "line_numbers": [
+        87
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- real WiFi / NTP sync"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-9",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 88,
+      "line_numbers": [
+        88
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- EEPROM / RTC memory persistence"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-10",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 89,
+      "line_numbers": [
+        89
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- real OLED / Blynk integration"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-11",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 90,
+      "line_numbers": [
+        90
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- sampled period loop と ISR wiring"
+    },
+    {
+      "evidence_record_id": "step-02-evidence-finding-telemetry-caveat-12",
+      "source_ref": ".kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md",
+      "source_kind": "implementation_snapshot",
+      "pattern_id": null,
+      "evidence_type": "implementation.snapshot_stub_boundary",
+      "review_focus": "telemetry_policy",
+      "section_heading": "5. Known Incompleteness",
+      "section_class": "implementation_snapshot_misc",
+      "first_line_number": 91,
+      "line_numbers": [
+        91,
+        93,
+        94,
+        95,
+        96
+      ],
+      "matched_terms": [
+
+      ],
+      "matched_excerpt": "- hardware-specific deep sleep entry したがって、この snapshot は `hardware-ready implementation` ではなく `reviewable first boundary snapshot` として扱う。"
+    }
+  ],
+  "observations": [
+
+  ],
+  "findings": [
+
+  ],
+  "validation_artifacts": {
+    "validator_result_refs": [
+      "validation/validator_result.json#validator-result-3e768477"
+    ],
+    "invalidation_marker_refs": [
+
+    ]
+  }
+}

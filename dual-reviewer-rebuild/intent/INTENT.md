@@ -29,7 +29,7 @@
 
 このため、再構築の目的は単に旧実装を移植することではない。review runtime を、再現性、可観測性、自己改善性を持つ system として作り直すことが目的である。
 
-加えて、この再構築そのものは `dual-reviewer` の最初の適用対象でもある。すなわち本 repo では、review system を作るだけでなく、仕様駆動開発の `intent`、`requirements`、`design`、`tasks` を対象に、その方法論を手動で適用しながら system を育てる。
+加えて、この再構築そのものは `dual-reviewer` の最初の適用対象でもある。すなわち本 repo では、review system を作るだけでなく、意図駆動開発の `intent`、`requirements`、`design`、`tasks` を対象に、その方法論を手動で適用しながら system を育てる。
 
 ## 3. 再構築が解くべき中心問題
 
@@ -57,7 +57,7 @@ review system の精度を上げるには、review 記録と内部挙動 evidenc
 
 再構築後の `dual-reviewer` は、単なる研究用スクリプト群ではなく、次の性質を持つ system を目指す。
 
-また、この system は単なる汎用 review assistant ではない。主たる対象は仕様駆動開発における複雑性の増大であり、特に人間の認知負荷が急増する phase を補うことに価値がある。
+また、この system は単なる汎用 review assistant ではない。主たる対象は意図駆動開発における複雑性の増大であり、特に人間の認知負荷が急増する phase を補うことに価値がある。
 
 ### 4.1 deploy 可能である
 

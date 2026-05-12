@@ -1,0 +1,26 @@
+{
+  "step_id": "step-01",
+  "step_name": "primary_detection",
+  "step_status": "completed",
+  "phase_profile": "tasks",
+  "treatment": "dual+judgment",
+  "target_id": "implementation:iot-arduino-c",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/primary/primary_reviewer.prompt.md",
+    "prompt_id": "foundation.primary_reviewer.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "evidence_records": [
+
+  ],
+  "observations": [
+
+  ],
+  "findings": [
+
+  ],
+  "counter_evidence": [
+
+  ]
+}

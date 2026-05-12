@@ -1,8 +1,8 @@
 # heat3d gate-only workflow trial
 
 _作成: 2026-05-11_  
-_status: active trial plan v0.1_  
-_purpose: `heat3d` を intent-governed development で進める際、workflow rule と gate が実際に機能するかを検証する_
+_status: historical trial record v0.2_  
+_purpose: `heat3d` で workflow rule と gate がどう検証されたかを残す履歴記録_
 
 ---
 
@@ -11,6 +11,13 @@ _purpose: `heat3d` を intent-governed development で進める際、workflow ru
 この文書は、`C-3 heat3d` を
 **「user が gate だけを承認する」**
 という簡約運用で試すための trial protocol である。
+
+現在の運用では、この文書を deployment 用の case 手順書として再利用しない。  
+新しい case に載せるときは、generic workflow に対する最小差分として
+[case-workflow-overlay-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/case-workflow-overlay-template.md:1)
+を使い、`heat3d` では
+[heat3d-case-workflow-overlay.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-case-workflow-overlay.md:1)
+を current overlay とする。
 
 ここで確認したいのは、
 
@@ -21,8 +28,8 @@ _purpose: `heat3d` を intent-governed development で進める際、workflow ru
 
 である。
 
-この trial は main evidence 取得そのものではない。
-主目的は **workflow operation validation** である。
+この trial は main evidence 取得そのものではない。  
+主目的は **workflow operation validation** であった。
 
 この文書は実施手順の補助であり、正本順位は次に従う。
 

@@ -2,7 +2,7 @@
 
 ## Development Mode
 
-- This repository uses `cc-sdd` style spec-driven development.
+- This repository uses an intent-driven workflow.
 - `intent/` and `operations/` are upstream inputs to `.kiro/specs/`.
 - Runtime changes must be traceable to evidence and spec updates.
 

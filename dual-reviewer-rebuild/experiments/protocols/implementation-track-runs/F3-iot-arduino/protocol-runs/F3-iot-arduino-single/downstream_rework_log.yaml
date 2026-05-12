@@ -1,0 +1,9 @@
+---
+run_label: F3-iot-arduino-single
+case_id: F3-iot-arduino
+track: implementation
+run_id: run-20260512T013547Z-bc86d715
+rework_events: []
+status: pending_manual_population
+note: Populate when implementation review findings trigger downstream rework or reopen
+  actions.

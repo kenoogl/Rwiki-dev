@@ -1,0 +1,10 @@
+---
+batch_id: F3-iot-arduino-r2
+scope: iot-arduino refined second-snapshot implementation acquisition
+protocol_output_root: experiments/protocols/implementation-track-runs/F3-iot-arduino-r2/protocol-runs
+runtime_run_root_base: experiments/protocols/implementation-track-runs/F3-iot-arduino-r2/runtime-runs
+export_root_base: experiments/protocols/implementation-track-runs/F3-iot-arduino-r2/exports
+run_labels:
+- F3-iot-arduino-r2-single
+- F3-iot-arduino-r2-dual-only
+- F3-iot-arduino-r2-dual

@@ -35,7 +35,20 @@
 
 - open point 1:
 
-## 5. gate readiness statement
+## 5. human decision guide
+
+- decide now:
+  - `<各判断点を plain language で 1 点ずつ説明する。何を比べて、何に違和感があれば止めるべきかまで書く>`
+- current proposal:
+  - `<system 側の current proposal を plain language で書く>`
+- do not decide yet:
+  - `<この gate ではまだ決めない detail を明示する>`
+- approve means:
+  - `<approve が次 phase で何を許可するかを plain language で書く>`
+- reject or defer means:
+  - `<reject/defer でどこまで戻るか、何が未確定のまま止まるかを書く>`
+
+## 6. gate readiness statement
 
 - readiness:
 - remaining risk:

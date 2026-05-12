@@ -79,7 +79,7 @@
 
 ## 6. `.kiro/steering/`
 
-`cc-sdd` 全体にかかる共通 steering。
+意図駆動ワークフロー全体にかかる共通 steering。
 
 | Path | Role | Status |
 |------|------|--------|
@@ -89,7 +89,7 @@
 
 ## 7. `.kiro/specs/`
 
-ここが `cc-sdd` の feature 正本である。各 spec は `brief -> requirements -> design -> tasks` の順に整備する。
+ここが意図駆動ワークフローの feature 正本である。各 spec は `brief -> requirements -> design -> tasks` の順に整備する。
 
 ### 7.1 feature 一覧
 
@@ -113,7 +113,7 @@
 | `requirements.md` | feature contract の正本 |
 | `design.md` | feature 設計の正本 |
 | `tasks.md` | 実装・移植タスクの正本 |
-| `spec.json` | `cc-sdd` 管理用メタデータ |
+| `spec.json` | 意図駆動ワークフロー管理用メタデータ |
 
 ### 7.3 spec 主要ファイルリンク
 

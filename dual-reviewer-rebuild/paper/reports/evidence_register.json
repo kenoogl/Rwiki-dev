@@ -1,100 +1,100 @@
 {
-  "generated_at": "2026-05-11T14:51:17Z",
+  "generated_at": "2026-05-12T12:52:13Z",
   "entries": [
     {
       "artifact_ref": "experiments/analysis/comparisons/phase_comparisons.json",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124938Z-8b651e3c",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-0b72fa40",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-f564def5"
       ],
       "runtime_validation_summary_refs": [
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml"
       ],
       "maturity_label": "mature",
       "caveat_refs": [
 
       ],
-      "generated_at": "2026-05-11T14:51:17Z"
+      "generated_at": "2026-05-12T12:52:13Z"
     },
     {
       "artifact_ref": "experiments/analysis/comparisons/treatment_comparisons.json",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124938Z-8b651e3c",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-0b72fa40",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-f564def5"
       ],
       "runtime_validation_summary_refs": [
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml"
       ],
       "maturity_label": "mature",
       "caveat_refs": [
 
       ],
-      "generated_at": "2026-05-11T14:51:17Z"
+      "generated_at": "2026-05-12T12:52:13Z"
     },
     {
       "artifact_ref": "experiments/analysis/caveats/caveat_register.json",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124938Z-8b651e3c",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-0b72fa40",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-f564def5"
       ],
       "runtime_validation_summary_refs": [
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml"
       ],
       "maturity_label": "mature",
       "caveat_refs": [
 
       ],
-      "generated_at": "2026-05-11T14:51:17Z"
+      "generated_at": "2026-05-12T12:52:13Z"
     },
     {
       "artifact_ref": "experiments/analysis/classifications/exclusion_report.json",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124938Z-8b651e3c",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-0b72fa40",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-f564def5"
       ],
       "runtime_validation_summary_refs": [
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml"
       ],
       "maturity_label": "preliminary",
       "caveat_refs": [
 
       ],
-      "generated_at": "2026-05-11T14:51:17Z"
+      "generated_at": "2026-05-12T12:52:13Z"
     },
     {
       "artifact_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "source_analysis_manifest_ref": "experiments/analysis/manifests/analysis_run_manifest.yaml",
       "input_run_set_ref": [
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-70acf852",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-d6c4618a",
-        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260511T062535Z-e945dac7"
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124938Z-8b651e3c",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-0b72fa40",
+        "experiments/analysis/manifests/analysis_run_manifest.yaml#run-20260512T124939Z-f564def5"
       ],
       "runtime_validation_summary_refs": [
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual-only/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-dual/conformance_review_result.yaml",
-        "experiments/protocols/implementation-track-runs/F2-heat3d-julia/protocol-runs/F2-heat3d-julia-single/conformance_review_result.yaml"
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual-only/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml",
+        "experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-single/conformance_review_result.yaml"
       ],
       "maturity_label": "preliminary",
       "caveat_refs": [
 
       ],
-      "generated_at": "2026-05-11T14:51:17Z"
+      "generated_at": "2026-05-12T12:52:13Z"
     }
   ]
 }

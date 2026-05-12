@@ -1,0 +1,26 @@
+{
+  "step_id": "step-02",
+  "step_name": "adversarial_review",
+  "step_status": "skipped",
+  "phase_profile": "tasks",
+  "treatment": "single",
+  "skip_reason": "treatment_single_skips_adversarial_review",
+  "prompt_identity": {
+    "prompt_artifact_path": "/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/prompts/adversarial/adversarial_reviewer.prompt.md",
+    "prompt_id": "foundation.adversarial_reviewer.default",
+    "prompt_version": "1.0.0",
+    "resolution_status": "resolved"
+  },
+  "evidence_records": [
+
+  ],
+  "observations": [
+
+  ],
+  "findings": [
+
+  ],
+  "counter_evidence": [
+
+  ]
+}

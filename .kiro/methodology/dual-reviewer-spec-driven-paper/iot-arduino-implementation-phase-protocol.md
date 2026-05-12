@@ -1,15 +1,15 @@
-# iot-arduino-c review acquisition protocol
+# iot-arduino implementation review acquisition protocol
 
 _作成: 2026-05-09_  
-_status: draft v0.1_  
-_role: dual-reviewer code review evaluation の target-specific protocol_
+_status: current draft v0.2_  
+_role: `iot-arduino` implementation track の target-specific review acquisition protocol_
 
 ---
 
 ## 1. 目的
 
 この protocol は、Arduino / IoT 系 C コードを
-`dual-reviewer` の code review evaluation target として扱う際の
+`iot-arduino` implementation track の review acquisition target として扱う際の
 取得条件を固定する。
 
 本 target の主な役割は、
@@ -24,6 +24,9 @@ _role: dual-reviewer code review evaluation の target-specific protocol_
 - language: `C`
 - category: embedded / event-driven code
 - expected difficulty: `medium-high`
+- current split:
+  - `loop-outside-control`
+  - `watering-loop`
 
 ### Review Boundary
 
@@ -35,12 +38,14 @@ review 対象に含めるもの:
 - sensor / actuator interaction
 - failure handling
 - deployment-relevant comments or configuration
+- owner boundary と handoff contract
 
 原則として review 対象に含めないもの:
 
 - trivial constant rename
 - purely cosmetic serial print cleanup
 - hardware-external documentation only
+- credential provisioning detail
 
 ---
 

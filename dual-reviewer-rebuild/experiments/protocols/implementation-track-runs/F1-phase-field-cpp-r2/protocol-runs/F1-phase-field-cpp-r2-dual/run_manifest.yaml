@@ -1,0 +1,42 @@
+---
+run_label: F1-phase-field-cpp-r2-dual
+case_id: F1-phase-field-cpp-r2
+track: implementation
+review_mode: dual_reviewer_workflow
+operator: phase-field-pilot-r2
+phase_profile: tasks
+generated_at: '2026-05-12T12:49:39Z'
+case_manifest_ref: experiments/protocols/case_manifests/F1-phase-field-cpp-r2.yaml
+inputs:
+  implementation_snapshot_ref: ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md"
+  upstream_spec_refs:
+  - ".kiro/specs/phase-field-reverse-spec/intent.md"
+  - ".kiro/specs/phase-field-reverse-spec/requirements.md"
+  - ".kiro/specs/phase-field-reverse-spec/design.md"
+  - ".kiro/specs/phase-field-reverse-spec/tasks.md"
+  governance_refs:
+  - dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md
+  - dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md
+  - dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md
+runtime:
+  run_id: run-20260512T124939Z-f564def5
+  runtime_review_mode: runtime_mediated
+  treatment: dual+judgment
+  bundle_id: bundle-run-20260512T124939Z-f564def5
+outputs:
+  review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/review_case.json
+  v2_review_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/v2/review_artifact.json
+  v2_metric_snapshot: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/v2/metric_snapshot.json
+  v2_trace_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/v2/trace_note.json
+  v2_signal_linkage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/v2/signal_linkage_note.json
+  decision_units: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/decisions/decision_units.json
+  conformance_review_result: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/validation/validator_result.json
+  caveat_artifact: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/validation/invalidation_markers.json
+  comparison_eligibility_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/derived/comparison_eligibility_note.json
+  invalid_run_triage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/runtime-runs/run-20260512T124939Z-f564def5/derived/invalid_run_triage_note.json
+  bundle_manifest: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/exports/bundle-run-20260512T124939Z-f564def5/bundle_manifest.yaml
+  implementation_review_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/implementation_review_note.md
+  signal_linkage_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/signal_linkage_note.yaml
+  downstream_rework_log: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/downstream_rework_log.yaml
+  conformance_review_result_note: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/conformance_review_result.yaml
+  execution_packet: experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/protocol-runs/F1-phase-field-cpp-r2-dual/execution_packet.md

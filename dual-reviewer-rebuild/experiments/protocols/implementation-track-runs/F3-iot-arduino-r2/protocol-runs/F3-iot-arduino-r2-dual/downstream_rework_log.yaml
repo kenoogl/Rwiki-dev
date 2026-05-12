@@ -1,0 +1,26 @@
+---
+run_label: F3-iot-arduino-r2-dual
+case_id: F3-iot-arduino-r2
+track: implementation
+run_id: run-20260512T084649Z-7c843863
+rework_events:
+- rework_id: R1-restart-boundary-hardening
+  source_finding_ref: review_case.json#step-01-finding-restart-boundary
+  class: implementation_local_refinement
+  status: completed_for_second_snapshot
+  upstream_reopen_required: false
+  summary: Added stub persistence boundary and explicit time-sync success/failure seam.
+- rework_id: R2-relay-failsafe-hardening
+  source_finding_ref: review_case.json#step-01-finding-stop-failsafe
+  class: implementation_local_refinement
+  status: completed_for_second_snapshot
+  upstream_reopen_required: false
+  summary: Moved relay shutdown into a single finalization path for threshold, timeout, and aborted exits.
+- rework_id: R3-telemetry-caveat-clarification
+  source_finding_ref: review_case.json#step-02-finding-telemetry-caveat
+  class: caveat_preserving_refinement
+  status: completed_for_second_snapshot
+  upstream_reopen_required: false
+  summary: Made telemetry warning return explicit while preserving non-blocking policy and caveat retention.
+status: second_snapshot_acquired
+note: Second acquisition preserved the same 2/3/3 comparison shape. Rework closed implementation-local seam issues without requiring upstream reopen.

@@ -3118,3 +3118,959 @@ first batch の具体実行とは何か
 ここで一旦コミット
 ```
 
+コミットしました。`6c64059` (`Checkpoint heat3d workflow and remaining track batches`) です。
+
+今回の checkpoint には、`heat3d` workflow 一式、`Intent / Spec` の fresh narrative batch、report / plan / synthesis / control の同期まで入っています。worktree も clean です。
+
+::git-stage{cwd="/Users/Daily/Development/Rwiki-dev"}
+::git-commit{cwd="/Users/Daily/Development/Rwiki-dev"}
+
+
+
+```
+暫くINDEX.mdを更新していませんでした。生成されたファイルをもれなくリスト、注記もつけてください
+```
+
+`INDEX.md` を全面更新しました。場所は [INDEX.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md:1) です。
+
+今回の更新で入れたものは次です。
+
+- `.kiro/methodology/dual-reviewer-spec-driven-paper/` 配下の現行文書を全件
+- `heat3d` の workflow / evidence / case-fixation / v3 note
+- `heat3d-spec` umbrella と 4 feature spec、各 local review と phase review summary
+- fresh `Intent / Spec` batch の `batch_manifest.yaml` と `comparison_summary.json`
+- `F2-heat3d-julia` implementation batch の入口
+- supporting external files
+  - `HUMAN_WORKFLOW.md`
+  - phase metric register
+  - review templates
+  - protocol manifests / batch runner scripts
+
+また、各項目に
+- 何の文書か
+- active artifact か historical input か
+- batch root 配下に何があるか
+
+の注記も付けました。
+
+今回は `INDEX.md` の更新だけで、他ファイルは触っていません。必要ならこの更新も次のコミットに積みます。
+
+
+
+```
+コミット
+```
+
+`INDEX.md` を更新しました。場所は [INDEX.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md:1) です。
+
+今回の index では、次を漏れなく入口として載せています。
+
+- methodology 正本一式
+- `heat3d` の workflow / evidence / case-fixation / v3 note
+- `heat3d-spec` umbrella と 4 feature spec
+- requirements / design / tasks / review acquisition / implementation の review artifact
+- fresh `Intent / Spec` batch の `batch_manifest` と `comparison_summary`
+- `F2-heat3d-julia` implementation batch の入口
+- external supporting files
+  - `HUMAN_WORKFLOW.md`
+  - metric register
+  - review templates
+  - protocol manifests / batch runner scripts
+  - [DR-rebuild-log-4.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-4.md:1)
+  - [DR-rebuild-log-5.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-5.md:1)
+
+注記も入れました。
+
+- 各文書の役割
+- active artifact か historical input か
+- batch root 配下に何があるか
+- 意図的な省略範囲  
+  deep な runtime JSON / export 群は、batch root の入口 file と注記で代表させる
+
+いま未コミットなのはこの `INDEX.md` 更新だけです。必要なら続けてこれもコミットします。
+
+
+
+```
+DR-rebuild-log-4/5.mdはRwiki-devのメインにコミット
+```
+
+`main` に `DR-rebuild-log-4.md` と `DR-rebuild-log-5.md` だけを commit しました。commit は `c0b52e6` (`Add DR rebuild logs 4 and 5`) です。
+
+補足:
+- これは `/private/tmp/rwiki-main-logs` の一時 worktree 上の `main` で切っています
+- まだ push はしていません
+- 元の作業 branch には未コミット変更が残っています
+  - [INDEX.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md:1)
+  - [DR-rebuild-log-5.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-5.md:1)
+
+::git-commit{cwd="/private/tmp/rwiki-main-logs"}
+
+
+
+```
+heat3dのタスクは全て終了したか
+```
+
+はい。**`heat3d` 固有の主タスクは完了**しています。
+
+完了済みの範囲は次です。
+
+- `intent -> discovery -> requirements -> design -> tasks`
+- human gate 承認
+- `review acquisition`
+- actual implementation
+- unit/smoke validation
+- canonical-scale run の実行
+- `C-3 heat3d` evidence bundle
+- main paper への統合
+- `fixed core case` 化
+- `v3 evaluation case` としての保存
+
+入口は次です。
+
+- [heat3d-c3-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-c3-evidence-bundle.md:1)
+- [core-case-heat3d.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md:1)
+- [implementation-evidence-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/reviews/implementation-evidence-summary.md:1)
+
+ただし、**残っているものはあります**。ただしそれは「未完了の heat3d 実装タスク」ではなく、後続分析です。
+
+- reference behavior mismatch の責任分解
+- `v3` での `code ↔ tasks/design/requirements` conformance 評価
+- supplementary behavioral evidence としての扱いの深掘り
+- 論文全体の additional comparison / metric aggregation
+
+つまり、短く言うと  
+**heat3d の作成・運用・証拠化タスクは完了、残りは後続評価タスク**  
+です。
+
+
+
+```
+v3は新たにintentから再構築ですね。他は、今やれる？
+```
+
+はい。`v3` は **新しく intent から再構築する前提**で考えるのが正しいです。
+
+今回の `heat3d` は、
+
+- `v1/v2 系 workflow` で作った spec 群
+- そこからの clean-room implementation
+- その結果として出た `spec underconstraint` の露出
+
+までを記録したケースです。  
+なので `v3` では、ここに継ぎ足すのではなく、
+
+- `intent`
+- `requirements`
+- `design`
+- `tasks`
+- `code`
+- `code ↔ upstream artifact` conformance review
+
+を **新しい評価線として引き直す** のが筋です。
+
+一方、`v3` 以外で今すぐやれることはあります。主に次です。
+
+1. 論文側の追加比較・指標集計の planning  
+   `Intent / Spec / Implementation` をまたぐ disagreement preservation や handback/reopen の集計設計。
+
+2. `heat3d` の supplementary note 整備  
+   behavioral mismatch を appendix/supplementary evidence としてどう見せるかの整形。
+
+3. 次ケースの選定  
+   `iot-arduino` など、`heat3d` の次に何を comparison case にするかを切る。
+
+4. `v3` の評価設計文書起こし  
+   実装はまだ始めず、`v3` で何を oracle にし、何を conformance と呼ぶかを先に固定する。
+
+逆に、**今やっても意味が薄い**のはこれです。
+
+- 現行 `heat3d` コードを直して reference log に寄せる作業
+- 今の codebase 上で `implementation bug` 断定を進める作業
+
+これはもう main paper の主線ではなく、`v3` か別検証タスクです。
+
+なので結論は、
+
+- `v3` は新規再構築で進める
+- それ以外の paper 整備と次ケース planning は今やれる
+
+です。  
+必要なら次は、`v3` 評価設計文書を先に起こします。
+
+
+
+```
+1,2を先にできますか
+```
+
+できます。先に進めて、2 本を正本に載せました。
+
+1 は [cross-track-metric-aggregation-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/cross-track-metric-aggregation-plan.md:1) です。`Intent / Spec / Implementation` をまたぐ最小集計 package を固定し、まず何を表にするか、どの artifact を source of truth にするかを決めています。
+
+2 は [heat3d-supplementary-behavioral-evidence-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-supplementary-behavioral-evidence-note.md:1) です。`heat3d` の canonical-scale 実行結果と reference behavior mismatch を、本文の workflow/evidence claim から切り離した supplementary evidence として固定しました。
+
+あわせて、入口も更新しています。
+
+- 本文側: [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1)
+- control: [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1), [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1)
+- index: [INDEX.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md:1)
+
+次の実務は、`cross-track-metric-aggregation-plan` に従って `Track-level preservation table` と `Implementation downstream rework table` の source metric を実際に抽出することです。
+
+補足として、未コミット変更は今回の文書群に加えて、別件の [DR-rebuild-log-5.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-5.md:1) も残っています。
+
+
+
+```
+1，2の詳しい説明を。なぜ、その処理が必要なのか。得られたデータをどういう風に使うのか。平易に説明
+```
+
+はい。平易に言うと、`1` と `2` は役割が違います。
+
+1. `cross-track metric aggregation plan`
+これは、**今まで取ったデータを、論文で比較できる形にそろえるための設計図**です。
+
+なぜ必要か。
+今はデータ自体はかなりあります。`Intent Track`、`Spec Track`、`Implementation Track` で、それぞれ review artifact や summary を取っています。ただ、そのままだと「文書がたくさんある」だけで、読者には比較しづらいです。  
+たとえば、
+
+- dual にすると何が増えたのか
+- finding 数だけでなく、handback や reopen がどう違ったのか
+- implementation まで行ったとき、手戻りが upstream に戻ったのか、実装の中で閉じたのか
+
+を、1 つの見方で並べられていません。
+
+この処理でやっていることは、
+**比較の物差しを先に決めること**です。
+
+たとえば今回の plan では、次のような軸で見ると決めました。
+
+- handback が残ったか
+- reopen が必要になったか
+- major correction が出たか
+- caveat や disposition が artifact に残ったか
+- implementation 時の手戻りが upstream に波及したか
+
+どう使うか。
+この plan に従うと、あとで
+
+- `Intent / Spec / Implementation` を横に並べた比較表
+- `phase-field / heat3d` の implementation 比較表
+
+を作れます。  
+論文では、その表をそのまま出してもいいし、もっと短く圧縮して
+
+> dual-reviewer の差は finding 数だけではなく、handback, reopen, caveat retention, downstream rework trace の保持にある
+
+という文章にできます。
+
+つまり `1` は、**データを論文で読める形に変えるための整理ルール**です。
+
+---
+
+2. `heat3d supplementary behavioral evidence note`
+これは、**`heat3d` の「動いたが、参照ログどおりではなかった」という事実を、本文の主張と混ぜないための整理メモ**です。
+
+なぜ必要か。
+`heat3d` では 2 種類の事実があります。
+
+1. workflow と evidence の事実
+- intent から requirements/design/tasks を通した
+- review acquisition を取った
+- clean-room implementation まで行けた
+- 実装時の手戻りも記録できた
+
+2. 挙動の事実
+- canonical-scale run は実行できた
+- 形式条件は通った
+- でも reference log の温度や収束挙動とは合わなかった
+
+この 2 つを同じ場所で混ぜると、読者が
+「挙動が違うなら workflow の評価も崩れるのでは？」
+と読みやすくなります。  
+でも、今回 main paper で言いたい中心はそこではありません。中心は、
+
+- workflow が回ったか
+- evidence が残ったか
+- clean-room implementation で spec/design の不足が露出したか
+
+です。
+
+だから `2` では、
+**behavior mismatch は supplementary evidence として別置きする**
+と固定しました。
+
+どう使うか。
+この note があると、本文では
+
+- `heat3d` は workflow validity の bridge case
+- behavior mismatch は supplementary に回す
+- 責任分解は `v3` に委ねる
+
+と短く書けます。
+
+一方、補足資料や appendix では、この note を使って
+
+- reference log はどうだったか
+- clean-room run はどうだったか
+- どこが一致して、どこが違ったか
+
+を具体的に説明できます。
+
+つまり `2` は、**`heat3d` の難しい結果を、論文の主張を壊さずに保存するための仕分けメモ**です。
+
+---
+
+まとめるとこうです。
+
+- `1` は **比較の枠組みを作る処理**
+- `2` は **`heat3d` の挙動差を本文から切り分ける処理**
+
+どちらも、「データはあるが、そのままでは論文で使いにくい」という問題を解くために必要です。  
+`1` がないと比較が散らばり、`2` がないと `heat3d` の解釈がぶれます。
+
+
+
+```
+次を進めてください
+```
+
+次まで進めました。`1` の planning を実データ入りの最小集計 package に落とし、`2` の supplementary boundary も独立 note として固定しています。
+
+新しく作った中心文書は [cross-track-metric-aggregation-first-package.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/cross-track-metric-aggregation-first-package.md:1) です。ここで、`Intent / Spec / Implementation` をまたぐ preservation table、`phase-field / heat3d` の implementation downstream rework table、解釈境界 table を 1 枚にまとめました。論文本文に入れるための compressed reading も同じ文書に固定してあります。
+
+`heat3d` 側は [heat3d-supplementary-behavioral-evidence-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-supplementary-behavioral-evidence-note.md:1) に切り出しました。ここでは、reference log 側と clean-room 実装側の canonical-scale 実行結果を並べたうえで、「本文では workflow/evidence claim を守り、behavior mismatch は supplementary に置く」という境界を明確にしています。
+
+あわせて、[dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1), [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1), [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1), [INDEX.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md:1) も更新し、次の作業を「この compressed reading を claim prose に織り込む」段階へ進めました。
+
+未コミット変更は今回の methodology 文書群に加えて、別件の [DR-rebuild-log-5.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-5.md:1) も残っています。次は、この最小集計 package の paragraph を `Claim 2 / 3 / 4` の本文へ実際に入れます。
+
+
+
+```
+次へ
+```
+
+次まで進めました。`cross-track` の最小集計 package の読みを、実際に `Claim` 本文へ反映しています。
+
+反映先の中心は [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1) です。`Claim 2` には、dual-reviewer の差が finding 数だけではなく、`Intent` では handback depth、`Spec` では reopen を維持したまま major correction を残す preservation pattern の差として現れる、という 1 段落を追加しました。`Claim 4` には、`heat3d` で actual coding 中の blocking issue `3` 件が upstream reopen `0` のまま implementation local に閉じたため、evidence が downstream rework trace としても再利用できる、という 1 段落を追加しています。
+
+ supporting 側も同期しています。[cross-track-metric-aggregation-first-package.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/cross-track-metric-aggregation-first-package.md:1) が最小集計 package の正本、[claim-2-3-4-cross-case-synthesis.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/claim-2-3-4-cross-case-synthesis.md:1) と [dual-reviewer-spec-driven-paper-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md:1) が補助同期先です。control も [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1) と [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1) で更新済みです。
+
+次の段階は、本文と supporting note の役割分担をもう一段整理して、どこまで重複を残すかを固定することです。
+
+未コミット変更は今回の methodology 文書群に加えて、別件の [DR-rebuild-log-5.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-5.md:1) も残っています。
+
+
+
+
+
+```
+dual-reviewer-spec-driven-preliminary-report.md内の記述で、Design Trackが抜けていないか？
+
+現時点の paper-facing story は、3 track を次のように連結する。
+
+- `Intent Track`
+  - 上流 bootstrap と downstream propagation
+- `Spec Track`
+  - downstream refinement と reopen / alignment
+- `Implementation Track`
+
+また、`dual-reviewer v1` は構築済みであり、governance と conformance review を含む最低限の workflow が成立している、とあるが、v2の間違いではないか？
+```
+
+はい、1 点目は修正すべきでした。`Design` は独立の `Design Track` として落としていたのではなく、**`Spec Track` の中に畳み込んでいた**のですが、現状の書き方だと欠落に見えます。  
+そのため [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1) を修正し、`Spec Track` が `requirements / design / tasks` を含む中流 bundle だと明記しました。
+
+2 点目の `v1 / v2` については、**現時点では `v1` が正しい**です。理由は、現行の完成系を指す正本が
+
+- [dual-reviewer-v1-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v1-user-guide.md:1)
+- [dual-reviewer-v1-completion-report.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reports/dual-reviewer-v1-completion-report.md:1)
+
+になっているからです。  
+一方 `v2` は、いまの repo では主に `generic execution layer v2` の redesign 系を指していて、システム全体の論文対象名ではありません。なので、report のその文は `v2` ではなく `v1` で整合しています。
+
+要するに、
+
+- `Design Track` 欠落に見える記述: 修正済み
+- `dual-reviewer v1`: 現状の naming では正しい
+
+です。
+
+
+
+```
+レポートではv1だが、開発命名ではv2に相当するか？
+```
+
+はい、**部分的には相当しますが、完全に同義ではありません**。
+
+整理するとこうです。
+
+- `v1`
+  - **システム全体の完成プロトタイプ名**です。
+  - 根拠は [dual-reviewer-v1-completion-report.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reports/dual-reviewer-v1-completion-report.md:1) です。
+  - ここでいう `v1` は、governance、workflow、manual conformance review まで含めた全体完成状態を指します。
+
+- `v2`
+  - **generic execution layer の再設計・置換線**です。
+  - 根拠は [generic-execution-layer-v2-replacement-outcome.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/generic-execution-layer-v2-replacement-outcome.md:1) と [generic-execution-layer-v2-spec.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/generic-execution-layer-v2-spec.md:1) です。
+  - これは system 全体の版名ではなく、主に runtime / execution path の redesign 名です。
+
+なので、質問への一番正確な答えは、
+
+**report で言っている `v1` は全体システム名として正しい。  
+ただし、その後に取得した一部の batch や runtime path は、開発上は `v2` execution layer を通っている。**
+
+です。
+
+つまり、
+
+- 論文の「構築済みシステム」 = `v1`
+- 開発中の「内部 execution path の新世代」 = `v2`
+
+です。
+
+言い換えると、今の report の文は少し粗いです。  
+厳密にはこう書く方が誤解がありません。
+
+- `dual-reviewer v1` は構築済み
+- その上で、runtime/execution path は `generic execution layer v2` への置換が進んでいる
+- fresh batch の一部は `v2 path` を通して再取得している
+
+必要なら、report の `v1` 周辺をこの区別が見えるように修正します。
+
+
+
+```
+ファイル命名やログからみると、非常に混同する。また、v3も計画されており、さらに混迷を増す。
+```
+
+はい。その懸念は正しいです。現状の名前だと、
+
+- `v1` が system 全体
+- `v2` が execution layer の redesign
+- `v3` が future evaluation
+
+なのに、見た目は同じ軸の連番に見えます。
+
+そのため、境界を 1 枚に固定しました。新規追加は [version-and-naming-boundary-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/version-and-naming-boundary-note.md:1) です。ここで、
+
+- `v1` = system-level prototype
+- `v2` = internal execution-layer redesign
+- `v3` = future code-conformance evaluation line
+
+と明示しています。
+
+あわせて、誤読しやすい入口も修正しました。
+
+- [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1)
+- [dual-reviewer-spec-driven-paper-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md:1)
+- [INDEX.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md:1)
+
+結論だけ言うと、  
+**report の `v1` は正しいが、読み手には `v2` や `v3` と同列に見えるので、今後は `v1 prototype`, `v2 execution layer`, `v3 evaluation line` と書き分けるべき**です。
+
+
+
+```
+納得できない。これは根本解決になっていない。単にレポートでの呼称をv2とすればよい。論文のファイナル版でv2を適切なシステム名に変更すればよいだけのこと。実体とかけ離れた記述は間違いの元
+```
+
+その指摘に合わせて、paper-facing 側は `v2` に切り替えました。方針は単純です。
+
+- 現行システム名: `dual-reviewer v2`
+- `v1` は historical artifact の filename にだけ残す
+- `v3` は future evaluation line のまま
+
+更新した主な文書は次です。
+
+- [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1)
+- [dual-reviewer-spec-driven-paper-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md:1)
+- [dual-reviewer-spec-driven-case-manifest.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md:1)
+- [core-case-phase-field.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-phase-field.md:1)
+- [core-case-heat3d.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md:1)
+- [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:1)
+- [phase-field-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-protocol.md:1)
+- [version-and-naming-boundary-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/version-and-naming-boundary-note.md:1)
+- [INDEX.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/INDEX.md:1)
+
+要するに、**論文・methodology 文書では `dual-reviewer v2`、内部の古い完了報告ファイル名はそのまま**にしました。これで「実体とかけ離れた `v1` 呼称」が paper-facing 本文に残る問題は解消しています。
+
+未コミット変更は引き続き複数あります。今回の命名修正に加えて、以前からの methodology 更新群と [DR-rebuild-log-5.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-5.md:1) の変更も残っています。
+
+
+
+```
+変更してください
+```
+
+変更しました。`paper-facing には〜と呼ぶ` のような回りくどい記述と、`v1` を説明する注記を落として、**単純に現行システム名を `dual-reviewer v2` と書く**形へ寄せました。
+
+主に直したのは次です。
+
+- [dual-reviewer-spec-driven-preliminary-report.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-preliminary-report.md:1)
+- [dual-reviewer-spec-driven-paper-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md:1)
+- [dual-reviewer-spec-driven-case-manifest.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md:1)
+- [core-case-phase-field.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-phase-field.md:1)
+- [core-case-heat3d.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md:1)
+- [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:1)
+- [phase-field-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-protocol.md:1)
+
+方針はこれです。
+
+- 論文・methodology 文書: `dual-reviewer v2`
+- 将来評価線: `v3`
+- 古い artifact filename の事情は本文に持ち込まない
+
+これで、少なくとも paper-facing 文書は「実体とかけ離れた `v1` 呼称」では読まれなくなっています。
+
+
+
+```
+次のタスクは？
+```
+
+次のタスクは、**この一連の methodology 文書を整理してコミット単位にまとめること**です。
+
+理由は 2 つです。
+
+1. ここまでで paper-facing な呼称修正、`heat3d` supplementary note、cross-track aggregation package、claim prose 反映まで入っていて、論文側のまとまりが 1 区切りできています。  
+2. いま worktree には未コミット変更がかなり残っていて、別件の [DR-rebuild-log-5.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-5.md:1) も混ざっています。
+
+なので、実務としての次タスクはまず次です。
+
+- methodology 文書群だけを切り出して確認
+- 必要なら `DR-rebuild-log-5.md` をこのコミットから外す
+- そのうえで 1 commit にまとめる
+
+もしコミット前にもう 1 段やるなら、その候補は  
+**`cross-track-metric-aggregation-first-package.md` の compressed reading を supporting note 側に合わせて少し整形すること**  
+ですが、優先度は低いです。
+
+つまり、いま一番自然な次タスクは  
+**今回の paper/methodology 更新をコミット可能な形に整えること**  
+です。
+
+
+
+```
+コミット
+```
+
+コミットしました。`6c19dbc` (`Refine paper framing and heat3d evidence packaging`) です。
+
+この commit には、`dual-reviewer v2` への paper-facing 呼称整理、`heat3d` supplementary behavioral note、cross-track metric aggregation の plan と first package、claim prose への反映、`INDEX / ACTIVE_WORKLIST / workflow path` の同期が入っています。
+
+[DR-rebuild-log-5.md](/Users/Daily/Development/Rwiki-dev/docs/DR-rebuild-log-5.md:1) は今回の commit には含めていません。引き続き未コミットです。
+
+::git-stage{cwd="/Users/Daily/Development/Rwiki-dev"}
+::git-commit{cwd="/Users/Daily/Development/Rwiki-dev"}
+
+
+
+```
+heat3dの試行で修正したheat3d, ECL, ACTIVE_WOKLISTなどは汎用化できているか
+```
+
+結論は、**部分的には汎用化できているが、全体としてはまだ「heat3d 試行の overlay を多く含む」状態**です。  
+しかも、全部を汎用化すべきでもありません。
+
+切り分けるとこうです。
+
+**汎用化できているもの**
+- [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
+  - `review wave -> alignment gate -> phase evidence summary -> human gate`
+  - `review acquisition` extension
+  - これは `heat3d` 固有ではなく、かなり一般化できています。
+- [execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1)
+  - いまは `phase-field` 起点の棚卸し文書ではなく、generic execution/control constraint ledger として整理されています。
+- review / gate templates
+  - [review-acquisition-preparation-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/review-acquisition-preparation-template.md:1)
+  - [review-acquisition-gate-summary-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/review-acquisition-gate-summary-template.md:1)
+  - [phase-evidence-summary-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/phase-evidence-summary-template.md:1)
+
+**汎用化していないもの**
+- [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1)
+  - これは汎用化不足というより、**そもそも current control board なので case-specific で正しい**です。
+  - generic rule を持つべき文書ではありません。
+- [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1)
+  - これは明確に `heat3d` への写像です。
+  - generic protocol ではなく、trial-specific overlay です。
+- `heat3d` の各 evidence note
+  - 当然 case-specific です。
+
+**中間状態のもの**
+- `cross-track` 系の paper note
+  - [cross-track-metric-aggregation-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/cross-track-metric-aggregation-plan.md:1)
+  - [cross-track-metric-aggregation-first-package.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/cross-track-metric-aggregation-first-package.md:1)
+  - これは generic metric family を意識していますが、まだ `phase-field + heat3d` に強く引かれています。
+
+なので、正確な評価はこうです。
+
+- `ECL`: かなり汎用化できている
+- `HUMAN_WORKFLOW` と template 群: 汎用化できている
+- `ACTIVE_WORKLIST`: 汎用化対象ではない
+- `heat3d-*` protocol/note: 汎用化していない。case overlay のまま
+- 全体: **generic core と case overlay の分離は進んだが、heat3d 試行から完全に独立した一般運用セットにはまだ達していない**
+
+一言で言うと、  
+**「generic rule は抽出できているが、運用文書セット全体はまだ heat3d 試行に寄っている」**  
+です。
+
+
+
+```
+ACTIVE_WORKLIT.mdは初期化時に作成すべきもの。ただし、ひな形として書くべきことは最低限あるはず。heat3d-gate-only-trial.mdはデプロイ時には必要か？各問題固有の情報が必要であれば、それを最低限記述してレビュー開始はあり得る。ただし、人が容易に書けることが前提
+```
+
+その整理が正しいです。
+
+`ACTIVE_WORKLIST.md` は case ごとに書き直す本文ではなく、**初期化時に生成される control board** であるべきです。  
+ただし空ではだめで、最低限のひな形は必要です。
+
+最低限必要なのは次です。
+
+- `role`
+  - current control board であり、workflow 正本ではない
+- `authoritative refs`
+  - `HUMAN_WORKFLOW`, `claim/case manifest`, `spec.json`
+- `current workflow step`
+- `current artifact type`
+- `current target set`
+- `blocker`
+- `current action`
+- `exit condition`
+- `working artifacts`
+- `stop rules`
+
+つまり、毎回 `heat3d` 向けに長文を書くのではなく、**最小テンプレートを生成し、その case の current state だけ埋める**のが正しいです。
+
+一方、`heat3d-gate-only-trial.md` は、**常設 artifact ではなく、trial/deploy 時の case overlay** と考えるべきです。  
+本番運用で毎回これほど長い文書は不要です。
+
+デプロイ時に必要なのは、もっと小さいものです。
+
+- case id
+- canonical source
+- active feature set
+- dependency order
+- approval model
+- special stop condition
+- review acquisition を使うかどうか
+- case-specific caveat
+
+この程度なら、人が容易に書けます。  
+要するに、`heat3d-gate-only-trial.md` の役割は将来的には
+
+- generic workflow から外れる特殊条件
+- その case だけの入力境界
+
+だけに縮めるべきです。
+
+結論:
+
+- `ACTIVE_WORKLIST.md`
+  - 初期化時に作る
+  - ただし minimal template 必須
+- `heat3d-gate-only-trial.md`
+  - 今の形では重すぎる
+  - deploy 時には不要
+  - 必要なら case overlay の短いメモだけでよい
+
+次にやるべき設計作業は明確です。
+
+1. `ACTIVE_WORKLIST` の template 化  
+2. case overlay の最小 schema 化  
+3. `heat3d-gate-only-trial.md` をその schema に縮約
+
+必要なら、その 3 つをそのまま文書へ落とします。
+
+
+
+```
+一般化に向けて整備しましょう。その後に、他ケースでのテストを行う。
+```
+
+まだ不十分です。整理するとこうです。
+
+`ECL` はかなり汎用化できています。  
+[execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1) は、もう `heat3d` 手順書ではなく、generic execution/control constraint ledger として読めます。これは次ケースにも持ち越せます。
+
+`ACTIVE_WORKLIST` は汎用化対象ではなく、**毎回生成される control board** です。  
+ただし今の [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1) には `heat3d` の履歴や経緯が混ざりすぎています。つまり思想は正しいが、**template 化されていない**。初期化時に生成するための最小ひな形が別に必要です。
+
+`heat3d-gate-only-trial.md` は汎用化できていません。  
+[heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1) は、いま見ると `heat3d` 向け protocol 全文になっていて重すぎます。デプロイ時に必要なのは、この全文ではなく、
+
+- case id
+- canonical source
+- active feature set
+- dependency order
+- approval model
+- special stop conditions
+- review acquisition を使うか
+
+程度の **case overlay** だけで十分です。
+
+一番汎用化できているのは、すでに `HUMAN_WORKFLOW` に昇格した部分です。  
+[HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:278) の `phase evidence summary`、[HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:337) の `optional review acquisition extension` は、`heat3d` を越えて使える一般則になっています。
+
+要するに、
+
+- `ECL`: かなり汎用
+- `HUMAN_WORKFLOW` と templates: 汎用
+- `ACTIVE_WORKLIST`: 役割は正しいが template 化不足
+- `heat3d-gate-only-trial`: まだ case-specific すぎる
+
+です。
+
+次にやるべき一般化は明確です。
+
+1. `ACTIVE_WORKLIST` の最小 template を作る  
+2. case overlay の最小 template を作る  
+3. `heat3d-gate-only-trial.md` をその overlay へ縮約する  
+4. その形で別ケースを 1 つ回す
+
+それが済んで初めて、「heat3d での修正が汎用化できた」と言えます。
+
+
+
+```
+なので、一般化を行います。
+```
+
+一般化しました。今回の整理で、`heat3d` 試行で混ざっていたものを 3 層に分けています。
+
+- generic core:
+  - [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
+  - [execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1)
+- generated instance:
+  - [active-worklist-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/active-worklist-template.md:1)
+  - [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1)
+- case overlay:
+  - [case-workflow-overlay-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/case-workflow-overlay-template.md:1)
+  - [heat3d-case-workflow-overlay.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-case-workflow-overlay.md:1)
+
+あわせて [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1) は `active trial plan` ではなく `historical trial record` に下げ、`INDEX` も新しい入口へ更新しました。つまり、今後は長い case 手順書を毎回書くのではなく、`ACTIVE_WORKLIST` は template から生成し、case 固有差分は overlay にだけ書く運用へ移せます。
+
+次のタスクは、この形で別ケースを 1 本初期化して、template と overlay だけで回り始めるかを試すことです。候補が決まっていれば、その case で `ACTIVE_WORKLIST` 初期化まで進めます。
+
+
+
+```
+論文化計画に従って考えると、候補はどれになりますか
+```
+
+論文化計画に従うなら、**第一候補は `iot-arduino`** です。
+
+理由は次です。
+
+- [dual-reviewer-spec-driven-case-manifest.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md:99) で `C-4: iot-arduino` は **provisional** の次ケースとして置かれている
+- [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:1) でも、
+  - `design / tasks` 未固定
+  - `Spec Track` concrete case 未固定
+  - `Implementation Track` protocol 未固定
+  となっていて、**今回作った template / overlay の一般化テストにちょうどよい**
+- manifest 上の役割も、[dual-reviewer-spec-driven-case-manifest.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md:154) にある通り
+  - `phase-field` = high-load downstream
+  - `heat3d` = simulation-oriented downstream
+  - `iot-arduino` = event-driven downstream
+  なので、**別ドメインでの再利用確認**になる
+
+逆に、他候補はこうです。
+
+- `phase-field`
+  - すでにかなり作り込まれていて、一般化テストというより historical baseline
+- `heat3d`
+  - もう case-specific overlay まで作ったので、再テスト先としては弱い
+- `dual-reviewer-rebuild`
+  - `Intent Track` 側の主ケースだが、今回の「case overlay と worklist 初期化」の検証先としては `iot-arduino` ほど自然ではない
+
+なので、**一般化後の最初の他ケーステストは `iot-arduino` が最も筋がよい**です。
+
+次にやる具体作業はこれです。
+
+1. `iot-arduino` 用の case overlay を作る  
+2. `ACTIVE_WORKLIST` を template から最小初期化する  
+3. `requirements/design/tasks` のどこから入るかを確定する  
+4. その状態で review wave まで進めるか確認する
+
+必要なら、このまま `iot-arduino` の overlay 起票から進めます。
+
+
+
+```
+論文としては、あとどのケースをサンプリングすれば、主張を支持するデータが集まるか
+```
+
+結論から言うと、**次に 1 ケースだけ足すなら `iot-arduino` です**。  
+それで、main paper の主張をかなり締められます。
+
+根拠はこうです。
+
+- すでにあるもの
+  - `Intent Track`: `dual-reviewer-rebuild`
+  - `Spec/Implementation Track`: `phase-field`
+  - `Spec/Implementation Track`: `heat3d`
+- まだ弱いところ
+  - `event-driven / embedded` 系の別ドメイン
+  - `simulation` 以外で template/overlay が回るか
+  - `iot-arduino` はまさにその空白を埋める  
+    参照: [dual-reviewer-spec-driven-case-manifest.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-case-manifest.md:99), [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:1)
+
+論文の claim ごとに見るとこうです。
+
+- `Claim 2`
+  - いまでも `phase-field + heat3d + fresh Intent/Spec batch` でかなり支えられています。
+  - ただ、`iot-arduino` が入ると「数値計算系だけで成立した話ではない」と言いやすくなります。
+
+- `Claim 3`
+  - ここに一番効きます。
+  - いまは `intent-only / spec-present / implementation-present` の 3 開始条件はある程度揃っていますが、`heat3d` は simulation 寄りです。
+  - `iot-arduino` を入れると、**別ドメインでも同じ workflow contract が動く**と言いやすくなります。  
+    参照: [dual-reviewer-spec-driven-paper-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md:217)
+
+- `Claim 4`
+  - `heat3d` で downstream rework trace はかなり取れています。
+  - ただ、`embedded / event-driven` で
+    - schedule
+    - persistence
+    - fail-safe
+    - network/time sync
+    のような別種の caveat が残るかを見る価値があります。  
+    参照: [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:37)
+
+なので、サンプリング優先度はこうです。
+
+1. `iot-arduino`
+2. もしさらに足すなら、軽量な `spec-present` 非数値系ケース
+3. 追加の数値シミュレーション case は優先度が低い
+
+要するに、**論文としては次に `iot-arduino` を取れば十分に意味がある**です。  
+`phase-field` と `heat3d` があるので、これ以上同系統を増やすより、**ドメインの軸を増やす方が効きます**。
+
+次にやるべき実務は、`iot-arduino` を今回の一般化済み
+
+- [active-worklist-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/active-worklist-template.md:1)
+- [case-workflow-overlay-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/case-workflow-overlay-template.md:1)
+
+で初期化して、最初の wave まで回すことです。
+
+
+
+```
+軽量な spec-present 非数値系ケースの例をしては？
+```
+
+あります。repo 内で言うなら、軽量な `spec-present` 非数値系の例は **`rwiki-v2-*` 系**です。
+
+候補を軽さ順で挙げると、こうです。
+
+1. `rwiki-v2-skill-library`  
+   [spec.json](/Users/Daily/Development/Rwiki-dev/.kiro/specs/rwiki-v2-skill-library/spec.json:1)  
+   すでに `design-approved` まであり、数値計算も組込み制御もありません。  
+   論点は
+   - skill metadata
+   - 検索/選択
+   - 境界責務
+   - interface
+   なので、**review wave と alignment の確認には向いていて、実行コストは低い**です。
+
+2. `rwiki-v2-lifecycle-management`  
+   [spec.json](/Users/Daily/Development/Rwiki-dev/.kiro/specs/rwiki-v2-lifecycle-management/spec.json:1)  
+   これも `design-approved` まであります。  
+   論点は
+   - state transition
+   - archive/delete/reopen
+   - lifecycle boundary
+   で、非数値・非シミュレーションです。  
+   **reopen / alignment の一般化テストにはかなり向いています。**
+
+3. `rwiki-v2-cli-mode-unification`  
+   [spec.json](/Users/Daily/Development/Rwiki-dev/.kiro/specs/rwiki-v2-cli-mode-unification/spec.json:1)  
+   これも `design-approved` ですが、設計がかなり大きいです。  
+   非数値ではあるものの、**軽量ケースとしては少し重い**です。
+
+論文上の使い方で言うと、
+
+- `iot-arduino`
+  - ドメイン一般化に効く
+  - ただし少し重い
+- `rwiki-v2-skill-library` / `lifecycle-management`
+  - 軽量な `spec-present` 非数値系
+  - template/overlay 一般化テストに向く
+
+です。
+
+なので、**「まず軽く 1 本回して一般化を確かめる」なら `rwiki-v2-lifecycle-management` か `rwiki-v2-skill-library`** が良いです。  
+その後に、**論文のドメイン幅を増やす本命として `iot-arduino`** を取るのが一番自然です。
+
+
+
+```
+Rwikiは軽くない。むしろ重い。逆にIoTの行数は少なく軽い。軽量な spec-present 非数値系ケースというのが何を意図するのか述べてくれれば考えやすい
+```
+
+その通りです。`rwiki-v2` は文書量も設計密度も高く、軽量とは言いにくいです。私の言い方が悪かったです。
+
+ここでいう **「軽量な spec-present 非数値系ケース」** の意図は、次の条件を満たすケースです。
+
+1. **`spec-present`**
+   - すでに `requirements/design/tasks` の少なくとも一部がある
+   - つまり `Intent Track` ではなく、`Spec Track` の一般化テストに使う
+
+2. **非数値系**
+   - PDE や solver や数値安定性のような、数値シミュレーション固有の難しさを含まない
+   - そうすることで、`phase-field` や `heat3d` の影響を外し、
+     **workflow 自体が回るか** を見やすくする
+
+3. **軽量**
+   - spec が少数 feature で閉じる
+   - design/tasks が短い
+   - 実装/プロトコルを読んで境界が追いやすい
+   - review wave と alignment gate を 1 周回すコストが低い
+
+つまり狙いは、  
+**「simulation 固有の複雑さを抜いた状態でも、Spec Track の workflow/gate/template がちゃんと回るか」**  
+を見ることです。
+
+なぜこれが欲しいかというと、今ある `Spec Track` の強いケースは
+
+- `phase-field`
+- `heat3d`
+
+で、どちらも downstream complexity が高いからです。  
+この 2 本だけだと、
+
+- generic workflow が良いのか
+- たまたま重い数値系ケースで必要だっただけか
+
+が分かれにくい。
+
+だから、**もっと単純で、非数値で、spec から始まるケース**を 1 本入れると、
+
+- alignment gate
+- reopen/recheck
+- evidence summary
+- worklist/overlay initialization
+
+が **ドメイン依存ではなく動く** と言いやすくなります。
+
+この定義で見ると、`iot-arduino` はかなり有力です。
+
+- 非数値
+- event-driven
+- code 行数も比較的少ない
+- spec-present にも持っていける
+- しかも論文上は `C-4` 候補として既に意味がある
+
+なので、あなたの感覚に合わせると、  
+**実質的に「軽量な spec-present 非数値系ケース」の第一候補は `iot-arduino`** です。
+
+要するに、この言葉で意図していたのは  
+**「数値シミュレーションではない、小さめの Spec Track 検証ケース」**  
+です。  
+その観点では、`rwiki-v2` より `iot-arduino` の方が適切です。

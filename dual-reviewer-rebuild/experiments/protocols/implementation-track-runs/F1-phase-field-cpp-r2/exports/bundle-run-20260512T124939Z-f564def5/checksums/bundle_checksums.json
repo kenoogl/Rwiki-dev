@@ -1,0 +1,73 @@
+{
+  "bundle_id": "bundle-run-20260512T124939Z-f564def5",
+  "checksums": [
+    {
+      "path": "bundle_manifest.yaml",
+      "sha256": "c18fd39a846c232f5be39e0ddd8422978c3831e92dc292c6ae6b9c5654a1544d"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/decisions/decision_units.json",
+      "sha256": "6a5ab53cf15b30fb7544c6d0bd7a115eee3f04976a6fe0f9c4fae780b0748c43"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/decisions/human_signoff.json",
+      "sha256": "812478b4610b9055ce8e9a418c027eb6a6543fd6ad3f80f36df4c1c09beb2ac6"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/derived/comparison_eligibility_note.json",
+      "sha256": "52bbd3b01f7a31dd017978cf09003efb25e432ac31f40eecd49e22ecc9571f83"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/derived/invalid_run_triage_note.json",
+      "sha256": "21e42610cd8bfef2884048e21740c0477edaf5fc4264c462710a6e7dca4ba52f"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/review_case.json",
+      "sha256": "55196b3c2f2ffac23b10cbd79e083fd2784da780c0b8cf073641a2aa920c8d30"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/run_manifest.yaml",
+      "sha256": "7fda5a37780d6b9cda2eff08b3e24a7769779d14eec47f043e5b6b3ae29c016b"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/steps/step_a_primary_detection.json",
+      "sha256": "6ffa7c8b5360e2884ef56c8850eb7d3fd010cd602a2105442b22acfee831e508"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/steps/step_b_adversarial_review.json",
+      "sha256": "b63aadb167b93dbc6b3d41c377b55319472edf80760822d5c2838722ae0fb5e5"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/steps/step_c_judgment.json",
+      "sha256": "382114896d87072d5295bf0ef9158473a59becbec8a225d569ea419a03f49b82"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/steps/step_d_integration.json",
+      "sha256": "b5be63bf84c0b0c25b6e6a6810974ee58998cd97118e83b64e020860f513cb0d"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/v2/metric_snapshot.json",
+      "sha256": "2da88da39429ca80e59b68394b0ffe5e744a8ea1dc0dae55586a8f460c7885da"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/v2/review_artifact.json",
+      "sha256": "0edf7f2f9ba8369fff288613a3423455f9293473e465f65cf53d2e815dfe3a96"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/v2/signal_linkage_note.json",
+      "sha256": "bf65dd4d90c80ecf1828d4bfb0f9d0abe1e5c9354a6559b3b790a1b7b7672acf"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/v2/trace_note.json",
+      "sha256": "49fc11c7ca6522a34dcea45a16788d802a8e6df16c8a22d3aebe69f5b2d6a3db"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/validation/invalidation_markers.json",
+      "sha256": "cd0da63c1e5f67add0beda2c31c817a68b52b3d6ccd728b34f7980745c919b5d"
+    },
+    {
+      "path": "run/run-20260512T124939Z-f564def5/validation/validator_result.json",
+      "sha256": "37b2afab881d29cdbc9382abadc7bba1a05ac3a086d1f84cc92ce809f34033cc"
+    }
+  ]
+}
