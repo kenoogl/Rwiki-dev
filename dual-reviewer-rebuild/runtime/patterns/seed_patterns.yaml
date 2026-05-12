@@ -52,7 +52,7 @@ reusable_fragment_cues:
     section_heading_patterns:
       - "^8\\. Caveats$"
     parent_heading_patterns:
-      - "^phase-field-cpp first snapshot$"
+      - "snapshot"
     line_prefix_patterns:
       - "^3$"
     match_terms: []
@@ -89,7 +89,7 @@ reusable_fragment_cues:
     section_heading_patterns:
       - "^8\\. Caveats$"
     parent_heading_patterns:
-      - "^phase-field-cpp first snapshot$"
+      - "snapshot"
     line_prefix_patterns:
       - "^2$"
     match_terms: []
@@ -100,7 +100,7 @@ reusable_fragment_cues:
     section_heading_patterns:
       - "^9\\. Immediate Operational Rule$"
     parent_heading_patterns:
-      - "^phase-field-cpp first snapshot$"
+      - "snapshot"
     line_prefix_patterns:
       - "^2$"
     match_terms: []
@@ -111,7 +111,7 @@ reusable_fragment_cues:
     section_heading_patterns:
       - "^8\\. Caveats$"
     parent_heading_patterns:
-      - "^phase-field-cpp first snapshot$"
+      - "snapshot"
     line_prefix_patterns:
       - "^4$"
     match_terms: []

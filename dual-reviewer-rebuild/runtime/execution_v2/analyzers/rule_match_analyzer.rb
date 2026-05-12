@@ -531,8 +531,6 @@ module DualReviewer
             "snapshot_rationale"
           elsif heading.match?(/Fixed Snapshot ID/i)
             "snapshot_identity"
-          elsif basename == "phase-field-implementation-phase-first-snapshot.md"
-            "implementation_snapshot_note"
           elsif source_kind == "implementation_snapshot"
             "implementation_snapshot_misc"
           elsif source_kind == "upstream_spec"

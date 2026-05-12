@@ -6,9 +6,9 @@ module DualReviewer
       class CaseManifest
         BASE_REQUIRED_FIELDS = %w[case_id track source_refs case_manifest_ref].freeze
         TRACK_REQUIRED_FIELDS = {
-          "implementation" => %w[target_id implementation_snapshot_ref upstream_spec_refs governance_refs phase_profile heuristic_profile_ref],
-          "spec" => %w[reviewed_phase reviewed_phase_ref adjacent_phase_refs alignment_refs analysis_profile_ref heuristic_profile_ref],
-          "intent" => %w[intent_ref supporting_refs traceability_refs objective analysis_profile_ref heuristic_profile_ref]
+          "implementation" => %w[target_id implementation_snapshot_ref upstream_spec_refs governance_refs phase_profile],
+          "spec" => %w[reviewed_phase reviewed_phase_ref adjacent_phase_refs alignment_refs analysis_profile_ref],
+          "intent" => %w[intent_ref supporting_refs traceability_refs objective analysis_profile_ref]
         }.freeze
 
         def build(payload)

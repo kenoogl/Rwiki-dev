@@ -1,0 +1,38 @@
+profile_version: 1
+profile_role: minimal intent heuristic profile template
+policy:
+  start_with_no_rules: true
+  add_only_phase_or_scope_contracts: true
+  note: >-
+    Add rules only when the bootstrap intent has a case-specific phase contract,
+    ownership boundary, or scope-drift risk that should be preserved during
+    intent review.
+steps:
+  primary_detection:
+    rules: []
+    # Example:
+    # rules:
+    #   - finding_suffix: finding-example-phase-gap
+    #     severity: high
+    #     source_role: primary_reviewer
+    #     source_pattern_ids:
+    #       - seed.example-phase-gap
+    #     failure_observation_refs:
+    #       - intent:example_phase_gap
+    #     summary_prefix: >-
+    #       <plain-language reason the intent needs an explicit phase contract>
+  adversarial_review:
+    rules: []
+    # Example:
+    # rules:
+    #   - finding_suffix: finding-example-human-gate
+    #     severity: medium
+    #     source_role: adversarial_reviewer
+    #     source_pattern_ids:
+    #       - seed.example-human-gate
+    #     counter_evidence_pattern_ids:
+    #       - implementation-conformance-review
+    #     failure_observation_refs:
+    #       - intent:example_human_gate_pressure
+    #     summary_prefix: >-
+    #       <plain-language reason this intent needs explicit human ownership>

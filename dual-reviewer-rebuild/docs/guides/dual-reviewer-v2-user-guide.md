@@ -2,7 +2,7 @@
 
 ## 0. ひとことで言うと
 
-`dual-reviewer` v2 は、仕様駆動開発における設計・タスク生成レビューの認知負荷を下げ、対話を通じて修正と品質判断を支援し、その結果を後から追える evidence として残すための review system である。
+`dual-reviewer` v2 は、意図駆動開発における設計・タスク生成レビューの認知負荷を下げ、対話を通じて修正と品質判断を支援し、その結果を後から追える evidence として残すための review system である。
 
 ## 1. このガイドの役割
 
@@ -23,7 +23,7 @@
 
 ## 2. コンセプト
 
-`dual-reviewer` v2 の本来の目的は、LLM とのソフトウェア協調設計において、仕様駆動開発を支援することである。
+`dual-reviewer` v2 の本来の目的は、LLM とのソフトウェア協調設計において、意図駆動開発を支援することである。
 
 一言で言うと、これは
 
@@ -32,7 +32,7 @@
 である。
 
 ここでの主対象は、単なるコード生成ではない。
-仕様駆動開発の中でも特に人の認知負荷が高くなりやすい
+意図駆動開発の中でも特に人の認知負荷が高くなりやすい
 
 - `design`
 - `tasks`
@@ -52,7 +52,7 @@
 
 ## 3. 何を解決するのか
 
-仕様駆動開発では、上流から下流へ進むにつれて次の問題が起きやすい。
+意図駆動開発では、上流から下流へ進むにつれて次の問題が起きやすい。
 
 - 設計が複雑になり、依存関係を追いきれない
 - task 分解が大きくなり、抜け漏れや順序ミスが増える
@@ -71,10 +71,10 @@
 `人の認知負荷を下げつつ、開発プロダクトの品質をガイドすること`
 にある。
 
-## 4. 仕様駆動開発の流れ
+## 4. 意図駆動開発の流れ
 
 `dual-reviewer` v2 は、単発のレビュー道具ではなく、
-`intent` から始まる仕様駆動開発の流れの中で使う。
+`intent` から始まる意図駆動開発の流れの中で使う。
 
 利用者が最初に押さえるべき全体像は次である。
 
@@ -137,6 +137,62 @@ flowchart TD
 
 この repo では、feature は並列に存在してよいが、上位拘束は常に `intent` が持つ。
 
+### 4.2.1 開始指示の最小形
+
+開始時点でも、user が長い運転指示を書く必要はない。
+
+たとえば
+
+- `<case-slug> を intent から進めてください`
+
+だけで十分である。
+
+このときの既定動作は、
+
+1. intent と source docs を読む
+2. active feature set 案を作る
+3. feature dependency order と open question を整理する
+4. 最初の human gate input として提示する
+
+である。
+
+つまり、
+
+- requirements を勝手に最後まで進めない
+- design / tasks に自動で入らない
+- implementation にも進まない
+
+という stop rule が最初から組み込まれている。
+
+言い換えると、開始指示は
+`次の human gate まで進める`
+短い command として使えるのが基本である。
+
+### 4.2.2 参照ケースなしで始める
+
+一般利用者は、特定の先行 case を手本にしなくても始められるべきである。
+
+v2 では、新しい case は次のひな形から始める。
+
+- bootstrap guide:
+  - [reference-free-case-bootstrap-guide.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/reference-free-case-bootstrap-guide.md:1)
+- bootstrap script:
+  - `ruby dual-reviewer-rebuild/scripts/bootstrap_reference_free_case.rb <case-slug> --intent-source <path> --canonical-source <path>`
+
+この bootstrap で最初に作るのは次である。
+
+- umbrella `intent.md`
+- umbrella `spec.json`
+- case workflow overlay
+- active worklist
+- workflow path
+
+つまり、新しい case の開始点は
+`既存 case を真似すること`
+ではなく
+`ひな形を埋めて source を固定すること`
+である。
+
 ### 4.3 各 feature で進む順序
 
 各 feature は、基本的に次の順で進む。
@@ -165,6 +221,12 @@ flowchart TD
 - shared artifact owner
 
 を固定したい場合にだけ差し込む optional extension である。
+
+この段で使う implementation protocol と snapshot note も、
+原則としてひな形から起こす。
+
+- [implementation-phase-protocol-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-phase-protocol-template.md:1)
+- [implementation-phase-snapshot-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-phase-snapshot-template.md:1)
 
 つまり、実装に入る直前の確認段は通常
 
@@ -225,11 +287,109 @@ repo では phase ごとに `phase evidence summary` のような summary を作
 
 をまとめて gate の入口にする。
 
+この gate package には、
+`今ここで何を判断すればよいか`
+も書く。
+
+たとえば `requirements gate` なら主に次を見る。
+
+- feature 分解が妥当か
+- 責務境界が自然か
+- acceptance criteria が足りているか
+- 重要な方針選択に違和感がないか
+
+逆に、実装方法や class 分割のような下流 detail は、まだここで決めない。
+
 承認結果は少なくとも次のいずれかになる。
 
 - `approve`
 - `reject`
 - `defer`
+
+### 4.5.1 user 指示の最小形
+
+利用体験として重要なのは、user が毎回
+
+- `gate package を作ったところで止めてください`
+- `まだ design には進まないでください`
+
+のような stop 条件を細かく書かなくても進められることである。
+
+v2 では、たとえば
+
+- `requirements wave を進めてください`
+
+と言われたら、既定で次までを含むものとして扱う。
+
+1. feature ごとの requirements 起草
+2. feature-local review
+3. requirements review wave
+4. requirements alignment gate
+5. human requirements gate package 作成
+
+そして、`design` には勝手に進まない。
+
+同様に、
+
+- `design wave を進めてください`
+
+なら human design gate package まで、
+
+- `tasks wave を進めてください`
+
+なら human tasks gate package まで進み、その次の phase には自動で入らない。
+
+つまり user は、phase 単位の短い指示だけで workflow を進められるのが基本である。
+
+### 4.5.2 heuristic profile の最小方針
+
+`heuristic profile` は、review を賢く見せるための飾りではない。
+case 固有に本当に見たい contract だけを追加するための最小 layer である。
+
+そのため v2 の既定方針は次である。
+
+- 最初は minimal template から始める
+- `heuristic_profile_ref` を明示しない場合でも、track ごとの minimal template を既定にしてよい
+- 追加 rule は必要最小限にする
+
+最小 template:
+
+- implementation:
+  - [implementation/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/implementation/_minimal_template.yaml:1)
+- intent:
+  - [intent/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/intent/_minimal_template.yaml:1)
+- spec:
+  - [spec/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/_minimal_template.yaml:1)
+
+詳しい作り方は [heuristic_profiles/README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/README.md:1) を見る。
+
+### 4.5.3 各 gate で何を判断するか
+
+wave が終わったら、system 側は human に
+`この gate での判断点`
+を分かりやすく説明する。
+
+- `requirements gate`
+  - feature 分解
+  - 責務境界
+  - acceptance criteria
+  - 重要な運用方針
+- `design gate`
+  - interface
+  - data flow
+  - module / file placement
+  - validation hook
+- `tasks gate`
+  - implementation order
+  - blocker dependency
+  - test sequencing
+  - implementation entry readiness
+
+加えて、
+`今はまだ判断しなくてよいこと`
+も一緒に示す。
+
+これにより user は、毎回 gate の意味を自分で再解釈しなくて済む。
 
 ### 4.6 ワークフローを制御する文書
 
@@ -324,7 +484,7 @@ review の結果として、
 
 を整理して受け取れる。
 
-これは単なる要約ではなく、仕様駆動開発の workflow に沿った guidance である。
+これは単なる要約ではなく、意図駆動開発の workflow に沿った guidance である。
 
 ### 5.3 修正後の再確認ができる
 

@@ -12,6 +12,7 @@ require_relative "../../runtime/controller/session_controller"
 require_relative "../../runtime/execution_v2/manifests/case_manifest_loader"
 require_relative "../../runtime/execution_v2/protocol_track_session"
 require_relative "runtime_validation_summary_builder"
+require_relative "default_heuristic_profile_ref"
 
 module DualReviewer
   module TrackRuns
@@ -84,6 +85,14 @@ module DualReviewer
 
       def workflow_gate_status_ref
         "docs/coordination/workflow-gate-status.md"
+      end
+
+      def heuristic_profile_ref
+        if loaded_case_manifest && loaded_case_manifest["heuristic_profile_ref"]
+          loaded_case_manifest["heuristic_profile_ref"]
+        else
+          DefaultHeuristicProfileRef.for_track("intent")
+        end
       end
 
       def signal_register_ref
@@ -444,7 +453,7 @@ module DualReviewer
               "intent_ref" => intent_ref,
               "supporting_refs" => supporting_refs,
               "traceability_refs" => traceability_refs,
-              "heuristic_profile_ref" => loaded_case_manifest.fetch("heuristic_profile_ref")
+              "heuristic_profile_ref" => heuristic_profile_ref
             }
           )
 

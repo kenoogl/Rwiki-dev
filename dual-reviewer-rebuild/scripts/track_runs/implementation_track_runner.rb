@@ -8,7 +8,9 @@ require "time"
 require "yaml"
 require_relative "../../runtime/controller/session_controller"
 require_relative "../../runtime/execution_v2/manifests/case_manifest_loader"
+require_relative "spec_phase_guard"
 require_relative "runtime_validation_summary_builder"
+require_relative "default_heuristic_profile_ref"
 
 module DualReviewer
   module TrackRuns
@@ -16,7 +18,8 @@ module DualReviewer
       attr_reader :repo_root, :run_label, :case_id, :review_mode, :implementation_snapshot_ref,
                   :upstream_spec_refs, :governance_refs, :operator, :phase_profile, :target_id,
                   :target_artifact_hash, :protocol_output_root, :runtime_run_root_base, :export_root_base,
-                  :case_manifest_ref, :loaded_case_manifest, :heuristic_profile_ref, :runtime_validation_summary_builder
+                  :case_manifest_ref, :loaded_case_manifest, :heuristic_profile_ref, :runtime_validation_summary_builder,
+                  :spec_phase_guard
 
       def initialize(repo_root:, run_label:, case_id:, review_mode:, implementation_snapshot_ref:,
                      upstream_spec_refs:, governance_refs:, operator:, phase_profile:, target_id:,
@@ -32,17 +35,24 @@ module DualReviewer
         @case_manifest_ref = case_manifest_ref
         @loaded_case_manifest = load_case_manifest(case_manifest_ref)
         @runtime_validation_summary_builder = RuntimeValidationSummaryBuilder.new(repo_root: @repo_root)
+        @spec_phase_guard = SpecPhaseGuard.new(repo_root: @repo_root)
         @case_id = loaded_case_manifest ? loaded_case_manifest.fetch("case_id") : case_id
         @implementation_snapshot_ref = loaded_case_manifest ? loaded_case_manifest.fetch("implementation_snapshot_ref") : implementation_snapshot_ref
         @upstream_spec_refs = loaded_case_manifest ? loaded_case_manifest.fetch("upstream_spec_refs") : upstream_spec_refs
         @governance_refs = loaded_case_manifest ? loaded_case_manifest.fetch("governance_refs") : governance_refs
         @phase_profile = loaded_case_manifest ? loaded_case_manifest.fetch("phase_profile") : phase_profile
         @target_id = loaded_case_manifest ? loaded_case_manifest.fetch("target_id") : target_id
-        @heuristic_profile_ref = loaded_case_manifest && loaded_case_manifest["heuristic_profile_ref"]
+        @heuristic_profile_ref = if loaded_case_manifest && loaded_case_manifest["heuristic_profile_ref"]
+                                   loaded_case_manifest["heuristic_profile_ref"]
+                                 else
+                                   DefaultHeuristicProfileRef.for_track("implementation")
+                                 end
         @target_artifact_hash = target_artifact_hash || derive_target_artifact_hash
       end
 
       def run_all
+        spec_phase_guard.assert_phase_entry_allowed!(phase: "implementation", refs: upstream_spec_refs)
+
         FileUtils.mkdir_p(run_root)
 
         controller = DualReviewer::Runtime::SessionController.new(

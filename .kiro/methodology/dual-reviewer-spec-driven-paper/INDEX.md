@@ -76,6 +76,12 @@ runtime 配下の deeply nested JSON をここで全部再列挙はしない。
   generic execution / control constraint ledger。
 - [generic-execution-layer-v2-spec.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/generic-execution-layer-v2-spec.md:1)  
   redesign 上位仕様。
+- [active-worklist-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/active-worklist-template.md:1)  
+  case 初期化時に current control board を生成する最小 template。
+- [case-workflow-overlay-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/case-workflow-overlay-template.md:1)  
+  case 固有差分だけを書く workflow overlay template。
+- [reference-free-case-bootstrap-guide.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/reference-free-case-bootstrap-guide.md:1)  
+  既存 case を参照せずに新しい case を起こすための bootstrap guide。
 
 ---
 
@@ -112,6 +118,8 @@ runtime 配下の deeply nested JSON をここで全部再列挙はしない。
   actual coding phase の実行メモ。
 - [heat3d-supplementary-behavioral-evidence-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-supplementary-behavioral-evidence-note.md:1)  
   canonical-scale 実行結果と behavior mismatch を supplementary evidence として固定。
+- [heat3d-case-workflow-overlay.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-case-workflow-overlay.md:1)  
+  `heat3d` を generic workflow に載せるための case 固有差分。
 
 ### 4.3 iot-arduino
 
@@ -119,6 +127,14 @@ runtime 配下の deeply nested JSON をここで全部再列挙はしない。
   provisional case note。
 - [iot-arduino-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-protocol.md:1)  
   implementation protocol draft。
+- [iot-arduino-c4-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-c4-evidence-bundle.md:1)  
+  two-snapshot implementation evidence を束ねた paper evidence bundle。
+- [iot-arduino-case-decision.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-case-decision.md:1)  
+  supporting case として閉じる判断。
+- [iot-arduino-implementation-phase-second-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md:1)  
+  second snapshot boundary note。
+- [implementation-evidence-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/iot-arduino-spec/reviews/implementation-evidence-summary.md:1)  
+  first/second acquisition comparison と implementation-local refinement 読み。
 
 ---
 
@@ -146,19 +162,35 @@ runtime 配下の deeply nested JSON をここで全部再列挙はしない。
 
 - [implementation-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-track-run-template.md:1)  
   implementation track template。
+- [implementation-phase-protocol-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-phase-protocol-template.md:1)  
+  target 固有 implementation protocol を起こす最小 template。
+- [implementation-phase-snapshot-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-phase-snapshot-template.md:1)  
+  implementation snapshot boundary を固定する最小 template。
 - [heat3d-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-implementation-phase-protocol.md:1)  
   `heat3d` implementation track protocol。
 - [heat3d-julia-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-julia-implementation-phase-first-snapshot.md:1)  
   `heat3d-julia` snapshot。
 - [heat3d-review-acquisition-preparation.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-review-acquisition-preparation.md:1)  
   review acquisition gate 前メモ。
+- [iot-arduino-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-protocol.md:1)  
+  `iot-arduino` implementation track protocol。
+- [iot-arduino-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md:1)  
+  `iot-arduino` first snapshot。
+- [iot-arduino-implementation-phase-second-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-second-snapshot.md:1)  
+  `iot-arduino` second snapshot。
+- [implementation-evidence-summary.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/iot-arduino-spec/reviews/implementation-evidence-summary.md:1)  
+  `iot-arduino` implementation-local refinement と acquisition comparison。
+- [heuristic_profiles/README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/README.md:1)  
+  `heuristic_profile` を minimal template から起こす方針。
 
 ---
 
 ## 6. heat3d Workflow and Remaining-Track Support
 
+- [heat3d-case-workflow-overlay.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-case-workflow-overlay.md:1)  
+  `heat3d` の current case overlay。
 - [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1)  
-  `heat3d` gate-only workflow protocol。
+  `heat3d` 試行時の historical trial record。
 - [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1)  
   `heat3d` path trace。
 - [remaining-track-acquisition-bridge-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-acquisition-bridge-note.md:1)  
@@ -321,6 +353,10 @@ runtime 配下の deeply nested JSON をここで全部再列挙はしない。
   implementation conformance template。
 - [phase-evidence-summary-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/phase-evidence-summary-template.md:1)  
   phase evidence summary template。
+- [active-worklist-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/active-worklist-template.md:1)  
+  current control board 生成用 template。
+- [case-workflow-overlay-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/case-workflow-overlay-template.md:1)  
+  case workflow overlay template。
 - [review-acquisition-preparation-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/review-acquisition-preparation-template.md:1)  
   review acquisition preparation template。
 - [review-acquisition-gate-summary-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/review-acquisition-gate-summary-template.md:1)  
@@ -360,12 +396,13 @@ runtime 配下の deeply nested JSON をここで全部再列挙はしない。
 
 ### `heat3d` の workflow と判断を追う
 
-1. [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1)
+1. [heat3d-case-workflow-overlay.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-case-workflow-overlay.md:1)
 2. [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1)
 3. [heat3d-c3-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-c3-evidence-bundle.md:1)
 4. [heat3d-main-paper-observation-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-main-paper-observation-note.md:1)
 5. [heat3d-v3-evaluation-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-v3-evaluation-note.md:1)
 6. [heat3d-supplementary-behavioral-evidence-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-supplementary-behavioral-evidence-note.md:1)
+7. [heat3d-gate-only-trial.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-gate-only-trial.md:1)
 
 ### fresh `Intent / Spec` batch を追う
 

@@ -9,18 +9,11 @@ require_relative "track_runs/intent_track_writer"
 repo_root = Pathname(__dir__).join("..").expand_path
 
 options = {
-  "run_label" => "F1-intent-track-single",
-  "case_id" => "F1-intent-dual-reviewer-rebuild",
+  "run_label" => "intent-track-run",
   "review_mode" => "single_review",
-  "intent_ref" => ".kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md",
-  "supporting_refs" => [
-    "dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md",
-    "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
-    "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md"
-  ],
+  "supporting_refs" => [],
   "operator" => "pending",
-  "objective" => "intent bootstrap pilot",
-  "case_manifest_ref" => "experiments/protocols/case_manifests/F1-intent-dual-reviewer-rebuild.yaml"
+  "case_manifest_ref" => nil
 }
 
 OptionParser.new do |opts|
@@ -37,15 +30,24 @@ OptionParser.new do |opts|
   opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |value| options["runtime_run_root_base"] = value }
 end.parse!(ARGV)
 
+if options["case_manifest_ref"].nil?
+  required = %w[case_id intent_ref objective]
+  missing = required.select { |key| options[key].nil? || options[key].to_s.empty? }
+  unless missing.empty?
+    warn "missing required options without --case-manifest-ref: #{missing.join(', ')}"
+    exit 1
+  end
+end
+
 writer = DualReviewer::TrackRuns::IntentTrackWriter.new(
   repo_root: repo_root,
   run_label: options.fetch("run_label"),
-  case_id: options.fetch("case_id"),
+  case_id: options["case_id"],
   review_mode: options.fetch("review_mode"),
-  intent_ref: options.fetch("intent_ref"),
+  intent_ref: options["intent_ref"],
   supporting_refs: options.fetch("supporting_refs"),
   operator: options.fetch("operator"),
-  objective: options.fetch("objective"),
+  objective: options["objective"],
   output_root: options["output_root"],
   case_manifest_ref: options["case_manifest_ref"],
   runtime_run_root_base: options["runtime_run_root_base"]
@@ -54,7 +56,7 @@ writer = DualReviewer::TrackRuns::IntentTrackWriter.new(
 puts JSON.pretty_generate(
   "track" => "intent",
   "run_label" => options.fetch("run_label"),
-  "case_id" => options.fetch("case_id"),
+  "case_id" => options["case_id"],
   "review_mode" => options.fetch("review_mode"),
   "paths" => writer.write_all.transform_values(&:to_s)
 )

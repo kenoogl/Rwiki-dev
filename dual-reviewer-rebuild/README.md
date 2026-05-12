@@ -8,6 +8,8 @@ Review system 再構築用 repository。
 
 その次に、役割分担は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)、信頼境界は [TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md:1) を読む。
 
+新しい case を参照 case なしで起こすときは、[reference-free-case-bootstrap-guide.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/reference-free-case-bootstrap-guide.md:1) と `ruby dual-reviewer-rebuild/scripts/bootstrap_reference_free_case.rb <case-slug> --intent-source <path> --canonical-source <path>` を使う。
+
 ## Purpose
 
 - dual-reviewer runtime を repo 内完結で再構築する
@@ -20,7 +22,7 @@ Review system 再構築用 repository。
 - `operations/` = deploy / trust / workflow / invalidation
 - `CONVENTIONS.md` = status / 用語 / naming の共通規約
 - `DOCUMENT_INDEX.md` = 文書と主要 artifact の所在 index
-- `.kiro/specs/` = `cc-sdd` の spec 正本
+- `.kiro/specs/` = 意図駆動ワークフローの spec 正本
 - `runtime/` = prompts / policies / schemas / skills / validators
 - `experiments/` = protocol / runs / analysis
 - `learning/` = 改善提案と採否履歴

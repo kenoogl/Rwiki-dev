@@ -9,17 +9,11 @@ require_relative "track_runs/spec_track_writer"
 repo_root = Pathname(__dir__).join("..").expand_path
 
 options = {
-  "run_label" => "F1-spec-track-single",
-  "case_id" => "F1-spec-phase-field-reverse-spec",
+  "run_label" => "spec-track-run",
   "review_mode" => "single_review",
-  "reviewed_phase" => "tasks",
-  "reviewed_phase_ref" => ".kiro/specs/phase-field-reverse-spec/tasks.md",
-  "adjacent_phase_refs" => [
-    ".kiro/specs/phase-field-reverse-spec/requirements.md",
-    ".kiro/specs/phase-field-reverse-spec/design.md"
-  ],
+  "adjacent_phase_refs" => [],
   "alignment_refs" => [],
-  "case_manifest_ref" => "experiments/protocols/case_manifests/F1-spec-phase-field-reverse-spec.yaml",
+  "case_manifest_ref" => nil,
   "operator" => "pending"
 }
 
@@ -38,13 +32,22 @@ OptionParser.new do |opts|
   opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |value| options["runtime_run_root_base"] = value }
 end.parse!(ARGV)
 
+if options["case_manifest_ref"].nil?
+  required = %w[case_id reviewed_phase reviewed_phase_ref]
+  missing = required.select { |key| options[key].nil? || options[key].to_s.empty? }
+  unless missing.empty?
+    warn "missing required options without --case-manifest-ref: #{missing.join(', ')}"
+    exit 1
+  end
+end
+
 writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
   repo_root: repo_root,
   run_label: options.fetch("run_label"),
-  case_id: options.fetch("case_id"),
+  case_id: options["case_id"],
   review_mode: options.fetch("review_mode"),
-  reviewed_phase: options.fetch("reviewed_phase"),
-  reviewed_phase_ref: options.fetch("reviewed_phase_ref"),
+  reviewed_phase: options["reviewed_phase"],
+  reviewed_phase_ref: options["reviewed_phase_ref"],
   adjacent_phase_refs: options.fetch("adjacent_phase_refs"),
   alignment_refs: options.fetch("alignment_refs"),
   case_manifest_ref: options["case_manifest_ref"],
@@ -56,8 +59,8 @@ writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
 puts JSON.pretty_generate(
   "track" => "spec",
   "run_label" => options.fetch("run_label"),
-  "case_id" => options.fetch("case_id"),
+  "case_id" => options["case_id"],
   "review_mode" => options.fetch("review_mode"),
-  "reviewed_phase" => options.fetch("reviewed_phase"),
+  "reviewed_phase" => options["reviewed_phase"],
   "paths" => writer.write_all.transform_values(&:to_s)
 )

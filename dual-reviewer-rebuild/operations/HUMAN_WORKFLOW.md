@@ -2,7 +2,7 @@
 
 ## 1. この文書の役割
 
-この文書は、`dual-reviewer-rebuild` において人間、Codex、`cc-sdd` review process がどう分担するかを定義する。
+この文書は、`dual-reviewer-rebuild` において人間、Codex、意図駆動ワークフロー review process がどう分担するかを定義する。
 
 本 repo では、system の一部を LLM が動かし、開発そのものも Codex が支援する。そのため、
 
@@ -18,21 +18,21 @@
 
 - 上位意図と最終判断は人間が持つ
 - 仕様具体化、実装、validator 整備、migration 作業は Codex が主担当になってよい
-- ただし `cc-sdd` の phase approval は人間が行う
+- ただし意図駆動ワークフローの phase approval は人間が行う
 - Codex は承認の代行者ではない
 - progress / reopen / alignment の current state は `spec.json` を正本とする
 
 ## 2.5 採用する開発スタイル
 
-本 repo では、完全自律型でも完全フレームワーク型でもなく、`cc-sdd` を骨格にした LLM 協調開発を採用する。
+本 repo では、完全自律型でも完全フレームワーク型でもなく、意図駆動ワークフローを骨格にした LLM 協調開発を採用する。
 
 意味:
 
-- 上位の方法論と phase gate は `cc-sdd` に従う
+- 上位の方法論と phase gate は意図駆動ワークフローに従う
 - 各 phase の具体化、文書起草、実装、検証は Codex が主担当になってよい
 - 承認、scope change、runtime-affecting change の採否は人間が持つ
 
-このため、Codex は「流儀を守りながら進める実装担当」であり、`cc-sdd` を置き換える存在ではない。
+このため、Codex は「流儀を守りながら進める実装担当」であり、意図駆動ワークフローを置き換える存在ではない。
 
 ## 3. 役割定義
 
@@ -80,7 +80,7 @@ Codex がやってはいけないこと:
 - invalid data を valid 扱いで前進させること
 - paper 都合で runtime rule を変えること
 
-### 3.3 `cc-sdd` review process
+### 3.3 意図駆動ワークフロー review process
 
 主責務:
 
@@ -90,7 +90,7 @@ Codex がやってはいけないこと:
 - multi-feature 間の alignment gate
 - implementation への流入制御
 
-`cc-sdd` は開発 process の骨格であり、Codex の補助機能ではない。Codex はその骨格の中で作業する。
+意図駆動ワークフローは開発 process の骨格であり、Codex の補助機能ではない。Codex はその骨格の中で作業する。
 
 ## 4. 旧 repo と新 repo の扱い
 
@@ -119,7 +119,7 @@ Codex がやってはいけないこと:
 新 repo は以下として扱う。
 
 - 正本
-- `cc-sdd` 開発の主作業場
+- 意図駆動ワークフロー開発の主作業場
 - runtime / evaluation / self-improvement の再構築場
 
 ## 5. 開発 workflow
@@ -146,11 +146,92 @@ Codex がやってはいけないこと:
 
 補足:
 
-- `cc-sdd` は phase の順序と gate を規定する
+- 意図駆動ワークフローは phase の順序と gate を規定する
 - Codex は各 gate の内側で、必要な調査、文書化、整合チェック、修正を進める
 - feature 間で依存が強い場合は、vertical に 1 feature を最後まで進めず、requirements wave や cross-spec review を優先する
 - feature 間依存と phase 進行順は [phase-and-feature-dependency-map.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/phase-and-feature-dependency-map.md) を参照する
 - 本 repo の spec 文書は、初期の dogfooding review 対象としても扱う
+
+### 5.2.1 開始指示の既定解釈
+
+本 repo では、user が case 開始時に
+
+- `<case-slug> を intent から進めてください`
+- `この intent と仕様から case を始めてください`
+
+のように短く指示した場合、細かい stop 条件がなくても
+**次の human gate まで進める**
+のを既定とする。
+
+intent-start の既定解釈:
+
+1. source docs を読む
+2. `intent` の current understanding を固定する
+3. active feature set 案を作る
+4. feature dependency order と主要 open question を整理する
+5. 最初の human gate input として提示する
+
+この既定では、user が明示的に追加指示しない限り、
+
+- requirements 文書を勝手に生成し切らない
+- design / tasks へ自動で進まない
+- implementation へ入らない
+
+つまり、開始指示は
+`最初の意味ある gate まで自然に進める`
+ための短い command として扱う。
+
+例外:
+
+- user が明示的に
+  - `requirements wave まで進めて`
+  - `最初の gate を越えて続けて`
+  のように指示した場合は、その追加条件を優先する
+
+### 5.2.1.1 参照 case なしの bootstrap
+
+本番運用では、特定の既存 case を参照しなくても
+新しい case を始められなければならない。
+
+そのため、新規 case は原則として次から始める。
+
+- bootstrap guide:
+  - [reference-free-case-bootstrap-guide.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/reference-free-case-bootstrap-guide.md:1)
+- bootstrap script:
+  - `ruby dual-reviewer-rebuild/scripts/bootstrap_reference_free_case.rb <case-slug> --intent-source <path> --canonical-source <path>`
+
+この bootstrap で最初に起こすもの:
+
+- umbrella `intent.md`
+- umbrella `spec.json`
+- case workflow overlay
+- active worklist
+- workflow path
+
+ルール:
+
+- 既存 case の中身はコピーしない
+- 再利用してよいのは template と gate structure だけとする
+- case 固有 stress は、その case 自身の source から書く
+
+### 5.2.1.2 heuristic profile の既定方針
+
+`heuristic_profile` は、case を rich に見せるために最初から増やさない。
+
+既定方針:
+
+- `heuristic_profile_ref` を case manifest に書かない場合、
+  runner は track ごとの minimal template を使ってよい
+- minimal template は次を正本とする
+  - implementation:
+    - [implementation/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/implementation/_minimal_template.yaml:1)
+  - intent:
+    - [intent/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/intent/_minimal_template.yaml:1)
+  - spec:
+    - [spec/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/_minimal_template.yaml:1)
+- case 固有 rule は、approved source に anchored した review-critical contract があるときだけ追加する
+
+詳細方針は [heuristic_profiles/README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/README.md:1) を正本とする。
 
 ### 5.2.2 手動適用方針
 
@@ -245,6 +326,64 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 
 この gate は optional ではなく、multi-feature 開発では標準手順とする。
 
+### 5.2.5.5 wave 指示の既定解釈
+
+本 repo では、user が
+
+- `requirements wave を進めてください`
+- `design wave を進めてください`
+- `tasks wave を進めてください`
+
+のように指示した場合、stop 条件を細かく追加で書かなくても、既定でその phase の gate package 作成まで進める。
+
+既定解釈:
+
+- `requirements wave`
+  - 各 feature の requirements 起草
+  - feature-local review
+  - requirements review wave
+  - requirements alignment gate
+  - human requirements gate package 作成
+  - `design` には自動で進まない
+- `design wave`
+  - 各 feature の design 起草
+  - feature-local review
+  - design review wave
+  - design alignment gate
+  - human design gate package 作成
+  - `tasks` には自動で進まない
+- `tasks wave`
+  - 各 feature の tasks 起草
+  - feature-local review
+  - tasks review wave
+  - tasks alignment gate
+  - human tasks gate package 作成
+  - `implementation` には自動で進まない
+
+この既定を置く理由は、user が
+`どこで止めるか`
+を毎回細かく指示しなくても、phase 単位で自然に使えるようにするためである。
+
+各 wave の終端では、gate package に
+`今ここで人間が何を判断すればよいか`
+を明示する。
+
+最低限含めるもの:
+
+- この gate で承認すべき対象
+- まだ判断しなくてよい対象
+- 重要な方針選択と current proposal
+- `approve / reject / defer` が次の phase にどう効くか
+
+例外:
+
+- user が明示的に
+  - `design まで続けて`
+  - `tasks まで一気に`
+  - `approval 後を仮定して先へ進めて`
+  のように指示した場合は、その追加指示を優先する
+- upstream phase が未承認の場合は、下流 phase には進まない
+
 ### 5.2.6 遡上修正時の強制再調整
 
 本 repo では、いったん先の phase に進んだ後でも、上流文書や既存 spec に遡って修正が入ることを前提にする。
@@ -292,6 +431,7 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - workflow gate status ref
 - metric snapshot
 - open point carried forward
+- human decision guide
 - gate readiness statement
 
 ルール:
@@ -302,6 +442,7 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - human gate request は、原則としてこの summary を入口に行う
 - `intent` と `requirements` の gate input 文書は、人間が意味を追える平易な文章で書かれていなければならない
 - `design` と `tasks` は、責務・依存・実装順序が追える限り、ソフトウェア工学的なフォーマットを許容する
+- summary には `この gate で何を判断するか / 今は何を判断しないか` を平易に書く
 
 ### 5.3 implementation フェーズ
 
@@ -367,6 +508,9 @@ reverse-engineered case や clean-room case では、coding そのものとは�
 - preparation memo はそれらの固定と参照に徹し、新しい要件を暗黙追加してはならない
 - multi-feature case では、shared file owner と implementation order を preparation で再確認する
 - clean-room case では、除外すべき implementation source を preparation で明示する
+- implementation protocol と snapshot boundary は、原則として次の template から起こす
+  - [implementation-phase-protocol-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-phase-protocol-template.md:1)
+  - [implementation-phase-snapshot-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-phase-snapshot-template.md:1)
 
 #### review acquisition gate summary
 
@@ -462,7 +606,7 @@ Codex は「実装担当」であって「意思決定の代替」ではない�
 実務上の整理:
 
 - `intent` と `operations` は人間主導、Codex 起草支援
-- `requirements` / `design` / `tasks` は `cc-sdd` gate、人間承認、Codex 具体化
+- `requirements` / `design` / `tasks` は意図駆動ワークフロー gate、人間承認、Codex 具体化
 - `implementation` は Codex 主導、人間 review
 - `evaluation` と `self-improvement` は Codex が分析し、人間が採否を持つ
 
@@ -483,6 +627,6 @@ Codex は「実装担当」であって「意思決定の代替」ではない�
 
 本書は、少なくとも以下を満たすときに有効とみなす。
 
-- 人間、Codex、`cc-sdd` の役割分担を一読で説明できる
+- 人間、Codex、意図駆動ワークフローの役割分担を一読で説明できる
 - 旧 repo と新 repo の使い分けが明確である
 - phase approval の責任が曖昧でない

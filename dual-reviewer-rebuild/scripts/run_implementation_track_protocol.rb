@@ -9,25 +9,12 @@ require_relative "track_runs/implementation_track_runner"
 repo_root = Pathname(__dir__).join("..").expand_path
 
 options = {
-  "run_label" => "F1-implementation-track-single",
-  "case_id" => "F1-phase-field-cpp",
+  "run_label" => "implementation-track-run",
   "review_mode" => "single_review",
-  "implementation_snapshot_ref" => ".kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md",
-  "upstream_spec_refs" => [
-    ".kiro/specs/phase-field-reverse-spec/intent.md",
-    ".kiro/specs/phase-field-reverse-spec/requirements.md",
-    ".kiro/specs/phase-field-reverse-spec/design.md",
-    ".kiro/specs/phase-field-reverse-spec/tasks.md"
-  ],
-  "governance_refs" => [
-    "dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md",
-    "dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md",
-    "dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md"
-  ],
-  "case_manifest_ref" => "experiments/protocols/case_manifests/F1-phase-field-cpp.yaml",
+  "upstream_spec_refs" => [],
+  "governance_refs" => [],
   "operator" => "pending",
-  "phase_profile" => "tasks",
-  "target_id" => "implementation:phase-field-cpp"
+  "case_manifest_ref" => nil
 }
 
 OptionParser.new do |opts|
@@ -48,18 +35,28 @@ OptionParser.new do |opts|
   opts.on("--export-root-base PATH", "Custom export root base") { |value| options["export_root_base"] = value }
 end.parse!(ARGV)
 
+if options["case_manifest_ref"].nil?
+  required = %w[case_id implementation_snapshot_ref phase_profile target_id]
+  missing = required.select { |key| options[key].nil? || options[key].to_s.empty? }
+  missing << "upstream_spec_refs" if options["upstream_spec_refs"].empty?
+  unless missing.empty?
+    warn "missing required options without --case-manifest-ref: #{missing.join(', ')}"
+    exit 1
+  end
+end
+
 runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
   repo_root: repo_root,
   run_label: options.fetch("run_label"),
-  case_id: options.fetch("case_id"),
+  case_id: options["case_id"],
   review_mode: options.fetch("review_mode"),
-  implementation_snapshot_ref: options.fetch("implementation_snapshot_ref"),
+  implementation_snapshot_ref: options["implementation_snapshot_ref"],
   upstream_spec_refs: options.fetch("upstream_spec_refs"),
   governance_refs: options.fetch("governance_refs"),
   case_manifest_ref: options["case_manifest_ref"],
   operator: options.fetch("operator"),
-  phase_profile: options.fetch("phase_profile"),
-  target_id: options.fetch("target_id"),
+  phase_profile: options["phase_profile"],
+  target_id: options["target_id"],
   target_artifact_hash: options["target_artifact_hash"],
   protocol_output_root: options["protocol_output_root"],
   runtime_run_root_base: options["runtime_run_root_base"],
@@ -71,7 +68,7 @@ result = runner.run_all
 puts JSON.pretty_generate(
   "track" => "implementation",
   "run_label" => options.fetch("run_label"),
-  "case_id" => options.fetch("case_id"),
+  "case_id" => options["case_id"],
   "review_mode" => options.fetch("review_mode"),
   "run_id" => result.fetch("run_id"),
   "bundle_id" => result.fetch("bundle_id"),
