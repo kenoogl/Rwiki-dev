@@ -56,7 +56,7 @@ _status: 計画系のみを反映した最小索引 v1.0_
 ## 第 5 章 取得計画とガイド
 
 - [v2-acquisition-design.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/v2-acquisition-design.md:1)
-  - 対応する spec：[.kiro/specs/dual-reviewer-v2-acquisition/](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-v2-acquisition/)
+  - 対応する spec：[dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/)
 - [intent-track-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-first-run-plan.md:1)
 - [spec-track-first-run-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-first-run-plan.md:1)
 - [reference-free-case-bootstrap-guide.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/reference-free-case-bootstrap-guide.md:1)
