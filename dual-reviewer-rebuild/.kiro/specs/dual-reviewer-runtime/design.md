@@ -465,17 +465,7 @@ v2 runtime は case manifest を track-aware object として扱う。
   - `spec`
   - `intent`
   それぞれは track 固有の required field set を持つ
-- optional fields
-  - `heuristic_profile_ref` のような tuning input は optional にしてよい
-
-heuristic resolution rule:
-
-- case manifest に `heuristic_profile_ref` がある場合
-  - その ref を使う
-- ない場合
-  - `scripts/track_runs/default_heuristic_profile_ref.rb` が返す track ごとの minimal template を使う
-
-このとき重要なのは、default fallback を hidden behavior にしないことだ。resolved heuristic ref は analysis input と protocol manifest の双方から辿れるように残す。
+備考：旧 v1 では `heuristic_profile_ref`（規則ファイル参照）を case manifest の任意項目として持ち、heuristic resolution rule で resolution の優先順位を定義していたが、v2 では規則ファイル参照を撤廃する方針のため、本項は削除した。詳細は v2 取得 spec（`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/`）を参照。
 
 ### Generic Protocol Entrypoint Rule
 
@@ -490,13 +480,9 @@ heuristic resolution rule:
 
 これにより、reference-free case でも runtime entry が `heat3d` や `phase-field` の既存 run label に暗黙依存しない。
 
-### Generic Fragment Cue Rule
+### Generic Fragment Cue Rule（削除済み）
 
-runtime の reusable analyzer / pattern cue は、implementation snapshot や upstream spec を読むときに
-section heading、section class、review focus、bullet ordinal のような structural cue を優先する。
-
-case 固有の basename や pilot-case heading を generic analyzer の条件に埋め込まない。
-pilot-case から得た learned cue を使いたい場合は、foundation seed pattern ではなく project/case 側 artifact に置く。
+旧 v1 では runtime の汎用解析器とパターン cue を structural cue ベースに寄せる規約を持っていたが、v2 では実 LLM 呼び出しに置き換えてパターン照合自体を撤廃する方針のため、本節は削除した。詳細は v2 取得 spec（`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/`）を参照。
 
 runtime は evidence を 3 層に分けて保存する。
 

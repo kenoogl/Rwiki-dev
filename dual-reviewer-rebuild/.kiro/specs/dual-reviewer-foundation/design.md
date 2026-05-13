@@ -136,9 +136,6 @@ runtime/
 ├── prompts/
 │   └── judgment/
 │       └── judgment_reviewer.prompt.md
-├── patterns/
-│   ├── seed_patterns.yaml
-│   └── fatal_patterns.yaml
 ├── config/
 │   ├── config.yaml.template
 │   └── terminology.yaml.template
@@ -389,40 +386,9 @@ prompt は plain text ではなく frontmatter 付き Markdown artifact とす�
 
 foundation は prompt の canonical placement と identity rule を定義するが、実際の prompt selection policy は runtime が持つ。
 
-### 7. Pattern and Terminology Assets
+### 7. 削除済み（旧 Pattern and Terminology Assets）
 
-`seed_patterns.yaml` と `fatal_patterns.yaml` は runtime logic ではなく data source として扱う。
-
-両者に共通するルール:
-
-- top-level `version` を持つ
-- artifact 自体が正本であり、code に同内容を埋め込まない
-- matching logic は持たない
-
-差分は次の通り。
-
-- `seed_patterns.yaml`
-  - 初期は reusable seed knowledge
-  - 中長期的には meta layer pattern asset の置き場
-  - mutable だが version 増分必須
-  - reusable fragment cue は section heading、section class、review focus、bullet ordinal のような structural cue に anchored し、pilot-case basename に依存しない
-- `fatal_patterns.yaml`
-  - policy-sensitive baseline
-  - 初期再構築では stable baseline として扱う
-
-`terminology.yaml.template` は empty initial state を持つ template とし、operator memory の代替ではなく repo-contained accumulation point とする。
-
-ここで重要なのは、pattern を 1 枚岩として扱わないことだ。foundation design 上の原則は次である。
-
-- general layer
-  - pattern を読む仕組みと placement rule
-- meta layer
-  - project 横断で再利用可能な抽象 pattern
-- project-specific layer
-  - review log から抽出された concrete pattern
-
-初期段階では `seed_patterns.yaml` を meta layer 寄りの asset として扱い、project-specific concrete は後続の self-improvement / learning artifact で蓄積する。
-つまり foundation-owned pattern asset には generic seed だけを置き、pilot-case で得た concrete cue や learned pattern を generic runtime の hidden default にしない。
+旧 v1 はパターン定義ファイル（種パターン・重大パターン）を data source として配置・管理していたが、v2 では実 LLM 呼び出しに置き換える方針のため、本節は削除した。terminology template 配置の論点は本 spec の責務から外す。詳細は v2 取得 spec（`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/`）を参照。
 
 ### 8. Validation and Invalidation Model
 

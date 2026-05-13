@@ -272,24 +272,9 @@
 
 - runtime から evaluation / self-improvement への handoff 条件が mechanical に確認できる
 
-### Task 11: Implement track-aware case manifest loading and heuristic fallback
+### Task 11: 削除済み（旧 Implement track-aware case manifest loading and heuristic fallback）
 
-目的:
-
-- reference-free case でも runtime が manifest と default heuristic を deterministic に解決できるようにする
-
-作業:
-
-- track-aware case manifest validator を実装する
-- `heuristic_profile_ref` を optional field として扱う
-- `heuristic_profile_ref` が無い場合の track-specific minimal fallback map を実装する
-- resolved heuristic ref を analysis input と protocol manifest に残す
-
-完了条件:
-
-- case manifest が track ごとの required field で検証される
-- heuristic profile 未指定でも runtime が repo-contained default で起動できる
-- 後から explicit heuristic と default heuristic を区別できる
+旧 v1 では `heuristic_profile_ref`（規則ファイル参照）の optional field 扱いと、未指定時の track-specific minimal fallback の実装タスクを持っていたが、v2 では規則ファイル参照を撤廃する方針のため、本タスクは削除した。track-aware case manifest validator の設計は v2 取得 spec（`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/`）で再設計する。
 
 ### Task 12: Remove pilot-case assumptions from generic runtime entrypoints
 
@@ -300,13 +285,13 @@
 作業:
 
 - `run_*_track_protocol.rb` を explicit input or manifest-required にする
-- generic analyzer と reusable seed pattern cue を structural cue ベースに寄せる
-- case basename や pilot-case heading を generic runtime 条件から外す
+- case basename を generic runtime 条件から外す
 
 完了条件:
 
 - generic protocol wrapper が pilot case 固定値なしで動く
-- reusable analyzer / seed pattern matching が case-agnostic になる
+
+備考：旧 v1 のパターン照合関連の作業（seed pattern cue を structural cue ベースに寄せる、seed pattern matching の case-agnostic 化）は、v2 で取得処理を実 LLM 呼び出しに置き換える方針のため不要となった。詳細は v2 取得 spec（`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/`）を参照。
 
 ## 4. Downstream Handoff
 

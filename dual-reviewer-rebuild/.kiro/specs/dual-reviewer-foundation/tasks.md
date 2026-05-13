@@ -144,34 +144,9 @@
 - runtime が relative path で judgment prompt を解決できる
 - prompt identity recording に必要な field が concrete になる
 
-### Task 5: Create pattern and terminology assets
+### Task 5: 削除済み（旧 Create pattern and terminology assets）
 
-目的:
-
-- pattern asset と terminology template を repo-contained data source にする
-
-作業:
-
-- `runtime/patterns/seed_patterns.yaml`
-- `runtime/patterns/fatal_patterns.yaml`
-- `runtime/config/terminology_template.yaml`
-
-を作成する。
-
-初版では empty / starter content でよいが、
-
-- reusable seed pattern
-- project-accumulated pattern
-- terminology entries structure
-- generic fragment cue と pilot-case learned cue の区別
-
-の distinction は明示する。
-
-完了条件:
-
-- self-improvement と runtime が pattern assets の canonical placement を参照できる
-- terminology template が empty でも schema-complete である
-- foundation-owned seed pattern が case basename 前提なしで再利用できる
+旧 v1 ではパターン定義ファイル（種パターン・重大パターン）と terminology template の作成タスクを持っていたが、v2 では実 LLM 呼び出しに置き換える方針のため、本タスクは削除した。詳細は v2 取得 spec（`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/`）を参照。
 
 ### Task 6: Create validator-facing contract artifacts
 
