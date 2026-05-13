@@ -1,7 +1,8 @@
 # Generic Execution Layer v2 Spec
 
 _作成: 2026-05-10_  
-_status: draft v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _purpose: case-specific heuristic pilot を置換する generic execution layer v2 の上位仕様を固定する_
 
 ---
@@ -203,7 +204,6 @@ writer は finding を発明しない。
 - implementation/spec mismatch
 - parameter interpretation drift
 - ordered-state-transition risk
-- caveat retention
 - downstream rework traceability
 
 ---

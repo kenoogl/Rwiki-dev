@@ -1,7 +1,8 @@
 # heat3d case workflow overlay
 
 _作成: 2026-05-11_  
-_status: active case overlay v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _purpose: `heat3d` を generic workflow に載せるための case 固有差分だけを固定する_
 
 ---
@@ -15,8 +16,6 @@ generic procedure の正本は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwik
 
 - case id:
   - `C-3 heat3d`
-- core note:
-  - [core-case-heat3d.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md:1)
 - canonical source:
   - `/Users/Daily/Development/DR-heat3d/spec_seed/thermal_simulator_spec.md`
 - umbrella state:
@@ -63,11 +62,3 @@ generic procedure の正本は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwik
 - uses behavioral appendix boundary:
   - `yes`
 
-## 8. Primary Working Artifacts
-
-- workflow trace:
-  - [heat3d-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-workflow-path.md:1)
-- current control board:
-  - [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1)
-- main evidence bundle:
-  - [heat3d-c3-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/heat3d-c3-evidence-bundle.md:1)

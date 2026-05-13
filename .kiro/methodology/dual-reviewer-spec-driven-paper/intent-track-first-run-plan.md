@@ -1,7 +1,8 @@
 # Intent Track first-run plan
 
 _作成: 2026-05-09_  
-_status: draft v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _purpose: intent-only start case の最初の取得条件固定_
 
 ---
@@ -139,6 +140,4 @@ Intent Track first-run の結果は、
 3. intent review artifact の最小 field を run template に落とす
    - status:
      - reflected in [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-run-template.md:1)
-4. current cross-track story における narrative role を固定する
-   - status:
-     - reflected in [remaining-track-acquisition-bridge-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-acquisition-bridge-note.md:1)
+4. current cross-track story における narrative role は、再取得段階で確定する。

@@ -1,7 +1,8 @@
 # Core Case: phase-field
 
 _作成: 2026-05-10_  
-_status: fixed core case v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _role: scientific / numerical representative case_
 
 ---
@@ -38,8 +39,7 @@ canonical source constraint:
 
 - implementation-phase protocol:
   - [phase-field-implementation-phase-protocol.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-protocol.md:1)
-- implementation snapshot:
-  - [phase-field-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md:1)
+- implementation snapshot：再取得時に再選定する。
 
 ---
 
@@ -73,7 +73,6 @@ canonical source constraint:
 2. boundary condition semantics
 3. parameter interpretation drift
 4. update ordering and state mutation
-5. scientific caveat retention
 
 ---
 

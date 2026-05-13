@@ -1,7 +1,8 @@
 # dual-reviewer first-run plan
 
 _作成: 2026-05-09_  
-_status: draft v0.2_  
+_最終更新: 2026-05-13_  
+_status: draft v0.3_  
 _purpose: first evaluation batch の取得条件固定_
 
 ---
@@ -60,8 +61,7 @@ current note:
 ### 4.1 `phase-field` implementation phase
 
 - batch label: `F1-phase-field-cpp`
-- fixed snapshot:
-  - [phase-field-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md:1)
+- fixed snapshot：再取得時に再選定する。
 - initial comparison modes:
   - `single review`
   - `dual-reviewer workflow`
@@ -182,6 +182,4 @@ main batch の前に潰す。
      - [intent-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/intent-track-run-template.md:1)
      - [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-run-template.md:1)
      - [implementation-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/implementation-track-run-template.md:1)
-6. `Intent Track / Spec Track` の未取得分を cross-track narrative の前半 gap として位置づける
-   - status:
-     - reflected in [remaining-track-acquisition-bridge-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-acquisition-bridge-note.md:1)
+6. `Intent Track / Spec Track` の未取得分は、再取得段階で取り扱う。

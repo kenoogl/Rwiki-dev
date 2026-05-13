@@ -1,7 +1,8 @@
 # iot-arduino case workflow overlay
 
 _作成: 2026-05-12_  
-_status: review acquisition completed v1.0_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _purpose: `iot-arduino` を generic workflow に載せるための case 固有差分だけを固定する_
 
 ---
@@ -15,8 +16,6 @@ generic procedure の正本は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwik
 
 - case id:
   - `C-4-iot-arduino`
-- core note:
-  - [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:1)
 - canonical source:
   - `/Users/Daily/Development/DR-IoT/intent.md`
   - `/Users/Daily/Development/DR-IoT/仕様.md`
@@ -64,15 +63,5 @@ generic procedure の正本は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwik
 
 ## 8. Primary Working Artifacts
 
-- workflow trace:
-  - [iot-arduino-workflow-path.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-workflow-path.md:1)
-- current control board:
-  - [iot-arduino-active-worklist.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-active-worklist.md:1)
 - first gate input:
   - [2026-05-12-iot-arduino-intent-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-12-iot-arduino-intent-review.md:1)
-- current gate package:
-  - [iot-arduino-c4-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-c4-evidence-bundle.md:1)
-  - [review acquisition summary](/Users/Daily/Development/Rwiki-dev/.kiro/specs/iot-arduino-spec/reviews/review-acquisition-summary.md:1)
-  - [review acquisition gate summary](/Users/Daily/Development/Rwiki-dev/.kiro/specs/iot-arduino-spec/reviews/review-acquisition-gate-summary.md:1)
-  - [iot-arduino-review-acquisition-preparation.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-review-acquisition-preparation.md:1)
-  - [iot-arduino-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-implementation-phase-first-snapshot.md:1)

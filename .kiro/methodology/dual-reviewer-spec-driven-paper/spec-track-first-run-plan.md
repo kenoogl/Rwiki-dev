@@ -1,7 +1,8 @@
 # Spec Track first-run plan
 
 _作成: 2026-05-09_  
-_status: draft v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _purpose: spec-present case の最初の取得条件固定_
 
 ---
@@ -139,6 +140,4 @@ Spec Track first-run の結果は、
 3. phase-review metric snapshot の採取手順を run template に落とす
    - status:
      - reflected in [spec-track-run-template.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/spec-track-run-template.md:1)
-4. current cross-track story における narrative role を固定する
-   - status:
-     - reflected in [remaining-track-acquisition-bridge-note.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/remaining-track-acquisition-bridge-note.md:1)
+4. current cross-track story における narrative role は、再取得段階で確定する。
