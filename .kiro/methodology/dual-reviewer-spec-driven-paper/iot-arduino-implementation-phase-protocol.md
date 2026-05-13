@@ -1,7 +1,8 @@
 # iot-arduino implementation review acquisition protocol
 
 _作成: 2026-05-09_  
-_status: current draft v0.2_  
+_最終更新: 2026-05-13_  
+_status: draft v0.3_  
 _role: `iot-arduino` implementation track の target-specific review acquisition protocol_
 
 ---
@@ -75,7 +76,7 @@ review 対象に含めるもの:
 解釈ルール:
 
 - manual reference は qualitative calibration 用
-- operational caveat retention を明示的に評価する
+- 観測項目は再取得段階で確定する
 - accepted finding と downstream fix を結び付ける
 
 ---
@@ -88,7 +89,6 @@ review 対象に含めるもの:
 2. I/O safety
 3. operational failure mode
 4. concurrency-like hazards
-5. deployment caveat retention
 
 期待する `dual-reviewer` の役割:
 
@@ -123,7 +123,7 @@ review 対象に含めるもの:
 - `single review`
   - finding と disposition を記録
 - `dual-reviewer workflow`
-  - disagreement, operational caveat, judgment effect を記録
+  - disagreement と判断記録を残す（具体項目は再取得段階で確定）
 - `manual reference`
   - rationale summary を短く残す
 

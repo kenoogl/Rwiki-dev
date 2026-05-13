@@ -1,7 +1,8 @@
 # heat3d-julia review acquisition protocol
 
 _作成: 2026-05-09_  
-_status: draft v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _role: dual-reviewer code review evaluation の target-specific protocol_
 
 ---
@@ -67,7 +68,7 @@ review 対象に含めるもの:
 
 - manual reference は calibration 用
 - finding count 単独比較はしない
-- caveat retention と traceability を主要比較軸に含める
+- 主要比較軸は再取得段階で確定する
 
 ---
 
@@ -79,7 +80,6 @@ review 対象に含めるもの:
 2. update scheme correctness
 3. discretization assumption visibility
 4. state transition ordering
-5. performance caveat retention
 
 期待する `dual-reviewer` の役割:
 
@@ -114,7 +114,7 @@ review 対象に含めるもの:
 - `single review`
   - finding と disposition を記録
 - `dual-reviewer workflow`
-  - disagreement, caveat retention, judgment effect を記録
+  - disagreement と判断記録を残す（具体項目は再取得段階で確定）
 - `manual reference`
   - qualitative reasoning を短く残す
 

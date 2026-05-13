@@ -1,7 +1,8 @@
 # implementation phase protocol template
 
 _作成: 2026-05-12_  
-_status: template v0.1_  
+_最終更新: 2026-05-13_  
+_status: template v0.2_  
 _purpose: 新しい implementation case の review acquisition protocol を、参照 case なしで起こすための最小 template_
 
 ---
@@ -14,7 +15,7 @@ _purpose: 新しい implementation case の review acquisition protocol を、�
 
 本 target の主な役割は、
 **`<domain or code style>` review** に対して
-`dual-reviewer` が `<portability / caveat retention / boundary preservation>` を
+`dual-reviewer` が `<観測したい維持項目（再取得時に固定）>` を
 維持できるかを観測することである。
 
 ---
@@ -68,7 +69,7 @@ review 対象に含めるもの:
 解釈ルール:
 
 - manual reference は calibration 用
-- count 単独比較ではなく `<caveat retention / traceability / safety finding>` を主軸に置く
+- count 単独比較ではなく、観測対象に応じた主軸を置く（具体項目は再取得段階で確定）
 - downstream rework との接続を残す
 
 ---
@@ -116,7 +117,7 @@ review 対象に含めるもの:
 - `single review`
   - finding と disposition を記録
 - `dual-reviewer workflow`
-  - disagreement、caveat retention、judgment effect を記録
+  - disagreement と判断記録を残す（具体項目は再取得段階で確定）
 - `manual reference`
   - rationale summary を短く残す
 

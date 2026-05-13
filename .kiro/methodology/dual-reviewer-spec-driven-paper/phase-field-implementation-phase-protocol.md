@@ -1,7 +1,8 @@
 # phase-field-cpp implementation-phase acquisition protocol
 
 _作成: 2026-05-09_  
-_status: draft v0.2_  
+_最終更新: 2026-05-13_  
+_status: draft v0.3_  
 _role: `phase-field` case の implementation/review phase protocol_
 
 ---
@@ -90,8 +91,6 @@ implementation/review phase で最低限の比較軸:
 - `manual reference` は absolute ground truth としない
 - `dual-reviewer` の評価は finding count 単独で行わない
 - process / evidence metrics を必ず併記する
-- `phase-field-cpp` は representative implementation case として `single / dual / dual+judgment` を取得する
-- ここでの `dual-reviewer workflow` は treatment 名としては `dual+judgment` を指す
 
 ---
 
@@ -103,8 +102,7 @@ implementation/review phase で最低限の比較軸:
 2. boundary condition semantics
 3. parameter interpretation drift
 4. update ordering and state mutation
-5. numerical caveat retention
-6. implementation-level brittleness
+5. implementation-level brittleness
 
 期待する `dual-reviewer` の役割:
 
