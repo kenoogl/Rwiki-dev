@@ -15,27 +15,31 @@
 
 ## 2. 背景
 
-`dual-reviewer` は、LLM を用いた review system として構想・試作・評価が進められてきた。旧 repo には、review runtime、評価スクリプト、比較実験、論文化準備、失敗履歴が豊富に残っている。その意味で旧 repo は貴重な archive であり、再構築に必要な材料は十分に揃っている。
+### 2.1 v1 取得処理の汚染発見（現在の背景）
 
-一方で、旧 system は「動く prototype」としての価値はあっても、「信頼できる review runtime」としては十分ではなかった。問題は主に model の能力不足ではなく、system 境界と運用境界の設計が弱かったことにある。
+dual-reviewer の v1 取得処理は、規則ファイル照合と固定 prompt の組み合わせとして実装されていた。運用中の検証で、次の 5 層の事前設定が観測結果を縛っていることが判明した。
 
-具体的には、以下の問題があった。
+1. 主役・敵対役・判断役のプロンプトに具体トピックが書き込まれていた。
+2. ヒューリスティック規則ファイルの方針が「主役 1〜2 件、敵対役 0〜1 件」と件数を上限固定していた。
+3. 各ケースの規則ファイルが共通の三つ組語彙を持っていた。
+4. Ruby ランタイム層が規則ファイルを決定論的に照合して発見を生成していた。
+5. 論文計画書に観測結果が先取りで書かれていた。
 
-- runtime を拘束する prompt / memory / policy の一部が project directory 外にあり、deploy 対象と実行条件が一致しなかった
-- data acquisition plan が途中で複数回変更され、同じ実験系列の中で protocol 条件が揺れた
-- git branch、review 実行、評価、論文化準備が同一 repo 内で強く結合し、責務境界が崩れた
-- review 結果だけでなく内部判定過程を十分に分離して扱えず、自己改善の入力と paper narrative の入力が混線した
-- 人が system 全体像を理解するための「意図の層」が弱く、仕様書やログを大量に読まないと判断の背景が追えなかった
+その結果、3 領域・3 言語・改修反復にわたって「単独 2 件・二重 3 件・二重+判断 3 件」という偽の規則性が観測された。これは LLM レビューの本質的な性質ではなく、規則設計の帰結である。
 
-このため、再構築の目的は単に旧実装を移植することではない。review runtime を、再現性、可観測性、自己改善性を持つ system として作り直すことが目的である。
+v1 の取得結果は archive に分離済みであり、v2 では実 LLM 呼び出しに置き換えた取得処理で真の値を観測する。
 
-加えて、この再構築そのものは `dual-reviewer` の最初の適用対象でもある。すなわち本 repo では、review system を作るだけでなく、意図駆動開発の `intent`、`requirements`、`design`、`tasks` を対象に、その方法論を手動で適用しながら system を育てる。
+### 2.2 旧 repo からの再構築（歴史的経緯）
+
+`dual-reviewer` は旧 repo（review runtime、評価スクリプト、比較実験、論文化準備、失敗履歴）を起点に再構築された。旧実装は「動く prototype」としての価値はあったが、prompt や policy の repo 外散在、データ取得計画の揺れ、責務境界の崩れ、意図層の弱さなど、system 境界と運用境界の設計に課題があった。本 system は、これを移植ではなく再現性・可観測性・自己改善性を持つ runtime として作り直すことを目的とする。
+
+加えて、本再構築は `dual-reviewer` の最初の適用対象でもある。すなわち本 repo では、review system を作るだけでなく、意図駆動開発の `intent`、`requirements`、`design`、`tasks` を対象に、その方法論を手動で適用しながら system を育てる。
 
 ## 3. 再構築が解くべき中心問題
 
 ### 3.1 再現可能性の欠如
 
-旧 system では、repo 外 memory や operator の暗黙知に依存する部分があった。この状態では、ある run がなぜその出力になったのかを第三者が再現できない。再構築では、clone 直後に同一 prompt / policy / schema / protocol で同じ review runtime を起動できることを最低条件にする。
+旧 repo の system では、repo 外 memory や operator の暗黙知に依存する部分があった。この状態では、ある run がなぜその出力になったのかを第三者が再現できない。再構築では、clone 直後に同一 prompt / policy / schema / protocol で同じ review runtime を起動できることを最低条件にする。
 
 ### 3.2 実験条件の drift
 
@@ -43,7 +47,7 @@ review system は評価しながら進化させる必要があるが、進化の
 
 ### 3.3 runtime と evaluation の混線
 
-旧 system では、runtime 改善、比較評価、論文化準備が近接しすぎていた。研究上は便利でも、system としては危険である。再構築では、runtime、evaluation、paper input を分離し、paper の都合で runtime rule を先に変えない構造にする。
+旧 repo の system では、runtime 改善、比較評価、論文化準備が近接しすぎていた。研究上は便利でも、system としては危険である。再構築では、runtime、evaluation、paper input を分離し、paper の都合で runtime rule を先に変えない構造にする。
 
 ### 3.4 自己改善の非形式性
 
@@ -52,6 +56,10 @@ review system の精度を上げるには、review 記録と内部挙動 evidenc
 ### 3.5 全体像の不可視性
 
 旧 repo には大量の spec、log、draft、script が存在するが、それらの背後にある「なぜこう設計されたのか」が分散していた。再構築では、intent を spec より上位に置き、人が system を理解するための入口を作る。
+
+### 3.6 取得処理の事前設定への退行
+
+LLM レビューを謳う system が、実際には規則ファイル照合や固定 prompt の単純写像になっていると、件数構成や論点が観測前に決まり、レビュー方式の差を測ることができなくなる。再構築では、取得処理が実 LLM 呼び出しに基づくこと、prompt や規則ファイルなどの事前設定が観測結果を縛らないことを最低条件にする。
 
 ## 4. この system が目指す状態
 
@@ -94,6 +102,10 @@ review system の精度を上げるには、review 記録と内部挙動 evidenc
 `dual-reviewer` は、この複雑性増大局面で人間の認知を補う review system である。特に `design` と `tasks` を高価値 phase とみなす。
 
 初期段階では、この価値仮説をまず本 repo 自身に対して検証する。つまり `dual-reviewer` は外部 project に適用される前に、この再構築の spec 群に対して手動運用される dogfooding 対象となる。
+
+### 4.7 取得処理が事前設定の写像にならない
+
+review の取得処理は、規則ファイル照合や固定 prompt の単純写像ではなく、実 LLM の判断に基づいて発見と判断を生成する。prompt、policy、規則ファイルなどの事前設定は、取得対象や入力範囲の固定には使ってよいが、観測結果（発見の件数、内容、構造）を縛ってはならない。
 
 ## 5. 想定利用者
 

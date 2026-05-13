@@ -147,14 +147,6 @@
 4. The runtime shall distinguish bundle export from central-side ingestion or admission decisions.
 5. The runtime shall not require repo-external hidden memory to reconstruct the meaning of an exported bundle.
 
-### Requirement 10: Track-Aware Case Manifest and Default Heuristic Resolution
+### Requirement 10: 削除済み
 
-**Objective:** As an operator starting or replaying a case, I want runtime entrypoints to accept track-aware manifests and deterministic defaults, so that new cases can run without inheriting hidden pilot-case assumptions.
-
-#### Acceptance Criteria
-
-1. The runtime shall validate case manifests against track-specific required fields while allowing shared optional fields such as `heuristic_profile_ref`.
-2. The runtime shall allow `heuristic_profile_ref` to be omitted from a case manifest and shall resolve a repo-contained minimal default per track in that case.
-3. The runtime shall preserve the resolved heuristic profile reference in runtime or protocol-facing inputs so later review can distinguish explicit case heuristics from track defaults.
-4. The runtime shall require generic protocol entrypoints to receive either a `case_manifest_ref` or an explicit complete input set, rather than silently falling back to pilot-case defaults.
-5. The runtime shall keep generic analyzer and seed-pattern matching case-agnostic, using structural snapshot cues instead of legacy case basenames for reusable matching.
+旧 v1 の取得処理は規則ファイル参照（`heuristic_profile_ref`）と種パターン照合に依存していたが、v2 では実 LLM 呼び出しに置き換える方針のため、本要件は削除した。ケース取得設定のトラック検証は v2 取得 spec（`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/`）で再設計する。

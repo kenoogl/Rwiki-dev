@@ -98,19 +98,9 @@
 4. The foundation shall define prompt placement rules that downstream runtime code can locate using relative repo paths only.
 5. The foundation shall require that prompt content updates be detectable through ordinary repository diff history.
 
-### Requirement 5: Pattern and Terminology Assets
+### Requirement 5: 削除済み
 
-**Objective:** As a runtime and self-improvement implementer, I want stable pattern and terminology asset contracts, so that reusable knowledge can be attached without changing runtime code.
-
-#### Acceptance Criteria
-
-1. The foundation shall define canonical placement rules for `seed_patterns.yaml` and `fatal_patterns.yaml`.
-2. The foundation shall preserve the distinction between reusable seed patterns and project-accumulated patterns.
-3. The foundation shall define a terminology template artifact with explicit versioning and an empty initial entries structure.
-4. The foundation shall define pattern assets as data sources, not embedded constants in runtime code.
-5. The foundation shall define reusable seed pattern cues in a case-agnostic form that does not depend on pilot-case file basenames or case identifiers for generic matching.
-6. The foundation shall preserve the boundary where pilot- or project-specific learned patterns live outside the foundation-owned seed asset.
-7. The foundation shall leave matching logic and quota logic out of scope for this spec.
+旧 v1 の取得処理はパターン定義ファイル（種パターン・重大パターン）との照合に依存していたが、v2 では実 LLM 呼び出しに置き換える方針のため、本要件は削除した。パターン関連の資産配置規約は本 spec の責務から外す。詳細は v2 取得 spec（`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-v2-acquisition/`）を参照。
 
 ### Requirement 6: Validator-Oriented Metadata Contract
 
