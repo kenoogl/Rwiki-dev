@@ -1,7 +1,8 @@
 # Intent Track first case: dual-reviewer-rebuild
 
 _作成: 2026-05-09_  
-_status: fixed for first-run v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _role: `F1-intent-track` の concrete case 固定_
 
 ---
@@ -24,8 +25,8 @@ concrete case を固定する。
 - track: `Intent Track`
 - target label: `dual-reviewer-rebuild`
 - role in paper:
-  - intent-origin workflow validity
-  - intent-only bootstrap representative
+  - intent-origin の作業の流れが成立するかを観測する候補ケース（最終確定は再取得後）。
+  - intent-only 開始の代表候補。
 
 ---
 
@@ -40,8 +41,7 @@ concrete case を固定する。
 
 ### 3.1 Intent-Side Anchor
 
-- canonical intent ref:
-  - [dual-reviewer-spec-driven-paper-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md:1)
+- canonical intent ref：再取得時に再選定する。当面は次の supporting refs を参考にする。
 - supporting intent/governance refs:
   - [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
   - [workflow-repair-procedure.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md:1)

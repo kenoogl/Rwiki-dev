@@ -1,7 +1,8 @@
 # Spec Track first case: phase-field-reverse-spec
 
 _作成: 2026-05-10_  
-_status: fixed for first-run v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _role: `F1-spec-track` の concrete case 固定_
 
 ---
@@ -25,8 +26,8 @@ concrete case を固定する。
 - track: `Spec Track`
 - target label: `phase-field-reverse-spec`
 - role in paper:
-  - scientific spec-origin case
-  - high-cognitive-load downstream refinement representative
+  - spec-origin で下流の認知的負荷が大きい候補ケース（最終確定は再取得後）。
+  - 科学計算系の代表候補。
 
 ---
 
@@ -77,12 +78,7 @@ Spec Track first-run では、この phase 状態自体も観測対象に含め�
 
 ### 3.3 Downstream Implementation Reference
 
-- implementation-side reference:
-  - [phase-field-implementation-phase-first-snapshot.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-implementation-phase-first-snapshot.md:1)
-
-この reference は main target ではないが、
-spec-side issue が downstream implementation へどう波及するかを
-説明する補助 anchor として使う。
+downstream implementation との接続は、再取得後に固定する。再取得段階で、spec-side issue が downstream implementation へどう波及するかを説明する補助 anchor を選定する。
 
 ---
 

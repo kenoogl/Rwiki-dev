@@ -1,7 +1,8 @@
 # reference-free case bootstrap guide
 
 _作成: 2026-05-12_  
-_status: active guide v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _purpose: 既存の参照 case に依存せず、新しい case を intent 起点で立ち上げるための最小ガイド_
 
 ---
@@ -38,8 +39,7 @@ _purpose: 既存の参照 case に依存せず、新しい case を intent 起�
   - [review-acquisition-preparation-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/review-acquisition-preparation-template.md:1)
 - review acquisition gate summary:
   - [review-acquisition-gate-summary-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/review-acquisition-gate-summary-template.md:1)
-- heuristic profile policy:
-  - [heuristic_profiles/README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/README.md:1)
+- heuristic profile policy：v2 以降のコード修正で再設計する。当面は参照しない。
 
 ---
 
@@ -86,24 +86,9 @@ _purpose: 既存の参照 case に依存せず、新しい case を intent 起�
 
 ## 5. Minimal Heuristic Policy
 
-`heuristic_profile` は、最初から多くの rule を持たせない。
+`heuristic_profile` の方針は、取得処理を実 LLM 呼び出しに置き換える v2 以降のコード修正で再設計する。本ガイドの作成時点では、件数ガイダンスや具体的な追加方針を提示しない。
 
-基本方針:
-
-- まず minimal template をそのまま置く
-- review-critical contract が明確なときだけ `primary_detection` を追加する
-- adversarial caveat が明確なときだけ `adversarial_review` を追加する
-- 追加 rule は各 step で 1-2 件から始める
-
-implementation なら、最初に考えるべきは次のどちらかで十分である。
-
-- safety / correctness contract
-- caveat / boundary preservation contract
-
-intent / spec なら、最初に考えるべきは次のどちらかで十分である。
-
-- phase contract gap
-- ownership / boundary drift
+新規 case で `heuristic_profile` を必要とする場合は、再設計後の方針に従う。
 
 ---
 
