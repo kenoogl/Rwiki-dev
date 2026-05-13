@@ -1,7 +1,8 @@
 # Claim-Case Matrix
 
 _作成: 2026-05-09_  
-_status: draft v0.1_  
+_最終更新: 2026-05-13_  
+_status: draft v0.2_  
 _purpose: claim と評価 case の対応を固定する_
 
 ---
@@ -23,19 +24,19 @@ _purpose: claim と評価 case の対応を固定する_
 
 ### Claim 1
 
-`dual-reviewer` は、意図駆動開発の下流工程で review attention を構造化し、cognitive brittleness を緩和するよう設計されている。
+`dual-reviewer` は、意図駆動開発（intent-driven development = 意図や仕様を起点に開発を進める方法）の下流の工程で、レビューでどこに注目するかを段階ごとに整理することを目指した設計である。そうした整理が下流での見落としや手戻りを実際に減らすかどうかは、観測課題として残し、本書では断定しない。
 
 ### Claim 2
 
-`dual-reviewer` は、finding だけでなく disagreement, caveat, disposition, handback depth を traceable に残す。
+`dual-reviewer` は、発見（finding）だけでなく、レビューア間の意見の不一致、注意書き、判断結果、差し戻しの重さといった付随情報を、レビュー成果物の中で機械可読な形で扱えるように設計されている。それらが実際に追跡可能な形で保持されているかは、観測課題として残す。
 
 ### Claim 3
 
-`dual-reviewer` は、`intent-only`, `spec-present`, `implementation-present` の異なる開始条件でも workflow を維持できる。
+`dual-reviewer` は、意図のみが存在する状態（intent-only）、仕様まで存在する状態（spec-present）、実装まで存在する状態（implementation-present）という 3 つの開始条件のいずれからも作業を起こせるよう設計されている。各条件で作業の流れが実際に維持されるかは、観測課題として残す。
 
 ### Claim 4
 
-`dual-reviewer` は、review 後の evidence を self-improvement / reporting に再利用可能な形で残す。
+`dual-reviewer` は、レビュー後の成果物を、自己改善（self-improvement = 過去の信号から学んで次のレビューに反映する仕組み）や報告生成に渡せる構造で保存する設計である。再利用がどこまで実用に耐えるかは、観測課題として残す。
 
 ---
 
@@ -66,12 +67,14 @@ _purpose: claim と評価 case の対応を固定する_
 
 ## 4. Orthogonal Matrix
 
-| claim | required case class | primary case | secondary case | not acceptable as main evidence |
-|---|---|---|---|---|
-| `Claim 1` | `Intent-origin` | `dual-reviewer-rebuild` | intent 付き `phase-field-reverse-spec`, intent 付き `heat3d`, intent 付き `iot-arduino` | `intent` がない case |
-| `Claim 2` | `Intent-origin` または `Spec-origin`、補助として `Implementation-origin` | `dual-reviewer-rebuild`, intent 付き `phase-field-reverse-spec` | `F1-phase-field-cpp-r2`, intent 付き `heat3d`, intent 付き `iot-arduino` | intent なし code-only case |
-| `Claim 3` | `Intent-origin` + `Spec-origin` + `Implementation-origin` の組 | `dual-reviewer-rebuild` + intent 付き `phase-field-reverse-spec` + `F1-phase-field-cpp-r2` | `heat3d`, `iot-arduino` | `intent-absent reconstruction` を主 case にすること |
-| `Claim 4` | `Implementation-origin`、ただし upstream `intent/spec` が必須 | `F1-phase-field-cpp-r2`, `heat3d-julia` | `iot-arduino` | upstream を持たない implementation-only case |
+| claim | required case class |
+|---|---|
+| `Claim 1` | `Intent-origin` |
+| `Claim 2` | `Intent-origin` または `Spec-origin`、補助として `Implementation-origin` |
+| `Claim 3` | `Intent-origin` + `Spec-origin` + `Implementation-origin` の組 |
+| `Claim 4` | `Implementation-origin`、ただし upstream `intent/spec` が必須 |
+
+各主張の主証拠ケースと補助証拠ケースの割り当ては、再取得結果が揃った段階で別途決定する。本書ではケース類別の適合性のみを固定する。
 
 ---
 
@@ -104,10 +107,9 @@ _purpose: claim と評価 case の対応を固定する_
 
 ### Rule 4
 
-`Claim 4` は implementation artifact を持つ case が必要だが、
-main evidence は code quality ではなく evidence reusability である。
+`Claim 4` は implementation artifact を持つ case が必要である。観測対象は、コードの品質そのものではなく、レビュー成果物が後続処理に渡せる構造で保存されているかどうかである。
 
-見るもの:
+観測候補項目（最終確定は再取得後）:
 
 - review artifact
 - decision units
@@ -118,21 +120,15 @@ main evidence は code quality ではなく evidence reusability である。
 
 ### Rule 5
 
-`adversarial` と `judgment` の寄与を分けて示したい claim では、
-少なくとも 1 つの代表 case で
+敵対役と判断役の寄与を分けて示したい主張では、少なくとも 1 つの代表ケースで次の 3 方式（取得方式）を取る方針とする。
 
-1. `single`
-2. `dual`
-3. `dual+judgment`
+1. `single`（単独）
+2. `dual`（二重）
+3. `dual+judgment`（二重+判断）
 
-の 3 treatment を取る。
+設計上の意図は、二重で広がる候補と、判断で整理される差を分解できるようにすることである。実際にそうした分解が観測できるかは、再取得後の検証対象とする。
 
-理由:
-- `dual` だけで増える候補
-- `judgment` を入れると整理される差
-を分解して示すため。
-
-現時点の代表 case は `F1-phase-field-cpp-r2` とする。
+代表ケースの確定は、再取得が完了した段階で行う。
 
 ---
 
@@ -163,13 +159,12 @@ main evidence は code quality ではなく evidence reusability である。
   - `Claim 2`
   - `Claim 3`
   - `Claim 4`
-- treatment role:
+- 方式上の役割:
   - upstream package:
     - `phase-field-reverse-spec`
   - implementation package:
     - `F1-phase-field-cpp-r2`
-  - `F1-phase-field-cpp-r2` を representative 3-treatment implementation case として使う
-  - `single / dual / dual+judgment` を取得して `adversarial` と `judgment` の寄与を分ける
+  - 代表ケースとしての位置づけと、3 方式（単独 / 二重 / 二重+判断）取得の最終構成は、再取得後に確定する。
 
 ### C-3 `heat3d`
 
@@ -184,12 +179,12 @@ main evidence は code quality ではなく evidence reusability である。
   - `Claim 3`
   - `Claim 4`
 - paper role:
-  - bridge implementation case
-- reading:
-  - workflow validity
-  - implementation-origin evidence
-  - evidence reusability
-  - spec/design underconstraint exposure
+  - 論文での位置づけは、再取得が完了した段階で別途決定する。
+- 観測候補項目（最終確定は再取得後）:
+  - 作業の流れが成り立つかどうか
+  - 実装段階を起点とする観測が得られるかどうか
+  - レビュー成果物が後続処理に渡せる構造で保存されるかどうか
+  - 仕様や設計の拘束が不足している場合に、それがレビュー側で見える形で現れるかどうか
 
 ### C-4 `iot-arduino`
 
@@ -204,10 +199,10 @@ main evidence は code quality ではなく evidence reusability である。
   - `Claim 3`
   - `Claim 4`
 - paper role:
-  - snapshot-based supporting case
-- reading:
-  - generalized first implementation case
-  - stable safety finding / preserved caveat evidence
+  - 論文での位置づけは、再取得が完了した段階で別途決定する。
+- 観測候補項目（最終確定は再取得後）:
+  - 一般化したケースの最初の実装段階として、作業の流れが成り立つかどうか
+  - 安全関連の指摘や注意書きが、改修反復に対してどのように扱われるか
 
 ---
 
@@ -231,13 +226,6 @@ main paper で使う case は、次の条件を満たすものに限定する。
 
 この matrix から導かれる次の作業は次である。
 
-1. `dual-reviewer-rebuild` を `Intent-origin` の主証拠に固定する
-2. `phase-field-reverse-spec` を `Spec-origin` の主証拠に固定する
-3. `F1-phase-field-cpp-r2` を clean 3-treatment implementation comparison case として扱う
-4. `heat3d-julia` を bridge implementation case として扱う
-5. `iot-arduino` を generalized supporting case として扱う
-6. 追加 case は、この tiering を崩さない範囲で supporting evidence として足す
-
-つまり、現時点の main line は
-**`F1 upstream` + `F1-phase-field-cpp-r2` + `F2 heat3d`**
-であり、`iot-arduino` は supporting line として読む。
+1. 4 つの候補ケース（`dual-reviewer-rebuild`、`phase-field-reverse-spec` / `phase-field-cpp`、`heat3d`、`iot-arduino`）のケース類別への適合性は、上記のとおり固定する。
+2. 各ケースの主証拠と補助証拠の割り当て、主線と支持線の区別、3 方式取得の代表ケース選定は、再取得が完了した段階で別途決定する。
+3. 過去の取得結果（archive 配下）は、新規取得が完了するまで根拠として参照しない。

@@ -66,6 +66,12 @@ _status: 計画系のみを反映した最小索引 v1.0_
 
 ---
 
+## 第 6 章 v3 計画
+
+- [v3-plan.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/v3-plan.md:1)
+
+---
+
 ## 注記
 
 - 結果系は archive に分離されており、再取得が完了するまで引用しない。

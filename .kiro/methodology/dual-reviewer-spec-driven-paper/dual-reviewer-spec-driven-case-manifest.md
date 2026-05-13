@@ -1,7 +1,8 @@
 # dual-reviewer case manifest
 
 _作成: 2026-05-09_  
-_status: draft v0.2_  
+_最終更新: 2026-05-13_  
+_status: draft v0.3_  
 _purpose: 仕様駆動開発支援評価に使う case の固定_
 
 ---
@@ -40,11 +41,10 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
 
 - 開始点:
   - implementation artifact
-- 観測したいこと:
-  - implementation/review phase support
-  - caveat retention
-  - disagreement preservation
-  - downstream rework traceability
+- 観測候補項目（最終確定は再取得後）:
+  - 実装段階のレビューが作業の流れの中で成立するかどうか
+  - 注意書きやレビューア間の意見の不一致が成果物として保持されるかどうか
+  - 下流で生じる手戻りを追跡できるかどうか
 
 ---
 
@@ -57,10 +57,8 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
 - track:
   - `Intent Track / Spec Track / Implementation Track`
 - role in paper:
-  - workflow construction validity
-  - intent-only start case の代表
-- fresh first batch:
-  - [F1-intent-dual-reviewer-rebuild-narrative comparison summary](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild-narrative/comparison_summary.json:1)
+  - 作業の流れが成立するかを観測する候補ケース（最終確定は再取得後）。
+  - intent-only 開始の代表候補。
 
 ### C-2: phase-field reverse-spec / phase-field-cpp
 
@@ -73,18 +71,15 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
 - intent ref:
   - [phase-field-reverse-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/phase-field-reverse-spec/intent.md:1)
 - role in paper:
-  - high-cognitive-load downstream case
-  - spec-present refinement / reopen case の代表
-- fresh spec-track batch:
-  - [F1-spec-phase-field-reverse-spec-narrative comparison summary](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec-narrative/comparison_summary.json:1)
+  - 下流の認知的負荷が大きい候補ケース（最終確定は再取得後）。
+  - spec-present 開始の代表候補。
 
 ### C-3: heat3d
 
 - core case note:
   - [core-case-heat3d.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-heat3d.md:1)
 - status:
-  - fixed core case
-  - preserved v3 evaluation case
+  - 候補ケース。最終的な役割は再取得後に確定する。
 - category:
   - PDE / simulation case
 - track:
@@ -92,29 +87,22 @@ _purpose: 仕様駆動開発支援評価に使う case の固定_
 - intent ref:
   - [heat3d-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/heat3d-spec/intent.md:1)
 - role in paper:
-  - simulation implementation case
-- role in v3:
-  - code-conformance vs spec-underconstraint evaluation case
+  - シミュレーション系の実装段階の候補ケース（最終確定は再取得後）。
 
 ### C-4: iot-arduino
 
 - core case note:
   - [core-case-iot-arduino.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/core-case-iot-arduino.md:1)
 - status:
-  - snapshot-based supporting case
-  - closed
+  - 候補ケース。最終的な役割は再取得後に確定する。
 - category:
   - embedded / event-driven case
 - track:
   - `Implementation Track` を中心に、intent/spec 作成後は `Spec Track` も追加
 - intent ref:
   - [iot-arduino-spec/intent.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/iot-arduino-spec/intent.md:1)
-- evidence bundle:
-  - [iot-arduino-c4-evidence-bundle.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-c4-evidence-bundle.md:1)
-- decision note:
-  - [iot-arduino-case-decision.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/iot-arduino-case-decision.md:1)
 - role in paper:
-  - operational / event-driven downstream supporting case
+  - 組み込み・イベント駆動系の候補ケース（最終確定は再取得後）。
 
 ---
 
@@ -153,12 +141,14 @@ main evaluation に含める evidence は、
 
 ## 6. Track-to-Paper Mapping
 
-| case | primary contribution |
+| case | 役割の類別（確定は再取得後） |
 |------|----------------------|
-| `dual-reviewer-rebuild` | intent-origin workflow validity |
-| `phase-field reverse-spec / cpp` | high-load downstream case |
-| `heat3d` | simulation-oriented downstream case |
-| `iot-arduino` | event-driven downstream case |
+| `dual-reviewer-rebuild` | intent-origin 候補ケース |
+| `phase-field reverse-spec / cpp` | spec-origin と implementation-origin の候補ケース |
+| `heat3d` | implementation-origin の候補ケース |
+| `iot-arduino` | implementation-origin の候補ケース |
+
+各ケースの最終的な貢献（主証拠と補助証拠の区別など）は、再取得が完了した段階で確定する。
 
 ---
 
