@@ -11,6 +11,7 @@ Kiro-style Spec-Driven Development on an agentic SDLC
 ### Paths
 - Steering: `.kiro/steering/`
 - Specs: `.kiro/specs/`
+- TODO 雛形: `.claude/templates/todo_next_session_template.md`
 
 ### Steering vs Specification
 
