@@ -13,7 +13,7 @@
 ## Core Rules
 
 - Keep prompts, policies, schemas, and validators inside the repo.
-- Do not rely on repo-external memory for steady-state behavior.
+- 外部記憶に依存しない（個人の応答品質規律は対象外）
 - Treat raw evidence as immutable.
 - Route behavior changes through spec updates, not ad-hoc prompt edits.
 
@@ -22,3 +22,7 @@
 1. Fix upper-layer documents.
 2. Write requirements for the 5 specs.
 3. Migrate foundation artifacts.
+
+## Paths
+
+- Memory: `.kiro/memory/MEMORY.md`
