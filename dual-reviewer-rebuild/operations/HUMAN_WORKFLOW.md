@@ -290,6 +290,15 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 
 この rule は optional ではなく、review progression にも multi-feature alignment を適用するための補助規則である。
 
+#### レビュー基本規律（全レビュー段階で適用）
+
+レビューの段階別に適用すべき規律。本節以降のレビュー節（5.2.8 / 5.2.9 / 5.2.10）からも参照する。
+
+- 検出時：所見は 4 要素で書く（memory `feedback_finding_4elements.md`）
+- 提示時：1 ラウンドにつき 1 応答単位、複数ラウンドの一括処理は禁止（memory `feedback_no_round_batching.md`）／ ラウンド提示と完了報告の統一書式（memory `feedback_review_log_template.md`）
+- 判定時：利用者判断を仰ぐべき所見の 23 パターン（memory `feedback_review_judgment_patterns.md`）／ 過剰修正偏りを抑える必要性判定（memory `feedback_review_necessity_judgment.md`）
+- 記録時：3 役レビューの各役完了時点でファイルに書き出す（memory `feedback_review_save_immediately.md`）
+
 ### 5.2.5 multi-feature alignment gate
 
 複数 feature が存在する場合、本 repo では各 phase の終端に feature 間調整 gate を置く。
@@ -534,6 +543,13 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 
 各ラウンドで発見した修正候補は、深掘り検討して致命的なデメリットがなければ自動採択、複数の合理的選択肢が残る場合や致命的影響がある場合は利用者判断を仰ぐ。明らかに劣る選択肢は提示しない。
 
+#### 各ラウンドで適用する規律（要件レビューで特に効くもの）
+
+基本規律は節 5.2.3「レビュー基本規律」を参照。要件レビューでは特に次の 2 件が効く。
+
+- 必要性判定（memory `feedback_review_necessity_judgment.md`）：要件レビューは主役の過剰修正偏りが出やすい。修正候補の必要性を 5 観点で判定してから採否を決める
+- 23 パターン（memory `feedback_review_judgment_patterns.md`）：自動採択偏向の校正。利用者判断を仰ぐ所見はパターン照合で判定する
+
 #### ラウンドの所要時間と発見数の傾向
 
 - 第 1 ラウンド：致命級・重要級が最も多く発見される
@@ -587,6 +603,11 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - **明らかに劣る選択肢は提示しない**：推奨案と比較して明白に劣後する案は提示の意味がない
 - **選択肢提示の方法**(memory `feedback_choice_presentation.md`)：設計時の代替案提示にも適用
 - **承認なしで進めない**(memory `feedback_approval_required.md`)：設計フェーズ移行や設計書の承認も対象
+- **所見の書き方**：4 要素で書く（memory `feedback_finding_4elements.md`）。設計時の所見も箇所・現状・問題・修正後の 4 要素を満たす
+- **レビュー記録の書式**：ラウンド提示と完了報告の統一テンプレート（memory `feedback_review_log_template.md`）
+- **必要性判定**：過剰修正偏りを抑える独立判定（memory `feedback_review_necessity_judgment.md`）。設計時も修正候補の必要性を判定してから採否を決める
+- **判定の 23 パターン**：利用者判断を仰ぐ所見の判定リスト（memory `feedback_review_judgment_patterns.md`）
+- **レビュー出力の即時保存**：3 役レビューの各役完了時点でファイルに書き出す（memory `feedback_review_save_immediately.md`）
 
 #### 設計特有の追加方針
 
@@ -645,6 +666,13 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - 各含意は修正コストが低い(1 段落から数行の追記)レベルであること
 - 修正対象は各フィーチャーの既存文書(新規フィーチャーの作成は不要、既存文書に追記)
 - 利用者判断は 3 択(全採用 / 個別レビュー / A 群と B 群のみ確認して C 群は次回送り)
+
+#### 横断レビューで適用する規律
+
+基本規律は節 5.2.3「レビュー基本規律」を参照。横断レビューでは特に次の 2 件が効く。
+
+- 所見の書き方（memory `feedback_finding_4elements.md`）：C 群（新規含意）の所見も 4 要素で書く
+- 必要性判定（memory `feedback_review_necessity_judgment.md`）：A 群 / B 群 / C 群の分類と相補的に、C 群の含意ごとに必要性を判定する
 
 #### 横断レビューの実施時期
 
