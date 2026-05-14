@@ -125,7 +125,7 @@ type: feedback
 
 6. `feedback_main_merge_3req_audit.md`
    - 改名案：`feedback_main_merge_audit_process.md`
-   - 書き直し量：大（「11 回目末 main 統合（case A 即 merge）+ V3 design phase artifact cleanup + 3 req 整合性 audit」のうち通番と V3 名を外し、3 仕様を「複数仕様」に一般化）
+   - 書き直し量：大（「11 回目末 main 統合（case A 即 merge）+ V3 design phase artifact cleanup + 3 req 整合性 audit」のうち通番と V3 名を外し、3 フィーチャーを「複数フィーチャー」に一般化）
    - 統合先：独立維持
 
 7. `feedback_review_judgment_patterns.md`
@@ -138,7 +138,7 @@ type: feedback
 
 9. `feedback_review_rounds.md`
    - 改名案：`feedback_review_rounds_5_stages.md`
-   - 書き直し量：中（「Foundation 改版時は傘下全 spec への精査必須」を「上位仕様の改版時は依存する下位仕様すべてを再精査」に一般化）
+   - 書き直し量：中（「Foundation 改版時は傘下全 spec への精査必須」を「上位フィーチャーの改版時は依存する下位フィーチャーすべてを再精査」に一般化）
    - 統合先：`feedback_no_round_batching.md` を本ファイルの一節として吸収する案あり（「各ラウンドを独立 turn で処理」を「適用ルール」の一節に組み込む）。統合すれば 22 件から 21 件、さらに統合できれば 20 件。
 
 10. `feedback_review_step_redesign.md`
@@ -166,7 +166,7 @@ type: feedback
 - `feedback_design_review_v3_consolidated.md` → `feedback_adversarial_review_overview.md`
 - `feedback_dual_reviewer_3_concept_separation.md` → `feedback_three_concepts_separation.md`
 - `feedback_main_merge_3req_audit.md` → `feedback_main_merge_audit_process.md`
-- `feedback_review_rounds.md` → `feedback_review_rounds_5_stages.md`
+- `feedback_review_rounds.md` → `feedback_requirements_review.md`（`feedback_design_review.md` との命名対称性のため変更）
 - `feedback_review_step_redesign.md` → `feedback_review_step_1_design.md`
 - `feedback_self_review_skill_skip.md` → `feedback_self_review_skip.md`
 
@@ -178,16 +178,20 @@ type: feedback
 - 削除候補採用：-1（`dual_reviewer_monitor_only`）
 - 統合候補採用：-1（`no_round_batching` を `review_rounds` に吸収）
 - 改名 6 件：件数は変わらず
-- 最終：19 件（推定）
+- 追加移植：+2（`feedback_approval_required.md` を 6 ファイル参照、`feedback_choice_presentation.md` を 4 ファイル参照のため、個人記憶から移植）
+- operations 側へ移動：-3（`feedback_design_review.md`、`feedback_requirements_review.md`、`feedback_cross_spec_review_pattern.md` を `operations/HUMAN_WORKFLOW.md` の節 5.2.8/5.2.9/5.2.10 に移動。手順 4 を厳密適用した結果、ワークフロー規定主体のためメモリから除外）
+- 削除追加：-3（`feedback_dual_reviewer_3_concept_separation.md` は内部固有の方法論整理で配布物として不適切なため削除、`feedback_main_merge_3req_audit.md` は内部固有度が高く 5.2.10 で汎用部分カバー済のため削除、`feedback_review_step_redesign.md` は内部固有度が極めて高く 5.2.9 と 23 パターンでカバー済のため削除）
+- 最終：15 件（推定）
 
 ## 実作業時の手順（次セッション以降）
 
 1. 削除候補 1 件の最終判断
 2. 統合候補 1 件の最終判断
 3. 各ファイルの内部固有表現を機械的に検索：通番（〇 回目）、内部世代名（V3 / V4）、phase 名（Phase A / Phase B-1.x）、固有仕様名（foundation / design-review / dogfeeding 等）、内部文書パス、日付
-4. 案 A / 案 B のテンプレートに沿って書き直し
-5. 改名を実施し、索引 `MEMORY.md` と他文書（特に `dual-reviewer-rebuild/CLAUDE.md`）の参照を同時更新
-6. 配布物として通読して規律が利用者に届く形になっているかを確認
+4. 内容点検：各ファイル本文のうち「ワークフロー規定（手順・受け渡し・成果物の取り決め）」に該当する部分が含まれていれば、メモリ側からは外し、`operations/`（主に `HUMAN_WORKFLOW.md`）または `.kiro/specs/` への移動を検討する。メモリ側に残すのは「エージェントの行動規律」のみとする。
+5. 案 A / 案 B のテンプレートに沿って書き直し
+6. 改名を実施し、索引 `MEMORY.md` と他文書（特に `dual-reviewer-rebuild/CLAUDE.md`）の参照を同時更新
+7. 配布物として通読して規律が利用者に届く形になっているかを確認
 
 ## B 群（Rwiki-dev 側）への参考
 
@@ -207,9 +211,9 @@ type: feedback
 - 案 X：6 を削除し、5・8・15・18 を直接参照させる。
 - 案 Y：6 を「全体概観の道標」として最小限に再構成し、入口ファイルとして残す。
 
-### 所見 2：「設計レビュー」と「仕様レビュー」の用語整理
+### 所見 2：「設計レビュー」と「要件レビュー」の用語整理
 
-`feedback_design_review.md`（5、10 観点 = 10 ラウンド）と `feedback_review_rounds.md`（16、5 ラウンド構成）は適用範囲が異なる（前者は設計レビュー、後者は仕様レビュー）。配布物では利用者の混乱を避けるため、各ファイル冒頭で対象範囲を明示し、相互参照を入れる。
+`feedback_design_review.md`（5、10 観点 = 10 ラウンド）と `feedback_review_rounds.md`（16、5 ラウンド構成）は適用範囲が異なる（前者は設計レビュー、後者は要件レビュー）。配布物では利用者の混乱を避けるため、各ファイル冒頭で対象範囲を明示し、相互参照を入れる。
 
 ### 所見 3：参照パターンと Step 1 改修の関係
 
@@ -221,7 +225,7 @@ type: feedback
 
 ### 軽い照合では重なりが見つからなかった項目
 
-- グループ C（仕様横断・統合、3 件）：相互に独立。
+- グループ C（フィーチャー横断・統合、3 件）：相互に独立。
 - グループ D（設計レビュー特有、2 件）：観点が異なり重なりなし。
 - グループ F（周辺手順、4 件）：相互に独立。
 

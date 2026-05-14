@@ -1,54 +1,58 @@
 ---
-name: review log template (Round 提示 + 完了報告)
-description: review 中の user 向け message を統一 template で出力。Round 提示と完了報告の 2 種類
+name: レビュー所見のテンプレート（ラウンド提示・完了報告）
+description: レビュー中に利用者へ提示するメッセージを統一テンプレートで出力する。ラウンド提示とラウンド完了報告の 2 種類を規定する。
 type: feedback
-originSessionId: 5550c82b-3239-48a1-aad5-ca9566a9ec80
 ---
-## Round 提示 template
 
-```
-# Round N (観点名) 検出 件数
+レビュー中に利用者へ提示するメッセージは、ラウンド単位で構造を統一する。ラウンドの所見提示と、ラウンド完走時の完了報告という 2 種類のテンプレートを用意し、利用者が読みやすく判断しやすい形に整える。
 
-## 概要
-1-2 文 = 何の review か + user に求める判断 + 判断しないと何が止まるか
+**Why:** ラウンドの構造を毎回別の書き方で提示すると、利用者は「今どこを判断すべきか」「何件採用し何件見送ったか」を読み解く手間がかかる。テンプレートを統一すれば、見出しと節構造から判断対象を即座に把握できる。
 
-## 検出 1 = P-1 + 短い見出し
-### 概要 / 問題点 / 選択肢 (案 a/b) / 推奨
+**How to apply:**
 
-(検出 2, 3, ... 同 structure)
+## ラウンド提示テンプレート
 
-## 推奨まとめ
-- 検出 1: 案 (a)
-- 検出 2: 案 (b)
-```
+    # ラウンド N（観点名） 検出 件数
 
-## Round 完了報告 template
+    ## 概要
+    1〜2 文：何のレビューか、利用者に求める判断、判断しないと何が止まるか
 
-```
-# Round N 完走
+    ## 検出 1：所見 ID + 短い見出し
+    ### 概要 / 問題点 / 選択肢（案 a / 案 b） / 推奨
 
-検出 (一次 N + 反対側 M) = K 件採用 + L 件 skip
+    （検出 2、3、... 同じ構造）
 
-修正内容:
-- 検出 1 (案 X): 1 文で何を変えたか
+    ## 推奨まとめ
+    - 検出 1：案 (a)
+    - 検出 2：案 (b)
 
-commit:
-- hash1 = 設計書修正
-- hash2 = 履歴
+## ラウンド完了報告テンプレート
 
-次: Round N+1 (観点名) 着手?
-```
+    # ラウンド N 完走
 
-## 入れない要素
+    検出（主役 N 件 + 敵対役 M 件） ＝ K 件採用 + L 件見送り
 
-- forced_divergence の詳細 (log artifact のみ)
-- 反対側 reviewer の各 option ラベル詳細 (log のみ)
-- seed_pattern hits / Phase 1 metapattern コード (jargon)
-- 修正規模の細かい数字 (= +X -Y +Z net 等)
-- branch 詳細名 (= 「今回の作業ブランチ」で十分)
-- enforcement / methodology meta (`feedback_response_quality_rules.md` 規律 3)
+    修正内容：
+    - 検出 1（案 X）：1 文で何を変えたか
 
-## 補強
+    コミット：
+    - hash1 ＝ 設計書修正
+    - hash2 ＝ 履歴
 
-- `feedback_explanation_with_context.md` (= 7 軸 self-check + paraphrase + 文脈 + 3 要素) は本 template の content quality を担当
-- 本 memory は structure / 入れる要素 / 入れない要素を担当
+    次：ラウンド N+1（観点名）着手？
+
+## 提示メッセージに含めない要素
+
+- 内部運用の技術用語や検証手法名 → ログ（artifact）のみ
+- 敵対役レビューでの各選択肢ラベルの詳細 → ログのみ
+- パターン分類のコード番号や内部運用通番
+- 修正規模の細かい数値（+X -Y +Z など）
+- ブランチの正式名称（「今回の作業ブランチ」で十分）
+- 方法論や運用そのものの長い説明
+
+これらは利用者の判断には不要で、提示メッセージを長くするだけで読み手の負担を増やす。詳細はレビューログ（artifact）側に残し、提示メッセージは判断材料のみに絞る。
+
+**関連する規律：**
+
+- 所見の 4 要素（`feedback_finding_4elements.md`）
+- レビュー出力の即時保存（`feedback_review_save_immediately.md`）

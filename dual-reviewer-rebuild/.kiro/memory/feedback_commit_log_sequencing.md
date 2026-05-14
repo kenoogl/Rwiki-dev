@@ -1,26 +1,34 @@
 ---
-name: 4 step sequential commit + log entry 順序規律
-description: rework_log / dev_log entry に commit hash 含める時は 4 step sequential。TBD placeholder + 後置換 pattern 撤廃
+name: コミットハッシュを含むログの 4 ステップ順次規律
+description: 修正履歴ファイルや開発ログファイルにコミットハッシュを含めるときは、後置換ではなく、コミット作成 → ハッシュ取得 → ハッシュを直接埋め込んだログ作成 → ログコミット の順で実行する。
 type: feedback
 ---
 
-## 4 step sequential
+修正履歴ファイルや開発ログファイルにコミットハッシュを含めるときは、後置換(先にハッシュなしのログを作って、あとから置換)ではなく、4 ステップを順次実行する。
 
-1. design.md 修正 commit 作成 (= Edit + git add + git commit)
-2. `git rev-parse HEAD` で hash 取得
-3. log entry 生成 = python3 で /tmp script 作成 (= Write tool 経由) → single-line `python3 /tmp/append_round{N}_logs.py` 実行 (= heredoc 禁止、permission match 確実化)
-4. log commit (= git add dev_log + rework_log + git commit)
+**Why:** 後置換のやり方には次の落とし穴がある。
 
-## why
+- 編集前の Read(読み込み)義務を忘れる事故が起きやすい
+- 編集とコミットを並列で発火させると、エラーと成功が同時に返り、後で復旧する手段が失われる
+- 結果として、置換し忘れた仮プレースホルダ(TBD など)が残ったまま、コミットが確定する事故が過去に発生した
 
-TBD placeholder + 後置換 pattern (= Edit による hash 置換) は (1) Edit 事前 Read 義務漏れ (2) Edit + Bash 並列発行で error と success 同時返却 → recoverability 喪失 で TBD 残存 commit 事故が起きる (= 31st セッション commit `aab4b01` 事例)。直接埋込で回避。
+直接埋め込みなら、ハッシュを取得したあとでログ本文を組み立てるため、上記の事故が起きにくい。
 
-## 並列化判断
+**How to apply:**
 
-- 同一 file への Edit + Bash (commit) は sequential (= dependency あり、同 message 並列発行禁止)
-- 異なる file への独立操作のみ並列可
-- error 監視は sequential 制御 (= error と success 並列返却すると recoverability 喪失)
+## 4 ステップ順次
 
-## python3 multi-line 規律 (43rd 末追補)
+1. 設計書(design.md)などの本体ファイルを修正してコミットを作成する(編集 → ステージング → コミット)
+2. `git rev-parse HEAD` で直近のコミットハッシュを取得する
+3. ハッシュを直接埋め込んだログエントリを作成する
+4. ログをコミットする(ログファイルをステージング → コミット)
 
-Bash permission tool の glob pattern (`Bash(python3 *)` / `Bash(python3:*)`) は newline match 不能 → heredoc (`python3 <<'EOF'`) で permission prompt 発火する。Write tool 経由 /tmp script (= file write は permission 不要) + single-line python3 = 確実 permission match。
+## 並列化の判断
+
+- 同じファイルに対する編集とコミットの組は順次実行(依存関係あり、同じ応答内での並列発火は禁止)
+- 異なるファイルへの独立した操作のみ並列で発行してよい
+- エラー監視は順次で制御する(エラーと成功を並列で返却させると、どちらが何の結果か分からなくなり、復旧手段が失われる)
+
+## 実行上の補足
+
+ログ生成スクリプトを実行するときは、長文の直接コマンド(複数行をひとつのコマンドに含める書き方)ではなく、いったんスクリプトを一時ファイルに書き出してから 1 行で実行する形が安全である。環境によっては、長文の引用形式が権限照合と合わないことがあるため。
