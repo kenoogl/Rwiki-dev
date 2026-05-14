@@ -2,6 +2,10 @@
 
 Kiro-style Spec-Driven Development on an agentic SDLC
 
+## サブツリー委譲
+
+- `dual-reviewer-rebuild/` 配下で作業する場合は、本文書ではなく `dual-reviewer-rebuild/CLAUDE.md` を優先する。
+
 ## Project Context
 
 ### Paths

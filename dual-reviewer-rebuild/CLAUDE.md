@@ -1,5 +1,9 @@
 # dual-reviewer-rebuild Working Notes
 
+## 親規律の差分上書き
+
+- 親 `Rwiki-v2-code-mod/CLAUDE.md` の `/kiro-*` 系コマンドおよび `.kiro/specs/` 直下への参照は、本サブツリー配下の作業には適用しない。本サブツリーは独自の intent 駆動ワークフローを用い、`dual-reviewer-rebuild/.kiro/specs/` を参照先とする。
+
 ## Development Mode
 
 - This repository uses an intent-driven workflow.
