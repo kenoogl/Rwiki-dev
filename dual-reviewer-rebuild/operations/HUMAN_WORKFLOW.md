@@ -262,6 +262,7 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - 各 review stage の内部では feature を水平展開して扱う
 - 1 feature だけを先に深く review し切るのではなく、その stage に属する feature 群を一通り見てから次段へ進む
 - 上流 review で修正が入った場合、下流 review は未確定扱いに戻す
+- 下流 phase がまだ生成されていない段階で上流文書の不整合を発見した場合、その場で上流を修正せず、下流 phase の起草開始時の入力として保留する。修正の着手は対応する alignment gate の文脈で判断する。
 - 下流 phase で観測した issue のうち、原因が intent の再解釈や intent 不整合にある場合は `intent-attributed issue` として記録する
 
 例:
