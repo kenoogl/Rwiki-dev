@@ -129,6 +129,12 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 - 節 5.2.10：フェーズ完走後のフィーチャー横断レビューパターン
 - 節 5.2.11：タスクレビューの 7 観点と進め方
 
+### CONVENTIONS.md の主要節
+
+- 節 3：Phase Terminology（`phase` 語の 3 種使い分け）
+- 節 7：日本語用語の整理（「仕様」の単独使用回避）
+- 節 8：レビュー 3 役の用語定義（主役・敵対役・判定役の名称と責務の正本）
+
 ### 規律ファイル群
 
 `.kiro/memory/feedback_*.md`（15 件）：エージェントの応答品質に関する個別規律。索引は `.kiro/memory/MEMORY.md`。

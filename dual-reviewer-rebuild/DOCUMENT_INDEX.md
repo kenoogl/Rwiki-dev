@@ -36,7 +36,7 @@
 | [README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/README.md) | repo 全体の入口 | overview |
 | [DOCUMENT_INDEX.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/DOCUMENT_INDEX.md) | 文書・artifact の所在管理 index | authoritative index |
 | [CLAUDE.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CLAUDE.md) | 開発作業時の運用メモ | working guidance |
-| [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md) | status / 用語 / naming の共通規約 | top-level contract |
+| [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md) | status / 用語 / naming / レビュー 3 役の共通規約 | top-level contract |
 | [SYSTEM_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/SYSTEM_BOUNDARY.md) | system の in/out scope | top-level contract |
 | [REPRODUCIBILITY_CONTRACT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/REPRODUCIBILITY_CONTRACT.md) | 再現性条件 | top-level contract |
 | [EVIDENCE_PROTOCOL.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/EVIDENCE_PROTOCOL.md) | evidence の扱い規約 | top-level contract |
