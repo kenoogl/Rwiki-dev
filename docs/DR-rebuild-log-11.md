@@ -4950,21 +4950,492 @@ DR-rebuild-log-6.md は「意図的に feature ブランチから外した」経
 間違って操作した可能性。ファイルは連番で揃っていないといけない。復元
 ```
 
+```
+DR-rebuild-log-6.mdの2854行をみて
+```
+
+DR-rebuild-log-6.md 行 2854 付近は、まさに先に「孤立」と指摘した heuristic_profile／参照ケースなし bootstrap の**発端の記録**でした。
+
+## 行 2854〜2878 が示す内容
+
+**利用者の指示（行 2854-2856）**：
+
+> 途中で heat3d を参考にしていたが、本番運用では参考にするものがない。ひな形が必要。heuristic_profile も共通的な最小限のテンプレートを用意し、必要なら追加するという方針
+
+**当時の対応（行 2858-2872）**：
+
+- `reference-free-case-bootstrap-guide.md`（`.kiro/methodology/...`）を起点に作成
+- `implementation-phase-protocol-template.md` / `snapshot-template.md` 追加
+- heuristic_profile の共通方針を `heuristic_profiles/README.md` に固定し、`{implementation,intent,spec}/_minimal_template.yaml` を最小テンプレートとして追加
+- 方針：「最初は空に近い最小形から始め、review-critical contract が明確なときだけ 1-2 件ずつ足す」
+
+**利用者の次の問い（行 2877）**：
+
+> これらはワークフローに組み込み済みですか
+
+## 確認した整合
+
+これは、先に HUMAN_WORKFLOW.md 節 5.2.1.1／5.2.1.2 で「孤立」と判定した記述（bootstrap guide ＋ heuristic 最小テンプレートを正本とする）の **設計意図そのもの**です。つまり：
+
+- 設計意図は log-6 に明確に存在（参照ケースなし運用＋最小開始方針）
+- それが HUMAN_WORKFLOW.md 5.2.1.1/5.2.1.2 に組み込まれた（行 2877 の問いが契機と推測）
+- しかし対象資産は 2026-05-13 に退避 → **意図は生きているが実体が退避済み**、という孤立の構図が裏付けられた
+
+行 2877「これらはワークフローに組み込み済みですか」への当時の回答が、組み込みの正否を判断する鍵です。続き（行 2879 以降）を読んで回答内容を確認しますか。あるいは別の行範囲を指定しますか。
+
+```
+確認して
+```
+
+DR-rebuild-log-6.md 行 2879〜2933 で全貌が判明し、**私の以前の見立て（heuristic_profile は廃止方向）を訂正します。**
+
+## log-6 が示す事実：heuristic_profile は「廃止」ではなく「完全統合された機能」
+
+経緯（行 2880〜2933）：
+
+1. 当初「半分入った状態」（文書ひな形のみ）
+2. 利用者「進めてください」（行 2921）
+3. **完全統合済み（行 2924〜2933）**：
+   - reference-free 正式手順を **HUMAN_WORKFLOW.md ＋ v2-user-guide.md に追加**
+   - `bootstrap_reference_free_case.rb` スクリプト
+   - heuristic_profile 最小テンプレート＋ README を**正本として固定**
+   - **runner 既定動作に組み込み**：case manifest に `heuristic_profile_ref` が無ければ、runner が track ごとの最小テンプレートを**自動使用**（`implementation_track_runner.rb`、`intent_track_writer.rb`、`spec_track_writer.rb`、`case_manifest.rb`、`default_heuristic_profile_ref.rb`）
+   - ruby valid スクリプトで確認済み
+
+## 重要な訂正と新たな含意
+
+- 以前「heuristic_profile は廃止方向」と評しましたが、log-6 は**コード（runner 既定動作）まで伴う意図的な完全統合機能**だったことを示します。これは陳腐化した設計ではなく、生きた機能でした
+- したがって 2026-05-13 の `experiments/protocols/heuristic_profiles/` 退避は、**統合済み機能の正本パスを壊した回帰（リグレッション）の疑い**が濃厚です。文書孤立だけでなく、**runner 既定コードが退避済みパスを参照し続けている＝実行時破壊**の可能性
+- これは文書修正の話を超え、runtime コード（`default_heuristic_profile_ref.rb` ほか）が退避先を指していないかの確認が必要
+
+## 確認したい論点
+
+次に検証すべきは「runner 既定コードが今どのパスを見ているか」です。
+
+- 論点：`default_heuristic_profile_ref.rb` / track runner 群が `experiments/protocols/heuristic_profiles/*/_minimal_template.yaml`（退避済み）を参照しているなら、reference-free 運用は現在**実行時に壊れている**。これを調査してよいか
+- その結果次第で、対応は「最小テンプレートを退避先から live パスへ復元」か「コード＋文書を退避先に再ポイント」かが決まる（方法論・runtime 判断、要承認）
+
+調査に進んでよいですか。これは runtime コードに踏み込むため、まず読み取り調査のみ行い、修正は別途承認とします。
+
+```
+調査して
+```
+
+runner 既定コードが参照するパスを調査します（読み取りのみ）。
+
+`default_heuristic_profile_ref.rb` 行 7-9 が **退避前の live パスをハードコード**しており、その実体は存在しません（退避済み）。回帰が確定的です。失敗モード（ハード停止か空フォールバックか）を確認します。
+
+## 調査結果：runtime 回帰を確定
+
+**確定した事実：**
+
+- `scripts/track_runs/default_heuristic_profile_ref.rb` の MAP（行 7-9）が **退避前 live パスをハードコード**：
+  - `…/experiments/protocols/heuristic_profiles/{implementation,intent,spec}/_minimal_template.yaml`
+- これらの live パスは **すべて MISS（存在しない）**。実体は `experiments/protocols/_archived-2026-05-13/heuristic_profiles/…` のみ
+- 消費側：`implementation_track_runner.rb:48`、`intent_track_writer.rb:94`、`spec_track_writer.rb:95` が、case manifest に `heuristic_profile_ref` が**無いとき**この既定パスを採用し、出力 artifact の `heuristic_profile_ref` に**存在しない退避前パスを書き込む**
+
+**意味：**
+
+reference-free 運用（`heuristic_profile_ref` 未指定＝まさに HUMAN_WORKFLOW.md 5.2.1.2 が既定とする動作）を実行すると、runner が**存在しない退避済みパスを参照する**。log-6 が示した「統合済みの既定機能」が、2026-05-13 の退避で**コード側も壊れた回帰**です。文書孤立だけの問題ではありませんでした。
+
+**根本原因：** 2026-05-13 の `experiments/protocols/heuristic_profiles/` 退避時に、(a) 4 文書（HUMAN_WORKFLOW 5.2.1.2／impl-governance design.md:153／tasks.md:208／v2-user-guide）も (b) runtime 既定 `default_heuristic_profile_ref.rb` も、いずれも更新されなかった。
+
+## 修正の選択肢（runtime 影響、要承認・方法論判断）
+
+- **選択肢 1（推奨）**：最小テンプレート 3 件＋README を退避先から **live パスへ復元**（`experiments/protocols/heuristic_profiles/…`）。コード・文書とも無変更で整合回復。log-6 の「統合済み設計」を尊重する最小修正
+- **選択肢 2**：`default_heuristic_profile_ref.rb` ＋ 4 文書を `_archived-2026-05-13/…` パスへ再ポイント。退避構造は保つが「_archived を正本」と宣言する意味的矛盾が残る
+- **選択肢 3**：reference-free heuristic 既定を廃止扱いとし、既定動作と文書を撤去。大規模・方法論判断。log-6（意図的統合機能）と矛盾するため非推奨
+
+私の推奨は **選択肢 1**（退避済みの最小テンプレート 3 件＋README を live パスへ復元）。理由は、log-6 が示すとおりこれは意図的に統合された生きた機能であり、コードも文書もその live パス前提で書かれているため、テンプレートを戻すのが最小かつ非矛盾の修復だからです。
+
+調査はここまで（読み取りのみ、ファイル未変更）。どの選択肢で進めるか判断をお願いします。選択肢 1 なら、退避先 4 ファイル（実体）を live パスへ復元する提案前チェックリストを提示します。
+
+```
+いや、そもそも参照ケースなしで始められるように、ひな形を追加しました。といって、そのひな形は具体的にどういうものかを調べたか？
+```
+
+ご指摘のとおり、中身を見ずに復元提案したのは早計でした。退避済みの最小テンプレート実体と README を実際に読みます。
+
+調べました。ご指摘どおり、中身を見ると評価が変わります。
+
+## ひな形の実体（最小テンプレート 3 件）
+
+3 件とも本質的に **「空のルール集＋方針宣言＋コメントの記入例」** です。
+
+- **implementation**（88 行）／**intent**（38 行）／**spec**（38 行）
+- 共通構造：
+  - `policy: start_with_no_rules: true`（ルールを空で始める方針を明示）
+  - `steps.primary_detection.rules: []`、`steps.adversarial_review.rules: []` ＝ **アクティブなルールはゼロ（空配列）**
+  - 残りはすべて `#` でコメントアウトされた**スキーマ記入例**（実行に効かない説明）
+  - 方針注記：「review-critical な契約が明示的に上流仕様や固定スナップショットに紐づくまでルールは空のままにせよ」
+
+つまりこの「ひな形」は、意図的に**ほぼ空の足場**です。実質的なヒューリスティック（経験則）ルールは 1 件も入っていません。
+
+## これが意味すること（評価の訂正）
+
+- **回帰の深刻度は私が言ったより低い**：退避でコード／文書が指す先が消えても、失われる実質コンテンツは「空 `[]` ＋コメント」だけ。意味のあるルールデータの喪失ではない
+- **v2 の脱バイアス方向と矛盾しない**：INTENT.md が v1 の問題とした「件数を固定する規則ファイル」の正反対が、この「空で始め、正当化されたときだけ足す」方針。最小テンプレートは v2 方向と**整合する設計**であり、廃止すべき旧弊ではない
+- 真の欠陥は**実体喪失ではなく、コード＋4 文書が宙吊りパスを指している**こと。内容的にはほぼ空なので、復元・再生成・再ポイントいずれも低コスト
+
+## 含意
+
+先に「選択肢 1：退避先から復元（推奨）」と述べましたが、中身がほぼ空と分かった今、選択肢は実質的に等価で、判断軸は「**reference-free＋空既定の仕組みを正規機能として残すか**」という方針判断に収束します。log-6 は「意図的に統合した生きた機能」、v2 方向は「空既定はむしろ正しい」と一致して示しています。
+
+ここまで調査のみ（ファイル未変更）。この理解を踏まえ、どう扱うか方針をお願いします（例：空テンプレートを live パスへ復元して整合回復／reference-free 既定の存続可否を方法論として確定／いったん TODO 記録）。
+
+```
+reference-free＋空既定の仕組みを正規機能として残すというのは、self-improvementの機能にも関連すると思うが
+```
+
+その関連を確認します。SELF_IMPROVEMENT_LOOP.md と self-improvement 仕様、log-6 の self-improvement 文脈を調べます。
+
+調べた結果、関連は**概念上は存在するが、仕様・コード上は接続されていない**ことが分かりました。
+
+## SELF_IMPROVEMENT_LOOP の実体
+
+`SELF_IMPROVEMENT_LOOP.md` 全文（21 行）：
+
+- 入力：review ログ／override パターン／偽陽性・偽陰性観測／下流手戻り信号
+- ループ：①再発する失敗・バイアスを検出 → ②提案 artifact 作成 → ③backtest/replay → ④採否 → ⑤受理変更を版管理
+- 制約：repo 外への場当たり的記憶パッチ禁止／未検証の prompt 肥大禁止
+
+**heuristic_profile への言及は一切なし。**
+
+## 接続状況
+
+- `learning/proposals/` の提案は **policy / prompt / workflow** が対象。heuristic_profile へのルール注入提案は無い
+- `learning/findings/pattern_candidates.json` は runtime 信号由来の「パターン候補」（evidence/review 品質・workflow 信号）で、heuristic_profile ルール追加ではない
+- self-improvement 仕様（requirements）も「学習ネットワーク」「失敗から学ぶ」など汎用で、heuristic_profile ルール成長は範囲外
+
+## 関連の本質（ご指摘の核心）
+
+ご認識のとおり**概念的には強く関連**します：最小テンプレートの方針「空で始め、review-critical 契約が現れたときだけルールを足す」は、まさに**学習・自己改善型の蓄積**の形をしています。
+
+ただし現状、その「ルールを足す」経路は self-improvement ループに**配線されていません**：
+
+- self-improvement ループの出力は「policy/prompt/workflow の版管理変更」であって、「heuristic_profile に case 別ルールを注入」ではない
+- つまり「空既定」の価値を支える“正当化されたら足す”機構は、現状**case ごとの手動判断**（テンプレート方針注記）に依存し、自己改善ループとは別系統
+
+## 含意（方針判断への接続）
+
+「reference-free＋空既定を正規機能として残す」決定は、**heuristic_profile のルール成長を誰がどう担うか**と不可分です：
+
+- 案 i：手動 case 駆動のまま（テンプレート方針注記どおり）。self-improvement とは独立
+- 案 ii：heuristic_profile ルール成長を self-improvement ループの出力対象に**正式に取り込む**（現状未配線。仕様拡張が必要）
+- 案 iii：reference-free＋空既定を廃し、別機構へ（log-6 の統合意図と矛盾）
+
+これは方法論・アーキテクチャ判断（runtime と self-improvement 仕様にまたがる）で、エージェント単独では決められません。どの方向で考えるか、あるいはさらに別資料（self-improvement 設計の詳細、log-6 の self-improvement 質問の原文脈）を先に精査しますか。本回答は調査のみ、ファイル変更なしです。
+
+```
+現状は案 i、将来構想として案 iiを記録して。
+```
+
+§10.2 を残します（追加記録の明示承認を受領）。`TODO_NEXT_SESSION.md` §10 は確定です：
+
+- §10.1：現状＝案 i（手動 case 駆動、self-improvement と独立）／将来構想＝案 ii（heuristic_profile ルール成長を self-improvement ループに取り込み、未配線・着手未定）
+- §10.2：未解決リグレッション（`default_heuristic_profile_ref.rb` の宙吊り live パス＋正本宣言文書 4 件、実体は退避先に現存、修復方針は方法論判断として未確定）
+
+`TODO_NEXT_SESSION.md` は git 管理外のためコミット不要です。
+
+現状の到達点：
+
+- 本セッションのコミット 9 件（フェーズ 1〜3、ステップ 6・7、判定役統一、相対パス化、DR-rebuild-log 連番修復）
+- 未コミットは前セッション引き継ぎ分のみ
+- heuristic_profile／reference-free の方針・リグレッションは §10 に記録済み（後対応）
+
+次の選択肢を判断してください。
+
+- §10.2 のリグレッション修復に着手（方法論判断：live パス復元 か 退避先再ポイント か。要方針決定）
+- 当初の候補 2（docs/ archival 系の相対パス一括変換、未着手）に戻る
+- 本セッションを区切る（`TODO_NEXT_SESSION.md` を全体成果で更新して引き継ぐ）
+
+```
+コミット
+```
 
 
 
+```
+議論を元に戻すと、HUMAN_WORKFLOW.mdのheuristic_profileのリンク先として、指すべきファイルは適切な場所にコピーして保持する。関連リンクも修正というのがよいのではないか
+```
 
+方向を確認します（選択肢 1：適切な live 位置へ復元＋関連リンク修正）。復元後に各文書のリンクがどうなるか、修正要否を正確に把握します。
 
+整理できました。重要点：**コードと文書 4 件はすべて既に live パスを指しており、ファイルが live パスに無いだけ**です。よって「適切な場所＝`experiments/protocols/heuristic_profiles/`（コード・文書が既に期待しているパス）」へコピーすれば、リンク編集なしで整合が回復します。
 
+## 提案前チェックリスト宣言
 
+### 操作 1：4 ファイルを退避先 → live パスへ**コピー**（スナップショットは保持）
 
+- 元：`experiments/protocols/_archived-2026-05-13/heuristic_profiles/{README.md, implementation/_minimal_template.yaml, intent/_minimal_template.yaml, spec/_minimal_template.yaml}`
+- 先：`experiments/protocols/heuristic_profiles/` 配下（同構造）
+- 方式：`cp`（退避スナップショット 2026-05-13 は凍結記録として**そのまま残す**。ユーザ指示「コピーして保持」に合致）
 
+### 操作 2：コピー後、リンク編集が**不要**な参照（自動的に解決）
 
+- `scripts/track_runs/default_heuristic_profile_ref.rb` 行 7-9（live パス指定）→ 解決
+- `operations/HUMAN_WORKFLOW.md` 節 5.2.1.2（`../experiments/protocols/heuristic_profiles/...` 相対）→ 解決
+- `.kiro/specs/dual-reviewer-implementation-governance/design.md` 行 93-96/153、`tasks.md` 行 208（live パス）→ 解決
 
+### 操作 3：要判断のリンク／文言（1 件）
 
+- `.kiro/specs/dual-reviewer-v2-acquisition/research.md` 行 8：「（`experiments/protocols/heuristic_profiles/` 配下、**現在は archive 配下**）」
+  - これは v1 の「件数固定の規則ファイル」を指す記述。今回復元するのは**最小テンプレート（ほぼ空・v2 整合）\**であり、v1 のバイアス付き case 別プロファイル（F1-\*.yaml 等）は退避先に残す。よって「現在は archive 配下」は\**部分的に不正確化**する
+  - 推奨：この行を「最小テンプレートは `experiments/protocols/heuristic_profiles/` 配下に復帰、v1 のバイアス付き case 別プロファイルは archive 配下」と精密化。ただし文意（v1 問題の説明）を壊さないため、編集は要承認
 
+### scope 外（今回触れない）
 
+- `docs/guides/dual-reviewer-v2-user-guide.md` 行 358-364：絶対パス基底は TODO §9.3（docs/ 相対化）の別件。コピー後ターゲットは存在するので機能はするが基底形式は別途
+- 退避先 `_archived-2026-05-13/` の他ファイル（v1 case 別プロファイル等）は不変
 
+### 検査観点
+
+1. live パスに 4 ファイル生成、内容が退避元と一致（diff 0）
+2. コード・文書 4 件のリンクが解決（存在チェック）
+3. 退避スナップショット `_archived-2026-05-13/` が無変更
+4. research.md 編集（承認時）後も文意保持
+
+操作 1・2 は機械的・低リスク。操作 3（research.md 文言）は要承認。**操作 1（コピー）と操作 3（research.md 修正）を実行してよいですか。** research.md は据え置きにする選択も可。判断をお願いします。
+
+```
+推奨どおりに
+```
+
+推奨どおり実行します。まず 4 ファイルを live パスへコピー。
+
+コピー成功（4 件、退避元と一致、スナップショット無変更）。次に research.md 行 8 を精密化します。
+
+- agreement-quote: 推奨どおりに
+- scope check: matches
+
+完了しました。検査結果：
+
+## heuristic_profile リグレッション修復 完了
+
+- **操作 1**：4 ファイル（README.md ＋ 最小テンプレート 3 件）を `_archived-2026-05-13/heuristic_profiles/` → live パス `experiments/protocols/heuristic_profiles/` へ**コピー**。退避元と内容一致（diff 0）、退避スナップショットは無変更
+- **操作 2**：コード `default_heuristic_profile_ref.rb`、HUMAN_WORKFLOW.md 節 5.2.1.2、impl-governance design.md/tasks.md のリンクは**すべて自動解決**（元から live パスを指していたため編集不要）
+- **操作 3**：`research.md` 行 8 を精密化（「v1 のバイアス付き case 別プロファイルは archive 配下、最小テンプレートは … 配下に復帰」）。v1 問題の文意は保持
+
+これで「`heuristic_profile_ref` 未指定の case で runner が存在しないパスを参照する」回帰は解消。reference-free＋空既定（案 i）が実体・コード・文書で整合しました。
+
+## 次の確認
+
+変更ファイル（git 追跡対象）：
+
+- 新規：`experiments/protocols/heuristic_profiles/` 配下 4 ファイル
+- 変更：`.kiro/specs/dual-reviewer-v2-acquisition/research.md`
+
+`research.md` は前セッション混在ではなく本セッションのクリーンな変更です（前セッション M は requirements.md と foundation/requirements.md のみ）。コミットしてよいですか。よければこの修復を 1 コミットにまとめます。
+
+```
+はい
+```
+
+コミット完了しました。
+
+- コミット：`af0aadaf` 「heuristic_profile 最小テンプレートを live パスへ復元し reference-free 既定の回帰を修復」（5 ファイル、298 行追加・1 行削除）
+- 内訳：live パスに 4 ファイル新規（README.md ＋ 最小テンプレート 3 件）、research.md 行 8 を精密化
+
+本セッションのコミット **10 件**：
+
+- `c1b8c9b` レビュー 3 役の用語定義を CONVENTIONS.md 節 8 に新設
+- `7dd9f3e` 規律ファイルを operations/disciplines/ へ再配置
+- `298f0b7` MEMORY.md の active 必読層を選定
+- `b8b64c1` 節 8 に同期ルールを明文化
+- `f292fee` 役名「判断役」を「判定役」に統一
+- `a8f2f4b` REVIEW_PROTOCOL.md に独自番号体系を導入
+- `c2d220d` 規律ファイル接頭辞を discipline_ に統一改名
+- `79f1030` 配布物中核のリンクを相対パス化
+- `d0e46b1` DR-rebuild-log 連番の移行漏れを修復
+- `af0aada` heuristic_profile 最小テンプレート復元・回帰修復
+
+これで heuristic_profile／reference-free 既定（案 i）は実体・コード・文書で整合し、TODO §10.2 のリグレッションは解消されました（§10 の記録は将来構想・経緯として残置）。
+
+次の選択肢を判断してください。
+
+- 残課題（v2-user-guide.md 358-364 の絶対パス基底＝TODO §9.3 別件、サブツリー外 26 件＝§9.1、docs/ archival 相対化＝§9.3）のいずれかに着手
+- 本セッションを区切る（`TODO_NEXT_SESSION.md` を全体成果で更新して引き継ぐ）
+
+```
+残課題を順に
+```
+
+残課題を順に処理します。まず §9.2（変換前から壊れていた内部リンク 4 件）が、先ほどの heuristic_profile 復元で解消されたか検証します。
+
+## §9.2：解消を確認
+
+HUMAN_WORKFLOW.md 節 5.2.1.2 の 4 リンク先（最小テンプレート 3 件＋README）は live パスに実在 ＝ **リンク解決**。先の `af0aadaf` 復元で §9.2（変換前から壊れていた内部リンク 4 件）は**解消済み**です。TODO §9.2／§10.2 は「解消済み」に更新が必要（git 管理外メモ）。
+
+## §9.3：着手（要承認・提案前チェックリスト）
+
+対象は **18 ファイル**（docs/ ＋ reviews/manual のサブツリー内絶対リンク、`_archived` 除外）：
+
+- 最多：docs/reports/dual-reviewer-v1-completion-report.md（27）、docs/coordination/analysis-run-set-selection-policy.md（13）、docs/legacy/legacy-discussion-carryover.md（10）、docs/guides/dual-reviewer-v2-user-guide.md（10）ほか
+
+**方式**（配布物中核の相対化と同一、検証済み）：
+
+- 対象パターン `](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/<sub>(:行)?)` のみをファイル別に相対パス化
+- サブツリー外（§9.1 の 26 件、基底に `dual-reviewer-rebuild/` を含まない）は正規表現上**自動非対象**＝不変
+- `:行番号` サフィックス保持、`_archived` 除外
+- スクリプトでファイル別に相対深さ算出 → 置換 → 検査
+
+**検査観点**：①18 ファイルの残存サブツリー内絶対リンク 0 ②相対リンク先の実在（既存 stale は変換起因でない旨を区別）③外部 26 は不変 ④変更が 18 ファイルに限定（前セッション混在・_archived へ波及なし）
+
+**scope 外**：§9.1 の外部 26 件（配布方針議論待ち、不変）。v2-user-guide.md の絶対リンクは本 §9.3 で相対化されるが、うち外部 methodology を指すものは §9.1 として残置。
+
+§9.3 を上記方式で実行してよいですか。承認後、(1) §9.2 解消を TODO に反映 →(2) §9.3 変換 →(3) 検査 →(4) コミット、の順で進めます。§9.1 は議論待ちのため本セッションでは保留（記録維持）。
+
+```
+はい
+```
+
+§9.3 を実行します。まず §9.2 解消を TODO に反映します。
+
+- agreement-quote: はい
+- scope check: matches
+
+§9.3 の相対パス変換を実行します。
+
+変換完了（18 ファイル・104 箇所）。検査します。
+
+検査全項目クリア。§9.3 をコミットします。
+
+§9.3 コミット完了。残課題の状況：
+
+## 残課題の処理結果（順に）
+
+- **§9.2（壊れ内部リンク 4 件）**：`af0aadaf` の heuristic_profile 復元で**解消済み**。TODO §9.2 を「解消済み」に更新
+- **§9.3（docs/ archival 絶対リンク）**：`5ca10a3a` で**完了**。18 ファイル・104 箇所を相対化、残存サブツリー内絶対リンク 0（_archived 除く）
+- **§9.1（サブツリー外 26 件）**：**配布方針議論待ちで保留**。DEPLOYMENT_MODEL.md 節 6（配布形態）の決定が前提のため本セッションでは着手不可。記録維持
+- **§10.2（runtime リグレッション）**：`af0aadaf` で解消済み
+
+本セッションのコミット **12 件**（直近 2 件）：
+
+- `af0aada` heuristic_profile 復元・回帰修復
+- `5ca10a3` docs/ 相対パス化（§9.3）
+
+## 到達点
+
+着手可能な残課題（§9.2・§9.3）はすべて完了。残るは §9.1（外部 26 件）のみで、これは配布方針の議論が前提のためブロック中です。
+
+次の選択肢を判断してください。
+
+- §9.1 の前提となる配布方針（DEPLOYMENT_MODEL.md 節 6）の論点整理に着手（議論の土台作り。コード変更なし）
+- 本セッションを区切る（`TODO_NEXT_SESSION.md` を全体成果で更新して引き継ぐ）
+
+```
+セッションを区切る
+```
+
+セッションを区切ります。`TODO_NEXT_SESSION.md` を本セッション（セッション 6）の成果で更新します。現状全体を確認します。
+
+本セッション（セッション 6）の成果で更新します。ヘッダーと §1〜§6 を順に書き換えます。
+
+- agreement-quote: セッションを区切る
+- scope check: matches
+- agreement-quote: セッションを区切る
+- scope check: matches
+
+§5（次セッション候補）と §6（未コミット）を更新します。
+
+§7（改善計画）の進捗ステータスを更新します。
+
+- agreement-quote: セッションを区切る
+- scope check: matches
+
+§8 の推奨開始手順を現状に合わせて更新します。
+
+- agreement-quote: セッションを区切る
+- scope check: matches
+
+§8 留意点の陳腐記述を確認します。
+
+§8 留意点の「個人記憶の active 必読層（5 件）」は個人記憶（`~/.claude` 側、5 件）を指しており正確なので変更不要です。`TODO_NEXT_SESSION.md` の更新が完了しました。
+
+## セッション 6 区切り完了
+
+`TODO_NEXT_SESSION.md`（git 管理外の引き継ぎメモ）を全面更新：
+
+- ヘッダー：セッション 6、最終コミット `5ca10a3a`
+- §1〜§2：セッション 6 の成果まとめ、コミット 12 件
+- §3〜§4：配布物の現状（discipline_ 接頭辞・2 箇所配置、CONVENTIONS 節 8、REVIEW_PROTOCOL 節 1〜5、相対パス化、DR-rebuild-log 1〜11）と参照経路
+- §5〜§6：次の主作業＝候補 1（仕様修正 #1〜#8、未着手）、未コミットは前セッション分のみ
+- §7：フェーズ 1〜3 完了、フェーズ 4 ステップ 6・7 完了／8 延期／9 中止、派生対応完了
+- §8：開始ガイドライン更新、§9/§10 は既に最新
+
+## 本セッションの最終成果
+
+- コミット **12 件**（フェーズ 1〜3、ステップ 6・7、判定役統一、相対パス化 2 件、DR-rebuild-log 連番修復、heuristic_profile 回帰修復）
+- 未コミットは前セッション引き継ぎ分のみ（一貫して除外）
+
+## 次セッションへの引き継ぎ要点
+
+- **主作業**：候補 1（foundation/runtime の仕様修正 #1〜#8、前セッションから未着手）
+- **ブロック中**：§9.1 サブツリー外 26 リンク／フェーズ 4 ステップ 8 導入ガイド／§10.1 案 ii（heuristic_profile を self-improvement に統合する将来構想）— いずれも DEPLOYMENT_MODEL.md 節 6 の配布方針議論が前提
+- **要注意**：`v2-acquisition/requirements.md` は前セッション修正と本セッションの判定役統一が混在。候補 1 とまとめて処理
+
+セッションを区切りました。お疲れさまでした。
+
+```
+次セッションでの候補 1はdual-reviewerが正しく動かないと評価できないか
+```
+
+いいえ、候補 1 は dual-reviewer のランタイム（自動の 3 役レビュー実行系）が動かなくても評価・実施できます。理由を整理します。
+
+## 候補 1 は「手動適用」の作業
+
+- 候補 1（foundation/runtime の must-fix #1〜#8 修正）の検出はすでに完了し、`requirements-local-review-2026-05-13.md` 等のレビュー結果ファイルに must-fix が記録済みです。**検出フェーズは終わっており**、候補 1 は「記録された指摘を要件書に反映する修正作業」です
+- 本リポジトリの方針は `HUMAN_WORKFLOW.md` 節 5.2.2「手動適用方針」：初期再構築では dual-reviewer 方法論を**まず手動で適用**し、レビューランタイムの完全自動運用を前提にしない。人間と Codex（LLM 支援者）が要件書を読み、dual-reviewer 的観点で点検する
+- したがって候補 1 の実施（修正適用）と評価（修正がその所見を解消したか）は、**人手＋手動レビューウェーブ**で完結します。自動ランタイムは前提条件ではありません
+
+## ランタイムが必要になるのは別の話
+
+- dual-reviewer の**方法論そのものの有効性を実験的に評価**する（論文用の比較データ取得など）場合は、ランタイム（3 役自動レビュー、heuristic_profile、runner）が必要です
+- 候補 1 はその実験評価ではなく、すでに手動レビューで挙がった must-fix を仕様に反映する作業なので、別物です
+
+## 補足（先の調査との接続）
+
+先に修復した heuristic_profile／reference-free 回帰は、その「自動ランタイム」側の整合でした。候補 1（手動の仕様修正）はそれと独立に進められます。ただし、もし次セッションで「修正後に自動ランタイムで再評価したい」となれば、その時点でランタイムの健全性（§10.2 で修復済み）が前提になります。
+
+要点：候補 1 自体は手動適用で評価可能。ランタイム稼働は候補 1 の前提ではなく、方法論の実験的評価を行うときに必要、という切り分けです。
+
+```
+チェックしておこう。スクリプトが参照する先がリンク切れになっていないか
+```
+
+スクリプトの参照先リンク切れを点検します。runtime/scripts の Ruby が参照するパス文字列を抽出し実在を検証します。
+
+参照パスが多数あります。具体パス（グロブ除く）の実在を repo 直下／サブツリー両方で検証します。
+
+未解決リストの大半は**スクリプトが実行時に生成する出力パス**（`*_manifest.yaml`、`comparison_summary.json` 等）で、リンク切れではありません。意味のある入力依存に絞って再検証します。
+
+## スクリプト参照のリンク切れ点検 結果
+
+### 解決済み（問題なし）
+
+- heuristic_profile 既定テンプレート 3 件：`af0aada` 修復済みで実在 OK
+- `experiments/protocols/case_manifests/*.yaml`：9 件すべて実在（バッチ入力 OK）
+- `.kiro/methodology/dual-reviewer-spec-driven-paper/`：ディレクトリ存在、24 個の .md あり
+- 「未解決」と出た多数は**スクリプトが実行時に生成する出力パス**（`*_manifest.yaml`、`comparison_summary.json` 等）でリンク切れではない
+
+### 実際に壊れている参照（実験バッチ実行スクリプト群）
+
+`run_*_first_batch.rb` / `run_*_narrative_batch.rb`（intent / heat3d / iot-arduino のバッチ実行系）が、存在しない methodology ファイルを入力として参照：
+
+- `.kiro/methodology/dual-reviewer-spec-driven-paper/dual-reviewer-spec-driven-paper-plan.md` → **不在**（INDEX.md 等はあるがこの名前は無い）
+- `…/heat3d-julia-implementation-phase-first-snapshot.md` → **不在**
+- `…/iot-arduino-implementation-phase-first-snapshot.md` ほか snapshot/preparation 系 → **不在**
+- 一部スクリプトが参照する `.kiro/specs/heat3d-spec/…`・`.kiro/specs/iot-arduino-spec/…` も本 repo に不在（旧 Rwiki-dev 由来の case 仕様）
+
+### 評価
+
+- これは「dual-reviewer の**実験ランタイム**（バッチ実行ハーネス）が、未移行の methodology／case 資産に依存して壊れている」状態で、先に整理した **§9.1（サブツリー外参照）・TODO §10（外部 methodology 依存）クラスタのスクリプト版の証拠**です
+- **候補 1（手動の仕様修正 #1〜#8）はこれらバッチ実行スクリプトを使わない**ため、候補 1 の評価・実施に影響はありません（先の回答どおり、候補 1 は手動適用で評価可能）
+- 修復は配布方針／外部 methodology の扱い決定が前提（DEPLOYMENT_MODEL.md 節 6 議論）で、本セッションのブロック対象
+
+## 確認
+
+この「実験バッチ実行スクリプトの壊れた methodology 入力参照」を TODO_NEXT_SESSION.md §9.1 か §10 に追記記録しますか（候補 1 とは独立、配布方針議論クラスタの一部として）。記録のみで修復は議論待ちのままにします。
 
 
 
