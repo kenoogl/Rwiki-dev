@@ -33,16 +33,16 @@
 
 | Path | Role | Status |
 |------|------|--------|
-| [README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/README.md) | repo 全体の入口 | overview |
-| [DOCUMENT_INDEX.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/DOCUMENT_INDEX.md) | 文書・artifact の所在管理 index | authoritative index |
-| [CLAUDE.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CLAUDE.md) | 開発作業時の運用メモ | working guidance |
-| [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md) | status / 用語 / naming / レビュー 3 役の共通規約 | top-level contract |
-| [SYSTEM_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/SYSTEM_BOUNDARY.md) | system の in/out scope | top-level contract |
-| [REPRODUCIBILITY_CONTRACT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/REPRODUCIBILITY_CONTRACT.md) | 再現性条件 | top-level contract |
-| [EVIDENCE_PROTOCOL.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/EVIDENCE_PROTOCOL.md) | evidence の扱い規約 | top-level contract |
-| [SELF_IMPROVEMENT_LOOP.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/SELF_IMPROVEMENT_LOOP.md) | 改善 loop の上位定義 | top-level contract |
-| [PAPER_WORK_BREAKDOWN.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/PAPER_WORK_BREAKDOWN.md) | 論文化作業の分解 | planning reference |
-| [MIGRATION_MANIFEST.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/MIGRATION_MANIFEST.md) | 旧 repo からの移植対象一覧 | migration authority |
+| [README.md](README.md) | repo 全体の入口 | overview |
+| [DOCUMENT_INDEX.md](DOCUMENT_INDEX.md) | 文書・artifact の所在管理 index | authoritative index |
+| [CLAUDE.md](CLAUDE.md) | 開発作業時の運用メモ | working guidance |
+| [CONVENTIONS.md](CONVENTIONS.md) | status / 用語 / naming / レビュー 3 役の共通規約 | top-level contract |
+| [SYSTEM_BOUNDARY.md](SYSTEM_BOUNDARY.md) | system の in/out scope | top-level contract |
+| [REPRODUCIBILITY_CONTRACT.md](REPRODUCIBILITY_CONTRACT.md) | 再現性条件 | top-level contract |
+| [EVIDENCE_PROTOCOL.md](EVIDENCE_PROTOCOL.md) | evidence の扱い規約 | top-level contract |
+| [SELF_IMPROVEMENT_LOOP.md](SELF_IMPROVEMENT_LOOP.md) | 改善 loop の上位定義 | top-level contract |
+| [PAPER_WORK_BREAKDOWN.md](PAPER_WORK_BREAKDOWN.md) | 論文化作業の分解 | planning reference |
+| [MIGRATION_MANIFEST.md](MIGRATION_MANIFEST.md) | 旧 repo からの移植対象一覧 | migration authority |
 
 ## 4. `intent/`
 
@@ -50,10 +50,10 @@
 
 | Path | Role | Status |
 |------|------|--------|
-| [intent/INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md) | 再構築の目的と価値命題 | authoritative |
-| [intent/NON_GOALS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/NON_GOALS.md) | 今回やらないことの明示 | authoritative |
-| [intent/DESIGN_PRINCIPLES.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/DESIGN_PRINCIPLES.md) | 設計原則 | authoritative |
-| [intent/TRACEABILITY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/TRACEABILITY.md) | intent から spec / artifact への接続 | authoritative |
+| [intent/INTENT.md](intent/INTENT.md) | 再構築の目的と価値命題 | authoritative |
+| [intent/NON_GOALS.md](intent/NON_GOALS.md) | 今回やらないことの明示 | authoritative |
+| [intent/DESIGN_PRINCIPLES.md](intent/DESIGN_PRINCIPLES.md) | 設計原則 | authoritative |
+| [intent/TRACEABILITY.md](intent/TRACEABILITY.md) | intent から spec / artifact への接続 | authoritative |
 
 補足:
 
@@ -68,10 +68,10 @@
 
 | Path | Role | Status |
 |------|------|--------|
-| [operations/DEPLOYMENT_MODEL.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/DEPLOYMENT_MODEL.md) | deploy 形態の固定 | authoritative |
-| [operations/TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md) | LLM / validator / human の責務境界 | authoritative |
-| [operations/HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md) | 開発・運用 workflow | authoritative |
-| [operations/DATA_INVALIDATION_POLICY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/DATA_INVALIDATION_POLICY.md) | valid / invalid / exploratory の扱い | authoritative |
+| [operations/DEPLOYMENT_MODEL.md](operations/DEPLOYMENT_MODEL.md) | deploy 形態の固定 | authoritative |
+| [operations/TRUST_BOUNDARY.md](operations/TRUST_BOUNDARY.md) | LLM / validator / human の責務境界 | authoritative |
+| [operations/HUMAN_WORKFLOW.md](operations/HUMAN_WORKFLOW.md) | 開発・運用 workflow | authoritative |
+| [operations/DATA_INVALIDATION_POLICY.md](operations/DATA_INVALIDATION_POLICY.md) | valid / invalid / exploratory の扱い | authoritative |
 
 補足:
 
@@ -83,9 +83,9 @@
 
 | Path | Role | Status |
 |------|------|--------|
-| [product.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/steering/product.md) | product steering | steering |
-| [tech.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/steering/tech.md) | technical steering | steering |
-| [structure.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/steering/structure.md) | repo structure steering | steering |
+| [product.md](.kiro/steering/product.md) | product steering | steering |
+| [tech.md](.kiro/steering/tech.md) | technical steering | steering |
+| [structure.md](.kiro/steering/structure.md) | repo structure steering | steering |
 
 ## 7. `.kiro/specs/`
 
@@ -119,12 +119,12 @@
 
 | Feature | Requirements | Design | Tasks |
 |---------|--------------|--------|-------|
-| foundation | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/tasks.md) |
-| runtime | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-runtime/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-runtime/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-runtime/tasks.md) |
-| evaluation | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/tasks.md) |
-| paper-interface | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-paper-interface/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-paper-interface/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-paper-interface/tasks.md) |
-| self-improvement | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/tasks.md) |
-| implementation-governance | [requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-implementation-governance/requirements.md) | [design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-implementation-governance/design.md) | [tasks.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-implementation-governance/tasks.md) |
+| foundation | [requirements.md](.kiro/specs/dual-reviewer-foundation/requirements.md) | [design.md](.kiro/specs/dual-reviewer-foundation/design.md) | [tasks.md](.kiro/specs/dual-reviewer-foundation/tasks.md) |
+| runtime | [requirements.md](.kiro/specs/dual-reviewer-runtime/requirements.md) | [design.md](.kiro/specs/dual-reviewer-runtime/design.md) | [tasks.md](.kiro/specs/dual-reviewer-runtime/tasks.md) |
+| evaluation | [requirements.md](.kiro/specs/dual-reviewer-evaluation/requirements.md) | [design.md](.kiro/specs/dual-reviewer-evaluation/design.md) | [tasks.md](.kiro/specs/dual-reviewer-evaluation/tasks.md) |
+| paper-interface | [requirements.md](.kiro/specs/dual-reviewer-paper-interface/requirements.md) | [design.md](.kiro/specs/dual-reviewer-paper-interface/design.md) | [tasks.md](.kiro/specs/dual-reviewer-paper-interface/tasks.md) |
+| self-improvement | [requirements.md](.kiro/specs/dual-reviewer-self-improvement/requirements.md) | [design.md](.kiro/specs/dual-reviewer-self-improvement/design.md) | [tasks.md](.kiro/specs/dual-reviewer-self-improvement/tasks.md) |
+| implementation-governance | [requirements.md](.kiro/specs/dual-reviewer-implementation-governance/requirements.md) | [design.md](.kiro/specs/dual-reviewer-implementation-governance/design.md) | [tasks.md](.kiro/specs/dual-reviewer-implementation-governance/tasks.md) |
 
 ## 8. `docs/`
 
@@ -134,11 +134,11 @@
 
 | Path | Role | Status |
 |------|------|--------|
-| [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md) | requirements wave の横断整合メモ | alignment memo |
-| [cross-spec-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md) | design wave の横断整合メモ | alignment memo |
-| [cross-spec-tasks-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md) | tasks wave の横断整合メモ | alignment memo |
-| [cross-spec-implementation-governance-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-implementation-governance-alignment.md) | implementation-governance 導入時の横断整合メモ | alignment memo |
-| [phase-and-feature-dependency-map.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/phase-and-feature-dependency-map.md) | phase 間・feature 間依存と進行順の正本補助 | alignment memo |
+| [cross-spec-requirements-alignment.md](docs/alignment/cross-spec-requirements-alignment.md) | requirements wave の横断整合メモ | alignment memo |
+| [cross-spec-design-alignment.md](docs/alignment/cross-spec-design-alignment.md) | design wave の横断整合メモ | alignment memo |
+| [cross-spec-tasks-alignment.md](docs/alignment/cross-spec-tasks-alignment.md) | tasks wave の横断整合メモ | alignment memo |
+| [cross-spec-implementation-governance-alignment.md](docs/alignment/cross-spec-implementation-governance-alignment.md) | implementation-governance 導入時の横断整合メモ | alignment memo |
+| [phase-and-feature-dependency-map.md](docs/alignment/phase-and-feature-dependency-map.md) | phase 間・feature 間依存と進行順の正本補助 | alignment memo |
 
 `cross-spec-design-alignment.md` には design 修正時の reopen procedure を含める。
 
@@ -146,54 +146,54 @@
 
 | Path | Role | Status |
 |------|------|--------|
-| [implementation-coordination-log.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md) | implementation 中の横断調整ログ | coordination log |
-| [implementation-signal-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-signal-register.md) | implementation 中の軽微な兆候・未確定リスクの台帳 | signal register |
-| [implementation-conformance-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md) | prototype 実装後の仕様準拠性・境界条件・証跡性 review 工程定義 | review procedure |
-| [implementation-conformance-metric-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-conformance-metric-register.md) | conformance review を測る metric 定義台帳 | metric register |
-| [phase-review-metric-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/phase-review-metric-register.md) | `intent` から `implementation` までの phase friction / handback / recheck を測る metric 定義台帳 | metric register |
-| [workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md) | 現在どの workflow gate まで通過したかの状態台帳 | gate status register |
-| [workflow-repair-procedure.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md) | `A/B/C/D` handback と gate 再実施の修正手続き一覧と状態遷移表 | workflow repair procedure |
+| [implementation-coordination-log.md](docs/coordination/implementation-coordination-log.md) | implementation 中の横断調整ログ | coordination log |
+| [implementation-signal-register.md](docs/coordination/implementation-signal-register.md) | implementation 中の軽微な兆候・未確定リスクの台帳 | signal register |
+| [implementation-conformance-review.md](docs/coordination/implementation-conformance-review.md) | prototype 実装後の仕様準拠性・境界条件・証跡性 review 工程定義 | review procedure |
+| [implementation-conformance-metric-register.md](docs/coordination/implementation-conformance-metric-register.md) | conformance review を測る metric 定義台帳 | metric register |
+| [phase-review-metric-register.md](docs/coordination/phase-review-metric-register.md) | `intent` から `implementation` までの phase friction / handback / recheck を測る metric 定義台帳 | metric register |
+| [workflow-gate-status.md](docs/coordination/workflow-gate-status.md) | 現在どの workflow gate まで通過したかの状態台帳 | gate status register |
+| [workflow-repair-procedure.md](docs/coordination/workflow-repair-procedure.md) | `A/B/C/D` handback と gate 再実施の修正手続き一覧と状態遷移表 | workflow repair procedure |
 
 ### 8.3 `docs/reviews/`
 
 | Path | Role | Status |
 |------|------|--------|
-| [2026-05-09-intent-baseline-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-intent-baseline-review.md) | v1 baseline 時点の intent review artifact | review artifact |
-| [2026-05-09-prototype-shelf-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review.md) | prototype 一巡後の implementation conformance review artifact | review artifact |
-| [2026-05-09-prototype-shelf-review-rerun.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review-rerun.md) | open finding 修正後の conformance review short rerun artifact | review artifact |
-| [templates/implementation-conformance-review-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/implementation-conformance-review-template.md) | conformance review artifact の再利用 template | review template |
-| [templates/intent-review-template.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/templates/intent-review-template.md) | intent review artifact の再利用 template | review template |
+| [2026-05-09-intent-baseline-review.md](docs/reviews/2026-05-09-intent-baseline-review.md) | v1 baseline 時点の intent review artifact | review artifact |
+| [2026-05-09-prototype-shelf-review.md](docs/reviews/2026-05-09-prototype-shelf-review.md) | prototype 一巡後の implementation conformance review artifact | review artifact |
+| [2026-05-09-prototype-shelf-review-rerun.md](docs/reviews/2026-05-09-prototype-shelf-review-rerun.md) | open finding 修正後の conformance review short rerun artifact | review artifact |
+| [templates/implementation-conformance-review-template.md](docs/reviews/templates/implementation-conformance-review-template.md) | conformance review artifact の再利用 template | review template |
+| [templates/intent-review-template.md](docs/reviews/templates/intent-review-template.md) | intent review artifact の再利用 template | review template |
 
 ### 8.4 `docs/reports/`
 
 | Path | Role | Status |
 |------|------|--------|
-| [dual-reviewer-v1-completion-report.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reports/dual-reviewer-v1-completion-report.md) | dual-reviewer v1 の完成報告と review/evidence の要約 | completion report |
+| [dual-reviewer-v1-completion-report.md](docs/reports/dual-reviewer-v1-completion-report.md) | dual-reviewer v1 の完成報告と review/evidence の要約 | completion report |
 
 ### 8.5 `docs/guides/`
 
 | Path | Role | Status |
 |------|------|--------|
-| [dual-reviewer-v2-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v2-user-guide.md) | dual-reviewer v2 の全体像、使い方、判断ポイントをまとめた利用者向けガイド | current user guide |
-| [dual-reviewer-v1-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v1-user-guide.md) | dual-reviewer v1 の目的と使い方をまとめた参照用ガイド | legacy reference |
+| [dual-reviewer-v2-user-guide.md](docs/guides/dual-reviewer-v2-user-guide.md) | dual-reviewer v2 の全体像、使い方、判断ポイントをまとめた利用者向けガイド | current user guide |
+| [dual-reviewer-v1-user-guide.md](docs/guides/dual-reviewer-v1-user-guide.md) | dual-reviewer v1 の目的と使い方をまとめた参照用ガイド | legacy reference |
 
 ### 8.6 `docs/traceability/`
 
 | Path | Role | Status |
 |------|------|--------|
-| [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) | intent 命題と feature requirements の対応表 | traceability matrix |
+| [intent-to-requirements-trace-matrix.md](docs/traceability/intent-to-requirements-trace-matrix.md) | intent 命題と feature requirements の対応表 | traceability matrix |
 
 ### 8.7 `docs/migration/`
 
 | Path | Role | Status |
 |------|------|--------|
-| [feature-disposition-judgment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/migration/feature-disposition-judgment.md) | 旧機能の keep/reshape/drop 判定表 | migration memo |
+| [feature-disposition-judgment.md](docs/migration/feature-disposition-judgment.md) | 旧機能の keep/reshape/drop 判定表 | migration memo |
 
 ### 8.8 `docs/legacy/`
 
 | Path | Role | Status |
 |------|------|--------|
-| [legacy-discussion-carryover.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/legacy/legacy-discussion-carryover.md) | 初期議論から継承する論点の整理 | legacy reference |
+| [legacy-discussion-carryover.md](docs/legacy/legacy-discussion-carryover.md) | 初期議論から継承する論点の整理 | legacy reference |
 
 ## 9. Artifact Directory Index
 
@@ -201,13 +201,13 @@
 
 | Path | Expected contents | Status |
 |------|-------------------|--------|
-| [runtime/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime) | prompts / schemas / validators / config / runtime assets | shared asset layer |
-| [experiments/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments) | protocols / runs / analysis / fixtures | experiment workspace |
-| [learning/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/learning) | findings / proposals / backtests / approved-updates / rejected-updates / rollback | self-improvement workspace |
-| [paper/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/paper) | reports / tables / figures / caveats | paper-facing workspace |
-| [scripts/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/scripts) | utility scripts | implementation workspace |
-| [tests/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/tests) | repo-level tests | validation workspace |
-| [reviews/manual/](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/reviews/manual) | manual dogfooding review records, templates, and aggregate summaries | manual review workspace |
+| [runtime/](runtime) | prompts / schemas / validators / config / runtime assets | shared asset layer |
+| [experiments/](experiments) | protocols / runs / analysis / fixtures | experiment workspace |
+| [learning/](learning) | findings / proposals / backtests / approved-updates / rejected-updates / rollback | self-improvement workspace |
+| [paper/](paper) | reports / tables / figures / caveats | paper-facing workspace |
+| [scripts/](scripts) | utility scripts | implementation workspace |
+| [tests/](tests) | repo-level tests | validation workspace |
+| [reviews/manual/](reviews/manual) | manual dogfooding review records, templates, and aggregate summaries | manual review workspace |
 
 ## 10. 正本と参考資料の区別
 
@@ -244,20 +244,20 @@
 
 新規参加者向けの推奨順序は次だ。
 
-1. [README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/README.md)
-2. [DOCUMENT_INDEX.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/DOCUMENT_INDEX.md)
-3. [intent/INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md)
-4. [operations/TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md)
-5. [SYSTEM_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/SYSTEM_BOUNDARY.md)
-6. [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md)
-7. [MIGRATION_MANIFEST.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/MIGRATION_MANIFEST.md)
-8. [dual-reviewer-foundation/requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/requirements.md)
-9. [dual-reviewer-foundation/design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/design.md)
-10. [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md)
-11. [cross-spec-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md)
-12. [cross-spec-tasks-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md)
-13. [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md)
-14. [dual-reviewer-implementation-governance/requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-implementation-governance/requirements.md)
-15. [dual-reviewer-implementation-governance/design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-implementation-governance/design.md)
+1. [README.md](README.md)
+2. [DOCUMENT_INDEX.md](DOCUMENT_INDEX.md)
+3. [intent/INTENT.md](intent/INTENT.md)
+4. [operations/TRUST_BOUNDARY.md](operations/TRUST_BOUNDARY.md)
+5. [SYSTEM_BOUNDARY.md](SYSTEM_BOUNDARY.md)
+6. [CONVENTIONS.md](CONVENTIONS.md)
+7. [MIGRATION_MANIFEST.md](MIGRATION_MANIFEST.md)
+8. [dual-reviewer-foundation/requirements.md](.kiro/specs/dual-reviewer-foundation/requirements.md)
+9. [dual-reviewer-foundation/design.md](.kiro/specs/dual-reviewer-foundation/design.md)
+10. [cross-spec-requirements-alignment.md](docs/alignment/cross-spec-requirements-alignment.md)
+11. [cross-spec-design-alignment.md](docs/alignment/cross-spec-design-alignment.md)
+12. [cross-spec-tasks-alignment.md](docs/alignment/cross-spec-tasks-alignment.md)
+13. [intent-to-requirements-trace-matrix.md](docs/traceability/intent-to-requirements-trace-matrix.md)
+14. [dual-reviewer-implementation-governance/requirements.md](.kiro/specs/dual-reviewer-implementation-governance/requirements.md)
+15. [dual-reviewer-implementation-governance/design.md](.kiro/specs/dual-reviewer-implementation-governance/design.md)
 
 この順序で、意図、運用境界、system boundary、移行方針、feature contract に到達できる。

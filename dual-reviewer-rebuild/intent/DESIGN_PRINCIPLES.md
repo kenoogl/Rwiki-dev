@@ -8,7 +8,7 @@
 
 再構築では、個々の設計判断が局所最適に流れないように、上位原則を明示しておく必要がある。
 
-artifact naming、status の正本、`phase` 用語の使い分けは [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md) を前提にする。
+artifact naming、status の正本、`phase` 用語の使い分けは [CONVENTIONS.md](../CONVENTIONS.md) を前提にする。
 
 ## 2. 原則 1: Repo-Contained Runtime
 

@@ -4,9 +4,9 @@ Review system 再構築用 repository。
 
 ## Start Here
 
-初見の利用者は、まず [dual-reviewer-v2-user-guide.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/guides/dual-reviewer-v2-user-guide.md:1) を読む。
+初見の利用者は、まず [dual-reviewer-v2-user-guide.md](docs/guides/dual-reviewer-v2-user-guide.md:1) を読む。
 
-その次に、役割分担は [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)、信頼境界は [TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md:1) を読む。
+その次に、役割分担は [HUMAN_WORKFLOW.md](operations/HUMAN_WORKFLOW.md:1)、信頼境界は [TRUST_BOUNDARY.md](operations/TRUST_BOUNDARY.md:1) を読む。
 
 新しい case を参照 case なしで起こすときは、[reference-free-case-bootstrap-guide.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/reference-free-case-bootstrap-guide.md:1) と `ruby dual-reviewer-rebuild/scripts/bootstrap_reference_free_case.rb <case-slug> --intent-source <path> --canonical-source <path>` を使う。
 
@@ -35,5 +35,5 @@ v1 prototype 完成。manual implementation conformance review と short rerun �
 ## Workflow Note
 
 - `intent/` または any `requirements.md` の意味を変えた場合は、trace matrix と requirements alignment を更新する
-- trace matrix 更新トリガーの詳細は [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) を正本とする
+- trace matrix 更新トリガーの詳細は [intent-to-requirements-trace-matrix.md](docs/traceability/intent-to-requirements-trace-matrix.md) を正本とする
 - status の正本は各 feature の `spec.json`

@@ -238,7 +238,7 @@ metric は 3 tier に分ける。
 
 の 2 層で考える。
 
-この 2 層構造の必要性は [INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md) にある価値命題を受けるものであり、overlay metric の具体定義と derived artifact への落とし込みは本 spec を正本とする。
+この 2 層構造の必要性は [INTENT.md](../../../intent/INTENT.md) にある価値命題を受けるものであり、overlay metric の具体定義と derived artifact への落とし込みは本 spec を正本とする。
 
 - run-level
   - total findings

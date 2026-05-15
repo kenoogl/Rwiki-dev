@@ -12,7 +12,7 @@
 
 を明示しないと、runtime と開発 process の両方で責任境界が崩れる。
 
-用語と status の共通規約は [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md) を正本とする。
+用語と status の共通規約は [CONVENTIONS.md](../CONVENTIONS.md) を正本とする。
 
 ## 2. 基本方針
 
@@ -132,7 +132,7 @@ Codex がやってはいけないこと:
 
 補足:
 
-- `spec phase`、`review phase/profile`、`run status` の用語は [CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md) の定義に従う
+- `spec phase`、`review phase/profile`、`run status` の用語は [CONVENTIONS.md](../CONVENTIONS.md) の定義に従う
 - 初期段階では、この repo 自身が `dual-reviewer` 方法論の手動適用対象になる
 
 ### 5.2 spec フェーズ
@@ -149,7 +149,7 @@ Codex がやってはいけないこと:
 - 意図駆動ワークフローは phase の順序と gate を規定する
 - Codex は各 gate の内側で、必要な調査、文書化、整合チェック、修正を進める
 - feature 間で依存が強い場合は、vertical に 1 feature を最後まで進めず、requirements wave や cross-spec review を優先する
-- feature 間依存と phase 進行順は [phase-and-feature-dependency-map.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/phase-and-feature-dependency-map.md) を参照する
+- feature 間依存と phase 進行順は [phase-and-feature-dependency-map.md](../docs/alignment/phase-and-feature-dependency-map.md) を参照する
 - 本 repo の spec 文書は、初期の dogfooding review 対象としても扱う
 
 ### 5.2.1 開始指示の既定解釈
@@ -224,14 +224,14 @@ intent-start の既定解釈:
   runner は track ごとの minimal template を使ってよい
 - minimal template は次を正本とする
   - implementation:
-    - [implementation/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/implementation/_minimal_template.yaml:1)
+    - [implementation/_minimal_template.yaml](../experiments/protocols/heuristic_profiles/implementation/_minimal_template.yaml:1)
   - intent:
-    - [intent/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/intent/_minimal_template.yaml:1)
+    - [intent/_minimal_template.yaml](../experiments/protocols/heuristic_profiles/intent/_minimal_template.yaml:1)
   - spec:
-    - [spec/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/_minimal_template.yaml:1)
+    - [spec/_minimal_template.yaml](../experiments/protocols/heuristic_profiles/spec/_minimal_template.yaml:1)
 - case 固有 rule は、approved source に anchored した review-critical contract があるときだけ追加する
 
-詳細方針は [heuristic_profiles/README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/README.md:1) を正本とする。
+詳細方針は [heuristic_profiles/README.md](../experiments/protocols/heuristic_profiles/README.md:1) を正本とする。
 
 ### 5.2.2 手動適用方針
 
@@ -415,7 +415,7 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 - 再調整結果は `docs/alignment/cross-spec-*.md` 系の文書に残す
 - 上位 phase の修正が入った場合、完了済みの下流 phase も「確定済み」とは見なさず、再確認完了まで reopen 状態として扱う
 - 再調整未実施のまま次 phase へ進むことは workflow 逸脱とみなす
-- `INTENT` と `requirements` の意味対応を管理する trace matrix がある場合、更新トリガーは [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) を正本とし、該当時点で同 matrix も更新対象に含める
+- `INTENT` と `requirements` の意味対応を管理する trace matrix がある場合、更新トリガーは [intent-to-requirements-trace-matrix.md](../docs/traceability/intent-to-requirements-trace-matrix.md) を正本とし、該当時点で同 matrix も更新対象に含める
 
 ### 5.2.6.1 設計フェーズで判明した仕様課題の取り扱い
 

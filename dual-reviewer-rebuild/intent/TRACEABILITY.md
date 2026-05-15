@@ -61,7 +61,7 @@
 
 matrix は単なる説明メモではなく、上位意図から requirement への流れを監査するための運用文書として扱う。
 
-更新必須トリガー、更新不要ケース、運用ルールの正本は [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) に置く。
+更新必須トリガー、更新不要ケース、運用ルールの正本は [intent-to-requirements-trace-matrix.md](../docs/traceability/intent-to-requirements-trace-matrix.md) に置く。
 
 本書では次のみを固定ルールとする。
 

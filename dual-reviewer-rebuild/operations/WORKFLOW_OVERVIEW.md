@@ -13,7 +13,7 @@ phase の連鎖は次の通り。
 
 `intent` → `requirements` → `design` → `tasks` → `implementation` → `review acquisition`
 
-各 phase の終端には人間関門があり、承認を得て次へ進む。承認状態は各 feature の `spec.json` に記録され、これが正本（[CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md) 第 2 節）。
+各 phase の終端には人間関門があり、承認を得て次へ進む。承認状態は各 feature の `spec.json` に記録され、これが正本（[CONVENTIONS.md](../CONVENTIONS.md) 第 2 節）。
 
 ---
 
@@ -54,7 +54,7 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 
 判定に迷う場合は、より上流へ戻す側に倒す（保守的判定）。
 
-詳細：[workflow-repair-procedure.md 第 4 節](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md)。
+詳細：[workflow-repair-procedure.md 第 4 節](../docs/coordination/workflow-repair-procedure.md)。
 
 ---
 
@@ -73,7 +73,7 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 9. approved / rechecked 済み phase から再開。
 10. implementation close を再判定。
 
-詳細：[workflow-repair-procedure.md 第 2 節](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md)。
+詳細：[workflow-repair-procedure.md 第 2 節](../docs/coordination/workflow-repair-procedure.md)。
 
 ---
 
@@ -83,7 +83,7 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 - **Codex（LLM 支援者）**：文書起草、要件 / 設計 / タスクの具体化、コード実装、検証、提案。承認の代行はしない。
 - **ワークフロー review process**：phase gate を持つ（intent review、requirements / design / tasks alignment gate、implementation conformance review）。
 
-詳細：[HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md)。
+詳細：[HUMAN_WORKFLOW.md](HUMAN_WORKFLOW.md)。
 
 ---
 
@@ -91,11 +91,11 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 
 各論点の正本は次の通り。
 
-- 意図：[INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md) と `intent/` 配下。
-- 運用と役割分担：[HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md)。
-- 修復手続き（reopen）：[workflow-repair-procedure.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md)。
-- gate 状態台帳：[workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md)。
-- 共通規約：[CONVENTIONS.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/CONVENTIONS.md)。
+- 意図：[INTENT.md](../intent/INTENT.md) と `intent/` 配下。
+- 運用と役割分担：[HUMAN_WORKFLOW.md](HUMAN_WORKFLOW.md)。
+- 修復手続き（reopen）：[workflow-repair-procedure.md](../docs/coordination/workflow-repair-procedure.md)。
+- gate 状態台帳：[workflow-gate-status.md](../docs/coordination/workflow-gate-status.md)。
+- 共通規約：[CONVENTIONS.md](../CONVENTIONS.md)。
 - 各 feature の状態正本：`.kiro/specs/<feature>/spec.json`。
 
 本書は概観であり、判断の根拠としては上記の正本文書を優先する。
