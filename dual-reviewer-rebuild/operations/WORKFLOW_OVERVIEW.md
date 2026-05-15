@@ -99,3 +99,36 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 - 各 feature の状態正本：`.kiro/specs/<feature>/spec.json`。
 
 本書は概観であり、判断の根拠としては上記の正本文書を優先する。
+
+---
+
+## 8. 文書構造マップ
+
+詳細を辿る入り口。
+
+### HUMAN_WORKFLOW.md の主要節
+
+- 節 5.1：上位文書フェーズ
+- 節 5.2：spec フェーズ
+  - 節 5.2.1：開始指示の既定解釈
+  - 節 5.2.3：Review Wave Order（intent → requirements → design → tasks の順序）
+  - 節 5.2.5：multi-feature alignment gate
+  - 節 5.2.6：遡上修正時の強制再調整
+  - 節 5.2.6.1：設計フェーズで判明した仕様課題の取り扱い
+  - 節 5.2.7：phase evidence summary
+  - 節 5.2.8〜5.2.11：レビュー詳細 → [REVIEW_PROTOCOL.md](REVIEW_PROTOCOL.md) に分離（プレースホルダのみ）
+- 節 5.3：implementation フェーズ
+- 節 5.4：optional review acquisition extension
+- 節 6〜10：人間関与・承認単位・委ね深さ・逸脱防止・完成条件
+
+### REVIEW_PROTOCOL.md の節構成
+
+- レビュー基本規律：全レビュー段階で適用（検出 / 提示 / 判定 / 記録の 4 段階）
+- 節 5.2.8：要件レビューの 5 ラウンド構成と波及精査
+- 節 5.2.9：設計レビューの 10 観点と進め方
+- 節 5.2.10：フェーズ完走後のフィーチャー横断レビューパターン
+- 節 5.2.11：タスクレビューの 7 観点と進め方
+
+### 規律ファイル群
+
+`.kiro/memory/feedback_*.md`（15 件）：エージェントの応答品質に関する個別規律。索引は `.kiro/memory/MEMORY.md`。

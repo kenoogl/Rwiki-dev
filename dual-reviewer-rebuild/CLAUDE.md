@@ -4,6 +4,10 @@
 
 - 親 `Rwiki-v2-code-mod/CLAUDE.md` の `/kiro-*` 系コマンドおよび `.kiro/specs/` 直下への参照は、本サブツリー配下の作業には適用しない。本サブツリーは独自の intent 駆動ワークフローを用い、`dual-reviewer-rebuild/.kiro/specs/` を参照先とする。
 
+## セッション開始時の必読
+
+本サブツリー配下で作業を始める際、最初に [operations/WORKFLOW_OVERVIEW.md](operations/WORKFLOW_OVERVIEW.md) を読む。ワークフロー全体像と文書構造マップ（HUMAN_WORKFLOW.md / REVIEW_PROTOCOL.md / 規律ファイル群への入り口）が記載されている。詳細は必要に応じて部分読み（grep + Read offset/limit）で参照する。
+
 ## Development Mode
 
 - This repository uses an intent-driven workflow.
