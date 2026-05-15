@@ -15,11 +15,11 @@
 
 ## Ready Manifests
 
-- [F1-phase-field-cpp-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F1-phase-field-cpp-selection.yaml:1)
-- [F1-intent-dual-reviewer-rebuild-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F1-intent-dual-reviewer-rebuild-selection.yaml:1)
-- [F1-requirements-phase-field-reverse-spec-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F1-requirements-phase-field-reverse-spec-selection.yaml:1)
-- [F1-design-phase-field-reverse-spec-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F1-design-phase-field-reverse-spec-selection.yaml:1)
-- [F1-spec-phase-field-reverse-spec-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F1-spec-phase-field-reverse-spec-selection.yaml:1)
+- [F1-phase-field-cpp-selection.yaml](../../experiments/analysis/manifests/F1-phase-field-cpp-selection.yaml:1)
+- [F1-intent-dual-reviewer-rebuild-selection.yaml](../../experiments/analysis/manifests/F1-intent-dual-reviewer-rebuild-selection.yaml:1)
+- [F1-requirements-phase-field-reverse-spec-selection.yaml](../../experiments/analysis/manifests/F1-requirements-phase-field-reverse-spec-selection.yaml:1)
+- [F1-design-phase-field-reverse-spec-selection.yaml](../../experiments/analysis/manifests/F1-design-phase-field-reverse-spec-selection.yaml:1)
+- [F1-spec-phase-field-reverse-spec-selection.yaml](../../experiments/analysis/manifests/F1-spec-phase-field-reverse-spec-selection.yaml:1)
 
 ## Selection Results
 

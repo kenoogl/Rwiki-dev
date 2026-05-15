@@ -355,13 +355,13 @@ case 固有に本当に見たい contract だけを追加するための最小 l
 最小 template:
 
 - implementation:
-  - [implementation/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/implementation/_minimal_template.yaml:1)
+  - [implementation/_minimal_template.yaml](../../experiments/protocols/heuristic_profiles/implementation/_minimal_template.yaml:1)
 - intent:
-  - [intent/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/intent/_minimal_template.yaml:1)
+  - [intent/_minimal_template.yaml](../../experiments/protocols/heuristic_profiles/intent/_minimal_template.yaml:1)
 - spec:
-  - [spec/_minimal_template.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/spec/_minimal_template.yaml:1)
+  - [spec/_minimal_template.yaml](../../experiments/protocols/heuristic_profiles/spec/_minimal_template.yaml:1)
 
-詳しい作り方は [heuristic_profiles/README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/heuristic_profiles/README.md:1) を見る。
+詳しい作り方は [heuristic_profiles/README.md](../../experiments/protocols/heuristic_profiles/README.md:1) を見る。
 
 ### 4.5.3 各 gate で何を判断するか
 
@@ -401,7 +401,7 @@ v2 を実際に運用するときは、spec 本文だけでは進行制御が足
 
 #### `workflow-gate-status`
 
-[workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md:1)
+[workflow-gate-status.md](../coordination/workflow-gate-status.md:1)
 は、今どの gate まで通過したかを記録する台帳である。
 
 これは
@@ -429,7 +429,7 @@ v2 を実際に運用するときは、spec 本文だけでは進行制御が足
 - stop rule
 
 重要なのは、`ACTIVE_WORKLIST` は workflow 手順そのものの正本ではない、という点である。
-phase の順序や gate のルールは [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1) が持つ。
+phase の順序や gate のルールは [HUMAN_WORKFLOW.md](../../operations/HUMAN_WORKFLOW.md:1) が持つ。
 `ACTIVE_WORKLIST` は「今この case で次に何をするか」を固定する。
 
 通常は case owner や operator が current step を管理し、LLM は blocker 整理や next action の起草を補助する。
@@ -687,7 +687,7 @@ v2 では記録と報告のための機能も持つ。
 最初は次の順で読むと分かりやすい。
 
 1. このガイドで全体像をつかむ
-2. [README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/README.md:1) で repo の入口を見る
-3. [INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md:1) で目的を確認する
-4. [TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md:1) で責務分担を見る
-5. 必要になったら [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1) を読む
+2. [README.md](../../README.md:1) で repo の入口を見る
+3. [INTENT.md](../../intent/INTENT.md:1) で目的を確認する
+4. [TRUST_BOUNDARY.md](../../operations/TRUST_BOUNDARY.md:1) で責務分担を見る
+5. 必要になったら [HUMAN_WORKFLOW.md](../../operations/HUMAN_WORKFLOW.md:1) を読む

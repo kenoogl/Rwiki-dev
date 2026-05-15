@@ -13,8 +13,8 @@
 
 ## Ready Manifests
 
-- [F1-intent-dual-reviewer-rebuild-narrative-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F1-intent-dual-reviewer-rebuild-narrative-selection.yaml:1)
-- [F1-spec-phase-field-reverse-spec-narrative-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F1-spec-phase-field-reverse-spec-narrative-selection.yaml:1)
+- [F1-intent-dual-reviewer-rebuild-narrative-selection.yaml](../../experiments/analysis/manifests/F1-intent-dual-reviewer-rebuild-narrative-selection.yaml:1)
+- [F1-spec-phase-field-reverse-spec-narrative-selection.yaml](../../experiments/analysis/manifests/F1-spec-phase-field-reverse-spec-narrative-selection.yaml:1)
 
 ## Selection Results
 

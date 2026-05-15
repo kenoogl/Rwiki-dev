@@ -20,7 +20,7 @@ pilot reacquisition 完了までを閉じるための記録である。
 ### 2.1 Intent Track
 
 - batch:
-  [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/comparison_summary.json:1)
+  [comparison_summary.json](../../experiments/protocols/intent-track-runs/F1-intent-dual-reviewer-rebuild/comparison_summary.json:1)
 - status:
   reacquired through runtime-mediated v2 path with legacy protocol artifacts preserved
 - key observations:
@@ -32,11 +32,11 @@ pilot reacquisition 完了までを閉じるための記録である。
 ### 2.2 Spec Track
 
 - tasks batch:
-  [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/comparison_summary.json:1)
+  [comparison_summary.json](../../experiments/protocols/spec-track-runs/F1-spec-phase-field-reverse-spec/comparison_summary.json:1)
 - requirements batch:
-  [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec/comparison_summary.json:1)
+  [comparison_summary.json](../../experiments/protocols/spec-track-runs/F1-requirements-phase-field-reverse-spec/comparison_summary.json:1)
 - design batch:
-  [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/comparison_summary.json:1)
+  [comparison_summary.json](../../experiments/protocols/spec-track-runs/F1-design-phase-field-reverse-spec/comparison_summary.json:1)
 - status:
   reacquired through runtime-mediated v2 path with reviewed-phase protocol artifacts preserved
 - key observations:
@@ -48,7 +48,7 @@ pilot reacquisition 完了までを閉じるための記録である。
 ### 2.3 Implementation Track
 
 - batch:
-  [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json:1)
+  [comparison_summary.json](../../experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json:1)
 - status:
   reacquired through v2 runtime path
 - key observations:

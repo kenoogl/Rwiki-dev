@@ -11,14 +11,14 @@
 
 ## Ready Manifests
 
-- [F1-phase-field-cpp-r2-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F1-phase-field-cpp-r2-selection.yaml:1)
+- [F1-phase-field-cpp-r2-selection.yaml](../../experiments/analysis/manifests/F1-phase-field-cpp-r2-selection.yaml:1)
 
 ## Acquisition Results
 
 - batch root:
-  - [F1-phase-field-cpp-r2](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2:1)
+  - [F1-phase-field-cpp-r2](../../experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2:1)
 - comparison summary:
-  - [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/comparison_summary.json:1)
+  - [comparison_summary.json](../../experiments/protocols/implementation-track-runs/F1-phase-field-cpp-r2/comparison_summary.json:1)
 - selected run count:
   - `3`
 - included treatments:

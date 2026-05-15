@@ -25,13 +25,13 @@ _対象: `dual-reviewer-generic-execution-layer-v2` design alignment_
 ## 2. 参照正本
 
 - [dual-reviewer-generic-execution-layer-v2 design](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/design.md:1)
-- [dual-reviewer-foundation design](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/design.md:1)
-- [dual-reviewer-runtime design](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-runtime/design.md:1)
-- [dual-reviewer-evaluation design](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/design.md:1)
-- [dual-reviewer-self-improvement design](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/design.md:1)
-- [dual-reviewer-paper-interface design](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-paper-interface/design.md:1)
+- [dual-reviewer-foundation design](../../.kiro/specs/dual-reviewer-foundation/design.md:1)
+- [dual-reviewer-runtime design](../../.kiro/specs/dual-reviewer-runtime/design.md:1)
+- [dual-reviewer-evaluation design](../../.kiro/specs/dual-reviewer-evaluation/design.md:1)
+- [dual-reviewer-self-improvement design](../../.kiro/specs/dual-reviewer-self-improvement/design.md:1)
+- [dual-reviewer-paper-interface design](../../.kiro/specs/dual-reviewer-paper-interface/design.md:1)
 - [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1)
-- [phase-and-feature-dependency-map.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/phase-and-feature-dependency-map.md:1)
+- [phase-and-feature-dependency-map.md](phase-and-feature-dependency-map.md:1)
 
 ## 3. Alignment Result Summary
 

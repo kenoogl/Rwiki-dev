@@ -32,7 +32,7 @@ dual-reviewer methodology の正本文書は完備されているが、一見し
 
 ## 4. dogfooding 上の意味
 
-dual-reviewer は意図駆動開発の複雑性増大を支援する道具と銘打っている（[INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md) 第 4.6 節）。にもかかわらず、方法論自身の文書が一見して把握できないのは次の問題を示す。
+dual-reviewer は意図駆動開発の複雑性増大を支援する道具と銘打っている（[INTENT.md](../../intent/INTENT.md) 第 4.6 節）。にもかかわらず、方法論自身の文書が一見して把握できないのは次の問題を示す。
 
 - 方法論の信頼性問題：自分自身の複雑性増大を支えきれていない。
 - LLM 支援運用上の品質問題：LLM が誤動作する余地が残る。

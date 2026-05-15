@@ -27,7 +27,7 @@ dual-reviewer methodology の review wave 手順を実施するにあたり、�
 - review wave 手順は `HUMAN_WORKFLOW.md` で正本化されているが、その手順を実行するためのテンプレートが揃っていなかった。
 - 既存ユーザ（このプロジェクトの開発者）は `intent-review-template.md` を流用するなど暗黙の慣行で運用していた可能性があるが、それを明示するテンプレートはない。
 - 結果として、各ユーザは毎回独自に形式を考えなければならず、形式の不整合が生じやすい。
-- これは [2026-05-13-workflow-graspability-finding.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reflections/2026-05-13-workflow-graspability-finding.md) と同類の問題で、方法論の文書整備が不完全であることを示す。
+- これは [2026-05-13-workflow-graspability-finding.md](2026-05-13-workflow-graspability-finding.md) と同類の問題で、方法論の文書整備が不完全であることを示す。
 
 ## 4. dogfooding 上の意味
 

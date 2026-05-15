@@ -79,8 +79,8 @@ _参照元: [docs/レビューシステム検討.md](/Users/Daily/Development/Rw
 
 これは現在の
 
-- [TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md)
-- [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md)
+- [TRUST_BOUNDARY.md](../../operations/TRUST_BOUNDARY.md)
+- [HUMAN_WORKFLOW.md](../../operations/HUMAN_WORKFLOW.md)
 
 と整合しているため、方針確認として継承価値がある。
 
@@ -156,17 +156,17 @@ _参照元: [docs/レビューシステム検討.md](/Users/Daily/Development/Rw
 旧議論から継承した発想は、現時点では次に反映されている。
 
 - 3 層分離
-  - [dual-reviewer-foundation/design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/design.md)
-  - [dual-reviewer-self-improvement/design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/design.md)
+  - [dual-reviewer-foundation/design.md](../../.kiro/specs/dual-reviewer-foundation/design.md)
+  - [dual-reviewer-self-improvement/design.md](../../.kiro/specs/dual-reviewer-self-improvement/design.md)
 - evidence からの継続改善
-  - [SELF_IMPROVEMENT_LOOP.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/SELF_IMPROVEMENT_LOOP.md)
-  - [dual-reviewer-self-improvement/requirements.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/requirements.md)
+  - [SELF_IMPROVEMENT_LOOP.md](../../SELF_IMPROVEMENT_LOOP.md)
+  - [dual-reviewer-self-improvement/requirements.md](../../.kiro/specs/dual-reviewer-self-improvement/requirements.md)
 - human-in-the-loop
-  - [TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md)
-  - [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md)
+  - [TRUST_BOUNDARY.md](../../operations/TRUST_BOUNDARY.md)
+  - [HUMAN_WORKFLOW.md](../../operations/HUMAN_WORKFLOW.md)
 - phase ごとに異なる有効性指標
-  - [INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md)
-  - [dual-reviewer-evaluation/design.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/design.md)
+  - [INTENT.md](../../intent/INTENT.md)
+  - [dual-reviewer-evaluation/design.md](../../.kiro/specs/dual-reviewer-evaluation/design.md)
 
 ## 6. 今後の使い方
 

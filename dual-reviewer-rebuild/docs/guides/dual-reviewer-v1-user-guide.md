@@ -330,12 +330,12 @@ maintainer 向けの補助手段である。
 
 ## 14. 最初に読むべき文書
 
-1. [README.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/README.md:1)
-2. [INTENT.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/INTENT.md:1)
-3. [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:1)
-4. [TRUST_BOUNDARY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/TRUST_BOUNDARY.md:1)
-5. [dual-reviewer-v1-completion-report.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reports/dual-reviewer-v1-completion-report.md:1)
-6. [workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md:1)
+1. [README.md](../../README.md:1)
+2. [INTENT.md](../../intent/INTENT.md:1)
+3. [HUMAN_WORKFLOW.md](../../operations/HUMAN_WORKFLOW.md:1)
+4. [TRUST_BOUNDARY.md](../../operations/TRUST_BOUNDARY.md:1)
+5. [dual-reviewer-v1-completion-report.md](../reports/dual-reviewer-v1-completion-report.md:1)
+6. [workflow-gate-status.md](../coordination/workflow-gate-status.md:1)
 
 ## 15. ひとことで言うと
 

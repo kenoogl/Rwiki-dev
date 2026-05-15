@@ -12,8 +12,8 @@
 
 ## Ready Manifests
 
-- [F3-iot-arduino-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F3-iot-arduino-selection.yaml:1)
-- [F3-iot-arduino-r2-selection.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/analysis/manifests/F3-iot-arduino-r2-selection.yaml:1)
+- [F3-iot-arduino-selection.yaml](../../experiments/analysis/manifests/F3-iot-arduino-selection.yaml:1)
+- [F3-iot-arduino-r2-selection.yaml](../../experiments/analysis/manifests/F3-iot-arduino-r2-selection.yaml:1)
 
 ## Selection Results
 

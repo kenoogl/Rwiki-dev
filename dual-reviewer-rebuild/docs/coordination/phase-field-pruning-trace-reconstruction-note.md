@@ -48,9 +48,9 @@ rule pruning 過程の raw rerun artifact の一部を誤って削除した後�
 
 根拠:
 
-- [implementation-coordination-log.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md:1)
-- [generic-execution-layer-v2-replacement-outcome.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/generic-execution-layer-v2-replacement-outcome.md:1)
-- [comparison_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json:1)
+- [implementation-coordination-log.md](implementation-coordination-log.md:1)
+- [generic-execution-layer-v2-replacement-outcome.md](generic-execution-layer-v2-replacement-outcome.md:1)
+- [comparison_summary.json](../../experiments/protocols/implementation-track-runs/F1-phase-field-cpp/comparison_summary.json:1)
 - [phase-field-dual-treatment-observation.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/phase-field-dual-treatment-observation.md:1)
 
 ### 4.2 現在も残っている representative artifact

@@ -31,13 +31,13 @@ workflow が要求する feature 間調整を記録するための alignment art
 - [requirements.md](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-generic-execution-layer-v2/requirements.md:1)
 - [ACTIVE_WORKLIST.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/ACTIVE_WORKLIST.md:1)
 - [execution-control-ledger.md](/Users/Daily/Development/Rwiki-dev/.kiro/methodology/dual-reviewer-spec-driven-paper/execution-control-ledger.md:1)
-- [HUMAN_WORKFLOW.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/operations/HUMAN_WORKFLOW.md:215)
-- [metadata_contract.yaml](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/runtime/foundation/metadata_contract.yaml:1)
+- [HUMAN_WORKFLOW.md](../../operations/HUMAN_WORKFLOW.md:215)
+- [metadata_contract.yaml](../../runtime/foundation/metadata_contract.yaml:1)
 - [dual-reviewer-foundation requirements](/Users/Daily/Development/Rwiki-dev/.kiro/specs/dual-reviewer-foundation/requirements.md:1)
-- [dual-reviewer-runtime requirements](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-runtime/requirements.md:1)
-- [dual-reviewer-evaluation requirements](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/requirements.md:1)
-- [dual-reviewer-self-improvement requirements](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-self-improvement/requirements.md:1)
-- [dual-reviewer-paper-interface requirements](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/.kiro/specs/dual-reviewer-paper-interface/requirements.md:1)
+- [dual-reviewer-runtime requirements](../../.kiro/specs/dual-reviewer-runtime/requirements.md:1)
+- [dual-reviewer-evaluation requirements](../../.kiro/specs/dual-reviewer-evaluation/requirements.md:1)
+- [dual-reviewer-self-improvement requirements](../../.kiro/specs/dual-reviewer-self-improvement/requirements.md:1)
+- [dual-reviewer-paper-interface requirements](../../.kiro/specs/dual-reviewer-paper-interface/requirements.md:1)
 
 ## 3. Alignment Result Summary
 

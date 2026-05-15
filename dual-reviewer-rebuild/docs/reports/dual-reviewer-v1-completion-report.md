@@ -40,7 +40,7 @@ v1 で完成した feature 群は次である。
 - `implementation prototype pass`: `completed`
 - `implementation conformance review`: `completed`
 
-参照: [workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md:19)
+参照: [workflow-gate-status.md](../coordination/workflow-gate-status.md:19)
 
 ## 4. manual review サイクル
 
@@ -51,7 +51,7 @@ manual `implementation conformance review` を 1 サイクル実施した。
 
 初回 review artifact:
 
-- [2026-05-09-prototype-shelf-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review.md:1)
+- [2026-05-09-prototype-shelf-review.md](../reviews/2026-05-09-prototype-shelf-review.md:1)
 
 ここで 3 finding を記録した。
 
@@ -63,15 +63,15 @@ manual `implementation conformance review` を 1 サイクル実施した。
 
 修正対象コード:
 
-- [history_registry.rb](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/scripts/self_improvement/history_registry.rb:37)
-- [replay_input_resolver.rb](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/scripts/self_improvement/replay_input_resolver.rb:56)
-- [evidence_register_builder.rb](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/scripts/paper_interface/evidence_register_builder.rb:21)
+- [history_registry.rb](../../scripts/self_improvement/history_registry.rb:37)
+- [replay_input_resolver.rb](../../scripts/self_improvement/replay_input_resolver.rb:56)
+- [evidence_register_builder.rb](../../scripts/paper_interface/evidence_register_builder.rb:21)
 
 ### 4.3 short rerun
 
 修正後 rerun artifact:
 
-- [2026-05-09-prototype-shelf-review-rerun.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review-rerun.md:1)
+- [2026-05-09-prototype-shelf-review-rerun.md](../reviews/2026-05-09-prototype-shelf-review-rerun.md:1)
 
 short rerun では新規 finding は 0 件で、initial finding 3 件は `fixed` と判定した。
 
@@ -102,48 +102,48 @@ v1 時点で phase ごとに回収できる metrics は次である。
 根拠:
 
 - `requirements`
-  - [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md:51)
-  - [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md:149)
+  - [cross-spec-requirements-alignment.md](../alignment/cross-spec-requirements-alignment.md:51)
+  - [cross-spec-requirements-alignment.md](../alignment/cross-spec-requirements-alignment.md:149)
 - `intent`
-  - [2026-05-09-intent-baseline-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-intent-baseline-review.md:1)
+  - [2026-05-09-intent-baseline-review.md](../reviews/2026-05-09-intent-baseline-review.md:1)
 - `design`
-  - [cross-spec-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md:46)
-  - [cross-spec-design-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-design-alignment.md:75)
+  - [cross-spec-design-alignment.md](../alignment/cross-spec-design-alignment.md:46)
+  - [cross-spec-design-alignment.md](../alignment/cross-spec-design-alignment.md:75)
 - `tasks`
-  - [cross-spec-tasks-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-tasks-alignment.md:110)
+  - [cross-spec-tasks-alignment.md](../alignment/cross-spec-tasks-alignment.md:110)
 - `implementation`
-  - [implementation-coordination-log.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md:153)
-  - [implementation-signal-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-signal-register.md:65)
+  - [implementation-coordination-log.md](../coordination/implementation-coordination-log.md:153)
+  - [implementation-signal-register.md](../coordination/implementation-signal-register.md:65)
 - `implementation review`
-  - [2026-05-09-prototype-shelf-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review.md:24)
-  - [2026-05-09-prototype-shelf-review-rerun.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review-rerun.md:20)
-  - [workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md:19)
+  - [2026-05-09-prototype-shelf-review.md](../reviews/2026-05-09-prototype-shelf-review.md:24)
+  - [2026-05-09-prototype-shelf-review-rerun.md](../reviews/2026-05-09-prototype-shelf-review-rerun.md:20)
+  - [workflow-gate-status.md](../coordination/workflow-gate-status.md:19)
 
 補足:
 
-- `intent` は [2026-05-09-intent-baseline-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-intent-baseline-review.md:1) を baseline artifact とし、v1 では `intent_revision_count=0`, `intent_handback_count=0` を採る。
+- `intent` は [2026-05-09-intent-baseline-review.md](../reviews/2026-05-09-intent-baseline-review.md:1) を baseline artifact とし、v1 では `intent_revision_count=0`, `intent_handback_count=0` を採る。
 - intent 起因の問題は、`intent` 自体の件数としてではなく、今後は `requirements / design / tasks / implementation` 側の `intent-attributed issue` として数える。
 - `requirements / design / tasks` は report に必要な統計を抽出できるが、現状は alignment memo 由来の semi-manual aggregation である。
-- 今後の phase 別定量化ルールは [phase-review-metric-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/phase-review-metric-register.md:1) を正本補助とする。
+- 今後の phase 別定量化ルールは [phase-review-metric-register.md](../coordination/phase-review-metric-register.md:1) を正本補助とする。
 
 ## 6. 実施エビデンス
 
 ### 6.1 workflow と governance
 
-- [implementation-conformance-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-conformance-review.md:1)
-- [implementation-conformance-metric-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-conformance-metric-register.md:1)
-- [workflow-repair-procedure.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-repair-procedure.md:1)
-- [workflow-gate-status.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/workflow-gate-status.md:1)
+- [implementation-conformance-review.md](../coordination/implementation-conformance-review.md:1)
+- [implementation-conformance-metric-register.md](../coordination/implementation-conformance-metric-register.md:1)
+- [workflow-repair-procedure.md](../coordination/workflow-repair-procedure.md:1)
+- [workflow-gate-status.md](../coordination/workflow-gate-status.md:1)
 
 ### 6.2 実装判断と signal
 
-- [implementation-coordination-log.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md:132)
-- [implementation-signal-register.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/coordination/implementation-signal-register.md:60)
+- [implementation-coordination-log.md](../coordination/implementation-coordination-log.md:132)
+- [implementation-signal-register.md](../coordination/implementation-signal-register.md:60)
 
 ### 6.3 review artifact
 
-- [2026-05-09-prototype-shelf-review.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review.md:1)
-- [2026-05-09-prototype-shelf-review-rerun.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/reviews/2026-05-09-prototype-shelf-review-rerun.md:1)
+- [2026-05-09-prototype-shelf-review.md](../reviews/2026-05-09-prototype-shelf-review.md:1)
+- [2026-05-09-prototype-shelf-review-rerun.md](../reviews/2026-05-09-prototype-shelf-review-rerun.md:1)
 
 ## 7. 実行した validator
 

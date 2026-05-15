@@ -10,7 +10,7 @@
 - 後から追加された観点が requirements に落ちているか確認できるようにする
 - requirement がどの intent を受けて存在しているかを監査可能にする
 
-この文書は [TRACEABILITY.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/intent/TRACEABILITY.md) の補助的正本であり、`intent -> requirements` の具体対応を保持する。
+この文書は [TRACEABILITY.md](../../intent/TRACEABILITY.md) の補助的正本であり、`intent -> requirements` の具体対応を保持する。
 
 ## 2. 更新必須トリガー
 
@@ -96,6 +96,6 @@
 
 ## 6. 運用メモ
 
-- この matrix を更新した場合、必要に応じて [cross-spec-requirements-alignment.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/alignment/cross-spec-requirements-alignment.md) を再確認する
+- この matrix を更新した場合、必要に応じて [cross-spec-requirements-alignment.md](../alignment/cross-spec-requirements-alignment.md) を再確認する
 - matrix と各 feature `spec.json` の `custom.traceability` 状態を一致させる
 - trace matrix 更新トリガーの正本は本書 `2. 更新必須トリガー` とする

@@ -11,7 +11,7 @@ _対象: `dual-reviewer-foundation` / `runtime` / `evaluation` / `paper-interfac
 
 ## 1.5 Trace Matrix 連動
 
-requirements alignment の結果、次のいずれかが起きた場合は [intent-to-requirements-trace-matrix.md](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/docs/traceability/intent-to-requirements-trace-matrix.md) を更新対象とする。
+requirements alignment の結果、次のいずれかが起きた場合は [intent-to-requirements-trace-matrix.md](../traceability/intent-to-requirements-trace-matrix.md) を更新対象とする。
 
 - requirement の追加、削除、統合、分割
 - requirement の責務移管

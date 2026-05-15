@@ -82,4 +82,4 @@ category distribution:
 
 machine-readable version:
 
-- [manual_review_metrics_summary.json](/Users/Daily/Development/Rwiki-dev/dual-reviewer-rebuild/reviews/manual/manual_review_metrics_summary.json)
+- [manual_review_metrics_summary.json](manual_review_metrics_summary.json)
