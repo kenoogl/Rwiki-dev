@@ -69,7 +69,7 @@ type: feedback
 
 ## 必要性判定との連結
 
-利用者判断候補として列挙された所見は、別ファイル `feedback_review_necessity_judgment.md` の必要性判定ステップで「修正必須 / 必要に応じて / 修正不要」のいずれかに分類される。本チェックリストの該当判定は、必要性判定の 5 観点のうち `uncertainty`（判断の割れ）の値を引き上げる根拠として扱う。具体的には、23 パターンに該当した所見は原則として `uncertainty` を「判断が割れる」または「中程度」と設定し、「明確」には分類しない。
+利用者判断候補として列挙された所見は、別ファイル `discipline_review_necessity_judgment.md` の必要性判定ステップで「修正必須 / 必要に応じて / 修正不要」のいずれかに分類される。本チェックリストの該当判定は、必要性判定の 5 観点のうち `uncertainty`（判断の割れ）の値を引き上げる根拠として扱う。具体的には、23 パターンに該当した所見は原則として `uncertainty` を「判断が割れる」または「中程度」と設定し、「明確」には分類しない。
 
 ## 利用者の「核心を突く一言」(エージェントが忘れがちな判定基準)
 
@@ -93,8 +93,8 @@ type: feedback
 
 **関連する規律：**
 
-- レビュー所見の必要性判定(`feedback_review_necessity_judgment.md`)— 検出された所見を三ラベルに分類するステップ。本チェックリストの該当所見は uncertainty を高く扱う。
+- レビュー所見の必要性判定(`discipline_review_necessity_judgment.md`)— 検出された所見を三ラベルに分類するステップ。本チェックリストの該当所見は uncertainty を高く扱う。
 - 設計レビューの観点(`operations/HUMAN_WORKFLOW.md` 節 5.2.9)— 12 ラウンド構成
 - 要件レビューのラウンド(`operations/HUMAN_WORKFLOW.md` 節 5.2.8)— 5 ラウンド構成
-- レビューラウンドの一括処理禁止(`feedback_no_round_batching.md`)— 各ラウンドでの利用者判断機会
-- 選択肢提示の方法(`feedback_choice_presentation.md`)— パターン 22 の前提(明らかに劣る選択肢の除外)
+- レビューラウンドの一括処理禁止(`discipline_no_round_batching.md`)— 各ラウンドでの利用者判断機会
+- 選択肢提示の方法(`discipline_choice_presentation.md`)— パターン 22 の前提(明らかに劣る選択肢の除外)

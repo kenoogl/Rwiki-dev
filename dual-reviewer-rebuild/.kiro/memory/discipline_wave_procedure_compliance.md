@@ -13,4 +13,4 @@ wave（段階的レビュー手順）に入る前に必ずワークフロー文�
 - feature-local review で must-fix が出た場合、その機能の requirements.md を修正してから次の機能に進む（修正手順は `operations/HUMAN_WORKFLOW.md` 節 5.2.6 の遡上修正再調整に従う）
 - 自分が「次にやること」と述べた内容は拘束条件として扱い、行動前に必ず直前の発言を確認する
 - ユーザーの短い返答（「承認」「了解」など）を受けたときは、何が承認されたかを確認してから次の行動に移る
-- 「承認が必要か」の判断は spec.json の承認状態変更、コミット、プッシュ、フェーズ移行に限定する（詳細は `feedback_approval_required.md` を参照）
+- 「承認が必要か」の判断は spec.json の承認状態変更、コミット、プッシュ、フェーズ移行に限定する（詳細は `discipline_approval_required.md` を参照）

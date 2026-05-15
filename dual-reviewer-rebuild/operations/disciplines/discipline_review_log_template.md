@@ -11,7 +11,7 @@ type: feedback
 ## 所見の二つの分類との関係
 
 本ファイルは「所見をどう見せるか」という形式の規律である。
-所見の中身に何を書くか（箇所・現状・問題・修正後）は、別ファイル `feedback_finding_4elements.md` の観点規律で定める。
+所見の中身に何を書くか（箇所・現状・問題・修正後）は、別ファイル `discipline_finding_4elements.md` の観点規律で定める。
 
 両者は場面で使い分ける。
 
@@ -39,7 +39,7 @@ type: feedback
     - 検出 3：案 (c)（例として、3 案以上から選んだ場合）
 
 注：上記の検出 1 件分のひな形は、利用者に判断を仰ぐ場面の並び。
-レビュー記録ファイルへ事実を残す場面では、四要素（箇所・現状・問題・修正後、別ファイル `feedback_finding_4elements.md`）で書く。
+レビュー記録ファイルへ事実を残す場面では、四要素（箇所・現状・問題・修正後、別ファイル `discipline_finding_4elements.md`）で書く。
 
 ## ラウンド完了報告テンプレート
 
@@ -69,5 +69,5 @@ type: feedback
 
 **関連する規律：**
 
-- 所見の 4 要素（`feedback_finding_4elements.md`）
-- レビュー出力の即時保存（`feedback_review_save_immediately.md`）
+- 所見の 4 要素（`discipline_finding_4elements.md`）
+- レビュー出力の即時保存（`discipline_review_save_immediately.md`）

@@ -30,5 +30,5 @@ type: feedback
 **関連する規律：**
 
 - 設計レビューの観点（`operations/HUMAN_WORKFLOW.md` 節 5.2.9）— 独立レビューが前提の方法論
-- ラウンド一括処理禁止（`feedback_no_round_batching.md`）— エージェントの自己制御の同類規律
+- ラウンド一括処理禁止（`discipline_no_round_batching.md`）— エージェントの自己制御の同類規律
 

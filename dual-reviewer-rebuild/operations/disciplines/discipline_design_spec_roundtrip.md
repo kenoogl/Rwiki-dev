@@ -28,6 +28,6 @@ type: feedback
 
 **関連する規律：**
 
-- 設計決定の記録方式（`feedback_design_decisions_record.md`）
-- 承認なしで進めない（`feedback_approval_required.md`）
+- 設計決定の記録方式（`discipline_design_decisions_record.md`）
+- 承認なしで進めない（`discipline_approval_required.md`）
 - 設計レビューの観点（`operations/HUMAN_WORKFLOW.md` 節 5.2.9）

@@ -30,7 +30,7 @@ type: feedback
 - `fix_cost`：高（複数フィーチャーや構造変更）／中／低
 - `scope_expansion`：要件範囲を広げる／広げない
 - `uncertainty`：判断が割れる／中程度／明確
-  - 23 パターン（別ファイル `feedback_review_judgment_patterns.md`）に該当した所見は、原則として `uncertainty` を「判断が割れる」または「中程度」と設定し、「明確」には分類しない。
+  - 23 パターン（別ファイル `discipline_review_judgment_patterns.md`）に該当した所見は、原則として `uncertainty` を「判断が割れる」または「中程度」と設定し、「明確」には分類しない。
 
 主観的判断のばらつきを抑えるため、半機械的な対応規則を判定役のプロンプトに埋め込む。例外を選ぶ場合は、その理由を `override_reason` として明記する。
 
@@ -60,6 +60,6 @@ type: feedback
 
 **関連する規律：**
 
-- レビュー判定の 23 パターン（`feedback_review_judgment_patterns.md`）— 検出段階のチェックリスト。本必要性判定の前段として、検出時に該当判定し、該当所見の `uncertainty` を高く扱う。
-- 所見の四要素（`feedback_finding_4elements.md`）— 検出所見を事実として記録する場面の観点規律。
-- レビュー所見のテンプレート（`feedback_review_log_template.md`）— 利用者に判断を仰ぐ場面の形式規律。三ラベル別の提示の並びにも適用する。
+- レビュー判定の 23 パターン（`discipline_review_judgment_patterns.md`）— 検出段階のチェックリスト。本必要性判定の前段として、検出時に該当判定し、該当所見の `uncertainty` を高く扱う。
+- 所見の四要素（`discipline_finding_4elements.md`）— 検出所見を事実として記録する場面の観点規律。
+- レビュー所見のテンプレート（`discipline_review_log_template.md`）— 利用者に判断を仰ぐ場面の形式規律。三ラベル別の提示の並びにも適用する。

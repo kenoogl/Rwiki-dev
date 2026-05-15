@@ -55,4 +55,4 @@ type: feedback
 **関連する規律：**
 
 - 要件レビューのラウンド（`operations/HUMAN_WORKFLOW.md` 節 5.2.8）— 各ラウンドでの判断機会
-- 承認なしで進めない（`feedback_approval_required.md`）— 選択肢提示後の承認は別工程
+- 承認なしで進めない（`discipline_approval_required.md`）— 選択肢提示後の承認は別工程

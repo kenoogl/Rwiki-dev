@@ -65,6 +65,6 @@ type: feedback
 ## 関連する規律
 
 - 設計レビューの観点（`operations/HUMAN_WORKFLOW.md` 節 5.2.9）
-- 設計と要件の往復判断（`feedback_design_spec_roundtrip.md`）
-- 選択肢提示の方法（`feedback_choice_presentation.md`）— 設計時の代替案提示にも適用
-- 承認なしで進めない（`feedback_approval_required.md`）— 重要決定の承認必須
+- 設計と要件の往復判断（`discipline_design_spec_roundtrip.md`）
+- 選択肢提示の方法（`discipline_choice_presentation.md`）— 設計時の代替案提示にも適用
+- 承認なしで進めない（`discipline_approval_required.md`）— 重要決定の承認必須

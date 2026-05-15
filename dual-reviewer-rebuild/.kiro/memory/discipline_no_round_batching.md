@@ -35,5 +35,5 @@ type: feedback
 
 - 設計レビューの観点(`operations/HUMAN_WORKFLOW.md` 節 5.2.9)— 設計レビューの 12 ラウンド構成
 - 要件レビューのラウンド(`operations/HUMAN_WORKFLOW.md` 節 5.2.8)— 要件レビューの 5 ラウンド構成
-- 承認なしで進めない(`feedback_approval_required.md`)— 利用者判断の境界
-- 選択肢提示の方法(`feedback_choice_presentation.md`)— 利用者判断ステップでの選択肢提示作法
+- 承認なしで進めない(`discipline_approval_required.md`)— 利用者判断の境界
+- 選択肢提示の方法(`discipline_choice_presentation.md`)— 利用者判断ステップでの選択肢提示作法

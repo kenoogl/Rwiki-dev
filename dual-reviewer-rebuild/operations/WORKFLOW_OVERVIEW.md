@@ -141,8 +141,8 @@ HUMAN_WORKFLOW.md 5.2.8〜5.2.11 のプレースホルダは本書の 節 2〜5 
 
 規律は 2 箇所に分かれて配置される。
 
-- `.kiro/memory/feedback_*.md`（8 件）：エージェントの応答品質に関する行動規律。索引は `.kiro/memory/MEMORY.md`。
-- `operations/disciplines/feedback_*.md`（7 件）：ワークフロー実行の手順・方針に関する規律（手順 5 件 + 方針 2 件）。
+- `.kiro/memory/discipline_*.md`（8 件）：エージェントの応答品質に関する行動規律。索引は `.kiro/memory/MEMORY.md`。
+- `operations/disciplines/discipline_*.md`（7 件）：ワークフロー実行の手順・方針に関する規律（手順 5 件 + 方針 2 件）。
 
 ### 節 8 の同期ルール
 

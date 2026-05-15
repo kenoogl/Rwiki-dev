@@ -15,7 +15,7 @@ type: feedback
 ## 提示時の並びとの関係
 
 本ファイルは「所見の中身に何を書くか」という観点の規律である。
-所見をどう見せるか（メッセージの並び、見出し構造）は、別ファイル `feedback_review_log_template.md` の形式の規律で定める。
+所見をどう見せるか（メッセージの並び、見出し構造）は、別ファイル `discipline_review_log_template.md` の形式の規律で定める。
 
 両者は場面で使い分ける。
 
@@ -52,6 +52,6 @@ type: feedback
 
 **関連する規律：**
 
-- レビュー所見のテンプレート（`feedback_review_log_template.md`）
-- レビュー所見の必要性判定（`feedback_review_necessity_judgment.md`）
-- レビュー出力の即時保存（`feedback_review_save_immediately.md`）
+- レビュー所見のテンプレート（`discipline_review_log_template.md`）
+- レビュー所見の必要性判定（`discipline_review_necessity_judgment.md`）
+- レビュー出力の即時保存（`discipline_review_save_immediately.md`）

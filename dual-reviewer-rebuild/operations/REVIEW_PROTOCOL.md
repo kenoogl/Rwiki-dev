@@ -16,10 +16,10 @@ _purpose: レビュー段階固有の規律と進め方を集約する_
 
 レビューの段階別に適用すべき規律。本文書の各節（節 2 / 節 3 / 節 4 / 節 5）から参照する。
 
-- 検出時：所見は 4 要素で書く（規律 `feedback_finding_4elements.md`）
-- 提示時：1 ラウンドにつき 1 応答単位、複数ラウンドの一括処理は禁止（規律 `feedback_no_round_batching.md`）／ ラウンド提示と完了報告の統一書式（規律 `feedback_review_log_template.md`）
-- 判定時：利用者判断を仰ぐべき所見の 23 パターン（規律 `feedback_review_judgment_patterns.md`）／ 過剰修正偏りを抑える必要性判定（規律 `feedback_review_necessity_judgment.md`）
-- 記録時：3 役レビューの各役完了時点でファイルに書き出す（規律 `feedback_review_save_immediately.md`）
+- 検出時：所見は 4 要素で書く（規律 `discipline_finding_4elements.md`）
+- 提示時：1 ラウンドにつき 1 応答単位、複数ラウンドの一括処理は禁止（規律 `discipline_no_round_batching.md`）／ ラウンド提示と完了報告の統一書式（規律 `discipline_review_log_template.md`）
+- 判定時：利用者判断を仰ぐべき所見の 23 パターン（規律 `discipline_review_judgment_patterns.md`）／ 過剰修正偏りを抑える必要性判定（規律 `discipline_review_necessity_judgment.md`）
+- 記録時：3 役レビューの各役完了時点でファイルに書き出す（規律 `discipline_review_save_immediately.md`）
 
 ---
 
@@ -97,8 +97,8 @@ _purpose: レビュー段階固有の規律と進め方を集約する_
 
 基本規律は本文書冒頭の「レビュー基本規律」を参照。要件レビューでは特に次の 2 件が効く。
 
-- 必要性判定（規律 `feedback_review_necessity_judgment.md`）：要件レビューは主役の過剰修正偏りが出やすい。修正候補の必要性を 5 観点で判定してから採否を決める
-- 23 パターン（規律 `feedback_review_judgment_patterns.md`）：自動採択偏向の校正。利用者判断を仰ぐ所見はパターン照合で判定する
+- 必要性判定（規律 `discipline_review_necessity_judgment.md`）：要件レビューは主役の過剰修正偏りが出やすい。修正候補の必要性を 5 観点で判定してから採否を決める
+- 23 パターン（規律 `discipline_review_judgment_patterns.md`）：自動採択偏向の校正。利用者判断を仰ぐ所見はパターン照合で判定する
 
 ### ラウンドの所要時間と発見数の傾向
 
@@ -147,27 +147,27 @@ _purpose: レビュー段階固有の規律と進め方を集約する_
 
 各ラウンドでは「要点提示 → 利用者判断 → 詳細抽出 → 深掘り検討と自動採択 / 利用者判断を仰ぐ判定 → 修正適用」の手順を踏む。「該当なし」確認も明示的に行い、ラウンドを跳ばさない。
 
-**ラウンド一括処理は禁止**：「ラウンド N から M を一括して実施」「複数ラウンド分集約」「結果報告」の形は禁止。1 ラウンドにつき 1 つ以上の応答単位で個別実施し、各ラウンドで利用者判断機会を確保する。「該当なし」判定でも要点提示 → 利用者確認 → 次ラウンドという応答単位の境界を作る。詳細は 規律 `feedback_no_round_batching.md` を参照。
+**ラウンド一括処理は禁止**：「ラウンド N から M を一括して実施」「複数ラウンド分集約」「結果報告」の形は禁止。1 ラウンドにつき 1 つ以上の応答単位で個別実施し、各ラウンドで利用者判断機会を確保する。「該当なし」判定でも要点提示 → 利用者確認 → 次ラウンドという応答単位の境界を作る。詳細は 規律 `discipline_no_round_batching.md` を参照。
 
 ### 要件レビューから継承する方針
 
 - **深掘り検討と自動採択**：致命的なデメリットがなければ自動採択する。複数の合理的選択肢が残る場合は利用者判断を仰ぐ
 - **明らかに劣る選択肢は提示しない**：推奨案と比較して明白に劣後する案は提示の意味がない
-- **選択肢提示の方法**(規律 `feedback_choice_presentation.md`)：設計時の代替案提示にも適用
-- **承認なしで進めない**(規律 `feedback_approval_required.md`)：設計フェーズ移行や設計書の承認も対象
-- **所見の書き方**：4 要素で書く（規律 `feedback_finding_4elements.md`）。設計時の所見も箇所・現状・問題・修正後の 4 要素を満たす
-- **レビュー記録の書式**：ラウンド提示と完了報告の統一テンプレート（規律 `feedback_review_log_template.md`）
-- **必要性判定**：過剰修正偏りを抑える独立判定（規律 `feedback_review_necessity_judgment.md`）。設計時も修正候補の必要性を判定してから採否を決める
-- **判定の 23 パターン**：利用者判断を仰ぐ所見の判定リスト（規律 `feedback_review_judgment_patterns.md`）
-- **レビュー出力の即時保存**：3 役レビューの各役完了時点でファイルに書き出す（規律 `feedback_review_save_immediately.md`）
+- **選択肢提示の方法**(規律 `discipline_choice_presentation.md`)：設計時の代替案提示にも適用
+- **承認なしで進めない**(規律 `discipline_approval_required.md`)：設計フェーズ移行や設計書の承認も対象
+- **所見の書き方**：4 要素で書く（規律 `discipline_finding_4elements.md`）。設計時の所見も箇所・現状・問題・修正後の 4 要素を満たす
+- **レビュー記録の書式**：ラウンド提示と完了報告の統一テンプレート（規律 `discipline_review_log_template.md`）
+- **必要性判定**：過剰修正偏りを抑える独立判定（規律 `discipline_review_necessity_judgment.md`）。設計時も修正候補の必要性を判定してから採否を決める
+- **判定の 23 パターン**：利用者判断を仰ぐ所見の判定リスト（規律 `discipline_review_judgment_patterns.md`）
+- **レビュー出力の即時保存**：3 役レビューの各役完了時点でファイルに書き出す（規律 `discipline_review_save_immediately.md`）
 
 ### 設計特有の追加方針
 
-- **独立した決定記録(ADR)形式は採用しない**：機能しなかった経験がある。決定事項は設計書本文「設計決定事項」節と変更履歴に二重記録する(詳細は 規律 `feedback_design_decisions_record.md`)
+- **独立した決定記録(ADR)形式は採用しない**：機能しなかった経験がある。決定事項は設計書本文「設計決定事項」節と変更履歴に二重記録する(詳細は 規律 `discipline_design_decisions_record.md`)
 - **性能は試作(プロトタイプ)で測定する**：機能優先、性能は実測ベース
 - **失敗シナリオのウォークスルーは可能な範囲で実施**：必須ではなく、できる範囲で行う
 - **フィーチャー横断の統合テスト設計は方式分け**：2 フィーチャー間のテストは呼び出し側の設計に記述する。3 フィーチャー以上で関連する場合は中心フィーチャーの設計で端から端までのフローを記述する(中心フィーチャーは利用者視点の起点となるフィーチャーで判断)
-- **要件⇄設計の往復改版の判断軸**：要件の受け入れ基準として読めるかどうか、利用者対話で確定(詳細は 規律 `feedback_design_spec_roundtrip.md`)
+- **要件⇄設計の往復改版の判断軸**：要件の受け入れ基準として読めるかどうか、利用者対話で確定(詳細は 規律 `discipline_design_spec_roundtrip.md`)
 
 ---
 
@@ -225,8 +225,8 @@ _purpose: レビュー段階固有の規律と進め方を集約する_
 
 基本規律は本文書冒頭の「レビュー基本規律」を参照。横断レビューでは特に次の 2 件が効く。
 
-- 所見の書き方（規律 `feedback_finding_4elements.md`）：C 群（新規含意）の所見も 4 要素で書く
-- 必要性判定（規律 `feedback_review_necessity_judgment.md`）：A 群 / B 群 / C 群の分類と相補的に、C 群の含意ごとに必要性を判定する
+- 所見の書き方（規律 `discipline_finding_4elements.md`）：C 群（新規含意）の所見も 4 要素で書く
+- 必要性判定（規律 `discipline_review_necessity_judgment.md`）：A 群 / B 群 / C 群の分類と相補的に、C 群の含意ごとに必要性を判定する
 
 ### 横断レビューの実施時期
 
@@ -270,19 +270,19 @@ _purpose: レビュー段階固有の規律と進め方を集約する_
 
 ### 各ラウンドの進め方
 
-各ラウンドでは「要点提示 → 利用者判断 → 詳細抽出 → 深掘り検討と自動採択 / 利用者判断を仰ぐ判定 → 修正適用」の手順を踏む。ラウンド一括処理は禁止（規律 `feedback_no_round_batching.md`）。
+各ラウンドでは「要点提示 → 利用者判断 → 詳細抽出 → 深掘り検討と自動採択 / 利用者判断を仰ぐ判定 → 修正適用」の手順を踏む。ラウンド一括処理は禁止（規律 `discipline_no_round_batching.md`）。
 
 ### 要件レビュー・設計レビューから継承する方針
 
 - **深掘り検討と自動採択**：致命的なデメリットがなければ自動採択。複数の合理的選択肢が残る場合は利用者判断を仰ぐ
 - **明らかに劣る選択肢は提示しない**：推奨案と比較して明白に劣後する案は提示の意味がない
-- **選択肢提示の方法**（規律 `feedback_choice_presentation.md`）
-- **承認なしで進めない**（規律 `feedback_approval_required.md`）：タスクフェーズ移行やタスク一覧の承認も対象
-- **所見の書き方**：4 要素で書く（規律 `feedback_finding_4elements.md`）
-- **レビュー記録の書式**（規律 `feedback_review_log_template.md`）
-- **必要性判定**（規律 `feedback_review_necessity_judgment.md`）：タスクレビューも修正候補の必要性を判定してから採否を決める
-- **判定の 23 パターン**（規律 `feedback_review_judgment_patterns.md`）
-- **レビュー出力の即時保存**（規律 `feedback_review_save_immediately.md`）
+- **選択肢提示の方法**（規律 `discipline_choice_presentation.md`）
+- **承認なしで進めない**（規律 `discipline_approval_required.md`）：タスクフェーズ移行やタスク一覧の承認も対象
+- **所見の書き方**：4 要素で書く（規律 `discipline_finding_4elements.md`）
+- **レビュー記録の書式**（規律 `discipline_review_log_template.md`）
+- **必要性判定**（規律 `discipline_review_necessity_judgment.md`）：タスクレビューも修正候補の必要性を判定してから採否を決める
+- **判定の 23 パターン**（規律 `discipline_review_judgment_patterns.md`）
+- **レビュー出力の即時保存**（規律 `discipline_review_save_immediately.md`）
 
 ### タスク特有の追加方針
 
