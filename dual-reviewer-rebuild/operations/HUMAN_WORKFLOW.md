@@ -421,18 +421,18 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 
 設計レビュー中に「現状の requirements と設計上の制約が衝突する」「設計の具体化で仕様に書かれていない事項が必要」と判明することがある。このとき、仕様改版（requirements 改版 + 再承認）が必要か、設計内吸収（仕様の文言は変えず設計で対処）が可能かの判断は、利用者対話で確定する。
 
-判断軸は memory `feedback_design_spec_roundtrip.md` を参照する。判断の結果に応じて次の手順を採る。
+判断軸は 規律 `feedback_design_spec_roundtrip.md` を参照する。判断の結果に応じて次の手順を採る。
 
 #### 仕様改版が確定した場合
 
 1. 当該 spec の requirements.md を改版する。設計レビューで上がった論点を AC として明確に書き起こす（軽微修正で済ませない）
 2. 他 spec への波及を再点検する（節 5.2.5 の requirements alignment gate を参照）
 3. spec.json の `approvals.requirements.approved` は再承認が必要となる（節 5.2.6 の遡上修正再調整に該当）
-4. 利用者の明示承認を得てから承認状態を更新する（memory `feedback_approval_required.md` 参照）
+4. 利用者の明示承認を得てから承認状態を更新する（規律 `feedback_approval_required.md` 参照）
 
 #### 設計内吸収が確定した場合
 
-1. design.md 内に「設計決定事項」として記録する（memory `feedback_design_decisions_record.md` 参照）
+1. design.md 内に「設計決定事項」として記録する（規律 `feedback_design_decisions_record.md` 参照）
 2. requirements.md は改版しない（本文・変更履歴とも変更なし）
 3. 仕様 AC との整合は design.md 本文で明示的に参照する（例：「本設計は requirements R3.5 の自然な実装具体化として、X を Y で実現する」）
 

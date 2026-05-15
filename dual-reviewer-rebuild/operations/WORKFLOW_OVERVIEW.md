@@ -137,4 +137,7 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 
 ### 規律ファイル群
 
-`.kiro/memory/feedback_*.md`（15 件）：エージェントの応答品質に関する個別規律。索引は `.kiro/memory/MEMORY.md`。
+規律は 2 箇所に分かれて配置される。
+
+- `.kiro/memory/feedback_*.md`（8 件）：エージェントの応答品質に関する行動規律。索引は `.kiro/memory/MEMORY.md`。
+- `operations/disciplines/feedback_*.md`（7 件）：ワークフロー実行の手順・方針に関する規律（手順 5 件 + 方針 2 件）。
