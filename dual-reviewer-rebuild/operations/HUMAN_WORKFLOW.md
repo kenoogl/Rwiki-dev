@@ -468,19 +468,19 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 
 ### 5.2.8 要件レビューの 5 ラウンド構成と波及精査
 
-詳細は [`REVIEW_PROTOCOL.md`](REVIEW_PROTOCOL.md) 節 5.2.8 を参照。
+詳細は [`REVIEW_PROTOCOL.md`](REVIEW_PROTOCOL.md) 節 2 を参照。
 
 ### 5.2.9 設計レビューの 10 観点と進め方
 
-詳細は [`REVIEW_PROTOCOL.md`](REVIEW_PROTOCOL.md) 節 5.2.9 を参照。
+詳細は [`REVIEW_PROTOCOL.md`](REVIEW_PROTOCOL.md) 節 3 を参照。
 
 ### 5.2.10 フェーズ完走後のフィーチャー横断レビューパターン
 
-詳細は [`REVIEW_PROTOCOL.md`](REVIEW_PROTOCOL.md) 節 5.2.10 を参照。
+詳細は [`REVIEW_PROTOCOL.md`](REVIEW_PROTOCOL.md) 節 4 を参照。
 
 ### 5.2.11 タスクレビューの 7 観点と進め方
 
-詳細は [`REVIEW_PROTOCOL.md`](REVIEW_PROTOCOL.md) 節 5.2.11 を参照。
+詳細は [`REVIEW_PROTOCOL.md`](REVIEW_PROTOCOL.md) 節 5 を参照。
 
 ### 5.3 implementation フェーズ
 
