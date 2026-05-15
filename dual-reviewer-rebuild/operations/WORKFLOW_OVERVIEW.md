@@ -141,3 +141,14 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 
 - `.kiro/memory/feedback_*.md`（8 件）：エージェントの応答品質に関する行動規律。索引は `.kiro/memory/MEMORY.md`。
 - `operations/disciplines/feedback_*.md`（7 件）：ワークフロー実行の手順・方針に関する規律（手順 5 件 + 方針 2 件）。
+
+### 節 8 の同期ルール
+
+本マップは次の文書の節構成・配置を変更したとき、同じ変更の中で更新する。
+
+- `HUMAN_WORKFLOW.md`：節の追加・削除・番号変更
+- `REVIEW_PROTOCOL.md`：節の追加・削除・番号変更
+- `CONVENTIONS.md`：本マップが掲げる節（現状 節 3 / 節 7 / 節 8）の追加・削除・番号変更
+- 規律ファイル：`.kiro/memory/` と `operations/disciplines/` 間の移動、件数の増減
+
+文書構造の変更と本マップの更新は同一コミットにまとめ、片方だけが先行する状態を残さない。
