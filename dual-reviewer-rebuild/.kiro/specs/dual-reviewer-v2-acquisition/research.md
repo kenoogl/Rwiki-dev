@@ -5,7 +5,7 @@
 v1 取得処理が偽の規則性（単独 2 件・二重 3 件・二重+判断 3 件）を生んでいた原因として、5 層の事前設定が特定されている。
 
 - 各役割のプロンプト（`dual-reviewer-rebuild/runtime/prompts/`）に具体トピックが書き込まれていた。
-- ヒューリスティック規則ファイル（`experiments/protocols/heuristic_profiles/` 配下、現在は archive 配下）の方針が件数を固定。
+- ヒューリスティック規則ファイル（v1 のバイアス付き case 別プロファイルは archive 配下、最小テンプレートは `experiments/protocols/heuristic_profiles/` 配下に復帰）の方針が件数を固定。
 - 各ケースの規則ファイルが共通の三つ組語彙を持っていた。
 - Ruby ランタイム層（`dual-reviewer-rebuild/runtime/executors/`）が規則ファイルを決定論的に照合。
 - 論文計画書（archive 配下）に観測結果が先取りで書かれていた。

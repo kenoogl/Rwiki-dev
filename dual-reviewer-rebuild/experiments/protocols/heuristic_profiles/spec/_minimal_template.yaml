@@ -1,0 +1,38 @@
+profile_version: 1
+profile_role: minimal spec heuristic profile template
+policy:
+  start_with_no_rules: true
+  add_only_review_critical_spec_boundaries: true
+  note: >-
+    Add rules only when approved requirements, design, or tasks contain a
+    review-critical boundary, ownership split, or downstream-readiness risk
+    that should be preserved in the spec-track review.
+steps:
+  primary_detection:
+    rules: []
+    # Example:
+    # rules:
+    #   - finding_suffix: finding-example-boundary-density
+    #     severity: high
+    #     source_role: primary_reviewer
+    #     source_pattern_ids:
+    #       - seed.example-boundary-density
+    #     failure_observation_refs:
+    #       - spec:example_boundary_density
+    #     summary_prefix: >-
+    #       <plain-language reason the spec boundary must remain explicit>
+  adversarial_review:
+    rules: []
+    # Example:
+    # rules:
+    #   - finding_suffix: finding-example-clean-room-boundary
+    #     severity: medium
+    #     source_role: adversarial_reviewer
+    #     source_pattern_ids:
+    #       - seed.example-clean-room-boundary
+    #     counter_evidence_pattern_ids:
+    #       - seed.example-clean-room-boundary
+    #     failure_observation_refs:
+    #       - spec:example_clean_room_boundary_pressure
+    #     summary_prefix: >-
+    #       <plain-language reason the clean-room or evidence boundary needs review>

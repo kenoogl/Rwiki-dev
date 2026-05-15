@@ -1,0 +1,88 @@
+profile_version: 1
+profile_role: minimal implementation heuristic profile template
+policy:
+  start_with_no_rules: true
+  add_only_target_specific_contracts: true
+  note: >-
+    Leave rules empty until the case has a review-critical implementation
+    contract or boundary caveat that is explicitly anchored in approved upstream
+    spec or a fixed implementation snapshot.
+steps:
+  primary_detection:
+    rules: []
+    # Example:
+    # rules:
+    #   - finding_suffix: finding-example-contract
+    #     severity: high
+    #     source_role: primary_reviewer
+    #     required_evidence_types:
+    #       - implementation.example_contract
+    #     required_source_kinds:
+    #       - upstream_spec
+    #     required_section_classes:
+    #       - acceptance_criteria
+    #     structural_source_requirements:
+    #       - source_kind: upstream_spec
+    #         section_class: acceptance_criteria
+    #         section_heading_patterns:
+    #           - "^Acceptance Criteria$"
+    #         parent_heading_patterns:
+    #           - "^Requirement 1: <contract title>$"
+    #         line_prefix_patterns:
+    #           - "^1$"
+    #         evidence_type: implementation.example_contract
+    #         review_focus: example_contract
+    #     failure_observation_refs:
+    #       - implementation:example_contract
+    #     summary_prefix: >-
+    #       <plain-language reason this implementation contract is review-critical>
+  adversarial_review:
+    rules: []
+    # Example:
+    # rules:
+    #   - finding_suffix: finding-example-caveat
+    #     severity: medium
+    #     source_role: adversarial_reviewer
+    #     required_evidence_types:
+    #       - implementation.snapshot_boundary
+    #       - implementation.example_policy
+    #     required_counter_evidence_types:
+    #       - implementation.example_policy
+    #     required_source_kinds:
+    #       - implementation_snapshot
+    #       - upstream_spec
+    #     required_counter_source_kinds:
+    #       - upstream_spec
+    #     required_section_classes:
+    #       - implementation_snapshot_misc
+    #       - acceptance_criteria
+    #     required_counter_section_classes:
+    #       - acceptance_criteria
+    #     structural_source_requirements:
+    #       - source_kind: implementation_snapshot
+    #         section_class: implementation_snapshot_misc
+    #         section_heading_patterns:
+    #           - "^5\\. Known Incompleteness$"
+    #         evidence_type: implementation.snapshot_boundary
+    #         review_focus: example_policy
+    #       - source_kind: upstream_spec
+    #         section_class: acceptance_criteria
+    #         section_heading_patterns:
+    #           - "^Acceptance Criteria$"
+    #         parent_heading_patterns:
+    #           - "^Requirement 2: <policy title>$"
+    #         evidence_type: implementation.example_policy
+    #         review_focus: example_policy
+    #     structural_counter_requirements:
+    #       - source_kind: upstream_spec
+    #         section_class: acceptance_criteria
+    #         section_heading_patterns:
+    #           - "^Acceptance Criteria$"
+    #         parent_heading_patterns:
+    #           - "^Requirement 2: <policy title>$"
+    #         evidence_type: implementation.example_policy
+    #         review_focus: example_policy
+    #     failure_observation_refs:
+    #       - implementation:example_policy_boundary
+    #     summary_prefix: >-
+    #       <plain-language reason this caveat should remain visible>
