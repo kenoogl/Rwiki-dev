@@ -4,7 +4,9 @@ Kiro-style Spec-Driven Development on an agentic SDLC
 
 ## サブツリー委譲
 
-- `dual-reviewer-rebuild/` 配下で作業する場合は、本文書ではなく `dual-reviewer-rebuild/CLAUDE.md` を優先する。
+- `dual-reviewer-rebuild/` 配下のファイルを読み書きする前に、必ず `dual-reviewer-rebuild/CLAUDE.md` を読む（自動ロードされないため、能動的に Read する必要がある）
+- サブツリー CLAUDE.md の指示に従い、`dual-reviewer-rebuild/operations/WORKFLOW_OVERVIEW.md`（全体像と文書構造マップ）を続けて読む
+- ルートの本文書の `/kiro-*` 系コマンド、`.kiro/specs/` 直下、Skills Structure などはサブツリー配下の作業には適用しない
 
 ## Project Context
 
