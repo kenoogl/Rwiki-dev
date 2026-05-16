@@ -119,6 +119,8 @@
 5. The foundation shall support downstream evaluation and self-improvement specs in excluding invalid runs by metadata alone.
 6. The foundation shall define a canonical review-mode vocabulary sufficient to distinguish at minimum manual dogfooding review records from runtime-mediated review records.
 7. The foundation shall define canonical provenance field names sufficient to identify at minimum source repository identity and source revision for cross-project evidence intake.
+8. The foundation shall define a canonical evidence-class vocabulary sufficient to distinguish at minimum valid, invalid, and explicitly exploratory run records, and shall own this vocabulary as the canonical source that downstream evaluation and paper-interface specs reference rather than redefine.
+9. The foundation shall define that attaching an invalidation marker to a run record triggers a staleness-propagation obligation for downstream derived artifacts that referenced that run.
 
 ### Requirement 7: Repo-Contained Asset Rule
 

@@ -40,6 +40,7 @@
 3. The feature shall support inputs from valid runs and invalid runs while preserving that distinction.
 4. The feature shall not treat unrecorded operator intuition as sufficient input.
 5. The feature shall preserve provenance from input evidence to proposal.
+6. The self-improvement feature shall block proposal generation when required provenance from input evidence is missing or broken, rather than allowing a proposal to proceed with absent provenance, consistent with the foundation metadata-failure rule (Requirement 6).
 
 ### Requirement 2: Proposal Artifact Contract
 
@@ -64,6 +65,8 @@
 3. The feature shall preserve replay/backtest results as separate artifacts from raw run evidence.
 4. The feature shall distinguish “proposal unsupported” from “proposal untested.”
 5. The feature shall avoid treating anecdotal plausibility as equivalent to backtest evidence.
+6. The self-improvement feature shall define replay as re-execution against recorded run evidence and backtest as lighter validation against existing derived results, and shall specify the branching-criteria components (at minimum change scope, risk level, and targeted layer) that determine when replay is required versus when backtest is sufficient.
+7. The self-improvement feature shall bind replay and backtest result artifacts to the foundation required run-metadata contract (Requirement 6), so that these artifacts remain independently verifiable and invalidatable under the same metadata-failure rule as run evidence.
 
 ### Requirement 4: Approval and Adoption Flow
 
@@ -88,6 +91,7 @@
 3. The feature shall preserve rollback reason as evidence.
 4. The feature shall distinguish rollback from ordinary supersession.
 5. The feature shall support learning from failed improvements rather than deleting their history.
+6. The self-improvement feature shall trigger re-evaluation or rollback of an adopted improvement when its motivating evidence is later invalidated, using the foundation invalidation contract, so that adopted changes do not remain in steady state on evidence that no longer holds.
 
 ### Requirement 6: Separation from Paper Narrative
 

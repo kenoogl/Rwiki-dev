@@ -41,6 +41,7 @@
 3. The evaluation feature shall preserve counts and reasons for excluded runs.
 4. The evaluation feature shall distinguish “missing data” from “invalid data.”
 5. The evaluation feature shall not require free-form human memory to determine run validity.
+6. The evaluation feature shall treat run-validity classification (valid / invalid / exploratory) and review-mode classification (manual dogfooding / runtime-mediated) as orthogonal independent axes, so that a content-valid run executed under manual dogfooding is not misclassified as invalid.
 
 ### Requirement 2: Treatment Comparison Contract
 
@@ -53,6 +54,7 @@
 3. The evaluation feature shall distinguish treatment-driven step omission from runtime failure.
 4. The evaluation feature shall make treatment identity visible in all comparison-relevant derived outputs.
 5. The evaluation feature shall detect and report comparison sets that are invalid because of mismatched treatment conditions or target conditions.
+6. The evaluation feature shall require protocol-version and prompt-version uniformity within a single comparison set as a comparability condition, and shall detect and report comparison sets that mix differing protocol or prompt versions even when all per-run metadata is present and well-formed.
 
 ### Requirement 3: Metric Extraction
 
@@ -89,6 +91,7 @@
 3. The evaluation feature shall separate analysis artifacts from raw run evidence storage.
 4. The evaluation feature shall support downstream consumption by both self-improvement and paper-interface features.
 5. The evaluation feature shall make artifact versioning visible when evaluation logic changes.
+6. The evaluation feature shall flag as stale or re-derive any derived artifact whose referenced runs are later invalidated, rather than leaving derived outputs based on invalidated runs unchanged.
 
 ### Requirement 6: Evaluation-Ready Metadata Completeness
 

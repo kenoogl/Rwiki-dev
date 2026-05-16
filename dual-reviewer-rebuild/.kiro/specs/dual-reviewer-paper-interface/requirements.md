@@ -37,8 +37,9 @@
 1. The paper-interface feature shall define how claims map to concrete evidence sources.
 2. The paper-interface feature shall preserve run and analysis provenance for each claim-supporting artifact.
 3. The paper-interface feature shall distinguish direct evidence from caveated or preliminary evidence.
-4. The paper-interface feature shall avoid requiring re-interpretation of raw logs where evaluation outputs already exist.
+4. The paper-interface feature shall consume evaluation outputs and shall not directly re-interpret raw logs; when evaluation outputs do not exist, it shall require the evaluation process to be run rather than accessing raw logs directly.
 5. The paper-interface feature shall not allow claim-supporting artifacts that cannot be traced to versioned evidence.
+6. The paper-interface feature shall define a claim as a paper-facing assertion that serves as the unit of claim-to-evidence mapping, requiring at minimum that each claim carries an identifier and an explicit evidence-source linkage, so that Requirements 1 through 3 remain testable.
 
 ### Requirement 2: Paper-Facing Data Contract
 
@@ -51,6 +52,7 @@
 3. The paper-interface feature shall keep paper-facing artifacts separate from raw evidence and core evaluation outputs.
 4. The paper-interface feature shall support regeneration when upstream evaluation outputs are unchanged.
 5. The paper-interface feature shall not force runtime or foundation schema changes solely for formatting convenience.
+6. The paper-interface feature shall require regeneration of paper-facing artifacts when their upstream evaluation outputs are marked stale due to run invalidation, not only when those outputs change.
 
 ### Requirement 3: Caveat and Limitation Tracking
 
@@ -87,6 +89,7 @@
 3. The paper-interface feature shall allow mixed-maturity reporting only when the distinction remains visible.
 4. The paper-interface feature shall not collapse mature and preliminary evidence into the same undifferentiated artifact.
 5. The paper-interface feature shall preserve traceability needed for later refinement or replacement.
+6. The paper-interface feature shall use a single unified evidence-classification vocabulary across Requirements 1, 3, and 5, bound to the foundation canonical evidence-class field, rather than maintaining independent per-requirement classification terms.
 
 ### Requirement 6: Review-Mode Provenance in Reporting
 
