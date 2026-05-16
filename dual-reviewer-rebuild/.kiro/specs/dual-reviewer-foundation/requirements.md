@@ -10,7 +10,7 @@
 - role と config の抽象 contract
 - finding / judgment / review_case の schema
 - prompt template の配置と versioning 規約
-- pattern data source と terminology template の共通配置規約
+- terminology template の共通配置規約
 - validator が前提とする metadata contract
 
 本 spec は `intent/` と `operations/` の上位文書を入力とし、後続 spec (`dual-reviewer-runtime` / `dual-reviewer-evaluation` / `dual-reviewer-self-improvement` / `dual-reviewer-paper-interface`) の土台を提供する。
@@ -21,8 +21,7 @@
   - Layer 1 review state machine definition
   - role abstraction (`primary_reviewer` / `adversarial_reviewer` / `judgment_reviewer`)
   - 共通 schema 5 file とその versioning 規約
-  - judgment prompt template の canonical placement rule
-  - pattern files (`seed_patterns.yaml` / `fatal_patterns.yaml`) の配置規約
+  - Step A/B/C 全プロンプト雛形の canonical placement rule
   - config / terminology template の最小 contract
   - validator 用 metadata の required field 定義
 
@@ -55,9 +54,12 @@
 1. The foundation shall define a canonical 4-step review pipeline consisting of Step A (`primary detection`), Step B (`adversarial review`), Step C (`judgment`), and Step D (`integration`).
 2. The foundation shall define these steps as a logical contract only; execution order, retries, and user interaction timing are runtime responsibilities.
 3. The foundation shall define required state transition names so that logs can refer to the same conceptual stages across implementations.
-4. The foundation shall distinguish Step B forced-divergence behavior from Step C necessity judgment behavior as separate roles and separate output intents.
-5. The foundation shall define the minimum run metadata required to bind each review event to a protocol version, prompt version, runtime version, target artifact hash, phase/profile, treatment, and operator sign-off status.
+4. The foundation shall distinguish Step B forced-divergence behavior from Step C necessity judgment behavior as separate roles and separate output intents. Step B forced-divergence behavior shall, at minimum, require the adversarial role to produce an independent challenge to the primary result rather than endorsing it, even when it ultimately agrees, so that the absence of challenge is itself recorded as a deliberate outcome.
+5. The foundation shall define the minimum run metadata required to bind each review event to a protocol version, prompt version, runtime version, target artifact hash, phase/profile, treatment, and human sign-off status.
 6. The foundation shall define step identity and transition labels as shared contract only, while leaving concrete step storage layout and execution control to runtime.
+7. The foundation shall define Step D (`integration`) as a contract that consolidates the outputs of Steps A, B, and C into a single review result without requiring an additional LLM invocation, and shall define its expected output as the consolidated review record consumed at run close.
+8. The foundation shall not enumerate the concrete phase/profile value vocabulary; ownership of the phase/profile value set is delegated to the `dual-reviewer-runtime` spec (Requirement 8), and downstream specs shall treat the runtime enumeration as the canonical source.
+9. The foundation shall not enumerate the concrete treatment value vocabulary; ownership of the treatment value set is delegated to the `dual-reviewer-runtime` spec (Requirement 2), and downstream specs shall treat the runtime enumeration as the canonical source.
 
 ### Requirement 2: Role and Config Abstraction
 
@@ -82,9 +84,11 @@
 3. The foundation shall require versioned schema artifacts and forbid silent incompatible edits.
 4. The `review_case` contract shall support run-level metadata needed for reproducibility and invalidation checks.
 5. The `finding` contract shall support source attribution, severity, counter-evidence linkage, judgment linkage, and human decision linkage.
-6. The `necessity_judgment` contract shall support the 5-field necessity structure, final label, recommended action, and optional override reason.
-7. The foundation shall specify which fields are mandatory for B-1.0-equivalent operation and which future extension points are intentionally deferred.
-8. The foundation shall define the schema field labels in English even when descriptive free-text content is written in Japanese.
+6. The `necessity_judgment` contract shall support the 5-field necessity structure (`requirement_link`, `ignored_impact`, `fix_cost`, `scope_expansion`, `uncertainty`), final label, recommended action, and optional override reason.
+7. The `impact_score` contract shall define a multi-axis severity rating structure covering at minimum finding severity, fix cost estimate, and downstream effect scope.
+8. The `failure_observation` contract shall define a structure for capturing failure mode classification data needed for cross-run research metrics.
+9. The foundation shall specify which fields are mandatory for B-1.0-equivalent operation and which future extension points are intentionally deferred.
+10. The foundation shall define the schema field labels in English even when descriptive free-text content is written in Japanese.
 
 ### Requirement 4: Canonical Prompt Placement
 
@@ -92,7 +96,7 @@
 
 #### Acceptance Criteria
 
-1. The foundation shall define a canonical in-repo location for the judgment prompt template.
+1. The foundation shall define a canonical in-repo location for prompt templates used in Steps A, B, and C of the review pipeline.
 2. The foundation shall require prompt version traceability from each run record to the prompt artifact used.
 3. The foundation shall treat prompt templates as versioned artifacts, not implicit operator knowledge.
 4. The foundation shall define prompt placement rules that downstream runtime code can locate using relative repo paths only.
@@ -109,7 +113,7 @@
 #### Acceptance Criteria
 
 1. The foundation shall define required run metadata fields needed by validators.
-2. The foundation shall include fields for protocol version, prompt version, runtime version, target artifact hash, phase/profile, treatment, review mode, run status, validator status, human sign-off status, and evidence class.
+2. The foundation shall include fields for protocol version, prompt version, runtime version, target artifact hash, phase/profile, treatment, review mode, run status, validator status, human sign-off status, and evidence class. This validator-oriented field set is a superset that extends the minimum run metadata defined in Requirement 1 AC 5; Requirement 1 AC 5 remains the minimal binding set and this list adds validator-only fields.
 3. The foundation shall define how invalidation markers are attached to run records without mutating raw evidence.
 4. The foundation shall define that missing required metadata causes validator failure.
 5. The foundation shall support downstream evaluation and self-improvement specs in excluding invalid runs by metadata alone.
@@ -122,7 +126,7 @@
 
 #### Acceptance Criteria
 
-1. The foundation shall require all prompts, schemas, templates, and pattern assets needed for runtime behavior to be stored inside the repository.
+1. The foundation shall require all prompts, schemas, and templates needed for runtime behavior to be stored inside the repository.
 2. The foundation shall forbid steady-state dependence on repo-external memory files for runtime-critical behavior.
 3. The foundation shall allow environment-level configuration only when explicitly modeled in config and recorded in run metadata.
 4. The foundation shall define repo-contained artifacts as the normative source for downstream runtime behavior.

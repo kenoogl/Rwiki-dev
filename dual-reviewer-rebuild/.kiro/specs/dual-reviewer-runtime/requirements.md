@@ -82,6 +82,7 @@
 4. The runtime shall separate raw evidence from derived summaries.
 5. The runtime shall preserve enough information for downstream replay and proposal analysis.
 6. The runtime shall emit review-mode provenance in a form conformant to the foundation metadata contract.
+7. The runtime shall emit a `failure_observation` record conforming to the foundation schema whenever a review run encounters a failure mode, so that the failure classification data is captured rather than left as an unused schema.
 
 ### Requirement 5: Human Decision Integration
 
@@ -109,6 +110,7 @@
 6. The runtime shall mark runtime-produced evidence with the canonical runtime-mediated review mode rather than relying on downstream inference.
 7. The runtime shall emit a machine-readable invalid-run triage artifact when validation or invalidation indicates workflow failure.
 8. The runtime shall preserve linkage between failed validator checks, invalidation markers, and operator-facing remediation hints.
+9. The runtime shall enforce the ordering human sign-off -> validator invocation -> run close, so that a run is never closed before sign-off and validation are both complete, and validator results never precede the human decision.
 
 ### Requirement 7: Replay-Friendly Runtime Records
 
