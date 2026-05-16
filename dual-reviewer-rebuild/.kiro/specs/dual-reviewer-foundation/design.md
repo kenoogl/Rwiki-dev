@@ -131,6 +131,10 @@ runtime/
 │   ├── failure_observation.schema.json
 │   └── necessity_judgment.schema.json
 ├── prompts/
+│   ├── primary_detection/
+│   │   └── primary_reviewer.prompt.md
+│   ├── adversarial_review/
+│   │   └── adversarial_reviewer.prompt.md
 │   └── judgment/
 │       └── judgment_reviewer.prompt.md
 ├── config/
@@ -152,8 +156,11 @@ runtime/
    - raw evidence schema の単一配置とする
    - runtime と evaluation が path 解決で迷わないようにする
 
-3. `runtime/prompts/judgment/`
-   - prompt を role / purpose 単位で配置する
+3. `runtime/prompts/<step_purpose>/<role>.prompt.md`
+   - prompt は step 目的ディレクトリ配下に role 単位で配置する
+   - 正本配置：Step A=`primary_detection/primary_reviewer.prompt.md`、Step B=`adversarial_review/adversarial_reviewer.prompt.md`、Step C=`judgment/judgment_reviewer.prompt.md`
+   - すべて repo 相対パスで解決でき、runtime は外部状態に依存せず path 解決できる（要件 4 受入 4）
+   - Step D（integration）は追加 LLM 呼び出しを持たないため prompt artifact を置かない
    - skill や runtime module はここから読むだけにする
 
 4. `runtime/validators/contracts/`
@@ -173,7 +180,9 @@ runtime/
 - `step_intents`
 - `required_metadata_refs`
 - `asset_locations`
-- `override_policy`
+- `override_extension_point`
+
+`override_extension_point` は、runtime が prompt override 機構を接続するための所在のみを foundation が固定する。foundation は override の選択順序・優先規則・適用条件を一切定義しない（Boundary Clarification のとおり、これらは runtime 責務）。本 spec が固定するのは「override の拡張点がこの framework のどこに位置するか」だけである。
 
 `step_pipeline` は Step A/B/C/D の canonical 名称だけを固定する。
 
@@ -231,6 +240,8 @@ model vendor や concrete model 名は config に退避し、framework definitio
 | `runtime_version` | runtime 挙動追跡 |
 | `schema_set_version` | schema 群の整合追跡 |
 | `prompt_set_version` | prompt 群の整合追跡 |
+| `config_version` | 当該 run を生成した config の版（要件 7 受入 3、config↔run の機械追跡） |
+| `config_hash` | config 内容固定のための hash（要件 2 受入 4、config は runtime input であり hidden state ではないことの担保） |
 | `run_status` | lifecycle 状態 |
 | `validator_status` | validation pass/fail |
 | `human_signoff_status` | sign-off 状態 |
@@ -277,6 +288,8 @@ cross-project intake を見据えた provenance field の役割分担:
 
 ### 4. Shared Schema Relationships
 
+本 spec が固定する各 schema は、項目ごとに「B-1.0 相当運用で必須（mandatory-B1.0）」か「意図的に先送りする拡張点（deferred）」かを明示する（要件 3 受入 9）。下記の項目一覧は特記なき限りすべて mandatory-B1.0 とし、deferred の拡張点は該当 schema 節に明記する。
+
 foundation が所有する 5 schema の関係は以下の通りとする。
 
 ```mermaid
@@ -304,7 +317,7 @@ run-level envelope。
 
 最小 review evidence unit。
 
-必須に近い field は次を想定する。
+B-1.0 で必須（mandatory-B1.0）の field は次の通り。いずれも要件 3 受入 5（source attribution / severity / counter-evidence linkage / judgment linkage / human decision linkage）を満たすため省略不可とする。
 
 - `finding_id`
 - `step_id`
@@ -316,16 +329,37 @@ run-level envelope。
 - `judgment_ref`
 - `decision_unit_id`
 - `human_decision_ref`
+- `adversarial_outcome`
 
 ここで `decision_unit_id` と `human_decision_ref` を持たせることで、runtime の human decision integration と foundation schema を接続する。
 
+`adversarial_outcome` は、Step B 敵対役の反証有無を意図的結果として記録する（要件 1 受入 4）。最小語彙は `counter_evidence_raised`（反証を提示）／`no_counter_evidence_after_challenge`（反証を試みた結果なし＝意図的な不在）／`not_assessed`（評価未実施）とし、空の `counter_evidence_refs` だけでは区別できない「不在の意図的記録」をこの field で担保する。語彙の拡張は deferred とし runtime / evaluation に委ねる。
+
+B-1.0 時点で deferred とする finding 拡張点はない。将来拡張は本節に deferred として追記する。
+
 #### `impact_score`
 
-finding の影響度を構造化する補助 schema。意味論の最適化は evaluation に渡し、foundation では field 形状のみを固定する。
+finding の影響度を構造化する補助 schema。foundation は要件 3 受入 7 が求める 3 軸を mandatory-B1.0 として固定する。
+
+- `finding_ref` — 対象 finding の識別子（finding との接続）
+- `severity_axis` — 指摘自体の重大度
+- `fix_cost_axis` — 修正コストの見積もり
+- `downstream_scope_axis` — 下流への影響範囲
+
+各軸の値語彙・採点尺度・重み付けなどの意味論最適化は deferred とし evaluation に委ねる（foundation は項目形状のみ固定）。
 
 #### `failure_observation`
 
-review miss や disagreement の構造を表す schema。self-improvement の replay / backtest で重要になるため、finding と分離した独立 schema とする。
+review miss（見落とし）や disagreement（役間の不一致）の構造を表す schema。self-improvement の replay / backtest で重要になるため、finding と分離した独立 schema とする。foundation は実行横断メトリクスに必要な最小分類項目を mandatory-B1.0 として固定する。
+
+- `observation_id` — 失敗観測の識別子
+- `run_ref` — 観測元 run の識別子（実行横断集計のための接続）
+- `related_finding_ref` — 関連 finding の識別子（finding との接続）
+- `failure_type` — 失敗モードの分類区分
+- `missed_by_role` — 見落とした role
+- `detected_at_step` — 検出された step
+
+`failure_type` の詳細分類体系やメトリクス導出方法は deferred とし、self-improvement / evaluation に委ねる。
 
 #### `necessity_judgment`
 
@@ -407,6 +441,15 @@ foundation では次の 2 artifact shape を固定する。
   - validator が生成
 - invalidation marker
   - validator または明示的 human process が生成
+
+`validator_result` は少なくとも次の field を持つ（invalidation_marker と対称形）。
+
+- `run_id` — 検証対象 run の識別子
+- `validator_status` — 検証結果（metadata_contract の `validator_status` 語彙 `not_run` / `passed` / `failed` と整合）
+- `checked_contract` — 検証した schema / metadata contract の対象範囲
+- `error_list` — 検出した契約違反の一覧（passed 時は空）
+- `validated_by` — 検証実施者
+- `validated_at` — 検証時刻
 
 `invalidation_marker` は少なくとも次の field を持つ。
 
@@ -507,11 +550,24 @@ approval unit の追跡を可能にするため、`finding` は `decision_unit_i
 
 これらは foundation の contract を前提に、後続 spec の design alignment gate で決める。
 
+## Test Strategy
+
+foundation は実行コードを持たないため、テストは成果物の機械検証に限定する。後続 spec はこの最小検証が pass することを前提にできる。
+
+- スキーマ整合：`runtime/schemas/*.schema.json` および `runtime/validators/contracts/*.schema.json` がすべて有効な JSON Schema として meta-schema 検証を通る
+- framework 整合：`layer1_framework.yaml` が YAML として解析でき、必須 top-level section（`version` / `roles` / `step_pipeline` / `step_intents` / `required_metadata_refs` / `asset_locations`）が存在する
+- metadata 整合：`metadata_contract.yaml` が YAML として解析でき、§3 の必須 field 一覧と各 enum が宣言されている
+- prompt 整合：Step A/B/C の正本配置（§Placement Decisions 項目 3）にファイルが存在し、各 frontmatter が解析可能で必須 field（`prompt_id` / `version` / `role` / `step` / `language` / `source_ref`）を持つ
+- template 整合：`config.yaml.template` / `terminology.yaml.template` が YAML として解析できる
+
+これらは外部依存なしに repo 内で実行できる静的検証であり、CI または手動チェックのいずれでも同一基準で判定できる。
+
 ## Completion Criteria
 
-この design は、少なくとも以下を満たすときに有効とみなす。
+この design は、少なくとも以下を満たすときに有効とみなす。判定は上記 Test Strategy の機械検証で行い、説明は補助とする。
 
-- foundation asset の配置先が一意に説明できる
-- metadata field の責務分離が説明できる
-- invalidation と validation が raw evidence を汚さないと説明できる
-- downstream 4 spec がどの artifact を import するか追跡できる
+- 上記 Test Strategy の全項目が pass する
+- foundation asset の配置先が §Shared Artifact Layout で一意に解決できる
+- metadata field の責務分離（`run_status` / `validator_status` / `human_signoff_status` / `evidence_class`）が §3 で宣言されている
+- invalidation と validation が raw evidence を汚さない artifact 分離が §8 で定義されている
+- downstream 4 spec が import する artifact が §Impact on Downstream Specs で追跡できる
