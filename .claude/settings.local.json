@@ -104,7 +104,23 @@
       "Bash(./pfm_bmp_sw /tmp/pfm_accept/snapshot.txt /tmp/pfm_sw_out)",
       "Bash(~/.claude/hooks/user-prompt-plain-ja-reminder.sh)",
       "WebFetch(domain:ses.sigse.jp)",
-      "Bash(\" /Users/Daily/Development/Rwiki-dev/docs/dual-reviewer-log-10.md | head -10)"
+      "Bash(\" /Users/Daily/Development/Rwiki-dev/docs/dual-reviewer-log-10.md | head -10)",
+      "Bash(ls -la /Users/keno/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/ | head -80)",
+      "Bash(ls -la /Users/Daily/Development/Rwiki-dev/ 2>/dev/null | head -30; echo \"---\"; ls -la /Users/Daily/Development/Rwiki-dev/.kiro/ 2>/dev/null)",
+      "Bash(mkdir -p /Users/Daily/Development/Rwiki-v2-code-mod/dual-reviewer-rebuild/.kiro/memory && mkdir -p /Users/Daily/Development/Rwiki-dev/.kiro/memory && ls -la /Users/Daily/Development/Rwiki-v2-code-mod/dual-reviewer-rebuild/.kiro/memory && echo \"---\" && ls -la /Users/Daily/Development/Rwiki-dev/.kiro/memory)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/ssot-order-check.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
