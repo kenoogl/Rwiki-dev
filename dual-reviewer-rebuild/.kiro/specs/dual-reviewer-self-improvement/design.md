@@ -154,6 +154,8 @@ input の価値は run validity と独立ではない。次のように扱う。
 
 proposal artifact は、どの input class とどの evidence maturity に依拠するかを必ず記録する。
 
+入力証跡からの必須 provenance が欠落または断絶している場合、provenance が欠けたまま proposal を進めず proposal 生成を阻止する。これは foundation のメタデータ欠落規則（foundation 要件 6）と整合させる（要件 1 受入 6）。
+
 ## Signal Extraction Model
 
 ### 1. Runtime-Derived Signals
@@ -292,6 +294,8 @@ proposal ごとに `required_test_mode` を持たせる。
 - `manual_review`
   - artifact comparison と人間判断が主になる場合
 
+test mode の分岐は次の構成要素で決める：変更規模、リスク水準、対象レイヤー（prompt / policy / schema / runtime / workflow）。replay が必要か backtest で足りるかはこの 3 要素で判定する（要件 3 受入 6）。
+
 ### 2. Replay Inputs
 
 replay は runtime の step-level artifact を読む。
@@ -338,6 +342,7 @@ backtest は evaluation output を読む。
 - `observed_effect`
 - `risk_observations`
 - `tested_at`
+- `foundation_run_metadata_ref`（要件 3 受入 7：本 artifact を foundation 要件 6 の実行メタデータ契約に束縛し、独立に検証・無効化可能にする）
 
 `result_label` の初版 enum:
 
@@ -398,6 +403,8 @@ rollback は supersession と分けて扱う。
 - `rolled_back_at`
 
 rollback も次の proposal の input になりうる。
+
+採用済み改善の motivating evidence が事後に invalidate された場合、foundation の無効化契約（foundation 要件 6）を起点に、その改善の再評価または rollback を起動する（要件 5 受入 6）。もはや成り立たない根拠の上に採用済み change を steady state で残さない。
 
 ## Separation from Paper Narrative
 

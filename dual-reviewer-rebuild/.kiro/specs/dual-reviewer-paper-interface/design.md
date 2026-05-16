@@ -30,7 +30,7 @@
 ## Design Drivers
 
 - paper convenience は reproducibility と validity に従属する
-- raw run artifact を直接読まず、原則 evaluation output を読む
+- raw run artifact を直接読まない。evaluation output を読む。evaluation output が存在しない場合は生ログにフォールバックせず、評価プロセスの実行を要求する（要件 1 受入 4）
 - claim は evidence source と provenance を失わない
 - preliminary evidence は明示的に label する
 
@@ -95,6 +95,8 @@ paper/
 
 paper-interface は claim を 1 artifact 単位で扱う。
 
+claim とは、claim-to-evidence 対応付けの単位となる paper-facing な言明であり、最低限 identifier と明示的な evidence source への結合を持つ（要件 1 受入 6）。
+
 `claim_map.json` の各 entry は少なくとも次を持つ。
 
 - `claim_id`
@@ -131,6 +133,8 @@ evidence maturity の初版 label は次とする。
 - `exploratory`
 
 `caveated` は maturity label ではなく、`caveat_refs` によって表現する。これにより、1 artifact が `mature` でありつつ caveat を持つ状態を表現できる。
+
+この maturity 語彙は paper-interface 独自に再定義せず、foundation の正準 evidence-class（要件 6 受入 8）に結合する。要件 1・3・5 をまたいで単一の統一語彙を用いる（要件 5 受入 6）。
 
 ### 2. Provenance Fields
 
@@ -221,6 +225,10 @@ preliminary または exploratory な evidence を、paper artifact 生成時に
 ### 3. Self-Improvement Independence
 
 self-improvement proposal は paper claim の support artifact ではない。採用済み改善履歴を methodology note として参照することはできるが、performance claim の一次根拠にはしない。
+
+### 4. Stale Upstream Regeneration
+
+上流 evaluation output が run 無効化により stale 扱いされた場合、paper-facing artifact は再生成の対象とする。出力が変化したときだけでなく、上流の陳腐化時にも再生成する（要件 2 受入 6）。
 
 ## Interfaces to Other Features
 

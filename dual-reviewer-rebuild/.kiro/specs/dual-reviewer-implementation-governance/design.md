@@ -150,7 +150,7 @@ workflow owner としての governance は、heuristic profile の増殖を抑�
   - runtime は track-specific minimal template を使ってよい
 - case 固有 heuristic は
   - approved source に anchored した review-critical contract が明確なときだけ追加する
-- minimal template の canonical source は `experiments/protocols/heuristic_profiles/*/_minimal_template.yaml` とする
+- heuristic default 挙動と minimal template 語彙の canonical owner は v2-acquisition spec とする（要件 8 受入 6）。governance はこれを参照するが所有せず、v2-acquisition spec が語彙を確定するまで governance validator はこれら heuristic template 実体を必須検査しない
 
 これにより、新規 case の最初の run は pilot-case copied heuristic ではなく、
 repo-contained minimal default から始まる。
@@ -294,6 +294,8 @@ phase-review metric register は phase progression 全体を測る。
 
 これにより、`intent` phase 自体の変更回数と、
 下流 phase で観測された intent 起因問題を分離して扱う。
+
+phase-review metric register の段階語彙（`implementation` を含む）は governance 所有であり、runtime 所有の phase/profile 審査語彙とは別物である。下流の evaluation / paper-interface は runtime の phase/profile slice に `implementation` を期待しない（要件 7 受入 7）。
 
 ## Validation Model
 

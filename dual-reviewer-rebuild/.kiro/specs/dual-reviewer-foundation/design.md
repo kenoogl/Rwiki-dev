@@ -9,7 +9,7 @@
 - Layer 1 review contract
 - shared schema set
 - prompt artifact placement and identity rule
-- pattern and terminology assets
+- terminology asset placement（pattern assets は本 spec の責務外、§7 参照）
 - validator-readable metadata contract
 
 再構築の主眼は、旧 prototype の有用な資産を引き継ぎつつも、`repo-contained runtime`、`protocol first`、`trust boundary separation` を満たす foundation に引き直すことにある。
@@ -51,7 +51,7 @@ foundation は `runtime/` 配下の shared asset layer を所有し、後続 fea
 - general layer
   - foundation が所有する review contract と shared schemas
 - meta layer
-  - cross-project 再利用可能な pattern assets
+  - cross-project 再利用可能な shared contract（pattern assets は本 spec の責務外）
 - project-specific layer
   - 後続 feature が evidence から抽出して蓄積する concrete patterns
 
@@ -68,7 +68,7 @@ foundation に置くもの:
 - metadata field definitions
 - schema shapes
 - prompt placement and identity rules
-- pattern / template placement rules
+- terminology template placement rules
 
 runtime に委ねるもの:
 
@@ -95,7 +95,6 @@ graph TD
       Metadata["runtime/foundation/metadata_contract.yaml"]
       Schemas["runtime/schemas/*.schema.json"]
       Prompts["runtime/prompts/judgment/*"]
-      Patterns["runtime/patterns/*.yaml"]
       Config["runtime/config/*.template"]
       Validators["runtime/validators/contracts/*"]
     end
@@ -111,8 +110,6 @@ graph TD
   - raw evidence の構造定義
 - `prompts`
   - role / step に紐づく prompt artifact
-- `patterns`
-  - reusable knowledge assets
 - `config`
   - operator-visible template
 - `validators/contracts`
@@ -159,10 +156,7 @@ runtime/
    - prompt を role / purpose 単位で配置する
    - skill や runtime module はここから読むだけにする
 
-4. `runtime/patterns/`
-   - pattern を code から切り離した data source とする
-
-5. `runtime/validators/contracts/`
+4. `runtime/validators/contracts/`
    - validator 実装の code とは分けて、validation artifact の shape だけを foundation が固定する
 
 ## Domain Model
@@ -188,6 +182,8 @@ runtime/
 - Step C: `judgment`
 - Step D: `integration`
 
+Step D（integration）は Step A/B/C の出力を 1 つの review 結果へ統合する contract であり、追加の LLM 呼び出しを要さない。出力は run close 時に消費される統合 review record とする（要件 1 受入 7）。
+
 ここでは retry、subagent dispatch、human interaction timing は定義しない。これらは runtime design の責務とする。
 
 ### 2. Role Abstraction
@@ -199,6 +195,8 @@ role は abstract name のみを foundation で固定する。
 - `judgment_reviewer`
 
 model vendor や concrete model 名は config に退避し、framework definition と schema field には出さない。
+
+`adversarial_reviewer` の Step B forced-divergence は、主役結論への安易な同調ではなく独立した反証の提示を最低限の振る舞いとする。最終的に同意する場合でも「反証なし」を意図的結果として記録する（要件 1 受入 4）。
 
 ### 3. Run Metadata Contract
 
@@ -226,8 +224,8 @@ model vendor や concrete model 名は config に退避し、framework definitio
 | `target_artifact_hash` | 対象固定のための hash |
 | `source_repository_id` | evidence が採取された repository の識別子 |
 | `source_revision` | evidence 採取時の source revision |
-| `phase_profile` | `intent` / `requirements` / `design` / `tasks` |
-| `treatment` | `single` / `dual` / `dual+judgment` |
+| `phase_profile` | 値語彙は runtime 所有（要件 1 受入 8、foundation は列挙しない） |
+| `treatment` | 値語彙は runtime 所有（要件 1 受入 9、foundation は列挙しない） |
 | `review_mode` | `manual_dogfooding` / `runtime_mediated` などの mode |
 | `protocol_version` | protocol drift 防止 |
 | `runtime_version` | runtime 挙動追跡 |
@@ -427,6 +425,8 @@ foundation では次の 2 artifact shape を固定する。
 
 これにより、全部無効化と部分無効化を同じ artifact 形式で扱える。
 
+無効化標識の付与は、その run を参照した下流の派生成果物への陳腐化伝播義務を伴う（要件 6 受入 9）。foundation は伝播義務の存在を contract として固定し、具体的な陳腐化フラグ付けや再導出手段は evaluation / paper-interface の design に委ねる。
+
 ### 9. Exploratory Handling
 
 cross-spec alignment で残っていた `exploratory` の formal placement は、foundation では `evidence_class` に置く。
@@ -483,7 +483,7 @@ approval unit の追跡を可能にするため、`finding` は `decision_unit_i
 | Role/config abstraction | abstract role 名と config template を分離 |
 | Shared schema set | `runtime/schemas/` に 5 schema を集約 |
 | Canonical prompt placement | `runtime/prompts/judgment/judgment_reviewer.prompt.md` を正本化 |
-| Pattern and terminology assets | `runtime/patterns/` と `runtime/config/terminology.yaml.template` を定義 |
+| Terminology assets | `runtime/config/terminology.yaml.template` を定義（pattern assets は責務外、§7） |
 | Validator-oriented metadata | `metadata_contract.yaml` と validator contracts を定義 |
 | Repo-contained asset rule | 全 artifact を repo 配下に固定し external memory を排除 |
 

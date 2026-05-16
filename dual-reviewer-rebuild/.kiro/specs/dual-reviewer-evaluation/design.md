@@ -196,6 +196,8 @@ evaluation は run を次の 4 状態で扱う。
 
 `derived/comparison_eligibility_note.json` が存在する場合、evaluation はこれを classification 前の補助判断材料として読んでよい。ただし final の valid / invalid / exploratory 判定は、依然として metadata、validator 結果、invalidation artifact を基礎にする。
 
+有効性分類（valid / invalid / exploratory）と review-mode（manual_dogfooding / runtime_mediated）は直交する独立軸として扱う。manual_dogfooding で実施された内容的に valid な run を、review-mode を理由に invalid と誤分類しない（要件 1 受入 6）。review-mode による標準集団の切り分けは、分類とは別の slice 操作として行う。
+
 ### Admission States for Imported Bundles
 
 imported bundle は classification の前段で次の admission state を持つ。
@@ -399,6 +401,8 @@ analysis artifact も versioned output とする。
 - `comparison_contract_version`
 
 同じ raw run set でも analysis logic が変われば別 output として扱う。
+
+参照していた run が事後に invalidate された場合、その run を入力に含む derived artifact は stale フラグ付け、または再導出の対象とする（要件 5 受入 6）。invalidation を含む run の上に古い derived output を据え置かない。これは foundation の無効化伝播義務（foundation 要件 6 受入 9）を入力起点とする。
 
 ## Interfaces to Downstream Features
 

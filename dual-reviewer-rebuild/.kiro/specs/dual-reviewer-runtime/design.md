@@ -408,6 +408,8 @@ runtime は evidence を次の 3 層で書き分ける。
 `review_case.json` は downstream compatibility のための machine-readable envelope とし、
 v2 内部では `review_artifact.json` を canonical object として保持する。
 
+レビュー実行が失敗の状態（review miss / disagreement など）に陥った場合、runtime は foundation の `failure_observation` schema に準拠した記録を `failures/failure_observation.json` に書き出す（要件 4 受入 7）。これにより failure 分類データが未使用 schema のまま放置されない。
+
 ### File Placement for v2 Runtime Core
 
 runtime 実装の code placement は次を正本とする。
@@ -509,16 +511,13 @@ step file の詳細すべてを重複して持たず、参照を中心に構成�
 
 ### Run Close Boundary
 
-run close は Step D が終わり、human sign-off artifact が書かれた時点で成立する。
+run close は、Step D 完了 → human sign-off artifact 書き込み → raw evidence freeze → validator invocation → `validator_result.json` 保存 がすべて完了した時点で成立する（要件 6 受入 9：human sign-off → validator → run close の順序を厳守し、validator 結果が human decision に先行しない）。
 
-run close の後に行うこと:
+run close 成立後に行うこと:
 
-1. raw evidence freeze
-2. validator invocation
-3. `validator_result.json` 保存
-4. invalidation marker 付与
-5. `invalid_run_triage_note.json` 生成
-6. `run_manifest.yaml` と `review_case.json` の metadata 更新
+1. invalidation marker 付与
+2. `invalid_run_triage_note.json` 生成
+3. `run_manifest.yaml` と `review_case.json` の metadata 更新
 
 この順序を崩さない。
 
@@ -645,6 +644,7 @@ self-improvement は少なくとも次を読む。
 - decision units
 - validator/invalidation artifacts
 - `derived/invalid_run_triage_note.json`
+- `failures/failure_observation.json`
 
 特に Step B と Step C の artifact を replay 入力として扱えるようにする。
 
