@@ -1,9 +1,9 @@
 {
   "feature_name": "dual-reviewer-paper-interface",
   "created_at": "2026-05-08T00:00:00+09:00",
-  "updated_at": "2026-05-09T00:45:00+09:00",
+  "updated_at": "2026-05-16T00:00:00+09:00",
   "language": "ja",
-  "phase": "tasks-approved",
+  "phase": "requirements-approved",
   "approvals": {
     "requirements": {
       "generated": true,
@@ -11,51 +11,52 @@
     },
     "design": {
       "generated": true,
-      "approved": true
+      "approved": false
     },
     "tasks": {
       "generated": true,
-      "approved": true
+      "approved": false
     }
   },
-  "ready_for_implementation": true,
+  "ready_for_implementation": false,
   "custom": {
     "reopened": {
       "requirements": false,
-      "design": false,
-      "tasks": false
+      "design": true,
+      "tasks": true
     },
     "alignment": {
       "requirements": {
         "required": true,
         "status": "completed",
-        "last_checked": "2026-05-08",
-        "note": "cross-spec requirements alignment completed"
+        "last_checked": "2026-05-16",
+        "note": "2026-05-16 横断整合ゲート不整合 0 件で完走（要件人間承認ゲート通過）"
       },
       "design": {
         "required": true,
-        "status": "completed",
-        "last_checked": "2026-05-08",
-        "note": "cross-spec design alignment rechecked after external bundle design handback"
+        "status": "pending",
+        "last_checked": null,
+        "note": "reset 2026-05-13: v2-acquisition data retake requires full re-review"
       },
       "tasks": {
         "required": true,
-        "status": "completed",
-        "last_checked": "2026-05-09",
-        "note": "cross-spec tasks alignment completed"
+        "status": "pending",
+        "last_checked": null,
+        "note": "reset 2026-05-13: v2-acquisition data retake requires full re-review"
       }
     },
     "recheck": {
-      "upstream_change_pending": false,
+      "upstream_change_pending": true,
       "impacted_downstream_phases": [
+        "design",
         "tasks"
       ]
     },
     "traceability": {
       "intent_requirements_matrix_required": true,
-      "intent_requirements_matrix_status": "current",
-      "intent_requirements_matrix_last_checked": "2026-05-08",
-      "intent_requirements_matrix_update_required": false
+      "intent_requirements_matrix_status": "pending",
+      "intent_requirements_matrix_last_checked": null,
+      "intent_requirements_matrix_update_required": true
     }
   }
 }
