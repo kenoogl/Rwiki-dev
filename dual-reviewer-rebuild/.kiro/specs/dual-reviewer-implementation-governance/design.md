@@ -96,6 +96,31 @@ graph TD
 - `experiments/protocols/heuristic_profiles/*/_minimal_template.yaml`
   - track-default heuristic templates
 
+### Review Template Required Sections
+
+validator（要件 5 受入 3）が存在確認する必須セクション名を確定する。
+
+`docs/reviews/templates/intent-review-template.md` の必須セクション（Stage 0 の reviewer 作業に対応）：
+
+- Reviewed Intent Documents
+- Traceability Check
+- Handback Decision（`D` handback 要否）
+- Intent Metric Snapshot（`intent_revision_count` / `intent_handback_count`）
+
+`docs/reviews/templates/implementation-conformance-review-template.md` の必須セクション（要件 2 受入 2 の最小内容集合に対応）：
+
+- Reviewed Scope
+- Reviewed Commit or Branch
+- Validation Rerun Summary
+- Findings
+- Severity
+- Recommended Action
+- Disposition Summary
+
+concrete review artifact（`docs/reviews/*.md`）は対応するテンプレートの上記必須セクションをすべて備える。
+
+artifact 種別判別機構：各 `docs/reviews/*.md` は front-matter に `type` フィールドを持ち、値は `intent_review` または `conformance_review` のいずれかとする。validator はこの `type` で適用する必須セクション集合（上記 2 種）を選択する。`type` が無い、または未知値の artifact は validator が不適合として扱う。
+
 ### Boundary Clarification
 
 この spec が所有するのは completion gate であり、feature artifact の ownership ではない。
@@ -176,6 +201,14 @@ reviewer は次を行う。
 - signal / coordination への接続
 - metric snapshot の記録
 
+`implementation conformance review` を実行すべきタイミングは次を最低限とする（要件 1 受入 3）。
+
+- プロトタイプ完了時（線形フロー上の既定の実行点）
+- pre-push または pre-PR チェックポイント時
+- trust boundary / invalidation / provenance / 承認・採用ロジック のいずれかを変更した後
+
+これらは「変更起因トリガー（変更後の再実行）」と「事前チェックポイント（push/PR 前）」を含み、線形フロー 1 回限りに閉じない。
+
 ### Stage 4: Checkpoint Close
 
 checkpoint close の条件は次のいずれかである。
@@ -247,6 +280,23 @@ severity は `P1 / P2 / P3` を使う。
 - recommended action
 - handback assessment
 - status
+
+### Finding → Signal Register Mapping
+
+各 finding は `implementation-signal-register` へ次の規則で写像する（要件 4 受入 1）。
+
+- `source_finding_ref` ← finding の識別子
+- signal の対象領域 ← finding の `scope` と `file reference`
+- signal の要約 ← finding の `description` と `impact`
+- signal の優先度 ← finding の severity（`P1` / `P2` / `P3`）
+- signal の `status` ← finding の `status`
+
+severity 別の接続先：
+
+- `P1`：signal register へ記録し、加えて Stage 4 の P1 ブロック経路（次 feature 開始前修正）に接続
+- `P2` / `P3`：軽微 signal として signal register に記録する
+
+handback assessment を持つ finding は本写像に加え handback クラス（A/B/C・intent）にも接続する（要件 4 受入 2 との整合）。
 
 ## Handback Model
 
