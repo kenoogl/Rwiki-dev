@@ -209,6 +209,7 @@ v2 導入後も、downstream compatibility のため次を維持する。
   - taxonomy-first internal canonical object
 - `derived/comparison_eligibility_note.json`
   - standard comparison に直接入れるかどうかを downstream が判断する補助 note
+  - スキーマは生成元の runtime が所有する（設計横断整合ゲート 2026-05-18 決定：評価 A-7）。最小項目：`run_id` / `eligible_for_standard_comparison`（真偽）/ `ineligibility_reason_codes` / `treatment` / `phase_profile` / `generated_at`
 - `derived/invalid_run_triage_note.json`
   - invalid run の primary failure、linked checks、operator action hint を downstream が再利用する補助 note
 
@@ -492,8 +493,7 @@ runtime は evidence を次の 3 層で書き分ける。
   - `v2/trace_note.json`
   - `v2/signal_linkage_note.json`
 
-`review_case.json` は downstream compatibility のための machine-readable envelope とし、
-v2 内部では `review_artifact.json` を canonical object として保持する。
+`review_case.json` を唯一の横断正本とする（スキーマは foundation 所有。下流はこれを正本として読む）。`review_artifact.json` は runtime 内部限定の taxonomy-first 表現にとどめ、横断正本にはしない。runtime は `review_artifact.json` → `review_case.json` の投影規約（フィールド対応）を所有・定義し、`review_case.json` が常に foundation の `review_case` スキーマに準拠することを保証する（設計横断整合ゲート 2026-05-18 決定：実行側 A-5）。
 
 レビュー実行が失敗の状態（review miss / disagreement など）に陥った場合、runtime は foundation の `failure_observation` schema に準拠した記録を `failures/failure_observation.json` に書き出す（要件 4 受入 7）。これにより failure 分類データが未使用 schema のまま放置されない。
 
@@ -785,8 +785,8 @@ validation は raw evidence を変更しない。
 - `review_case.json` 内での step ref 粒度
 - validator bridge の実行 entrypoint
 - accepted review output の最終 export 形
-- 実行側 A-5：`review_case.json`（foundation 正本）と `review_artifact.json`（v2 内部正本）の二重正本。対応（投影）規約の所有と、foundation 正本優先の確定（foundation/runtime/evaluation 整合）
-- 評価 A-7：`derived/comparison_eligibility_note.json` のスキーマ所有 spec の確定（土台所有／実行側所有／評価が契約所有 の選択）
+- 実行側 A-5（解決済み・設計横断整合ゲート 2026-05-18）：`review_case.json` を唯一の横断正本（foundation 所有スキーマ）に確定。`review_artifact.json` は runtime 内部限定、投影規約は runtime 所有（§Evidence Writing Model 参照）
+- 評価 A-7（解決済み・設計横断整合ゲート 2026-05-18）：`comparison_eligibility_note.json` のスキーマは生成元 runtime 所有に確定（§Runtime Artifact Layout 参照）。evaluation は依存宣言のみ
 
 これらは evaluation / self-improvement / paper-interface design が揃った後の `design alignment gate` で詰める。
 

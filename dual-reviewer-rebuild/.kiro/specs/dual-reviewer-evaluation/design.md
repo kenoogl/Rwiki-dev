@@ -185,6 +185,7 @@ evaluation は run を次の 4 状態で扱う。
 - `analysis_blocked`
   - required evaluation input の不足
   - または `run_status != closed`
+  - または `validator_status=blocked`（検証が前提不足で完了できず、妥当性を確定できない）
 
 `analysis_blocked` は exclusion report には出すが、比較対象集団には入れない。
 
@@ -194,7 +195,7 @@ evaluation は run を次の 4 状態で扱う。
 - `created` や途中中断 run は `invalid` ではなく `analysis_blocked` として扱う
 - `analysis_blocked` の主目的は「評価不能 run を valid/invalid 判定と混同しない」ことにある
 
-`derived/comparison_eligibility_note.json` が存在する場合、evaluation はこれを classification 前の補助判断材料として読んでよい。ただし final の valid / invalid / exploratory 判定は、依然として metadata、validator 結果、invalidation artifact を基礎にする。
+`derived/comparison_eligibility_note.json` が存在する場合、evaluation はこれを classification 前の補助判断材料として読んでよい。ただし final の valid / invalid / exploratory 判定は、依然として metadata、validator 結果、invalidation artifact を基礎にする。このスキーマは runtime が所有する。evaluation は runtime 所有スキーマの最小項目に依存し、評価側で再定義しない（設計横断整合ゲート 2026-05-18 決定：評価 A-7）。
 
 有効性分類（valid / invalid / exploratory）と review-mode（manual_dogfooding / runtime_mediated）は直交する独立軸として扱う。manual_dogfooding で実施された内容的に valid な run を、review-mode を理由に invalid と誤分類しない（要件 1 受入 6）。review-mode による標準集団の切り分けは、分類とは別の slice 操作として行う。
 
@@ -484,7 +485,7 @@ exploratory と invalid を黙って混ぜない。
 - exploratory aggregate をどこまで標準化するか
 - self-improvement 向けに必要な finding-level detail の追加有無
 - paper-interface 向け comparison artifact の field naming
-- 評価 A-7：依存する `comparison_eligibility_note.json` のスキーマ所有 spec が未宣言。所有者確定までは無契約依存。設計ゲートで確定（土台所有／実行側所有／評価が契約所有）
+- 評価 A-7（解決済み・設計横断整合ゲート 2026-05-18）：`comparison_eligibility_note.json` のスキーマは生成元 runtime 所有に確定。evaluation は runtime 所有スキーマの最小項目に依存し再定義しない（§Classification Model 参照）
 
 ## Completion Criteria
 

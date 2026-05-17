@@ -243,7 +243,7 @@ model vendor や concrete model 名は config に退避し、framework definitio
 | `config_version` | 当該 run を生成した config の版（要件 7 受入 3、config↔run の機械追跡） |
 | `config_hash` | config 内容固定のための hash（要件 2 受入 4、config は runtime input であり hidden state ではないことの担保） |
 | `run_status` | lifecycle 状態 |
-| `validator_status` | validation pass/fail |
+| `validator_status` | validation の結果（pass / fail / blocked） |
 | `human_signoff_status` | sign-off 状態 |
 | `evidence_class` | `candidate` / `valid` / `invalid` / `exploratory` |
 | `started_at` | run 開始時刻 |
@@ -260,6 +260,7 @@ model vendor や concrete model 名は config に退避し、framework definitio
   - `not_run`
   - `passed`
   - `failed`
+  - `blocked`
 - `human_signoff_status`
   - `pending`
   - `approved`
@@ -445,7 +446,7 @@ foundation では次の 2 artifact shape を固定する。
 `validator_result` は少なくとも次の field を持つ（invalidation_marker と対称形）。
 
 - `run_id` — 検証対象 run の識別子
-- `validator_status` — 検証結果（metadata_contract の `validator_status` 語彙 `not_run` / `passed` / `failed` と整合）
+- `validator_status` — 検証結果（metadata_contract の `validator_status` 語彙 `not_run` / `passed` / `failed` / `blocked` と整合）
 - `checked_contract` — 検証した schema / metadata contract の対象範囲
 - `error_list` — 検出した契約違反の一覧（passed 時は空）
 - `validated_by` — 検証実施者
