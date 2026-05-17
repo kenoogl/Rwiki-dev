@@ -206,6 +206,14 @@ imported bundle は classification の前段で次の admission state を持つ�
 - `admitted_exploratory`
 - `rejected`
 
+受理判定ルール（要件 10 受入 4。優先順に評価し、最初に該当した状態を採る）:
+
+- `rejected`：`bundle_manifest.yaml` が不在または不正、または必須 provenance（`source_repository_id` / `source_revision`）が欠落、または必須 intake 入力（`run_manifest.yaml` / `review_case.json` / `validator_result.json` / `invalidation_markers.json`）が schema 不適合で読めない
+- `admitted_exploratory`：必須 intake 入力は読めるが、(a) required provenance の一部が非致命的に欠落、(b) protocol / prompt / schema version が比較集合と不整合、または mixed maturity、(c) low sample / exploratory-only slice のいずれかに該当（要件 10 受入 2：standard admission には required provenance 完備が前提）
+- `admitted_standard`：必須 intake 入力が揃い、required provenance 完備、version が比較集合と整合し、invalidation marker が無い
+
+判定結果と該当理由は `imports/admission_register.json` の `admission_status` / `admission_reason_codes` に記録する。
+
 この admission state は run validity とは別に保持する。たとえば imported bundle が schema 的には読めても、provenance 不足で `admitted_exploratory` になることがある。
 
 ### 3. Missing vs Invalid
@@ -218,6 +226,15 @@ evaluation は次を区別する。
   - 入力はあるが contract に違反している
 
 これにより、「run が invalid なのか」「analysis 側の入力準備不足なのか」を分離する。
+
+### 4. 設計スキップ vs 障害欠損の弁別
+
+ステップが欠けている場合、evaluation は runtime のステップ実行印（`execution_state` ＝ executed / skipped / reduced、`reason`、`treatment`。runtime 設計で定義）を参照して次を弁別する（要件 2 受入 3）。
+
+- 設計スキップ：当該ステップに skipped / reduced 印があり、`reason` が treatment 由来で、run の treatment と runtime の Treatment×Step 対応表に整合する場合。設計上の意図的省略であり障害ではない。同一 treatment 内では比較可能なまま扱い、欠損を障害として減点しない
+- 障害欠損：印が無い、または印が宣言 treatment と矛盾する場合。障害・事故的欠落として扱い、当該 run はそのステップを前提とする比較から除外し、必要に応じ `analysis_blocked` または `invalid` とする
+
+これにより、実行条件比較の母集団から「設計上ステップが無い run」を誤って障害扱いで排除しない（runtime 要件 2 受入 5 と整合）。
 
 ## Metric Model
 
@@ -467,6 +484,7 @@ exploratory と invalid を黙って混ぜない。
 - exploratory aggregate をどこまで標準化するか
 - self-improvement 向けに必要な finding-level detail の追加有無
 - paper-interface 向け comparison artifact の field naming
+- 評価 A-7：依存する `comparison_eligibility_note.json` のスキーマ所有 spec が未宣言。所有者確定までは無契約依存。設計ゲートで確定（土台所有／実行側所有／評価が契約所有）
 
 ## Completion Criteria
 

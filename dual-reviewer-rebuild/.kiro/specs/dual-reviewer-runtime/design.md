@@ -616,7 +616,7 @@ validator 結果は次の 3 種に整理する。
 - fail
 - blocked
 
-`blocked` は required artifact 不足などで validation 自体を完了できない場合に使う。foundation の `validator_status` enum にはまだないので、runtime では `blocked` を internal event として保持し、final metadata には `failed` と insufficiency detail を落とす。
+`blocked` は required artifact 不足などで validation 自体を完了できない場合に使う。foundation が正準 validator 状態語彙として `pass` / `fail` / `blocked` を所有する（foundation 要件 6 受入 10）。runtime はこれを再定義・丸めせず、`blocked` をそのまま final metadata の `validator_status` に伝播し、insufficiency detail を併記する（runtime 要件 6 受入 2）。
 
 ## Invalidation Handling
 
@@ -785,6 +785,8 @@ validation は raw evidence を変更しない。
 - `review_case.json` 内での step ref 粒度
 - validator bridge の実行 entrypoint
 - accepted review output の最終 export 形
+- 実行側 A-5：`review_case.json`（foundation 正本）と `review_artifact.json`（v2 内部正本）の二重正本。対応（投影）規約の所有と、foundation 正本優先の確定（foundation/runtime/evaluation 整合）
+- 評価 A-7：`derived/comparison_eligibility_note.json` のスキーマ所有 spec の確定（土台所有／実行側所有／評価が契約所有 の選択）
 
 これらは evaluation / self-improvement / paper-interface design が揃った後の `design alignment gate` で詰める。
 
