@@ -109,6 +109,14 @@ learning/
 - `rollback/`
   - rollback 履歴
 
+### Schema Versioning
+
+learning/ 配下の全 artifact（`proposals/<id>.yaml`・各 index・各 register・findings/・templates/）は `schema_version` field を持つ。スキーマ進化は foundation 要件 3 受入 3 の versioning 規約（版管理スキーマ artifact、silent な非互換編集の禁止）に従う。
+
+- 非互換変更時は `schema_version` を上げ、既存 artifact は旧 version のまま解釈可能に保つ（破壊的な一括書き換えをしない）
+- 長期保存 artifact（proposal・各 register。要件 5 受入 5「失敗改善からの学習」）は version 差があっても読めることを保証する
+- スキーマ所有は self-improvement 側にあり、foundation 規約に接続宣言するのみ（foundation 側の修正は不要）
+
 ## Input Model
 
 ### 1. Input Classes
@@ -155,6 +163,15 @@ input の価値は run validity と独立ではない。次のように扱う。
 proposal artifact は、どの input class とどの evidence maturity に依拠するかを必ず記録する。
 
 入力証跡からの必須 provenance が欠落または断絶している場合、provenance が欠けたまま proposal を進めず proposal 生成を阻止する。これは foundation のメタデータ欠落規則（foundation 要件 6）と整合させる（要件 1 受入 6）。
+
+### 2.5 Manual→Runtime Handoff Boundary
+
+`source_origin` は入力の初期出所をタグ付けするが、後から runtime 由来 evidence が先行の手動 dogfooding evidence を上書きする場合がある。このとき引き継ぎ境界を保存する（要件 7 受入 5）。
+
+- 上書きは破壊的に行わない。先行の手動由来 proposal / signal は削除せず保持し、上書き関係を明示記録する
+- 上書き記録は最低限 `superseded_by`（後続 runtime 由来 proposal/signal の識別子）/ `supersession_reason`（例：`later_runtime_evidence`）/ `supersession_at` を持つ
+- 先行側には対称に `supersedes`（先行が上書きした対象がある場合）を残し、手動由来であった事実（`source_origin=manual_review_record`）は上書き後も保持する
+- これにより「初期は手動検証、のちに runtime 検証で更新された」という履歴境界が機械的に辿れ、手動由来観察を runtime 品質と過度に同一視しない（要件 7 受入 4 とも整合）
 
 ## Signal Extraction Model
 
@@ -215,6 +232,16 @@ downstream protocol artifact が runtime validation summary を持つ場合、�
 
 これにより、learning loop が「個別失敗の記録」で終わらず、pattern layer の成長へつながる。
 
+### 4. Findings Artifact Required Fields
+
+findings/ と templates/ の各 artifact は、出所連鎖（要件 1 受入 5）を検証可能にするため最低限次を持つ。
+
+- `findings/recurring_failure_signals.json` / `findings/workflow_failure_signals.json`：各 signal エントリは `signal_id` / `signal_type` / `source_evidence_refs`（runtime・evaluation 由来 evidence への参照）/ `occurrence_count` / `first_seen_run_ref` / `last_seen_run_ref` / `summary`
+- `findings/pattern_candidates.json`：各 candidate は `candidate_id` / `abstraction_level`（project-specific / meta-pattern candidate）/ `source_signal_refs` / `summary`
+- `templates/workflow_remediation_templates.json`：各 template は `template_id` / `failure_mode` / `checklist` / `recommended_action` / `source_pattern_refs`
+
+これにより proposal の `source_evidence_refs` から findings/ artifact、さらに runtime・evaluation evidence までの参照が機械的に辿れる。
+
 ## Proposal Model
 
 ### 1. Proposal Unit
@@ -267,6 +294,19 @@ proposal state は次を採る。
 - `rejected`
 - `adopted`
 - `rolled_back`
+
+許可遷移と遷移条件は次を正本とする（要件 4 受入 1）。
+
+- `draft` → `awaiting_test`：proposal が起草され検証待ちに入る
+- `draft` → `rejected`：検証前に前提無効・重複等で却下
+- `awaiting_test` → `tested`：replay / backtest が完了し結果 artifact が出た
+- `tested` → `approved`：approval gate を人間が通過
+- `tested` → `rejected`：検証不合格、またはレビューで却下
+- `approved` → `adopted`：repo 反映と version update が完了（Decision 3：両者なしに adopted にならない）
+- `approved` → `rejected`：adoption 前に阻止事由が判明し採用取消
+- `adopted` → `rolled_back`：採用後に rollback 発動
+
+終端状態は `rejected` と `rolled_back` とする。`rolled_back` は終端だが rollback 履歴として次の改善入力につながる（Decision 4）。上記以外の遷移（例：`draft`→`adopted` の直行、`adopted` から `rolled_back` 以外への遷移、終端状態からの遷移）は許可しない。
 
 ### 4. Review Prioritization Notes
 
@@ -376,6 +416,15 @@ human approval が必要な対象:
 
 `approved-updates/adoption_register.json` は proposal と実際の repo change を結ぶ registry とする。
 
+`adoption_register.json` は少なくとも次を持つ。
+
+- `proposal_id`
+- `adopted_change_ref`（実際に入った repo change の参照）
+- `version_update_ref`（Adoption Gate 条件 3：repo change と結びつく version update）
+- `approval_ref`（採用を正当化した approval の参照。要件 4 受入 3 の連結保存）
+- `test_artifact_ref`（Adoption Gate 条件 2：必須 test artifact の参照）
+- `adopted_at`
+
 ### 3. Rejection Model
 
 rejection は失敗ではなく履歴である。`rejected-updates/rejection_register.json` には少なくとも次を残す。
@@ -459,6 +508,8 @@ invalid run は workflow defect 改善には使えるが、quality gain claim �
 | Approval and adoption flow | approval gate と adoption register を定義 |
 | Rollback and failure handling | rollback registry と supersession 区別を定義 |
 | Separation from paper narrative | paper convenience 禁止ルールを定義 |
+| Manual vs runtime evidence provenance | `source_origin` enum と Manual→Runtime Handoff Boundary（§Input Model 2.5）を定義（要件 7） |
+| Imported evidence provenance preservation | `source_origin=imported_external_bundle` と入力 provenance 必須化（§Input Model 2、source repository/revision・evaluation 受理状態の保持）を定義（要件 8） |
 
 ## Open Issues for Design Alignment Gate
 
