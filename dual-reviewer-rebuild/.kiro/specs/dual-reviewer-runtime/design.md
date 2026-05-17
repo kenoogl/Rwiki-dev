@@ -153,6 +153,8 @@ experiments/runs/<run_id>/
 ├── decisions/
 │   ├── decision_units.json
 │   └── human_signoff.json
+├── failures/
+│   └── failure_observation.json
 ├── v2/
 │   ├── review_artifact.json
 │   ├── metric_snapshot.json
@@ -177,6 +179,8 @@ experiments/runs/<run_id>/
   - step-level replay の最小単位
 - `decisions/`
   - human decision integration を raw evidence から切り離して保存
+- `failures/`
+  - レビュー実行が失敗状態（review miss / disagreement など）に陥った場合の foundation `failure_observation` 準拠記録（要件 4 受入 7）
 - `v2/`
   - generic execution layer v2 の internal canonical artifact を保存
 - `validation/`
@@ -247,7 +251,29 @@ run 開始時に controller が固定する入力は次とする。
 
 run-level の `human_signoff_status` は、finding ごとの採否ではなく「この run が人間の明示的 close judgment を通過したか」を表す。個別 finding や decision unit の accept / reject / defer は `decisions/decision_units.json` 側で保持する。
 
+`evidence_class` は run 開始時の固定入力ではなく、run close 時点で初期値 `candidate` を `run_manifest.yaml` と `review_case.json` に記録する。その後 `validator_status` と `human_signoff_status` が揃った段階で、foundation §Run Metadata Contract が定める規則に従い `valid` / `invalid` / `exploratory` へ確定する（foundation 要件 6 受入 2・受入 8）。runtime は初期値 `candidate` の記録までを責務とし、確定遷移は foundation 契約に従う検証・承認結果に基づく。
+
 local runtime の初版では、`source_repository_id` と `source_revision` は実行元 repository と revision を指す。将来 central 側へ bundle export するときも、この provenance は local source として保持される。
+
+### Run Manifest Field Set
+
+`run_manifest.yaml` は foundation §Run Metadata Contract が定める必須メタデータ項目（基盤要件 6 受入 2）を正本として保持する。項目は値を固定する時点で 2 群に分ける。runtime は項目集合を再定義せず、foundation 契約の項目を継承する。
+
+開始時固定（run 開始時に controller が記録、run 中に上書きしない）:
+
+- `run_id`
+- 上記「Session Inputs」の全項目（`target_id` / `target_artifact_hash` / `source_repository_id` / `source_revision` / `phase_profile` / `treatment` / `review_mode` / `protocol_version` / `runtime_version` / `prompt_set_version` / `schema_set_version` / `config_version` / `config_hash` / operator identity）
+- `started_at`
+
+実行中に変化（実行進行・検証・承認の結果で更新）:
+
+- `run_status`
+- `validator_status`
+- `human_signoff_status`
+- `evidence_class`（run close 時 `candidate`、その後確定遷移）
+- `closed_at`
+
+各項目の語彙・責務分離は foundation §Run Metadata Contract に従い、runtime はその記録時点（開始時固定／実行中更新）のみを定義する。
 
 ### 3. Phase/Profile and Treatment Axes
 
@@ -300,12 +326,15 @@ runtime では次の 2 軸を分離する。
 - adversarial findings
 - counter-evidence
 - divergence trace
+- adversarial_outcome（foundation finding スキーマの当該欄に準拠）
 
 保存先:
 
 - `steps/step_b_adversarial_review.json`
 
 `single` treatment では実行せず、skip marker を記録する。
+
+Step B は最終的に一次結果へ同意する場合でも、独立した反証の試行を必ず行う（基盤要件 1 受入 4）。反証が無いという結果も意図的結果として記録し、各 finding の `adversarial_outcome` に `counter_evidence_raised` / `no_counter_evidence_after_challenge` / `not_assessed` のいずれかを必ず設定する。空の counter-evidence だけで「反証を試みていない」と「試みた結果なし」を曖昧にしない。
 
 ### Step C: Judgment
 
@@ -332,19 +361,54 @@ runtime では次の 2 軸を分離する。
 
 入力:
 
-- prior step outputs
-- human decision actions
+- prior step outputs（Step A/B、treatment に応じ Step C）
+- ※人間の判断行為は Step D の入力ではない（人間は Step D が生成した decision unit に対して後段で承認・否決・保留する。要件 5 受入 1、Run Close Boundary 参照）
 
 出力:
 
-- decision units
-- accepted / rejected / deferred mapping
-- run close readiness
+- decision units（proposed_action 付き、未確定の human_decision を含む）
+- run close readiness signal
+
+統合手順（追加の言語モデル呼び出しを行わない機械的手順。foundation 要件 1 受入 7）:
+
+1. Step A・Step B の finding を収集し、source_role を保持したまま統合集合にする
+2. treatment が Step C を含む場合、Step C の necessity judgment と final label を対応する finding に機械的に紐づける（Step C 非実行時は紐づけをスキップ）
+3. finding を decision unit 単位に集約する（集約キーは finding の requirement_link / 対象領域。新たな推論はしない）
+4. 各 decision unit の proposed_action を、Step C final label がある場合はそれを写像し、ない場合は規定の既定規則で決める
+5. run close readiness を、必須 step 出力の充足のみで機械判定する
+6. 結果を steps/step_d_integration.json と decisions/decision_units.json に書き出す（human_decision は未確定のまま）
+
+decision unit に対する accepted / rejected / deferred は、Step D の出力ではなく、後段の人間 sign-off の結果として decision_units.json と human_signoff.json に記録される（Run Close Boundary の順序：Step D → 人間 sign-off → validator → close）。
 
 保存先:
 
 - `steps/step_d_integration.json`
 - `decisions/decision_units.json`
+
+### Treatment × Step Execution Matrix
+
+各ステップの実行状態は次の 3 値とする（要件 2 受入 3）。
+
+- `executed` — ステップを通常実行する
+- `skipped` — treatment 選択により意図的に実行しない（要件 2 受入 4）
+- `reduced` — ステップは動くが対象・深さを限定して実行する。現行 3 treatment では使用せず、将来 phase/profile 連動で使う場合に備えた語彙として定義する
+
+treatment ごとの各ステップ実行状態は次を正本とする。
+
+| treatment | Step A | Step B | Step C | Step D |
+|-----------|--------|--------|--------|--------|
+| `single` | executed | skipped | skipped | executed |
+| `dual` | executed | executed | skipped | executed |
+| `dual+judgment` | executed | executed | executed | executed |
+
+`skipped` または `reduced` のステップは、`steps/step_<x>_*.json` に marker record を残す。marker は次を持つ。
+
+- `step_id` / `step_name`
+- `execution_state` — `executed` / `skipped` / `reduced`
+- `reason` — treatment 由来である旨（意図的決定であることを示す）
+- `treatment` — この決定の根拠となった treatment
+
+これにより、設計上の意図的スキップと事故的欠落を run record だけで区別できる（要件 2 受入 5）。
 
 ## Prompt Resolution Model
 
@@ -358,6 +422,17 @@ resolution order は次とする。
 
 steady-state behavior では repo 外 prompt source を禁止する。
 
+### Role and Step Mapping
+
+各ステップは foundation の抽象ロール名（基盤要件 2 受入 1）を継承する。対応は次を正本とする。
+
+| Step | foundation role |
+|------|-----------------|
+| Step A（primary_detection） | `primary_reviewer` |
+| Step B（adversarial_review） | `adversarial_reviewer` |
+| Step C（judgment） | `judgment_reviewer` |
+| Step D（integration） | なし（言語モデル非依存の機械統合のため reviewer role を持たない） |
+
 ### Prompt Identity Recording
 
 各 step record は最低限次を持つ。
@@ -365,6 +440,7 @@ steady-state behavior では repo 外 prompt source を禁止する。
 - `prompt_artifact_path`
 - `prompt_id`
 - `prompt_version`
+- `role` — このプロンプトを使った foundation 抽象ロール名（要件 3 受入 3：ロール×ステップでプロンプト利用を区別）
 
 これにより replay 時に「同じ step だが prompt が違う」ケースを判別できる。
 
@@ -387,6 +463,17 @@ decision unit の責務:
 - `human_decision`
 - `human_decision_timestamp`
 - `human_decision_note`
+
+### Human Sign-off Record
+
+`decisions/human_signoff.json` は、個別 decision unit の採否とは別に、run 全体の人間 close judgment を表す run レベル正本とする。Run Close Boundary（後述）の順序の起点であり、validator 呼び出しより前に書き込む（要件 6 受入 9）。
+
+- `run_id`
+- `human_signoff_status` — foundation `human_signoff_status` enum に従い `pending`（承認なし）/ `approved` / `rejected`（明示的否決）/ `deferred`（明示的保留）を区別する（要件 5 受入 3）
+- `signed_off_by` — close judgment を行った operator identity
+- `signed_off_at` — close judgment の時刻
+- `covered_decision_unit_ids` — この close judgment が対象とした decision unit の一覧
+- `signoff_note` — optional 備考
 
 foundation の `finding` schema にある `decision_unit_id` と `human_decision_ref` はこの artifact を参照する。
 
@@ -682,6 +769,15 @@ validation は raw evidence を変更しない。
 | Validator integration and run close | freeze -> validate -> annotate の順序を定義 |
 | Replay-friendly runtime records | step-level files と prompt identity を保存 |
 | Phase-aware review profiles | profile axis と emphasis model を定義 |
+
+## Testability Seams
+
+完全なテスト計画はタスク工程で策定するが、設計段階で次のテスト可能性の縫い目を固定する。
+
+- 言語モデル差し替え点：各ステップ実行器の言語モデル呼び出しは差し替え可能な境界とし、固定応答に置換してステップ実行器を決定的に検証できる
+- 検証ブリッジ起動点：validator 呼び出しは Run Close Boundary の単一起動点に集約し、その入力（凍結後 raw evidence）と出力（`validator_result.json`）で単体検証できる
+- ステップ入出力分離点：各ステップ実行器は入力（前ステップ出力・prompt artifact・config）と出力（`steps/*.json`）が分離され、前後ステップなしで単体検証できる
+- 決定単位生成の検証方針：Step D の機械的統合手順は言語モデル非依存のため、固定の Step A/B/C 出力を入力に与えれば決定単位生成を入出力対応で検証できる
 
 ## Open Issues for Design Alignment Gate
 
