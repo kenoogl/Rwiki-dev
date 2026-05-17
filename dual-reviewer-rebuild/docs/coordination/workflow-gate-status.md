@@ -49,6 +49,8 @@ workflow gate の current status を記録するための台帳である。
 - 2026-05-17 `requirements re-approval 通過`：foundation・runtime とも要件人間再承認を取得。spec.json 反映済み（approvals.requirements.approved=true、reopened.requirements=false、recheck.impacted_downstream_phases から requirements 除去）。alignment.requirements=completed。A-4 再開サイクル（10 ステップ）完了。残課題なし
 - 2026-05-17 `design alignment gate 決定保留 2 件`：(1) 実行側 A-5＝review_case と review_artifact の二重正本の対応規約所有、(2) 評価 A-7＝comparison_eligibility_note.json のスキーマ所有 spec。いずれも foundation/runtime/evaluation（および後続 self-improvement/paper-interface の消費）にまたがる所有決定。設計横断整合ゲートで一括決定。解消期限＝設計人間承認の前。それまで無契約依存が残る旨を明示
 - 2026-05-18 `design alignment gate（5 機能）完走`：対象＝foundation/runtime/evaluation/self-improvement/paper-interface。検出＝不整合 1（基盤設計 validator_status 列挙に blocked 欠落＝A-4 基盤側設計追従漏れ）→ 基盤設計修正で解消。C 群 1（評価分類に validator_status=blocked→analysis_blocked 追記）解消。越境クラスタ 2 件決定：実行側 A-5＝review_case を唯一横断正本（foundation 所有）・review_artifact 投影規約は runtime 所有、評価 A-7＝comparison_eligibility_note スキーマは生成元 runtime 所有。最終結果＝不整合 0。残＝implementation-governance 設計 must-fix（SSoT 設計波順で本ゲート後）
+- 2026-05-18 `implementation-governance 設計 must-fix 適用`：4 件（P-1/P-8/A-1/A-3）すべて統治設計内で完結・他 spec 波及 0。横断波及なしのため 5 機能ゲート結果（不整合 0）維持
+- 2026-05-18 `design 人間承認 通過`：6 機能とも設計 must-fix・横断整合・A-4 関連解消を経て設計人間承認を取得。spec.json 反映済み（phase=design-approved、approvals.design.approved=true、reopened.design=false、alignment.design=completed、recheck.impacted_downstream_phases から design 除去）。次段＝tasks フェーズ
 
 ## 4. next gate transition
 
