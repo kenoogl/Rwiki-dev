@@ -1,7 +1,7 @@
 {
   "feature_name": "dual-reviewer-foundation",
   "created_at": "2026-05-08T00:00:00+09:00",
-  "updated_at": "2026-05-16T00:00:00+09:00",
+  "updated_at": "2026-05-17T00:00:00+09:00",
   "language": "ja",
   "phase": "requirements-approved",
   "approvals": {
@@ -29,8 +29,8 @@
       "requirements": {
         "required": true,
         "status": "completed",
-        "last_checked": "2026-05-16",
-        "note": "2026-05-16 横断整合ゲート不整合 0 件で完走（要件人間承認ゲート通過）"
+        "last_checked": "2026-05-17",
+        "note": "2026-05-17 実行側 A-4 起点で要件再開（要件 6 受入 10＝validator 状態語彙 pass/fail/blocked を追加）。差分横断整合 不整合 0、C 群全採用で解消。要件人間再承認は未実施（設計人間承認の前に別途必要）"
       },
       "design": {
         "required": true,

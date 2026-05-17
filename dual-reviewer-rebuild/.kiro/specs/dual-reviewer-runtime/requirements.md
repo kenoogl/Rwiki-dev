@@ -103,7 +103,7 @@
 #### Acceptance Criteria
 
 1. The runtime shall invoke validator checks at run close.
-2. The runtime shall propagate validation pass / fail status into run metadata.
+2. The runtime shall propagate validator status into run metadata using the foundation canonical validator-status vocabulary (at minimum pass / fail / blocked) rather than redefining or collapsing it.
 3. The runtime shall support invalidation markers without mutating raw evidence.
 4. The runtime shall distinguish validator failure from orchestration failure.
 5. The runtime shall prevent downstream “valid run” handling when required validation fails.

@@ -121,6 +121,7 @@
 7. The foundation shall define canonical provenance field names sufficient to identify at minimum source repository identity and source revision for cross-project evidence intake.
 8. The foundation shall define a canonical evidence-class vocabulary sufficient to distinguish at minimum valid, invalid, and explicitly exploratory run records, and shall own this vocabulary as the canonical source that downstream evaluation and paper-interface specs reference rather than redefine.
 9. The foundation shall define that attaching an invalidation marker to a run record triggers a staleness-propagation obligation for downstream derived artifacts that referenced that run.
+10. The foundation shall define a canonical validator-status vocabulary sufficient to distinguish at minimum a check that ran and passed, a check that ran and failed, and a check that could not run because its preconditions were unmet (blocked), and shall own this vocabulary as the canonical source that downstream runtime and evaluation specs reference rather than redefine.
 
 ### Requirement 7: Repo-Contained Asset Rule
 
