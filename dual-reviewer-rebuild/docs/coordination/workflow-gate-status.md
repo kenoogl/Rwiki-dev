@@ -35,6 +35,7 @@ workflow gate の current status を記録するための台帳である。
 - `governance artifact implementation`: `completed`
 - `governance artifact validation`: `completed`
 - `governance cross-spec alignment`: `completed`
+- `governance Req9 強制関数 implementation`: `completed`（2026-05-18 Task 11〜16・18 を TDD で実コード化、テスト 40 件全緑、commit `0be5df21`。導入期＝自己ブートストラップ下で手作業台帳運用）
 
 ## 3.3 Open finding backlog status
 
@@ -61,6 +62,8 @@ workflow gate の current status を記録するための台帳である。
 - 2026-05-18 `implementation-governance tasks 人間承認 通過／Requirement 9 再開サイクル完了`：spec.json 反映済み（phase=tasks-approved、approvals.tasks.approved=true、reopened すべて false、alignment.tasks=completed、recheck.upstream_change_pending=false・impacted_downstream_phases=[]）。要件→設計→タスクの再開 10 ステップ完走。残＝承認後の上位文書同期 C-1（依存マップ）／C-2（CONVENTIONS・WORKFLOW_OVERVIEW・HUMAN_WORKFLOW）／C-3（workflow-repair-procedure 節 2／3）＝Task 17、および強制関数の実装（実装フェーズ）。保留＝本セッション前半で全面再導出した 6 機能タスク文書のレビュー（利用者指示「その後」＝強制関数確立後）
 - 2026-05-18 `implementation-governance 承認後 上位文書同期 C-1/C-2/C-3 完了`：Task 17 として実施。C-1＝phase-and-feature-dependency-map §8.1 に台帳着手前提を追記。C-2＝CONVENTIONS §6（新概念 prescribed workflow process／workflow execution ledger を Req9 正本定義として参照）・WORKFLOW_OVERVIEW §7（権威ソース＝workflow-process-authority-map を正本一覧に追加）・HUMAN_WORKFLOW §5.2.7（gate package に台帳突合表埋込を前提化、Req9 受入 8）。C-3＝workflow-repair-procedure §2.1（reopen 手続きへ台帳・enforcement・確定書式を内包）・§3 表直後に enforcement 対象注記。各文書とも追記のみ・既存不変。要件/設計/タスク横断整合ゲートで設計段送りとした C 群を全件解消。残＝強制関数の実装（実装フェーズ）と保留中の 6 機能タスク文書レビュー（利用者指示「その後」）
 - 2026-05-18 `6 機能タスク保留レビュー 完走／5 機能 tasks 人間承認 通過`：前半で全面再導出した 6 機能 tasks.md を、飛ばしていた段（機能個別レビュー＝REVIEW_PROTOCOL 節 5 の 7 観点／独立横断整合ゲート＝節 4）を含め正規にやり直し。いずれも独立サブエージェントで実施。個別レビュー＝foundation must-fix なし／runtime 9／evaluation 重要3+軽微6／self-improvement 重要4+軽微5／paper-interface 重要3+軽微4／governance Task1-10 T3-GOV・T6-GOV、各 must-fix を 1 件ずつ承認で適用。独立 6 機能横断整合ゲート＝不整合 0・A群12/B群5/C群3、C 群 3 件（F-7・T5-A 案A・T5-B、すべて実行側 tasks.md 軽微追記）を全採用で適用。foundation/runtime/evaluation/self-improvement/paper-interface の 5 機能 spec.json を tasks-approved 反映済み（reopened.tasks=false、alignment.tasks=completed、recheck 解除）。statファイル証跡＝各 reviews/tasks-local-review-2026-05-18.md、docs/coordination/tasks-alignment-gate-2026-05-18-6features.md。統治は Req9 サイクルで tasks-approved 済み、Task1-10 レビューの承認後編集（T3-GOV/T6-GOV＝§5.1/§5.2 追記）は非契約・非意味的かつ独立個別レビュー・独立 6 機能横断ゲート（不整合 0）で健全性確認済みのため B 手戻り（tasks recheck）は回さず証跡記録のみ（利用者判断＝案ア）。残＝強制関数の実装（実装フェーズ）
+
+- 2026-05-18 `implementation-governance Req9 強制関数 実装フェーズ 完走（自己ブートストラップ証跡）`：統治 tasks.md Task 11〜16・18 を TDD（赤→緑）で実コード化。成果＝実行台帳テンプレ／authority-map／ledgers skeleton（Task 11）、台帳生成器（Task 12）、独立再導出＋validator サブモード（Task 13）、enforcement point（Task 14）、独立生成マーカー真正性（Task 15）、移行戦略（Task 16）、Req9 統合・異常系まとめテスト（Task 18）。テスト 40 件 全緑、既存資産不変、既存検査スクリプトは後方互換維持。commit `0be5df21`。Task 17（C-1/C-2/C-3 上位文書同期）は仕様フェーズで適用済のため実装段では不要。強制関数自体が未稼働の導入期につき、本実装作業の遵守は design 小節 10 の自己ブートストラップ規定（移行期は手作業台帳可）に基づき本台帳（workflow-gate-status.md）へ証跡記録。次段＝統治 Requirement 1 ほか中核の実装適合レビュー、および 6 機能全体の実装適合レビュー（利用者合意 2026-05-18：旧仕様ベース既存コードを現行承認仕様へ適合、最後に実施）
 
 ## 4. next gate transition
 
