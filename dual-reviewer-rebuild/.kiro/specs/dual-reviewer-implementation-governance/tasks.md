@@ -325,6 +325,25 @@ phase-and-feature-dependency-map §5.3 に従い、implementation-governance tas
 - Task 3 の heuristic 語彙関連 validator 検査は v2-acquisition spec の語彙確定まで必須化しない（Requirement 8 受入 6）
 - Task 9 の validator は他 5 feature の implementation 着手後に concrete review artifact を得て pass 確認する
 
+### 5.1 Task 間依存グラフ（§2 から導出。並列可を明示）
+
+- Task 1（所有 artifact skeleton）が起点。
+- Task 2（conformance review procedure）と Task 3（intent review／reference-free bootstrap）は Task 1 後に並行着手可。
+- Task 4（review template／必須セクション／type 判別）→ Task 5（finding model／signal・handback 接続）→ Task 6（conformance／phase-review metric register）→ Task 7（workflow status／reopen propagation）→ Task 8（cross-spec alignment model）。
+- Task 9（governance artifact validator／concrete artifact）は Task 2/4/6 の成果（procedure・template・metric register）が揃って着手可。
+- Task 10（テスト）は Task 1〜9 と並走（TDD 先行）。
+- Requirement 9 ぶん：Task 11→12→13→14→15→16→18（§2 の Req9 内部順序）。Task 17（C-1/C-2/C-3 上位文書同期）はタスク人間承認後の文書同期作業として最後。Req9 ぶんは Task 1 skeleton と Task 9 validator 拡張を前提とする。
+- 外部前提：Task 3 の heuristic 語彙関連 validator 検査は v2-acquisition 語彙確定まで必須化しない、Task 9 は他 5 feature の implementation 着手後に concrete artifact で pass 確認（上記 Blocking）。
+
+### 5.2 失敗時の巻き戻し単位
+
+- Task 1〜10 は governance 文書・スクリプト作成で概ね task-local 吸収（handback A）。
+- Task 7（reopen propagation）／Task 8（cross-spec alignment model）でワークフロー正本や他 feature 完了規則との不整合が判明したら handback B（design）または C（requirements）で上流へ。
+- Task 3 の heuristic 語彙は v2-acquisition spec 所有のため不足時は v2-acquisition 側 alignment 議題（Requirement 8 受入 6 により governance validator は必須化しない）。
+- Task 9 validator が他 feature の concrete artifact 不在で pass 確認できない場合は blocked（巻き戻しでなく前提待ち）。
+- Requirement 9 ぶん（Task 11〜18）の巻き戻しは design 小節 5／10（grandfathering・reopen 経路）に従う。
+- governance は feature data を生成しないため raw evidence は対象外。判定に迷う場合は WORKFLOW_OVERVIEW §4 に従い上流（C）へ寄せる。
+
 ## 6. Completion Criteria
 
 design「Validation Model」と Requirement に従い、少なくとも次を満たすとき本 task plan は有効とみなす。

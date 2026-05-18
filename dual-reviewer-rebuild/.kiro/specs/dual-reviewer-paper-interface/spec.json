@@ -1,9 +1,9 @@
 {
   "feature_name": "dual-reviewer-paper-interface",
   "created_at": "2026-05-08T00:00:00+09:00",
-  "updated_at": "2026-05-18T00:00:00+09:00",
+  "updated_at": "2026-05-18T16:00:00+09:00",
   "language": "ja",
-  "phase": "design-approved",
+  "phase": "tasks-approved",
   "approvals": {
     "requirements": {
       "generated": true,
@@ -15,7 +15,7 @@
     },
     "tasks": {
       "generated": true,
-      "approved": false
+      "approved": true
     }
   },
   "ready_for_implementation": false,
@@ -23,7 +23,7 @@
     "reopened": {
       "requirements": false,
       "design": false,
-      "tasks": true
+      "tasks": false
     },
     "alignment": {
       "requirements": {
@@ -40,16 +40,14 @@
       },
       "tasks": {
         "required": true,
-        "status": "pending",
-        "last_checked": null,
-        "note": "reset 2026-05-13: v2-acquisition data retake requires full re-review"
+        "status": "completed",
+        "last_checked": "2026-05-18",
+        "note": "2026-05-18 全面再導出型で tasks.md 再生成 → 独立タスク個別レビュー（節 5 7 観点、重要 3・軽微 4、must-fix 7 件を 1 件ずつ承認で適用、他 spec 波及 0）→ 独立 6 機能タスク横断整合ゲート（不整合 0、C 群は実行側 tasks のみ・論文側修正不要）→ タスク人間承認 通過。証跡＝reviews/tasks-local-review-2026-05-18.md、docs/coordination/tasks-alignment-gate-2026-05-18-6features.md"
       }
     },
     "recheck": {
-      "upstream_change_pending": true,
-      "impacted_downstream_phases": [
-        "tasks"
-      ]
+      "upstream_change_pending": false,
+      "impacted_downstream_phases": []
     },
     "traceability": {
       "intent_requirements_matrix_required": true,

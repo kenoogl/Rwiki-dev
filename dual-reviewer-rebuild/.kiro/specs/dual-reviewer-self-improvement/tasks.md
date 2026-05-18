@@ -32,7 +32,7 @@
 
 - signal intake → proposal がないと test / decision が成立しない
 - adoption は test gate と version update を前提とする
-- rollback は invalidation 契約を起点とするため decision/adoption 確定後に置く
+- rollback は invalidation 契約を起点とし、かつ adoption_register の adopted_change 連結を前提とするため decision/adoption（Task 6）確定後に置く
 
 ## 3. Tasks
 
@@ -71,6 +71,7 @@
 - manual→runtime handoff boundary を保存する（Requirement 7 受入 5、design §2.5）。上書きは非破壊で `superseded_by` / `supersession_reason` / `supersession_at` を記録し、先行側に `supersedes` と `source_origin=manual_review_record` を保持する。
 - imported external bundle 由来か central local run 由来かを保持し、imported 時は source repository identity / source revision / evaluation 側 admission status を保持する（Requirement 8 受入 1〜3）。provenance 不足 imported evidence を admitted standard comparison evidence と等価扱いしない（受入 5）。
 - v2 supporting input（`run_manifest.yaml` / `v2/signal_linkage_note.json` / `v2/trace_note.json` / `derived/comparison_eligibility_note.json`）は signal extraction を助ける補助入力とし、読めなくても基本 flow が維持される設計にする（design §1.5）。
+- 注記：本 Task は規模が大きいため、実装着手時にサブタスク分解（3 class＋valid/invalid 弁別／manual↔runtime handoff／imported bundle provenance）を検討する。分解は実装判断に委ね、過剰分割は避ける。
 
 完了条件:
 
@@ -86,7 +87,7 @@
 - runtime 由来 signal（repeated defer clusters / high reject concentration / frequent skip-marker misuse / repeated invalidation categories / repeated signal linkage）を抽出する（design §1）。
 - evaluation 由来 signal（treatment-specific quality drop / phase-specific caveat concentration / low acceptance ratio in design・tasks / repeated analysis_blocked / repeated comparison-ineligible reasons）を抽出する（design §2）。
 - `findings/recurring_failure_signals.json` を proposal 前 inventory として作る。findings/ と templates/ の required field を実装する（design §4）。signal エントリは `signal_id` / `signal_type` / `source_evidence_refs` / `occurrence_count` / `first_seen_run_ref` / `last_seen_run_ref` / `summary`、pattern candidate は `candidate_id` / `abstraction_level` / `source_signal_refs` / `summary`、template は `template_id` / `failure_mode` / `checklist` / `recommended_action` / `source_pattern_refs`。proposal の `source_evidence_refs` から findings、runtime/evaluation evidence まで機械的に辿れるようにする（Requirement 1 受入 5）。
-- project-specific pattern 抽出 flow（recurring signal 抽出 → pattern candidate 整理 → meta-pattern 抽象化 → proposal/pattern asset 改訂接続）を実装する（design §3）。project-specific concrete と meta-pattern candidate を区別する。安定時に operator-facing remediation template を `learning/templates/workflow_remediation_templates.json` に派生させる。runtime validation summary は `scripts/track_runs/contracts/runtime_validation_summary.schema.json` を canonical contract とし track 間で payload shape を揃える。
+- project-specific pattern 抽出 flow（recurring signal 抽出 → pattern candidate 整理 → meta-pattern 抽象化 → proposal/pattern asset 改訂接続）を実装する（design §3）。project-specific concrete と meta-pattern candidate を区別する。安定時に operator-facing remediation template を `learning/templates/workflow_remediation_templates.json` に派生させる。runtime validation summary の payload 契約 `scripts/track_runs/contracts/runtime_validation_summary.schema.json` は runtime 所有とし、self-improvement は consumer として依存・再定義しない（owner 側＝実行側の固定作業は未確定。tasks 横断整合ゲート議題に持ち上げる）。
 - proposal normalization rules を実装する（design §2.5）。同一 run の closely-coupled workflow failure signal は 1 proposal に統合可（例 `validator_failed` + `invalidation_marker_issued`）、aggregate caveat signal は caveat code ごとに proposal identity を分ける。
 
 完了条件:
@@ -110,6 +111,7 @@
 
 - proposal が target layer / motivation を曖昧にせず構造化される
 - 不正遷移が state machine で禁止される
+- Task 9 の決定的検証ケースで pass する
 
 ### Task 5: replay / backtest model を作る
 
@@ -127,10 +129,11 @@
 
 - replay 必須 / backtest 十分の分岐が 3 要素で判定される
 - test result artifact が foundation 実行メタデータ契約に束縛され独立検証・無効化可能
+- Task 9 の決定的検証ケースで pass する
 
 ### Task 6: decision / adoption model を作る
 
-根拠: Requirement 4（受入 1〜5）、design「Decision and Adoption Model §1〜§3」。
+根拠: Requirement 4（受入 1〜5）、design「Decision and Adoption Model §1〜§3」。※ Requirement 4 受入 1 の state 定義実体は Task 4（proposal state machine）が担当。
 
 作業:
 
@@ -142,6 +145,7 @@
 
 - approval と adoption の違いを説明できる（design Completion Criteria 第 3 項）
 - adopted change が proposal・version update・approval・test artifact と連結保存される
+- Task 9 の決定的検証ケースで pass する
 
 ### Task 7: rollback model を作る
 
@@ -158,6 +162,7 @@
 
 - rollback が supersession と区別され履歴として保持される
 - motivating evidence の事後 invalidate が再評価/rollback を起動する
+- Task 9 の決定的検証ケースで pass する
 
 ### Task 8: paper narrative 分離を強制する
 
@@ -189,6 +194,7 @@
 完了条件:
 
 - design Completion Criteria 4 点（signal 使い分け説明・artifact 所在説明・approval/adoption 区別説明・境界説明）を満たす
+- 列挙 4 検証対象（状態機械の許可/不許可遷移／provenance 欠落時 proposal 阻止／test mode 3 要素分岐＋result_label 整合／adoption gate 3 条件＋invalidation 起点 rollback）それぞれに固定入力→期待出力の決定的検証ケースが 1 つ以上存在し pass する（着手前に客観基準を確定、TDD 先行）
 
 ## 4. Downstream Handoff
 
@@ -201,6 +207,24 @@ phase-and-feature-dependency-map §5.3 に従い、次は先行成果物が固�
 - Task 2/3 は runtime の step-level replay artifact と evaluation の analysis output（classification index / metrics / caveat register）確定が前提
 - Task 5 の foundation 実行メタデータ契約（要件 6）確定が前提（backtest artifact 束縛）
 - Task 7 の foundation 無効化契約確定が前提（invalidation 起点 rollback）
+- Task 3 が参照する `runtime_validation_summary.schema.json` は runtime 所有（案 A）。owner 側（実行側）の固定作業は未確定で、tasks 横断整合ゲートの横断議題として持ち上げる（self-improvement は consumer 依存のみ）
+- design open issue 4 件（version update 参照法・schema change 最小 replay・workflow-only replay 境界・paper-interface 履歴粒度）は tasks alignment gate で確定
+
+### 5.1 Task 間依存グラフ（§2 から導出。並列可を明示）
+
+- Task 1（learning skeleton／schema versioning）が起点。
+- Task 2（input model）→ Task 3（signal extraction）→ Task 4（proposal model）→ Task 5（replay/backtest）→ Task 6（decision/adoption）→ Task 7（rollback）。
+- Task 8（paper 分離）は Task 4 以降と並列可。
+- Task 9（テスト）は全 Task と並走（TDD 先行）。
+- 外部前提：Task 2/3 は実行側 replay artifact・評価 analysis output 確定、Task 5 は foundation 実行メタデータ契約確定、Task 7 は foundation 無効化契約確定が blocking（上記）。
+
+### 5.2 失敗時の巻き戻し単位
+
+- Task 1〜4/6/8 は task-local 吸収（handback A）。
+- Task 1/5/7 で foundation 契約（schema versioning 規約／実行メタデータ契約／無効化契約）不足が判明したら handback C で foundation へ。
+- Task 2/3 で実行側 replay artifact または評価 analysis output の shape 不足が判明したら handback C で当該 producer へ。
+- 判定に迷う場合は保守規律により C（上流）へ寄せる。
+- learning loop 動作時の rollback は履歴非削除・supersession 区別で raw 不変（design Decision 4、Task 7）。
 
 ## 6. Completion Criteria
 

@@ -85,13 +85,14 @@
 - `comparison_eligibility_note.json` を classification 前の補助判断材料として読んでよいが final 判定は metadata / validator / invalidation を基礎にする。スキーマは runtime 所有、evaluation は最小項目に依存し再定義しない（評価 A-7 決定、design §2 末尾）。
 - 有効性分類（valid/invalid/exploratory）と review-mode（manual_dogfooding/runtime_mediated）を直交独立軸として扱う。manual_dogfooding の内容的 valid run を review-mode 理由で invalid 誤分類しない（Requirement 1 受入 6、Requirement 9 受入 1）。review-mode による標準集団切り分けは別の slice 操作とする（Requirement 9 受入 2・4・5）。
 - review-mode の standard comparison-population rule を evaluation が所有する: manual dogfooding は Phase 1 evidence で、明示的 separate slice として含めない限り standard runtime-mediated comparison set から除外する（Requirement 9 受入 6）。通常編集活動を manual review record contract 経由でなければ valid review evidence にしない（受入 3）。
-- imported bundle の admission state `admitted_standard` / `admitted_exploratory` / `rejected` を classification 前段で判定する（Requirement 10 受入 4、design Admission States、優先順ルール）。admission status / reason codes を `imports/admission_register.json` に記録し、admission state を run validity と別に保持する（受入 5）。
+- imported bundle の admission state（`admitted_standard` / `admitted_exploratory` / `rejected`）は Task 7 が単一所有者として判定・`imports/admission_register.json` に記録する。本 Task はその admission status を classification 前段の入力として参照し、再判定しない（Requirement 10 受入 4、design Admission States）。admission state を run validity と別に保持する（受入 5）。
 - 設計スキップ vs 障害欠損を runtime の step 実行印（`execution_state` / `reason` / `treatment`）で弁別する（Requirement 2 受入 3、design §4）。設計上の意図的省略を障害扱いで母集団から誤排除しない（runtime 要件 2 受入 5 と整合）。
 
 完了条件:
 
 - valid / invalid / exploratory / analysis_blocked の違いを説明できる（design Completion Criteria 第 2 項）
 - review-mode と run-validity が直交軸として扱われる
+- classification / admission / 設計スキップ弁別が Task 9 の決定的検証ケースで pass する
 
 ### Task 4: metric extraction を作る
 
@@ -109,6 +110,7 @@
 
 - metrics がどこに出るか説明できる（design Completion Criteria 第 3 項）
 - core / phase overlay の 2 層が derived artifact から追跡できる
+- metric 導出（core / phase overlay）が Task 9 の決定的検証ケースで pass する
 
 ### Task 5: comparison model を作る
 
@@ -125,6 +127,7 @@
 
 - 比較可能性条件（target / phase / version / eligibility）を満たさない set が aggregate されない
 - valid population のみで標準比較が計算される
+- 比較可能性条件と valid population rule が Task 9 の決定的検証ケースで pass する
 
 ### Task 6: exclusion / caveat reporting を作る
 
@@ -149,7 +152,7 @@
 
 - `imports/ingestion_register.json` を作る（`bundle_id` / `run_id` / `source_repository_id` / `source_revision` / `review_mode` / `ingested_at` / `ingestion_status` / `missing_fields`）。
 - `imports/admission_register.json` を作る（`bundle_id` / `run_id` / `admission_status` / `admission_reason_codes` / `eligible_for_standard_comparison` / `eligible_for_exploratory_analysis`）。
-- admission 前に required provenance を validate する（Requirement 10 受入 2）。imported runtime-mediated bundle と manual dogfooding session を区別する（受入 3）。reject / downgrade-to-exploratory / admit を明示 admission rule で判定する（受入 4）。どの derived artifact が imported evidence をどの admission status で含むか保持する（受入 5）。
+- admission 前に required provenance を validate する（Requirement 10 受入 2）。imported runtime-mediated bundle と manual dogfooding session を区別する（受入 3）。reject / downgrade-to-exploratory / admit を明示 admission rule で判定する（受入 4）。本 Task が admission 判定の単一所有者であり、判定結果を `imports/admission_register.json` に記録する。Task 3 は本 Task の admission status を参照のみ（再判定しない）。どの derived artifact が imported evidence をどの admission status で含むか保持する（受入 5）。
 
 完了条件:
 
@@ -170,6 +173,7 @@
 
 - analysis logic 変更時に artifact versioning が見える
 - 事後 invalidate された run を含む derived artifact が stale 化または再導出される
+- staleness 伝播（事後 invalidate → derived stale 化）が Task 9 の決定的検証ケースで pass する
 
 ### Task 9: テストを用意する
 
@@ -186,10 +190,11 @@
 完了条件:
 
 - design Completion Criteria 4 点（境界説明・4 状態説明・metrics/caveat 所在説明・downstream 追跡）を満たす
+- 列挙 4 検証対象（classification・admission／metric 導出／比較可能性・valid population／staleness 伝播）それぞれに固定入力→期待出力の決定的検証ケースが 1 つ以上存在し pass する（着手前に客観基準を確定、TDD 先行）
 
 ## 4. Downstream Handoff
 
-evaluation tasks 完了後に downstream が読んでよい artifact（design「Interfaces to Downstream Features」）。
+evaluation tasks 完了後に downstream が読んでよい artifact（design「Interfaces to Downstream Features」）。本節は Requirement 5 受入 4（self-improvement・paper-interface の双方が消費可能）を満たす。
 
 - self-improvement: `run_classification_index.json` / `exclusion_report.json` / `run_metrics.json` / `finding_metrics.json` / `caveat_register.json`（特に invalid / exploratory 分布）
 - paper-interface: `treatment_comparisons.json` / `phase_comparisons.json` / `exclusion_report.json` / `caveat_register.json`（raw run directory を一次入力にしない）
@@ -202,6 +207,26 @@ phase-and-feature-dependency-map §5.3 に従い、次は先行成果物が固�
 - Task 2 の foundation metadata contract / evidence_class 確定が前提
 - Task 8 の foundation 無効化伝播義務確定が前提
 - evaluation comparison artifact field naming 確定が paper-interface bundle task の前提（後段 alignment で詰める）
+- `treatment_comparisons.json` / `phase_comparisons.json` の field naming 確定は tasks alignment gate の横断議題（design open issue。確定値は alignment gate で詰める）
+- Task 4 の phase-specific overlay 初版集合は design alignment open issue 解決後に確定（tasks alignment gate で詰める）
+
+### 5.1 Task 間依存グラフ（§2 から導出。並列可を明示）
+
+- Task 1（analysis skeleton）が起点。
+- Task 2（intake）→ Task 3（classification）→ Task 4（metric）→ Task 5（comparison）→ Task 6（exclusion/caveat）。
+- Task 7（imported intake artifacts。admission 判定の単一所有）は Task 2 後に着手可。Task 3 は Task 7 の admission status を参照（Task 7 → Task 3 の一方向）。
+- Task 8（versioning/staleness）は Task 3（classification 確定）後。
+- Task 9（テスト）は全 Task と並走（TDD 先行）。
+- 外部前提：Task 2/3 は runtime export shape・`comparison_eligibility_note.json`（runtime 所有）確定、Task 2 は foundation metadata/evidence_class 確定、Task 8 は foundation 無効化伝播義務確定が blocking（上記）。
+
+### 5.2 失敗時の巻き戻し単位
+
+- Task 1/6/7 は task-local 吸収（handback A）。
+- Task 2/3 で実行側 export shape または `comparison_eligibility_note.json` 最小項目不足が判明したら handback C で実行側へ。
+- Task 2 で foundation metadata contract / evidence_class 不足なら handback C で foundation へ。
+- Task 4 の phase-specific overlay 初版集合が固められず詰まった場合：要件 8（phase-specific effectiveness metrics）が十分で設計の初版確定だけが未了なら handback B（design へ）、要件 8 自体が overlay を導けるほど取り決めていないなら handback C（requirements へ）、判定に迷う場合は保守規律により C（上流）へ寄せる。
+- Task 8 で foundation 無効化伝播義務不足なら handback C で foundation へ。
+- raw 不変原則（design Decision 1）により実行時の巻き戻しは derived artifact 再生成に閉じ raw を編集しない。
 
 ## 6. Completion Criteria
 

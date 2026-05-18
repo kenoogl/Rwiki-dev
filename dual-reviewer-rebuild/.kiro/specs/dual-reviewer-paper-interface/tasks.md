@@ -87,6 +87,7 @@
 
 - claim と evidence source の対応を説明できる（design Completion Criteria 第 1 項）
 - 全 claim が versioned evidence に辿れる
+- 証拠追跡性の機械検証が Task 9 の決定的検証ケースで pass する
 
 ### Task 4: evidence register model を作る
 
@@ -104,6 +105,8 @@
 
 - mature / preliminary / exploratory の扱いを説明できる（design Completion Criteria 第 2 項）
 - `maturity_label` が foundation `evidence_class` に束縛され Requirement 1・3・5 で同一語彙
+- 無声昇格検出・review_mode 混在 caveat 検証が Task 9 の決定的検証ケースで pass する
+- Task 4 作業項目は Requirement 5 受入 1〜6・Requirement 6 受入 1〜5・Requirement 1 受入 2 に対応（maturity label＝Req5 受入 1・2／evidence_class 束縛＝Req5 受入 6／provenance fields＝Req1 受入 2・Req5 受入 5／review-mode＝Req6 受入 1〜5／supersession＝Req5 受入 5・Req6 受入 5）
 
 ### Task 5: figure / table bundle model を作る
 
@@ -164,6 +167,7 @@
 
 - paper-interface が runtime/evaluation を支配しないことを説明できる（design Completion Criteria 第 4 項）
 - stale 上流時に paper-facing artifact が再生成対象になる
+- stale 再生成検出が Task 9 の決定的検証ケースで pass する
 
 ### Task 9: テストを用意する
 
@@ -181,6 +185,7 @@
 
 - design Test Strategy 4 点が検証できる
 - design Completion Criteria 4 点を満たす
+- 列挙 4 検証対象（証拠追跡性／無声昇格／混在 review_mode caveat／陳腐化再生成）それぞれに固定入力→期待出力の決定的検証ケースが 1 つ以上存在し pass する（着手前に客観基準を確定、TDD 先行）
 
 ## 4. Downstream Handoff
 
@@ -193,6 +198,25 @@ phase-and-feature-dependency-map §5.3 に従い、paper-interface bundle 実装
 - Task 3〜7 は evaluation の comparison / exclusion / caveat artifact 確定が前提
 - Task 4 の foundation `evidence_class`・`review_mode` 語彙確定が前提
 - Task 8 の evaluation staleness 伝播（foundation 要件 6 受入 9 起点）確定が前提
+- Task 3 の claim ID taxonomy 形式化範囲、Task 8 の adopted change history methodology note 参照範囲は design alignment open issue 解決後に確定（tasks alignment gate で詰める）
+- evaluation comparison artifact field naming は design alignment open issue 未解決のため tasks alignment gate の横断議題であり、確定値は alignment gate で詰める（evaluation tasks.md §5 と双方向整合）
+
+### 5.1 Task 間依存グラフ（§2 から導出。並列可を明示）
+
+- Task 1（paper skeleton）が起点 → Task 2（reference format、全モデル共通 hub）。
+- Task 2 → {Task 3（claim mapping）, Task 4（evidence register）}（Task 3 と Task 4 は Task 2 後に並行着手可）。
+- Task 4 → Task 5（figure/table bundle、maturity 参照）→ Task 6（caveat、claim_refs 参照）→ Task 7（reporting fragment、Task 3/4/6 出典参照）→ Task 8（separation rules、全モデルに stale 標識付与）。
+- Task 9（テスト）は全 Task と並走（TDD 先行）。
+- 外部前提：Task 3〜7＝evaluation comparison/exclusion/caveat 確定、Task 4＝foundation `evidence_class`/`review_mode` 確定、Task 8＝evaluation staleness 伝播確定が blocking（上記）。
+
+### 5.2 失敗時の巻き戻し単位
+
+- Task 1/2/5/6/7 は task-local 吸収（handback A）。
+- Task 3〜7 で evaluation comparison/exclusion/caveat artifact contract 不足が判明したら handback C で evaluation へ。
+- Task 4 で foundation `evidence_class`/`review_mode` 語彙不足なら handback C で foundation へ。
+- Task 8 で evaluation staleness 伝播（foundation 要件 6 受入 9 起点）不足なら handback C で foundation/evaluation へ。
+- claim ID taxonomy（Task 3）/ adopted change history 範囲（Task 8）が design open issue 未確定で詰まれば handback B で design へ。判定に迷う場合は保守規律により上流 C へ寄せる。
+- raw evidence・core evaluation output 不変、paper convenience 従属（design Separation Rules）により実行時の巻き戻しは paper-facing artifact 再生成に閉じ raw/core evaluation output を編集しない。
 
 ## 6. Completion Criteria
 

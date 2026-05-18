@@ -22,8 +22,8 @@
 
 1. code / run directory skeleton を確定する
 2. session controller（run lifecycle・session inputs・run_manifest field set・phase/treatment 軸）
-3. Step A/B/C/D executors と treatment × step 実行マトリクス
-4. prompt resolution model
+3. prompt resolution model（step executor の入力前提を先に確定）
+4. Step A/B/C/D executors と treatment × step 実行マトリクス
 5. decision unit model と human sign-off record
 6. evidence writing model（raw/derived 分離、review_case 正本、failure_observation）
 7. validator integration と Run Close Boundary
@@ -76,6 +76,7 @@
 - `evidence_class` は run close 時に初期値 `candidate` を記録し、確定遷移は foundation 契約に従う検証・承認結果に委ねる（design §2、foundation 要件 6 受入 2・8）。
 - `phase_profile`（`intent` / `requirements` / `design` / `tasks`）と `treatment`（`single` / `dual` / `dual+judgment`）を独立軸として扱う（Requirement 8 受入 5、design §3）。
 - reference-free entry: generic runtime code が特定 case の basename / case id を hidden default にしない。case manifest か明示入力群のみ受ける（design「Reference-Free Runtime Entry Principle」「Generic Protocol Entrypoint Rule」、`case_manifest_ref` 無し時は track 必須入力を明示、両方無しは fail fast）。
+- case manifest の base 必須項目（`case_id` / `track` / `source_refs` / `case_manifest_ref`）と track 別必須項目を `runtime/execution_v2/manifests/` で固定する（design「Case Manifest and Heuristic Resolution Model」）。
 
 完了条件:
 
@@ -96,11 +97,13 @@
 - 設計上の意図的 skip と事故的欠落を run record だけで区別する（Requirement 1 受入 4、Requirement 2 受入 5）。
 - Step B forced-divergence: 最終同意時も独立した反証を必ず試行し、各 finding の `adversarial_outcome` に `counter_evidence_raised` / `no_counter_evidence_after_challenge` / `not_assessed` を必ず設定する（Requirement 1 受入 4 ＝ foundation 要件 1 受入 4、design Step B）。
 - Step D 統合は追加 LLM 呼び出しなしの機械手順（design Step D の 6 手順）。decision units（proposed_action 付き・human_decision 未確定）と run close readiness signal を出力する。accepted/rejected/deferred は Step D 出力ではなく後段 sign-off 結果（design Step D 末尾）。
+- 注記：本 Task は規模が大きいため、実装着手時にサブタスク分解（Step A/B、Step C、Step D 統合）を検討する。分解は実装判断に委ね、過剰分割は避ける。
 
 完了条件:
 
 - 各 treatment で実行/skip/reduced が run record から一意に読める
 - Step D が言語モデル非依存の機械統合として入出力対応で検証できる（design Testability Seams 第 4 項）
+- Step A/B/C/D と treatment×step matrix が Task 11 の決定的検証ケースで pass する
 
 ### Task 4: prompt resolution model を作る
 
@@ -147,11 +150,17 @@
 - review-mode provenance を foundation metadata contract 準拠で出す（Requirement 4 受入 6）。
 - review run が failure mode に陥ったとき `failures/failure_observation.json` を foundation `failure_observation` schema 準拠で必ず出す（Requirement 4 受入 7、design）。未使用 schema のまま放置しない。
 - replay / proposal 分析に十分な情報を保持し、過圧縮しない（Requirement 4 受入 5、Requirement 7 受入 1〜5）。step-level 境界・prompt/treatment identity を保持し、品質問題と workflow/validation 問題を区別可能にする（Requirement 7 受入 2〜4）。
+- `derived/comparison_eligibility_note.json` のスキーマと最小 6 項目（`run_id` / `eligible_for_standard_comparison` / `ineligibility_reason_codes` / `treatment` / `phase_profile` / `generated_at`）を runtime 所有として定義・生成する（評価 A-7 決定。評価は本スキーマに依存し再定義しない＝producer 側責務）。
+- `v2/metric_snapshot.json` の生成責務を runtime writer 側に明示する（design layout に存在。未生成の空 artifact を残さない）。
+- `scripts/track_runs/contracts/runtime_validation_summary.schema.json` を runtime 所有 contract として定義・固定し、track 間で payload shape を揃える（自己改善 T5-A 決定＝案 A。self-improvement は consumer 依存・再定義しない＝comparison_eligibility_note の A-7 と同型の producer 側責務）。
 
 完了条件:
 
 - downstream 3 feature が runtime のどの artifact を読むか追跡できる（design Completion Criteria 第 4 項）
 - `review_case.json` が常に foundation `review_case` schema に準拠する
+- `derived/comparison_eligibility_note.json` が A-7 最小 6 項目を満たし runtime 所有スキーマとして生成される
+- evidence writing（review_case 正本・投影規約・failure_observation）が Task 11 の決定的検証ケースで pass する
+- `runtime_validation_summary.schema.json` が runtime 所有 contract として定義・固定され、self-improvement が consumer 依存で再定義しない（T5-A 案 A）
 
 ### Task 7: validator integration と Run Close Boundary を作る
 
@@ -170,6 +179,7 @@
 
 - run close と validation の順序を説明できる（design Completion Criteria 第 2 項）
 - `blocked` が final metadata まで丸めなしで伝播する
+- Run Close Boundary 順序と validator 伝播が Task 11 の決定的検証ケースで pass する
 
 ### Task 8: invalidation handling と invalid-run triage を作る
 
@@ -204,7 +214,7 @@
 
 ### Task 10: phase-aware review profiles を作る
 
-根拠: Requirement 8（受入 1〜5）、design「Phase-Aware Review Profiles」。
+根拠: Requirement 8（受入 1〜5）、design「Phase-Aware Review Profiles」。※ Requirement 8 受入 6（prompt override 所有）は Task 4 が担当。
 
 作業:
 
@@ -232,6 +242,7 @@
 
 完了条件:
 
+- 4 つの testability seam（言語モデル差し替え／検証ブリッジ起動点／ステップ入出力分離／Step D 機械統合）それぞれに、固定入力 → 期待出力の決定的検証ケースが 1 つ以上存在し pass する（着手前にこの客観基準を確定。TDD で先行）
 - design Testability Seams 4 点が検証できる
 - Completion Criteria（artifact layout 説明・close 順序説明・decision unit 接続説明・downstream 追跡）を満たす
 
@@ -239,8 +250,8 @@
 
 runtime tasks 完了後に downstream が読んでよい artifact（design「Interfaces to Downstream Features」）。
 
-- evaluation: `run_manifest.yaml` / `review_case.json` / `validation/validator_result.json` / `validation/invalidation_markers.json` / `derived/comparison_eligibility_note.json`（`derived/runtime_summary.json` には依存させない）
-- self-improvement: step files / decision units / validator・invalidation artifacts / `derived/invalid_run_triage_note.json` / `failures/failure_observation.json`（特に Step B・Step C を replay 入力に）
+- evaluation: `run_manifest.yaml` / `review_case.json` / `decisions/decision_units.json` / `validation/validator_result.json` / `validation/invalidation_markers.json` / `derived/comparison_eligibility_note.json`（`derived/runtime_summary.json` には依存させない）
+- self-improvement: step files / decision units / validator・invalidation artifacts / `derived/invalid_run_triage_note.json` / `failures/failure_observation.json`（特に Step B・Step C を replay 入力に。optional 補助: `v2/signal_linkage_note.json` / `v2/trace_note.json`）
 - paper-interface: runtime から直接 raw step file を読ませず原則 evaluation 出力経由。paper convenience のために artifact shape を変えない
 
 ## 5. Blocking Dependencies
@@ -251,6 +262,20 @@ runtime tasks 完了後に downstream が読んでよい artifact（design「Int
 - Task 6 の foundation schema 準拠 evidence emission
 - Task 7 の foundation canonical validator-status 語彙伝播
 - Task 9 の portable bundle（foundation provenance field 確定が前提）
+
+### 5.1 Task 間依存グラフ（§2 から導出。並列可を明示）
+
+- Task 1（skeleton）→ Task 2（controller）が起点。
+- Task 2 → Task 4（prompt resolution）→ Task 3（step executors。Task 4 の prompt 解決契約を前提）。
+- Task 3 → Task 5（decision unit）→ Task 6（evidence writing）→ Task 7（validator/close）→ Task 8（invalidation/triage）。
+- Task 9（portable export）は Task 7（close）後。
+- Task 10（phase profile）は Task 2 後に着手可で Task 3〜8 と並列可。
+- Task 11（テスト）は全 Task と並走（TDD 先行）。
+- 外部前提：Task 1/6/7/9 は foundation tasks 完了が blocking（上記）。
+
+### 5.2 失敗時の巻き戻し単位
+
+Task 1〜5・10 は task-local 吸収。Task 6/7/9 で foundation 契約不足が判明したら handback class C で foundation へ戻す。実行時の invalidation は raw evidence を編集せず marker 追加で表現し、巻き戻しは raw 不変を維持（design Decision 3、Task 8）。
 
 ## 6. Completion Criteria
 
