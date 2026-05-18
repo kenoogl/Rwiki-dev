@@ -3,6 +3,38 @@
 
 require "pathname"
 
+# Requirement 9 受入 5・3: 独立再導出 validator 拡張モード（design 小節 7）。
+# `--rederive <process_id> [--repo-root P] [--date D] [--ledger PATH]`。
+# 終了コード 0=pass、非0=不適合/検査不能（fail-closed と一致）。
+# 引数なしの既存検査は不変（後方互換）。
+if ARGV.include?("--rederive")
+  require_relative "governance/independent_rederivation"
+
+  def opt(flag)
+    i = ARGV.index(flag)
+    i && ARGV[i + 1]
+  end
+
+  process_id = opt("--rederive")
+  repo = Pathname(opt("--repo-root") || Pathname(__dir__).join("..").expand_path)
+  begin
+    validator = Governance::RederivationValidator.new(repo_root: repo)
+    outcome = validator.validate(process_id: process_id, date: opt("--date"),
+                                 ledger_path: opt("--ledger"))
+    outcome.lines.each { |l| puts l }
+    if outcome.ok
+      puts "result=pass reason=#{outcome.reason}"
+      exit 0
+    else
+      puts "result=fail reason=#{outcome.reason}"
+      exit 1
+    end
+  rescue Governance::FailClosed => e
+    puts "result=fail reason=#{e.message}"
+    exit 1
+  end
+end
+
 repo_root = Pathname(__dir__).join("..").expand_path
 
 required_files = [
