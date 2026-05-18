@@ -6,6 +6,11 @@ require "optparse"
 require "pathname"
 require_relative "track_runs/implementation_track_runner"
 
+# Task 11 / B: implementation track protocol wrapper（新 API 整合・スクラッチ）
+# 根拠: tasks.md Task 2「Generic Protocol Entrypoint Rule」。
+#   - case_manifest_ref あり → runner 経由で controller が manifest を読む
+#   - なし → track 別必須入力を明示必須（ここで検証）
+#   - どちらも無し → fail fast
 repo_root = Pathname(__dir__).join("..").expand_path
 
 options = {
@@ -19,20 +24,17 @@ options = {
 
 OptionParser.new do |opts|
   opts.banner = "Usage: ruby scripts/run_implementation_track_protocol.rb [options]"
-  opts.on("--run-label LABEL", "Run label") { |value| options["run_label"] = value }
-  opts.on("--case-id ID", "Case id") { |value| options["case_id"] = value }
-  opts.on("--review-mode MODE", "Review mode") { |value| options["review_mode"] = value }
-  opts.on("--snapshot-ref PATH", "Implementation snapshot ref path") { |value| options["implementation_snapshot_ref"] = value }
-  opts.on("--upstream-spec-ref PATH", "Upstream spec ref path (repeatable)") { |value| options["upstream_spec_refs"] << value }
-  opts.on("--governance-ref PATH", "Governance ref path (repeatable)") { |value| options["governance_refs"] << value }
-  opts.on("--case-manifest-ref PATH", "Case manifest ref path") { |value| options["case_manifest_ref"] = value }
-  opts.on("--operator NAME", "Operator name") { |value| options["operator"] = value }
-  opts.on("--phase-profile NAME", "Phase profile") { |value| options["phase_profile"] = value }
-  opts.on("--target-id ID", "Runtime target id") { |value| options["target_id"] = value }
-  opts.on("--target-artifact-hash HASH", "Target artifact hash") { |value| options["target_artifact_hash"] = value }
-  opts.on("--protocol-output-root PATH", "Custom protocol output root") { |value| options["protocol_output_root"] = value }
-  opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |value| options["runtime_run_root_base"] = value }
-  opts.on("--export-root-base PATH", "Custom export root base") { |value| options["export_root_base"] = value }
+  opts.on("--run-label LABEL", "Run label") { |v| options["run_label"] = v }
+  opts.on("--case-id ID", "Case id") { |v| options["case_id"] = v }
+  opts.on("--review-mode MODE", "Review mode") { |v| options["review_mode"] = v }
+  opts.on("--snapshot-ref PATH", "Implementation snapshot ref path") { |v| options["implementation_snapshot_ref"] = v }
+  opts.on("--upstream-spec-ref PATH", "Upstream spec ref path (repeatable)") { |v| options["upstream_spec_refs"] << v }
+  opts.on("--governance-ref PATH", "Governance ref path (repeatable)") { |v| options["governance_refs"] << v }
+  opts.on("--case-manifest-ref PATH", "Case manifest ref path") { |v| options["case_manifest_ref"] = v }
+  opts.on("--operator NAME", "Operator name") { |v| options["operator"] = v }
+  opts.on("--phase-profile NAME", "Phase profile") { |v| options["phase_profile"] = v }
+  opts.on("--target-id ID", "Runtime target id") { |v| options["target_id"] = v }
+  opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |v| options["runtime_run_root_base"] = v }
 end.parse!(ARGV)
 
 if options["case_manifest_ref"].nil?
@@ -57,10 +59,7 @@ runner = DualReviewer::TrackRuns::ImplementationTrackRunner.new(
   operator: options.fetch("operator"),
   phase_profile: options["phase_profile"],
   target_id: options["target_id"],
-  target_artifact_hash: options["target_artifact_hash"],
-  protocol_output_root: options["protocol_output_root"],
-  runtime_run_root_base: options["runtime_run_root_base"],
-  export_root_base: options["export_root_base"]
+  runtime_run_root_base: options["runtime_run_root_base"]
 )
 
 result = runner.run_all
@@ -71,7 +70,7 @@ puts JSON.pretty_generate(
   "case_id" => options["case_id"],
   "review_mode" => options.fetch("review_mode"),
   "run_id" => result.fetch("run_id"),
-  "bundle_id" => result.fetch("bundle_id"),
-  "protocol_paths" => result.fetch("protocol_paths"),
+  "run_status" => result.fetch("run_status"),
+  "treatment" => result.fetch("treatment"),
   "runtime_paths" => result.fetch("runtime_paths")
 )

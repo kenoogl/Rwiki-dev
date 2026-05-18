@@ -6,6 +6,11 @@ require "optparse"
 require "pathname"
 require_relative "track_runs/spec_track_writer"
 
+# Task 11 / B: spec track protocol wrapper（新 API 整合・スクラッチ）
+# 根拠: tasks.md Task 2「Generic Protocol Entrypoint Rule」。
+#   - case_manifest_ref あり → writer 経由で controller が manifest を読む
+#   - なし → track 別必須入力を明示必須（ここで検証）
+#   - どちらも無し → fail fast
 repo_root = Pathname(__dir__).join("..").expand_path
 
 options = {
@@ -19,17 +24,16 @@ options = {
 
 OptionParser.new do |opts|
   opts.banner = "Usage: ruby scripts/run_spec_track_protocol.rb [options]"
-  opts.on("--run-label LABEL", "Run label") { |value| options["run_label"] = value }
-  opts.on("--case-id ID", "Case id") { |value| options["case_id"] = value }
-  opts.on("--review-mode MODE", "Review mode") { |value| options["review_mode"] = value }
-  opts.on("--reviewed-phase PHASE", "Reviewed phase") { |value| options["reviewed_phase"] = value }
-  opts.on("--reviewed-phase-ref PATH", "Reviewed phase ref path") { |value| options["reviewed_phase_ref"] = value }
-  opts.on("--adjacent-ref PATH", "Adjacent phase ref path (repeatable)") { |value| options["adjacent_phase_refs"] << value }
-  opts.on("--alignment-ref PATH", "Alignment ref path (repeatable)") { |value| options["alignment_refs"] << value }
-  opts.on("--case-manifest-ref PATH", "Case manifest ref path") { |value| options["case_manifest_ref"] = value }
-  opts.on("--operator NAME", "Operator name") { |value| options["operator"] = value }
-  opts.on("--output-root PATH", "Custom output root") { |value| options["output_root"] = value }
-  opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |value| options["runtime_run_root_base"] = value }
+  opts.on("--run-label LABEL", "Run label") { |v| options["run_label"] = v }
+  opts.on("--case-id ID", "Case id") { |v| options["case_id"] = v }
+  opts.on("--review-mode MODE", "Review mode") { |v| options["review_mode"] = v }
+  opts.on("--reviewed-phase PHASE", "Reviewed phase") { |v| options["reviewed_phase"] = v }
+  opts.on("--reviewed-phase-ref PATH", "Reviewed phase ref path") { |v| options["reviewed_phase_ref"] = v }
+  opts.on("--adjacent-ref PATH", "Adjacent phase ref path (repeatable)") { |v| options["adjacent_phase_refs"] << v }
+  opts.on("--alignment-ref PATH", "Alignment ref path (repeatable)") { |v| options["alignment_refs"] << v }
+  opts.on("--case-manifest-ref PATH", "Case manifest ref path") { |v| options["case_manifest_ref"] = v }
+  opts.on("--operator NAME", "Operator name") { |v| options["operator"] = v }
+  opts.on("--runtime-run-root-base PATH", "Custom runtime run root base") { |v| options["runtime_run_root_base"] = v }
 end.parse!(ARGV)
 
 if options["case_manifest_ref"].nil?
@@ -52,9 +56,10 @@ writer = DualReviewer::TrackRuns::SpecTrackWriter.new(
   alignment_refs: options.fetch("alignment_refs"),
   case_manifest_ref: options["case_manifest_ref"],
   operator: options.fetch("operator"),
-  output_root: options["output_root"],
   runtime_run_root_base: options["runtime_run_root_base"]
 )
+
+out = writer.write_all
 
 puts JSON.pretty_generate(
   "track" => "spec",
@@ -62,5 +67,8 @@ puts JSON.pretty_generate(
   "case_id" => options["case_id"],
   "review_mode" => options.fetch("review_mode"),
   "reviewed_phase" => options["reviewed_phase"],
-  "paths" => writer.write_all.transform_values(&:to_s)
+  "run_id" => out.fetch("run_id"),
+  "run_status" => out.fetch("run_status"),
+  "paths" => out.reject { |k, _| %w[run_id run_status].include?(k) }
+                .transform_values(&:to_s)
 )

@@ -2,87 +2,71 @@
 # frozen_string_literal: true
 
 require "json"
-require_relative "../runtime/controller/session_controller"
+require "optparse"
+require "pathname"
+require_relative "track_runs/runtime_session_driver"
 
-repo_root = File.expand_path("..", __dir__)
-controller = DualReviewer::Runtime::SessionController.new(repo_root: repo_root)
+# Task 11 / B: run entrypoint（新 controller API 整合・スクラッチ）
+# 根拠: tasks.md Task 2「Reference-Free Runtime Entry Principle」「Generic
+#       Protocol Entrypoint Rule」、design「File Placement」。旧 v1
+#       （dangling controller API: initialize_run / emit_step_artifacts /
+#       aggregate_review_case / close_run / export_run_bundle 等）は
+#       スクラッチ方針で置換。旧ロジックは流用しない。
+#
+# reference-free entry: pilot case を hidden default にしない。case manifest
+# か明示 track 入力（target-id / phase-profile / source-ref）を受ける。
+repo_root = Pathname(__dir__).join("..").expand_path
+
+options = {
+  "phase_profile" => "tasks",
+  "review_mode" => "dual_reviewer_workflow",
+  "operator" => "local-operator",
+  "source_refs" => [],
+  "case_manifest_ref" => nil,
+  "run_root_base" => nil
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: ruby scripts/run_review_session.rb [options]"
+  opts.on("--target-id ID", "Runtime target id") { |v| options["target_id"] = v }
+  opts.on("--phase-profile NAME", "Phase profile") { |v| options["phase_profile"] = v }
+  opts.on("--review-mode MODE", "Review mode") { |v| options["review_mode"] = v }
+  opts.on("--operator NAME", "Operator name") { |v| options["operator"] = v }
+  opts.on("--source-ref PATH", "Source ref (repeatable)") { |v| options["source_refs"] << v }
+  opts.on("--case-manifest-ref PATH", "Case manifest ref path") { |v| options["case_manifest_ref"] = v }
+  opts.on("--run-root-base PATH", "Custom runtime run root base") { |v| options["run_root_base"] = v }
+end.parse!(ARGV)
+
+run_root_base =
+  if options["run_root_base"]
+    Pathname(options["run_root_base"]).expand_path
+  else
+    repo_root + "experiments/runs"
+  end
+
+# Generic Protocol Entrypoint Rule: case_manifest_ref も明示 track 入力も
+# 無ければ controller が fail fast する（ここで暗黙 default を作らない）。
+driver = DualReviewer::TrackRuns::RuntimeSessionDriver.new(
+  repo_root: repo_root, run_root_base: run_root_base
+)
+
+result = driver.run_session(
+  target_id: options["target_id"] || "spec:dual-reviewer-runtime:tasks",
+  phase_profile: options.fetch("phase_profile"),
+  review_mode: options.fetch("review_mode"),
+  operator: options.fetch("operator"),
+  source_refs:
+    options["source_refs"].empty? ? ["scripts/run_review_session.rb"] : options["source_refs"],
+  track: options["case_manifest_ref"] ? nil : "spec",
+  case_manifest_ref: options["case_manifest_ref"]
+)
 
 summary = {
   "entrypoint" => "run_review_session",
-  "foundation_contract_summary" => controller.foundation_contract_summary,
-  "step_names" => controller.step_executors.map(&:step_name)
+  "run_id" => result.fetch("run_id"),
+  "treatment" => result.fetch("treatment"),
+  "run_status" => result.fetch("run_status"),
+  "runtime_paths" => result.fetch("runtime_paths")
 }
-
-initialized_run = controller.initialize_run(
-    target_id: "spec:dual-reviewer-runtime:tasks",
-    target_artifact_hash: "sha256:example-target-hash",
-    phase_profile: "tasks",
-    treatment: "dual+judgment",
-    review_mode: "runtime_mediated",
-    operator_id: "local-operator"
-  )
-step_payloads = controller.emit_step_artifacts(
-  run_id: initialized_run.fetch("run_id"),
-  target_id: initialized_run.fetch("metadata").fetch("target_id"),
-  phase_profile: initialized_run.fetch("metadata").fetch("phase_profile"),
-  treatment: initialized_run.fetch("metadata").fetch("treatment")
-)
-review_case = controller.aggregate_review_case(
-  run_id: initialized_run.fetch("run_id"),
-  metadata: initialized_run.fetch("metadata"),
-  step_payloads: step_payloads
-)
-
-summary["sample_run_initialization"] = initialized_run
-summary["step_artifacts"] = step_payloads
-summary["review_case_path"] = review_case.fetch("review_case_path")
-
-decision_artifacts = controller.emit_decision_artifacts(
-  run_id: initialized_run.fetch("run_id"),
-  step_payloads: step_payloads,
-  human_decision: "approved",
-  operator_id: "local-operator"
-)
-validation_close = controller.close_run(
-  run_id: initialized_run.fetch("run_id"),
-  metadata: initialized_run.fetch("metadata"),
-  human_signoff: decision_artifacts.fetch("human_signoff")
-)
-
-case_manifest = controller.build_case_manifest(
-  "case_id" => "sample-runtime-session",
-  "target_id" => initialized_run.fetch("metadata").fetch("target_id"),
-  "source_refs" => ["scripts/run_review_session.rb"],
-  "case_manifest_ref" => "sample/runtime-session"
-)
-
-execution_v2_artifacts = controller.emit_execution_v2_artifacts(
-  run_id: initialized_run.fetch("run_id"),
-  track: "implementation",
-  common_inputs: {
-    "target_id" => initialized_run.fetch("metadata").fetch("target_id"),
-    "target_artifact_hash" => initialized_run.fetch("metadata").fetch("target_artifact_hash"),
-    "source_repository_id" => initialized_run.fetch("metadata").fetch("source_repository_id"),
-    "source_revision" => initialized_run.fetch("metadata").fetch("source_revision"),
-    "phase_profile" => initialized_run.fetch("metadata").fetch("phase_profile"),
-    "treatment" => initialized_run.fetch("metadata").fetch("treatment"),
-    "review_mode" => initialized_run.fetch("metadata").fetch("review_mode"),
-    "source_refs" => ["scripts/run_review_session.rb"],
-    "governance_refs" => ["runtime/foundation/metadata_contract.yaml"]
-  },
-  track_inputs: {
-    "implementation_snapshot_ref" => "scripts/run_review_session.rb",
-    "upstream_spec_refs" => [],
-    "governance_refs" => ["runtime/foundation/metadata_contract.yaml"]
-  },
-  case_manifest: case_manifest,
-  review_case: review_case.fetch("review_case"),
-  decision_artifacts: decision_artifacts,
-  validation_close: validation_close
-)
-
-summary["decision_artifacts"] = decision_artifacts
-summary["validation_close"] = validation_close
-summary["execution_v2_artifacts"] = execution_v2_artifacts
 
 puts JSON.pretty_generate(summary)

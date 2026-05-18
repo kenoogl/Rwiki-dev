@@ -2,646 +2,431 @@
 
 require "securerandom"
 require "time"
-require_relative "../support/foundation_asset_loader"
-require_relative "../support/source_provenance_resolver"
-require_relative "../execution_v2/contracts/common_execution_contract"
-require_relative "../execution_v2/contracts/track_contract_specializer"
+require "yaml"
+require "json"
+require "fileutils"
+require "pathname"
+require_relative "../execution_v2/contracts/run_layout"
 require_relative "../execution_v2/manifests/case_manifest"
-require_relative "../execution_v2/analyzers/base_analyzer"
-require_relative "../execution_v2/decisions/decision_context"
-require_relative "../execution_v2/writers/compatibility_projector"
-require_relative "../execution_v2/writers/review_artifact_writer"
-require_relative "../execution_v2/support/object_naming"
-require_relative "../executors/step_a_primary_detection"
-require_relative "../executors/step_b_adversarial_review"
-require_relative "../executors/step_c_judgment"
-require_relative "../executors/step_d_integration"
-require_relative "../writers/evidence_writer"
-require_relative "../validation/validation_bridge"
-require_relative "../export/bundle_exporter"
+require_relative "../execution_v2/validation/invalidation_handler"
 
+# Task 2: session controller
+# 根拠: tasks.md Task 2、Requirement 1（受入 1〜6）、Requirement 8（受入 1・3・5）、
+#       design「Session Model §1〜§3」「Run Manifest Field Set」
+#       「Reference-Free Runtime Entry Principle」「Generic Protocol Entrypoint Rule」、
+#       設計再確定 finding 9（run close 順序＝controller ライフサイクル不変条件）
+#
+# 本波の範囲: run lifecycle 状態機械・session input 固定・軸分離・reference-free
+# entry・Run Close Boundary の順序ガード骨格。validator 実体呼び出しは後続 Task 7 で
+# 接続する（invoke_validator は前提条件ガードと yield ブロック差し込み点のみ提供）。
 module DualReviewer
   module Runtime
     class SessionController
-      TERMINAL_HUMAN_SIGNOFF_STATUSES = %w[approved rejected deferred].freeze
+      # foundation metadata_contract.yaml の enum を継承（再定義しない）。
+      RUN_STATUSES = %w[created in_progress closed orchestration_failed].freeze
+      VALIDATOR_STATUSES = %w[not_run passed failed blocked].freeze
+      HUMAN_SIGNOFF_STATUSES = %w[pending approved rejected deferred].freeze
+      EVIDENCE_CLASSES = %w[candidate valid invalid exploratory].freeze
 
-      attr_reader :asset_loader,
-                  :evidence_writer,
-                  :validation_bridge,
-                  :bundle_exporter,
-                  :source_provenance_resolver,
-                  :common_execution_contract,
-                  :track_contract_specializer,
-                  :case_manifest_builder,
-                  :decision_context_builder,
-                  :compatibility_projector,
-                  :review_artifact_writer,
-                  :execution_v2_object_naming
+      # phase_profile / treatment は独立軸。値語彙は runtime 所有（design §3）。
+      PHASE_PROFILES = %w[intent requirements design tasks].freeze
+      TREATMENTS = %w[single dual dual+judgment].freeze
 
-      def initialize(repo_root:, run_root_base: nil, export_root_base: nil)
-        @asset_loader = FoundationAssetLoader.new(repo_root: repo_root)
-        @evidence_writer = EvidenceWriter.new(
-          repo_root: repo_root,
-          run_root_base: run_root_base,
-          export_root_base: export_root_base
-        )
-        @validation_bridge = ValidationBridge.new(asset_loader: asset_loader)
-        @bundle_exporter = BundleExporter.new(
-          asset_loader: asset_loader,
-          evidence_writer: evidence_writer
-        )
-        @source_provenance_resolver = SourceProvenanceResolver.new(repo_root: repo_root)
-        @common_execution_contract = ExecutionV2::CommonExecutionContract.new(asset_loader: asset_loader)
-        @track_contract_specializer = ExecutionV2::TrackContractSpecializer.new
-        @case_manifest_builder = ExecutionV2::CaseManifest.new
-        @decision_context_builder = ExecutionV2::DecisionContext.new
-        @compatibility_projector = ExecutionV2::CompatibilityProjector.new
-        @review_artifact_writer = ExecutionV2::ReviewArtifactWriter.new
-        @execution_v2_object_naming = ExecutionV2::ObjectNaming.new
+      # run_manifest.yaml 開始時固定群（design「Run Manifest Field Set」）。
+      STARTED_FIXED_FIELDS = %w[
+        run_id target_id target_artifact_hash source_repository_id source_revision
+        phase_profile treatment review_mode protocol_version runtime_version
+        prompt_set_version schema_set_version config_version config_hash
+        operator_id started_at
+      ].freeze
+
+      # 実行中更新群（実行進行・検証・承認の結果で更新）。
+      RUNTIME_UPDATED_FIELDS = %w[
+        run_status validator_status human_signoff_status evidence_class closed_at
+      ].freeze
+
+      # finding 9: Run Close Boundary 前提条件違反・多重起動を表す fail-closed エラー。
+      class CloseBoundaryViolation < StandardError; end
+
+      def initialize(run_root_base:)
+        @run_root_base = Pathname(run_root_base)
       end
 
-      def step_executors
-        @step_executors ||= [
-          StepAPrimaryDetection.new(asset_loader: asset_loader, evidence_writer: evidence_writer),
-          StepBAdversarialReview.new(asset_loader: asset_loader, evidence_writer: evidence_writer),
-          StepCJudgment.new(asset_loader: asset_loader, evidence_writer: evidence_writer),
-          StepDIntegration.new(asset_loader: asset_loader, evidence_writer: evidence_writer)
-        ]
-      end
+      # reference-free entry（design「Generic Protocol Entrypoint Rule」）。
+      # case_manifest_ref があれば manifest を読む。無ければ track 別必須入力を要求。
+      # どちらも無ければ fail fast。generic runtime code は特定 case を hidden default
+      # にしない（pilot case basename / case id を既定値に持たない）。
+      def start_run(
+        target_id:, target_artifact_hash:, source_repository_id:, source_revision:,
+        phase_profile:, treatment:, review_mode:, protocol_version:, runtime_version:,
+        prompt_set_version:, schema_set_version:, config_version:, config_hash:,
+        operator_id:, case_manifest_ref: nil, track: nil, source_refs: nil
+      )
+        validate_axis!(PHASE_PROFILES, phase_profile, "phase_profile")
+        validate_axis!(TREATMENTS, treatment, "treatment")
 
-      def foundation_contract_summary
-        {
-          "metadata_contract_version" => asset_loader.metadata_contract.fetch("version"),
-          "prompt_frontmatter_contract_version" => asset_loader.prompt_frontmatter_contract.fetch("version"),
-          "review_case_schema_id" => asset_loader.review_case_schema.fetch("$id"),
-          "canonical_run_subdirectories" => evidence_writer.canonical_subdirectories,
-          "execution_v2_contract_version" => ExecutionV2::CommonExecutionContract::CONTRACT_VERSION
-        }
-      end
-
-      def build_execution_contract(track:, common_inputs:, track_inputs:)
-        normalized_common_inputs = common_inputs.merge("track" => track)
-        contract = common_execution_contract.build(
-          common_inputs: normalized_common_inputs,
-          track_inputs: track_inputs
+        case_manifest = resolve_case_manifest(
+          case_manifest_ref: case_manifest_ref, track: track,
+          source_refs: source_refs, target_id: target_id
         )
 
-        track_contract_specializer.specialize(
-          track: track,
-          common_inputs: contract.fetch("common_inputs"),
-          track_inputs: track_inputs
-        )
-
-        contract
-      end
-
-      def build_case_manifest(payload)
-        case_manifest_builder.build(payload)
-      end
-
-      def bootstrap_run_context(target_id:, phase_profile:, treatment:)
-        {
-          target_id: target_id,
-          phase_profile: phase_profile,
-          treatment: treatment,
-          foundation_contract_summary: foundation_contract_summary
-        }
-      end
-
-      def initialize_run(target_id:, target_artifact_hash:, phase_profile:, treatment:, review_mode:, operator_id:)
         run_id = generate_run_id
-        manifest = build_run_manifest(
-          run_id: run_id,
-          target_id: target_id,
-          target_artifact_hash: target_artifact_hash,
-          phase_profile: phase_profile,
-          treatment: treatment,
-          review_mode: review_mode,
-          operator_id: operator_id
-        )
-
-        validate_required_metadata!(manifest.fetch("metadata"))
-        manifest_path = evidence_writer.write_run_manifest(run_id: run_id, manifest: manifest)
-
-        {
+        started_at = Time.now.utc.iso8601
+        metadata = {
           "run_id" => run_id,
-          "run_root" => evidence_writer.canonical_run_root(run_id).to_s,
-          "run_manifest_path" => manifest_path.to_s,
-          "metadata" => manifest.fetch("metadata")
-        }
-      end
-
-      def emit_step_artifacts(run_id:, target_id:, phase_profile:, treatment:, analysis_inputs: {})
-        step_payloads = []
-        step_executors.each_with_index do |executor, index|
-          step_id = format("step-%02d", index + 1)
-          payload = executor.execute(
-            step_id: step_id,
-            target_id: target_id,
-            phase_profile: phase_profile,
-            treatment: treatment,
-            analysis_inputs: analysis_inputs,
-            prior_step_payloads: step_payloads
-          )
-          evidence_writer.write_step_artifact(run_id: run_id, step_name: executor.step_name, payload: payload)
-          step_payloads << payload
-        end
-
-        step_payloads
-      end
-
-      def aggregate_review_case(run_id:, metadata:, step_payloads:)
-        judgment_index = step_payloads
-          .select { |payload| payload.fetch("step_name") == "judgment" }
-          .flat_map { |payload| payload.fetch("judgments", []) }
-          .each_with_object({}) { |judgment, acc| acc[judgment.fetch("finding_id")] = judgment }
-        step_observation_index = step_payloads
-          .flat_map { |payload| payload.fetch("observations", []) }
-          .each_with_object({}) { |observation, acc| acc[observation.fetch("observation_id")] = observation }
-        step_evidence_record_index = step_payloads
-          .flat_map { |payload| payload.fetch("evidence_records", []) }
-          .each_with_object({}) { |record, acc| acc[record.fetch("evidence_record_id")] = record }
-
-        findings = step_payloads
-          .flat_map { |payload| payload.fetch("findings", []) }
-          .map do |finding|
-            judgment = judgment_index[finding.fetch("finding_id")]
-            {
-              "schema_version" => "1.0.0",
-              "finding_id" => finding.fetch("finding_id"),
-              "run_id" => run_id,
-              "step_id" => finding.fetch("finding_id").split("-finding-").first,
-              "source_role" => finding.fetch("source_role"),
-              "severity" => finding.fetch("severity"),
-              "summary" => finding.fetch("summary"),
-              "source_refs" => finding.fetch("source_refs"),
-              "counter_evidence_refs" => finding.fetch("counter_evidence_refs"),
-              "judgment_ref" => judgment ? "steps/#{evidence_writer.step_filename('judgment')}.json##{judgment.fetch('necessity_judgment_id')}" : nil,
-              "decision_unit_id" => nil,
-              "human_decision_ref" => nil,
-              "impact_score_ref" => nil,
-              "failure_observation_refs" => finding.fetch("failure_observation_refs", []),
-              "validation_refs" => {
-                "invalidation_marker_refs" => []
-              }
-            }
-          end
-        observations = step_observation_index.values.map do |observation|
-          {
-            "observation_id" => observation.fetch("observation_id"),
-            "source_role" => observation.fetch("source_role"),
-            "severity" => observation.fetch("severity"),
-            "summary" => observation.fetch("summary"),
-            "source_refs" => observation.fetch("source_refs"),
-            "counter_evidence_refs" => observation.fetch("counter_evidence_refs", []),
-            "taxonomy_path" => observation["taxonomy_path"],
-            "observation_class" => observation["observation_class"],
-            "evidence_record_refs" => observation.fetch("evidence_record_ids", []).map { |id| "review_case.json##{id}" },
-            "counter_evidence_record_refs" => observation.fetch("counter_evidence_record_ids", []).map { |id| "review_case.json##{id}" },
-            "matched_pattern_ids" => observation.fetch("matched_pattern_ids", []),
-            "counter_evidence_pattern_ids" => observation.fetch("counter_evidence_pattern_ids", []),
-            "evidence_types" => observation.fetch("evidence_types", []),
-            "counter_evidence_types" => observation.fetch("counter_evidence_types", []),
-            "review_focuses" => observation.fetch("review_focuses", []),
-            "source_kinds" => observation.fetch("source_kinds", []),
-            "counter_evidence_source_kinds" => observation.fetch("counter_evidence_source_kinds", []),
-            "section_classes" => observation.fetch("section_classes", []),
-            "counter_evidence_section_classes" => observation.fetch("counter_evidence_section_classes", [])
-          }
-        end
-        evidence_records = step_evidence_record_index.values.map do |record|
-          {
-            "evidence_record_id" => record.fetch("evidence_record_id"),
-            "source_ref" => record.fetch("source_ref"),
-            "source_kind" => record["source_kind"],
-            "pattern_id" => record["pattern_id"],
-            "evidence_type" => record["evidence_type"],
-            "review_focus" => record["review_focus"],
-            "section_heading" => record["section_heading"],
-            "section_class" => record["section_class"],
-            "first_line_number" => record["first_line_number"],
-            "line_numbers" => record["line_numbers"],
-            "matched_terms" => record["matched_terms"],
-            "matched_excerpt" => record["matched_excerpt"]
-          }
-        end
-
-        payload = {
-          "schema_version" => "1.0.0",
-          "review_case_id" => "review-case-#{run_id}",
-          "metadata" => metadata,
-          "step_records" => step_payloads.map do |payload_item|
-            {
-              "step_id" => payload_item.fetch("step_id"),
-              "step_name" => payload_item.fetch("step_name"),
-              "step_status" => payload_item.fetch("step_status"),
-              "step_prompt_artifact_id" => payload_item.fetch("prompt_identity").fetch("prompt_id"),
-              "step_started_at" => nil,
-              "step_closed_at" => nil
-            }
-          end,
-          "evidence_records" => evidence_records,
-          "observations" => observations,
-          "findings" => findings,
-          "validation_artifacts" => {
-            "validator_result_refs" => [],
-            "invalidation_marker_refs" => []
-          }
-        }
-
-        review_case_path = evidence_writer.write_review_case(run_id: run_id, payload: payload)
-        {
-          "review_case_path" => review_case_path.to_s,
-          "review_case" => payload
-        }
-      end
-
-      def emit_decision_artifacts(run_id:, step_payloads:, human_decision:, operator_id:, review_case: nil)
-        judgments = step_payloads
-          .select { |payload| payload.fetch("step_name") == "judgment" }
-          .flat_map { |payload| payload.fetch("judgments", []) }
-        findings = review_case ? review_case.fetch("findings", []) : []
-
-        decision_units_payload = {
-          "decision_units" => findings.map do |finding|
-            judgment = judgments.find { |entry| entry.fetch("finding_id") == finding.fetch("finding_id") }
-            {
-              "decision_unit_id" => "decision-unit-#{finding.fetch('finding_id')}",
-              "finding_refs" => ["review_case.json##{finding.fetch('finding_id')}"],
-              "judgment_refs" => judgment ? ["#{evidence_writer.step_filename('judgment')}.json##{judgment.fetch('necessity_judgment_id')}"] : [],
-              "proposed_action" => judgment ? judgment.fetch("recommended_action") : "manual_review_required",
-              "human_decision" => human_decision,
-              "human_decision_timestamp" => Time.now.utc.iso8601,
-              "human_decision_note" => "Protocol pilot decision artifact."
-            }
-          end
-        }
-        human_signoff_payload = {
-          "run_id" => run_id,
-          "human_signoff_status" => terminal_human_signoff_status(human_decision),
+          "target_id" => target_id,
+          "target_artifact_hash" => target_artifact_hash,
+          "source_repository_id" => source_repository_id,
+          "source_revision" => source_revision,
+          "phase_profile" => phase_profile,
+          "treatment" => treatment,
+          "review_mode" => review_mode,
+          "protocol_version" => protocol_version,
+          "runtime_version" => runtime_version,
+          "prompt_set_version" => prompt_set_version,
+          "schema_set_version" => schema_set_version,
+          "config_version" => config_version,
+          "config_hash" => config_hash,
           "operator_id" => operator_id,
-          "signoff_timestamp" => Time.now.utc.iso8601,
-          "note" => "Skeleton runtime sign-off artifact."
+          "started_at" => started_at,
+          # 実行中更新群の初期値
+          "run_status" => "in_progress",
+          "validator_status" => "not_run",
+          "human_signoff_status" => "pending",
+          "evidence_class" => "candidate",
+          "closed_at" => nil
         }
 
-        decision_units_path = evidence_writer.write_decision_units(run_id: run_id, payload: decision_units_payload)
-        human_signoff_path = evidence_writer.write_human_signoff(run_id: run_id, payload: human_signoff_payload)
-
-        evidence_writer.update_review_case(run_id: run_id) do |review_case_payload|
-          review_case_payload["findings"].each do |finding|
-            decision_unit_id = "decision-unit-#{finding.fetch('finding_id')}"
-            finding["decision_unit_id"] = decision_unit_id
-            finding["human_decision_ref"] = "decisions/decision_units.json##{decision_unit_id}"
-          end
-        end
-
-        {
-          "decision_units_path" => decision_units_path.to_s,
-          "human_signoff_path" => human_signoff_path.to_s,
-          "decision_units" => decision_units_payload,
-          "human_signoff" => human_signoff_payload
-        }
-      end
-
-      def close_run(run_id:, metadata:, human_signoff:)
-        closed_at = Time.now.utc.iso8601
-        metadata_for_validation = metadata.merge(
-          "run_status" => "closed",
-          "human_signoff_status" => human_signoff.fetch("human_signoff_status"),
-          "closed_at" => closed_at
+        run = RunSession.new(
+          run_id: run_id, run_root: @run_root_base + RunLayout.run_root_relative(run_id),
+          metadata: metadata, case_manifest: case_manifest
         )
-        validation_result = validation_bridge.validate_run(
-          run_id: run_id,
-          metadata: metadata_for_validation,
-          human_signoff: human_signoff
-        )
-
-        validator_result_path = evidence_writer.write_validator_result(
-          run_id: run_id,
-          payload: validation_result.fetch("validator_result")
-        )
-        invalidation_markers_path = evidence_writer.write_invalidation_markers(
-          run_id: run_id,
-          payload: { "invalidation_markers" => validation_result.fetch("invalidation_markers") }
-        )
-        comparison_eligibility_note = build_comparison_eligibility_note(
-          run_id: run_id,
-          metadata: metadata_for_validation,
-          validator_result: validation_result.fetch("validator_result"),
-          invalidation_markers: validation_result.fetch("invalidation_markers"),
-          human_signoff: human_signoff
-        )
-        comparison_eligibility_note_path = evidence_writer.write_comparison_eligibility_note(
-          run_id: run_id,
-          payload: comparison_eligibility_note
-        )
-        invalid_run_triage_note = build_invalid_run_triage_note(
-          run_id: run_id,
-          validator_result: validation_result.fetch("validator_result"),
-          invalidation_markers: validation_result.fetch("invalidation_markers"),
-          human_signoff: human_signoff
-        )
-        invalid_run_triage_note_path = evidence_writer.write_invalid_run_triage_note(
-          run_id: run_id,
-          payload: invalid_run_triage_note
-        )
-
-        final_validator_status = validation_result.fetch("validator_result").fetch("overall_status") == "passed" ? "passed" : "failed"
-        final_evidence_class =
-          if final_validator_status == "passed" && TERMINAL_HUMAN_SIGNOFF_STATUSES.include?(human_signoff.fetch("human_signoff_status"))
-            metadata["evidence_class"] == "exploratory" ? "exploratory" : "valid"
-          else
-            "invalid"
-          end
-
-        evidence_writer.update_run_manifest(run_id: run_id) do |manifest|
-          manifest.fetch("metadata")["run_status"] = "closed"
-          manifest.fetch("metadata")["validator_status"] = final_validator_status
-          manifest.fetch("metadata")["human_signoff_status"] = human_signoff.fetch("human_signoff_status")
-          manifest.fetch("metadata")["evidence_class"] = final_evidence_class
-          manifest.fetch("metadata")["closed_at"] = closed_at
-        end
-
-        evidence_writer.update_review_case(run_id: run_id) do |review_case|
-          review_case["metadata"]["run_status"] = "closed"
-          review_case["metadata"]["validator_status"] = final_validator_status
-          review_case["metadata"]["human_signoff_status"] = human_signoff.fetch("human_signoff_status")
-          review_case["metadata"]["evidence_class"] = final_evidence_class
-          review_case["metadata"]["closed_at"] = closed_at
-          review_case["validation_artifacts"]["validator_result_refs"] = ["validation/validator_result.json##{validation_result.fetch('validator_result').fetch('validator_result_id')}"]
-          review_case["validation_artifacts"]["invalidation_marker_refs"] = validation_result.fetch("invalidation_markers").map do |marker|
-            "validation/invalidation_markers.json##{marker.fetch('invalidation_marker_id')}"
-          end
-        end
-
-        {
-          "validator_result_path" => validator_result_path.to_s,
-          "invalidation_markers_path" => invalidation_markers_path.to_s,
-          "comparison_eligibility_note_path" => comparison_eligibility_note_path.to_s,
-          "invalid_run_triage_note_path" => invalid_run_triage_note_path.to_s,
-          "validator_result" => validation_result.fetch("validator_result"),
-          "invalidation_markers" => validation_result.fetch("invalidation_markers"),
-          "comparison_eligibility_note" => comparison_eligibility_note,
-          "invalid_run_triage_note" => invalid_run_triage_note
-        }
-      end
-
-      def emit_execution_v2_artifacts(run_id:, track:, common_inputs:, track_inputs:, case_manifest:, review_case:, decision_artifacts:, validation_close:)
-        execution_contract = build_execution_contract(
-          track: track,
-          common_inputs: common_inputs.merge("case_manifest_ref" => case_manifest.fetch("case_manifest_ref")),
-          track_inputs: track_inputs
-        )
-        analyzer = ExecutionV2::BaseAnalyzer.new(track: track)
-        analysis_result = analyzer.analyze(
-          execution_contract,
-          review_case: review_case,
-          decision_artifacts: decision_artifacts,
-          validation_close: validation_close
-        )
-        decision_context = decision_context_builder.build(
-          execution_contract: execution_contract,
-          analysis_result: analysis_result,
-          decision_artifacts: decision_artifacts,
-          validation_close: validation_close
-        )
-        compatibility_projection = compatibility_projector.build(
-          review_case: review_case,
-          decision_artifacts: decision_artifacts,
-          analysis_result: analysis_result,
-          validation_close: validation_close
-        )
-        review_artifact_payload = review_artifact_writer.build(
-          execution_contract: execution_contract,
-          decision_context: decision_context,
-          compatibility_projection: compatibility_projection
-        ).merge(
-          "case_manifest" => case_manifest,
-          "validation" => {
-            "validator_result_ref" => "validation/validator_result.json##{validation_close.fetch('validator_result').fetch('validator_result_id')}",
-            "invalidation_marker_refs" => validation_close.fetch("invalidation_markers").map do |marker|
-              "validation/invalidation_markers.json##{marker.fetch('invalidation_marker_id')}"
-            end,
-            "comparison_eligibility_note_ref" => "derived/comparison_eligibility_note.json##{validation_close.fetch('comparison_eligibility_note').fetch('comparison_eligibility_note_id')}",
-            "invalid_run_triage_note_ref" => "derived/invalid_run_triage_note.json##{validation_close.fetch('invalid_run_triage_note').fetch('invalid_run_triage_note_id')}"
-          }
-        )
-        metric_snapshot_payload = build_metric_snapshot(run_id: run_id, review_case: review_case, decision_artifacts: decision_artifacts)
-        trace_note_payload = build_trace_note(run_id: run_id, track: track, case_manifest: case_manifest, common_inputs: common_inputs)
-        signal_linkage_note_payload = build_signal_linkage_note(
-          run_id: run_id,
-          track: track,
-          analysis_result: analysis_result,
-          validation_close: validation_close
-        )
-
-        review_artifact_path = evidence_writer.write_v2_review_artifact(run_id: run_id, payload: review_artifact_payload)
-        metric_snapshot_path = evidence_writer.write_v2_metric_snapshot(run_id: run_id, payload: metric_snapshot_payload)
-        trace_note_path = evidence_writer.write_v2_trace_note(run_id: run_id, payload: trace_note_payload)
-        signal_linkage_note_path = evidence_writer.write_v2_signal_linkage_note(run_id: run_id, payload: signal_linkage_note_payload)
-
-        {
-          "execution_contract" => execution_contract,
-          "analysis_result" => analysis_result,
-          "decision_context" => decision_context,
-          "review_artifact_path" => review_artifact_path.to_s,
-          "metric_snapshot_path" => metric_snapshot_path.to_s,
-          "trace_note_path" => trace_note_path.to_s,
-          "signal_linkage_note_path" => signal_linkage_note_path.to_s
-        }
-      end
-
-      def export_run_bundle(run_id:, metadata:)
-        bundle_exporter.export_bundle(run_id: run_id, metadata: metadata)
+        run.persist_initial_manifest
+        run
       end
 
       private
 
-      def build_run_manifest(run_id:, target_id:, target_artifact_hash:, phase_profile:, treatment:, review_mode:, operator_id:)
-        {
-          "manifest_version" => "1.0.0",
-          "runtime_feature" => "dual-reviewer-runtime",
-          "operator_id" => operator_id,
-          "metadata" => {
-            "run_id" => run_id,
-            "target_id" => target_id,
-            "target_artifact_hash" => target_artifact_hash,
-            "source_repository_id" => source_repository_id,
-            "source_revision" => source_revision,
-            "phase_profile" => phase_profile,
-            "treatment" => treatment,
-            "review_mode" => review_mode,
-            "protocol_version" => config_protocol_version,
-            "runtime_version" => runtime_version,
-            "schema_set_version" => asset_loader.review_case_schema.fetch("$id").split(":").last,
-            "prompt_set_version" => asset_loader.prompt_frontmatter_contract.fetch("version"),
-            "run_status" => "created",
-            "validator_status" => "not_run",
-            "human_signoff_status" => "pending",
-            "evidence_class" => "candidate",
-            "started_at" => Time.now.utc.iso8601,
-            "closed_at" => nil
-          }
-        }
+      def validate_axis!(vocab, value, label)
+        return if vocab.include?(value)
+
+        raise ArgumentError,
+              "invalid #{label}: #{value.inspect} (allowed: #{vocab.join('/')})"
       end
 
-      def validate_required_metadata!(metadata)
-        required_fields = asset_loader.metadata_contract.fetch("required_fields")
-        missing = required_fields.reject { |field| metadata.key?(field) }
-        raise ArgumentError, "missing required metadata fields: #{missing.join(', ')}" unless missing.empty?
-
-        empty_required = required_fields.reject do |field|
-          value = metadata[field]
-          !value.nil? && !(value.respond_to?(:empty?) && value.empty?)
+      def resolve_case_manifest(case_manifest_ref:, track:, source_refs:, target_id:)
+        if case_manifest_ref && !case_manifest_ref.to_s.strip.empty?
+          payload = JSON.parse(Pathname(case_manifest_ref).read)
+          return CaseManifest.build(payload)
         end
-        empty_allowed = ["closed_at"]
-        invalid_empty = empty_required - empty_allowed
-        raise ArgumentError, "empty required metadata fields: #{invalid_empty.join(', ')}" unless invalid_empty.empty?
+
+        if track.nil? || track.to_s.strip.empty? ||
+           source_refs.nil? || (source_refs.respond_to?(:empty?) && source_refs.empty?)
+          raise ArgumentError,
+                "reference-free entry requires either case_manifest_ref or " \
+                "explicit track inputs (track + source_refs); none provided"
+        end
+
+        CaseManifest.build(
+          "case_id" => target_id,
+          "track" => track,
+          "source_refs" => source_refs,
+          "case_manifest_ref" => "inline:explicit-track-inputs"
+        )
       end
 
       def generate_run_id
-        timestamp = Time.now.utc.strftime("%Y%m%dT%H%M%SZ")
-        "run-#{timestamp}-#{SecureRandom.hex(4)}"
+        "run-#{Time.now.utc.strftime('%Y%m%dT%H%M%SZ')}-#{SecureRandom.hex(4)}"
       end
 
-      def source_repository_id
-        @source_repository_id ||= source_provenance_resolver.repository_id
-      end
+      # 1 run の lifecycle 状態機械と Run Close Boundary 順序ガードの保持者。
+      # 状態遷移 API は後続波（Task 7）が validator 実体と前提条件ガードを
+      # 差し込めるよう、観測可能なフラグとして分離する。
+      class RunSession
+        attr_reader :run_id, :run_root, :initial_status
 
-      def source_revision
-        @source_revision ||= source_provenance_resolver.revision
-      end
-
-      def config_protocol_version
-        asset_loader.foundation_asset_path("runtime/config/config.yaml.template").yield_self do |path|
-          config = YAML.load_file(path)
-          config.fetch("review_protocol").fetch("protocol_version")
+        def initialize(run_id:, run_root:, metadata:, case_manifest:)
+          @run_id = run_id
+          @run_root = run_root
+          @metadata = metadata
+          @case_manifest = case_manifest
+          # Task 8: invalidation marker / triage note 本体は runtime 所有の
+          # 独立 InvalidationHandler が生成する（controller は接続点のみ）。
+          @invalidation_handler = ExecutionV2::InvalidationHandler.new
+          @initial_status = "created"
+          # finding 9 前提条件 observable
+          @step_d_complete = false
+          @human_signoff_written = false
+          @raw_evidence_frozen = false
+          @validator_invoked = false
+          @validator_status = "not_run"
+          @human_signoff_status = "pending"
+          @invalidation_markers = []
+          @validator_result = nil
+          @closed = false
         end
-      end
 
-      def runtime_version
-        "0.1.0"
-      end
+        def run_status
+          @metadata.fetch("run_status")
+        end
 
-      def build_comparison_eligibility_note(run_id:, metadata:, validator_result:, invalidation_markers:, human_signoff:)
-        eligible = validator_result.fetch("overall_status") == "passed" &&
-          human_signoff.fetch("human_signoff_status") == "approved" &&
-          invalidation_markers.empty?
+        def manifest_metadata
+          @metadata
+        end
 
-        {
-          "schema_version" => "1.0.0",
-          "comparison_eligibility_note_id" => "comparison-eligibility-#{run_id}",
-          "run_id" => run_id,
-          "eligibility_status" => eligible ? "eligible_standard" : "ineligible_standard",
-          "review_mode" => metadata.fetch("review_mode"),
-          "treatment" => metadata.fetch("treatment"),
-          "reason_codes" => comparison_eligibility_reason_codes(
+        def case_manifest
+          @case_manifest
+        end
+
+        def invalidation_markers
+          @invalidation_markers
+        end
+
+        def persist_initial_manifest
+          @run_root.mkpath
+          write_manifest
+        end
+
+        # Step D 統合完了（finding 9 前提条件 1）。
+        def mark_step_d_complete
+          @step_d_complete = true
+        end
+
+        # human sign-off artifact 書込（finding 9 前提条件 2）。
+        # validator より前に decisions/human_signoff.json を書く（要件 6 受入 9）。
+        def write_human_signoff(status:, signed_off_by:, covered_decision_unit_ids: [], note: nil)
+          unless HUMAN_SIGNOFF_STATUSES.include?(status)
+            raise ArgumentError, "invalid human_signoff_status: #{status.inspect}"
+          end
+
+          payload = {
+            "run_id" => @run_id,
+            "human_signoff_status" => status,
+            "signed_off_by" => signed_off_by,
+            "signed_off_at" => Time.now.utc.iso8601,
+            "covered_decision_unit_ids" => covered_decision_unit_ids,
+            "signoff_note" => note
+          }
+          path = @run_root + "decisions/human_signoff.json"
+          path.dirname.mkpath
+          path.write(JSON.pretty_generate(payload))
+          @human_signoff_status = status
+          @human_signoff_written = true
+          payload
+        end
+
+        # raw evidence 凍結（finding 9 前提条件 3）。controller が evidence writer に
+        # 指示する凍結を骨格として表現。freeze marker artifact を observable にする。
+        def freeze_raw_evidence
+          marker = @run_root + "validation/.raw_evidence_frozen"
+          marker.dirname.mkpath
+          marker.write(Time.now.utc.iso8601)
+          @raw_evidence_frozen = true
+        end
+
+        # finding 9: validator 単一起動点。前提 3 条件未充足／多重起動は
+        # fail-closed（orchestration_failed）＋invalidation marker。
+        # validator 実体は後続 Task 7 が yield ブロックとして差し込む。
+        def invoke_validator
+          enforce_close_boundary_preconditions!
+
+          @validator_invoked = true
+          result = block_given? ? yield : { "validator_status" => "not_run" }
+          status = result.fetch("validator_status")
+          # foundation canonical 4 値を丸めず伝播。enum 外は再定義せず拒否。
+          unless VALIDATOR_STATUSES.include?(status)
+            raise ArgumentError, "invalid validator_status: #{status.inspect}"
+          end
+
+          @validator_status = status
+          @validator_result = result
+          # validator_result.json を Run Close Boundary 単一起動点で保存
+          # （要件 6 受入 9、design Run Close Boundary）。raw evidence は
+          # 凍結済みで非編集、結果は別 artifact として重ねる（design Decision 3）。
+          path = @run_root + "validation/validator_result.json"
+          path.dirname.mkpath
+          path.write(JSON.pretty_generate(result))
+          result
+        end
+
+        # close は validator 後にのみ成立（順序: Step D → sign-off → freeze →
+        # validator → close）。closed は raw evidence 凍結のみを意味し validity を
+        # 意味しない（design §1）。evidence_class は close 時 candidate のまま記録。
+        def close
+          unless @validator_invoked
+            fail_closed!("close attempted before validator invocation",
+                         "close_boundary_order_violation")
+          end
+
+          @metadata["run_status"] = "closed"
+          @metadata["validator_status"] = @validator_status
+          @metadata["human_signoff_status"] = @human_signoff_status
+          @metadata["evidence_class"] = "candidate"
+          @metadata["closed_at"] = Time.now.utc.iso8601
+          write_manifest
+          write_review_case
+          @closed = true
+          @metadata
+        end
+
+        # run close 成立後の確定順（design Run Close Boundary）:
+        #   1. invalidation marker 付与
+        #   2. invalid_run_triage_note.json 生成（本体生成は Task 8 波。本波は
+        #      Run Close Boundary 後の triage 呼び出し位置・順序のみ確定）
+        #   3. run_manifest.yaml / review_case.json metadata 更新
+        # close 成立前の呼び出しは順序違反として fail-closed（順序を崩さない）。
+        def finalize_post_close(validation_bridge:)
+          unless @closed
+            fail_closed!(
+              "finalize_post_close attempted before run close " \
+              "(required order: ... -> validator -> close -> post-close)",
+              "close_boundary_order_violation"
+            )
+          end
+
+          order = []
+
+          # 1. invalidation marker 付与（既に検知済みの marker を確定保存）。
+          persist_invalidation_markers
+          order << "invalidation_markers_applied"
+
+          # 2. triage note 生成（Task 8 本体）。order 第2段の接続点で、
+          #    bridge の triage_linkage（failed checks / invalidation marker /
+          #    remediation hint linkage）を入力に InvalidationHandler が
+          #    derived/invalid_run_triage_note.json を生成する。Run Close
+          #    Boundary 後の生成位置・順序を崩さない（design Run Close Boundary）。
+          validator_result = @validator_result ||
+            { "validator_status" => @validator_status, "error_list" => [] }
+          linkage = validation_bridge.triage_linkage(
+            run_id: @run_id,
             validator_result: validator_result,
-            invalidation_markers: invalidation_markers,
-            human_signoff: human_signoff
+            invalidation_markers: @invalidation_markers
           )
-        }
-      end
-
-      def build_invalid_run_triage_note(run_id:, validator_result:, invalidation_markers:, human_signoff:)
-        failed_checks = validator_result.fetch("checks", []).select { |check| check.fetch("status") == "failed" }
-        primary_failure_code = if invalidation_markers.any?
-                                 "invalidation_marker_present"
-                               elsif failed_checks.any?
-                                 "validator_check_failed"
-                               else
-                                 "no_invalid_run_condition_detected"
-                               end
-
-        {
-          "schema_version" => "1.0.0",
-          "invalid_run_triage_note_id" => "invalid-run-triage-#{run_id}",
-          "run_id" => run_id,
-          "validator_status" => validator_result.fetch("overall_status"),
-          "human_signoff_status" => human_signoff.fetch("human_signoff_status"),
-          "primary_failure_code" => primary_failure_code,
-          "failed_checks" => failed_checks.map do |check|
-            {
-              "check_id" => check.fetch("check_id"),
-              "message" => check.fetch("message"),
-              "severity" => check.fetch("severity")
-            }
-          end,
-          "invalidation_marker_summary" => invalidation_markers.map do |marker|
-            {
-              "invalidation_marker_id" => marker.fetch("invalidation_marker_id"),
-              "reason_code" => marker.fetch("reason_code"),
-              "reason_detail" => marker.fetch("reason_detail"),
-              "scope" => marker.fetch("scope"),
-              "issued_by" => marker.fetch("issued_by"),
-              "linked_check_ids" => marker.fetch("linked_check_ids", [])
-            }
-          end,
-          "operator_action_hint" => operator_action_hint(
-            failed_checks: failed_checks,
-            invalidation_markers: invalidation_markers
+          triage = @invalidation_handler.write_triage_note(
+            run_root: @run_root,
+            run_id: @run_id,
+            validator_result: validator_result,
+            invalidation_markers: @invalidation_markers,
+            operator_action_hint: linkage["operator_remediation_hint"]
           )
-        }
-      end
+          order << "triage_hook_invoked"
 
-      def comparison_eligibility_reason_codes(validator_result:, invalidation_markers:, human_signoff:)
-        codes = []
-        codes << "validator_failed" unless validator_result.fetch("overall_status") == "passed"
-        codes << "human_signoff_not_approved" unless human_signoff.fetch("human_signoff_status") == "approved"
-        codes.concat(invalidation_markers.map { |marker| "invalidation:#{marker.fetch('reason_code')}" })
-        codes = ["eligible_standard"] if codes.empty?
-        codes
-      end
+          # 3. run_manifest.yaml / review_case.json metadata 更新。
+          @metadata["validator_status"] = @validator_status
+          @metadata["human_signoff_status"] = @human_signoff_status
+          write_manifest
+          write_review_case
+          order << "metadata_refreshed"
 
-      def operator_action_hint(failed_checks:, invalidation_markers:)
-        if invalidation_markers.any?
-          "Review invalidation marker reasons first, then decide whether the run should be rerun or formally excluded from downstream analysis."
-        elsif failed_checks.any?
-          "Resolve validator check failures before treating this run as analysis-ready."
-        else
-          "No invalid-run triage action is required."
+          {
+            "invalidation_markers_applied" => @invalidation_markers,
+            "triage_hook_invoked" => triage,
+            "metadata_refreshed" => true,
+            "post_close_order" => order
+          }
         end
-      end
 
-      def terminal_human_signoff_status(human_decision)
-        TERMINAL_HUMAN_SIGNOFF_STATUSES.include?(human_decision) ? human_decision : "pending"
-      end
+        private
 
-      def build_metric_snapshot(run_id:, review_case:, decision_artifacts:)
-        decisions = decision_artifacts.fetch("decision_units").fetch("decision_units")
-        {
-          "schema_version" => "1.0.0",
-          "run_id" => run_id,
-          "finding_count" => review_case.fetch("findings", []).length,
-          "decision_unit_count" => decisions.length,
-          "approved_decision_count" => decisions.count { |entry| entry["human_decision"] == "approved" },
-          "rejected_decision_count" => decisions.count { |entry| entry["human_decision"] == "rejected" },
-          "deferred_decision_count" => decisions.count { |entry| entry["human_decision"] == "deferred" }
-        }
-      end
+        def enforce_close_boundary_preconditions!
+          if @validator_invoked
+            fail_closed!("validator double invocation is forbidden",
+                         "close_boundary_double_invocation")
+          end
 
-      def build_trace_note(run_id:, track:, case_manifest:, common_inputs:)
-        {
-          "schema_version" => "1.0.0",
-          "run_id" => run_id,
-          "track" => track,
-          "case_id" => case_manifest.fetch("case_id"),
-          "target_id" => common_inputs.fetch("target_id"),
-          "phase_profile" => common_inputs.fetch("phase_profile"),
-          "source_refs" => common_inputs.fetch("source_refs"),
-          "governance_refs" => common_inputs.fetch("governance_refs")
-        }
-      end
+          missing = []
+          missing << "step_d_complete" unless @step_d_complete
+          missing << "human_signoff_written" unless @human_signoff_written
+          missing << "raw_evidence_frozen" unless @raw_evidence_frozen
+          return if missing.empty?
 
-      def build_signal_linkage_note(run_id:, track:, analysis_result:, validation_close:)
-        {
-          "schema_version" => "1.0.0",
-          "run_id" => run_id,
-          "track" => track,
-          "linked_signal_ids" => analysis_result.fetch("signal_candidates", []).map { |entry| entry.fetch("signal_id") },
-          "validator_status" => validation_close.fetch("validator_result").fetch("overall_status"),
-          "comparison_eligibility_status" => validation_close.fetch("comparison_eligibility_note").fetch("eligibility_status")
-        }
+          fail_closed!(
+            "Run Close Boundary preconditions unmet before validator: " \
+            "missing #{missing.join(', ')} (required order: Step D -> human " \
+            "sign-off -> freeze -> validator -> close)",
+            missing.include?("human_signoff_written") ? :run_close_without_signoff : :treatment_step_mismatch
+          )
+        end
+
+        # fail-closed: validator を起動せず orchestration_failed にし、
+        # invalidation marker を raw evidence 非編集で追加（design Decision 3）。
+        # marker は Task 8 InvalidationHandler 経由で構築し、基盤
+        # invalidation_marker.schema.json の必須形・reason_code 語彙を
+        # handler が出す自動 marker と一貫させる（finding 9・型一貫）。
+        # reason が 4 自動 kind の場合は kind を渡し、controller 固有の
+        # orchestration reason（close 順序違反等）は同 schema 必須形で構築する。
+        def fail_closed!(message, reason)
+          @metadata["run_status"] = "orchestration_failed"
+          marker =
+            if reason.is_a?(Symbol)
+              @invalidation_handler.automatic_marker(
+                run_id: @run_id, kind: reason, detail: message, scope: "run"
+              )
+            else
+              @invalidation_handler.human_issued_marker(
+                run_id: @run_id, reason_code: reason.to_s,
+                reason_detail: message, issued_by: "runtime", scope: "run"
+              )
+            end
+          @invalidation_markers << marker
+          persist_invalidation_markers
+          write_manifest
+          raise CloseBoundaryViolation, message
+        end
+
+        def persist_invalidation_markers
+          path = @run_root + "validation/invalidation_markers.json"
+          path.dirname.mkpath
+          path.write(JSON.pretty_generate("invalidation_markers" => @invalidation_markers))
+        end
+
+        def write_manifest
+          path = @run_root + "run_manifest.yaml"
+          path.dirname.mkpath
+          payload = {
+            "manifest_version" => "1.0.0",
+            "runtime_feature" => "dual-reviewer-runtime",
+            "metadata" => @metadata
+          }
+          path.write(YAML.dump(payload))
+        end
+
+        # review_case.json は唯一の横断正本（常に foundation review_case schema
+        # 準拠＝A-5、design Completion Criteria）。投影規約は runtime 所有の
+        # ReviewCaseProjector が持つ（writer 層）。controller は run lifecycle の
+        # 更新群を反映する責務のみを持ち、projector 生成済みの schema-compliant
+        # envelope（step_records / findings / validation_refs 等）を clobber せず
+        # 保全し、metadata の実行中更新群（run_status / validator_status /
+        # human_signoff_status / evidence_class / closed_at）のみを上書きする。
+        # projector 出力が未生成の場合は最小 envelope を書く（metadata 正本性は
+        # 保つ。横断正本の完全形は EvidenceWriter 経由で投影される）。
+        def write_review_case
+          path = @run_root + "review_case.json"
+          path.dirname.mkpath
+          existing =
+            if path.file?
+              begin
+                JSON.parse(path.read)
+              rescue JSON::ParserError
+                nil
+              end
+            end
+
+          payload =
+            if existing.is_a?(Hash) && existing.key?("metadata")
+              # projector 生成済み envelope を保全し metadata のみ refresh する
+              # （raw step_records / findings / validation_refs を消さない）。
+              merged_metadata = (existing["metadata"] || {}).merge(@metadata)
+              existing.merge("metadata" => merged_metadata)
+            else
+              {
+                "schema_version" => "1.0.0",
+                "review_case_id" => "review-case-#{@run_id}",
+                "metadata" => @metadata
+              }
+            end
+          path.write(JSON.pretty_generate(payload))
+        end
       end
     end
   end

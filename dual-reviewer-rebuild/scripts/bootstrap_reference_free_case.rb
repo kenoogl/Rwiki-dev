@@ -6,7 +6,6 @@ require "json"
 require "optparse"
 require "pathname"
 require "time"
-require_relative "track_runs/default_heuristic_profile_ref"
 
 module DualReviewer
   module Scripts
@@ -39,9 +38,6 @@ module DualReviewer
         puts "overlay: #{case_workflow_overlay_path}"
         puts "active worklist: #{active_worklist_path}"
         puts "workflow path: #{workflow_path_path}"
-        puts "default intent heuristic: #{TrackRuns::DefaultHeuristicProfileRef.for_track('intent')}"
-        puts "default spec heuristic: #{TrackRuns::DefaultHeuristicProfileRef.for_track('spec')}"
-        puts "default implementation heuristic: #{TrackRuns::DefaultHeuristicProfileRef.for_track('implementation')}"
       end
 
       private

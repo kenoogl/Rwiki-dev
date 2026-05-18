@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dual-reviewer:runtime:comparison_eligibility_note:1.0.0",
+  "title": "comparison_eligibility_note",
+  "description": "standard comparison に直接入れてよいかを downstream が判断する補助 note。スキーマは生成元 runtime が所有する（設計横断整合ゲート 2026-05-18 決定：評価 A-7）。evaluation はこれに依存し再定義しない（producer 側責務）。最小 6 項目を required とする。配置は runtime 所有 contract（foundation runtime/schemas/ は consumer 参照のみで本 runtime 所有スキーマを置かない）。",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "run_id",
+    "eligible_for_standard_comparison",
+    "ineligibility_reason_codes",
+    "treatment",
+    "phase_profile",
+    "generated_at"
+  ],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "eligible_for_standard_comparison": { "type": "boolean" },
+    "ineligibility_reason_codes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "treatment": { "type": "string", "minLength": 1 },
+    "phase_profile": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "minLength": 1 }
+  },
+  "x-versioning-note": "versioned artifact。silent な非互換編集を禁ずる。runtime 所有 contract（評価 A-7）。"
+}
