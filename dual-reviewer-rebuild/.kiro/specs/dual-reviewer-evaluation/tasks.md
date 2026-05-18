@@ -2,339 +2,213 @@
 
 ## 1. この文書の役割
 
-この文書は `dual-reviewer-evaluation` を implementation 可能な作業単位へ落とした task plan である。
+この文書は `dual-reviewer-evaluation` を implementation 可能な作業単位へ落とした task plan である。承認済み requirements.md（Requirement 1〜10）と design.md から全面再導出した。
 
-`evaluation` は
+`evaluation` は runtime artifact を読み、valid / invalid / exploratory / analysis_blocked の区分、比較可能な metrics、caveat 付き分析 artifact に変換する analysis layer である。raw run evidence を編集せず `experiments/analysis/` に derived artifact を生成する。本 task は次の順で作る。
 
-- local run intake
-- imported bundle ingestion
-- admission / classification
-- metrics / comparisons / caveats
-
-を `experiments/analysis/` 配下の concrete artifact として実装する。
+- analysis artifact directory skeleton
+- intake（local run + portable bundle）
+- classification（4 状態 + admission state）
+- metric extraction（3 tier + phase overlay）
+- comparison（treatment / phase-aware）
+- exclusion / caveat reporting
+- imported evidence intake artifacts（ingestion / admission register）
+- versioning と staleness 伝播
+- テスト
 
 ## 2. 実装順序
 
-1. analysis directory skeleton を揃える
-2. local run intake を実装する
-3. imported bundle ingestion と admission を実装する
-4. classification と exclusion を実装する
-5. metric extraction を実装する
-6. comparisons と caveats を実装する
-7. analysis manifest と fixtures/tests を追加する
+1. `experiments/analysis/` directory skeleton を確定する
+2. intake model（local + portable bundle）
+3. classification model（valid / invalid / exploratory / analysis_blocked、admission state、設計スキップ弁別）
+4. metric extraction（3 tier、core + phase overlay、derivation rule）
+5. comparison model（treatment、phase-aware、valid population rule、比較可能性条件）
+6. exclusion / caveat reporting
+7. imported evidence intake artifacts（ingestion / admission register）
+8. versioning と staleness 伝播
+9. テスト
 
-理由:
+理由（design「Architecture」「Interfaces to Downstream Features」より）:
 
-- self-improvement と paper-interface は evaluation output がないと tasks を具体化しにくい
-- imported bundle ingestion は classification / metrics の前提になる
-- exclusion / caveat は comparisons の前に必要になる
+- intake → classification がないと metric / comparison が成立しない
+- comparison 可能性条件と caveat がないと paper-interface / self-improvement が再利用できない
+- staleness 伝播は foundation 無効化伝播義務を入力起点とするため classification 確定後に置く
 
 ## 3. Tasks
 
-### Task 1: Create analysis directory skeleton
+### Task 1: `experiments/analysis/` directory skeleton を確定する
 
-目的:
-
-- evaluation 正本出力先を repo 上に固定する
+根拠: Requirement 5（受入 1・3）、design「Analysis Artifact Layout」「Placement Rationale」「Key Decision 1」。
 
 作業:
 
-- `experiments/analysis/imports/`
-- `experiments/analysis/manifests/`
-- `experiments/analysis/classifications/`
-- `experiments/analysis/metrics/`
-- `experiments/analysis/comparisons/`
-- `experiments/analysis/caveats/`
-
-の skeleton を作る。
+- 正本出力先を固定する（design「Analysis Artifact Layout」）。
+  - `imports/{ingestion_register.json,admission_register.json}`
+  - `manifests/analysis_run_manifest.yaml`
+  - `classifications/{run_classification_index.json,exclusion_report.json}`
+  - `metrics/{run_metrics.json,finding_metrics.json,treatment_metrics.json}`
+  - `comparisons/{treatment_comparisons.json,phase_comparisons.json}`
+  - `caveats/caveat_register.json`
+- analysis artifact を raw run evidence storage から分離する（Requirement 5 受入 3、Decision 1：evaluation は run artifact を mutate しない）。
 
 完了条件:
 
-- evaluation owner の artifact placement が repo 上に存在する
+- raw run と analysis artifact の境界を説明できる（design Completion Criteria 第 1 項）
+- derived output が `experiments/analysis/` に分離されている
 
-### Task 2: Implement local run intake
+### Task 2: intake model を作る
 
-目的:
-
-- in-repo local run directory を標準入力として読めるようにする
+根拠: Requirement 6（受入 1〜5）、Requirement 10（受入 1〜3）、design「Intake Model」「Portable Bundle Intake」「Analysis Population Selection」。
 
 作業:
 
-- `run_manifest.yaml`
-- `review_case.json`
-- `decisions/decision_units.json`
-- `validation/validator_result.json`
-- `validation/invalidation_markers.json`
-- `derived/comparison_eligibility_note.json`
-
-を読む intake loader を実装する。
+- local run の最小 intake artifact を読む: `run_manifest.yaml` / `review_case.json` / `decisions/decision_units.json` / `validation/validator_result.json` / `validation/invalidation_markers.json` / `derived/comparison_eligibility_note.json`（design Intake Model）。standard aggregate の一次入力は `review_case.json` と validation artifact とし、`steps/*.json` は必要時のみ読む。
+- v2-compatible optional intake（`v2/review_artifact.json` / `v2/metric_snapshot.json` / `v2/trace_note.json`）を読めなくても standard analysis が成立する設計にする（design）。
+- portable bundle intake の最小入力（`bundle_manifest.yaml` + exported run_manifest/review_case/decision_units/validator_result/invalidation_markers/comparison_eligibility_note）を受ける（Requirement 10 受入 1）。required provenance 欠落時は intake 継続しても standard admission を与えない（design Portable Bundle Intake）。
+- standard aggregation 前に必須 metadata を check し、欠落時は standard aggregation を拒否、insufficiency diagnostics を明示する（Requirement 6 受入 1〜3）。narrative から欠落 metadata を捏造しない（受入 5）。
+- analysis population を再現可能な selection policy で選ぶ（`run_status=closed` / standard intake complete / protocol-facing validation summary available / 同一 case_id・phase_profile 内で比較 treatment が揃う）。selection manifest と refresh workflow に落とせる形にする（design Analysis Population Selection）。
 
 完了条件:
 
-- runtime fixture を入力にして local run intake が成立する
-- missing required artifact を識別できる
-- comparison eligibility 補助情報を比較前提に引き渡せる
+- 必須 metadata 不足時に standard aggregation が fail fast し insufficiency diagnostics を出す
+- portable bundle が required provenance 不足では standard admission を得ない
 
-追加で扱ってよい補助入力:
+### Task 3: classification model を作る
 
-- `v2/review_artifact.json`
-- `v2/metric_snapshot.json`
-- `v2/trace_note.json`
-
-### Task 3: Implement imported bundle ingestion
-
-目的:
-
-- portable evidence bundle を central-side evaluation が intake できるようにする
+根拠: Requirement 1（受入 1〜6）、Requirement 9（受入 1〜6）、Requirement 10（受入 4・5）、Requirement 2 受入 3、design「Classification Model §1〜§4」「Admission States for Imported Bundles」。
 
 作業:
 
-- `bundle_manifest.yaml` loader
-- exported run subtree resolver
-- bundle checksum verifier
-- required provenance check
-- imported bundle materialization or in-memory intake path
-- optional v2 internal artifact resolver
-
-を実装する。
+- run を 4 状態 `valid` / `invalid` / `exploratory` / `analysis_blocked` で分類する（design §1）。`analysis_blocked` は foundation evidence_class ではなく evaluation local state（design §1、Decision 2）。
+- classification rules を実装する（design §2）。`valid`=validator_status passed かつ human_signoff 終端かつ evidence_class valid、`invalid`=invalidation marker あり or validator_status failed、`exploratory`=evidence_class exploratory、`analysis_blocked`=required input 不足 or run_status≠closed or validator_status blocked。`analysis_blocked` は exclusion report に出すが比較集団に入れない（Requirement 1 受入 1・2）。
+- missing と invalid を区別する（Requirement 1 受入 4、design §3）。
+- `comparison_eligibility_note.json` を classification 前の補助判断材料として読んでよいが final 判定は metadata / validator / invalidation を基礎にする。スキーマは runtime 所有、evaluation は最小項目に依存し再定義しない（評価 A-7 決定、design §2 末尾）。
+- 有効性分類（valid/invalid/exploratory）と review-mode（manual_dogfooding/runtime_mediated）を直交独立軸として扱う。manual_dogfooding の内容的 valid run を review-mode 理由で invalid 誤分類しない（Requirement 1 受入 6、Requirement 9 受入 1）。review-mode による標準集団切り分けは別の slice 操作とする（Requirement 9 受入 2・4・5）。
+- review-mode の standard comparison-population rule を evaluation が所有する: manual dogfooding は Phase 1 evidence で、明示的 separate slice として含めない限り standard runtime-mediated comparison set から除外する（Requirement 9 受入 6）。通常編集活動を manual review record contract 経由でなければ valid review evidence にしない（受入 3）。
+- imported bundle の admission state `admitted_standard` / `admitted_exploratory` / `rejected` を classification 前段で判定する（Requirement 10 受入 4、design Admission States、優先順ルール）。admission status / reason codes を `imports/admission_register.json` に記録し、admission state を run validity と別に保持する（受入 5）。
+- 設計スキップ vs 障害欠損を runtime の step 実行印（`execution_state` / `reason` / `treatment`）で弁別する（Requirement 2 受入 3、design §4）。設計上の意図的省略を障害扱いで母集団から誤排除しない（runtime 要件 2 受入 5 と整合）。
 
 完了条件:
 
-- exported bundle fixture を evaluation が読める
-- missing provenance を黙って補完しない
-- bundle integrity を checksum で確認できる
+- valid / invalid / exploratory / analysis_blocked の違いを説明できる（design Completion Criteria 第 2 項）
+- review-mode と run-validity が直交軸として扱われる
 
-### Task 4: Implement admission decision logic
+### Task 4: metric extraction を作る
 
-目的:
-
-- imported bundle を `standard / exploratory / rejected` に分ける
+根拠: Requirement 3（受入 1〜5）、Requirement 8（受入 1〜5）、Requirement 7（受入 1・4）、design「Metric Model §1〜§3」「Phase-Specific Metric Overlays」。
 
 作業:
 
-- admission rule evaluator
-- `imports/ingestion_register.json` writer
-- `imports/admission_register.json` writer
-
-を実装する。
-
-含めること:
-
-- provenance sufficiency check
-- review-mode distinction
-- standard comparison eligibility
+- metric を 3 tier（run-level / finding-level / treatment-level）に分離する（Requirement 3 受入 5、design §1）。
+- 初版 minimum metric set を実装する（design §2）。run-level=total/accepted/rejected/deferred findings + validation outcome、finding-level=severity/source-role/judgment label distribution、treatment-level=findings per run/acceptance ratio/judgment invocation coverage。foundation / runtime に追加 field を要求しない範囲で始める。
+- phase 共通 core metric layer と phase ごとの overlay metric layer の 2 層構造にする（Requirement 8 受入 1〜5、design §2・§2.5）。overlay は intent/requirements/design/tasks（+ future implementation-oriented）ごとに別観点。design 中心 baseline を全 phase 主指標と見なさない。phase-specific metric selection を derived artifact に明示する（Requirement 8 受入 4、Requirement 7 受入 4）。entire evaluation contract の再設計なしに implementation-oriented review へ拡張可能にする（受入 5）。
+- derivation rule: free-form summary からでなく metadata → structured findings → decision units → validation/invalidation の順で計算する（Requirement 3 受入 2、design §3）。`derived/runtime_summary.json` を metric の正本入力にしない。
+- raw evidence → derived metric の derivation path を保持し、schema 互換 raw evidence 不変なら再計算可能にする（Requirement 3 受入 3・4）。
 
 完了条件:
 
-- imported evidence が admission status を持たずに比較へ入らない
+- metrics がどこに出るか説明できる（design Completion Criteria 第 3 項）
+- core / phase overlay の 2 層が derived artifact から追跡できる
 
-### Task 5: Implement classification and exclusion logic
+### Task 5: comparison model を作る
 
-目的:
-
-- valid / invalid / exploratory / analysis_blocked を concrete に分類する
+根拠: Requirement 2（受入 1〜6）、Requirement 7（受入 2・3・5）、design「Comparison Model §1〜§3」。
 
 作業:
 
-- classification engine
-- `classifications/run_classification_index.json`
-- `classifications/exclusion_report.json`
-
-を実装する。
-
-区別すること:
-
-- missing vs invalid
-- imported admission vs run validity
-- standard exclusion vs exploratory retention
+- treatment comparison（`single` / `dual` / `dual+judgment`）を実装する（Requirement 2 受入 1・2、design §1）。比較前に target condition 一致 / phase-profile 比較可能 / protocol・runtime・prompt・schema version 比較可能 / `comparison_eligibility_note` の不可理由を先に尊重、を確認する。
+- protocol-version と prompt-version の uniformity を比較可能性条件として要求し、per-run metadata が揃っていても version 混在 comparison set を検出・報告する（Requirement 2 受入 6）。不一致は `comparison_invalid_reason` を出し aggregate しない（受入 5）。treatment-driven step omission と runtime failure を区別する（受入 3）。treatment identity を comparison-relevant derived output 全てに見せる（受入 4）。
+- phase-aware comparison の標準 slice（intent/requirements/design/tasks）を実装する（Requirement 7 受入 3、design §2）。phase identity を消さず保持し phase-specific overlay 選択を明示する。phase-distinct run を default で 1 集約に潰さない（Requirement 7 受入 5）。
+- valid population rule: 標準 comparative metrics は `valid` population のみで計算し、`exploratory` は separate appendix-style aggregate として保持、主比較に混ぜない（design §3、Decision 3）。
 
 完了条件:
 
-- invalid / missing / analysis_blocked が混線しない
-- exclusion reasons が machine-readable に残る
+- 比較可能性条件（target / phase / version / eligibility）を満たさない set が aggregate されない
+- valid population のみで標準比較が計算される
 
-### Task 6: Implement run-level and finding-level metric extraction
+### Task 6: exclusion / caveat reporting を作る
 
-目的:
-
-- structured evidence から core metrics を再計算可能に抽出する
+根拠: Requirement 4（受入 1〜5）、Requirement 1 受入 3、design「Exclusion and Caveat Model」「Key Decision 4」。
 
 作業:
 
-- `metrics/run_metrics.json`
-- `metrics/finding_metrics.json`
-
-の生成処理を実装する。
-
-含めること:
-
-- total / accepted / rejected / deferred
-- severity distribution
-- source-role distribution
-- judgment label distribution
+- `classifications/exclusion_report.json` を作る（`run_id` / `classification` / `reason_codes` / `reason_details` / `phase_profile` / `treatment`）。どの run がなぜ除外されたか記述する（Requirement 4 受入 1、design §1）。除外 run の counts と reasons を保持する（Requirement 1 受入 3、Requirement 4 受入 4：raw run log 手読みなしに exclusion counts を報告可能）。
+- `caveats/caveat_register.json` を作る（mixed maturity evidence / exploratory only slice / low sample size / protocol drift across comparison set など）。paper-interface が raw archive 再読なしに caveat 継承できる形にする（Requirement 4 受入 2、design §2）。
+- data-quality caveat と runtime-quality caveat を区別する（Requirement 4 受入 3）。invalid と valid population を silent に 1 集約へ潰さない（Requirement 4 受入 5、Decision 4）。
 
 完了条件:
 
-- `derived/runtime_summary.json` に依存せず metric を計算できる
+- exclusion counts を raw log 手読みなしに報告できる
+- caveat が machine-readable first-class artifact として残る
 
-### Task 7: Implement treatment-level metrics and comparisons
+### Task 7: imported evidence intake artifacts を作る
 
-目的:
-
-- treatment / phase-aware aggregate を concrete artifact にする
+根拠: Requirement 10（受入 2〜5）、design「Imported Evidence Intake Artifacts」。
 
 作業:
 
-- `metrics/treatment_metrics.json`
-- `comparisons/treatment_comparisons.json`
-- `comparisons/phase_comparisons.json`
-
-を生成する。
-
-含めること:
-
-- comparison precondition checks
-- invalid comparison reason emission
-- phase-specific overlay selection visibility
+- `imports/ingestion_register.json` を作る（`bundle_id` / `run_id` / `source_repository_id` / `source_revision` / `review_mode` / `ingested_at` / `ingestion_status` / `missing_fields`）。
+- `imports/admission_register.json` を作る（`bundle_id` / `run_id` / `admission_status` / `admission_reason_codes` / `eligible_for_standard_comparison` / `eligible_for_exploratory_analysis`）。
+- admission 前に required provenance を validate する（Requirement 10 受入 2）。imported runtime-mediated bundle と manual dogfooding session を区別する（受入 3）。reject / downgrade-to-exploratory / admit を明示 admission rule で判定する（受入 4）。どの derived artifact が imported evidence をどの admission status で含むか保持する（受入 5）。
 
 完了条件:
 
-- `single / dual / dual+judgment` の比較条件が machine-readable に残る
-- phase-aware comparison が `design / tasks` を中心に slice できる
-- comparison eligibility note と比較 exclusion reason が矛盾しない
+- imported evidence が raw local run と区別されたまま扱える
+- admission status と reason codes が register に残る
 
-### Task 8: Implement caveat and limitation artifacts
+### Task 8: versioning と staleness 伝播を作る
 
-目的:
-
-- exclusion と別軸で limitation を保持する
+根拠: Requirement 5（受入 5・6）、Requirement 5 受入 2、design「Versioning Model」。
 
 作業:
 
-- `caveats/caveat_register.json` writer
-- low sample size
-- mixed maturity
-- protocol drift
-- exploratory-only slice
-
-などの caveat emission を実装する。
-
-### Task 9: Implement analysis manifest and versioning
-
-目的:
-
-- 同じ raw run set でも analysis logic 変更を区別できるようにする
-
-作業:
-
-- `manifests/analysis_run_manifest.yaml` writer
-
-を実装し、
-
-- `analysis_logic_version`
-- `input_run_set`
-- `metric_set_version`
-- `phase_metric_profile_version`
-- `comparison_contract_version`
-- `runtime_validation_summary_coverage`
-
-を記録する。
+- analysis artifact を versioned output とする。`manifests/analysis_run_manifest.yaml` に `analysis_logic_version` / `input_run_set` / `generated_at` / `metric_set_version` / `phase_metric_profile_version` / `comparison_contract_version` を記録する（Requirement 5 受入 5、design Versioning Model）。同一 raw run set でも analysis logic が変われば別 output 扱い。
+- derived output から run identifier / target identifier への linkage を保持する（Requirement 5 受入 2）。
+- 参照していた run が事後に invalidate された場合、その run を入力に含む derived artifact を stale フラグ付け、または再導出する（Requirement 5 受入 6、design）。invalidation を含む run の上に古い derived output を据え置かない。foundation 無効化伝播義務（foundation 要件 6 受入 9）を入力起点とする。
 
 完了条件:
 
-- analysis output の再生成と差分追跡が可能になる
-- paper-interface などの downstream が protocol summary の coverage 欠落を黙って見落とさない
+- analysis logic 変更時に artifact versioning が見える
+- 事後 invalidate された run を含む derived artifact が stale 化または再導出される
 
-### Task 10: Formalize analysis population selection workflow
+### Task 9: テストを用意する
 
-目的:
-
-- analysis population を run set 選定ルールと selection manifest で再現可能にする
+根拠: design「Completion Criteria」、プロジェクト開発方針（TDD）。
 
 作業:
 
-- protocol-backed run を選ぶ selector script
-- selection manifest schema / placement
-- selected run set から `experiments/analysis/` を再構築する helper
-- 必要なら paper artifact までまとめて更新する wrapper
-
-を整備する。
-
-完了条件:
-
-- `input_run_set` が ad hoc な手選別ではなく、selection policy と manifest から再生成できる
-- paper-interface と self-improvement が同じ protocol-backed analysis population を共有できる
-
-### Task 11: Add evaluation fixtures
-
-目的:
-
-- downstream feature と tests が使える evaluation output sample を用意する
-
-作業:
-
-- valid local run fixture intake result
-- imported bundle admission fixture
-- invalid / analysis_blocked fixture
-- minimal comparison fixture
-
-を配置する。
+- classification rules / admission rules / 設計スキップ弁別を固定入力で決定的に検証する。
+- metric derivation を固定 structured evidence で入出力対応検証する（free-form 非依存）。
+- comparison 可能性条件（version 混在検出含む）と valid population rule を検証する。
+- staleness 伝播（事後 invalidate → derived stale 化）を検証する。
+- TDD: 期待入出力に基づき先にテストを用意し失敗を確認してから実装する。
 
 完了条件:
 
-- self-improvement と paper-interface が fixture ベースで後続 task を起こせる
-
-### Task 12: Add evaluation tests and smoke checks
-
-目的:
-
-- intake / admission / metrics の最低限の mechanical validation を持つ
-
-作業:
-
-- local run intake test
-- imported bundle ingestion test
-- admission decision test
-- classification / exclusion test
-- core metric extraction test
-- comparison invalidity test
-
-を追加する。
-
-完了条件:
-
-- imported / local / exploratory / invalid の区別が mechanical に確認できる
+- design Completion Criteria 4 点（境界説明・4 状態説明・metrics/caveat 所在説明・downstream 追跡）を満たす
 
 ## 4. Downstream Handoff
 
-evaluation tasks 完了後に、次の feature が依存してよい artifact は少なくとも次である。
+evaluation tasks 完了後に downstream が読んでよい artifact（design「Interfaces to Downstream Features」）。
 
-- `experiments/analysis/imports/*.json`
-- `experiments/analysis/classifications/*.json`
-- `experiments/analysis/metrics/*.json`
-- `experiments/analysis/comparisons/*.json`
-- `experiments/analysis/caveats/caveat_register.json`
-- `experiments/analysis/manifests/analysis_run_manifest.yaml`
+- self-improvement: `run_classification_index.json` / `exclusion_report.json` / `run_metrics.json` / `finding_metrics.json` / `caveat_register.json`（特に invalid / exploratory 分布）
+- paper-interface: `treatment_comparisons.json` / `phase_comparisons.json` / `exclusion_report.json` / `caveat_register.json`（raw run directory を一次入力にしない）
 
 ## 5. Blocking Dependencies
 
-evaluation task 着手前の前提:
+phase-and-feature-dependency-map §5.3 に従い、次は先行成果物が固まるまで blocked。
 
-- foundation metadata / review-mode / provenance field naming が存在する
-- runtime canonical run artifact が存在する
-- runtime exported bundle shape が存在する
-
-evaluation tasks 完了まで blocked とみなす downstream task:
-
-- self-improvement の imported evidence provenance task
-- self-improvement の backtest-on-analysis task
-- paper-interface の comparison source bundle task
-- paper-interface の evidence register task
+- Task 2/3 は runtime export manifest shape と `comparison_eligibility_note.json`（runtime 所有スキーマ）確定が前提
+- Task 2 の foundation metadata contract / evidence_class 確定が前提
+- Task 8 の foundation 無効化伝播義務確定が前提
+- evaluation comparison artifact field naming 確定が paper-interface bundle task の前提（後段 alignment で詰める）
 
 ## 6. Completion Criteria
 
-- local run と imported bundle の両 intake path が存在する
-- admission status が machine-readable に残る
-- valid / invalid / exploratory / analysis_blocked が分類できる
-- metrics / comparisons / caveats が `experiments/analysis/` に出力される
-- downstream feature が evaluation output を参照する前提を持てる
+design「Completion Criteria」に従い、少なくとも次を満たすとき本 task plan は有効とみなす。
+
+- raw run と analysis artifact の境界を説明できる
+- valid / invalid / exploratory / analysis_blocked の違いを説明できる
+- metrics と caveat がどこに出るか説明できる
+- self-improvement と paper-interface がどの analysis artifact を読むか追跡できる
+- review-mode と run-validity が直交軸として扱われ、`comparison_eligibility_note.json` を runtime 所有スキーマとして参照する（評価 A-7）
