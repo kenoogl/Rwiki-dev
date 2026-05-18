@@ -295,10 +295,11 @@ cross-project intake を見据えた provenance field の役割分担:
 
 各 schema 上で mandatory-B1.0 と deferred を機械可読に区別する符号化規約を次の通り固定する（finding 8 設計差し戻しにより明文化、2026-05-18）。
 
-- mandatory-B1.0 の field は、当該 schema の JSON Schema `required` 配列に列挙する。`required` への列挙が「B-1.0 運用で省略不可」の正本表現である。
-- deferred の拡張点は、`required` に列挙しない。かつ schema または対象 field の `description` に deferred である旨を記し、加えて schema トップレベルに `x-deferred` 注記（先送り対象と委譲先を文章で示す）を置く。
+- mandatory-B1.0 の field は、当該 schema の JSON Schema `required` 配列に列挙する。`required` への列挙が「B-1.0 運用で省略不可」の正本表現である。入れ子の object および配列 `items` についても、各階層の `required` で当該階層の mandatory を表現する（最上位の `required` のみで入れ子内部の必須を代表させない）。
+- deferred の拡張点は、`required` に列挙しない。かつ schema または対象 field の `description` に deferred である旨を記し、加えて schema トップレベルに `x-deferred` 注記（先送り対象と委譲先を文章で示す）を置く。`x-deferred` は人間可読注記であり、機械的な deferred 検査（validator が `x-deferred` をどう扱うか）の要否は validator design に委ねる（本規約は責務境界の明示にとどめ、検査機構は設計しない）。
 - 値語彙・採点尺度・重み付けなど「形状は固定するが意味論を先送りする」項目は、field 自体は `required` に置き（形状は mandatory）、その値域 enum を schema に書かず `x-deferred` に委譲先を明記する。
-- 本規約は 5 schema および validator-facing contract 2 schema に一律適用する。runtime / evaluation / self-improvement はこの符号化を前提に import してよい。
+- 「初版語彙を固定し将来拡張のみ先送りする」項目は、当該 field の `enum` を schema に記載する（形状・初版語彙とも mandatory）。そのうえで語彙の将来拡張が deferred である旨を `description` に記し、`x-deferred` に拡張の委譲先を併記する。前項（値域 enum を書かない先送り）とは異なり、初版語彙は schema 上に確定列挙する。
+- 本規約は 5 schema および validator-facing contract 2 schema に一律適用する。runtime / evaluation / self-improvement はこの符号化を前提に import してよい。ただし validator-facing 2 contract で deferred を表現する際、専用注記キー（例：`x-staleness-propagation`）を `x-deferred` の代替として用いてよい。その場合も deferred 対象と委譲先を文章で示す義務は変わらない。
 
 foundation が所有する 5 schema の関係は以下の通りとする。
 
@@ -565,6 +566,7 @@ approval unit の追跡を可能にするため、`finding` は `decision_unit_i
 foundation は実行コードを持たないため、テストは成果物の機械検証に限定する。後続 spec はこの最小検証が pass することを前提にできる。
 
 - スキーマ整合：`runtime/schemas/*.schema.json` および `runtime/validators/contracts/*.schema.json` がすべて有効な JSON Schema として meta-schema 検証を通る
+- 符号化規約整合：各 schema が §4「mandatory/deferred の JSON Schema 符号化規約」に準拠する（mandatory=`required` 列挙、deferred=`x-deferred`（validator-facing 契約は専用注記キー可）＋`description`）ことを schema 単体検査で確認する
 - framework 整合：`layer1_framework.yaml` が YAML として解析でき、必須 top-level section（`version` / `roles` / `step_pipeline` / `step_intents` / `required_metadata_refs` / `asset_locations`）が存在する
 - metadata 整合：`metadata_contract.yaml` が YAML として解析でき、§3 の必須 field 一覧と各 enum が宣言されている
 - prompt 整合：Step A/B/C の正本配置（§Placement Decisions 項目 3）にファイルが存在し、各 frontmatter が解析可能で必須 field（`prompt_id` / `version` / `role` / `step` / `language` / `source_ref`）を持つ
