@@ -1,2 +1,6 @@
-version: 1.0.0
+# terminology.yaml.template
+# dual-reviewer-foundation Requirement 7／design「Domain Model §10」
+# 空でも成立するが version と entries を持つ。entries の運用は runtime / self-improvement で積み上げる。
+
+version: "1.0.0"
 entries: []

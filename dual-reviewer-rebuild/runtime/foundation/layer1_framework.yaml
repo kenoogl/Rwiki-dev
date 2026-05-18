@@ -1,0 +1,56 @@
+# layer1_framework.yaml
+# dual-reviewer-foundation Requirement 1（受入 1〜9）／Requirement 2 受入 1
+# design「Domain Model §1 Layer 1 Review Contract」「§2 Role Abstraction」
+#
+# 全 treatment / 全 phase で共有される Layer 1 review state machine の論理 contract。
+# runtime 実装詳細（retry / subagent dispatch / human interaction timing）は定義しない。
+# phase/profile 値語彙・treatment 値語彙は列挙しない（所有は runtime）。
+
+version: "1.0.0"
+
+roles:
+  primary_reviewer:
+    intent: "主役。対象から指摘候補を一次検出する。"
+  adversarial_reviewer:
+    intent: "敵対役。主役結論への安易な同調をせず独立した反証を提示する。"
+  judgment_reviewer:
+    intent: "判定役。指摘の必要性を構造的に判断する。"
+# vendor / concrete model 名は config に退避し、ここには出さない（Requirement 2 受入 1・2）。
+
+step_pipeline:
+  step_a:
+    canonical_name: "primary_detection"
+  step_b:
+    canonical_name: "adversarial_review"
+  step_c:
+    canonical_name: "judgment"
+  step_d:
+    canonical_name: "integration"
+
+step_intents:
+  step_b_forced_divergence:
+    role: "adversarial_reviewer"
+    output_intent: "独立した反証の提示。最終同意でも『反証なし』を意図的結果として記録する。"
+  step_c_necessity_judgment:
+    role: "judgment_reviewer"
+    output_intent: "指摘の必要性判断。step_b とは別 role・別 output intent。"
+  step_d_integration:
+    role: "(no additional LLM call)"
+    output_intent: "Step A/B/C 出力を追加 LLM 呼び出しなしに統合し、run close 時に消費される統合 review record。"
+
+required_metadata_refs:
+  contract: "runtime/foundation/metadata_contract.yaml"
+  note: "Requirement 1 受入 5 の最小 binding set は metadata_contract.yaml が正本。"
+
+asset_locations:
+  schemas: "runtime/schemas/"
+  prompts:
+    primary_detection: "runtime/prompts/primary_detection/primary_reviewer.prompt.md"
+    adversarial_review: "runtime/prompts/adversarial_review/adversarial_reviewer.prompt.md"
+    judgment: "runtime/prompts/judgment/judgment_reviewer.prompt.md"
+  validator_contracts: "runtime/validators/contracts/"
+  config: "runtime/config/"
+
+override_extension_point:
+  location: "runtime が prompt override 機構を接続する拡張点の所在のみ foundation が固定する。"
+  note: "選択順序・優先規則・適用条件は一切定義しない（runtime 責務。design §1 / Boundary Clarification）。"

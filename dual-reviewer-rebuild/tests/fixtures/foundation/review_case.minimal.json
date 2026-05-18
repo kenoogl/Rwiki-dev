@@ -1,87 +1,37 @@
 {
-  "schema_version": "1.0.0",
-  "review_case_id": "review-case-001",
+  "review_case_id": "rc-fixture-001",
   "metadata": {
-    "run_id": "run-001",
-    "target_id": "spec:dual-reviewer-foundation:tasks",
-    "target_artifact_hash": "sha256:example-target-hash",
-    "source_repository_id": "kenoogl/Rwiki-dev",
-    "source_revision": "f77e190",
-    "phase_profile": "tasks",
-    "treatment": "dual+judgment",
+    "run_id": "run-fixture-001",
+    "target_id": "spec:fixture",
+    "target_artifact_hash": "sha256:0000",
+    "source_repository_id": "fixture/repo",
+    "source_revision": "0000000",
+    "phase_profile": "fixture-phase",
+    "treatment": "fixture-treatment",
     "review_mode": "runtime_mediated",
     "protocol_version": "1.0.0",
     "runtime_version": "0.1.0",
     "schema_set_version": "1.0.0",
     "prompt_set_version": "1.0.0",
+    "config_version": "1.0.0",
+    "config_hash": "sha256:1111",
     "run_status": "closed",
     "validator_status": "passed",
     "human_signoff_status": "approved",
     "evidence_class": "valid",
-    "started_at": "2026-05-08T14:00:00Z",
-    "closed_at": "2026-05-08T15:00:00Z"
+    "started_at": "2026-05-18T00:00:00Z",
+    "closed_at": "2026-05-18T00:00:01Z"
   },
   "step_records": [
     {
-      "step_id": "step-a-001",
+      "step_id": "s-a",
       "step_name": "primary_detection",
-      "step_status": "completed",
-      "step_prompt_artifact_id": "foundation.primary_reviewer.default",
-      "step_started_at": "2026-05-08T14:00:00Z",
-      "step_closed_at": "2026-05-08T14:10:00Z"
-    },
-    {
-      "step_id": "step-b-001",
-      "step_name": "adversarial_review",
-      "step_status": "completed",
-      "step_prompt_artifact_id": "foundation.adversarial_reviewer.default",
-      "step_started_at": "2026-05-08T14:10:00Z",
-      "step_closed_at": "2026-05-08T14:20:00Z"
-    },
-    {
-      "step_id": "step-c-001",
-      "step_name": "judgment",
-      "step_status": "completed",
-      "step_prompt_artifact_id": "foundation.judgment_reviewer.default",
-      "step_started_at": "2026-05-08T14:20:00Z",
-      "step_closed_at": "2026-05-08T14:30:00Z"
-    },
-    {
-      "step_id": "step-d-001",
-      "step_name": "integration",
-      "step_status": "completed",
-      "step_prompt_artifact_id": "foundation.integration.default",
-      "step_started_at": "2026-05-08T14:30:00Z",
-      "step_closed_at": "2026-05-08T15:00:00Z"
+      "step_status": "closed",
+      "step_prompt_artifact_id": "foundation.primary_detection.primary_reviewer",
+      "step_started_at": "2026-05-18T00:00:00Z",
+      "step_closed_at": "2026-05-18T00:00:01Z"
     }
   ],
-  "findings": [
-    {
-      "schema_version": "1.0.0",
-      "finding_id": "finding-001",
-      "run_id": "run-001",
-      "step_id": "step-a-001",
-      "source_role": "primary_reviewer",
-      "severity": "medium",
-      "summary": "A minimal finding fixture for foundation contract tests.",
-      "source_refs": [
-        "steps/step_a_primary_detection.json#finding-001"
-      ],
-      "counter_evidence_refs": [],
-      "judgment_ref": "steps/step_c_judgment.json#judgment-001",
-      "decision_unit_id": "decision-unit-001",
-      "human_decision_ref": "decisions/decision_units.json#decision-unit-001",
-      "impact_score_ref": null,
-      "failure_observation_refs": [],
-      "validation_refs": {
-        "invalidation_marker_refs": []
-      }
-    }
-  ],
-  "validation_artifacts": {
-    "validator_result_refs": [
-      "validation/validator_result.json#validator-result-001"
-    ],
-    "invalidation_marker_refs": []
-  }
+  "findings": [],
+  "validation_refs": { "validator_result_ref": null, "invalidation_marker_refs": [] }
 }

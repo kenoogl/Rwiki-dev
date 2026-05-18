@@ -1,0 +1,10 @@
+{
+  "requirement_link": "req:1",
+  "ignored_impact": "low",
+  "fix_cost": "low",
+  "scope_expansion": "none",
+  "uncertainty": "low",
+  "final_label": "not_required",
+  "recommended_action": "no_action",
+  "override_reason": null
+}

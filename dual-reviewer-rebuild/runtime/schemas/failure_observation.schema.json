@@ -2,85 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:dual-reviewer:foundation:failure_observation:1.0.0",
   "title": "failure_observation",
-  "description": "Structured record for misses, disagreement, or process failure observed during review.",
+  "description": "review miss / 役間 disagreement の構造。self-improvement の replay/backtest 用に finding と分離した独立 schema。下記は mandatory-B1.0（Requirement 3 受入 8）。",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": [
-    "schema_version",
-    "failure_observation_id",
-    "run_id",
-    "step_id",
-    "failure_mode",
-    "summary",
-    "evidence_refs",
-    "detected_by",
-    "recorded_at"
+    "observation_id", "run_ref", "related_finding_ref",
+    "failure_type", "missed_by_role", "detected_at_step"
   ],
   "properties": {
-    "schema_version": {
-      "type": "string",
-      "const": "1.0.0"
-    },
-    "failure_observation_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "run_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "step_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "related_finding_id": {
-      "anyOf": [
-        {
-          "type": "string",
-          "minLength": 1
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
-    "failure_mode": {
-      "type": "string",
-      "enum": [
-        "missed_issue",
-        "false_positive",
-        "unsupported_claim",
-        "unresolved_disagreement",
-        "incomplete_evidence",
-        "process_gap",
-        "other"
-      ]
-    },
-    "summary": {
-      "type": "string",
-      "minLength": 1
-    },
-    "evidence_refs": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "string",
-        "minLength": 1
-      }
-    },
-    "detected_by": {
-      "type": "string",
-      "enum": [
-        "primary_reviewer",
-        "adversarial_reviewer",
-        "judgment_reviewer",
-        "validator",
-        "human_operator"
-      ]
-    },
-    "recorded_at": {
-      "type": "string",
-      "format": "date-time"
-    }
-  }
+    "observation_id": { "type": "string" },
+    "run_ref": { "type": "string", "description": "観測元 run の識別子（実行横断集計の接続）" },
+    "related_finding_ref": { "type": ["string", "null"] },
+    "failure_type": { "type": "string", "description": "失敗モード分類区分。詳細分類体系は deferred（self-improvement/evaluation 委譲）。" },
+    "missed_by_role": { "type": "string" },
+    "detected_at_step": { "type": "string" }
+  },
+  "x-deferred": "failure_type の詳細分類体系・メトリクス導出方法は self-improvement / evaluation 委譲。",
+  "x-versioning-note": "versioned artifact。silent な非互換編集を禁ずる（Requirement 3 受入 3）。"
 }

@@ -1,169 +1,107 @@
-contract_id: foundation_run_metadata
-version: 1.0.0
-applies_to:
-  - review_case.metadata
-description: >
-  Canonical run-level metadata contract shared by runtime, evaluation,
-  self-improvement, and validator integrations.
-required_fields:
-  - run_id
-  - target_id
-  - target_artifact_hash
-  - source_repository_id
-  - source_revision
-  - phase_profile
-  - treatment
-  - review_mode
-  - protocol_version
-  - runtime_version
-  - schema_set_version
-  - prompt_set_version
-  - run_status
-  - validator_status
-  - human_signoff_status
-  - evidence_class
-  - started_at
-  - closed_at
-enum_definitions:
-  phase_profile:
-    - intent
-    - requirements
-    - design
-    - tasks
-  treatment:
-    - single
-    - dual
-    - dual+judgment
-  review_mode:
-    - manual_dogfooding
-    - runtime_mediated
-    - imported_bundle
-  run_status:
-    - created
-    - in_progress
-    - closed
-    - orchestration_failed
-  validator_status:
-    - not_run
-    - passed
-    - failed
-  human_signoff_status:
-    - pending
-    - approved
-    - rejected
-    - deferred
-  evidence_class:
-    - candidate
-    - valid
-    - invalid
-    - exploratory
-field_definitions:
+# metadata_contract.yaml
+# dual-reviewer-foundation Requirement 1 受入 5／Requirement 6（受入 1〜10）／
+# Requirement 7 受入 3／Requirement 2 受入 4／design「Domain Model §3」「§9」
+#
+# run-level metadata の field list・enum・責務分離を固定する。
+# validator と evaluation はこれを正本として読む。
+
+version: "1.0.0"
+
+# run_status / validator_status / human_signoff_status / evidence_class は
+# 別概念であり混同しない（design Decision 2／§3／§9）。
+responsibility_separation:
+  run_status: "runtime lifecycle 状態のみを表す"
+  validator_status: "mechanical validation の結果のみを表す"
+  human_signoff_status: "operator decision の状態のみを表す"
+  evidence_class: "downstream consumption 上の区分のみを表す"
+  note: >
+    実行は閉じたが invalid／実行は閉じたが exploratory／human sign-off 未完了、
+    といった状態を混同しない。run_status=closed かつ validator_status=passed でも
+    evidence_class=exploratory は成立しうる（design §9）。
+
+provenance_roles:
+  source_repository_id: "どの local repository で evidence が採取されたか"
+  source_revision: "どの source revision で evidence が採取されたか"
+  target_id: "review 対象 artifact の識別子"
+  target_artifact_hash: "review 対象 artifact 自体の固定子"
+
+rules:
+  missing_required_metadata_is_validator_failure: true   # Requirement 6 受入 4
+  metadata_alone_can_exclude_invalid_run: true            # Requirement 6 受入 5
+  phase_profile_value_vocab_owned_by_runtime: true        # Requirement 1 受入 8
+  treatment_value_vocab_owned_by_runtime: true            # Requirement 1 受入 9
+
+fields:
   run_id:
-    type: string
+    purpose: "run の安定識別子"
     required: true
-    nullable: false
-    description: Stable identifier for a single review run.
   target_id:
-    type: string
+    purpose: "review 対象識別子"
     required: true
-    nullable: false
-    description: Stable identifier for the reviewed target artifact.
   target_artifact_hash:
-    type: string
+    purpose: "対象固定のための hash"
     required: true
-    nullable: false
-    description: Hash or equivalent fixed digest for the reviewed target artifact.
   source_repository_id:
-    type: string
+    purpose: "evidence が採取された repository の識別子"
     required: true
-    nullable: false
-    description: Repository identity where the evidence was produced.
   source_revision:
-    type: string
+    purpose: "evidence 採取時の source revision"
     required: true
-    nullable: false
-    description: Source revision captured when the evidence was produced.
   phase_profile:
-    type: enum
+    purpose: "phase/profile 識別。値語彙は runtime 所有（foundation は列挙しない）"
     required: true
-    nullable: false
-    enum_ref: phase_profile
-    description: Review phase/profile under inspection.
   treatment:
-    type: enum
+    purpose: "treatment 識別。値語彙は runtime 所有（foundation は列挙しない）"
     required: true
-    nullable: false
-    enum_ref: treatment
-    description: Review treatment variant applied to the run.
   review_mode:
-    type: enum
+    purpose: "review 実施モード"
     required: true
-    nullable: false
-    enum_ref: review_mode
-    description: Operational mode that produced the evidence.
+    enum: [manual_dogfooding, runtime_mediated]
   protocol_version:
-    type: string
+    purpose: "protocol drift 防止"
     required: true
-    nullable: false
-    description: Protocol version governing the run.
   runtime_version:
-    type: string
+    purpose: "runtime 挙動追跡"
     required: true
-    nullable: false
-    description: Runtime implementation version governing the run.
   schema_set_version:
-    type: string
+    purpose: "schema 群の整合追跡"
     required: true
-    nullable: false
-    description: Shared schema set version expected by the run.
   prompt_set_version:
-    type: string
+    purpose: "prompt 群の整合追跡"
     required: true
-    nullable: false
-    description: Prompt asset set version expected by the run.
+  config_version:
+    purpose: "当該 run を生成した config の版（Requirement 7 受入 3）"
+    required: true
+  config_hash:
+    purpose: "config 内容固定のための hash（Requirement 2 受入 4）"
+    required: true
   run_status:
-    type: enum
+    purpose: "runtime lifecycle 状態"
     required: true
-    nullable: false
-    enum_ref: run_status
-    description: Runtime lifecycle status for the run.
+    enum: [created, in_progress, closed, orchestration_failed]
   validator_status:
-    type: enum
+    purpose: "mechanical validation の結果（pass / fail / blocked）"
     required: true
-    nullable: false
-    enum_ref: validator_status
-    description: Mechanical validation status for the run.
+    enum: [not_run, passed, failed, blocked]
   human_signoff_status:
-    type: enum
+    purpose: "operator sign-off 状態"
     required: true
-    nullable: false
-    enum_ref: human_signoff_status
-    description: Operator sign-off state for the run.
+    enum: [pending, approved, rejected, deferred]
   evidence_class:
-    type: enum
+    purpose: "downstream consumption 区分"
     required: true
-    nullable: false
-    enum_ref: evidence_class
-    description: Downstream consumption class for the run evidence.
+    enum: [candidate, valid, invalid, exploratory]
   started_at:
-    type: string
-    format: date-time
+    purpose: "run 開始時刻"
     required: true
-    nullable: false
-    description: Run start timestamp in RFC 3339 format.
   closed_at:
-    type: string
-    format: date-time
-    required: true
-    nullable: true
-    description: >
-      Run close timestamp in RFC 3339 format. This field remains null until the
-      run closes or fails.
-state_notes:
-  candidate_transition_rule: >
-    Evidence remains candidate until validator_status and human_signoff_status
-    have been resolved enough to assign valid, invalid, or exploratory.
-  provenance_rule: >
-    source_repository_id, source_revision, target_id, and target_artifact_hash
-    together provide the minimum cross-project provenance tuple.
-  validation_rule: Missing required metadata is validator failure.
+    purpose: "run 終了時刻"
+    required: false
+
+# foundation が canonical source として所有する語彙（downstream は再定義せず参照）。
+canonical_ownership:
+  validator_status: [not_run, passed, failed, blocked]      # Requirement 6 受入 10
+  evidence_class: [candidate, valid, invalid, exploratory]   # Requirement 6 受入 8
+  candidate_note: >
+    candidate は runtime close 直後の未確定状態。validator_status と
+    human_signoff_status が揃った後に valid / invalid / exploratory へ遷移する。

@@ -1,14 +1,26 @@
-version: 1.0.0
-project:
-  language: ja
-  default_phase_profile: design
-review_protocol:
-  protocol_version: 1.0.0
-  evidence_output_location: runtime/runs
+# config.yaml.template
+# dual-reviewer-foundation Requirement 2（受入 3〜5）／Requirement 7（受入 1〜4）
+# design「Domain Model §10 Config and Template Model」
+#
+# runtime input contract の最小雛形。operator-visible・repo-contained。
+# hidden operator memory に依存しない（config が唯一の runtime input 正本）。
+
+version: "1.0.0"
+
+# role ごとの model identifier（vendor/concrete model 名は framework/schema に出さず config に退避）
 roles:
   primary_reviewer:
-    model_identifier: YOUR_PRIMARY_MODEL
+    model: "<model-identifier>"
   adversarial_reviewer:
-    model_identifier: YOUR_ADVERSARIAL_MODEL
+    model: "<model-identifier>"
   judgment_reviewer:
-    model_identifier: YOUR_JUDGMENT_MODEL
+    model: "<model-identifier>"
+
+project_language: "ja"
+protocol_version: "1.0.0"
+evidence_output_location: "experiments/runs/"
+default_phase_profile: "<phase-profile>"   # 値語彙は runtime 所有
+
+config_note: >
+  本 template は runtime input contract の最小雛形。実値は運用時に埋める。
+  config_version / config_hash により run metadata と機械追跡される。

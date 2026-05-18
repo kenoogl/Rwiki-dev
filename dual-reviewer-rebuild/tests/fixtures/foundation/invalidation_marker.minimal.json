@@ -1,12 +1,8 @@
 {
-  "schema_version": "1.0.0",
-  "invalidation_marker_id": "invalid-001",
-  "run_id": "run-001",
-  "step_id": null,
-  "finding_id": null,
-  "reason_code": "manual_invalidation",
-  "reason_detail": "Fixture example for invalidation marker shape.",
+  "run_id": "run-fixture-001",
+  "reason_code": "fixture_reason",
+  "reason_detail": "fixture invalidation",
   "scope": "run",
-  "issued_by": "human_operator",
-  "issued_at": "2026-05-08T15:00:00Z"
+  "issued_by": "foundation-fixture",
+  "issued_at": "2026-05-18T00:00:03Z"
 }

@@ -2,105 +2,22 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:dual-reviewer:foundation:necessity_judgment:1.0.0",
   "title": "necessity_judgment",
-  "description": "Step C judgment contract with a five-field necessity structure and final action guidance.",
+  "description": "Step C の出力単位。必要性 5-field・final label・recommended action・optional override reason を固定（Requirement 3 受入 6、design §4 necessity_judgment）。judgment 質評価/policy は runtime/evaluation 委譲。",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": [
-    "schema_version",
-    "necessity_judgment_id",
-    "finding_id",
-    "step_id",
-    "necessity_dimensions",
-    "final_label",
-    "recommended_action"
+    "requirement_link", "ignored_impact", "fix_cost",
+    "scope_expansion", "uncertainty", "final_label", "recommended_action"
   ],
   "properties": {
-    "schema_version": {
-      "type": "string",
-      "const": "1.0.0"
-    },
-    "necessity_judgment_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "finding_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "step_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "necessity_dimensions": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "issue_validity",
-        "issue_materiality",
-        "actionability",
-        "fix_readiness",
-        "adoption_priority"
-      ],
-      "properties": {
-        "issue_validity": {
-          "$ref": "#/$defs/necessityDimension"
-        },
-        "issue_materiality": {
-          "$ref": "#/$defs/necessityDimension"
-        },
-        "actionability": {
-          "$ref": "#/$defs/necessityDimension"
-        },
-        "fix_readiness": {
-          "$ref": "#/$defs/necessityDimension"
-        },
-        "adoption_priority": {
-          "$ref": "#/$defs/necessityDimension"
-        }
-      }
-    },
-    "final_label": {
-      "type": "string",
-      "enum": [
-        "necessary",
-        "optional",
-        "not_necessary",
-        "defer"
-      ]
-    },
-    "recommended_action": {
-      "type": "string",
-      "minLength": 1
-    },
-    "override_reason": {
-      "anyOf": [
-        {
-          "type": "string",
-          "minLength": 1
-        },
-        {
-          "type": "null"
-        }
-      ]
-    }
+    "requirement_link": { "description": "mandatory-B1.0。必要性 5-field の 1。" },
+    "ignored_impact": { "description": "mandatory-B1.0。必要性 5-field の 2。" },
+    "fix_cost": { "description": "mandatory-B1.0。必要性 5-field の 3。" },
+    "scope_expansion": { "description": "mandatory-B1.0。必要性 5-field の 4。" },
+    "uncertainty": { "description": "mandatory-B1.0。必要性 5-field の 5。" },
+    "final_label": { "type": "string", "description": "mandatory-B1.0。最終ラベル。" },
+    "recommended_action": { "type": "string", "description": "mandatory-B1.0。推奨アクション。" },
+    "override_reason": { "type": ["string", "null"], "description": "optional。override 時の理由。" }
   },
-  "$defs": {
-    "necessityDimension": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "score",
-        "rationale"
-      ],
-      "properties": {
-        "score": {
-          "type": "number"
-        },
-        "rationale": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    }
-  }
+  "x-versioning-note": "versioned artifact。silent な非互換編集を禁ずる（Requirement 3 受入 3）。"
 }

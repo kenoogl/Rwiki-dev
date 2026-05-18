@@ -2,76 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:dual-reviewer:foundation:impact_score:1.0.0",
   "title": "impact_score",
-  "description": "Structured impact assessment attached to a finding.",
+  "description": "finding の影響度を構造化する補助 schema。3 軸は mandatory-B1.0（Requirement 3 受入 7）。値語彙・採点尺度・重み付けは deferred（evaluation 委譲）。",
   "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema_version",
-    "impact_score_id",
-    "finding_id",
-    "scale",
-    "overall_score",
-    "dimensions",
-    "rationale"
-  ],
+  "additionalProperties": true,
+  "required": ["finding_ref", "severity_axis", "fix_cost_axis", "downstream_scope_axis"],
   "properties": {
-    "schema_version": {
-      "type": "string",
-      "const": "1.0.0"
-    },
-    "impact_score_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "finding_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "scale": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "minimum",
-        "maximum"
-      ],
-      "properties": {
-        "minimum": {
-          "type": "number"
-        },
-        "maximum": {
-          "type": "number"
-        }
-      }
-    },
-    "overall_score": {
-      "type": "number"
-    },
-    "dimensions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "dimension_id",
-          "score"
-        ],
-        "properties": {
-          "dimension_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "score": {
-            "type": "number"
-          },
-          "rationale": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "rationale": {
-      "type": "string",
-      "minLength": 1
-    }
-  }
+    "finding_ref": { "type": "string", "description": "mandatory-B1.0。対象 finding の識別子。" },
+    "severity_axis": { "description": "mandatory-B1.0。指摘自体の重大度。値語彙は deferred。" },
+    "fix_cost_axis": { "description": "mandatory-B1.0。修正コスト見積もり。値語彙は deferred。" },
+    "downstream_scope_axis": { "description": "mandatory-B1.0。下流影響範囲。値語彙は deferred。" }
+  },
+  "x-deferred": "各軸の値語彙・採点尺度・重み付けの意味論最適化は evaluation 委譲（foundation は項目形状のみ固定）。",
+  "x-versioning-note": "versioned artifact。silent な非互換編集を禁ずる（Requirement 3 受入 3）。"
 }
