@@ -67,6 +67,8 @@ workflow gate の current status を記録するための台帳である。
 
 - 2026-05-18 `dual-reviewer-foundation design reopen（実装適合 finding 8・手戻り B）`：6 機能実装適合フェーズの基盤レビューで finding 8（mandatory-B1.0／deferred を JSON Schema 上でどう符号化するかの境界が design 未具体・P2）を検出。利用者判断で手戻り B＝設計差し戻し。正本更新＝`dual-reviewer-foundation/design.md` §4 に「mandatory/deferred の JSON Schema 符号化規約」小節を追記（mandatory=`required` 配列、deferred=`required` 非列挙＋`x-deferred`／description、意味論先送りは形状 mandatory＋値域を `x-deferred` 委譲）。spec.json 反映＝approvals.design.approved=false／reopened.design=true／alignment.design=pending／recheck.upstream_change_pending=true・impacted_downstream_phases=[design,tasks]。実装側（commit `c4928ff3`）は既に本符号化で構築済みのため実装手戻りなし。未了＝独立設計レビュー → 設計横断整合ゲート再実施 → 設計人間再承認（強制関数導入期につき本台帳が自己ブートストラップ証跡）。finding 1〜7・9（手戻り A）は基盤スクラッチ再実装 `c4928ff3` で解消・機械検証 8件107アサーション全緑
 
+- 2026-05-18 `dual-reviewer-runtime design reopen（実装適合 B 群 4 件・finding 2/5/6/9）`：6 機能実装適合フェーズの実行系レビューで finding 11 件（致命6/重要3/軽微2、手戻り A7/B4）を検出。B 群 4 件（finding 2＝prompt 解決の構造的付け替え／finding 5＝step 実行と v2-acquisition 責務境界の再確定／finding 6＝validation 層の基盤新契約付け替え／finding 9＝run close 順序保証の controller ライフサイクル不変条件）を利用者判断で設計差し戻し。正本更新＝`dual-reviewer-runtime/design.md` に「実装適合差し戻し対応：設計境界の再確定（finding 2/5/6/9）」節を追記。spec.json 反映＝approvals.design.approved=false／reopened.design=true／alignment.design=pending／recheck.upstream_change_pending=true・impacted_downstream_phases=[design,tasks]。未了＝独立設計レビュー → 設計横断整合ゲート再実施 → 設計人間再承認（強制関数導入期につき本台帳が自己ブートストラップ証跡）。手戻り A 7 件（finding 1/3/4/7/8/10/11）は runtime スクラッチ再実装で解消予定（未着手）。証跡＝`.kiro/specs/dual-reviewer-runtime/reviews/implementation-conformance-review-2026-05-18.md`、commit `bea2dbeb`
+
 ## 4. next gate transition
 
 現在の次段は、必要があれば通常の feature 実装または新しい review checkpoint に進むこと。

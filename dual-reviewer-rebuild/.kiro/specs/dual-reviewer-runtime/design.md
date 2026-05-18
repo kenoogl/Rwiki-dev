@@ -790,6 +790,17 @@ validation は raw evidence を変更しない。
 
 これらは evaluation / self-improvement / paper-interface design が揃った後の `design alignment gate` で詰める。
 
+## 実装適合差し戻し対応：設計境界の再確定（finding 2/5/6/9、2026-05-18）
+
+実装適合レビュー（`reviews/implementation-conformance-review-2026-05-18.md`）の手戻り B 群 4 件を利用者判断で設計差し戻し。基盤スクラッチ再実装で確定した新 shared contract に対し、本節で実行側の設計境界を再確定する。
+
+- finding 2（Prompt Resolution Model の構造的付け替え）：prompt 解決は foundation の現行 prompt frontmatter 規約（各 prompt の YAML frontmatter が `prompt_id` / `version` / `role` / `step` / `language` / `source_ref` を持つ）と `runtime/foundation/layer1_framework.yaml` の `asset_locations` を唯一の入力とする。解決方針＝role×step から `asset_locations` の repo 相対パスを引き当て、frontmatter を parse して本文を LLM に渡す。旧 `prompts/shared/frontmatter_contract.yaml` 等の撤廃済み資産は参照しない。selection/override の適用順序は runtime 所有（foundation は拡張点の所在のみ固定）。
+- finding 5（Step Execution Model と v2-acquisition 責務境界）：step 実行は固定文の簡易解析ではなく実 LLM 呼び出しとし、テスト可能性のため差し替え可能な seam（LLM 呼び出し境界）を 1 点設ける。責務境界＝runtime は「step を実行し evidence を emit する」ことを所有し、取得方式（v2 取得の語彙・プロファイル等）は `dual-reviewer-v2-acquisition` 所有。runtime は v2-acquisition の確定物を入力として参照するのみで再定義しない。
+- finding 6（validation 層の基盤新契約への付け替え）：validation 層は foundation `metadata_contract.yaml` の `fields:` 構造を正本入力とし、必須項目は各 field の `required: true` から機械抽出する。`validator_status` は `canonical_ownership.validator_status`（`not_run`/`passed`/`failed`/`blocked`）、`review_mode` は同契約 enum を参照し、runtime 側で再定義・別トークン化しない。
+- finding 9（run close 順序保証＝controller ライフサイクル不変条件）：validator 呼び出しは Run Close Boundary の単一起動点に集約する設計を不変条件として固定する。前提条件＝(1) Step D 統合完了、(2) human sign-off artifact 書込済み、(3) raw evidence 凍結済み。3 条件未充足での validator 起動および多重起動を controller が禁止する。順序＝Step D → human sign-off → freeze → validator → close を厳守し validator 結果が human decision に先行しない（要件 6 受入 9 と一体）。
+
+本節の確定により finding 2/5/6/9 の設計境界欠落は解消する。実装（runtime スクラッチ再実装）は本節を前提に行う。
+
 ## Completion Criteria
 
 - 1 run の artifact layout を説明できる
