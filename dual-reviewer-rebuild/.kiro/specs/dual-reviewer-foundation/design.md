@@ -291,6 +291,15 @@ cross-project intake を見据えた provenance field の役割分担:
 
 本 spec が固定する各 schema は、項目ごとに「B-1.0 相当運用で必須（mandatory-B1.0）」か「意図的に先送りする拡張点（deferred）」かを明示する（要件 3 受入 9）。下記の項目一覧は特記なき限りすべて mandatory-B1.0 とし、deferred の拡張点は該当 schema 節に明記する。
 
+#### mandatory/deferred の JSON Schema 符号化規約
+
+各 schema 上で mandatory-B1.0 と deferred を機械可読に区別する符号化規約を次の通り固定する（finding 8 設計差し戻しにより明文化、2026-05-18）。
+
+- mandatory-B1.0 の field は、当該 schema の JSON Schema `required` 配列に列挙する。`required` への列挙が「B-1.0 運用で省略不可」の正本表現である。
+- deferred の拡張点は、`required` に列挙しない。かつ schema または対象 field の `description` に deferred である旨を記し、加えて schema トップレベルに `x-deferred` 注記（先送り対象と委譲先を文章で示す）を置く。
+- 値語彙・採点尺度・重み付けなど「形状は固定するが意味論を先送りする」項目は、field 自体は `required` に置き（形状は mandatory）、その値域 enum を schema に書かず `x-deferred` に委譲先を明記する。
+- 本規約は 5 schema および validator-facing contract 2 schema に一律適用する。runtime / evaluation / self-improvement はこの符号化を前提に import してよい。
+
 foundation が所有する 5 schema の関係は以下の通りとする。
 
 ```mermaid

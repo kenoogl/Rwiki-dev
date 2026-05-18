@@ -65,6 +65,8 @@ workflow gate の current status を記録するための台帳である。
 
 - 2026-05-18 `implementation-governance Req9 強制関数 実装フェーズ 完走（自己ブートストラップ証跡）`：統治 tasks.md Task 11〜16・18 を TDD（赤→緑）で実コード化。成果＝実行台帳テンプレ／authority-map／ledgers skeleton（Task 11）、台帳生成器（Task 12）、独立再導出＋validator サブモード（Task 13）、enforcement point（Task 14）、独立生成マーカー真正性（Task 15）、移行戦略（Task 16）、Req9 統合・異常系まとめテスト（Task 18）。テスト 40 件 全緑、既存資産不変、既存検査スクリプトは後方互換維持。commit `0be5df21`。Task 17（C-1/C-2/C-3 上位文書同期）は仕様フェーズで適用済のため実装段では不要。強制関数自体が未稼働の導入期につき、本実装作業の遵守は design 小節 10 の自己ブートストラップ規定（移行期は手作業台帳可）に基づき本台帳（workflow-gate-status.md）へ証跡記録。次段＝統治 Requirement 1 ほか中核の実装適合レビュー、および 6 機能全体の実装適合レビュー（利用者合意 2026-05-18：旧仕様ベース既存コードを現行承認仕様へ適合、最後に実施）
 
+- 2026-05-18 `dual-reviewer-foundation design reopen（実装適合 finding 8・手戻り B）`：6 機能実装適合フェーズの基盤レビューで finding 8（mandatory-B1.0／deferred を JSON Schema 上でどう符号化するかの境界が design 未具体・P2）を検出。利用者判断で手戻り B＝設計差し戻し。正本更新＝`dual-reviewer-foundation/design.md` §4 に「mandatory/deferred の JSON Schema 符号化規約」小節を追記（mandatory=`required` 配列、deferred=`required` 非列挙＋`x-deferred`／description、意味論先送りは形状 mandatory＋値域を `x-deferred` 委譲）。spec.json 反映＝approvals.design.approved=false／reopened.design=true／alignment.design=pending／recheck.upstream_change_pending=true・impacted_downstream_phases=[design,tasks]。実装側（commit `c4928ff3`）は既に本符号化で構築済みのため実装手戻りなし。未了＝独立設計レビュー → 設計横断整合ゲート再実施 → 設計人間再承認（強制関数導入期につき本台帳が自己ブートストラップ証跡）。finding 1〜7・9（手戻り A）は基盤スクラッチ再実装 `c4928ff3` で解消・機械検証 8件107アサーション全緑
+
 ## 4. next gate transition
 
 現在の次段は、必要があれば通常の feature 実装または新しい review checkpoint に進むこと。
