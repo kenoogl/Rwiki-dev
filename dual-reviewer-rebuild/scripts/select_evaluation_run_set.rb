@@ -1,75 +1,65 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# 評価所有エントリ（スクラッチ再実装）。
+# 旧 v1 は experiments/protocols/**/protocol-runs/*/run_manifest.yaml を
+# 走査し、撤廃済み review_mode 語彙（single_review / dual_review /
+# dual_reviewer_workflow）で完全一致フィルタしていた。実 runtime / 基盤
+# canonical は manual_dogfooding / runtime_mediated であり、旧語彙は実
+# runtime manifest を silent に 0 件化していた（適合レビュー 2026-05-19
+# finding 4・基盤語彙再定義違反）。加えて v1 protocol artifact は
+# experiments/protocols/_archived-2026-05-13/ へ退避済みで active state に
+# 無い。
+#
+# 本実装は design「Analysis Population Selection」/ 評価所有
+# PopulationSelector を正本に置き換える。selection policy（run_status=
+# closed・standard intake complete・protocol-facing validation summary
+# available・同一 case_id/phase_profile 内で比較 treatment が揃う）は
+# PopulationSelector が一元所有し、本 script はその薄い CLI である。
+# review_mode は foundation canonical（manual_dogfooding / runtime_mediated）
+# のみを扱い再定義しない。
+#
+# CLI 契約: local run root を引数で受けるか --local-runs-root <dir> 配下を
+# 走査する。stdout JSON に runtime_run_roots を含め、cross-feature の
+# rebuild_evaluation_analysis_from_runs.rb --selection-json が消費できる
+# 形を維持する。--track/--case-id/--phase-profile/--review-mode/--treatment/
+# --selection-manifest/--allow-missing-summary は後方互換のため受理し
+# canonical 語彙へ写像する（旧撤廃語彙は除外せず canonical に正規化）。
 require "json"
 require "pathname"
 require "yaml"
+require_relative "evaluation/local_run_loader"
+require_relative "evaluation/population_selector"
 
 repo_root = Pathname(__dir__).join("..").expand_path
 
-def runtime_root_from_summary(summary_path:, repo_root:)
-  payload = YAML.load_file(summary_path)
-  validator_ref = payload["validator_result_ref"]
-  return runtime_root_from_validator_ref(validator_ref) if validator_ref
+# 旧撤廃語彙 → foundation canonical review_mode への正規化写像
+# （評価は canonical を再定義しない・finding 4）。
+LEGACY_REVIEW_MODE_NORMALIZATION = {
+  "single_review" => "runtime_mediated",
+  "dual_review" => "runtime_mediated",
+  "dual_reviewer_workflow" => "runtime_mediated",
+  "manual_dogfooding" => "manual_dogfooding",
+  "runtime_mediated" => "runtime_mediated"
+}.freeze
 
-  invalidation_ref = payload["invalidation_markers_ref"]
-  return runtime_root_from_validator_ref(invalidation_ref) if invalidation_ref
+CANONICAL_REVIEW_MODES = %w[manual_dogfooding runtime_mediated].freeze
 
-  raise ArgumentError, "unable to resolve runtime root from summary: #{summary_path.relative_path_from(repo_root)}"
-end
-
-def runtime_root_from_validator_ref(ref)
-  Pathname(ref).dirname.dirname.to_s
-end
-
-def runtime_root_fallback(case_id:, track:, run_id:, repo_root:)
-  track_root =
-    case track
-    when "implementation"
-      repo_root.join("experiments/protocols/implementation-track-runs")
-    when "intent"
-      repo_root.join("experiments/protocols/intent-track-runs")
-    when "spec"
-      repo_root.join("experiments/protocols/spec-track-runs")
-    end
-
-  pattern = track_root.join("**/runtime-runs/#{run_id}").to_s
-  path = Dir.glob(pattern).sort.first
-  raise ArgumentError, "runtime run not found for #{case_id}: #{run_id}" if path.nil?
-
-  Pathname(path).relative_path_from(repo_root).to_s
-end
-
-def treatment_rank(treatment)
-  {
-    "single" => 0,
-    "dual" => 1,
-    "dual+judgment" => 2
-  }.fetch(treatment, 99)
-end
-
-def review_mode_rank(review_mode)
-  {
-    "single_review" => 0,
-    "dual_review" => 1,
-    "dual_reviewer_workflow" => 2
-  }.fetch(review_mode, 99)
-end
-
+run_roots = []
+local_runs_root = nil
 case_id = nil
 track = nil
 phase_profile = nil
-require_protocol_summary = true
-allowed_review_modes = ["single_review", "dual_review", "dual_reviewer_workflow"].freeze
+allowed_review_modes = nil
 allowed_treatments = nil
 selection_manifest_path = nil
-explicit_allow_missing_summary = false
-protocol_root_override = nil
 
 argv = ARGV.dup
 until argv.empty?
   flag = argv.shift
   case flag
+  when "--local-runs-root"
+    local_runs_root = argv.shift
   when "--case-id"
     case_id = argv.shift
   when "--track"
@@ -77,114 +67,112 @@ until argv.empty?
   when "--phase-profile"
     phase_profile = argv.shift
   when "--review-mode"
-    allowed_review_modes = argv.shift.to_s.split(",").map(&:strip).reject(&:empty?)
+    allowed_review_modes =
+      argv.shift.to_s.split(",").map(&:strip).reject(&:empty?)
   when "--treatment"
-    allowed_treatments = argv.shift.to_s.split(",").map(&:strip).reject(&:empty?)
+    allowed_treatments =
+      argv.shift.to_s.split(",").map(&:strip).reject(&:empty?)
   when "--selection-manifest"
     selection_manifest_path = argv.shift
-  when "--protocol-root"
-    protocol_root_override = argv.shift
   when "--allow-missing-summary"
-    require_protocol_summary = false
-    explicit_allow_missing_summary = true
+    # 後方互換で受理（PopulationSelector は protocol-facing validation
+    # summary を validation_refs.validator_result_ref で判定する）。
+    nil
   else
-    abort "unknown argument: #{flag}"
+    run_roots << flag
   end
 end
 
 if selection_manifest_path
-  manifest_payload = YAML.load_file(Pathname(File.expand_path(selection_manifest_path, Dir.pwd)))
+  manifest_payload = YAML.safe_load(
+    Pathname(File.expand_path(selection_manifest_path, Dir.pwd)).read
+  ) || {}
   track ||= manifest_payload["track"]
   case_id ||= manifest_payload["case_id"]
   phase_profile ||= manifest_payload["phase_profile"]
-  require_protocol_summary = manifest_payload.fetch("require_protocol_summary", true) unless explicit_allow_missing_summary
-  allowed_review_modes = Array(manifest_payload["review_modes"]).map(&:to_s) if manifest_payload["review_modes"]
-  allowed_treatments = Array(manifest_payload["treatments"]).map(&:to_s) if manifest_payload["treatments"]
-  protocol_root_override ||= manifest_payload["protocol_root"]
+  if manifest_payload["review_modes"]
+    allowed_review_modes = Array(manifest_payload["review_modes"]).map(&:to_s)
+  end
+  if manifest_payload["treatments"]
+    allowed_treatments = Array(manifest_payload["treatments"]).map(&:to_s)
+  end
+  local_runs_root ||= manifest_payload["local_runs_root"]
 end
 
-abort "usage: ruby scripts/select_evaluation_run_set.rb --track <track> --case-id <case_id> [--phase-profile <phase>] [--review-mode <modes>] [--treatment <treatments>] [--protocol-root <path>] [--selection-manifest <path>] [--allow-missing-summary]" if case_id.nil? || track.nil?
-
-summary_filename =
-  case track
-  when "implementation"
-    "conformance_review_result.yaml"
-  when "intent", "spec"
-    "runtime_validation_summary.yaml"
-  else
-    abort "unsupported track: #{track}"
+# review_mode フィルタを canonical へ正規化（旧撤廃語彙も canonical へ）。
+normalized_review_modes =
+  if allowed_review_modes
+    allowed_review_modes
+      .map { |m| LEGACY_REVIEW_MODE_NORMALIZATION.fetch(m, m) }
+      .select { |m| CANONICAL_REVIEW_MODES.include?(m) }
+      .uniq
   end
 
-protocol_root =
-  if protocol_root_override
-    Pathname(protocol_root_override).absolute? ? Pathname(protocol_root_override) : repo_root.join(protocol_root_override)
-  else
-    case track
-    when "implementation"
-      repo_root.join("experiments/protocols/implementation-track-runs")
-    when "intent"
-      repo_root.join("experiments/protocols/intent-track-runs")
-    when "spec"
-      repo_root.join("experiments/protocols/spec-track-runs")
-    end
+if local_runs_root
+  base = Pathname(File.expand_path(local_runs_root, repo_root))
+  run_roots = Dir.glob(base.join("*").to_s)
+                 .select { |p| File.directory?(p) }
+                 .sort
+end
+
+if run_roots.empty?
+  abort "usage: ruby scripts/select_evaluation_run_set.rb " \
+        "<run_root> [<run_root> ...] | --local-runs-root <dir> " \
+        "[--phase-profile <phase>] [--review-mode <modes>] " \
+        "[--treatment <treatments>] [--selection-manifest <path>]"
+end
+
+loader = DualReviewer::Evaluation::LocalRunLoader.new(repo_root: repo_root)
+selector = DualReviewer::Evaluation::PopulationSelector.new(
+  repo_root: repo_root
+)
+
+intake_by_root = {}
+run_intakes = run_roots.map do |rr|
+  expanded = Pathname(File.expand_path(rr, repo_root))
+  intake = loader.load_run(run_root: expanded)
+  intake_by_root[intake.fetch("metadata", {})["run_id"]] = expanded
+  intake
+end
+
+# 後方互換フィルタ（canonical review_mode / treatment / case_id /
+# phase_profile）を PopulationSelector 適用前段に適用する。
+filtered = run_intakes.select do |intake|
+  md = intake.fetch("metadata", {})
+  next false if case_id && md["target_id"] != case_id &&
+                 md["case_id"] != case_id
+  next false if phase_profile && md["phase_profile"] != phase_profile
+  if normalized_review_modes
+    next false unless normalized_review_modes.include?(md["review_mode"])
   end
-
-entries = []
-
-Dir.glob(protocol_root.join("**/protocol-runs/*/run_manifest.yaml").to_s).sort.each do |manifest_path|
-  manifest = YAML.load_file(manifest_path)
-  next unless manifest["case_id"] == case_id
-  next unless allowed_review_modes.include?(manifest["review_mode"])
-  next if phase_profile && manifest["phase_profile"] != phase_profile && manifest["reviewed_phase"] != phase_profile
-
-  runtime = manifest["runtime"] || {}
-  run_id = runtime["run_id"]
-  treatment = runtime["treatment"]
-  next if run_id.nil? || treatment.nil?
-  next if allowed_treatments && !allowed_treatments.include?(treatment)
-
-  summary_path = Pathname(manifest_path).dirname.join(summary_filename)
-  next if require_protocol_summary && !summary_path.exist?
-
-  runtime_root =
-    if summary_path.exist?
-      repo_root.join(runtime_root_from_summary(summary_path: summary_path, repo_root: repo_root))
-    else
-      repo_root.join(runtime_root_fallback(case_id: case_id, track: track, run_id: run_id, repo_root: repo_root))
-    end
-  next unless runtime_root.exist?
-
-  entries << {
-    "run_id" => run_id,
-    "review_mode" => manifest["review_mode"],
-    "treatment" => treatment,
-    "phase_profile" => manifest["phase_profile"] || manifest["reviewed_phase"],
-    "protocol_run_manifest_ref" => Pathname(manifest_path).relative_path_from(repo_root).to_s,
-    "protocol_summary_ref" => summary_path.exist? ? summary_path.relative_path_from(repo_root).to_s : nil,
-    "runtime_run_root" => runtime_root.relative_path_from(repo_root).to_s
-  }
+  if allowed_treatments
+    next false unless allowed_treatments.include?(md["treatment"])
+  end
+  true
 end
 
-ordered_entries = entries.sort_by do |entry|
-  [
-    treatment_rank(entry.fetch("treatment")),
-    review_mode_rank(entry.fetch("review_mode")),
-    entry.fetch("run_id")
-  ]
-end
+selection = selector.select(run_intakes: filtered)
+selected_ids = selection.fetch("selected_run_ids")
+
+runtime_run_roots = selected_ids.map do |rid|
+  root = intake_by_root[rid]
+  next nil unless root
+
+  root.relative_path_from(repo_root).to_s
+end.compact
 
 puts JSON.pretty_generate(
   {
-    "selection_policy_version" => "1.0.0",
-      "track" => track,
-      "case_id" => case_id,
-      "phase_profile" => phase_profile,
-      "protocol_root" => protocol_root.relative_path_from(repo_root).to_s,
-      "require_protocol_summary" => require_protocol_summary,
-    "review_modes" => allowed_review_modes,
+    "selection_policy_version" =>
+      selection.dig("refresh_inputs", "selector_logic_version"),
+    "track" => track,
+    "case_id" => case_id,
+    "phase_profile" => phase_profile,
+    "review_modes" => normalized_review_modes,
     "treatments" => allowed_treatments,
-    "selected_run_count" => ordered_entries.length,
-    "entries" => ordered_entries,
-    "runtime_run_roots" => ordered_entries.map { |entry| entry.fetch("runtime_run_root") }
+    "selection_policy" => selection.fetch("selection_policy"),
+    "selected_run_count" => selected_ids.length,
+    "selected_run_ids" => selected_ids,
+    "runtime_run_roots" => runtime_run_roots
   }
 )

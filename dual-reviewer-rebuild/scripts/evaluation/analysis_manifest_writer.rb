@@ -3,9 +3,23 @@
 
 require "json"
 require "pathname"
+require "fileutils"
 require "time"
 require "yaml"
+require "digest"
 
+# Task 8: versioning（analysis artifact を versioned output とする。
+# 評価所有・スクラッチ再実装）
+# 根拠: tasks.md Task 8、Requirement 5 受入 5・2、design「Versioning Model」。
+#       manifests/analysis_run_manifest.yaml に 6 version フィールドを記録し、
+#       derived output から run identifier / target identifier への linkage を
+#       保持する。同一 raw run set でも analysis logic が変われば別 output 扱い。
+#
+# スクラッチ方針: 旧 v1 analysis_manifest_writer（既存 derived JSON を読んで
+# input_run_set を逆算・mkpath なし・run/target linkage なし・staleness
+# 非接続）は流用せず破棄して作り直す。入力は評価が確定した input_run_records
+# （run_id / target_id / classification）を一次入力にし、derived 逆読みに
+# 依存しない（derivation path の正本性を保つ）。
 module DualReviewer
   module Evaluation
     class AnalysisManifestWriter
@@ -13,84 +27,63 @@ module DualReviewer
       METRIC_SET_VERSION = "0.1.0"
       PHASE_METRIC_PROFILE_VERSION = "overlay-v1"
       COMPARISON_CONTRACT_VERSION = "0.1.0"
-      RUNTIME_VALIDATION_SUMMARY_GLOBS = [
-        "experiments/protocols/**/runtime_validation_summary.yaml",
-        "experiments/protocols/**/conformance_review_result.yaml"
-      ].freeze
 
-      attr_reader :repo_root
+      REL_PATH = "manifests/analysis_run_manifest.yaml"
 
-      def initialize(repo_root:)
-        @repo_root = Pathname(repo_root).expand_path
-      end
-
-      def write_manifest
-        run_set = input_run_set
-        validation_summary_coverage = runtime_validation_summary_coverage(run_ids: run_set)
-        manifest = {
-          "analysis_logic_version" => ANALYSIS_LOGIC_VERSION,
-          "input_run_set" => run_set,
-          "generated_at" => Time.now.utc.iso8601,
-          "metric_set_version" => METRIC_SET_VERSION,
-          "phase_metric_profile_version" => PHASE_METRIC_PROFILE_VERSION,
-          "comparison_contract_version" => COMPARISON_CONTRACT_VERSION,
-          "runtime_validation_summary_coverage" => validation_summary_coverage
-        }
-
-        path = repo_root.join("experiments/analysis/manifests/analysis_run_manifest.yaml")
-        path.write(YAML.dump(manifest))
-        path
-      end
-
-      private
-
-      def input_run_set
-        run_ids = []
-
-        run_metrics_path = repo_root.join("experiments/analysis/metrics/run_metrics.json")
-        if run_metrics_path.exist?
-          run_metrics = JSON.parse(run_metrics_path.read).fetch("entries", [])
-          run_ids.concat(run_metrics.map { |entry| entry["run_id"] })
-        end
-
-        admission_register_path = repo_root.join("experiments/analysis/imports/admission_register.json")
-        if admission_register_path.exist?
-          admission_entries = JSON.parse(admission_register_path.read).fetch("entries", [])
-          run_ids.concat(admission_entries.map { |entry| entry["run_id"] })
-        end
-
-        run_ids.compact.uniq.sort
-      end
-
-      def runtime_validation_summary_coverage(run_ids:)
-        entries = discover_runtime_validation_summaries(run_ids: run_ids)
-        covered_run_ids = entries.map { |entry| entry.fetch("run_id") }.uniq.sort
+      # design Versioning Model が要求する 6 version フィールド
+      # ＋ run/target linkage（Requirement 5 受入 2）。
+      def build_manifest(input_run_records:,
+                         analysis_logic_version: ANALYSIS_LOGIC_VERSION,
+                         metric_set_version: METRIC_SET_VERSION,
+                         phase_metric_profile_version:
+                           PHASE_METRIC_PROFILE_VERSION,
+                         comparison_contract_version:
+                           COMPARISON_CONTRACT_VERSION,
+                         generated_at: nil)
+        records = Array(input_run_records)
+        run_set = records.map { |r| r["run_id"] }.compact.uniq.sort
 
         {
-          "input_run_count" => run_ids.length,
-          "covered_run_count" => covered_run_ids.length,
-          "missing_run_ids" => (run_ids - covered_run_ids).sort,
-          "summary_artifact_refs" => entries.map { |entry| entry.fetch("artifact_ref") }.uniq.sort
+          "analysis_logic_version" => analysis_logic_version,
+          "input_run_set" => run_set,
+          "generated_at" => generated_at || Time.now.utc.iso8601,
+          "metric_set_version" => metric_set_version,
+          "phase_metric_profile_version" => phase_metric_profile_version,
+          "comparison_contract_version" => comparison_contract_version,
+          # derived output から run/target identifier への linkage を保持
+          # （Requirement 5 受入 2）。
+          "run_target_linkage" => records.map do |r|
+            {
+              "run_id" => r["run_id"],
+              "target_id" => r["target_id"],
+              "classification" =>
+                (r["classification"] || {})["classification"]
+            }
+          end
         }
       end
 
-      def discover_runtime_validation_summaries(run_ids:)
-        normalized_run_ids = Array(run_ids).compact
+      # 同一 raw run set でも analysis logic が変われば別 output 扱い
+      # （design Versioning Model）。version 群 ＋ input_run_set から
+      # 決定的な output identity を導く。
+      def output_identity(manifest:)
+        material = [
+          manifest["analysis_logic_version"],
+          manifest["metric_set_version"],
+          manifest["phase_metric_profile_version"],
+          manifest["comparison_contract_version"],
+          Array(manifest["input_run_set"]).sort.join(",")
+        ].join("|")
+        Digest::SHA256.hexdigest(material)
+      end
 
-        RUNTIME_VALIDATION_SUMMARY_GLOBS.flat_map do |glob|
-          Dir.glob(repo_root.join(glob).to_s).sort.map do |path|
-            artifact_path = Pathname(path)
-            payload = YAML.load_file(artifact_path)
-            run_id = payload["run_id"]
-            next if run_id.nil?
-            next if normalized_run_ids.any? && !normalized_run_ids.include?(run_id)
-
-            {
-              "artifact_ref" => artifact_path.relative_path_from(repo_root).to_s,
-              "run_id" => run_id
-            }
-          end.compact
-        end
+      # 適合レビュー 2026-05-19 の writer 系不具合（出力先未作成での ENOENT）を
+      # 再発させないため書き出し前に mkpath を保証する。
+      def write_manifest(manifest:, analysis_root:)
+        path = Pathname(analysis_root).expand_path + REL_PATH
+        path.dirname.mkpath
+        path.write(YAML.dump(manifest))
+        path.to_s
       end
     end
   end

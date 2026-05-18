@@ -1,16 +1,12 @@
 {
   "invalidation_markers": [
     {
-      "schema_version": "1.0.0",
-      "invalidation_marker_id": "invalid-invalid-001",
-      "run_id": "run-invalid-001",
-      "step_id": null,
-      "finding_id": null,
-      "reason_code": "manual_invalidation",
-      "reason_detail": "Fixture invalid run for evaluation classification.",
-      "scope": "run",
-      "issued_by": "human_operator",
-      "issued_at": "2026-05-09T00:10:00Z"
+      "marker_id": "im-invalid_runtime_run-001",
+      "run_id": "run-eval-invalid-0001",
+      "reason_code": "validator_failed",
+      "reason_detail": "validator reported contract violation",
+      "issued_by": "runtime",
+      "scope": "run"
     }
   ]
 }

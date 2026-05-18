@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "fileutils"
 require "json"
 require "pathname"
 
@@ -37,6 +38,7 @@ module DualReviewer
       private
 
       def write_payload(path, payload)
+        FileUtils.mkdir_p(path.dirname)
         path.write(JSON.pretty_generate(payload))
         path
       end

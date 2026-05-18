@@ -1,0 +1,11 @@
+{
+  "run_id": "run-eval-exploratory-0001",
+  "human_signoff_status": "approved",
+  "signed_off_by": "kenji",
+  "signed_off_at": "2026-05-18T20:35:42Z",
+  "covered_decision_unit_ids": [
+    "du-001",
+    "du-002"
+  ],
+  "signoff_note": null
+}

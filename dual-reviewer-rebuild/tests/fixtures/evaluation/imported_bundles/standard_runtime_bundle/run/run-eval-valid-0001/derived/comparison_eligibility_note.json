@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-eval-valid-0001",
+  "eligible_for_standard_comparison": true,
+  "ineligibility_reason_codes": [
+
+  ],
+  "treatment": "dual+judgment",
+  "phase_profile": "design",
+  "generated_at": "2026-05-18T20:35:42Z"
+}

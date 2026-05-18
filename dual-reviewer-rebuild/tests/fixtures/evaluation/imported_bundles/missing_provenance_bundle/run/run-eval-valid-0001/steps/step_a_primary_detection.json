@@ -1,0 +1,29 @@
+{
+  "step_id": "step_a",
+  "step_name": "primary_detection",
+  "execution_state": "executed",
+  "treatment": "dual+judgment",
+  "phase_profile": "design",
+  "prompt_identity": {
+    "prompt_artifact_path": "runtime/prompts/primary_reviewer.prompt.md",
+    "prompt_id": "foundation.primary_reviewer",
+    "prompt_version": "1.0.0",
+    "role": "primary_reviewer"
+  },
+  "findings": [
+    {
+      "finding_id": "f1",
+      "source_role": "primary_reviewer",
+      "requirement_link": "R1",
+      "severity": "major",
+      "summary": "scope drift detected"
+    },
+    {
+      "finding_id": "f2",
+      "source_role": "primary_reviewer",
+      "requirement_link": "R2",
+      "severity": "minor",
+      "summary": "missing acceptance condition"
+    }
+  ]
+}

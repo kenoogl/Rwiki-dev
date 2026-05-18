@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-eval-valid-0001",
+  "generated_at": "2026-05-18T20:35:42Z",
+  "treatment": "dual+judgment",
+  "phase_profile": "design",
+  "step_execution_counts": {
+    "executed": 4
+  },
+  "recorded_step_ids": [
+    "step_a",
+    "step_b",
+    "step_c",
+    "step_d"
+  ]
+}

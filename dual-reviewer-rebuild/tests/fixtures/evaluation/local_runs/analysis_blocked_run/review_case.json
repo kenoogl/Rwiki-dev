@@ -1,30 +1,108 @@
 {
   "schema_version": "1.0.0",
-  "review_case_id": "review-case-run-blocked-001",
+  "review_case_id": "review-case-run-eval-blocked-0001",
   "metadata": {
-    "run_id": "run-blocked-001",
-    "target_id": "spec:dual-reviewer-runtime:tasks",
-    "target_artifact_hash": "sha256:blocked-target-hash",
-    "source_repository_id": "kenoogl/Rwiki-dev",
-    "source_revision": "0943943",
+    "run_id": "run-eval-blocked-0001",
+    "target_id": "spec/dual-reviewer-evaluation/tasks.md",
+    "target_artifact_hash": "sha256:fixture",
+    "source_repository_id": "dual-reviewer-rebuild",
+    "source_revision": "rev-blocked-001",
     "phase_profile": "tasks",
-    "treatment": "single",
+    "treatment": "dual+judgment",
     "review_mode": "runtime_mediated",
     "protocol_version": "1.0.0",
     "runtime_version": "0.1.0",
-    "schema_set_version": "1.0.0",
     "prompt_set_version": "1.0.0",
-    "run_status": "closed",
-    "validator_status": "not_run",
-    "human_signoff_status": "pending",
+    "schema_set_version": "1.0.0",
+    "config_version": "1.0.0",
+    "config_hash": "sha256:cfg",
+    "operator_id": "fixture-gen",
+    "started_at": "2026-05-18T20:35:42Z",
+    "run_status": "in_progress",
+    "validator_status": "blocked",
+    "human_signoff_status": "approved",
     "evidence_class": "candidate",
-    "started_at": "2026-05-09T01:00:00Z",
-    "closed_at": "2026-05-09T01:05:00Z"
+    "closed_at": "2026-05-18T20:35:42Z"
   },
-  "step_records": [],
-  "findings": [],
-  "validation_artifacts": {
-    "validator_result_refs": [],
-    "invalidation_marker_refs": []
+  "step_records": [
+    {
+      "step_id": "step_a",
+      "step_name": "primary_detection",
+      "step_status": "executed",
+      "step_prompt_artifact_id": "foundation.primary_reviewer",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step_b",
+      "step_name": "adversarial_review",
+      "step_status": "executed",
+      "step_prompt_artifact_id": "foundation.adversarial_reviewer",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step_c",
+      "step_name": "judgment",
+      "step_status": "executed",
+      "step_prompt_artifact_id": "foundation.judgment_reviewer",
+      "step_started_at": null,
+      "step_closed_at": null
+    },
+    {
+      "step_id": "step_d",
+      "step_name": "integration",
+      "step_status": "executed",
+      "step_prompt_artifact_id": "mechanical_integration",
+      "step_started_at": null,
+      "step_closed_at": null
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "f1",
+      "step_id": "step_a",
+      "source_role": "primary_reviewer",
+      "severity": "major",
+      "summary": "scope drift detected",
+      "source_refs": [
+
+      ],
+      "counter_evidence_refs": [
+
+      ],
+      "judgment_ref": "step_c#f1",
+      "decision_unit_id": "du-001",
+      "human_decision_ref": "decisions/human_signoff.json",
+      "adversarial_outcome": "no_counter_evidence_after_challenge",
+      "final_label": "necessary",
+      "recommended_action": "fix"
+    },
+    {
+      "finding_id": "f2",
+      "step_id": "step_a",
+      "source_role": "primary_reviewer",
+      "severity": "minor",
+      "summary": "missing acceptance condition",
+      "source_refs": [
+
+      ],
+      "counter_evidence_refs": [
+        "ce-1"
+      ],
+      "judgment_ref": "step_c#f2",
+      "decision_unit_id": "du-002",
+      "human_decision_ref": "decisions/human_signoff.json",
+      "adversarial_outcome": "counter_evidence_raised",
+      "final_label": "unnecessary",
+      "recommended_action": "drop",
+      "override_reason": "counter-evidence"
+    }
+  ],
+  "validation_refs": {
+    "validator_result_ref": "validation/validator_result.json",
+    "invalidation_marker_refs": [
+
+    ]
   }
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "fileutils"
 require "json"
 require "pathname"
 
@@ -41,6 +42,7 @@ module DualReviewer
           payload[top_level_key].reject! { |existing| existing["run_id"] == entry["run_id"] }
         end
         payload[top_level_key] << entry
+        FileUtils.mkdir_p(register_path.dirname)
         register_path.write(JSON.pretty_generate(payload))
         register_path
       end

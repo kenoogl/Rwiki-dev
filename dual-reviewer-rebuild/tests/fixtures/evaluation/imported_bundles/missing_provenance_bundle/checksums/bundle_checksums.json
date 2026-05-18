@@ -1,0 +1,61 @@
+{
+  "bundle_id": "bundle-standard-0001",
+  "checksums": [
+    {
+      "path": "bundle_manifest.yaml",
+      "sha256": "d9ba1e6c85e49d6377601813ddd713acc4df872a7551caeb3c713724e5b5f488"
+    },
+    {
+      "path": "run/run-eval-valid-0001/decisions/decision_units.json",
+      "sha256": "97ca2b91189669f70867ed74fd5922deb65222f1f97757570ae2b06ad103a0a1"
+    },
+    {
+      "path": "run/run-eval-valid-0001/decisions/human_signoff.json",
+      "sha256": "90eb24b8bf2f9e4b99f19a7ddfa9b7356e6995d45c53198a25d1d1fca7f322d7"
+    },
+    {
+      "path": "run/run-eval-valid-0001/derived/comparison_eligibility_note.json",
+      "sha256": "ba1062a163fd13aa1ab4bd24ceab76581a2dbddb7b338ae79b037ebe6fd65bec"
+    },
+    {
+      "path": "run/run-eval-valid-0001/derived/invalid_run_triage_note.json",
+      "sha256": "c4a05915dfd076c0dd199d66bac903d476f78ccc9c809dc0ecacecb70792a423"
+    },
+    {
+      "path": "run/run-eval-valid-0001/review_case.json",
+      "sha256": "e1ab3bde1c834a340a6c906ae1afec721f90f3a9cffe2a830e1cf48f90e1c239"
+    },
+    {
+      "path": "run/run-eval-valid-0001/run_manifest.yaml",
+      "sha256": "87841cf9525cf11046e83fab951415023be619373d8111c6bda0d8307c291bee"
+    },
+    {
+      "path": "run/run-eval-valid-0001/steps/step_a_primary_detection.json",
+      "sha256": "949f2fb95b0260d7684476849903efd2f8320b63b214cb7fceecb1a5a79f1286"
+    },
+    {
+      "path": "run/run-eval-valid-0001/steps/step_b_adversarial_review.json",
+      "sha256": "13ffc4d11362dbe6cd2fda7b7f577b4c89b8063f4a65f0fa5155600b2ac97efc"
+    },
+    {
+      "path": "run/run-eval-valid-0001/steps/step_c_judgment.json",
+      "sha256": "b34fcaf4df631d96d3e9846344d291fb412b4a5d9b0eed22b3b1121c48f8bec5"
+    },
+    {
+      "path": "run/run-eval-valid-0001/steps/step_d_integration.json",
+      "sha256": "942d17d795210e6989876e2d0f4b52fb29a430e4679a0277bc3eef3c7edb699d"
+    },
+    {
+      "path": "run/run-eval-valid-0001/v2/metric_snapshot.json",
+      "sha256": "ca76d4e3d1eddfc59b15a82999e3db56db2dc67f041b2d76509db210b84f735f"
+    },
+    {
+      "path": "run/run-eval-valid-0001/validation/invalidation_markers.json",
+      "sha256": "cd0da63c1e5f67add0beda2c31c817a68b52b3d6ccd728b34f7980745c919b5d"
+    },
+    {
+      "path": "run/run-eval-valid-0001/validation/validator_result.json",
+      "sha256": "6793802f8ce11dc56bf9e8fb3a26360919a1ee22d8f2cf4887e36e8e27249b41"
+    }
+  ]
+}

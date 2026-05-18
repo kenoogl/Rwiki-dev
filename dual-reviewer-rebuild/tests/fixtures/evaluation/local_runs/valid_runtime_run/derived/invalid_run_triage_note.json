@@ -1,0 +1,14 @@
+{
+  "run_id": "run-eval-valid-0001",
+  "primary_failure_code": "unknown",
+  "failed_validator_check_ids": [
+
+  ],
+  "invalidation_marker_linkage": [
+
+  ],
+  "operator_action_hint": null,
+  "validator_status": "passed",
+  "generated_by": "runtime:execution_v2:invalidation_handler",
+  "generated_at": "2026-05-18T20:35:42Z"
+}

@@ -1,0 +1,20 @@
+---
+bundle_id: bundle-missing-prov-0001
+run_id: run-eval-valid-0001
+review_mode: runtime_mediated
+exported_at: '2026-05-18T21:00:00Z'
+export_runtime_version: 0.1.0
+included_artifact_refs:
+- run/run-eval-valid-0001/decisions/decision_units.json
+- run/run-eval-valid-0001/decisions/human_signoff.json
+- run/run-eval-valid-0001/derived/comparison_eligibility_note.json
+- run/run-eval-valid-0001/derived/invalid_run_triage_note.json
+- run/run-eval-valid-0001/review_case.json
+- run/run-eval-valid-0001/run_manifest.yaml
+- run/run-eval-valid-0001/steps/step_a_primary_detection.json
+- run/run-eval-valid-0001/steps/step_b_adversarial_review.json
+- run/run-eval-valid-0001/steps/step_c_judgment.json
+- run/run-eval-valid-0001/steps/step_d_integration.json
+- run/run-eval-valid-0001/v2/metric_snapshot.json
+- run/run-eval-valid-0001/validation/invalidation_markers.json
+- run/run-eval-valid-0001/validation/validator_result.json
