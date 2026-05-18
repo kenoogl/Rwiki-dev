@@ -444,6 +444,8 @@ manual review も実装や spec 作成と同様に、上流から下流へ段階
 これは review artifact, alignment memo, workflow gate status を gate package として読むための
 **derived artifact** であり、正本そのものではない。
 
+`requirements / design / tasks` の human gate に回す phase evidence summary／gate package は、dual-reviewer-implementation-governance Requirement 9 受入 8 に従い、当該 prescribed workflow process の workflow execution ledger の各段→証跡 artifact パスの突合表を必ず埋め込む。突合表を欠く gate package の人間回付は workflow 逸脱とする。
+
 最低限含めるもの:
 
 - reviewed feature set

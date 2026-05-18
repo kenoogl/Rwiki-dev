@@ -176,6 +176,7 @@ traceability や planning では次を区別する。
 - `spec phase` / `review phase` / `run status` のどれにも当てはまらない新しい phase-like 概念を導入する場合は、本書で先に定義する
 - status 表現を他文書に追加する場合は、`spec.json` を正本とする旨を崩さない
 - implementation handback は `task-local adjustment` / `design handback` / `requirements handback` の 3 区分で扱う
+- `prescribed workflow process`（phase execution / review wave / alignment gate / reopen procedure / cross-spec alignment の総称。`spec phase` / `review phase` / `run status` のいずれとも別概念）と `workflow execution ledger` は dual-reviewer-implementation-governance Requirement 9 を正本定義とする。本書はその参照元として §3 phase 用語と区別する
 
 ## 7. 日本語用語の整理
 

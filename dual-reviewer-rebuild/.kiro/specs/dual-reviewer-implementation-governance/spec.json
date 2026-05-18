@@ -1,9 +1,9 @@
 {
   "feature_name": "dual-reviewer-implementation-governance",
   "created_at": "2026-05-09T10:00:00+09:00",
-  "updated_at": "2026-05-18T00:00:00+09:00",
+  "updated_at": "2026-05-18T15:00:00+09:00",
   "language": "ja",
-  "phase": "design-approved",
+  "phase": "tasks-approved",
   "approvals": {
     "requirements": {
       "generated": true,
@@ -15,7 +15,7 @@
     },
     "tasks": {
       "generated": true,
-      "approved": false
+      "approved": true
     }
   },
   "ready_for_implementation": false,
@@ -23,33 +23,31 @@
     "reopened": {
       "requirements": false,
       "design": false,
-      "tasks": true
+      "tasks": false
     },
     "alignment": {
       "requirements": {
         "required": true,
         "status": "completed",
-        "last_checked": "2026-05-16",
-        "note": "2026-05-16 横断整合ゲート不整合 0 件で完走（要件人間承認ゲート通過）"
+        "last_checked": "2026-05-18",
+        "note": "2026-05-18 Requirement 9（Workflow Execution Ledger and Compliance Enforcement、受入 1〜11）追加。独立要件個別レビュー（致命2/重要4/軽微1 の must-fix 7 件を 1 件ずつ承認で適用）→ 独立要件横断整合ゲート（不整合 0・他 6 spec 波及 0・A8/B2/C3、C 群 3 件は上位文書同期で設計段送り）→ 統治要件 6 受入 1 横断整合 要件段充足 → 要件人間承認 通過。証跡＝reviews/requirements-local-review-2026-05-18.md、docs/coordination/requirements-alignment-gate-2026-05-18-governance.md"
       },
       "design": {
         "required": true,
         "status": "completed",
         "last_checked": "2026-05-18",
-        "note": "2026-05-18 設計 must-fix 4 件適用・横断波及なし（5 機能ゲート結果維持）。設計人間承認 通過"
+        "note": "2026-05-18 Requirement 9 追従設計を design.md に差分追加（小節 1〜10）。独立設計個別レビュー（節 3 の 10 観点、致命2/重要8/軽微1 の must-fix 11 件を 1 件ずつ承認で適用）→ 独立設計横断整合ゲート（節 4、不整合 0・他 6 spec 波及 0・A9/B4/C3）→ 統治要件 6 受入 1 設計段充足 → 設計人間承認 通過。独立逆方向トレース監査（design.md 全体×現行要件 1〜9）＝孤児 0・設計健全、S-1 軽微は案 A（非意味的前方参照）適用・B 手戻り不要（利用者判断）。証跡＝reviews/design-local-review-2026-05-18.md、reviews/design-reverse-trace-audit-2026-05-18.md、docs/coordination/design-alignment-gate-2026-05-18-governance.md"
       },
       "tasks": {
         "required": true,
-        "status": "pending",
-        "last_checked": null,
-        "note": "reset 2026-05-13: v2-acquisition data retake requires full re-review"
+        "status": "completed",
+        "last_checked": "2026-05-18",
+        "note": "2026-05-18 Requirement 9 タスクを tasks.md に差分追加（Task 11〜18 ＋§2 内部順序＋§6 完了条件、既存 Task 1〜10 不変）。独立タスク個別レビュー（節 5 の 7 観点、致命/重要 0・軽微 4、F-3／F-4 案 X を 1 件ずつ承認で適用）→ 独立タスク横断整合ゲート（節 4、不整合 0・他 6 spec 波及 0・A8/B3/C0）→ 統治要件 6 受入 1 タスク段充足 → タスク人間承認 通過。Requirement 9 要件再開サイクル（10 ステップ）完了。残＝承認後の上位文書同期 C-1/C-2/C-3（Task 17）と強制関数の実装（実装フェーズ）。証跡＝reviews/tasks-local-review-2026-05-18.md、docs/coordination/tasks-alignment-gate-2026-05-18-governance.md"
       }
     },
     "recheck": {
-      "upstream_change_pending": true,
-      "impacted_downstream_phases": [
-        "tasks"
-      ]
+      "upstream_change_pending": false,
+      "impacted_downstream_phases": []
     },
     "traceability": {
       "intent_requirements_matrix_required": false,

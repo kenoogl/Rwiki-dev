@@ -119,6 +119,14 @@ implementation checkpoint は次でのみ閉じる。
 3. implementation conformance review 実施
 4. finding が 0 件、または artifact と disposition を伴って記録済み
 
+### 2.1 reopen 手続きへの Workflow Execution Ledger 内包（dual-reviewer-implementation-governance Requirement 9）
+
+reopen procedure 自体が prescribed workflow process であり、本契約の対象である。
+
+- 着手前：本節（Step 1〜10）が定める段集合を権威ソースとして workflow execution ledger を新規生成する（Req9 受入 1）。本節 Step 1〜10 は段集合の確定書式（番号付き stage 見出しの単一リスト＝独立再導出が段集合を一意抽出できる形）として維持する（Req9 受入 10、governance design D5-1）。
+- 不可逆操作の直前：Step 4（正本更新）・Step 5（`spec.json` 更新）・Step 7（gate 再実施）・Step 9（再開）に伴う spec.json approval／phase 書込・gate package 生成は Requirement 9 の enforcement point の対象であり、台帳・全段証跡・独立再導出突合が pass しない限り遮断する（fail-closed。Req9 受入 6・11）。
+- これにより reopen 経路を enforcement の抜け穴にしない（Req9 受入 9・governance design 小節 5）。
+
 ## 3. 状態遷移表
 
 | 起点状態 | 事象 | 判定 | 必須アクション | 次状態 |
@@ -137,6 +145,8 @@ implementation checkpoint は次でのみ閉じる。
 | `conformance review completed` | open finding あり | `A/B/C/D` | signal / coordination / review artifact へ接続 | `completed_with_open_findings` |
 | `completed_with_open_findings` | finding 修正着手 | severity と handback に従う | 実装修正、smoke rerun、conformance review short rerun | `recheck in_progress` |
 | `governance spec introduced` | completion rule 変更 | cross-spec review 必須 | alignment memo、gate status、`spec.json` alignment 更新 | `governance alignment completed` |
+
+上表の各遷移のうち `spec.json` 書込・phase 移行・gate package 生成を伴うものは、dual-reviewer-implementation-governance Requirement 9 の enforcement point の対象である（workflow execution ledger・独立再導出突合・通過マーカーが pass しない遷移は fail-closed）。
 
 ## 4. handback quick rule
 

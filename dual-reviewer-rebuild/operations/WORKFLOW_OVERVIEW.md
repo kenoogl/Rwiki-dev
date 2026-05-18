@@ -97,6 +97,7 @@ multi-feature 開発では、各 phase の終端に必須の alignment gate を�
 - gate 状態台帳：[workflow-gate-status.md](../docs/coordination/workflow-gate-status.md)。
 - 共通規約：[CONVENTIONS.md](../CONVENTIONS.md)。
 - 各 feature の状態正本：`.kiro/specs/<feature>/spec.json`。
+- prescribed workflow process ごとの段集合の権威ソース：`.kiro/specs/dual-reviewer-implementation-governance` design「Workflow Execution Ledger and Enforcement Model」が定める `docs/coordination/workflow-process-authority-map.md`（process→権威文書を一意指定）。本概観の段構成記述はその権威ソースの一つだが、判断根拠は authority-map と各正本を優先する。
 
 本書は概観であり、判断の根拠としては上記の正本文書を優先する。
 

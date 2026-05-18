@@ -305,6 +305,10 @@ graph TD
 - `tasks wave` の実際の blocking dependency が本書と一致しないと分かった場合
 - implementation completion rule が変更された場合
 
+### 8.1 Workflow Execution Ledger 前提（dual-reviewer-implementation-governance Requirement 9）
+
+prescribed workflow process（phase execution / review wave / alignment gate / reopen procedure / cross-spec alignment）は、着手前に権威ソース文書から段集合を導出した workflow execution ledger を持つことを前提とする（統治 Requirement 9・design「Workflow Execution Ledger and Enforcement Model」）。本 dependency map の §5（各 phase の生成順）は wave 段構成の権威ソースの一つであり、各 process の段集合の権威ソースは `workflow-process-authority-map.md` が一意指定する（governance design 小節 1.2）。本書を planning memo でなく phase progression の補助正本として扱う既存方針（§8 冒頭）は、この台帳前提と整合する。
+
 ## 9. Current Conclusion
 
 現時点の正しい進め方は、
