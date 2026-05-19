@@ -21,7 +21,8 @@ class TestLedgerGenerator < Minitest::Test
     write_authority_map(
       "reopen-procedure" => {
         path: "operations/sample-procedure.md",
-        section: "## 2. 手続き一覧"
+        section: "## 2. 手続き一覧",
+        rule: "番号付き stage 見出しの単一リスト stage_prefix=Step"
       }
     )
     @gen = Governance::LedgerGenerator.new(repo_root: @dir)
@@ -49,7 +50,7 @@ class TestLedgerGenerator < Minitest::Test
   # 権威ソース曖昧（未確立行）は黙って段集合を返さず fail-closed（design 小節 4）
   def test_unresolved_authority_is_fail_closed
     write_authority_map(
-      "intent-review-wave" => { path: "未確立", section: "未確立" }
+      "intent-review-wave" => { path: "未確立", section: "未確立", rule: "未確立" }
     )
     gen = Governance::LedgerGenerator.new(repo_root: @dir)
     assert_raises(Governance::FailClosed) do
@@ -148,10 +149,10 @@ class TestLedgerGenerator < Minitest::Test
     lines = []
     lines << "# workflow-process-authority-map"
     lines << ""
-    lines << "| process_id | authority_document_path | authoritative_section |"
-    lines << "|------------|-------------------------|-----------------------|"
+    lines << "| process_id | authority_document_path | authoritative_section | stage_extraction_rule |"
+    lines << "|------------|-------------------------|-----------------------|-----------------------|"
     rows.each do |pid, r|
-      lines << "| `#{pid}` | `#{r[:path]}` | `#{r[:section]}` |"
+      lines << "| `#{pid}` | `#{r[:path]}` | `#{r[:section]}` | `#{r[:rule]}` |"
     end
     lines << ""
     (@dir + "docs/coordination/workflow-process-authority-map.md").write(lines.join("\n") + "\n")

@@ -24,7 +24,8 @@ class TestReq9Suite < Minitest::Test
     (@dir + "operations").mkpath
     (@dir + "docs/reviews").mkpath
     write_doc(3)
-    write_map("reopen-procedure" => { p: "operations/p.md", s: "## 2. 手続き一覧" })
+    write_map("reopen-procedure" => { p: "operations/p.md", s: "## 2. 手続き一覧",
+                                      r: "番号付き stage 見出しの単一リスト stage_prefix=Step" })
     @ledger = @dir + "docs/coordination/ledgers/reopen-procedure-2026-05-18.md"
     @ep = Governance::EnforcementPoint.new(repo_root: @dir)
   end
@@ -54,7 +55,7 @@ class TestReq9Suite < Minitest::Test
 
   # 異常系: 曖昧権威ソース（未確立）→ fail-closed
   def test_abnormal_ambiguous_authority_fail_closed
-    write_map("intent-review-wave" => { p: "未確立", s: "未確立" })
+    write_map("intent-review-wave" => { p: "未確立", s: "未確立", r: "未確立" })
     ep = Governance::EnforcementPoint.new(repo_root: @dir)
     assert_raises(Governance::FailClosed) { ep.enforce(process_id: "intent-review-wave", operation: OP, date: "2026-05-18") }
   end
@@ -114,8 +115,10 @@ class TestReq9Suite < Minitest::Test
   end
 
   def write_map(rows)
-    lines = ["# m", "", "| process_id | authority_document_path | authoritative_section |", "|---|---|---|"]
-    rows.each { |pid, r| lines << "| `#{pid}` | `#{r[:p]}` | `#{r[:s]}` |" }
+    lines = ["# m", "",
+             "| process_id | authority_document_path | authoritative_section | stage_extraction_rule |",
+             "|---|---|---|---|"]
+    rows.each { |pid, r| lines << "| `#{pid}` | `#{r[:p]}` | `#{r[:s]}` | `#{r[:r]}` |" }
     (@dir + "docs/coordination/workflow-process-authority-map.md").write(lines.join("\n") + "\n")
   end
 end

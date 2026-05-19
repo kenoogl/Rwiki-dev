@@ -24,7 +24,8 @@ class TestIndependentRederivation < Minitest::Test
     (@dir + "operations").mkpath
     write_authority_doc(stage_count: 3)
     write_authority_map(
-      "reopen-procedure" => { path: "operations/sample-procedure.md", section: "## 2. 手続き一覧" }
+      "reopen-procedure" => { path: "operations/sample-procedure.md", section: "## 2. 手続き一覧",
+                              rule: "番号付き stage 見出しの単一リスト stage_prefix=Step" }
     )
   end
 
@@ -43,7 +44,7 @@ class TestIndependentRederivation < Minitest::Test
 
   # 権威ソース未確立は黙って段集合を返さず fail-closed
   def test_unresolved_authority_is_fail_closed
-    write_authority_map("intent-review-wave" => { path: "未確立", section: "未確立" })
+    write_authority_map("intent-review-wave" => { path: "未確立", section: "未確立", rule: "未確立" })
     rd = Governance::IndependentRederivation.new(repo_root: @dir)
     assert_raises(Governance::FailClosed) { rd.rederive("intent-review-wave") }
   end
@@ -104,9 +105,10 @@ class TestIndependentRederivation < Minitest::Test
   end
 
   def write_authority_map(rows)
-    lines = ["# authority-map", "", "| process_id | authority_document_path | authoritative_section |",
-             "|---|---|---|"]
-    rows.each { |pid, r| lines << "| `#{pid}` | `#{r[:path]}` | `#{r[:section]}` |" }
+    lines = ["# authority-map", "",
+             "| process_id | authority_document_path | authoritative_section | stage_extraction_rule |",
+             "|---|---|---|---|"]
+    rows.each { |pid, r| lines << "| `#{pid}` | `#{r[:path]}` | `#{r[:section]}` | `#{r[:rule]}` |" }
     (@dir + "docs/coordination/workflow-process-authority-map.md").write(lines.join("\n") + "\n")
   end
 end

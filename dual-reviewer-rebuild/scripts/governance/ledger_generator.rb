@@ -13,7 +13,14 @@ module Governance
 
   Result = Struct.new(:status, :ledger_path, :superseded_path, keyword_init: true)
 
-  AuthorityRow = Struct.new(:process_id, :authority_document_path, :authoritative_section, keyword_init: true)
+  AuthorityRow = Struct.new(:process_id, :authority_document_path, :authoritative_section,
+                            :stage_extraction_rule, keyword_init: true) do
+    # stage_extraction_rule から段見出し接頭辞を取り出す（`stage_prefix=<接頭辞>`）。
+    # 明示が無い行は接頭辞限定なし（従来どおり全番号付き見出しを段候補とする）。
+    def stage_prefix
+      stage_extraction_rule.to_s[/stage_prefix=(\S+)/, 1]
+    end
+  end
 
   class LedgerGenerator
     def initialize(repo_root:)
@@ -70,7 +77,7 @@ module Governance
 
       read_utf8(map_path).each_line do |line|
         cells = parse_table_row(line)
-        next unless cells && cells.length == 3
+        next unless cells && cells.length == 4
         next if cells[0] == "process_id" || cells[0].start_with?("-")
         next unless cells[0] == process_id
 
@@ -79,7 +86,8 @@ module Governance
         end
 
         return AuthorityRow.new(process_id: cells[0], authority_document_path: cells[1],
-                                authoritative_section: cells[2])
+                                authoritative_section: cells[2],
+                                stage_extraction_rule: cells[3])
       end
       raise FailClosed, "authority-map に process_id 不在（fail-closed）: #{process_id}"
     end
@@ -115,15 +123,24 @@ module Governance
 
     def derive_stage_set(row)
       body = section_body(row)
+      prefix = row.stage_prefix
       stages = []
       body.each do |l|
         heading = l[/\A(#+)\s+(.*)/, 2]
         next unless heading
 
-        token = heading[/\A(Step\s+\d+|\d+(?:\.\d+)*)/, 1]
-        # 段見出しは番号付き stage 見出しの単一リストでなければならない。
-        # 番号付きでない下位見出しが混在＝確定書式でない＝曖昧 fail-closed。
-        raise FailClosed, "確定書式でない下位見出しを検出（曖昧＝fail-closed）: #{heading}" unless token
+        if prefix
+          # stage_prefix 明示時：当該接頭辞で始まる番号付き見出しのみを段とし、
+          # 接頭辞に合致しない文書小節（補足注記 `2.1` 等）は段集合に含めない
+          # （authority-map §6・正本の段集合定義に合致。Finding 5）。
+          token = heading[/\A(#{Regexp.escape(prefix)}\s+\d+)/, 1]
+          next unless token
+        else
+          token = heading[/\A(Step\s+\d+|\d+(?:\.\d+)*)/, 1]
+          # prefix 非明示の process は番号付き stage 見出しの単一リストを要求。
+          # 番号付きでない下位見出しが混在＝確定書式でない＝曖昧 fail-closed。
+          raise FailClosed, "確定書式でない下位見出しを検出（曖昧＝fail-closed）: #{heading}" unless token
+        end
 
         stages << token.gsub(/\s+/, " ")
       end

@@ -21,9 +21,9 @@ module Governance
 
     # 権威ソースから段集合を独立に再導出する。曖昧・未確立は fail-closed。
     def rederive(process_id)
-      doc_path, section = resolve_authority(process_id)
+      doc_path, section, rule = resolve_authority(process_id)
       body = slice_section(doc_path, section)
-      extract_stages(body)
+      extract_stages(body, rule)
     end
 
     private
@@ -41,7 +41,7 @@ module Governance
         next unless line =~ /\A\s*\|(.+)\|\s*\z/
 
         cols = Regexp.last_match(1).split("|").map { |c| c.strip.tr("`", "").strip }
-        next unless cols.length == 3
+        next unless cols.length == 4
         next if cols[0] == "process_id" || cols[0].start_with?("-")
         next unless cols[0] == process_id
 
@@ -53,7 +53,7 @@ module Governance
         raise FailClosed, "権威ソース未確立（fail-closed）: #{process_id}"
       end
 
-      [@repo_root + hit[1], hit[2]]
+      [@repo_root + hit[1], hit[2], hit[3]]
     end
 
     def slice_section(doc_path, section)
@@ -79,13 +79,22 @@ module Governance
     end
 
     # 独立した一次解釈：段見出しのみを走査し番号付き token を抽出する。
-    def extract_stages(body)
+    # stage_extraction_rule に `stage_prefix=<接頭辞>` がある場合は当該接頭辞で
+    # 始まる見出しのみを段とし、接頭辞外の文書小節（`2.1` 等）は段に含めない
+    # （Finding 5。台帳生成器とロジックを共有せず独立に同じ正本定義へ到達）。
+    def extract_stages(body, rule = nil)
+      prefix = rule.to_s[/stage_prefix=(\S+)/, 1]
       tokens = []
       body.each do |l|
         next unless (text = l[/\A#+\s+(.+?)\s*\z/, 1])
 
-        tok = text[/\A(?:Step\s+\d+|\d+(?:\.\d+)*)/]
-        raise FailClosed, "確定書式でない下位見出し（曖昧＝fail-closed）: #{text}" unless tok
+        if prefix
+          tok = text[/\A#{Regexp.escape(prefix)}\s+\d+/]
+          next unless tok
+        else
+          tok = text[/\A(?:Step\s+\d+|\d+(?:\.\d+)*)/]
+          raise FailClosed, "確定書式でない下位見出し（曖昧＝fail-closed）: #{text}" unless tok
+        end
 
         tokens << tok.gsub(/\s+/, " ")
       end

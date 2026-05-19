@@ -24,7 +24,8 @@ class TestEnforcementPoint < Minitest::Test
     (@dir + "docs/reviews").mkpath
     write_authority_doc(stage_count: 3)
     write_authority_map(
-      "reopen-procedure" => { path: "operations/sample-procedure.md", section: "## 2. 手続き一覧" }
+      "reopen-procedure" => { path: "operations/sample-procedure.md", section: "## 2. 手続き一覧",
+                              rule: "番号付き stage 見出しの単一リスト stage_prefix=Step" }
     )
     @ledger = @dir + "docs/coordination/ledgers/reopen-procedure-2026-05-18.md"
     @ep = Governance::EnforcementPoint.new(repo_root: @dir)
@@ -68,7 +69,7 @@ class TestEnforcementPoint < Minitest::Test
 
   # 権威ソース曖昧（未確立）＝fail-closed
   def test_ambiguous_authority_is_fail_closed
-    write_authority_map("intent-review-wave" => { path: "未確立", section: "未確立" })
+    write_authority_map("intent-review-wave" => { path: "未確立", section: "未確立", rule: "未確立" })
     ep = Governance::EnforcementPoint.new(repo_root: @dir)
     assert_raises(Governance::FailClosed) do
       ep.enforce(process_id: "intent-review-wave", operation: OP, date: "2026-05-18")
@@ -142,9 +143,10 @@ class TestEnforcementPoint < Minitest::Test
   end
 
   def write_authority_map(rows)
-    lines = ["# m", "", "| process_id | authority_document_path | authoritative_section |",
-             "|---|---|---|"]
-    rows.each { |pid, r| lines << "| `#{pid}` | `#{r[:path]}` | `#{r[:section]}` |" }
+    lines = ["# m", "",
+             "| process_id | authority_document_path | authoritative_section | stage_extraction_rule |",
+             "|---|---|---|---|"]
+    rows.each { |pid, r| lines << "| `#{pid}` | `#{r[:path]}` | `#{r[:section]}` | `#{r[:rule]}` |" }
     (@dir + "docs/coordination/workflow-process-authority-map.md").write(lines.join("\n") + "\n")
   end
 end

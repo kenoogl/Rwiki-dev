@@ -52,7 +52,7 @@ required_files = [
 missing_files = required_files.reject { |relative| repo_root.join(relative).exist? }
 raise "missing governance artifacts: #{missing_files.join(', ')}" unless missing_files.empty?
 
-review_artifact = repo_root.join("docs/reviews/2026-05-09-prototype-shelf-review.md").read
+review_artifact = repo_root.join("docs/reviews/2026-05-09-prototype-shelf-review.md").read(encoding: "UTF-8")
 required_sections = [
   "## 1. review scope",
   "## 2. validation rerun",
@@ -75,7 +75,7 @@ required_metric_keys = [
 missing_metric_keys = required_metric_keys.reject { |key| review_artifact.include?(key) }
 raise "review artifact missing metric keys: #{missing_metric_keys.join(', ')}" unless missing_metric_keys.empty?
 
-intent_review_artifact = repo_root.join("docs/reviews/2026-05-09-intent-baseline-review.md").read
+intent_review_artifact = repo_root.join("docs/reviews/2026-05-09-intent-baseline-review.md").read(encoding: "UTF-8")
 required_intent_sections = [
   "## 1. review scope",
   "## 2. findings",
@@ -94,21 +94,21 @@ required_intent_metric_keys = [
 missing_intent_metric_keys = required_intent_metric_keys.reject { |key| intent_review_artifact.include?(key) }
 raise "intent review artifact missing metric keys: #{missing_intent_metric_keys.join(', ')}" unless missing_intent_metric_keys.empty?
 
-template = repo_root.join("docs/reviews/templates/implementation-conformance-review-template.md").read
+template = repo_root.join("docs/reviews/templates/implementation-conformance-review-template.md").read(encoding: "UTF-8")
 missing_template_keys = required_metric_keys.reject { |key| template.include?(key) }
 raise "review template missing metric keys: #{missing_template_keys.join(', ')}" unless missing_template_keys.empty?
 
-intent_template = repo_root.join("docs/reviews/templates/intent-review-template.md").read
+intent_template = repo_root.join("docs/reviews/templates/intent-review-template.md").read(encoding: "UTF-8")
 missing_intent_template_keys = required_intent_metric_keys.reject { |key| intent_template.include?(key) }
 raise "intent review template missing metric keys: #{missing_intent_template_keys.join(', ')}" unless missing_intent_template_keys.empty?
 
-procedure = repo_root.join("docs/coordination/implementation-conformance-review.md").read
+procedure = repo_root.join("docs/coordination/implementation-conformance-review.md").read(encoding: "UTF-8")
 raise "procedure doc missing completion rule" unless procedure.include?("## 10. completion rule")
 
-metric_register = repo_root.join("docs/coordination/implementation-conformance-metric-register.md").read
+metric_register = repo_root.join("docs/coordination/implementation-conformance-metric-register.md").read(encoding: "UTF-8")
 raise "metric register missing baseline snapshot section" unless metric_register.include?("## 4. current baseline snapshot")
 
-phase_metric_register = repo_root.join("docs/coordination/phase-review-metric-register.md").read
+phase_metric_register = repo_root.join("docs/coordination/phase-review-metric-register.md").read(encoding: "UTF-8")
 required_phase_metric_terms = [
   "`intent_revision_count`",
   "`intent_handback_count`",
@@ -117,7 +117,7 @@ required_phase_metric_terms = [
 missing_phase_metric_terms = required_phase_metric_terms.reject { |term| phase_metric_register.include?(term) }
 raise "phase-review metric register missing required terms: #{missing_phase_metric_terms.join(', ')}" unless missing_phase_metric_terms.empty?
 
-workflow_gate_status = repo_root.join("docs/coordination/workflow-gate-status.md").read
+workflow_gate_status = repo_root.join("docs/coordination/workflow-gate-status.md").read(encoding: "UTF-8")
 required_status_terms = [
   "`completed_with_open_findings`",
   "implementation conformance review",
@@ -126,7 +126,7 @@ required_status_terms = [
 missing_status_terms = required_status_terms.reject { |term| workflow_gate_status.include?(term) }
 raise "workflow gate status missing required terms: #{missing_status_terms.join(', ')}" unless missing_status_terms.empty?
 
-alignment_memo = repo_root.join("docs/alignment/cross-spec-implementation-governance-alignment.md").read
+alignment_memo = repo_root.join("docs/alignment/cross-spec-implementation-governance-alignment.md").read(encoding: "UTF-8")
 required_alignment_sections = [
   "## 1. 目的",
   "## 2. 確認した論点",
