@@ -1,0 +1,44 @@
+{
+  "entries": [
+    {
+      "run_id": "run-si-exploratory-0001",
+      "phase_profile": "requirements",
+      "treatment": "single",
+      "total_findings": 1,
+      "accepted_findings": 1,
+      "rejected_findings": 0,
+      "deferred_findings": 0,
+      "validation_outcome": "passed"
+    },
+    {
+      "run_id": "run-si-invalid-workflow-0001",
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "total_findings": 2,
+      "accepted_findings": 2,
+      "rejected_findings": 0,
+      "deferred_findings": 0,
+      "validation_outcome": "failed"
+    },
+    {
+      "run_id": "run-si-valid-clean-0001",
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "total_findings": 1,
+      "accepted_findings": 1,
+      "rejected_findings": 0,
+      "deferred_findings": 0,
+      "validation_outcome": "passed"
+    },
+    {
+      "run_id": "run-si-valid-dissent-0001",
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "total_findings": 2,
+      "accepted_findings": 1,
+      "rejected_findings": 1,
+      "deferred_findings": 0,
+      "validation_outcome": "passed"
+    }
+  ]
+}

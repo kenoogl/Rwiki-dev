@@ -1,0 +1,7 @@
+{
+  "step_id": "step_c",
+  "step_name": "judgment",
+  "execution_state": "skipped",
+  "reason": "intentional skipped by treatment selection (treatment=single)",
+  "treatment": "single"
+}

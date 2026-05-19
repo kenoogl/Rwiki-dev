@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-si-valid-clean-0001",
+  "generated_at": "2026-05-19T00:00:00Z",
+  "treatment": "dual+judgment",
+  "phase_profile": "design",
+  "step_execution_counts": {
+    "executed": 4
+  },
+  "recorded_step_ids": [
+    "step_a",
+    "step_b",
+    "step_c",
+    "step_d"
+  ]
+}

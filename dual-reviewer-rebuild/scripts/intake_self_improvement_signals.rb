@@ -1,27 +1,54 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# 自己改善エントリ（スクラッチ整合）: design Architecture 段 1
+# = signal intake → signal extraction。
+#
+# 旧 v1 エントリ 10 件は第1波で git rm 済（評価外参照ゼロを grep -rl で
+# 確認済）。本エントリは新モジュール公開 API（共有 PipelineDriver）のみで
+# runtime/evaluation fixture or 実出力から findings/ ・templates/ を
+# learning/ 正本配置へ冪等生成する。raw evidence / analysis は mutate
+# しない。
+#
+# usage:
+#   ruby scripts/intake_self_improvement_signals.rb \
+#     --learning-root <dir> --analysis-root <dir> <run_root> [<run_root>...]
 require "json"
 require "pathname"
-require_relative "self_improvement/signal_intake"
+require_relative "self_improvement/pipeline_driver"
 
-repo_root = Pathname(__dir__).join("..").expand_path
-signal_intake = DualReviewer::SelfImprovement::SignalIntake.new(repo_root: repo_root)
+repo_root = Pathname(File.expand_path("..", __dir__))
+learning_root = nil
+analysis_root = nil
+run_roots = []
 
-mode = ARGV.shift
-target_path = ARGV.shift
-
-unless %w[runtime evaluation].include?(mode) && target_path
-  warn "usage: ruby scripts/intake_self_improvement_signals.rb <runtime|evaluation> <path>"
-  exit 1
+argv = ARGV.dup
+until argv.empty?
+  flag = argv.shift
+  case flag
+  when "--learning-root" then learning_root = argv.shift
+  when "--analysis-root" then analysis_root = argv.shift
+  else run_roots << flag
+  end
 end
 
-result =
-  case mode
-  when "runtime"
-    signal_intake.load_runtime_signals(run_root: target_path)
-  when "evaluation"
-    signal_intake.load_evaluation_signals(analysis_root: target_path)
-  end
+if learning_root.nil? || run_roots.empty?
+  abort "usage: ruby scripts/intake_self_improvement_signals.rb " \
+        "--learning-root <dir> --analysis-root <dir> <run_root>..."
+end
 
-puts JSON.pretty_generate(result)
+driver = DualReviewer::SelfImprovement::PipelineDriver.new(
+  repo_root: repo_root
+)
+res = driver.stage_signal_intake(
+  learning_root: learning_root,
+  run_roots: run_roots, analysis_root: analysis_root
+)
+puts JSON.pretty_generate(
+  "stage" => "signal_intake",
+  "signal_count" => res[:signals].size,
+  "signal_classes" => res[:signals].map { |s| s["signal_class"] }.uniq,
+  "inventory_entries" => res[:inventory_entries].size,
+  "pattern_candidates" => res[:pattern_candidates].size,
+  "templates" => res[:templates].size
+)

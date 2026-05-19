@@ -1,0 +1,33 @@
+{
+  "run_id": "run-si-invalid-workflow-0001",
+  "decision_units": [
+    {
+      "decision_unit_id": "du-001",
+      "decision_key": "R1",
+      "finding_refs": [
+        "f1"
+      ],
+      "judgment_refs": [
+        "f1"
+      ],
+      "proposed_action": "fix",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-19T00:00:00Z",
+      "human_decision_note": null
+    },
+    {
+      "decision_unit_id": "du-002",
+      "decision_key": "R2",
+      "finding_refs": [
+        "f2"
+      ],
+      "judgment_refs": [
+        "f2"
+      ],
+      "proposed_action": "drop",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-19T00:00:00Z",
+      "human_decision_note": null
+    }
+  ]
+}

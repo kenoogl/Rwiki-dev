@@ -1,0 +1,23 @@
+{
+  "step_id": "step_b",
+  "step_name": "adversarial_review",
+  "execution_state": "executed",
+  "treatment": "dual+judgment",
+  "phase_profile": "design",
+  "prompt_identity": {
+    "prompt_artifact_path": "runtime/prompts/adversarial_reviewer.md",
+    "prompt_id": "foundation.adversarial_reviewer",
+    "prompt_version": "1.0.0",
+    "role": "adversarial_reviewer"
+  },
+  "assessments": [
+    {
+      "finding_id": "f1",
+      "adversarial_outcome": "no_counter_evidence_after_challenge"
+    },
+    {
+      "finding_id": "f2",
+      "adversarial_outcome": "counter_evidence_raised"
+    }
+  ]
+}

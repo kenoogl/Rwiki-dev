@@ -1,0 +1,14 @@
+{
+  "run_id": "run-si-valid-dissent-0001",
+  "primary_failure_code": "unknown",
+  "failed_validator_check_ids": [
+
+  ],
+  "invalidation_marker_linkage": [
+
+  ],
+  "operator_action_hint": null,
+  "validator_status": "passed",
+  "generated_by": "runtime:execution_v2:invalidation_handler",
+  "generated_at": "2026-05-19T00:00:00Z"
+}

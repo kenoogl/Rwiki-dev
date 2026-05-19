@@ -1,0 +1,20 @@
+{
+  "step_id": "step_d",
+  "step_name": "integration",
+  "execution_state": "executed",
+  "treatment": "dual+judgment",
+  "integrated_finding_count": 2,
+  "decision_unit_count": 2,
+  "run_close_readiness": {
+    "ready": true,
+    "missing_required_steps": [
+
+    ],
+    "treatment": "dual+judgment",
+    "evaluated_required_steps": [
+      "step_a",
+      "step_b",
+      "step_c"
+    ]
+  }
+}

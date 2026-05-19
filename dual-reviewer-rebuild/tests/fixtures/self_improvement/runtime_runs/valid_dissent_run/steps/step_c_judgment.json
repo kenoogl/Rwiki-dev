@@ -1,0 +1,25 @@
+{
+  "step_id": "step_c",
+  "step_name": "judgment",
+  "execution_state": "executed",
+  "treatment": "dual+judgment",
+  "phase_profile": "design",
+  "prompt_identity": {
+    "prompt_artifact_path": "runtime/prompts/judgment_reviewer.md",
+    "prompt_id": "foundation.judgment_reviewer",
+    "prompt_version": "1.0.0",
+    "role": "judgment_reviewer"
+  },
+  "judgments": [
+    {
+      "finding_id": "f1",
+      "final_label": "necessary",
+      "recommended_action": "fix"
+    },
+    {
+      "finding_id": "f2",
+      "final_label": "unnecessary",
+      "recommended_action": "drop"
+    }
+  ]
+}

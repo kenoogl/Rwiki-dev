@@ -1,0 +1,24 @@
+---
+analysis_logic_version: 0.1.0
+input_run_set:
+- run-si-exploratory-0001
+- run-si-invalid-workflow-0001
+- run-si-valid-clean-0001
+- run-si-valid-dissent-0001
+generated_at: '2026-05-19T00:00:00Z'
+metric_set_version: 0.1.0
+phase_metric_profile_version: overlay-v1
+comparison_contract_version: 0.1.0
+run_target_linkage:
+- run_id: run-si-exploratory-0001
+  target_id: spec/dual-reviewer-self-improvement/tasks.md
+  classification: exploratory
+- run_id: run-si-invalid-workflow-0001
+  target_id: spec/dual-reviewer-self-improvement/tasks.md
+  classification: invalid
+- run_id: run-si-valid-clean-0001
+  target_id: spec/dual-reviewer-self-improvement/tasks.md
+  classification: valid
+- run_id: run-si-valid-dissent-0001
+  target_id: spec/dual-reviewer-self-improvement/tasks.md
+  classification: valid

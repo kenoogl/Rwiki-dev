@@ -1,0 +1,19 @@
+{
+  "run_id": "run-si-valid-clean-0001",
+  "decision_units": [
+    {
+      "decision_unit_id": "du-001",
+      "decision_key": "R1",
+      "finding_refs": [
+        "f1"
+      ],
+      "judgment_refs": [
+        "f1"
+      ],
+      "proposed_action": "fix",
+      "human_decision": "approved",
+      "human_decision_timestamp": "2026-05-19T00:00:00Z",
+      "human_decision_note": null
+    }
+  ]
+}

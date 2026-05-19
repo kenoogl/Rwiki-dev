@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run-si-valid-dissent-0001",
+  "eligible_for_standard_comparison": false,
+  "ineligibility_reason_codes": [
+    "non_standard_population_member"
+  ],
+  "treatment": "dual+judgment",
+  "phase_profile": "design",
+  "generated_at": "2026-05-19T00:00:00Z"
+}

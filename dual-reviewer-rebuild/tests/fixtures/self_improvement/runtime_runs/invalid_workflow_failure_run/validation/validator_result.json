@@ -1,0 +1,16 @@
+{
+  "run_id": "run-si-invalid-workflow-0001",
+  "validator_status": "failed",
+  "checked_contract": "foundation:metadata_contract.yaml#fields(required)+review_mode.enum",
+  "error_list": [
+    {
+      "check_id": "review_mode_not_in_contract_enum",
+      "detail": "review_mode not in foundation metadata_contract enum",
+      "fields": [
+        "review_mode"
+      ]
+    }
+  ],
+  "validated_by": "runtime:execution_v2:validation_bridge",
+  "validated_at": "2026-05-19T00:00:00Z"
+}

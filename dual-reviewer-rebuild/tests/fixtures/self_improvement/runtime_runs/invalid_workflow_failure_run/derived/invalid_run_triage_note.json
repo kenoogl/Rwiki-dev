@@ -1,0 +1,14 @@
+{
+  "run_id": "run-si-invalid-workflow-0001",
+  "primary_failure_code": "validator_failed",
+  "failed_validator_check_ids": [
+    "review_mode_not_in_contract_enum"
+  ],
+  "invalidation_marker_linkage": [
+
+  ],
+  "operator_action_hint": null,
+  "validator_status": "failed",
+  "generated_by": "runtime:execution_v2:invalidation_handler",
+  "generated_at": "2026-05-19T00:00:00Z"
+}

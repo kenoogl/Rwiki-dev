@@ -1,0 +1,79 @@
+{
+  "entries": [
+    {
+      "run_id": "run-si-exploratory-0001",
+      "phase_profile": "requirements",
+      "treatment": "single",
+      "severity_distribution": {
+        "major": 1
+      },
+      "source_role_distribution": {
+        "primary_reviewer": 1
+      },
+      "judgment_label_distribution": {
+        "resolved_labels": {
+          "approved": 1
+        },
+        "judgment_ref_present": 0,
+        "unresolved_judgment_labels": 0
+      }
+    },
+    {
+      "run_id": "run-si-invalid-workflow-0001",
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "severity_distribution": {
+        "major": 1,
+        "minor": 1
+      },
+      "source_role_distribution": {
+        "primary_reviewer": 2
+      },
+      "judgment_label_distribution": {
+        "resolved_labels": {
+          "approved": 2
+        },
+        "judgment_ref_present": 2,
+        "unresolved_judgment_labels": 0
+      }
+    },
+    {
+      "run_id": "run-si-valid-clean-0001",
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "severity_distribution": {
+        "major": 1
+      },
+      "source_role_distribution": {
+        "primary_reviewer": 1
+      },
+      "judgment_label_distribution": {
+        "resolved_labels": {
+          "approved": 1
+        },
+        "judgment_ref_present": 1,
+        "unresolved_judgment_labels": 0
+      }
+    },
+    {
+      "run_id": "run-si-valid-dissent-0001",
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "severity_distribution": {
+        "major": 1,
+        "minor": 1
+      },
+      "source_role_distribution": {
+        "primary_reviewer": 2
+      },
+      "judgment_label_distribution": {
+        "resolved_labels": {
+          "approved": 1,
+          "rejected": 1
+        },
+        "judgment_ref_present": 2,
+        "unresolved_judgment_labels": 0
+      }
+    }
+  ]
+}

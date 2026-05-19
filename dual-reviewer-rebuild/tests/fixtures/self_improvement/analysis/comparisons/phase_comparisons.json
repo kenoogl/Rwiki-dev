@@ -1,0 +1,23 @@
+{
+  "comparison_status": "valid",
+  "comparison_invalid_reason": [
+
+  ],
+  "phase_slices": [
+    {
+      "phase_profile": "design",
+      "selected_overlay": [
+        "cross_section_consistency",
+        "responsibility_boundary_defects",
+        "failure_mode_omission_detection"
+      ],
+      "run_count": 1,
+      "run_ids": [
+        "run-si-valid-clean-0001"
+      ],
+      "treatments_present": [
+        "dual+judgment"
+      ]
+    }
+  ]
+}

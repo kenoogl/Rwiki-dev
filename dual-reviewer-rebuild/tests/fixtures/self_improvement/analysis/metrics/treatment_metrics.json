@@ -1,0 +1,14 @@
+{
+  "entries": [
+    {
+      "treatment": "dual+judgment",
+      "run_count": 1,
+      "run_ids": [
+        "run-si-valid-clean-0001"
+      ],
+      "findings_per_run": 1.0,
+      "acceptance_ratio": 1.0,
+      "judgment_invocation_coverage": 1.0
+    }
+  ]
+}

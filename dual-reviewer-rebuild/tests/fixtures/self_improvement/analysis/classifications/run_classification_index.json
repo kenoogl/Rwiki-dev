@@ -1,0 +1,172 @@
+{
+  "entries": [
+    {
+      "run_id": "run-si-exploratory-0001",
+      "classification": "exploratory",
+      "reason_codes": [
+        "evidence_class_exploratory"
+      ],
+      "reason_details": [
+        "evidence_class marks this run as exploratory."
+      ],
+      "phase_profile": "requirements",
+      "treatment": "single",
+      "insufficiency_kind": null,
+      "review_mode": "runtime_mediated",
+      "in_comparison_population": false,
+      "excluded": true,
+      "in_standard_runtime_comparison_set": false,
+      "review_mode_slice_codes": [
+
+      ],
+      "step_omission_disposition": {
+        "step_a": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_b": {
+          "kind": "design_skip",
+          "expected_execution_state": "skipped",
+          "observed_execution_state": "skipped"
+        },
+        "step_c": {
+          "kind": "design_skip",
+          "expected_execution_state": "skipped",
+          "observed_execution_state": "skipped"
+        },
+        "step_d": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        }
+      }
+    },
+    {
+      "run_id": "run-si-invalid-workflow-0001",
+      "classification": "invalid",
+      "reason_codes": [
+        "validator_failed"
+      ],
+      "reason_details": [
+        "validator_status is failed"
+      ],
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "insufficiency_kind": "invalid_input",
+      "review_mode": "legacy_single_review",
+      "in_comparison_population": false,
+      "excluded": true,
+      "in_standard_runtime_comparison_set": false,
+      "review_mode_slice_codes": [
+
+      ],
+      "step_omission_disposition": {
+        "step_a": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_b": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_c": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_d": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        }
+      }
+    },
+    {
+      "run_id": "run-si-valid-clean-0001",
+      "classification": "valid",
+      "reason_codes": [
+        "valid_population_member"
+      ],
+      "reason_details": [
+        "validator passed, human sign-off terminal, evidence_class valid."
+      ],
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "insufficiency_kind": null,
+      "review_mode": "runtime_mediated",
+      "in_comparison_population": true,
+      "excluded": false,
+      "in_standard_runtime_comparison_set": true,
+      "review_mode_slice_codes": [
+
+      ],
+      "step_omission_disposition": {
+        "step_a": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_b": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_c": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_d": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        }
+      }
+    },
+    {
+      "run_id": "run-si-valid-dissent-0001",
+      "classification": "valid",
+      "reason_codes": [
+        "valid_population_member"
+      ],
+      "reason_details": [
+        "validator passed, human sign-off terminal, evidence_class valid."
+      ],
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "insufficiency_kind": null,
+      "review_mode": "runtime_mediated",
+      "in_comparison_population": true,
+      "excluded": false,
+      "in_standard_runtime_comparison_set": true,
+      "review_mode_slice_codes": [
+
+      ],
+      "step_omission_disposition": {
+        "step_a": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_b": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_c": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        },
+        "step_d": {
+          "kind": "executed",
+          "expected_execution_state": "executed",
+          "observed_execution_state": "executed"
+        }
+      }
+    }
+  ]
+}

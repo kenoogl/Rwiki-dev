@@ -1,0 +1,7 @@
+{
+  "step_id": "step_b",
+  "step_name": "adversarial_review",
+  "execution_state": "skipped",
+  "reason": "intentional skipped by treatment selection (treatment=single)",
+  "treatment": "single"
+}

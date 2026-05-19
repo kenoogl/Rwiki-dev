@@ -1,0 +1,10 @@
+{
+  "run_id": "run-si-exploratory-0001",
+  "validator_status": "passed",
+  "checked_contract": "foundation:metadata_contract.yaml#fields(required)+review_mode.enum",
+  "error_list": [
+
+  ],
+  "validated_by": "runtime:execution_v2:validation_bridge",
+  "validated_at": "2026-05-19T00:00:00Z"
+}

@@ -1,0 +1,28 @@
+{
+  "caveats": [
+    {
+      "caveat_code": "mixed_maturity_evidence",
+      "caveat_class": "data_quality",
+      "severity": "warning",
+      "details": "Slice mixes valid (2) and exploratory (1) evidence; do not collapse maturity.",
+      "affected_scope": "global"
+    }
+  ],
+  "caveats_by_class": {
+    "data_quality": [
+      {
+        "caveat_code": "mixed_maturity_evidence",
+        "caveat_class": "data_quality",
+        "severity": "warning",
+        "details": "Slice mixes valid (2) and exploratory (1) evidence; do not collapse maturity.",
+        "affected_scope": "global"
+      }
+    ]
+  },
+  "population_collapsed": false,
+  "population_summary": {
+    "valid_count": 2,
+    "exploratory_count": 1,
+    "invalid_count": 1
+  }
+}

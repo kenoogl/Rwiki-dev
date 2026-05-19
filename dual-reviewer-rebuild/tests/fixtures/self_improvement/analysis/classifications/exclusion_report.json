@@ -1,0 +1,42 @@
+{
+  "entries": [
+    {
+      "run_id": "run-si-exploratory-0001",
+      "classification": "exploratory",
+      "reason_codes": [
+        "evidence_class_exploratory"
+      ],
+      "reason_details": [
+        "evidence_class marks this run as exploratory."
+      ],
+      "phase_profile": "requirements",
+      "treatment": "single"
+    },
+    {
+      "run_id": "run-si-invalid-workflow-0001",
+      "classification": "invalid",
+      "reason_codes": [
+        "validator_failed"
+      ],
+      "reason_details": [
+        "validator_status is failed"
+      ],
+      "phase_profile": "design",
+      "treatment": "dual+judgment"
+    }
+  ],
+  "total_excluded": 2,
+  "exclusion_counts": {
+    "exploratory": 1,
+    "invalid": 1
+  },
+  "exclusion_counts_by_reason_code": {
+    "evidence_class_exploratory": 1,
+    "validator_failed": 1
+  },
+  "population_separation": {
+    "valid_population_count": 2,
+    "excluded_population_count": 2,
+    "collapsed_into_single_aggregate": false
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "observation_id": "fo-run-si-invalid-workflow-0001-step_b",
+  "run_ref": "run-si-invalid-workflow-0001",
+  "related_finding_ref": "f2",
+  "failure_type": "validator_contract_violation",
+  "missed_by_role": "adversarial_reviewer",
+  "detected_at_step": "step_b"
+}
