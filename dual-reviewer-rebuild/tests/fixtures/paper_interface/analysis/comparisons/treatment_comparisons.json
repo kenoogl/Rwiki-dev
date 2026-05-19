@@ -1,0 +1,21 @@
+{
+  "comparison_status": "valid",
+  "comparison_invalid_reason": [
+
+  ],
+  "treatments_present": [
+    "dual+judgment"
+  ],
+  "treatment_aggregates": [
+    {
+      "treatment": "dual+judgment",
+      "run_count": 1,
+      "run_ids": [
+        "run-eval-valid-0001"
+      ],
+      "findings_per_run": 2.0,
+      "acceptance_ratio": 1.0,
+      "judgment_invocation_coverage": 1.0
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "caveats": [
+    {
+      "caveat_code": "low_sample_size",
+      "caveat_class": "data_quality",
+      "severity": "warning",
+      "details": "Valid population has fewer than 2 runs (1).",
+      "affected_scope": "global"
+    },
+    {
+      "caveat_code": "mixed_maturity_evidence",
+      "caveat_class": "data_quality",
+      "severity": "warning",
+      "details": "Slice mixes valid (1) and exploratory (1) evidence; do not collapse maturity.",
+      "affected_scope": "global"
+    }
+  ],
+  "caveats_by_class": {
+    "data_quality": [
+      {
+        "caveat_code": "low_sample_size",
+        "caveat_class": "data_quality",
+        "severity": "warning",
+        "details": "Valid population has fewer than 2 runs (1).",
+        "affected_scope": "global"
+      },
+      {
+        "caveat_code": "mixed_maturity_evidence",
+        "caveat_class": "data_quality",
+        "severity": "warning",
+        "details": "Slice mixes valid (1) and exploratory (1) evidence; do not collapse maturity.",
+        "affected_scope": "global"
+      }
+    ]
+  },
+  "population_collapsed": false,
+  "population_summary": {
+    "valid_count": 1,
+    "exploratory_count": 1,
+    "invalid_count": 1
+  }
+}

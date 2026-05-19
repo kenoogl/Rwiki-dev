@@ -1,0 +1,24 @@
+---
+analysis_logic_version: 0.1.0
+input_run_set:
+- run-eval-blocked-0001
+- run-eval-exploratory-0001
+- run-eval-invalid-0001
+- run-eval-valid-0001
+generated_at: '2026-01-01T00:00:00Z'
+metric_set_version: 0.1.0
+phase_metric_profile_version: overlay-v1
+comparison_contract_version: 0.1.0
+run_target_linkage:
+- run_id: run-eval-blocked-0001
+  target_id: spec/dual-reviewer-evaluation/tasks.md
+  classification: analysis_blocked
+- run_id: run-eval-exploratory-0001
+  target_id: spec/dual-reviewer-evaluation/tasks.md
+  classification: exploratory
+- run_id: run-eval-invalid-0001
+  target_id: spec/dual-reviewer-evaluation/tasks.md
+  classification: invalid
+- run_id: run-eval-valid-0001
+  target_id: spec/dual-reviewer-evaluation/tasks.md
+  classification: valid

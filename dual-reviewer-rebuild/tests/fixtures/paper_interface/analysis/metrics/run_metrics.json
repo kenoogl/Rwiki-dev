@@ -1,0 +1,44 @@
+{
+  "entries": [
+    {
+      "run_id": "run-eval-blocked-0001",
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment",
+      "total_findings": 2,
+      "accepted_findings": 0,
+      "rejected_findings": 0,
+      "deferred_findings": 0,
+      "validation_outcome": "passed"
+    },
+    {
+      "run_id": "run-eval-exploratory-0001",
+      "phase_profile": "requirements",
+      "treatment": "single",
+      "total_findings": 2,
+      "accepted_findings": 2,
+      "rejected_findings": 0,
+      "deferred_findings": 0,
+      "validation_outcome": "passed"
+    },
+    {
+      "run_id": "run-eval-invalid-0001",
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "total_findings": 2,
+      "accepted_findings": 2,
+      "rejected_findings": 0,
+      "deferred_findings": 0,
+      "validation_outcome": "failed"
+    },
+    {
+      "run_id": "run-eval-valid-0001",
+      "phase_profile": "design",
+      "treatment": "dual+judgment",
+      "total_findings": 2,
+      "accepted_findings": 2,
+      "rejected_findings": 0,
+      "deferred_findings": 0,
+      "validation_outcome": "passed"
+    }
+  ]
+}

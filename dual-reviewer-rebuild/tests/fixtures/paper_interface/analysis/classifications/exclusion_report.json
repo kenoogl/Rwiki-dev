@@ -1,0 +1,59 @@
+{
+  "entries": [
+    {
+      "run_id": "run-eval-blocked-0001",
+      "classification": "analysis_blocked",
+      "reason_codes": [
+        "required_input_missing"
+      ],
+      "reason_details": [
+        "Missing evaluation input: decisions/decision_units.json"
+      ],
+      "phase_profile": "tasks",
+      "treatment": "dual+judgment"
+    },
+    {
+      "run_id": "run-eval-exploratory-0001",
+      "classification": "exploratory",
+      "reason_codes": [
+        "evidence_class_exploratory"
+      ],
+      "reason_details": [
+        "evidence_class marks this run as exploratory."
+      ],
+      "phase_profile": "requirements",
+      "treatment": "single"
+    },
+    {
+      "run_id": "run-eval-invalid-0001",
+      "classification": "invalid",
+      "reason_codes": [
+        "validator_failed",
+        "invalidation:validator_failed"
+      ],
+      "reason_details": [
+        "validator_status is failed",
+        "validator reported contract violation"
+      ],
+      "phase_profile": "design",
+      "treatment": "dual+judgment"
+    }
+  ],
+  "total_excluded": 3,
+  "exclusion_counts": {
+    "analysis_blocked": 1,
+    "exploratory": 1,
+    "invalid": 1
+  },
+  "exclusion_counts_by_reason_code": {
+    "required_input_missing": 1,
+    "evidence_class_exploratory": 1,
+    "validator_failed": 1,
+    "invalidation:validator_failed": 1
+  },
+  "population_separation": {
+    "valid_population_count": 1,
+    "excluded_population_count": 3,
+    "collapsed_into_single_aggregate": false
+  }
+}
