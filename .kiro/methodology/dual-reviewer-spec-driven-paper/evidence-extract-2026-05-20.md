@@ -17,7 +17,7 @@ _対の正本: 同ディレクトリ `paperization-policy-2026-05-20.md` / `over
   - やり直し（reopen）= 承認済みフェーズを問題検出により再開すること。
   - 判定 = レビューの結論語（GO 可／要手戻り（GO 不可）／設計整合ゲート不通過 など、記録された語のまま）。
   - 見落とし事例 = 指示違反・仕様逸脱が前段の関門を素通りし、後段の点検や独立レビューで初めて捕捉された旨が記録された箇所。
-- 対象範囲（有効・git 追跡）: 6機能の `dual-reviewer-rebuild/.kiro/specs/dual-reviewer-{foundation,runtime,evaluation,self-improvement,paper-interface,implementation-governance}/reviews/*.md`（計35ファイル）＋ git コミット名。
+- 対象範囲（有効・git 追跡）: 6機能の `dual-reviewer-rebuild/.kiro/specs/dual-reviewer-{foundation,runtime,evaluation,self-improvement,paper-interface,implementation-governance}/reviews/*.md`（計36ファイル、2026-05-20 に foundation の postrebuild レビューを補完追加）＋ git コミット名。
 - 除外: `experiments/protocols/_archived-2026-05-13/`（汚染・退避、論文化方針§2「除外」）。レビュー記録の無い `dual-reviewer-v2-acquisition` は本抽出の対象外。
 - パス略記: 以下、各機能節のレビュー記録は `…/.kiro/specs/dual-reviewer-<機能>/reviews/<ファイル名>` を `<ファイル名>` と略記する。
 
@@ -77,7 +77,19 @@ _対の正本: 同ディレクトリ `paperization-policy-2026-05-20.md` / `over
 - 判定: 総括「既存コードの現行仕様適合度: 低い」（`:146`）。
 - 見落とし事例: 削除済み Requirement 5 資産と検証スクリプトが旧仕様を前提化＝実装が旧仕様ベースである直接証拠（Finding 4 `:68`）。既存 smoke が完走せず非適合を検出できず（`:134`、`:58`）＝smoke 関門のすり抜け。要件再開（2026-05-17）に実装未追従（`:147`）。
 - その他定量: post_smoke_nonconformance_count 9、fixture_bound_resolution_count 1、heuristic_linkage_count 0（`:134`–`:138`）。
-- 再実装: コミット `c4928ff3`（基盤スクラッチ再実装：適合 finding A 8件解消）。foundation には「-postrebuild」版のレビュー記録は無い（再実装後の独立適合レビュー記録ファイルは本機能の reviews/ に存在しない）。
+- 再実装: コミット `c4928ff3`（基盤スクラッチ再実装：適合 finding A 8件解消）。
+
+### 1.6 実装適合レビュー（再実装後）— `implementation-conformance-review-2026-05-20-postrebuild.md`
+
+- 追補日: 2026-05-20。本論文骨子レビューを受けて欠損を補完（補完前は本機能のみ postrebuild レビュー記録が無く、図1・図2 の収束データに穴があった）。
+- reviewed commit: `cea191b8` 時点の作業ツリー（基盤の再実装は `c4928ff3` で完了済み）。
+- 指摘件数: 新規 finding 1件。`conformance_findings_count`: 1（P1=0／P2=0／P3=1）。
+- 重大度内訳: 新規 P3 1件（`finding.schema.json` トップレベル `x-deferred` 注記欠落、軽微）。severity_weighted_finding_score 1。
+- 差し戻し区分（A/B/C/D）: A=1／B=0／C=0／D=0。
+- やり直し（reopen）: 不要。前回 finding 9件すべて解消を独立確認（B群1件＝Finding 8 は design §4 符号化規約追記により構造的に解消、A群8件は task-local 解消）。
+- 判定: 「GO 可。基盤再実装は承認仕様に構造適合、残1 finding は本ブランチ内 task-local cleanup で吸収、reopen 不要」。
+- 検証結果: `scripts/validate_foundation_contracts.rb` 完走 exit 0、`tests/foundation/test_foundation_contracts.rb` 8 runs / 107 assertions / 0 failures（無回帰）。
+- 見落とし事例: 該当記述なし（新規 finding は schema 注記の軽微欠落のみで関門すり抜け事例ではない）。
 
 ---
 
@@ -372,7 +384,7 @@ _対の正本: 同ディレクトリ `paperization-policy-2026-05-20.md` / `over
 本節は §1〜§6 の事実から読み取れる傾向の説明であり、論文1の主張ではない。骨子・主張は人間承認後に確定する（論文化方針§4「信頼の作法」）。
 
 - 観察A（差し戻しの深さの分布）: 6機能の実装適合レビューで記録された差し戻し区分は、A（その作業内で吸収）と B（設計まで戻す）に集中し、C（要件）・D（意図）は全機能でゼロ。設計まで戻った（B）のは基盤（B=1、Finding 8）と実行系（B=4、Finding 2/5/6/9）と統治（B候補=1、A 吸収で消化）に限られる。これは「要件・意図は概ね妥当で、乖離の多くは実装側の旧仕様残存」とレビュー記録が繰り返し述べる構造と対応する（各機能の総括行を参照）。
-- 観察B（再実装前→後の解消）: 評価・自己改善・論文インターフェースは再実装前レビューで「GO 不可・要手戻り」となり、スクラッチ再実装後の独立レビューで前回 finding が全件（または1件部分残置）解消・新規ほぼゼロに収束。実行系も同型（前回11件→再実装後 新規3件 P3/A）。統治のみ部分修正で前回6件解消・新規ゼロ。
+- 観察B（再実装前→後の解消）: 評価・自己改善・論文インターフェースは再実装前レビューで「GO 不可・要手戻り」となり、スクラッチ再実装後の独立レビューで前回 finding が全件（または1件部分残置）解消・新規ほぼゼロに収束。実行系も同型（前回11件→再実装後 新規3件 P3/A）。統治のみ部分修正で前回6件解消・新規ゼロ。基盤は再実装後の独立適合レビュー（§1.6、2026-05-20補完）で前回9件すべて解消・新規1件（P3/A）。
 - 観察C（見落としの捕捉点）: 「指示違反・仕様逸脱が前段の関門を素通りし後段で初めて捕まった」型の記録が複数機能にある。代表は (1) fixture を手製で仮装し smoke が緑になる構造が実連携・点検で破綻（評価・論文・統治の再実装前）、(2) tasks-approved まで回帰基盤が無く破綻が静的検出されなかった（実行系 Finding 11）、(3) Req9 タスクレビューが Task 1〜10 を含む全体の節5違反を正面評価せず後続の正規補完で初出論点化（統治）。これらは論文化方針§2 末尾「フルスクラッチ指示違反が全関門をすり抜け対話・点検で初めて捕まった見落とし」に相当する素材。
 - 観察D（記録の様式上の限界）: 差し戻し区分（A/B/C/D）の件数と §4 metric snapshot は実装適合レビューにのみ存在し、要件・設計・タスクの個別レビューは must-fix/should-fix/leave-as-is で集計される。フェーズ横断で同一指標による定量比較はできない（フェーズで記録語が異なる）。これは限界として論文に明記すべき素材（論文化方針§4「限界・脅威を明記」）。
 - 原文内部の不整合（事実として記録、解釈なし）:
