@@ -1,7 +1,8 @@
 # dual-reviewer spec-driven paper index
 
 _作成: 2026-05-13_
-_status: 計画系のみを反映した最小索引 v1.0_
+_最終更新: 2026-05-20（第7章「論文化サイクル」を追加）_
+_status: 計画系のみを反映した最小索引 v1.1_
 
 ---
 
@@ -71,7 +72,40 @@ _status: 計画系のみを反映した最小索引 v1.0_
 
 ---
 
+## 第 7 章 論文化サイクル（2026-05-20 起動、5/29 SES 2026 初回投稿）
+
+第1〜6章は旧サイクルの計画系。第7章は本サイクルの現役文書群。本サイクルの作業判断は第7章の正本を優先する。
+
+### 7.1 正本（人間承認で更新）
+
+- [paperization-policy-2026-05-20.md](paperization-policy-2026-05-20.md)：論文化方針正本。2本構成、論文1＝SES 2026 実践論文（効果量なし・質的自己適用＋監査知見）、有効証拠基盤と除外（汚染分の退避）を確定
+- [overall-plan-2026-05-20.md](overall-plan-2026-05-20.md)：今後の計画正本。3開発（D-A 安全封筒／D-B 監査フェーズ／D-C 監査の道具立て）＋2論文＋日程（5/21〜7/27）
+
+### 7.2 論文1（SES 2026 実践論文）骨子
+
+- [paper1-outline-2026-05-20.md](paper1-outline-2026-05-20.md)：手戻りリバイス版（第2次）。三役レビュー（§7.3）の must-fix 13件・should-fix 13件を反映。問題軸＝「指標と実体の乖離」、4主張構造（問題→提案A：保全→提案B：実体検査ほか→限界）、図1（重大度分布）・図2（手戻り有向グラフ）を中核証拠
+
+### 7.3 証拠基盤と自己適用記録
+
+- [evidence-extract-2026-05-20.md](evidence-extract-2026-05-20.md)：D-C 抽出。6機能×各フェーズの定量（指摘件数・重大度・差し戻し区分・reopen・判定・見落とし）を、ファイル行・gitコミットに辿れる出典付きで構造化。36件のレビュー記録＋git
+- [outline-reviews-2026-05-20.md](outline-reviews-2026-05-20.md)：骨子に対する三役レビュー証跡（主役・敵対役・判定役）。本論文の主張2「指摘以外の保全」と主張3「多重独立化」を骨子段階で自己適用した記録
+
+### 7.4 背景資料
+
+- [docs/deep-research-report.md](../../../docs/deep-research-report.md)：自動レビューの従来研究調査。2010〜2026年の横断分析、重要研究10件、本論文との位置取り。骨子§7（参考文献の位置決め）と outline-reviews の関連研究判断の典拠
+
+### 7.5 関連する spec 配下証跡（参考リンク）
+
+論文1の中核証拠の出所。詳細は evidence-extract から辿る。
+
+- 基盤の再実装後独立適合レビュー（2026-05-20 補完）：`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/reviews/implementation-conformance-review-2026-05-20-postrebuild.md`
+- 他5機能の postrebuild レビューも `dual-reviewer-rebuild/.kiro/specs/dual-reviewer-{runtime,evaluation,self-improvement,paper-interface,implementation-governance}/reviews/` 配下
+
+---
+
 ## 注記
 
-- 結果系は archive に分離されており、再取得が完了するまで引用しない。
+- 結果系は archive に分離されており、再取得が完了するまで引用しない（第1〜6章）。
 - 第 1 章の ★要修正 2 件は、観測結果を先取りした語彙（保持の不変則、disagreement preservation など）を含むため、計画系の見直しで内容を修正する必要がある。
+- 第7章は2026-05-20 起動の本サイクル現役文書。本サイクルの作業判断は第7章の正本（§7.1）を優先する。
+- 第1〜6章のパス記法は旧リポジトリ名（`Rwiki-dev`）で記述されている。第7章は現リポジトリ（`Rwiki-v2-code-mod`）に合わせて相対パスで記述。
