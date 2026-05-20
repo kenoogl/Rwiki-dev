@@ -94,7 +94,15 @@ _status: 計画系のみを反映した最小索引 v1.1_
 
 - [docs/deep-research-report.md](../../../docs/deep-research-report.md)：自動レビューの従来研究調査。2010〜2026年の横断分析、重要研究10件、本論文との位置取り。骨子§7（参考文献の位置決め）と outline-reviews の関連研究判断の典拠
 
-### 7.5 関連する spec 配下証跡（参考リンク）
+### 7.5 本文素材
+
+論文1 本文執筆時に直接参照する素材。
+
+- [paper1-references-2026-05-20.md](paper1-references-2026-05-20.md)：参考文献13件の完全書誌（BibTeX 相当）。決定的lint・スメル系4／formalization 1／RAG・グラフ統合 2／多役・LLMレビュー 3／既知議論 3。引用方針メモと要追加調査5件も併記
+- [paper1-figures/](paper1-figures/)：図1（重大度分布の積み上げ棒、matplotlib製）と図2（手戻り有向グラフ、ユーザー手描き版）。各図のキャプション案（日本語・英語）を併設
+- [D-A-safety-envelope-2026-05-20.md](D-A-safety-envelope-2026-05-20.md)：D-A 安全封筒の運用記録。骨子§3・§5.3 の主張3「事前防止と補強」の補強証拠（復元点＋使い捨て隔離環境＋境界承認の3要素、6機能の実証経緯）
+
+### 7.6 関連する spec 配下証跡（参考リンク）
 
 論文1の中核証拠の出所。詳細は evidence-extract から辿る。
 
