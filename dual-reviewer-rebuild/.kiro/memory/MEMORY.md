@@ -11,3 +11,4 @@
 - [所見提示は 4 要素で書く](discipline_finding_4elements.md) — 箇所・現状・問題・修正後、修正前後の具体引用必須、抽象 1 行禁止
 - [ラウンド一括処理禁止](discipline_no_round_batching.md) — 各ラウンドは独立した応答単位で実施、利用者判断機会を必ず確保
 - [レビュー出力の即時保存](discipline_review_save_immediately.md) — 3 役レビューの各役完了時点でファイルに書き出す、自動圧縮対策
+- [表形式禁止は応答画面のみ・md ファイル内では表使用可](discipline_table_scope_screen_only.md) — CLAUDE.md「表形式禁止」は応答画面の規律であり Markdown ファイル内では表の使用は禁止対象でない
