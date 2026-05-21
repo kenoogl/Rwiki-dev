@@ -162,13 +162,32 @@ ReviewCompass/
 │   ├── path_resolver/                 （アプリパスの解決）
 │   ├── spec_discovery/                （アプリ側仕様の発見）
 │   └── reviewer_stub/                 （レビューのモック実装）
-├── schemas/                           （foundation 由来の契約・スキーマ）
+├── schemas/                           （foundation 由来の契約・スキーマ、§5.18）
+│   ├── foundation/                    （4 段論理契約・メタデータ契約、§5.18.3／§5.18.7）
+│   │   ├── layer1_framework.yaml      （4 段正式名称と 3 役抽象名の正本）
+│   │   └── metadata_contract.yaml     （20 必須メタデータ項目と 4 状態軸の値リスト）
+│   ├── domain/                        （5 共有スキーマ、§5.18.5）
+│   │   ├── review_case.schema.json
+│   │   ├── finding.schema.json
+│   │   ├── impact_score.schema.json
+│   │   ├── failure_observation.schema.json
+│   │   └── necessity_judgment.schema.json
+│   ├── validators/                    （2 検証スキーマ、§5.18.9）
+│   │   ├── validator_result.schema.json
+│   │   └── invalidation_marker.schema.json
 │   └── review-criteria/               （レビュー種別ごとの検査仕様、§5.9.3）
 │       ├── requirements_local_review.yaml
 │       ├── design_local_review.yaml
 │       ├── tasks_local_review.yaml
 │       └── implementation_conformance_review.yaml
 ├── templates/                         （レビューテンプレート、3 軸対応）
+│   ├── prompts/                       （3 役プロンプト雛形、foundation 由来、§5.18）
+│   │   ├── primary_detection/primary_reviewer.prompt.md
+│   │   ├── adversarial_review/adversarial_reviewer.prompt.md
+│   │   └── judgment/judgment_reviewer.prompt.md
+│   └── config/                        （アプリ側設定雛形、foundation 由来、§5.18.15 残課題）
+│       ├── config.yaml.template
+│       └── terminology.yaml.template
 ├── stages/                            （所定手続きごとの段集合 YAML、詳細は §5.5）
 │   ├── intent.yaml                    （drafting／review／approval）
 │   ├── feature-partitioning.yaml      （candidate-proposal／approval）
@@ -623,6 +642,7 @@ session 開始時の標準フロー：
 #### 5.9.1 基本構造（3 役 ＋ モデル多様化 ＋ ファイル遮断）
 
 - **3 役レビュー（TriadReview）の維持**：主役（primary）・敵対役（adversarial）・判定役（judgment）の役割分担を継承。β 逐次方式（主役 → 敵対役 → 判定役の直列）、各役は独立 session、メイン LLM は 3 役のいずれにもならない
+- **3 役の抽象名の正本所有者は foundation**：人間可読の和訳「主役／敵対役／判定役」と機械可読の正本「primary_reviewer／adversarial_reviewer／judgment_reviewer」を区別。抽象名の正本は foundation の `schemas/foundation/layer1_framework.yaml` が所有し、他機能は再定義せず参照のみ（詳細は §5.18.4）
 - **モデル多様化を規律として明文化**：異なるモデルファミリーまたは異なるバージョンを 3 役に割り当てる。同モデル使用は禁止
 - **ファイルアクセス遮断を規律として明文化**：各役はファイルアクセスを技術的に遮断
 - **呼び出し経路の完全並列**：
@@ -1648,6 +1668,8 @@ runtime はレビューを実行して構造化ログを書き出す機能。下
 - **judgment 段**：判定（must-fix／should-fix／leave-as-is）
 - **integration 段**：統合（最終レビュー記録の作成）
 
+4 段の正式名称（primary_detection／adversarial_review／judgment／integration）の正本は foundation の `schemas/foundation/layer1_framework.yaml` が所有し、runtime は再定義せず参照のみ（詳細は §5.18.3）。
+
 3 つの実行方式（§5.9.6 と統一）：
 
 | 実行方式 | primary 段 | adversarial 段 | judgment 段 | integration 段 |
@@ -1720,7 +1742,16 @@ analysis は直接読まず、evaluation を介して受け取る。
 
 終了の順序保証：人間承認 → 検証 → 終了 の順序を実装で強制（fail-closed）。
 
-状態語彙は foundation の `metadata_contract.yaml` が所有、runtime は再定義しない。
+状態語彙は foundation の `metadata_contract.yaml` が所有、runtime は再定義しない。4 軸の値リストの所有関係は次のとおり（詳細は §5.18.7）：
+
+| 状態軸 | 値リスト | 所有者 |
+|---|---|---|
+| 実行ライフサイクル（run_status） | created／in_progress／closed／orchestration_failed | foundation |
+| 検証状態（validator_status） | not_run／passed／failed／blocked | foundation |
+| 人間承認状態（human_signoff_status） | pending／approved／rejected／deferred | foundation |
+| 証跡区分（evidence_class） | candidate／valid／invalid／exploratory | foundation |
+
+evaluation／runtime／analysis／self-improvement／conformance-evaluation はこれらの値を再定義せず参照のみ。
 
 #### 5.15.5 4 つの設計の工夫
 
@@ -1970,6 +2001,365 @@ ReviewCompass 第 1 期で含めるもの：
 - **フェーズ 4 第 3 サイクル**：履歴とロールバック（§5.16.7）の実装、効果測定 7 指標の集計、§5.9.5 の本格運用
 - **フェーズ 4 完了後**：他 4 層改善（prompt / policy / schema / runtime）の本格設計。旧 8 要件の枠組みを他 4 層で再評価、本節の枠組みとの統合判断
 
+### 5.17 evaluation 機能の継承方針（2026-05-21 確定）
+
+本節は本セッションで実施した evaluation 機能（個別 run の評価）の現仕様調査と実装調査の結果を整理し、ReviewCompass 再構築での継承方針を明示する。現仕様（dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/）は要件 10 件・設計 7 節・タスク 9 件で承認済みで、Ruby 実装が 2410 行・テストが 2697 行存在しテストは通過しているが、§2.2 クリーンスレートと §3.1 抽出時のクリーニング規律に従い、表現はそのまま採り入れず思想と構造を抽象化して継承する。
+
+#### 5.17.1 そのまま採り入れない方針
+
+現仕様の表現はそのまま採り入れない。理由：
+
+- §2.2 クリーンスレート：「コードや構造を機械的に移植するのではなく、抽出した知見を踏まえて設計し直す」
+- §3.1 抽出時のクリーニング規律：「自己適用前提の記述を取り除き、対象アプリは外部にある前提に書き換える」
+- §7 フェーズ 1 完了条件：「自己適用前提の表現が grep で 0 件であることを確認できる」
+
+採り入れるのは思想と構造のみ。表現・命名・パスは抽出時に書き換える。
+
+#### 5.17.2 5 段パイプライン構造の継承
+
+現仕様の 5 段アーキテクチャ（受け取り → 区分け → 指標抽出 → 比較 → 報告）を継承する。各段の責務境界：
+
+- 受け取り：runtime の実行時ログ artifact を読む
+- 区分け：4 状態への分類（§5.17.3）
+- 指標抽出：3 階層と 2 層の指標生成（§5.17.4）
+- 比較：実行方式比較と phase 横断比較
+- 報告：除外・注意事項の明示出力
+
+各段はファイル境界で分け、生の証跡を編集しない原則を維持。
+
+#### 5.17.3 4 状態区分の継承
+
+run の分類状態として 4 種を継承する：
+
+- 妥当（valid）：検証通過・人間承認終端・証跡区分が妥当
+- 無効（invalid）：無効化印あり、または検証失敗
+- 探索的（exploratory）：証跡区分が探索的
+- 分析不能（analysis_blocked）：必要入力の不足、または実行未終了、または検証が前提不足で結論不能
+
+「無効」と「分析不能」を区別する設計判断は維持する。レビューモード（手動と runtime 経由）との直交独立軸の扱いは §5.17.10 に分離。
+
+#### 5.17.4 3 階層・2 層の指標構造
+
+指標の構造として 3 階層 ＋ 2 層を継承する。
+
+階層：
+
+- 1 回の実行単位（run-level）
+- 所見ごと（finding-level）
+- 実行方式ごと（treatment-level、§5.17.8 で命名変更）
+
+層：
+
+- phase 共通の中核層（core layer）
+- phase（意図・要件・設計・タスク）別の上乗せ層（overlay layer）
+
+§5.14.3 カテゴリ 10 で言及されている「旧 evaluation 設計の継承（3 階層 ＋ core/overlay 層）」を、evaluation 側の継承宣言として本節で正本化する。
+
+#### 5.17.5 他環境からの取り込み機構の扱い
+
+現仕様の要件 10「外部 bundle の取り込みと受入」は、別環境で集めた成果物の束を中央側で取り込み、受入規則に従って判定する仕組み。3 状態（標準受理・探索的受理・拒否）の判定ルールは思想として継承候補。
+
+ただし ReviewCompass は対象アプリの任意の場所に配置する前提（§2.3）で、中央側集約モードを残すか、アプリ側完結に縮退するかは未決定。フェーズ 1 の抽出作業で配置モデルとあわせて確定する。
+
+foundation との連動（§5.18.14）：foundation 仕様の要件 6 受入 7 は来歴項目（source_repository_id ＝ 採取元リポジトリ識別子／source_revision ＝ 採取時の改訂版識別子）の必須化を求めている。中央側集約モードを残す場合は来歴項目を必須として継承、アプリ側完結に縮退する場合は来歴項目を任意に格下げまたは要件 6 受入 7 を修正、と直接連動するため、判断は foundation 側の修正と同時に行う。
+
+#### 5.17.6 バージョン管理 4 軸と古さ伝播の継承
+
+派生成果物のバージョン管理 4 軸を継承する：
+
+- 分析ロジック版
+- 指標集合版
+- phase 別指標プロファイル版
+- 比較契約版
+
+古さ伝播：参照していた run が事後に無効化された場合、それを入力にしていた派生成果物に「古い」印を付けるか、再生成する。foundation の無効化伝播義務を入力起点とする。foundation 機能の継承方針が未確定の段階では宙吊りだが、思想としては継承する。
+
+#### 5.17.7 設計判断 4 項目の継承
+
+現仕様の設計判断 4 項目を継承する：
+
+- 生の証跡は不変（evaluation は run の artifact を編集しない）
+- 「分析不能」は evaluation 固有の状態（実行時の無効と評価側の入力不足を区別）
+- 標準比較は妥当集団のみで計算（探索的・無効を黙って混ぜない）
+- 注意事項（caveat）は一等市民として明示出力（後段の analysis や報告で再利用可能）
+
+#### 5.17.8 命名整合（§5.15.6 への参照）
+
+§5.15.6 で確定した命名変更を、evaluation 仕様の抽出時に全件適用する：
+
+- 実行方式名：single → primary、dual → adversarial、dual+judgment → judgment
+- 機能名参照：paper-interface → analysis
+- ディレクトリ名：v2/ → internal/
+- 内部正本ファイル名：review_artifact.json → review_taxonomy.json
+- 段別ファイル名：step_a_primary_detection.json → primary.json（adversarial.json／judgment.json／integration.json も同様）
+
+抽出時のクリーニング規律として §3.1 にも併記する。
+
+#### 5.17.9 自己適用前提の除去項目
+
+evaluation の現仕様には次の自己適用前提が残っており、抽出時にすべて抽象化する：
+
+- 機能名参照：dual-reviewer-runtime／dual-reviewer-foundation／dual-reviewer-self-improvement／dual-reviewer-paper-interface → ReviewCompass の機能名（runtime／foundation／self-improvement／analysis）に置換
+- 固定パス：experiments/analysis/／experiments/runs/<run_id>/ → 対象アプリ側パス規約（.reviewcompass/specs/<feature>/）に対応する形に抽象化
+- リポジトリ前提：dual-reviewer-rebuild の構造に依存する記述 → 外部アプリへの配置前提に書き換え
+
+フェーズ 1 完了条件「自己適用前提の表現が grep で 0 件」を本機能でも適用する。
+
+#### 5.17.10 手動 dogfooding の存廃判断（残課題）
+
+現仕様の要件 9 は「手動 dogfooding（人手で運用しながらの自己適用検証）と runtime 経由」を直交独立軸として保つことを必須化している。ReviewCompass で手動 dogfooding が存続するかどうかは現時点で未決定。
+
+未決定として明示するに留め、本節では結論を出さない。フェーズ 1 の抽出作業の中で利用者判断を仰ぐ。
+
+foundation との連動（§5.18.13）：foundation 仕様の要件 6 受入 6 はレビューモード語彙に `manual_dogfooding` と `runtime_mediated` の区別を最低限必須化している。手動 dogfooding を ReviewCompass で存続させる場合は foundation の `metadata_contract.yaml` のレビューモード語彙に `manual_dogfooding` を残す、廃止する場合は foundation の要件 6 受入 6 自体を修正、と直接連動するため、判断は foundation 側の修正と同時に行う。
+
+#### 5.17.11 比較適格性ノートのスキーマ所有者の継承
+
+derived/comparison_eligibility_note.json のスキーマは runtime 所有（2026-05-18 の評価 A-7 決定）で、evaluation は最小項目に依存し再定義しない。この所有境界を ReviewCompass でも継承する。
+
+§5.15.4 の「状態語彙は foundation 所有」と並べると、所有境界は次のとおり：
+
+- 状態語彙：foundation 所有
+- 比較適格性ノートのスキーマ：runtime 所有
+- 4 状態区分・3 階層 2 層指標・取り込み判定状態：evaluation 所有
+
+これを `docs/operations/EVALUATION.md` に明記する。
+
+#### 5.17.12 探索的区分の扱い
+
+探索的（exploratory）区分は標準集約から外す独立区分として保つ。これは思想として継承する。
+
+§5.9 の所見メタデータ（severity／judgment／depth／evidence_type／verifying_commands）では現在「探索的」フラグが明示されていないため、抽出時に整合確認：
+
+- 個別所見の「探索的かどうか」を扱うフィールドが必要か
+- それとも run 全体の区分として保てば十分か
+
+フェーズ 1 の抽出作業で確定。
+
+#### 5.17.13 機能依存マップの整合確認
+
+§5.10.5 と §5.14.8 の feature-dependency.yaml の二か所記述を内容で点検した結果：
+
+- **方向 A（analysis → conformance-evaluation を read）**：§5.14.3 のメトリクスカテゴリ 5 で「conformance-evaluation メトリクス（12 criteria の検査結果）」を analysis が取り込む明示あり。内容上の根拠あり
+- **方向 B（conformance-evaluation → analysis を read）**：§5.10.5 の依存記述に `analysis: review` とあるが、§5.10 本文には analysis を入力源として扱う具体的記述がない。conformance-evaluation の 12 criteria は対象アプリの実装コードと上流文書の照合が中心で、analysis の二次分析結果を必要とする説明が存在しない。phase_order でも conformance-evaluation は最後（analysis の後段）。**内容上の根拠が見当たらない**
+
+結論：これは内容上の循環依存ではなく、§5.10.5 の依存記述の冗長（または誤記）と判断するのが妥当。
+
+**提案**：§5.10.5 の `analysis: review` を削除し、一方向（analysis が conformance-evaluation を読むのみ）に整理する。確定はフェーズ 1 の抽出作業の中で利用者判断。
+
+#### 5.17.14 段階的導入（§5.9.9 への組み込み）
+
+- **フェーズ 1（抽出作業）**：本節の継承方針に基づき、evaluation 仕様を `docs/operations/EVALUATION.md` の骨子として整理。自己適用前提の除去（§5.17.9）、命名整合（§5.17.8）、手動 dogfooding の存廃判断（§5.17.10）、機能依存マップの整合（§5.17.13）、所有境界の整理（§5.17.11）を実施。探索的区分のフィールド整合（§5.17.12）も確定
+- **フェーズ 2（リポジトリ新設）**：継承された evaluation 仕様を `docs/operations/EVALUATION.md` として配置。検査仕様を `schemas/review-criteria/evaluation.yaml` に準備
+- **フェーズ 3（デプロイスタブ）**：evaluation のスタブコマンド（`reviewcompass classify`／`reviewcompass evaluate`）の骨子を準備。実機能は載せない
+- **フェーズ 4 第 1 サイクル**：5 段パイプライン（§5.17.2）の基本実装と 4 状態区分（§5.17.3）。設計判断 4 項目（§5.17.7）を反映
+- **フェーズ 4 第 2 サイクル**：3 階層・2 層の指標構造（§5.17.4）と古さ伝播（§5.17.6）の実装。バージョン管理 4 軸を導入
+- **フェーズ 4 第 3 サイクル**：取り込み機構（§5.17.5）と探索的区分の本格対応（§5.17.12）、所有境界の機械検査
+
+#### 5.17.15 関連参照
+
+- 現仕様の抽出元：`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-evaluation/`（要件・設計・タスク・spec.json）
+- 隣接機能の継承方針：§5.14（analysis）、§5.15（runtime）、§5.16（self-improvement）
+- 命名変更の正本：§5.15.6
+- 抽出時のクリーニング規律：§3.1
+- 受入規律：§2.2 クリーンスレート
+
+### 5.18 foundation 機能の継承方針（2026-05-21 確定）
+
+本節は本セッションで実施した foundation 機能（基盤機能）の現仕様調査と実装調査の結果を整理し、ReviewCompass 再構築での継承方針を明示する。foundation は他の 6 機能とは性格が大きく異なり、実行コードを持たず、契約・規約・配置のみを成果物として固定する特殊な機能。本節は他節（§5.9.1／§5.15.2／§5.15.4／§5.17.5／§5.17.10／§4）への波及を併せて整理する。
+
+#### 5.18.1 foundation の性格の特殊性
+
+foundation は他機能と決定的に違う 2 つの特殊性を持つ：
+
+- **実行コードを持たない**：foundation の中身は YAML／JSON Schema／Markdown 雛形のみ。Ruby スクリプトや実行パイプラインを持たない
+- **全機能の最上流**：他 6 機能すべてが foundation に硬く依存（feature-dependency.yaml で `foundation: hard`）。foundation の契約が他機能の前提
+
+したがって §5.18 の継承方針は「実装をどう書くか」ではなく「成果物（契約と規約と配置）をどう一般化して継承するか」に集中する。テストも「成果物の機械検査」のみで、振る舞いのテストはない。
+
+#### 5.18.2 そのまま採り入れない方針
+
+§2.2 クリーンスレートと §3.1 抽出時のクリーニング規律に従い、現仕様の表現はそのまま採り入れない。foundation 仕様には次の自己適用前提が残るため、抽出時に書き換える：
+
+- 機能名参照：dual-reviewer-runtime／dual-reviewer-evaluation／dual-reviewer-self-improvement／dual-reviewer-paper-interface → ReviewCompass の機能名（runtime／evaluation／self-improvement／analysis）に置換
+- リポジトリ前提：dual-reviewer-rebuild に依存する記述 → 外部アプリへの配置前提に書き換え
+- v1 撤廃の経緯（Requirement 5 削除・§7 削除）：抽出時に「削除済み」表記は持ち込まず、現行のみを記述
+
+#### 5.18.3 4 段論理契約と所有者の明示
+
+§5.15.2 で確定した 4 段命名（主役検出／敵対役レビュー／判定／統合）の正式名称の **正本所有者は foundation** とする。
+
+- 所有者：foundation の `layer1_framework.yaml`
+- 値リスト：primary_detection／adversarial_review／judgment／integration
+- runtime は値を再定義しない（参照のみ）
+
+§5.15.2 にこの所有関係を併記する（§5.18 から §5.15.2 への波及）。
+
+#### 5.18.4 3 役の抽象名と所有者の明示
+
+§5.9.1 で運用が決まった 3 役（主役／敵対役／判定役）の抽象名の **正本所有者は foundation** とする。
+
+- 所有者：foundation の `layer1_framework.yaml`
+- 値リスト：primary_reviewer／adversarial_reviewer／judgment_reviewer
+- §5.9.1 の運用名（主役／敵対役／判定役）は人間可読の和訳、抽象名（primary_reviewer 等）は機械可読の正本
+
+§5.9.1 にこの所有関係を併記する（§5.18 から §5.9.1 への波及）。
+
+#### 5.18.5 5 スキーマ集合の継承
+
+現仕様の 5 スキーマを継承する。再構築でも同じ責務境界を保つ：
+
+- `review_case`：1 回分の包み紙（メタデータ・段の境界・所見群・検証への参照）
+- `finding`：最小レビュー証跡（所見 1 件分）
+- `impact_score`：所見の影響度を 3 軸で構造化
+- `failure_observation`：見落とし・役間不一致を表現
+- `necessity_judgment`：判定段の出力（必要性 5 項目・最終ラベル）
+
+`finding` の必須項目（finding_id／step_id／source_role／severity／summary／source_refs／counter_evidence_refs／judgment_ref／decision_unit_id／human_decision_ref／adversarial_outcome）と、`adversarial_outcome` の最小語彙（反証提示／反証なし／未評価）は思想として継承する。
+
+#### 5.18.6 20 必須メタデータ項目の継承
+
+run-level metadata（実行 1 回分の付帯情報）の 20 必須項目を継承する。継承時の整理：
+
+- 機能間境界に関わる項目（run_id／target_id／target_artifact_hash／source_repository_id／source_revision）：そのまま継承
+- 値リストを持つ項目：所有者明示（phase_profile・treatment は runtime 所有、review_mode・evidence_class・validator_status は foundation 所有）
+- バージョン管理項目（protocol_version／runtime_version／schema_set_version／prompt_set_version／config_version／config_hash）：そのまま継承
+- 時刻項目（started_at／closed_at）：そのまま継承
+
+#### 5.18.7 4 状態軸の責務分離と所有者の明示
+
+§5.15.4 で「4 状態軸の独立性」が言及されているが、各軸の値リストの正本所有者を本節で明示する：
+
+| 状態軸 | 値リスト | 所有者 |
+|---|---|---|
+| run_status（実行ライフサイクル） | created／in_progress／closed／orchestration_failed | foundation |
+| validator_status（検証状態） | not_run／passed／failed／blocked | foundation |
+| human_signoff_status（人間承認状態） | pending／approved／rejected／deferred | foundation |
+| evidence_class（証跡区分） | candidate／valid／invalid／exploratory | foundation |
+
+evaluation／runtime／analysis／self-improvement／conformance-evaluation はこれらの値を再定義せず参照のみ。§5.15.4 にこの所有関係の一覧を併記する（§5.18 から §5.15.4 への波及）。
+
+#### 5.18.8 必須／先送り の符号化規約の継承
+
+JSON Schema 上で「B-1.0 運用で必須」と「意図的先送り」を区別する符号化規約（§4「mandatory／deferred の JSON Schema 符号化規約」）を継承する：
+
+- 必須：`required` 配列に列挙
+- 先送り：`required` に列挙せず、`description` で先送りである旨を明記し、トップレベルに `x-deferred` 注記
+- 値域 enum を先送りする場合：field 自体は `required` に置き、enum を書かず `x-deferred` に委譲先を明記
+- 初版語彙を固定し将来拡張のみ先送り：enum を記載し、`description` と `x-deferred` で拡張の委譲先を併記
+
+5 スキーマ＋ 2 検証スキーマに一律適用する規約として継承する。
+
+#### 5.18.9 2 検証スキーマの継承
+
+検証結果と無効化標識の 2 スキーマを継承する：
+
+- `validator_result.schema.json`：検証実行結果（run_id／validator_status／checked_contract／error_list／validated_by／validated_at）
+- `invalidation_marker.schema.json`：無効化の理由と範囲（run_id／reason_code／reason_detail／scope／issued_by／issued_at）
+
+`scope` の初版語彙（run／step／finding）は思想として継承。「無効化は注釈であり、生の証跡を書き換えない」という設計判断 4 も継承（§5.18.10）。
+
+#### 5.18.10 設計判断 5 つの継承
+
+現仕様の設計判断 5 つを継承する：
+
+- 設計判断 1：プロンプトは成果物として扱う（skill の中身に埋め込まない、リポジトリ内成果物として版数管理）
+- 設計判断 2：ライフサイクルと品質分類は分離（run_status と evidence_class を混同しない）
+- 設計判断 3：人間との連携は所見レベル（finding に decision_unit_id と human_decision_ref を持たせる）
+- 設計判断 4：無効化は注釈、書き換えない（生の証跡は不変、別成果物として重ねる）
+- 設計判断 5：再演は段単位から（再演の最小単位は段、1 回分全体ではない）
+
+#### 5.18.11 自己適用前提の除去項目
+
+抽出時に除去・抽象化する自己適用前提：
+
+- 機能名参照：§5.18.2 で一括整理
+- 配置先：foundation 現仕様は `runtime/` 配下に集約（`runtime/foundation/`／`runtime/schemas/`／`runtime/prompts/`／`runtime/config/`／`runtime/validators/contracts/`）。ReviewCompass のディレクトリ構造（§4）に合わせて再編が必要（詳細は §5.18.12）
+- リポジトリ前提：dual-reviewer-rebuild 内の固定パスを抽象化
+
+フェーズ 1 完了条件「自己適用前提の表現が grep で 0 件」を本機能でも適用する。
+
+#### 5.18.12 ディレクトリ構造の整合（§4 への提案）
+
+foundation 現仕様のディレクトリ構造と計画書 §4 の構造案の照合：
+
+- **現仕様**：`runtime/foundation/`（layer1_framework・metadata_contract）／`runtime/schemas/`（5 スキーマ）／`runtime/prompts/<段の用途>/<役>.prompt.md`／`runtime/config/`（雛形）／`runtime/validators/contracts/`（2 検証スキーマ）。すべて `runtime/` 配下に集約
+- **計画書 §4**：`schemas/` を独立ディレクトリにし、`schemas/review-criteria/` のみ言及。foundation 由来の他成果物（4 段論理契約・メタデータ契約・プロンプト雛形・設定雛形・検証スキーマ）の配置先が未明示
+
+**提案**：§4 のリポジトリ構造案を次のように補強する：
+
+```
+ReviewCompass/
+├── schemas/
+│   ├── foundation/                  （foundation 由来：4 段論理契約・メタデータ契約）
+│   │   ├── layer1_framework.yaml
+│   │   └── metadata_contract.yaml
+│   ├── domain/                      （foundation 由来：5 スキーマ）
+│   │   ├── review_case.schema.json
+│   │   ├── finding.schema.json
+│   │   ├── impact_score.schema.json
+│   │   ├── failure_observation.schema.json
+│   │   └── necessity_judgment.schema.json
+│   ├── validators/                  （foundation 由来：2 検証スキーマ）
+│   │   ├── validator_result.schema.json
+│   │   └── invalidation_marker.schema.json
+│   └── review-criteria/             （§5.9.3 由来：レビュー種別ごとの検査仕様）
+├── templates/
+│   ├── prompts/                     （foundation 由来：3 役プロンプト雛形）
+│   │   ├── primary_detection/primary_reviewer.prompt.md
+│   │   ├── adversarial_review/adversarial_reviewer.prompt.md
+│   │   └── judgment/judgment_reviewer.prompt.md
+│   └── config/                      （foundation 由来：アプリ側設定雛形）
+│       ├── config.yaml.template
+│       └── terminology.yaml.template
+```
+
+§4 に上記の補強を反映する（§5.18 から §4 への波及）。本セッション（2026-05-21）で §4 への反映を実施済み。
+
+#### 5.18.13 レビューモード語彙と §5.17.10 の連動
+
+foundation 仕様の要件 6 受入 6 は「レビューモード語彙が最低限 `manual_dogfooding`（手動 dogfooding）と `runtime_mediated`（runtime 経由）を区別できる」ことを必須化している。
+
+§5.17.10（手動 dogfooding の存廃判断）で「ReviewCompass で手動 dogfooding が存続するかは未決定」とした。この判断は foundation 仕様の要件 6 受入 6 と直接連動する：
+
+- 存続させる場合：foundation の `metadata_contract.yaml` のレビューモード語彙に `manual_dogfooding` を残す
+- 廃止する場合：foundation の要件 6 受入 6 自体を修正し、レビューモード語彙から `manual_dogfooding` を除く
+
+§5.17.10 にこの連動関係を併記する（§5.18 から §5.17.10 への波及）。
+
+#### 5.18.14 来歴項目と §5.17.5 の連動
+
+foundation 仕様の要件 6 受入 7 は「来歴項目が最低限 `source_repository_id`（採取元リポジトリ識別子）と `source_revision`（採取時の改訂版識別子）を区別できる」ことを必須化している。これは他環境からの取り込みのための起点。
+
+§5.17.5（他環境からの取り込み機構の扱い）で「中央側集約モードを残すか、アプリ側完結に縮退するかは未決定」とした。この判断は foundation 仕様の要件 6 受入 7 と直接連動する：
+
+- 中央側集約モードを残す場合：foundation の来歴項目を必須として継承
+- アプリ側完結に縮退する場合：foundation の来歴項目を任意に格下げ、または要件 6 受入 7 を修正
+
+§5.17.5 にこの連動関係を併記する（§5.18 から §5.17.5 への波及）。
+
+#### 5.18.15 設定成果物と reviewcompass.yaml の関係（残課題）
+
+foundation 仕様の `config.yaml.template` はアプリ側の設定雛形、計画書の `reviewcompass.yaml` はツール側の設定。両者の関係（同じものか別物か、どちらが上位か）は未整理。
+
+未決定として明示するに留め、本節では結論を出さない。フェーズ 1 抽出作業の中で「ツール側とアプリ側の境界整理」と合わせて確定する。
+
+#### 5.18.16 段階的導入（§5.9.9 への組み込み）
+
+- **フェーズ 1（抽出作業）**：本節の継承方針に基づき foundation 仕様を `docs/operations/FOUNDATION.md` の骨子として整理。自己適用前提の除去（§5.18.11）、ディレクトリ構造の再編（§5.18.12）、レビューモード語彙の存廃判断（§5.18.13）、来歴項目の存廃判断（§5.18.14）、設定成果物の境界整理（§5.18.15）を実施
+- **フェーズ 2（リポジトリ新設）**：継承された foundation 成果物を §5.18.12 の構造で配置。5 スキーマ＋ 2 検証スキーマを JSON Schema として整備、`layer1_framework.yaml` と `metadata_contract.yaml` を配置、3 役プロンプト雛形と 2 設定雛形を配置
+- **フェーズ 3（デプロイスタブ）**：foundation は実行コードを持たないため、新規実装は不要。スタブとして foundation 成果物の機械検査スクリプト（JSON Schema 妥当性／YAML 解析／必須節存在）の骨子を準備
+- **フェーズ 4 全サイクル**：foundation は基盤として常に参照される。サイクルごとに foundation の値リスト所有が機械検査され、他機能の再定義が検出されたら遮断する仕組みを順次組み込む
+
+#### 5.18.17 関連参照
+
+- 現仕様の抽出元：`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-foundation/`（要件・設計・タスク・spec.json）
+- 隣接機能の継承方針：§5.14（analysis）、§5.15（runtime）、§5.16（self-improvement）、§5.17（evaluation）
+- 命名変更の正本：§5.15.6
+- 抽出時のクリーニング規律：§3.1
+- 受入規律：§2.2 クリーンスレート
+- 連動する他節：§4（ディレクトリ構造）、§5.9.1（3 役抽象名）、§5.15.2（4 段名称）、§5.15.4（4 状態軸）、§5.17.5（来歴項目）、§5.17.10（レビューモード語彙）
+
 ## 6. 統合する課題と機能採用判断（本セッション発見の 5 つ ＋ 機能採用 1 件）
 
 それぞれを再構築の初期設計に反映する：
@@ -1996,6 +2386,8 @@ ReviewCompass 第 1 期で含めるもの：
 - 規律ファイルの一般化
 - レビュー方法の抽出整理（§5.9）：規律ステータス付与、形骸化規律 archive、重大度語彙統一マッピング、criteria 構造整理、メトリクス台帳新表記対応
 - conformance-evaluation の準備（§5.10）：v3-plan.md からの抽出、12 criteria 構造の定義、`docs/operations/CONFORMANCE_EVALUATION.md` の骨子作成
+- evaluation 機能の継承準備（§5.17）：現仕様の抽出、自己適用前提の除去、命名整合、手動 dogfooding の存廃判断、機能依存マップの整合、所有境界の整理、探索的区分のフィールド整合、`docs/operations/EVALUATION.md` の骨子作成
+- foundation 機能の継承準備（§5.18）：現仕様の抽出、自己適用前提の除去、ディレクトリ構造の再編、レビューモード語彙の存廃判断、来歴項目の存廃判断、設定成果物の境界整理、`docs/operations/FOUNDATION.md` の骨子作成
 
 完了条件（すべて満たす）：
 
@@ -2018,7 +2410,8 @@ ReviewCompass 第 1 期で含めるもの：
 完了条件（すべて満たす）：
 
 - GitHub 上に新リポジトリが存在し、URL が本計画書に追記されている
-- フェーズ 1 の抽出物が新リポジトリの該当パスに配置済み
+- フェーズ 1 の抽出物が新リポジトリの該当パスに配置済み（`docs/operations/EVALUATION.md`／`docs/operations/FOUNDATION.md`／`docs/operations/CONFORMANCE_EVALUATION.md`／`docs/operations/ANALYSIS.md`／`docs/operations/RUNTIME.md`／`docs/operations/SELF_IMPROVEMENT.md` を含む 7 機能分の正本、§5.14〜§5.18 の段階的導入で定義した配置先）
+- foundation 由来の成果物が §4 ディレクトリ構造に従って配置済み（`schemas/foundation/`、`schemas/domain/`、`schemas/validators/`、`templates/prompts/`、`templates/config/`）
 - README.md に「目的」「対象利用者」「スタブ完成までの段取り」の 3 つの見出しが存在する（各 1 ページ以内）
 
 ### フェーズ 3：デプロイスタブの実装
