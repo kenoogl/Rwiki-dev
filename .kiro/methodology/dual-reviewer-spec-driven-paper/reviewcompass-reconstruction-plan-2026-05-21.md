@@ -50,11 +50,16 @@ _配置先：新リポジトリ作成時に ReviewCompass 側へ移管する暫�
 
 抽出対象を 5 カテゴリに分け、それぞれの抽出方針を定める。
 
-### 3.1 5 機能の仕様（self-improvement は当初対象外）
+### 3.1 5 機能の仕様（self-improvement の workflow 層のみ含める）
 
 対象：`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-{foundation, runtime, evaluation, paper-interface, implementation-governance}/`
 
-self-improvement は当初の再構築範囲から **外す**。理由：自己改善ループは現状の仕様では効果測定機構が未設計（本セッションで発見した課題のひとつ）であり、デプロイの初期段階に組み込むには重い。スタブと基本機能が動いた後、別フェーズで再設計して追加する。
+self-improvement は仕様 Requirement 2 で 5 層（prompt ／ policy ／ schema ／ runtime ／ workflow）の改善を扱う。再構築では **workflow 層改善のみ第 1 期に含め、他 4 層はスコープ外** とする（§5.9.5 で確定）。
+
+- **第 1 期に含める**：workflow 層改善（規律と実体の双方向同期、規律 archive 機構、遵守検査、効果測定 3 指標）
+- **スコープ外**：prompt ／ policy ／ schema ／ runtime の 4 層改善（フェーズ 4 完了後の宿題）
+
+理由：他 4 層改善は効果測定機構が未設計で重いが、workflow 層改善は本セッションで論点 7 として議論し効果測定を 3 指標で設計済み（規律遵守率／昇格件数／退避件数）。レビュー方法の規律と実体の乖離（本セッションで実体検証で発見）を放置すると、また手動 self-improvement を繰り返すことになるため、workflow 層は第 1 期に組み込む。
 
 抽出する要素：
 
@@ -114,8 +119,10 @@ self-improvement は当初の再構築範囲から **外す**。理由：自己�
 
 抽出方針：
 
-- 3 軸対応の新テンプレートとして書き直す
+- 3 軸対応の新テンプレートとして書き直す（severity ／ judgment ／ depth、§5.9.3）
 - アプリ側に配置するもの（記入用）とツール側に配置するもの（プロンプト本体）を分ける
+- レビュー記録テンプレートに front-matter スキーマを必須化（§5.9.3）：type／target／target_commit／target_content_hash／3 役のメタデータ／findings_by_method
+- 観点（criteria）構造に対応した雛形：要件 5・設計 10・タスク 7・実装適合 5（§5.9.2）
 
 ## 4. ReviewCompass リポジトリの初期構造案
 
@@ -127,12 +134,22 @@ ReviewCompass/
 ├── docs/
 │   ├── design/                        （設計方針）
 │   ├── operations/                    （正本文書、抽出元 operations/）
-│   └── disciplines/                   （規律ファイル、抽出元 memory/）
+│   │   ├── REVIEW_PROTOCOL.md         （レビュー方法正本、§6 実装適合レビューを統合、§5.9）
+│   │   └── metric-registers/          （メトリクス台帳、新表記対応、§5.9.5）
+│   ├── disciplines/                   （規律ファイル、抽出元 memory/、status メタデータ付き）
+│   ├── archive/
+│   │   └── disciplines/<日付>/        （撤廃規律の退避先、撤廃 README 含む、§5.9.4）
+│   └── discipline-compliance-reports/ （遵守検査結果の時系列保管、§5.9.5）
 ├── stub/                              （デプロイスタブ、Python 実装）
 │   ├── path_resolver/                 （アプリパスの解決）
 │   ├── spec_discovery/                （アプリ側仕様の発見）
 │   └── reviewer_stub/                 （レビューのモック実装）
 ├── schemas/                           （foundation 由来の契約・スキーマ）
+│   └── review-criteria/               （レビュー種別ごとの検査仕様、§5.9.3）
+│       ├── requirements_local_review.yaml
+│       ├── design_local_review.yaml
+│       ├── tasks_local_review.yaml
+│       └── implementation_conformance_review.yaml
 ├── templates/                         （レビューテンプレート、3 軸対応）
 ├── stages/                            （所定手続きごとの段集合 YAML、詳細は §5.5）
 │   ├── intent.yaml                    （drafting／review／approval）
@@ -192,7 +209,7 @@ ReviewCompass/
 
 スタブが動くようになったら、次の順で実機能を載せる。実機能は「レビュー機能」と「ワークフロー管理機能」の 2 群に分ける。
 
-**レビュー機能**（3 役レビューの中身、各フェーズの「レビュー波」段で動く）：
+**レビュー機能**（3 役レビューの中身、各フェーズの「レビュー波」段で動く。詳細は §5.9）：
 
 1. 主役レビューの実装（プロンプト＋大規模言語モデル呼び出し）
 2. 敵対役レビューの実装
@@ -203,8 +220,11 @@ ReviewCompass/
 4. 段集合 YAML と検査スクリプト（§5.4・§5.5）。各フェーズの整合ゲート段や実装フェーズの適合レビュー段は、この段集合 YAML に含まれる
 5. reopen の trigger_map による機械強制（§5.6）
 6. session 跨ぎ用の in-progress 機構（§5.7）
+7. workflow 層 self-improvement の最小実装（§5.9.5）
 
-自己改善ループは **当初は外す**。上記の基本機能が動いた後、別フェーズで効果測定機構を含めて新規設計する。
+レビュー方法の再設計（3 役・観点・所見メタデータ・3 方式比較・API 障害対応など）の詳細は §5.9 を参照。
+
+self-improvement の他 4 層（prompt ／ policy ／ schema ／ runtime）は **当初は外す**。基本機能が動いた後、別フェーズで効果測定機構を含めて新規設計する。
 
 ### 5.4 ワークフロー管理の軽量化方針（2026-05-21 確定）
 
@@ -551,6 +571,272 @@ session 開始時の標準フロー：
 
 本節は再構築計画の **限界の正直な記録** として残す。第 2〜5 層の具体設計はフェーズ 4 以降の宿題とし、本計画書では設計を確定しない。フェーズ 4 開始時に本節を読み返し、当時の知見でアップデートする。
 
+### 5.9 レビュー方法の再設計（2026-05-21 確定）
+
+本節は本セッションで議論したレビュー方法（3 役レビュー、観点構造、所見メタデータ、機械検査、形骸化規律の取り下げ、workflow 層 self-improvement、3 方式比較データ、API 障害対応、コスト最適化、段階的導入順序）の確定事項を一括記載する。論点 1〜9 と派生する追加事項を 9 つの小節に整理。
+
+#### 5.9.1 基本構造（3 役 ＋ モデル多様化 ＋ ファイル遮断）
+
+- **3 役レビュー（TriadReview）の維持**：主役（primary）・敵対役（adversarial）・判定役（judgment）の役割分担を継承。β 逐次方式（主役 → 敵対役 → 判定役の直列）、各役は独立 session、メイン LLM は 3 役のいずれにもならない
+- **モデル多様化を規律として明文化**：異なるモデルファミリーまたは異なるバージョンを 3 役に割り当てる。同モデル使用は禁止
+- **ファイルアクセス遮断を規律として明文化**：各役はファイルアクセスを技術的に遮断
+- **呼び出し経路の完全並列**：
+  - Claude CLI 経路（既存方式）：`claude --print --disallowedTools "Read,Write,Edit"` で遮断
+  - API 経路（新規）：プロバイダー抽象層として設計、初期実装は Anthropic API のみ、後から他プロバイダー追加可能
+- **役ごとに経路とモデルを独立指定**：`reviewcompass.yaml` で各役の provider と model を指定
+- **推奨既定**：v2-acquisition-design.md §2.1 の決定（主役 Opus ／ 敵対役 Sonnet ／ 判定役 Opus）を既定。利用者が yaml で変更可能
+- **API 経路でのファイル遮断**：ツール権限を与えず、対象文書はプロンプトに埋め込む
+- **API キー管理**：環境変数のみ（reviewcompass.yaml には書かない）
+- **レスポンス形式の統一**：所見フォーマットを YAML schema で統一、パース失敗は fail-closed
+
+設定例：
+
+```yaml
+# reviewcompass.yaml
+review:
+  default_assignment:
+    primary:
+      provider: claude-cli
+      model: claude-opus-4-7
+      temperature: 0
+    adversarial:
+      provider: claude-cli
+      model: claude-sonnet-4-6
+      temperature: 0
+    judgment:
+      provider: claude-cli
+      model: claude-opus-4-7
+      temperature: 0
+```
+
+#### 5.9.2 観点（criteria）と重大度の統一
+
+- **観点の語**：「criterion（単数）／criteria（複数）」に統一。「ラウンド」は廃止
+- **全フェーズで「Criterion N」見出し方式**：要件 5 ／ 設計 10 ／ タスク 7 ／ 実装適合 5、合計 27 criteria
+- **各 criterion のサブ構造**：要点／詳細抽出／深掘り／該当なし
+- **実装適合レビューを REVIEW_PROTOCOL.md §6 に統合**：これまで implementation-governance 側に切り出されていたものを体系統合
+- **1 criterion ＝ 1 応答単位**：規律 `discipline_no_criteria_batching.md` を維持
+- **重大度語彙の統一**：CRITICAL ／ ERROR ／ WARN ／ INFO の 4 段に全フェーズ統一
+  - タスク「致命」→ CRITICAL、「重要」→ ERROR、「軽微」→ WARN
+  - 実装適合 P1 → CRITICAL、P2 → ERROR、P3 → WARN
+  - INFO はタスクと実装適合でも使えるよう拡張
+- **重み**：CRITICAL=4 ／ ERROR=3 ／ WARN=2 ／ INFO=1（全フェーズ共通）
+
+#### 5.9.3 所見メタデータの 3 軸必須化と機械検査
+
+各所見が次の 3 軸を必須項目として持つ。
+
+- severity（重大度軸）：CRITICAL ／ ERROR ／ WARN ／ INFO
+- judgment（対応優先度軸）：must-fix ／ should-fix ／ leave-as-is（判定役のみ）
+- depth（深さ軸）：N／R／D／A／I × 0〜4（reopen 時のみ）
+
+所見項目名は実体に合わせる：severity ／ target_location ／ description ／ rationale。「修正後」項目は必須から外す。
+
+レビュー記録に front-matter を必須化：
+
+```yaml
+---
+type: requirements_local_review
+target: foundation/requirements.md
+target_commit: ab0d4006
+target_content_hash: <sha256>
+date: 2026-05-13
+primary:
+  provider: claude-cli
+  model: claude-opus-4-7
+  temperature: 0
+  attempts: 1
+  total_tokens: 12450
+  cost_usd: 0.15
+  duration_seconds: 42
+adversarial:
+  provider: claude-cli
+  model: claude-sonnet-4-6
+  temperature: 0
+judgment:
+  provider: claude-cli
+  model: claude-opus-4-7
+  temperature: 0
+findings_by_method:
+  primary:
+    by_severity: { CRITICAL: 2, ERROR: 6, WARN: 3, INFO: 0 }
+    count: 11
+  adversarial:
+    by_severity: { CRITICAL: 4, ERROR: 8, WARN: 5, INFO: 2 }
+    count: 19
+  judgment:
+    by_severity: { CRITICAL: 3, ERROR: 6, WARN: 4, INFO: 1 }
+    count: 14
+    judgment_distribution: { must-fix: 6, should-fix: 8, leave-as-is: 5 }
+---
+```
+
+3 層の機械検査：
+
+- **第 1 層：front-matter 構造検査**：必須フィールド存在、3 役モデル多様化、集計整合
+- **第 2 層：必須節存在検査**：レビュー種別ごとの schema を `schemas/review-criteria/<種別>.yaml` に保管
+- **第 3 層：軽量中身検査**：説明 30 文字以上、根拠 100 文字以上、判断根拠 50 文字以上、対象箇所の具体性（ファイル名＋節番号／行番号／AC 番号）、コピペ防止、「該当なし」明示
+
+YAML キーは英語、本文の見出しは日本語可。
+
+#### 5.9.4 形骸化規律の取り下げ
+
+- **23 パターン**（discipline_review_judgment_patterns.md）
+  - ヒューリスティック撤廃方針（DR-rebuild-log-7 で確定）の一環で実体撤廃済み
+  - `docs/archive/disciplines/2026-05-21/` へ退避、撤廃理由を README に記録
+  - ReviewCompass 再構築には持ち込まない
+- **必要性 5 観点の明示要求**（discipline_review_necessity_judgment.md）
+  - 実体で参照ゼロ
+  - 判定役の判断根拠の中で扱える任意項目に格下げ
+- **「判定役」用語統一規律**（CONVENTIONS.md 節 8.5）
+  - 規律を維持、実体側を「判定役」に揃える
+- **所見「修正後」項目**（discipline_finding_4elements.md）
+  - 実体に合わせ、必須要素は「severity ／ target_location ／ description ／ rationale」の 4 要素
+  - 「修正後」は判定役の判断根拠に必要時のみ含める任意項目
+- **ヒューリスティック撤廃方針の取り込み**
+  - ReviewCompass の運用方針に明記
+
+#### 5.9.5 workflow 層 self-improvement の組み込み
+
+§3.1 で「self-improvement は当初対象外」としたが、workflow 層改善（規律と実体の双方向同期）に限り **第 1 期（フェーズ 1〜4）に含める**。他層（prompt ／ policy ／ schema ／ runtime）は引き続きスコープ外。
+
+- **規律ステータスメタデータの導入**：`status: enforced / aspirational / archived` を全規律ファイルに必須化
+- **規律ファイルへの追加メタデータ**：last_verified、evidence_check_method、abolish_reason、created_by_consolidating、consolidation_reason
+- **遵守検査のタイミング**：フェーズ境目（要件 → 設計、設計 → タスク等の遷移時）に実行、利用者監査とセット
+- **規律 → 実体の自動検査**：evidence_check_method を機械実行、違反率閾値超過で aspirational 降格を提案
+- **実体 → 規律の昇格機構**：フェーズ境目の利用者監査で運用パターン候補を提示、利用者承認で規律化
+  - 本セッションで発見した昇格候補：モデル多様化、ファイル遮断、所見項目名
+- **archive ディレクトリの構造化**：`docs/archive/disciplines/<日付>/` ＋撤廃 README
+- **遵守検査結果の時系列保管**：`docs/discipline-compliance-reports/<日付>.yaml`
+- **効果測定の 3 指標**：規律遵守率／昇格件数／退避件数。phase-review-metric-register.md に追加
+- **縮減義務**：利用者意識依存、規律ファイルに統廃合元を記録
+
+#### 5.9.6 3 方式比較データの取得（v2-acquisition-design.md §1.4.2 の実装）
+
+3 方式（primary ／ adversarial ／ judgment）の比較データを取得する。方式名は役名と一致：
+
+- **primary 方式**：主役のみで止める方式
+- **adversarial 方式**：主役 ＋ 敵対役で止める方式
+- **judgment 方式**：3 役すべて実施する方式
+
+§1.4.2 の決定（1 ケース × 3 回呼び出しで 3 方式すべてのデータを取得）を実装。レビュー記録の front-matter の `findings_by_method` セクションに 3 方式集計を分離記録（§5.9.3 の例参照）。
+
+機械検査の整合チェック：
+
+- `findings_by_method.primary.count` ＝ 主役発見セクションの所見数
+- `findings_by_method.adversarial.count` ＝ primary 方式 ＋ 敵対役独立発見 − 反論で撤回された主役所見
+- `findings_by_method.judgment.count` ＝ adversarial 方式のうち判定役が must-fix または should-fix と判定した数
+
+過去データは方式別データを持たないため、過去データから方式別比較メトリクスを再構築できない。過去データを使う場合は「judgment 方式の所見集合」として解釈。
+
+文書内では「primary 役」「adversarial 役」「judgment 役」（役を指す）と「primary 方式」「adversarial 方式」「judgment 方式」（方式を指す）を区別する。
+
+#### 5.9.7 API 経路と障害対応
+
+API 経路で起きうる障害（タイムアウト、レート制限、一時的エラー、過負荷、コンテキスト長超過、不正レスポンス、コスト超過）への対応。
+
+- **タイムアウト**：既定 5 分、明示設定
+- **リトライ**：指数バックオフ、最大 3 回、初回 5 秒 → 10 秒 → 20 秒 ...
+- **レート制限**：プロバイダーのヘッダ尊重（Retry-After など）
+- **コンテキスト長超過**：超過時は既定で停止、利用者判断（自動要約はしない）
+- **不正レスポンス**：最大 2 回リトライ、ダメなら fail-closed
+- **コスト管理**：警告のみ、自動継続（自動停止はしない）
+- **失敗時の状態管理**：in-progress ファイルに記録、利用者が手動再実行可
+
+プロバイダー抽象層に Claude CLI 経路と API 経路を統一インターフェースで実装。
+
+設定例：
+
+```yaml
+review:
+  api_settings:
+    timeout_seconds: 300
+    max_retries: 3
+    retry_backoff: exponential
+    initial_retry_delay_seconds: 5
+    max_retry_delay_seconds: 60
+    respect_rate_limit_header: true
+    cost_warning_threshold_usd: 10
+    cost_high_warning_threshold_usd: 50
+    context_length_check: strict
+```
+
+#### 5.9.8 コスト最適化と運用
+
+採用する最適化策：
+
+- **キャッシュとリプレイ**：content hash を front-matter に記録、reopen 時の「自動継承候補」を利用者に提示
+- **機能間並列化**：フィーチャー間で 3 役レビューを並列実行、同一フィーチャー内の β 逐次は維持
+
+採用しない最適化策：
+
+- **観点束ね**：規律「1 criterion ＝ 1 応答」維持のため採用せず
+- **fast pass モード**：規律維持のため採用せず
+- **API バッチ呼び出し**：即時応答性を優先するため採用せず
+
+判断保留：
+
+- **軽微フィルタ**（INFO の 3 役通過省略）：フェーズ 4 進行中に運用データを見て判断
+
+#### 5.9.9 段階的導入順序
+
+論点 1〜8 と派生事項を、本計画書のフェーズ 1〜4 に振り分け。
+
+**フェーズ 1（抽出作業）：**
+
+- 規律ファイル抽出と分類（ステータス付与、archive 退避）
+- 実体運用パターンの規律化（モデル多様化、ファイル遮断、所見項目名）
+- 重大度語彙統一マッピング表作成
+- criteria 構造の整理（27 criteria、実装適合を REVIEW_PROTOCOL.md §6 に統合）
+- メトリクス台帳の新表記対応と効果測定 3 指標の追加
+- ヒューリスティック撤廃方針の取り込み
+- reviewcompass.yaml の api_settings 設定項目を schema として定義
+- extraction-mapping.md への記録
+
+**フェーズ 2（リポジトリ新設）：**
+
+- 規律ファイル群を `docs/disciplines/` に配置（ステータス付き）
+- archive 構造を `docs/archive/disciplines/<日付>/` に配置、撤廃 README を含む
+- レビュー方法正本を `docs/operations/REVIEW_PROTOCOL.md` に配置（§6 実装適合レビュー含む）
+- メトリクス台帳を `docs/operations/metric-registers/` に配置
+
+**フェーズ 3（デプロイスタブ）：**
+
+- レビュー記録 schema を `schemas/review-criteria/` に準備
+- レビュー記録の front-matter スキーマ定義
+- 検査スクリプトのスタブ（front-matter 読み込み、必須節検査のみ）
+- スタブでタイムアウト・リトライの最低限の骨子を準備
+
+**フェーズ 4（実機能開発、3 サイクル）：**
+
+- **第 1 サイクル：3 役完成（Claude CLI 経路）**
+  - reviewcompass.yaml でのモデル指定
+  - 主役・敵対役・判定役の β 逐次方式実装、独立 session とファイル遮断
+  - レビュー記録の front-matter 完全実装、機械検査の本格実装（3 層）
+  - モデル多様化規律の機械確認
+
+- **第 2 サイクル：API 対応と 3 方式比較**
+  - プロバイダー抽象層の実装（初期は Anthropic API のみ）
+  - API 経路でのファイル遮断、レスポンス YAML パース、schema 検証
+  - メタデータ拡張（provider／model／version／temperature／attempts／cost）
+  - API キー管理（環境変数経由）
+  - 3 方式比較データ（§1.4.2）の取得実装、集計の整合検査
+  - 障害対応の本格実装（指数バックオフ、レート制限尊重、不正レスポンス対応、コスト警告）
+
+- **第 3 サイクル：workflow 層 self-improvement と最適化**
+  - workflow 層 self-improvement の最小実装（規律遵守検査、利用者監査ステップ、効果測定 3 指標集計）
+  - キャッシュとリプレイ（content hash ベース）
+  - 機能間並列化（同一機能内の直列は維持）
+  - 軽微フィルタの導入判断（運用データを見て）
+
+**フェーズ 4 完了後の宿題：**
+
+- self-improvement の他 4 層改善（prompt ／ policy ／ schema ／ runtime）
+- 多層防御の第 2 層（git フック）・第 4 層（定期事後監査）の本格実装
+- API バッチ呼び出しの再検討
+- マルチプロバイダー対応の拡張（OpenAI、Google API など）
+- UK スペル統一の判断（judgement vs judgment）
+
 ## 6. 統合する課題（本セッション発見の 5 つ）
 
 それぞれを再構築の初期設計に反映する：
@@ -571,15 +857,20 @@ session 開始時の標準フロー：
 
 作業内容：
 
-- 5 機能の仕様の抽出と一般化（self-improvement は当初対象外）
+- 5 機能の仕様の抽出と一般化（self-improvement は workflow 層のみ第 1 期、他 4 層はスコープ外）
 - 正本文書の整理
 - 規律ファイルの一般化
+- レビュー方法の抽出整理（§5.9）：規律ステータス付与、形骸化規律 archive、重大度語彙統一マッピング、criteria 構造整理、メトリクス台帳新表記対応
 
 完了条件（すべて満たす）：
 
 - 5 機能分の仕様一式（intent.md／brief.md／requirements.md／design.md／tasks.md／spec.json の構造）が ReviewCompass 用に書き換えられ、自己適用前提の表現（「dual-reviewer 自身」「本対象システム」等）が grep で 0 件であることを確認できる
 - 正本文書（operations 配下 6 件、docs/coordination 1 件、リポジトリ直下 7 件、計 14 件）が `docs/operations/` に配置済みで、抽出元と抽出先の対応表が `docs/extraction-mapping.md` に記録されている
-- 規律ファイル（`dual-reviewer-rebuild/.kiro/memory/discipline_*.md` 10 件程度）が `docs/disciplines/` に配置済みで、内容が「アプリ開発支援ツールとしての規律」に書き換えられている
+- 規律ファイル（`dual-reviewer-rebuild/.kiro/memory/discipline_*.md` 10 件程度）が `docs/disciplines/` に配置済みで、内容が「アプリ開発支援ツールとしての規律」に書き換えられている。全規律ファイルに status メタデータ（enforced ／ aspirational ／ archived）が付与されている
+- 23 パターン規律と必要性 5 観点規律が `docs/archive/disciplines/<日付>/` に退避済み、撤廃 README に経緯（ヒューリスティック撤廃方針との整合）が記録されている
+- レビュー方法の正本（REVIEW_PROTOCOL.md）が §6 として実装適合レビューを統合した形に書き換え済み
+- メトリクス台帳が新表記（N/R/D/A/I × 0〜4）と効果測定 3 指標（規律遵守率／昇格件数／退避件数）に対応済み
+- `reviewcompass.yaml` の schema 定義（review.default_assignment、review.api_settings 含む）が完成
 
 ### フェーズ 2：ReviewCompass リポジトリ新設
 
@@ -614,19 +905,24 @@ session 開始時の標準フロー：
 
 ### フェーズ 4：スタブの上で実機能開発
 
-作業内容：
+作業内容（§5.9.9 の 3 サイクル方式）：
 
 - ReviewCompass 自身を ReviewCompass で開発する（デプロイ前提の自己適用）
-- 機能を順次載せる（§5.3 の順序）
+- 第 1 サイクル：3 役完成（Claude CLI 経路、§5.9.1）
+- 第 2 サイクル：API 対応と 3 方式比較データ取得、API 障害対応（§5.9.6・§5.9.7）
+- 第 3 サイクル：workflow 層 self-improvement と最適化（§5.9.5・§5.9.8）
 
 完了条件（すべて満たす）：
 
 - 5 機能のうち少なくとも 1 機能（主役レビューを推奨）が、実 LLM（大規模言語モデル）呼び出しを伴って動き、スタブ版でなく実 LLM 版のレビュー記録を出力する
 - その 1 機能について、自己適用の最初の 1 サイクルが完走している（仕様 → 主役レビュー → 利用者承認）
+- 3 役（主役・敵対役・判定役）が異なるモデルで動作し、レビュー記録の front-matter に 3 役のモデル多様化が検査済みであることが記録されている
+- 3 方式比較データ（findings_by_method）が機械抽出可能な形でレビュー記録に含まれている
+- workflow 層 self-improvement の最小実装が動き、効果測定 3 指標が `docs/discipline-compliance-reports/` に時系列保管されている
 
-### スコープ外：self-improvement の再設計
+### スコープ外：self-improvement の他 4 層改善
 
-self-improvement（自己改善ループ）は、本計画書のフェーズ 1〜4 のスコープ外。フェーズ 4 完了後に、効果測定機構を含む再設計を別計画書として起こす。本計画書では扱わない。
+self-improvement は仕様 Requirement 2 で 5 層（prompt ／ policy ／ schema ／ runtime ／ workflow）の改善を扱う。本計画書では **workflow 層改善のみ第 1 期（フェーズ 1〜4）に含める**（§5.9.5）。他 4 層（prompt ／ policy ／ schema ／ runtime）はスコープ外、フェーズ 4 完了後に効果測定機構を含む再設計を別計画書として起こす。
 
 ### スコープ外：多層防御の第 2〜5 層
 
