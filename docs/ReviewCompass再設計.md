@@ -16,6 +16,14 @@
 
 [マルチターン](##マルチターン)
 
+[Analysis](##Analysis)
+
+[RUNTIME](##RUNTIME)
+
+[メモリ、規律、運用md](##メモリ、規律、運用md)
+
+
+
 ```
 既に現在のリポジトリは複雑になりすぎている。これまで、何度も作成、改変を行ってきたため。そこから得られた仕様やノウハウがあるので、それらを抽出し、ReviewCompassを再構築する。再構築にあたり、デプロイの枠組みをスタブで作成し、それが動くようになったら、そこで開発を行う。どうか？
 ```
@@ -6224,3 +6232,1994 @@ review:
 
 人間への通知機構を採用しますか
 
+
+
+
+
+
+
+## Analysis
+
+```
+レポート用のメトリックを抽出するプロセスについて説明して。現在はpaper-interfaceかな
+```
+
+paper-interface（再構築では report-interface に改名予定）の現状を確認します。
+
+整理して報告します。
+
+## 旧 paper-interface（再構築で report-interface に改名）の構造
+
+### 1. 役割
+
+evaluation 機能が出力した分析データを **論文や報告に使える形** に整理する変換層。論文本文の執筆そのものは扱わず、論文化に必要な構造化された入力を整える。
+
+### 2. 4 段階のパイプライン
+
+```
+evaluation 出力 → claim mapper → reporting bundle builder → caveat / maturity annotator → export fragments → paper/
+```
+
+各段階の役割：
+
+- **claim mapper**：論文の主張（claim）ごとに、それを裏付ける成果物（supporting artifact）を結びつける
+- **reporting bundle builder**：図表・要約の入力となる bundle を作る
+- **caveat / maturity annotator**：成熟度（mature / preliminary / exploratory）と注意事項を明示
+- **export fragments**：JSON ／ Markdown ／表入力など、論文用に使える形で出力
+
+### 3. 出力先と中身
+
+`paper/` ディレクトリ配下に次を出す：
+
+- `reports/claim_map.json`：claim と evidence の対応正本
+- `reports/evidence_register.json`：成熟度と provenance（由来）の台帳
+- `reports/reporting_fragments.json`：再利用可能な報告断片
+- `tables/table_source_bundle.json`：表の入力データ
+- `figures/figure_source_bundle.json`：図の入力データ
+- `caveats/paper_caveat_register.json`：論文向け注意事項の集約
+
+### 4. 入力（evaluation 機能から）
+
+`experiments/analysis/` 配下のファイルを読む：
+
+- `comparisons/treatment_comparisons.json`：3 方式（primary / adversarial / judgment）の比較結果
+- `comparisons/phase_comparisons.json`：フェーズ間の比較
+- `classifications/exclusion_report.json`：除外データの報告
+- `caveats/caveat_register.json`：上流の注意事項
+- 必要に応じて `metrics/*.json`
+
+### 5. 重要な制約
+
+- **逆流禁止**：論文の都合で runtime のルールを変えてはいけない
+- **生ログ禁止**：raw run artifact を直接読まない。evaluation の出力を介する
+- **evaluation 不在時の挙動**：evaluation 出力がなければ raw にフォールバックせず、評価プロセスの実行を要求する
+
+### 6. 主な台帳と構造
+
+**Claim Unit**（claim_map.json の各エントリ）：
+
+- `claim_id`：論文中の主張識別子
+- `claim_text`：主張の本文
+- `supporting_artifact_refs`：裏付け成果物への参照
+- `maturity_label`：mature / preliminary / exploratory
+- `caveat_refs`：関連する注意事項への参照
+- `provenance_refs`：由来追跡情報への参照
+
+**Evidence Register**（evidence_register.json の各エントリ）：
+
+- `artifact_ref`
+- `source_analysis_manifest_ref`：どの分析実行から出たか
+- `input_run_set_ref`：どの実行集合を入力にしたか
+- `evidence_class`：foundation 由来（valid / invalid / exploratory）
+- `review_mode`：foundation 由来（manual_dogfooding / runtime_mediated）
+- `maturity_label`：evidence_class に束縛
+- `caveat_refs`
+- `supersedes` / `superseded_by`：置換系譜
+- `generated_at`
+
+### 7. 成熟度集約規則
+
+複数出典を束ねた fragment の `maturity_label` は **最も保守的な値**：
+
+- 順序：`exploratory` < `preliminary` < `mature`
+- 出典に 1 つでも低い値があれば fragment 全体をその低い値に
+- 出典ごとの成熟度は fragment 内に保持（束ねても見えなくしない）
+
+------
+
+## ReviewCompass 再構築での扱い（report-interface）
+
+旧 paper-interface の設計を継承しつつ、本セッションで議論した機構と接続する必要があります。
+
+### 8. 新規入力（本セッションで増えた）
+
+旧設計は evaluation 出力のみを入力としていましたが、再構築では次の機構からもメトリクスが流れ込みます：
+
+- **レビュー記録**（§5.9.3）：front-matter の集計情報（findings_by_method、severity 別件数、judgment 別件数、evidence_type 別件数、検証コマンド併記率）
+- **workflow 層 self-improvement**（§5.9.5）：規律遵守率、昇格件数、退避件数、規律違反検出履歴
+- **conformance-evaluation**（§5.10）：意図適合・文書適合の検査結果、推定文書と既存文書の差分集計
+- **3 方式比較データ**（§5.9.6）：findings_by_method.primary ／ .adversarial ／ .judgment の集計
+- **API 障害対応**（§5.9.7）：呼び出し回数、リトライ率、トークン消費、コスト
+- **代役機構**（§5.12）：代役判断件数、エスカレーション率、対話ターン数分布
+- **通知機構**（§5.13）：通知回数、応答時間
+- **現在位置可視化**（§5.11）：機能 × フェーズマトリックスの履歴
+
+### 9. 抽出の流れ
+
+ReviewCompass での想定フロー：
+
+```
+レビュー記録（front-matter） ─┐
+workflow-gate-status.md ───┤
+規律遵守レポート ──────────┼→ evaluation 機能で集約 → report-interface で論文化整理 → paper/
+代役対話履歴 ──────────────┤
+通知履歴 ────────────────┤
+conformance-evaluation 結果 ┘
+```
+
+evaluation 機能が中継し、report-interface はそこから claim / evidence / caveat / maturity の構造化に変換。
+
+### 10. 旧設計との差分（推定）
+
+ReviewCompass 再構築で report-interface に変えるべき点（暫定、フェーズ 1 の抽出作業で詳細確定）：
+
+- 入力源を evaluation のみから、レビュー記録・workflow 層メトリクス等にも拡張
+- evidence_type 比率を成熟度（maturity）の補助情報として追加
+- 代役判断と本人判断を明示的に区別したメトリクス
+- 通知応答時間を運用品質指標として組み込む
+- conformance-evaluation 由来のメトリクス（意図適合率、文書適合率）を新規追加
+
+### 11. 制約は維持
+
+旧設計の制約はそのまま継承：
+
+- 逆流禁止（report-interface が他機能のルールを変えない）
+- evaluation を介する（raw 直接読み禁止、ただし「raw」の定義は再構築で要確認）
+- 成熟度の保守的集約
+- caveat の脱落防止
+
+## 計画書への反映余地
+
+現在の計画書 §3.1 と §4 で report-interface は機能名として登場しますが、本セッションで議論した機構との接続は明示していません。フェーズ 1 抽出作業の中で、report-interface の入力源拡張と新規メトリクスの取り込みを設計する余地があります。
+
+§3.1 の対象機能のリストに report-interface の役割を明文化したり、§5 系統に report-interface 専用の節（§5.14 など）を作って入力源・メトリクス集約・抽出フローを記載する選択肢があります。
+
+## 確認
+
+ReviewCompass の report-interface について、計画書への追加反映が必要ですか。
+
+- **案 A**：§5.14 として report-interface 機構を新設、入力源・メトリクス・出力構造を整理
+- **案 B**：現状の説明で十分、フェーズ 1 抽出作業の中で詳細化
+- **案 C**：別計画書として独立（report-interface 設計の詳細）
+
+
+
+```
+私の理解では、実行時にログを出力（これはruntimeが担当？）、事後にログから様々なメトリクスを抽出し、構造化して保持する。
+```
+
+ご認識が正しいか、現リポジトリで確認します。
+
+ご認識のとおりです。現リポジトリの設計を 3 機能の役割分担で確認しました。
+
+## 機能ごとの役割（現設計）
+
+### runtime（実行時ログ出力担当）
+
+- **責務**：
+  - レビューセッションの実行
+  - 4 段階パイプライン（Step A 主役検出 → Step B 敵対役レビュー → Step C 判定 → Step D 統合）の実行
+  - prompt loading
+  - **構造化ログの出力**（structured evidence emission、Requirement 4）
+  - 人間判断（承認・却下・保留）の記録
+- **対象外**：
+  - メトリクス集計
+  - 図表生成
+  - 改善提案生成
+  - 論文用報告生成
+
+つまり「実行時にログを出す」のが runtime。要件 4 で明示：
+
+- run-level evidence（実行レベルの証跡）
+- finding-level records（所見レベルの記録）
+- counter-evidence と override 情報
+- raw evidence と derived summary を分離して出力
+- 後段の replay（再実行）に必要な情報を保持
+
+### evaluation（事後メトリクス抽出担当）
+
+- **責務**：
+  - **メトリクス抽出**（Requirement 3）
+  - valid / invalid run の分離
+  - 3 方式（single / dual / dual+judgment）の比較
+  - 除外報告
+  - 派生分析成果物の生成
+  - 中央側での外部 evidence 取り込み
+- **対象外**：
+  - runtime の動作
+  - prompt 設計
+  - 改善提案の採否
+  - 論文ドラフトの生成
+
+要件 3「Metric Extraction」が明示：
+
+- 構造化された evidence からメトリクスを計算（自由文の要約からではない）
+- raw evidence から派生メトリクスへの導出経路を保持
+- raw evidence が schema-compatible で変わっていなければ再計算可能
+- run-level ／ finding-level ／ treatment-level の 3 階層のメトリクスを分離
+
+### report-interface（論文化用変換層、旧 paper-interface）
+
+evaluation 出力を読み、論文に使える形に整理。前回説明のとおり。
+
+## データの流れ
+
+```
+[runtime]
+  実行時にログ出力（raw evidence + finding records）
+       ↓
+[evaluation]
+  事後にメトリクス抽出
+  valid/invalid 分離
+  treatment 比較
+  派生分析成果物の生成
+       ↓
+[report-interface（旧 paper-interface）]
+  claim と evidence の対応付け
+  caveat と maturity ラベルの付与
+  論文用 fragment / 図表入力に整理
+       ↓
+paper/ 配下に出力
+```
+
+ご認識のとおりの 3 段の流れ。
+
+## ReviewCompass 再構築での追加考慮点
+
+本セッション後半で議論した機構の出力は、この 3 機能のどこで集約されるかを整理しておく必要があります。
+
+### runtime が出すべきもの（実行時）
+
+- レビュー記録の本体（主役発見・敵対役レビュー・判定役判断）
+- レビュー記録の front-matter（§5.9.3 で確定したメタデータ）
+  - target_commit / target_content_hash
+  - 3 役のモデル情報（provider / model / temperature）
+  - 呼び出しメタデータ（attempts / total_tokens / cost / duration）
+  - findings_by_method（§5.9.6 の 3 方式比較）
+  - 所見ごとの evidence_type と verifying_commands（§5.9.3）
+- API 障害ログ（§5.9.7、リトライ履歴・エラー）
+- 代役対話履歴（§5.12、proxy-conversations ディレクトリ）
+- 通知履歴（§5.13、notifications ディレクトリ）
+- workflow ゲート状態の遷移（workflow-gate-status.md の更新ログ）
+
+### evaluation が集計すべきもの（事後）
+
+runtime ログから次のメトリクスを抽出：
+
+- レビュー所見の集計（重大度別件数、judgment 別件数、evidence_type 比率、コマンド併記率）
+- 3 方式比較メトリクス（findings_by_method の集計）
+- 規律遵守率（§5.9.5 workflow 層 self-improvement の指標）
+- 規律昇格件数・退避件数（§5.9.5）
+- conformance-evaluation の結果集計（意図適合率、文書適合率、§5.10）
+- 代役機構のメトリクス（代役判断件数、エスカレーション率、本人一致率、§5.12）
+- 通知機構のメトリクス（通知回数、応答時間、§5.13）
+- API コスト・呼び出し回数の集計（§5.9.7）
+
+### report-interface が論文化整理するもの
+
+evaluation 出力を受けて：
+
+- 論文の主張（claim）と evidence の対応付け
+- 成熟度（mature / preliminary / exploratory）のラベル
+- caveat の付与
+- 図表・要約の入力 bundle
+
+## 注意点
+
+本セッションの初期に学んだとおり、**文書と実体は乖離している可能性** があります。上記は設計どおりの想定であり、実体での運用がこのとおりかは別途検証が必要です。
+
+たとえば：
+
+- 規律遵守率の集計を evaluation が本当に担当しているか
+- conformance-evaluation の結果（新機能）をどこが集計するか（まだ設計途中）
+- 代役判断件数・通知履歴の集計責任が明確か
+
+特に conformance-evaluation・代役機構・通知機構は本セッションで新規追加したため、それらのメトリクスを誰が集計するかは計画書で未確定です。
+
+## 確認
+
+ご質問の意図を踏まえると、計画書に **メトリクス抽出パイプライン（runtime → evaluation → report-interface）の役割分担と新規機構の集計責任** を明文化する余地があります。
+
+- **案 A**：§5.14 として「メトリクス抽出パイプライン」を新設、3 機能の役割と新規機構の集計責任を整理
+- **案 B**：各機能の節（§5.10 など）に集計責任の記述を分散追加
+- **案 C**：今は議論のみで計画書反映は保留
+
+どう進めますか。
+
+
+
+```
+現在の実装を調べて報告
+```
+
+実装ファイルを調査します。
+
+実装を調査した結果を報告します。
+
+## 現在の実装の構造
+
+### runtime（実行時ログ出力担当）
+
+実装場所：`dual-reviewer-rebuild/runtime/`
+
+- `runtime/execution_v2/analyzers/step_executors.rb`：4 ステップ（A〜D）の実行
+- `runtime/execution_v2/writers/evidence_writer.rb`：構造化ログの書き出し
+- `runtime/execution_v2/writers/review_case_projector.rb`：レビューケース統合
+- `runtime/execution_v2/contracts/run_layout.rb`：実行成果物の配置規約
+- `runtime/controller/session_controller.rb`：セッション制御
+- `runtime/schemas/*.json`：成果物の JSON Schema（review_case、finding、necessity_judgment、impact_score、failure_observation の 5 つ）
+
+### runtime の出力先（実体確認）
+
+`experiments/runs/run-<タイムスタンプ>-<ハッシュ>/` 配下に：
+
+- `run_manifest.yaml`：実行メタデータ（run_id、target_id、treatment、phase_profile、review_mode、prompt_version、validator_status、human_signoff_status、evidence_class など）
+- `review_case.json`：レビュー全体の集約
+- `steps/step_a_primary_detection.json` ／ `step_b_adversarial_review.json` ／ `step_c_judgment.json` ／ `step_d_integration.json`
+- `decisions/decision_units.json` ／ `human_signoff.json`
+- `validation/validator_result.json` ／ `invalidation_markers.json`
+- `derived/comparison_eligibility_note.json`
+
+つまり 1 回の review 実行ごとに 10 ファイル前後を出力。
+
+### evaluation（事後メトリクス抽出担当）
+
+実装場所：`dual-reviewer-rebuild/scripts/evaluation/` ＋ `scripts/extract_evaluation_metrics.rb`
+
+- **entry point**：`scripts/extract_evaluation_metrics.rb`（30 行、コマンドライン入口）
+- **本体**：`scripts/evaluation/metric_extractor.rb`（336 行、抽出ロジック）
+- **補助**：local_run_loader、metric_writer、admission_evaluator、classification_engine、classification_writer、comparison_builder、comparison_writer、population_selector、exclusion_report_builder、caveat_builder、analysis_layout、analysis_manifest_writer、staleness_propagator など 20 件ほど
+
+加えて再構築用の entry：
+
+- `scripts/build_evaluation_caveats.rb`
+- `scripts/build_evaluation_comparisons.rb`
+- `scripts/classify_evaluation_input.rb`
+- `scripts/select_evaluation_run_set.rb`
+- `scripts/validate_evaluation_pipeline.rb`
+- `scripts/rebuild_evaluation_analysis_from_runs.rb`
+
+### 抽出するメトリクス（コード解析より）
+
+`metric_extractor.rb` のソースを読むと、3 階層 × 2 層構造で抽出される。
+
+**3 階層**：
+
+- run-level（実行単位）
+- finding-level（所見単位）
+- treatment-level（実行条件単位）
+
+**core 層**（全フェーズ共通のメトリクス）：
+
+- total_findings（所見総数）
+- accepted_findings ／ rejected_findings ／ deferred_findings（採否別件数）
+- validation_outcome（検証結果）
+- findings_per_run（実行あたり所見数）
+- acceptance_ratio（採用率）
+- judgment_invocation_coverage（判定役通過率）
+- severity_distribution（重大度別分布）
+- source_role_distribution（所見の出処役別分布）
+- judgment_label_distribution（判定ラベル別分布）
+
+**phase overlay**（フェーズごとの追加メトリクス）：
+
+- intent：目的曖昧性削減、非目的漏れ検出、要件追跡可能性支援
+- requirements：要件矛盾検出、スコープ漂流検出、受入条件欠落検出
+- design：節間整合性、責任境界欠陥、失敗モード網羅
+- tasks：タスク被覆漏れ、順序リスク、検証不能タスク分解検出
+- implementation：変更影響齟齬、テスト漏れ示唆、危険な修正推奨検出
+
+### paper_interface（論文化整理担当）
+
+実装場所：`dual-reviewer-rebuild/scripts/paper_interface/v2/`
+
+- `analysis_intake.rb`：evaluation 出力の取り込み
+- `claim_map_builder.rb`：claim と evidence の対応付け
+- `evidence_register_builder.rb`：成熟度と provenance の台帳構築
+- `bundle_builder.rb`：図・表の入力 bundle 構築
+- `paper_caveat_register_builder.rb`：注意事項の集約
+- `reporting_fragments_builder.rb`：再利用可能な報告断片の生成
+- `separation_rules.rb`：分離規則の検査
+- `paper_layout.rb`：出力配置
+- `reference.rb`：参照形式の規定
+
+トップレベルの entry point スクリプトは見つかりませんでした（v2/ サブモジュールのみ）。
+
+## データの流れ（実体確認）
+
+```
+[runtime]
+  experiments/runs/run-<id>/ に 10 ファイル前後を出力
+       ↓
+[evaluation]
+  scripts/extract_evaluation_metrics.rb がエントリ
+  各 run を loader で読み込み、metric_extractor で 3 階層 × 2 層のメトリクス抽出
+  metric_writer が experiments/analysis/ に書き出す
+       ↓
+[paper_interface]
+  scripts/paper_interface/v2/analysis_intake.rb が experiments/analysis/ を読む
+  各 builder（claim_map / evidence_register / bundle / caveat_register / reporting_fragments）が paper/ 配下に書き出す
+       ↓
+paper/reports/、paper/tables/、paper/figures/、paper/caveats/
+```
+
+## 重要な観察：実体上のデータは空
+
+実体を見ると：
+
+- `experiments/runs/` に 6 件の実行がある（2026-05-10 の pilot 走行）
+- ただし `step_a_primary_detection.json` を見ると `findings: []`、`counter_evidence: []` で **所見が空**（実体）
+- `experiments/analysis/` は空（旧版は `_archived-analysis-2026-05-13/` に退避済み）
+- `paper/reports/` ／ `tables/` ／ `figures/` ／ `caveats/` のサブディレクトリのみ存在、中身は空
+
+これは v2 取得方式（v2-acquisition-design.md）への移行に伴う **データの取り直し中** の状態。
+
+## 実装と設計の整合性
+
+実装は設計どおりに 3 機能の役割分担に沿っている：
+
+- runtime が実行時ログ（structured evidence）を出力
+- evaluation が事後にメトリクスを抽出
+- paper_interface が論文化用に整理
+
+ただし、本セッション後半で議論した新規機構（evidence_type、conformance-evaluation、workflow 層 self-improvement、代役機構、通知機構）は **まだ実装に存在しない**。これらは ReviewCompass 再構築で新規導入する予定。
+
+## 旧 v1 からの再実装の痕跡
+
+`metric_extractor.rb` のコメントから、旧 v1 が「ヒューリスティック規則ファイルに件数を固定していた」問題で破棄され、v2 でスクラッチ再実装されたことが分かる。これは log-7 で確定した「ヒューリスティック撤廃」と整合。
+
+paper_interface の `bundle_builder.rb` も同様に「旧 v1 の固定キー依存を破棄、v2 でスクラッチ再実装」とコメントに明記。
+
+## 含意
+
+- 実装構造は揃っており、設計どおりに役割分担している
+- 実体のデータは現在空（v2 取得方式への移行中）
+- ReviewCompass 再構築では、本セッション後半の新規機構（evidence_type、conformance-evaluation、workflow 層 self-improvement、代役、通知）を **既存の 3 機能（runtime / evaluation / report-interface）にどう分配するか** を設計する必要がある
+- 抽出ロジックの再利用は可能（metric_extractor.rb のような形）、ただし新規メトリクスに対応するための拡張が必要
+
+これでご質問の「現在の実装」の調査結果は揃いました。次の議論や反映の指示をお願いします。
+
+
+
+```
+ReviewCompass 再構築では、考えているメトリクスがきちんと抽出できる情報がログに残っている必要がある。また、ログから必要なメトリクスを抽出する方法が記述できている必要がある。まず、どのようなメトリクスが必要か、計画から読み取り、整理する。その後、ログの仕様を決める。
+```
+
+計画書から必要なメトリクスを抽出して整理します。
+
+計画書から必要なメトリクスを抽出し、カテゴリごとに整理しました。
+
+## メトリクス一覧（10 カテゴリ）
+
+### カテゴリ 1：レビュー所見の基本集計
+
+各レビュー記録の front-matter に集計、評価機能で横断集計（§5.9.3）。
+
+- 重大度別件数：CRITICAL ／ ERROR ／ WARN ／ INFO（4 値）
+- 重大度重み付き合計：CRITICAL=4 ／ ERROR=3 ／ WARN=2 ／ INFO=1 の加重合計
+- 対応優先度別件数：must-fix ／ should-fix ／ leave-as-is（3 値、判定役判断）
+- 手戻り種別別件数：N／R／D／A／I × 0〜4（最大 25 値、新表記）
+- 役別の所見数：主役発見数 ／ 敵対役独立発見数 ／ 反論で撤回された数
+
+### カテゴリ 2：3 方式比較メトリクス（§5.9.6）
+
+`findings_by_method` セクションから抽出：
+
+- primary 方式の所見数と重大度分布
+- adversarial 方式の所見数と重大度分布
+- judgment 方式の所見数と重大度分布、judgment_distribution
+- 方式間の所見数差分（adversarial 追加分、judgment 削減分）
+
+### カテゴリ 3：evidence_type メトリクス（§5.9.3 追記）
+
+- `phase_fact_based_finding_ratio`：fact 比率
+- `phase_inference_based_finding_ratio`：inference 比率
+- `phase_verifying_command_coverage`：fact 系所見のうち verifying_commands を持つ割合
+- 重大度別の fact 比率（CRITICAL/ERROR ほど fact 必須）
+
+### カテゴリ 4：workflow 層 self-improvement 効果測定 3 指標（§5.9.5）
+
+- 規律遵守率：各規律の `evidence_check_method` 実行結果から計算
+- 昇格件数：aspirational → enforced の累積件数
+- 退避件数：規律 → archive の累積件数
+- 規律違反検出件数：機械検査で検出した違反
+
+### カテゴリ 5：conformance-evaluation メトリクス（§5.10）
+
+12 criteria（4 評価軸 × 3 criteria）の検査結果：
+
+- intent conformance：3 criteria の所見数、適合率
+- requirements conformance：3 criteria の所見数、適合率
+- design conformance：3 criteria の所見数、適合率
+- tasks conformance：3 criteria の所見数、適合率
+- 既存文書と推定文書の差分件数（生成モード）
+- 食い違い件数（照合チェックモード）
+
+### カテゴリ 6：API 呼び出しメトリクス（§5.9.7）
+
+各呼び出しごとに front-matter に記録、評価機能で集計：
+
+- attempts（リトライ回数）
+- total_tokens（消費トークン）
+- cost_usd（実コスト）
+- duration_seconds（実行時間）
+
+集計：
+
+- timeout_count（タイムアウト回数）
+- rate_limit_hit_count（レート制限到達回数）
+- retry_total_count（リトライ総数）
+- fail_closed_count（fail-closed 遮断回数）
+
+### カテゴリ 7：代役機構メトリクス（§5.12.9）
+
+- proxy_decision_count（代役判断件数）
+- escalation_ratio（エスカレーション率）
+- agreement_ratio（本人サンプル監査との一致率）
+- average_turn_count（対話の平均ターン数）
+- proxy_cost_usd（代役の API コスト）
+
+### カテゴリ 8：通知機構メトリクス（§5.13.9）
+
+- notification_count（通知回数、チャネル別）
+- response_time（利用者の応答時間）
+- escalation_event_count（エスカレーション件数）
+- channel_failure_count（チャネル障害回数）
+
+### カテゴリ 9：既存からの継承（phase-review-metric-register.md）
+
+旧設計から継承：
+
+- `intent_revision_count` ／ `intent_handback_count`
+- `phase_blocking_issue_count` ／ `phase_nonblocking_open_point_count`
+- `phase_recheck_count`
+- `phase_reopen_required_count`
+- `phase_minor_adjustment_count` ／ `phase_major_correction_count`
+- `phase_intent_attributed_issue_count`
+- `phase_signal_count` ／ `phase_signal_status_distribution` ／ `phase_signal_risk_distribution`
+- `phase_conformance_finding_count` ／ `phase_conformance_severity_weighted_score`
+
+新表記対応で追加：
+
+- `phase_handback_count_by_origin`（N／R／D／A／I の 5 値）
+- `phase_handback_count_by_depth`（0／1／2／3／4 の 5 値）
+
+### カテゴリ 10：旧 evaluation 設計の継承（実装済み metric_extractor.rb より）
+
+- 3 階層（run-level ／ finding-level ／ treatment-level）
+- core 層（全フェーズ共通）：total_findings、accepted_findings、rejected_findings、deferred_findings、validation_outcome、findings_per_run、acceptance_ratio、judgment_invocation_coverage、severity_distribution、source_role_distribution、judgment_label_distribution
+- phase overlay（フェーズ別）：
+  - intent：goal_ambiguity_reduction、non_goal_leakage_detection、intent_to_requirement_traceability_support
+  - requirements：requirement_inconsistency_detection、scope_drift_detection、missing_acceptance_condition_detection
+  - design：cross_section_consistency、responsibility_boundary_defects、failure_mode_omission_detection
+  - tasks：task_coverage_gap_detection、ordering_risk_detection、unverifiable_task_decomposition_detection
+  - implementation：change_impact_mismatch、test_gap_indication、unsafe_patch_recommendation_detection
+
+## メトリクス間の関係
+
+これらは独立ではなく、階層化できます。
+
+### 階層 A：所見単位（finding-level）
+
+カテゴリ 1（基本集計）、カテゴリ 3（evidence_type）、カテゴリ 5（conformance-evaluation の所見）
+
+### 階層 B：レビュー単位（review-level、1 レビュー記録あたり）
+
+カテゴリ 1（集計）、カテゴリ 2（3 方式比較）、カテゴリ 6（API 呼び出し）、カテゴリ 7（代役）
+
+### 階層 C：フェーズ単位（phase-level）
+
+カテゴリ 9（phase-review-metric-register.md）、カテゴリ 10 core 層 ＋ overlay
+
+### 階層 D：機能単位（feature-level）
+
+7 機能ごとに集計
+
+### 階層 E：プロジェクト単位（project-level）
+
+カテゴリ 4（workflow 層 self-improvement 3 指標）、カテゴリ 8（通知機構）
+
+## 整理結果
+
+合計 10 カテゴリ、約 60 種類のメトリクスが計画書に登場します。実装上は次の集約が必要：
+
+- **所見メタデータの必須項目**（log に残すべき）：severity、judgment、depth、evidence_type、verifying_commands、target_location、description、rationale
+- **レビュー記録メタデータ**（front-matter）：3 役のモデル情報、トークン消費、コスト、duration、findings_by_method
+- **規律遵守ログ**：evidence_check_method の実行結果、規律ステータス遷移
+- **代役対話履歴**：actor、provider、model、turns、confidence、decision、conversation_log
+- **通知履歴**：channel、timestamp、recipient、subject、response_time
+- **conformance-evaluation 結果**：12 criteria 別の所見、推定文書と既存文書の差分
+
+## 次のステップ
+
+メトリクスの一覧が整理できたので、次にこれらを **抽出可能にするためのログ仕様** を決める段階に入れます。具体的には：
+
+1. 各カテゴリごとに「ログのどこに何が記録されるか」を明示
+2. 抽出方法（grep、JSON Path、YAML パース、front-matter 解析など）を明示
+3. ログのスキーマを統一（既存の review_case.json、step_*.json などを拡張）
+
+このまま進めてよいですか。あるいはメトリクス一覧の追加・削除・優先度付けの議論を先にしますか。
+
+
+
+```
+列挙したメトリクスを、report-interfaceがどのように料理するか？そこから何を見いだすか？
+```
+
+メトリクスを report-interface がどう料理するか、そしてそこから何を見いだすかを整理します。
+
+## report-interface の料理（処理）方法
+
+旧設計（paper-interface）の 4 段パイプライン（claim mapping → bundle builder → caveat annotator → export fragments）を ReviewCompass の文脈に拡張すると、5 つの処理になります。
+
+### 処理 A：階層集約
+
+10 カテゴリのメトリクスを 5 階層に集約：
+
+- 所見単位（finding-level）
+- レビュー単位（review-level、1 レビュー記録あたり）
+- フェーズ単位（phase-level、各機能のフェーズあたり）
+- 機能単位（feature-level、7 機能あたり）
+- プロジェクト単位（project-level、全体）
+
+それぞれの階層で重大度別件数・採否分布・evidence_type 比率を集計。
+
+### 処理 B：時系列化
+
+長期実行（数十 session）で各メトリクスの時系列推移を構築：
+
+- 規律遵守率の月次推移
+- 手戻り発生頻度の機能別推移
+- API コストの累積
+- 代役エスカレーション率の変動
+
+### 処理 C：関連付け（claim と evidence）
+
+論文の主張（claim）ごとに、それを裏付けるメトリクスを evidence として紐付け：
+
+- 「3 役レビューは過剰修正を抑える」claim → 3 方式比較メトリクスを evidence
+- 「規律と実体は時間とともに乖離する」claim → 規律遵守率の時系列を evidence
+- 「LLM 自走には限界がある」claim → 代役エスカレーション率と本人介入率を evidence
+- 「軽量機構で 100% は無理だが多層防御で実用可能」claim → 各層の検出件数を evidence
+
+### 処理 D：成熟度ラベルと注意事項の付与
+
+- pilot 段階のデータ → `preliminary`
+- 安定運用のデータ → `mature`
+- 探索的試行 → `exploratory`
+- データ取得の偏り、統計的有意性の限界、バイアスの存在を caveat として明示
+
+### 処理 E：報告形式への変換
+
+複数の出力形式に変換：
+
+- **論文用**：figure / table input、reporting fragments
+- **運用ダッシュボード用**：時系列グラフ、進捗マトリックス（§5.11 と統合）
+- **週次レポート用**：要約 fragment
+- **監査レポート用**：規律違反件数の集計、archive 退避履歴
+
+## 見いだせる発見（insight）
+
+メトリクスから引き出せる発見を、研究的価値順に整理します。
+
+### 発見 1：3 役レビュー機構の定量効果（論文化価値：高）
+
+3 方式比較メトリクスから：
+
+- 主役のみ（primary 方式）vs 3 役通過（judgment 方式）の所見数差
+- 敵対役の独立発見が主役を何%補完したか
+- 判定役が must-fix に絞った率（過剰修正抑制効果）
+
+これは「3 役レビュー機構の有効性」を **数字で示す** ことができる。dual-reviewer の中核論文ネタ。
+
+### 発見 2：モデル多様化の有効性（論文化価値：高）
+
+各役のモデル組合せ別に集計：
+
+- 主役 Opus ＋ 敵対役 Sonnet 構成 vs 逆構成の所見数
+- 同モデル使用時の所見数（実体では起きていないが仮想実験可）
+- モデルバージョン差による発見の質の違い
+
+これは「モデル多様化規律の有効性」を **比較実験的に** 示せる。
+
+### 発見 3：規律 drift の発見と抑制効果（論文化価値：高）
+
+規律遵守率の時系列推移から：
+
+- どの規律が時間とともに守られなくなるか
+- workflow 層 self-improvement 導入前後の遵守率変化
+- 規律 archive 退避の累積件数
+
+これは「規律と実体の乖離は実在する」「双方向同期機構で抑制できる」を **時系列で示す**。本セッションで議論した論文ネタ D の実証。
+
+### 発見 4：レビュー所見の中身の質（論文化価値：中〜高）
+
+evidence_type メトリクスから：
+
+- fact 比率の時系列推移（時間とともに上がるか下がるか）
+- 重大度別の fact 比率（CRITICAL ほど高くなるか）
+- 中身検査導入前後の所見の質変化
+
+これは「LLM レビューの中身の空疎を抑える機構の効果」を示せる。論文ネタ F の実証。
+
+### 発見 5：手戻りパターンの分布（論文化価値：中）
+
+N／R／D／A／I × 0〜4 の手戻り頻度から：
+
+- どのフェーズで手戻りが多いか
+- 上流まで戻る reopen の頻度
+- 深い手戻りの原因（intent 不備か、要件不備か、設計不備か）
+- 機能による手戻り傾向の違い
+
+これは spec-driven 開発の品質指標になる。
+
+### 発見 6：意図と実装の乖離パターン（論文化価値：高）
+
+conformance-evaluation の結果から：
+
+- intent と実装の食い違いパターン
+- requirements と実装の対応漏れ
+- design 文書と実装の構造差異
+- 既存コードから推定した文書と実際の文書の差分
+
+これは spec-driven 開発における「実装ドリフト」の研究材料。論文ネタ E（逆方向推定）の実証。
+
+### 発見 7：代役機構の限界と適切な代行範囲（論文化価値：中〜高）
+
+代役機構メトリクスから：
+
+- 代役の本人一致率（信頼性レベル）
+- 何を代行できて何を代行できなかったか（権限範囲の妥当性）
+- 対話ターン数の分布（複雑度別）
+
+これは「LLM が LLM の代役を務める限界」を示す研究材料。
+
+### 発見 8：コスト効率の高いレビュー方式（論文化価値：低〜中）
+
+API コストメトリクスから：
+
+- 機能・フェーズ別のコスト分布
+- リトライ率と障害発生
+- キャッシュ活用率
+- 軽微フィルタ導入による削減効果
+
+実務的価値は高いが、論文ネタとしては中程度。
+
+### 発見 9：通知応答時間と運用即時性（論文化価値：低）
+
+通知メトリクスから：
+
+- 利用者の介入タイミングの統計
+- チャネル別の応答性
+- 夜間バッチでの効果
+
+運用記録としての価値はあるが、論文化までは難しい。
+
+### 発見 10：多層防御の各層の有効性（論文化価値：高）
+
+各層の検出件数から：
+
+- 第 1 層（YAML 検査）が止めた違反
+- 補助層（代役）が代行した件数
+- 補助層（通知）が応答した件数
+- 第 3 層（利用者監査）が見つけた件数
+- 残余リスクの実体観察（どこも止められなかった件）
+
+これは「多層防御モデルの有効性」を実証する材料。論文ネタ B の実証。
+
+## 全体としての見いだし方
+
+これらの発見を統合すると、ReviewCompass の研究的貢献は次の 4 つに集約できる：
+
+### 統合 1：LLM レビュー機構の効果実証
+
+発見 1（3 役効果）＋ 発見 2（モデル多様化）＋ 発見 4（中身の質）＋ 発見 7（代役）
+
+「LLM レビューの品質を構造的に高める機構の組合せ効果」
+
+### 統合 2：規律と実体の双方向同期
+
+発見 3（drift 抑制）＋ 発見 10（多層防御）
+
+「長期運用での規律 drift の発見と抑制機構」
+
+### 統合 3：spec-driven 開発の品質指標
+
+発見 5（手戻りパターン）＋ 発見 6（意図実装乖離）
+
+「spec-driven 開発における実装ドリフトの定量化」
+
+### 統合 4：運用効率
+
+発見 8（コスト）＋ 発見 9（応答時間）
+
+「LLM ワークフローの実運用における効率指標」
+
+## report-interface の役割の更新案
+
+旧設計（paper-interface）は論文化のみを想定。ReviewCompass の report-interface は、4 つの出力先を持つべき：
+
+- 論文用（claim ＋ evidence ＋ caveat、図表入力）
+- 運用ダッシュボード用（進捗マトリックス、時系列グラフ）
+- 週次レポート用（要約 fragment）
+- 監査レポート用（規律違反集計、archive 履歴）
+
+これらを共通の「メトリクス台帳」から派生させる構造になります。
+
+## 計画書への反映余地
+
+これまで report-interface の中身は §3.1 の機能リストにあるだけで、内容は旧 paper-interface の継承として暗黙でした。本議論を踏まえて、§5.14 として「report-interface の役割と料理方法」を明示する余地があります。記載する内容：
+
+- 5 つの処理パイプライン（階層集約・時系列化・claim 紐付け・成熟度／注意事項・形式変換）
+- 10 個のメトリクスカテゴリと階層対応
+- 4 つの出力先（論文／ダッシュボード／週次／監査）
+- 10 個の主要発見と論文化価値の整理
+- 4 つの統合テーマ
+
+このまま §5.14 として計画書に反映する形で進めますか。あるいは内容の追加・削除・優先度付けを先に議論しますか。
+
+
+
+```
+加えて、どのような経緯を辿って、レビューが収束していくか、その過程が可視化できると嬉しい。report-interfaceという名前よりもanalysisという名称がよくないか
+```
+
+2 つの良い提案、両方とも妥当だと思います。順に整理します。
+
+## 提案 1：「analysis」への改名
+
+「report-interface」は最終出力（報告）に焦点が当たった名前ですが、ReviewCompass の機能の中身は次のような分析全体を含みます：
+
+- メトリクスの集約・時系列化
+- claim と evidence の対応付け
+- 成熟度ラベルの付与
+- 収束過程の可視化
+- ダッシュボード生成
+- 監査レポート出力
+- 論文用 fragment 出力
+
+これらは「報告」というより「分析」が筋。「analysis」のほうが性格を正しく表現します。
+
+ただし、注意点：**evaluation 機能との境界** を整理する必要があります。
+
+両者の役割の違い（提案）：
+
+- **evaluation**：個別 run の評価（valid/invalid 判定、3 方式比較、メトリクスの一次抽出）。1 run 単位の数値計算
+- **analysis**：横断分析、claim 構築、時系列、可視化、報告（旧 paper-interface の役割を含む）。複数 run／フェーズ／機能をまたぐ二次分析
+
+つまり：
+
+```
+runtime（ログ出力）
+   ↓
+evaluation（個別 run の評価、一次メトリクス抽出）
+   ↓
+analysis（横断分析、可視化、報告）
+```
+
+7 機能体制の更新案：
+
+1. foundation
+2. runtime
+3. evaluation
+4. **analysis**（旧 report-interface、さらに旧 paper-interface）
+5. workflow-management
+6. self-improvement
+7. conformance-evaluation
+
+## 提案 2：レビュー収束過程の可視化
+
+これは新しい視点。analysis 機能の中で重要な役割になります。
+
+### 可視化対象
+
+レビューがどう収束していくかの過程：
+
+- **所見の減少カーブ**：レビューラウンドごとの重大度別件数の推移。CRITICAL/ERROR が減り、WARN/INFO に推移する様子
+- **judgment 分布の遷移**：must-fix → should-fix → leave-as-is へのラベル分布の変化
+- **手戻り（reopen）の累積**：何回 reopen したか、どの深さの手戻りか
+- **規律遵守率の改善曲線**：時間とともに遵守率が上がる（または下がる）パターン
+- **機能間整合性の収束**：機能間の依存衝突が解消されていく様子
+- **conformance-evaluation の差分減少**：意図適合・文書適合の改善
+
+### 可視化形式の候補
+
+- **折れ線グラフ**：時系列推移（重大度別件数、判定分布）
+- **積み上げ棒グラフ**：レビューラウンドごとの所見分布
+- **バーンダウン**：所見の減少カーブ（must-fix 件数の零への漸近）
+- **Sankey 図**：所見の流れ（主役発見 → 敵対役で増減 → 判定役での採否）
+- **ヒートマップ**：機能 × フェーズ × ラウンドの所見密度
+- **ガントチャート**：手続きの進行と reopen 履歴
+
+### §5.11 現在位置可視化との関係
+
+両者は補完的、性格が違う：
+
+- **§5.11 現在位置可視化**：「いま、どこにいるか」（現在の状態）
+- **新規（収束過程可視化）**：「どう辿ってきたか、どう収束していくか」（過程）
+
+§5.11 は status コマンド（マトリックス、次ステップ推奨）でスナップショット重視。新規は時系列重視。
+
+実装上は両方とも analysis 機能の管轄になります。
+
+## 改名の影響範囲
+
+「report-interface → analysis」を確定すると、計画書の次の箇所を更新する必要：
+
+- §3.1 機能リスト
+- §4 構造案
+- §5.3 実機能の順序
+- §5.5 feature-dependency.yaml の例（features と phase_order の両方）
+- §5.9.5 ／ §5.10.3 ／ §5.10.5 など分散する参照
+- §6 統合する課題テーブル
+- §7 フェーズ完了条件
+- §8 関連文書
+
+新規節（仮称 §5.14）として analysis 機能の役割を明示する場合は、
+
+- 5 つの料理パイプライン（処理 A〜E）
+- 10 メトリクスカテゴリへの対応
+- 4 つの出力先（論文／ダッシュボード／週次／監査）
+- 収束過程の可視化
+- evaluation との境界
+- 主要な発見（insight）の整理
+
+を含めることになります。
+
+
+
+## RUNTIME
+
+```
+次は、runtimeについて、仕様と実装を確認して、内容を説明
+```
+
+ご指摘ありがとうございます。前回の説明は密度が高すぎました。整理の方向性を確認させてください。
+
+## 整理の目的によって、提示の仕方が変わります
+
+3 つの選択肢があります。
+
+### 案 A：1 枚絵の構成図で全体像を示す
+
+入力 → 4 ステップ → 出力 の流れを 1 枚で見せる。詳細は省略。
+
+```
+[入力]
+仕様文書 ＋ 設定（実行方式・モデル）
+       ↓
+[runtime の中身]
+ケース束ね → 4 ステップ実行 → 判定 → 書き出し
+       ↓
+[出力]
+experiments/runs/<run_id>/ に成果物
+```
+
+### 案 B：1 件の実行例で具体化する
+
+「foundation の requirements.md を dual 方式（主役 ＋ 敵対役）でレビュー」のような具体例を 1 件追って、入力・処理・出力を順に説明。
+
+### 案 C：ReviewCompass 再構築の観点に絞る
+
+runtime の細部は割愛し、「ReviewCompass で継承する設計」「新規追加が必要な点」だけを整理。
+
+
+
+```
+最終的に全体像と詳細を理解したい。全容を把握した上でReviewCompassに向けた仕様再構築をしたい
+```
+
+了解しました。階層化して理解できる構造を作ります。まず目次を示し、その後 user が深掘りしたい箇所から進めるアプローチを提案します。
+
+## runtime 理解のための 7 段階の階層
+
+### レベル 1：runtime とは何か（1 行）
+
+レビューを実際に動かして、結果を構造化ログに書き出す機能。
+
+### レベル 2：データの流れ（5 行）
+
+入力 → ステップ実行 → 判定 → 書き出し → 出力。
+
+### レベル 3：4 つのステップと 3 つの実行方式
+
+4 ステップ（A 主役検出 ／ B 敵対役レビュー ／ C 判定 ／ D 統合）に対し、3 方式（主役のみ ／ 主役 ＋ 敵対役 ／ 3 役すべて）で「どのステップを動かすか」が決まる。
+
+### レベル 4：出力ファイル群
+
+1 回の実行ごとに `experiments/runs/<run_id>/` 配下に 10 種類前後のファイルを出す。
+
+### レベル 5：状態管理（ライフサイクルと状態語彙）
+
+実行状態 ／ 検証状態 ／ 人間承認状態 ／ 証跡区分の 4 軸を独立に管理。
+
+### レベル 6：重要な設計判断（4 つの工夫）
+
+LLM 接続点・強制的差異化・不変性・下流の読み手の明示。
+
+### レベル 7：仕様と実装の整合性、ReviewCompass への含意
+
+整合している点、移行中の点、再構築での継承と拡張。
+
+## どの階層から始めますか
+
+階層 1 と 2 はすでに上に示しました。詳細を順に降りていく方が分かりやすいので、まず階層 3 から進めるのが自然です。
+
+ご指摘どおりです。A/B/C/D は手戻り種別（N/R/D/A/I × 0〜4）と混同します。段の名前を役名と一致させて書き直します。
+
+## 階層 3 修正版：4 つの段と 3 つの実行方式
+
+### 4 つの段（役名と一致）
+
+レビューは次の 4 段に分かれます。
+
+- **primary 段（主役検出）**
+  - 主役（LLM の 1 つ）が対象文書を読み、所見を網羅的に挙げる
+- **adversarial 段（敵対役レビュー）**
+  - 敵対役（別の LLM）が主役の出力を見て、反論したり見落としを補足する
+- **judgment 段（判定）**
+  - 判定役（さらに別の LLM）が主役と敵対役の出力を見て、各所見に「修正必須／必要に応じて／修正不要」のラベルを付ける
+- **integration 段（統合）**
+  - 各役の出力をまとめ、最終的なレビュー記録を作る
+
+### 3 つの実行方式（§5.9.6 と統一）
+
+実行方式は「どこまで通すか」の選択。方式名は最後に実行する役の名前と一致：
+
+- **primary 方式**：primary 段のみで止める（＋ integration 段は必須）
+- **adversarial 方式**：primary 段 ＋ adversarial 段まで実行（＋ integration 段）
+- **judgment 方式**：3 役すべて実行（＋ integration 段）
+
+### 実行方式と段の対応表
+
+| 実行方式         | primary 段 | adversarial 段 | judgment 段 | integration 段 |
+| ---------------- | ---------- | -------------- | ----------- | -------------- |
+| primary 方式     | 実行       | 省略           | 省略        | 実行           |
+| adversarial 方式 | 実行       | 実行           | 省略        | 実行           |
+| judgment 方式    | 実行       | 実行           | 実行        | 実行           |
+
+integration 段はどの方式でも必ず実行されます。理由：何が実行されて何が省略されたかを記録し、後で再現可能にするため。
+
+### 設計上の重要な点
+
+- **省略は意図的な記録として残す**：実行省略は「adversarial 段は方式選択で意図的に省略」と明示記録。事故的な欠落（実行したが失敗）と区別できる
+- **方式は 1 回の実行で 1 つ**：1 件の実行は 1 つの実行方式を持つ。3 方式を比較したい場合は、同じ対象に対して 3 回呼び出す（v2-acquisition-design §1.4.2 の「方式間の再利用」で「1 ケース × 3 回呼び出しで 3 方式すべてのデータを取得」と定められている）
+
+### 実装上の注意（内部識別子は残る）
+
+ファイル名や実装コード内では step_a／step_b／step_c／step_d の識別子が使われていますが、これは内部実装の話。利用者向けの説明では段名（primary／adversarial／judgment／integration）で統一します。
+
+ファイル名と段名の対応：
+
+- `steps/step_a_primary_detection.json` = primary 段の生成果物
+- `steps/step_b_adversarial_review.json` = adversarial 段の生成果物
+- `steps/step_c_judgment.json` = judgment 段の生成果物
+- `steps/step_d_integration.json` = integration 段の生成果物
+
+------
+
+ここまでが階層 3 の修正版です。
+
+ファイル名の `step_a` などの識別子もそのうち変えるべきか、それとも実装の互換性のため残すかは、ReviewCompass 再構築での判断ポイントになります。今は説明文の統一だけ整えました。
+
+階層 4（出力ファイル群）に進めますか。
+
+
+
+両方確定しました。階層 4 を新命名で書き直します。
+
+## 階層 4 修正版：出力ファイル群（ReviewCompass 命名）
+
+runtime は 1 回の実行ごとに `experiments/runs/<run_id>/` 配下にファイル群を出力します。8 つのグループに分かれます。
+
+### 全体図（新命名）
+
+```
+experiments/runs/<run_id>/
+├── run_manifest.yaml        ← グループ 1：メタデータ
+├── review_case.json         ← グループ 2：横断正本
+├── steps/                   ← グループ 3：段別の生記録
+│   ├── primary.json
+│   ├── adversarial.json
+│   ├── judgment.json
+│   └── integration.json
+├── decisions/               ← グループ 4：判断
+│   ├── decision_units.json
+│   └── human_signoff.json
+├── failures/                ← グループ 5：失敗観測
+│   └── failure_observation.json
+├── internal/                ← グループ 6：内部正本（旧 v2/）
+│   ├── review_taxonomy.json
+│   ├── metric_snapshot.json
+│   ├── trace_note.json
+│   └── signal_linkage_note.json
+├── validation/              ← グループ 7：検証結果
+│   ├── validator_result.json
+│   └── invalidation_markers.json
+└── derived/                 ← グループ 8：補助
+    ├── runtime_summary.json
+    ├── comparison_eligibility_note.json
+    └── invalid_run_triage_note.json
+```
+
+### グループ 1：メタデータ（`run_manifest.yaml`）
+
+人が読みやすい形で、実行全体の情報を持つファイル。1 つだけ。
+
+主な内容：
+
+- 実行識別子（run_id）
+- 対象識別子（target_id、target_artifact_hash）
+- 由来情報（source_repository_id、source_revision）
+- 実行設定（phase_profile、treatment、review_mode）
+- バージョン情報（protocol_version、runtime_version、prompt_set_version など）
+- 実行担当者と開始時刻
+- 状態（実行状態、検証状態、人間承認状態、証跡区分、終了時刻）
+
+性格：これ 1 ファイルで「いつ、誰が、何を、どの設定で、どこまで完了したか」が分かる。
+
+### グループ 2：横断正本（`review_case.json`）
+
+機械可読の形で、レビュー全体を 1 ファイルにまとめた正本。foundation のスキーマに準拠。
+
+役割：
+
+- 全段の流れを 1 つに集約
+- 下流（evaluation）が読む主要入口
+- 段ごとのファイル（グループ 3）とは別に、横断的に見たいときに使う
+
+### グループ 3：段別の生記録（`steps/`）
+
+各段の生の出力を 1 段 1 ファイルで保存。
+
+- `steps/primary.json`：primary 段の所見と反証候補
+- `steps/adversarial.json`：adversarial 段の独立発見と反論
+- `steps/judgment.json`：judgment 段の判定
+- `steps/integration.json`：integration 段の統合結果
+
+性格：
+
+- 再実行の最小単位（一段だけ再実行可能）
+- 不変（一度書いたら書き換え禁止）
+- 省略段も「省略マーカー」として記録（事故と区別）
+
+### グループ 4：判断（`decisions/`）
+
+人間判断に関する情報を分離保存。
+
+- `decisions/decision_units.json`：人間が承認・却下・保留できる単位
+- `decisions/human_signoff.json`：実際の人間判断の記録
+
+性格：生の証跡（グループ 3）とは別に分離。「LLM が出した所見」と「人間が決めたこと」を混同させない。
+
+### グループ 5：失敗観測（`failures/`）
+
+レビュー実行中に失敗状態が起きた場合の記録。
+
+- `failures/failure_observation.json`
+
+性格：foundation の failure_observation スキーマに準拠。失敗が起きなければファイルなし。
+
+### グループ 6：内部正本（`internal/`、旧 `v2/`）
+
+分類優先（taxonomy-first）の内部正本。
+
+- `internal/review_taxonomy.json`：分類優先の内部正本（`review_case.json` と区別）
+- `internal/metric_snapshot.json`：実行時メトリクス
+- `internal/trace_note.json`：トレース情報
+- `internal/signal_linkage_note.json`：signal 紐付け
+
+性格：
+
+- 既存ファイル（グループ 2 や 3）を置き換えず、追加で持つ
+- self_improvement が読む
+
+### グループ 7：検証結果（`validation/`）
+
+機械的検証の結果を保存。
+
+- `validation/validator_result.json`：検証スクリプトの結果
+- `validation/invalidation_markers.json`：無効化マーカー（生の証跡は書き換えず、別ファイルで無効を表す）
+
+性格：
+
+- 生の証跡を変更せず、別ファイルで検証結果を重ねる
+- 検証は実行終了前に呼ばれる
+
+### グループ 8：補助（`derived/`）
+
+下流が便利に使うための補助ファイル。evaluation の正本ではない。
+
+- `derived/runtime_summary.json`：runtime の便利な要約
+- `derived/comparison_eligibility_note.json`：標準比較に使えるかの判定
+- `derived/invalid_run_triage_note.json`：無効な実行のトリアージ情報
+
+性格：
+
+- evaluation が読むが、これだけに依存しない（生の証跡から再導出可能）
+- 「便利」のためであり、正本ではない
+
+## 8 グループの読み手（下流の機能ごと）
+
+下流の各機能がどのグループを読むかが、コード内で明示されています。
+
+| グループ     | evaluation | self-improvement | analysis |
+| ------------ | ---------- | ---------------- | -------- |
+| 1 メタデータ | ○          | ○                | ×        |
+| 2 横断正本   | ○          | ×                | ×        |
+| 3 段別生記録 | ×          | ○                | ×        |
+| 4 判断       | ○          | ○                | ×        |
+| 5 失敗観測   | ×          | ○                | ×        |
+| 6 内部正本   | ×          | ○                | ×        |
+| 7 検証結果   | ○          | ○                | ×        |
+| 8 補助       | ○（一部）  | ○（一部）        | ×        |
+
+analysis は **直接読まない**。evaluation を介して受け取る。
+
+## 出力ファイルの特徴の要約
+
+- **不変性**：生の証跡（グループ 3）は 1 度書いたら書き換え禁止
+- **責務分離**：人間判断（4）、検証結果（7）、補助（8）を生の証跡と分けて保存
+- **方式の差異の明示記録**：省略段も「意図的な省略」として記録、事故と区別
+- **下流の読み手の明示**：どの機能がどのファイルを読むかをコードで宣言
+
+------
+
+ここまでが階層 4 の修正版です。名称変更（`v2/` → `internal/`、段別ファイル名を役名に統一）は ReviewCompass の正本としてこの形で確定するのが筋。計画書 §5.15（仮、runtime 仕様の整理）に記録する余地があります。
+
+階層 5（状態管理）に進めますか。
+
+
+
+## 階層 5：状態管理（ライフサイクルと状態語彙）
+
+runtime は 4 つの状態軸を **独立に** 管理します。1 つの状態軸を別の状態軸で代用しない、という設計判断が中核です。
+
+### 全体像
+
+1 回の実行は、次の 4 軸の状態を同時に持ちます。
+
+```
+[実行ライフサイクル]    created → in_progress → closed → orchestration_failed
+[検証状態]            not_run → passed / failed / blocked
+[人間承認状態]        pending → approved / rejected / deferred
+[証跡区分]            candidate → valid / invalid / exploratory
+```
+
+それぞれが独立に動く理由：性格の違う状態を 1 つに混ぜると、ある軸の判断ミスが別の軸に波及する。たとえば「実行は終わったが、検証は失敗」「検証は通ったが、人間承認待ち」「実行も検証も完了したが、探索目的で正本にしない」など、混在する状態を表現するため。
+
+### 状態軸 1：実行ライフサイクル（run_status）
+
+レビューの実行制御そのものの状態。
+
+- `created`（作成済み）：実行を準備した段階
+- `in_progress`（進行中）：4 段を進行中
+- `closed`（終了）：全段が終わり、生の証跡が凍結された
+- `orchestration_failed`（実行制御失敗）：4 段の実行制御自体が壊れた
+
+重要：**`closed` は「妥当」を意味しません**。実行が終わったというだけ。実行が無事に終わっても、検証が失敗するかもしれないし、人間が却下するかもしれない。
+
+### 状態軸 2：検証状態（validator_status）
+
+機械的な検証スクリプトの結果。
+
+- `not_run`（未実行）
+- `passed`（通過）
+- `failed`（失敗）
+- `blocked`（遮断）
+
+特徴：
+
+- 検証は実行終了の直前に呼ばれる
+- `failed` でも実行自体は closed として記録される（実行と検証は別軸）
+- `blocked` は「検証スクリプト自体が動かなかった」状態。前提条件不足など
+
+### 状態軸 3：人間承認状態（human_signoff_status）
+
+担当者の判断。
+
+- `pending`（保留中）
+- `approved`（承認）
+- `rejected`（却下）
+- `deferred`（先送り）
+
+特徴：
+
+- LLM の所見は人間承認なしでは「採用された出力」にならない
+- `deferred` は明示的な「保留」、`pending` は単に未判断
+- 検証状態とは独立（検証通過でも人間却下はあり得る）
+
+### 状態軸 4：証跡区分（evidence_class）
+
+下流（evaluation、self-improvement、analysis）が使うときの分類。
+
+- `candidate`（候補）：まだ確定していない
+- `valid`（妥当）：標準比較に使える
+- `invalid`（無効）：下流の標準比較から除外される
+- `exploratory`（探索的）：標準比較ではなく探索目的に使う
+
+特徴：
+
+- 実行ライフサイクルとも検証状態とも独立
+- 実行が closed で検証 passed でも、探索目的なら `exploratory`
+- 検証 failed なら `invalid` になることが多いが、自動ではない（運用判断あり）
+
+### 状態の組み合わせ例
+
+4 軸の組み合わせで実体を表現：
+
+| 実行                 | 検証    | 人間承認 | 証跡区分    | 意味                                     |
+| -------------------- | ------- | -------- | ----------- | ---------------------------------------- |
+| closed               | passed  | approved | valid       | 全部通過、標準比較に使える               |
+| closed               | passed  | approved | exploratory | 全部通過したが探索目的で標準比較から外す |
+| closed               | passed  | rejected | invalid     | 検証は通ったが人間が却下、下流で除外     |
+| closed               | failed  | pending  | invalid     | 検証失敗、人間判断待ち、下流で除外       |
+| orchestration_failed | not_run | pending  | invalid     | 実行が壊れた、無効扱い                   |
+
+このように 4 軸を独立に持つことで、複雑な実体を素直に表現できる。
+
+### 終了の順序保証（重要な設計判断）
+
+「人間承認 → 検証 → 終了」の順序が強制されます（実装で fail-closed）。
+
+理由：
+
+- 人間承認の前に検証を走らせると、人間判断と機械判断の境界が曖昧になる
+- 検証の前に終了すると、検証結果が反映されない
+- → 順序を固定することで、「終了した実行は人間承認も検証も済んでいる」が保証される
+
+実装での強制：`SessionController` の `CloseBoundaryViolation` エラー。違反した呼び出しは例外で止まる。
+
+### 状態語彙の所有
+
+これらの状態語彙は **foundation の `metadata_contract.yaml` が所有** します。runtime は再定義しない、別トークンにしない、文字列を変えない。
+
+理由：
+
+- 下流（evaluation、self-improvement、analysis）が同じ語彙を解釈する必要がある
+- 各機能で語彙が違うと、機能境界で誤判定が起きる
+- 語彙の正本を 1 か所に固定することで、機能間の解釈ズレを防ぐ
+
+### 状態遷移の禁則
+
+混同しがちな点を整理：
+
+- `closed != valid`：実行終了は妥当性ではない
+- `passed != approved`：検証通過は人間承認ではない
+- `approved != valid`：人間承認は証跡区分ではない（標準比較に使うかは別判断）
+
+これら 3 つは「a なら b」と思いがちだが、実体では独立に動く。
+
+### ReviewCompass 再構築での扱い
+
+状態語彙と責務分離の設計は ReviewCompass にそのまま継承する価値があります。理由：
+
+- 4 軸の独立性は実用上有効
+- 終了順序の強制は LLM の自走を機械的に止める仕組み（§5.8 の第 1 層と整合）
+- foundation 所有の語彙設計は、機能間の解釈ズレを防ぐ基本構造
+
+加えて本セッションで議論した新規機構との接続：
+
+- **代役機構（§5.12）の判断**：`actor: human_proxy` を追加した記録形式（§5.12.5）。これは人間承認状態とは別軸として `human_signoff_status` を再利用する判断もありうる
+- **通知機構（§5.13）の応答時間**：`pending` から `approved` への遷移時間として記録
+- **規律遵守状態**（§5.9.5）：状態軸 4 軸とは別の系統。analysis 機能で集計
+
+------
+
+ここまでが階層 5 です。階層 6（重要な設計判断の 4 つの工夫）に進めますか。
+
+
+
+## 階層 6：重要な設計判断（4 つの工夫）
+
+runtime の実装には、明示的に取られた 4 つの設計判断があります。いずれも「LLM が信頼できない場面でも、機構として正しさを担保する」という発想に基づきます。
+
+### 工夫 1：LLM 接続点（差し替え可能な境界）
+
+#### 何の問題を解くか
+
+レビューの中身は LLM が生成しますが、実装は LLM の呼び出し方法に縛られたくない。
+
+- どの LLM を使うか（Claude / OpenAI / Google など）
+- どう呼ぶか（コマンドライン経由 / API 経由）
+- どんなパラメータか（モデル名・温度など）
+
+これらは将来変わる可能性が高い。runtime のコードが LLM の詳細に密結合すると、変更時に大規模な書き直しが必要。
+
+#### どう解いているか
+
+`StepExecutors` クラスが `llm_seam`（LLM 接続点）を **依存性注入** で受け取る。
+
+- 接続点は「役、段、プロンプト本体、対象、文脈」を入力にして、構造化された出力（findings の配列など）を返すインターフェース
+- 既定値は **モック**（空の構造化出力を返すダミー）
+- テスト時はモックを差し込み、決定的な検証を行う
+- 本番時は v2-acquisition 仕様で確定した実 LLM 接続を差し込む
+
+#### 効果
+
+- LLM の詳細が変わっても、接続点の差し替えだけで対応
+- テスト容易性が高い（モックで決定的にテスト）
+- 実体の `experiments/runs/` のデータが空（findings: []）だったのも、既定のモックが動いた結果
+
+#### ReviewCompass 再構築への含意
+
+§5.9.1 で確定した「Claude CLI 経路と API 経路の併存」「プロバイダー抽象層」は、この LLM 接続点の設計と論理的に同じ。継承可能。
+
+### 工夫 2：強制的差異化（forced-divergence）
+
+#### 何の問題を解くか
+
+adversarial 段（敵対役レビュー）で、敵対役が「主役の所見に反証を試みたが、何も見つからなかった」と「そもそも反証を試みていない」を、出力だけから区別できないと、後で誤解が起きる。
+
+たとえば counter_evidence（反証）が空の場合、それが「試行したが反証なし」なのか「未試行」なのか不明だと、評価機能が誤った判定をする。
+
+#### どう解いているか
+
+adversarial 段の各所見に、**敵対役判定結果（adversarial_outcome）** の付与を必須化。3 つの値のいずれかでなければエラー。
+
+- `counter_evidence_raised`：反証あり
+- `no_counter_evidence_after_challenge`：試行したが反証なし
+- `not_assessed`：未試行
+
+実装の `StepExecutors.run_step_b` が、戻り値のチェックを行い、3 値以外なら `StepExecutionError` で止める。
+
+#### 効果
+
+- 「試行したが反証なし」と「未試行」が機械的に区別できる
+- 評価機能が誤判定するリスクを構造的に防ぐ
+- 「曖昧な空」を許さない設計
+
+#### ReviewCompass 再構築への含意
+
+本セッションの §5.9.3 で確定した「evidence_type ラベル（fact / inference / mixed）」は、この強制的差異化の発想を拡張したもの。所見の根拠の性質を明示することで、空疎な所見を機械的に弾く。
+
+### 工夫 3：不変性（生の証跡の書き換え禁止）
+
+#### 何の問題を解くか
+
+生の証跡（段別ファイル）が後から書き換えられると、何が起きたかの真実が消える。たとえば：
+
+- 後の段で都合の悪い所見を主役の出力から削除する
+- 検証失敗を隠すために生の証跡を編集する
+
+これらは「実体と記録の乖離」を生む。
+
+#### どう解いているか
+
+`EvidenceWriter.write_raw_step` は同じ段に対して **1 度しか書けない**。2 度目の書き込みは `RawImmutabilityError` で拒否。
+
+- 生の証跡は最初の 1 度で固定される
+- 検証結果や無効化マーカーは、生の証跡を **書き換えず**、別ファイル（`validation/` 配下）として **重ねる**
+- 人間判断も `decisions/` に分離保存
+
+#### 効果
+
+- 「何が起きたか」が保全される
+- 検証や判断の追加で生の証跡が汚されない
+- 監査可能性が確保される
+
+#### ReviewCompass 再構築への含意
+
+§5.7（session 跨ぎ管理）の「途中状態 in-progress ファイル」も、過去ファイルを書き換えず別ファイルとして記録する形を取っている。同じ発想。
+
+### 工夫 4：下流の読み手の明示
+
+#### 何の問題を解くか
+
+runtime が出力する 8 グループのファイルを、下流の機能（evaluation / self-improvement / analysis）がどう読むかが暗黙だと、
+
+- どのファイルが誰に必要か分からない
+- 不要なファイルを「とりあえず作る」ようになる
+- ファイル削除や形式変更の影響が読めない
+
+#### どう解いているか
+
+`EvidenceWriter.downstream_artifact_trace` というメソッドで、コード内に **読み手のマップを明示**：
+
+- evaluation が読むファイル一覧
+- self-improvement が読むファイル一覧
+- analysis（旧 paper-interface）が読むファイル一覧
+
+特に analysis については「runtime から直接 raw step file を読まず原則 evaluation 出力経由」とコメントで明記。
+
+#### 効果
+
+- ファイル作成の責任が明確になる
+- 削除や変更時の影響範囲が機械的に把握できる
+- 「念のため作るファイル」が減る
+- 機能間の境界が文書化される
+
+#### ReviewCompass 再構築への含意
+
+§5.14 で整理した evaluation と analysis の境界（個別 run の一次抽出 vs 横断二次分析）は、この明示の発想と整合。runtime → evaluation → analysis のデータ流れと、それぞれが読むファイルがコードレベルで宣言される。
+
+## 4 つの工夫の共通する発想
+
+これら 4 つは個別の工夫ですが、共通の発想に基づいています。
+
+**「LLM の判断や人間の善意に依存せず、機構として正しさを担保する」**
+
+- 工夫 1：LLM の中身を変えても機構が壊れない
+- 工夫 2：曖昧な空を機械的に弾く
+- 工夫 3：書き換えを構造的に禁止
+- 工夫 4：機能間の境界をコードで宣言
+
+これは §5.8 で確定した多層防御の中核思想（「LLM-in-loop の根本限界」を機構で補う）と完全に一致します。runtime は **多層防御の第 1 層を実装した実例** と見ることができます。
+
+### ReviewCompass 再構築での新規追加
+
+本セッションで議論した新規機構（§5.9 〜 §5.13）は、この「機構として正しさを担保する」発想を以下のように拡張します：
+
+- **evidence_type ラベル**（§5.9.3）：所見の根拠の性質を強制的に分類（工夫 2 の拡張）
+- **3 役のモデル多様化規律**（§5.9.1）：同モデル使用を機械検査で禁止（新規）
+- **代役機構の権限範囲**（§5.12）：本人必須カテゴリを設定で固定（新規）
+- **通知機構の severity_routing**（§5.13）：通知タイミングと重要度別ルーティングを設定で固定（新規）
+
+これらすべて「人間や LLM の善意ではなく、設定とコードで正しさを担保する」発想。
+
+------
+
+ここまでが階層 6 です。階層 7（仕様と実装の整合性、ReviewCompass への含意）に進めますか。
+
+
+
+## 階層 7：仕様と実装の整合性、ReviewCompass への含意
+
+### 7.1 仕様と実装の整合状況
+
+#### 整合している点
+
+主要な設計判断は、仕様と実装が一致しています。
+
+- **4 段構造**：仕様の primary／adversarial／judgment／integration の 4 段が、実装の `StepExecutors` で同じ構造
+- **3 つの実行方式**：`treatment_matrix.rb` に「方式 × 段」の対応表が定数として固定され、design.md の表と一致
+- **状態語彙の責務分離**：4 軸（実行ライフサイクル／検証／人間承認／証跡区分）が `SessionController` の定数として独立に管理
+- **終了の順序保証**：「人間承認 → 検証 → 終了」の順序強制が `CloseBoundaryViolation` エラーで実装
+- **出力配置**：仕様の 8 グループ構造（run_manifest、review_case、steps/、decisions/、failures/、internal/[旧 v2/]、validation/、derived/）が `run_layout.rb` で固定
+- **不変性**：生の証跡（steps/）の書き換え禁止が `EvidenceWriter.write_raw_step` で `RawImmutabilityError` として実装
+- **強制的差異化**：adversarial 段の 3 値必須化が `StepExecutors.run_step_b` で機械検査
+- **LLM 接続点**：依存性注入による差し替え可能設計が `MockSeam` の既定値とともに実装
+- **下流の読み手の明示**：`EvidenceWriter.downstream_artifact_trace` でファイルと読み手の対応が宣言
+
+#### 移行中・未整備の点
+
+- **実 LLM 呼び出しが動いていない**：既定の `MockSeam` が空出力を返す状態
+  - 理由：v2-acquisition 仕様で実 LLM 接続の設計が再構築中
+  - 実体の `experiments/runs/` のデータは pilot 段階の空出力
+- **実体データの収集が中断**：log-7 で確定したヒューリスティック撤廃方針により、旧データは `_archived-analysis-2026-05-13/` に退避済み、新方式での取り直しが進行中
+- **ファイル名に旧表記が残る**：実装では `step_a_primary_detection.json` などの長い名前が使われており、ReviewCompass で新命名（`primary.json` 等）に切り替える必要
+
+#### 仕様と実装の乖離が小さい理由
+
+runtime は dual-reviewer-rebuild の中で最もスクラッチ再実装が進んだ機能です：
+
+- v2 設計（taxonomy-first 内部正本の追加）が後付けされた
+- v2 取得方式（ヒューリスティック撤廃）に伴うコード破棄と再実装が行われた
+- コード内コメントに「旧 v1 は破棄、スクラッチ再実装」と明記されている箇所が多数
+
+結果として、設計と実装の乖離は他機能より小さい状態にある（評価機能や論文インターフェース機能と比べて）。
+
+### 7.2 ReviewCompass 再構築への含意
+
+#### 継承すべき設計（変更なし）
+
+そのまま ReviewCompass に持ち込む価値が高い設計：
+
+- **4 段構造**：primary／adversarial／judgment／integration
+- **3 つの実行方式**：primary／adversarial／judgment（方式名を §5.9.6 と統一）
+- **状態 4 軸の独立管理**：実行ライフサイクル／検証／人間承認／証跡区分
+- **終了の順序強制**：人間承認 → 検証 → 終了
+- **8 グループのファイル配置**：run_manifest / review_case / steps / decisions / failures / internal / validation / derived
+- **4 つの工夫**：LLM 接続点・強制的差異化・不変性・下流の読み手の明示
+
+#### 改名で確定した点（仕様レベルで反映）
+
+本セッションで合意済み：
+
+- 機能名：paper-interface → analysis（§5.14）
+- 機能名：implementation-governance → workflow-management
+- ディレクトリ名：v2/ → internal/
+- 内部正本ファイル名：review_artifact.json → review_taxonomy.json
+- 段別ファイル名：step_a_primary_detection.json → primary.json（adversarial.json、judgment.json、integration.json も同様）
+
+#### 拡張すべき点（本セッションで議論した内容）
+
+runtime のログ出力に、新規機構の情報を組み込む必要があります：
+
+##### 拡張 1：レビュー記録の front-matter
+
+各レビュー記録の冒頭メタデータ（§5.9.3）として：
+
+- target_commit、target_content_hash
+- 3 役のモデル情報（provider、model、temperature、attempts、total_tokens、cost_usd、duration_seconds）
+- findings_by_method（§5.9.6 の 3 方式比較集計）
+- 所見ごとの evidence_type と verifying_commands
+
+##### 拡張 2：API 障害ログ
+
+§5.9.7 で確定した障害対応：
+
+- リトライ履歴（attempts、retry_intervals）
+- レート制限ヒット数
+- タイムアウト発生履歴
+- 失敗時の in-progress 記録
+
+##### 拡張 3：代役対話履歴
+
+§5.12 で確定した人間代役機構：
+
+- 新規ディレクトリ `proxy-conversations/<日付>-<id>.md` への対話履歴保存
+- 代役判断の actor: human_proxy、turns、confidence、決定内容の記録
+
+##### 拡張 4：通知履歴
+
+§5.13 で確定した通知機構：
+
+- 新規ディレクトリ `notifications/<日付>.yaml` への送信履歴保存
+- チャネル別の応答時間追跡
+
+##### 拡張 5：conformance-evaluation ログ
+
+§5.10 で確定した文書生成 ＋ 照合チェック機能：
+
+- 推定された上流文書（intent / requirements / design / tasks の推定版）
+- 既存文書との差分集計
+- 4 評価軸 × 3 観点 = 12 観点の検査結果
+
+#### 削除・縮減すべき点
+
+ヒューリスティック撤廃方針（log-7 で確定）に沿って削除すべき部分：
+
+- 旧 v1 の `heuristic_profile_ref` 参照（要件 10 で削除済み、コードからも除去済み）
+- 旧 seed_patterns.yaml 依存（実体撤廃済み、archive に退避済み）
+- 23 パターンチェックリスト規律ファイル（§5.9.4 で archive 退避決定済み）
+
+### 7.3 ReviewCompass での runtime 仕様の整理（提案）
+
+本階層 1 〜 7 で整理した内容を、計画書に `§5.15 runtime 仕様の整理` として新設する提案。
+
+含めるべき内容：
+
+- 階層 1 〜 7 の要点をまとめた仕様骨子
+- 命名の確定事項（v2/ → internal/、段別ファイル名、機能名の改名対応）
+- ReviewCompass での拡張点（5 つの拡張）
+- 仕様と実装の乖離点の明示
+
+これは「runtime をフェーズ 1 抽出作業でどう移行するか」の手引きになります。
+
+### 7.4 仕様抽出時のチェックリスト
+
+フェーズ 1 で runtime 仕様を抽出するときに、次の整合性を確認すべき：
+
+- 4 段構造（primary／adversarial／judgment／integration）が役名と一致しているか
+- 3 つの実行方式の方式名が §5.9.6 と統一されているか
+- 状態 4 軸の語彙が foundation 由来として再定義されていないか
+- 8 グループのファイル配置が新命名（internal/、primary.json 等）で記載されているか
+- 4 つの工夫（LLM 接続点、強制的差異化、不変性、下流の読み手）が新仕様にも継承されているか
+- 拡張 1 〜 5（本セッション議論分）が漏れていないか
+- ヒューリスティック撤廃方針が反映されているか
+
+## 階層 1 〜 7 の総括
+
+runtime は ReviewCompass の中で **最も完成度の高い機能** です。理由：
+
+- 設計と実装の整合性が高い
+- 4 つの工夫が機構として実装されている
+- スクラッチ再実装が進み、旧設計の残骸が少ない
+
+しかし、本セッションで議論した新規機構（evidence_type、3 方式比較、API 障害対応、代役、通知、conformance-evaluation）に対応するため、ログ出力の拡張が必要です。これらは仕様レベルで明文化し、フェーズ 4 第 1 サイクル（3 役完成）と第 2 サイクル（API 対応）の中で順次組み込まれます。
+
+------
+
+ここまでが階層 1 〜 7 の完結です。次の選択肢：
+
+- 計画書に §5.15 runtime 仕様の整理を新設して、本階層 1 〜 7 の内容を集約
+- foundation や self-improvement など他機能の同様の階層化分析
+- 整合性チェック → コミット
+- セッション終了
+
+どう進めますか。
+
+
+
+
+
+ご指摘の点を整理します。現状の front-matter では、モデル特定情報が不十分な可能性があります。
+
+## 現状のモデル識別情報（§5.9.3 で確定）
+
+各役（primary / adversarial / judgment）に対して：
+
+- provider（claude-cli / anthropic-api 等）
+- model（claude-opus-4-7 等）
+- temperature
+- attempts、total_tokens、cost_usd、duration_seconds
+
+## 不足している可能性のある情報
+
+「同じ実行を後で再現したい」「どのモデルが何を答えたか正確に特定したい」と思ったときに必要な情報が抜けています。
+
+### 不足 1：モデルの完全版識別子
+
+`claude-opus-4-7` という名前は **エイリアス（別名）** の可能性。実際のモデルは内部で更新されることがあり、同じエイリアスでも別実装になる場合があります。
+
+- 完全版識別子（例：`claude-opus-4-7-20260201` のような日付スタンプ付き）
+- モデル指紋（Anthropic API のレスポンスに含まれる `system_fingerprint` など）
+
+### 不足 2：呼び出し方の特定
+
+- プロバイダーの接続先（API なら URL、CLI ならコマンドパス）
+- プロバイダー SDK／CLI のバージョン
+
+CLI を使った場合と API を使った場合で、同じモデル名でも振る舞いが微妙に違うことがある。
+
+### 不足 3：呼び出しごとの一意識別子
+
+API レスポンスには `x-request-id`／`response.id` などの一意識別子が含まれます。これを記録すれば、後でプロバイダー側のログと照合可能。
+
+- request_id：呼び出しごとの追跡識別子
+- response_id：レスポンスの一意識別子
+
+### 不足 4：プロンプトの版とハッシュ
+
+プロンプト本体が変わると、同じモデルでも結果が変わります。
+
+- prompt_artifact_path（既に部分的に対応：prompt_identity フィールド）
+- prompt_artifact_hash（コンテンツのハッシュ値）
+
+これは既存の `prompt_set_version` に加えて、個別プロンプトのハッシュも持つ案。
+
+## 提案する front-matter 拡張
+
+```yaml
+primary:
+  # 既存
+  provider: anthropic-api
+  model: claude-opus-4-7
+  temperature: 0
+  attempts: 1
+  total_tokens: 12450
+  cost_usd: 0.15
+  duration_seconds: 42
+
+  # 追加（モデル特定）
+  provider_endpoint: https://api.anthropic.com/v1/messages
+  provider_sdk_version: anthropic-sdk-python==0.65.0
+  model_full_id: claude-opus-4-7-20260201
+  model_fingerprint: fp_abc123          # API レスポンスから取得
+  request_id: req_01ABCxyz              # 呼び出し追跡用
+  response_id: msg_01ABCxyz             # レスポンス追跡用
+
+  # 追加（プロンプト特定）
+  prompt_artifact_path: runtime/prompts/primary_detection/primary_reviewer.prompt.md
+  prompt_artifact_hash: sha256:abc...    # プロンプト本体のハッシュ
+```
+
+## CLI 経路と API 経路の差
+
+経路ごとに取れる情報が違うため、フィールドの **必須／任意** を分ける：
+
+| フィールド           | Claude CLI                    | Anthropic API            | OpenAI API  | 必須／任意               |
+| -------------------- | ----------------------------- | ------------------------ | ----------- | ------------------------ |
+| provider             | 必須                          | 必須                     | 必須        | 必須                     |
+| model                | 必須                          | 必須                     | 必須        | 必須                     |
+| temperature          | 必須                          | 必須                     | 必須        | 必須                     |
+| provider_endpoint    | コマンドパス                  | URL                      | URL         | 必須                     |
+| provider_sdk_version | CLI version                   | SDK version              | SDK version | 必須                     |
+| model_full_id        | 取得可（claude --version 等） | 取得可（response.model） | 取得可      | 必須                     |
+| model_fingerprint    | 取得不可                      | 取得可                   | 取得可      | 任意（取得可能なら必須） |
+| request_id           | 取得不可                      | 取得可                   | 取得可      | 任意（同上）             |
+| response_id          | 取得不可                      | 取得可                   | 取得可      | 任意（同上）             |
+| prompt_artifact_path | 必須                          | 必須                     | 必須        | 必須                     |
+| prompt_artifact_hash | 必須                          | 必須                     | 必須        | 必須                     |
+
+機械検査の規則：API 経路では fingerprint と request_id を必須化、CLI 経路では取得不可なので任意。
+
+## 効果
+
+これらを記録すれば：
+
+- 後で同じレビューを再現できる（プロバイダー側のログと照合可能）
+- モデルの内部更新による結果の変化を追跡できる
+- プロンプト変更の影響を機械的に検出できる
+- 障害発生時にプロバイダーに問い合わせるための識別子が揃う
+
+## 計画書への反映方針
+
+§5.9.3 の所見メタデータと機械検査の節に、モデル特定情報の追加項目を反映する。
+
+## 確認したい点
+
+モデル特定情報をどこまで追加しますか
+
+```
+最低限の追加
+```
+
+
+
+```
+self-improvement の仕様は従来のものをそのまま入れるのではなく、今セッションでworkflow改善に適したものを考える。
+```
+
+ご指摘どおりです。従来 8 要件をそのまま流用するのは、workflow 改善の性格に合いません。再設計します。
+
+## workflow 改善に特化した仕様の構成案
+
+workflow 改善は「規律と実体の双方向同期」という独特の性格を持ちます。従来の 8 要件は主に runtime 改善（prompt / schema 改修など）を想定していたため、そのままでは合わない部分があります。workflow 改善に必要な要素をゼロから設計します。
+
+### 構成 1：入力（何を見て改善するか）
+
+workflow 改善の入力源は規律と実体の乖離：
+
+- レビュー記録の規律違反検出結果
+- 規律遵守検査の結果（evidence_check_method の実行結果）
+- フェーズ境目の利用者監査での指摘
+- 実体運用で新たに観察された運用パターン（モデル多様化・ファイル遮断など、本セッションで発見したような）
+- 規律違反の累積データ（時系列）
+
+従来 R1 と性格が違う：「runtime の入力」ではなく「規律と実体の乖離の観察」。
+
+### 構成 2：提案単位（何を改善するか）
+
+workflow 改善の対象は規律と運用ルール。提案種別は次の 5 つ：
+
+- **新規規律の起案**：実体パターンから規律への昇格（例：モデル多様化を `discipline_model_diversification.md` として新設）
+- **既存規律の更新**：実体と乖離した部分の修正（例：「箇所/現状/問題/修正後」→「severity/target_location/description/rationale」）
+- **規律のステータス変更**：enforced ↔ aspirational の切り替え
+- **規律の archive 退避**：撤廃（例：23 パターンの archive 退避）
+- **規律間の統廃合**：縮減義務（新規規律追加と既存規律削減のセット）
+
+### 構成 3：提案の構造
+
+workflow 改善に特化した提案フォーマット：
+
+```yaml
+proposal_id: WP-001
+proposal_type: new_discipline       # new_discipline / update / status_change / archive / consolidation
+target_discipline_path: docs/disciplines/discipline_model_diversification.md
+motivating_evidence:
+  - source: review_record           # review_record / compliance_report / user_audit
+    location: foundation/.../review-2026-05-13.md
+    observation: 「主役 Sonnet・敵対役 Opus・判定役 Opus」が複数レビューで一貫して使われている
+  - source: compliance_report
+    location: docs/discipline-compliance-reports/2026-05-20.yaml
+    observation: 文書化されていない運用パターンが定常化
+proposed_change: |
+  以下の新規規律を作成：
+  - 異なるモデルファミリーまたは異なるバージョンを 3 役に割り当てる
+  - 同モデル使用は禁止
+  - 機械検査で確認
+expected_effect:
+  - 3 役の独立性が機構として担保される
+  - レビュー品質の向上
+statistical_evidence:
+  observed_runs: 17
+  consistent_pattern_ratio: 100%
+status: pending                     # pending / approved / rejected / superseded
+```
+
+### 構成 4：検証（採用前にどう試すか）
+
+workflow 改善は replay/backtest（runtime 改善向け）が使いにくい。代わりに 3 つの検証方法：
+
+- **過去データへの遡及シミュレーション**：過去レビュー記録に新規律を当てて違反検出率を見る
+- **パイロット運用**：新規律を `status: aspirational` で一定期間運用、遵守率を観察してから `enforced` 昇格
+- **影響範囲の事前分析**：既存規律との衝突、撤廃予定規律との関係を機械検査
+
+これらは「規律案を試す」性格で、runtime の replay/backtest とは別物。
+
+### 構成 5：承認
+
+フェーズ境目の利用者監査でまとめて判断。重要な点：
+
+- 規律の正式化（aspirational → enforced）は明示承認必須
+- 規律の archive 退避は撤廃 README を必須化（撤廃理由の記録）
+- 規律間の統廃合は対応表を必須化（何と何が統合されたか）
+
+### 構成 6：履歴
+
+workflow 改善の履歴保管：
+
+- `learning/workflow/proposals/<日付>-<id>.yaml`：提案
+- `learning/workflow/approved-updates/<日付>-<id>.yaml`：承認済み
+- `learning/workflow/rejected-updates/<日付>-<id>.yaml`：却下済み
+- `docs/discipline-compliance-reports/<日付>.yaml`：遵守検査の時系列
+- `docs/archive/disciplines/<日付>/README.md`：撤廃の経緯
+
+### 構成 7：ロールバック
+
+workflow 改善のロールバックは規律レベルで起きる：
+
+- archive から復活：撤廃された規律を `docs/disciplines/` に戻す
+- ステータス変更を戻す：enforced → aspirational に格下げ
+- 規律の更新を取り消す：過去版に戻す（git の履歴を活用）
+
+ロールバック理由を `learning/workflow/rollback/<日付>-<id>.yaml` に保存。
+
+### 構成 8：効果測定
+
+§5.9.5 で確定済みの 3 指標：
+
+- 規律遵守率
+- 昇格件数（aspirational → enforced）
+- 退避件数（規律 → archive）
+
+これに加えて：
+
+- 提案件数（種別ごと）
+- 採用率（採用 / 提案合計）
+- ロールバック率（ロールバック / 採用）
+- 提案から採用までの平均日数
+
+### スコープ外（明示）
+
+- 他 4 層改善（prompt / policy / schema / runtime）：別計画書
+- replay/backtest の従来定義：workflow 改善では使わない
+- 外部 bundle 取り込み（旧 R8）：フェーズ 4 完了後
+- 論文化との分離（旧 R6）：継承するが個別の規律ファイルとしては立てない
+
+
+
+§5.16 を全面書き直します。
+
+エディットを小分けにして再試行します。
+
+残りを書き直します。
+
+§5.16 を全面書き直しました。
+
+## 反映内容（新 §5.16）
+
+12 サブ節で workflow 改善に特化した仕様を再設計：
+
+- **§5.16.1**：役割と性格（規律と実体の双方向同期）
+- **§5.16.2**：入力（規律遵守検査結果、実体観察パターン、利用者監査）
+- **§5.16.3**：提案単位（新規規律／更新／ステータス変更／archive 退避／統廃合の 5 種）
+- **§5.16.4**：提案の構造（YAML 例、proposal_id ～ status）
+- **§5.16.5**：検証（過去遡及シミュレーション／パイロット運用／影響範囲分析）
+- **§5.16.6**：承認（フェーズ境目の利用者監査）
+- **§5.16.7**：履歴とロールバック（learning/workflow/ 配下 4 サブディレクトリ）
+- **§5.16.8**：効果測定（既存 3 指標 ＋ 運用 4 指標 ＝ 7 指標）
+- **§5.16.9**：スコープと旧 8 要件との関係
+- **§5.16.10**：命名と配置
+- **§5.16.11**：旧実装モジュールとの関係（継承 4 件、新規 4 件）
+- **§5.16.12**：段階的導入
+
+## 確認
+
+整合性チェック・コミット・他の作業のどれを進めますか。
+
+
+
+
+
+
+
+Memory, md
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## メモリ、規律、運用md

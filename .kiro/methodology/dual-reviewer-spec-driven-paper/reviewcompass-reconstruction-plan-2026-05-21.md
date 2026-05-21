@@ -67,7 +67,7 @@ ReviewCompass は 7 機能体制で構築する：
 1. foundation
 2. runtime
 3. evaluation
-4. report-interface（旧 paper-interface）
+4. analysis（旧 paper-interface）
 5. workflow-management（旧 implementation-governance）
 6. self-improvement（workflow 層のみ第 1 期、他 4 層スコープ外）
 7. **conformance-evaluation**（新規、§5.10 で確定）：v3-plan.md の future feature を第 1 期から導入。実装コードから上流文書を推定生成し、既存上流文書との照合を行う逆方向機能
@@ -94,7 +94,7 @@ self-improvement の扱い：仕様 Requirement 2 で 5 層（prompt ／ policy 
 - ツール側に残すものとアプリ側に置くものを明示的に分ける
 - implementation-governance は **workflow-management** という名称に統一する（本セッションで「ワークフロー管理」に改名）
 - workflow-management の抽出時は §5.4 の軽量化方針に従い、現仕様の Requirement 9（実行台帳・節ハッシュ・独立再導出パーサ・supersedes・grandfathering）の大部分を削り、思想だけを継承する
-- paper-interface は **report-interface** に変更
+- paper-interface は **analysis** に変更
 
 ### 3.2 正本文書（複数の場所に分散）
 
@@ -144,7 +144,7 @@ self-improvement の扱い：仕様 Requirement 2 で 5 層（prompt ／ policy 
 
 ## 4. ReviewCompass リポジトリの初期構造案
 
-対象 7 機能：`foundation` / `runtime` / `evaluation` / `report-interface` / `workflow-management` / `self-improvement`（workflow 層のみ） / `conformance-evaluation`（新規、§5.10）。旧 `paper-interface` を `report-interface` に、旧 `implementation-governance` を `workflow-management` に改名済み。
+対象 7 機能：`foundation` / `runtime` / `evaluation` / `analysis` / `workflow-management` / `self-improvement`（workflow 層のみ） / `conformance-evaluation`（新規、§5.10）。旧 `paper-interface` を `analysis` に、旧 `implementation-governance` を `workflow-management` に改名済み。
 
 ```
 ReviewCompass/
@@ -339,22 +339,22 @@ intent 層の設計補足：
       depends_on: [foundation]
     evaluation:
       depends_on: [foundation, runtime]
-    report-interface:
+    analysis:
       depends_on: [foundation, evaluation]
     workflow-management:
-      depends_on: [foundation, runtime, evaluation, report-interface]
+      depends_on: [foundation, runtime, evaluation, analysis]
     conformance-evaluation:
       depends_on:
         foundation: hard
         runtime: review
         evaluation: review
-        report-interface: review
+        analysis: review
         workflow-management: review
   phase_order:
     - foundation
     - runtime
     - evaluation
-    - report-interface
+    - analysis
     - workflow-management
     - conformance-evaluation
   ```
@@ -689,19 +689,28 @@ date: 2026-05-13
 primary:
   provider: claude-cli
   model: claude-opus-4-7
+  model_full_id: claude-opus-4-7-20260201   # 完全版識別子（日付付き）
   temperature: 0
   attempts: 1
   total_tokens: 12450
   cost_usd: 0.15
   duration_seconds: 42
+  prompt_artifact_path: runtime/prompts/primary/primary_reviewer.prompt.md
+  prompt_artifact_hash: sha256:abc123       # プロンプト本体のハッシュ
 adversarial:
   provider: claude-cli
   model: claude-sonnet-4-6
+  model_full_id: claude-sonnet-4-6-20260115
   temperature: 0
+  prompt_artifact_path: runtime/prompts/adversarial/adversarial_reviewer.prompt.md
+  prompt_artifact_hash: sha256:def456
 judgment:
   provider: claude-cli
   model: claude-opus-4-7
+  model_full_id: claude-opus-4-7-20260201
   temperature: 0
+  prompt_artifact_path: runtime/prompts/judgment/judgment_reviewer.prompt.md
+  prompt_artifact_hash: sha256:abc123
 findings_by_method:
   primary:
     by_severity: { CRITICAL: 2, ERROR: 6, WARN: 3, INFO: 0 }
@@ -718,9 +727,25 @@ findings_by_method:
 
 3 層の機械検査：
 
-- **第 1 層：front-matter 構造検査**：必須フィールド存在、3 役モデル多様化、集計整合
+- **第 1 層：front-matter 構造検査**：必須フィールド存在、3 役モデル多様化、集計整合、モデル特定情報の必須化（model_full_id・prompt_artifact_hash）
 - **第 2 層：必須節存在検査**：レビュー種別ごとの schema を `schemas/review-criteria/<種別>.yaml` に保管
 - **第 3 層：軽量中身検査**：説明 30 文字以上、根拠 100 文字以上、判断根拠 50 文字以上、対象箇所の具体性（ファイル名＋節番号／行番号／AC 番号）、コピペ防止、「該当なし」明示、evidence_type 検査（後述）
+
+#### モデル特定情報（再現性確保）
+
+レビューの再現性を担保するため、各役のメタデータに次の 2 項目を最低限必須化する：
+
+- **model_full_id**：完全版識別子（日付スタンプ付き）。エイリアス（`claude-opus-4-7`）と実体（`claude-opus-4-7-20260201`）を区別。モデル更新による振る舞いの変化を追跡可能にする
+- **prompt_artifact_hash**：プロンプト本体のコンテンツハッシュ（sha256）。同じプロンプトパスでも内容が変わると結果が変わるため、ハッシュで内容固定を保証
+
+将来的に追加検討の項目（フェーズ 4 進行中に運用データを見て判断）：
+
+- provider_endpoint（API URL ／ CLI コマンドパス）
+- provider_sdk_version（SDK ／ CLI バージョン）
+- model_fingerprint（API レスポンスから取得可能）
+- request_id ／ response_id（API 呼び出しの一意識別子）
+
+これらは API 経路で取得可能だが、CLI 経路では取得不可なものもあるため、必須化はフェーズ 4 進行中に判断。
 
 #### evidence_type ラベルと verifying_commands
 
@@ -802,6 +827,8 @@ YAML キーは英語、本文の見出しは日本語可。
 - **遵守検査結果の時系列保管**：`docs/discipline-compliance-reports/<日付>.yaml`
 - **効果測定の 3 指標**：規律遵守率／昇格件数／退避件数。phase-review-metric-register.md に追加
 - **縮減義務**：利用者意識依存、規律ファイルに統廃合元を記録
+
+本節は workflow 層 self-improvement の組み込み概要。完全な仕様（入力・提案単位・提案構造・検証・承認・履歴ロールバック・効果測定 7 指標・命名と配置・旧実装モジュールとの関係・段階的導入）は **§5.16 で全面書き直したものを正本** とする。
 
 #### 5.9.6 3 方式比較データの取得（v2-acquisition-design.md §1.4.2 の実装）
 
@@ -1019,22 +1046,22 @@ features:
     depends_on: [foundation]
   evaluation:
     depends_on: [foundation, runtime]
-  report-interface:
+  analysis:
     depends_on: [foundation, evaluation]
   workflow-management:
-    depends_on: [foundation, runtime, evaluation, report-interface]
+    depends_on: [foundation, runtime, evaluation, analysis]
   conformance-evaluation:
     depends_on:
       foundation: hard
       runtime: review
       evaluation: review
-      report-interface: review
+      analysis: review
       workflow-management: review
 phase_order:
   - foundation
   - runtime
   - evaluation
-  - report-interface
+  - analysis
   - workflow-management
   - conformance-evaluation
 ```
@@ -1138,7 +1165,7 @@ Mermaid 形式の例：
 graph TD
     F[foundation 全完了]:::done --> R[runtime design 進行中]:::wip
     F --> E[evaluation requirements 完了]:::partial
-    F --> RI[report-interface requirements 完了]:::partial
+    F --> RI[analysis requirements 完了]:::partial
     F --> WM[workflow-mgmt requirements 完了]:::partial
     R --> SI[self-improvement requirements 完了]:::partial
     E --> SI
@@ -1466,6 +1493,483 @@ review:
 - **フェーズ 4 第 3 サイクル**：複数チャネル対応の拡張（Zulip、Slack、Webhook、Discord、Telegram）、fatal_error と timeout_warning への対応、severity_routing の本格実装、通知履歴の集計
 - **フェーズ 4 完了後**：通知履歴の自動分析・dashboard 化はスコープ外
 
+### 5.14 analysis 機能の役割と料理方法（2026-05-21 確定）
+
+analysis（旧 paper-interface、旧 report-interface）は、evaluation が一次抽出した個別 run のメトリクスを横断的に料理し、claim・可視化・報告に変換する機能。本セッションで議論した内容を踏まえ、論文化に限らず運用ダッシュボード・週次レポート・監査レポート・収束過程の可視化まで含めて担当する。
+
+#### 5.14.1 evaluation との境界
+
+役割を明示的に分離する：
+
+- **evaluation**：個別 run の評価。1 run 単位で valid/invalid 判定、3 方式比較、メトリクスの一次抽出
+- **analysis**：複数 run／フェーズ／機能をまたぐ二次分析、可視化、報告
+
+データの流れ：
+
+```
+runtime（実行時ログ出力）
+   ↓ raw evidence（experiments/runs/run-<id>/）
+evaluation（個別 run 評価、一次メトリクス抽出）
+   ↓ derived metrics（experiments/analysis/）
+analysis（横断分析、可視化、報告）
+   ↓ 出力 4 種
+論文／ダッシュボード／週次／監査
+```
+
+#### 5.14.2 5 つの料理パイプライン
+
+- **処理 A：階層集約**
+  - 所見単位（finding-level）
+  - レビュー単位（review-level）
+  - フェーズ単位（phase-level）
+  - 機能単位（feature-level）
+  - プロジェクト単位（project-level）
+- **処理 B：時系列化**
+  - 各メトリクスの長期推移
+  - 月次・週次・session 単位の集計
+- **処理 C：claim と evidence の対応付け**
+  - 論文の主張（claim）に裏付けメトリクスを紐付け
+  - claim_map.json と evidence_register.json の構築（旧 paper-interface から継承）
+- **処理 D：成熟度ラベルと注意事項の付与**
+  - pilot 段階：preliminary、安定運用：mature、探索的：exploratory
+  - データ取得偏り、統計的有意性の限界、バイアスを caveat として明示
+- **処理 E：報告形式への変換**
+  - 4 つの出力先に変換（後述）
+
+#### 5.14.3 10 メトリクスカテゴリへの対応
+
+§5.9〜§5.13 で確定したメトリクスを、analysis が次の 10 カテゴリで集約・分析する：
+
+- カテゴリ 1：レビュー所見の基本集計（重大度別件数、judgment 分布、手戻り種別、役別所見数）
+- カテゴリ 2：3 方式比較メトリクス（findings_by_method）
+- カテゴリ 3：evidence_type メトリクス（fact 比率、inference 比率、コマンド併記率）
+- カテゴリ 4：workflow 層 self-improvement 効果測定 3 指標（規律遵守率／昇格件数／退避件数）
+- カテゴリ 5：conformance-evaluation メトリクス（12 criteria の検査結果）
+- カテゴリ 6：API 呼び出しメトリクス（attempts／tokens／cost／duration／失敗系）
+- カテゴリ 7：代役機構メトリクス（判断件数／エスカレーション率／一致率）
+- カテゴリ 8：通知機構メトリクス（通知回数／応答時間）
+- カテゴリ 9：既存からの継承（phase-review-metric-register.md の旧メトリクス、新表記対応）
+- カテゴリ 10：旧 evaluation 設計の継承（3 階層 ＋ core/overlay 層）
+
+#### 5.14.4 4 つの出力先
+
+analysis 機能は次の 4 つの形式で出力する：
+
+- **論文用**：claim_map.json／evidence_register.json／reporting_fragments.json／figure_source_bundle.json／table_source_bundle.json／paper_caveat_register.json（旧 paper-interface から継承）
+- **運用ダッシュボード用**：進捗マトリックス（§5.11 と統合）、時系列グラフ、収束カーブ
+- **週次レポート用**：要約 fragment、変化のあった項目のハイライト
+- **監査レポート用**：規律違反件数集計、archive 退避履歴、評価対象の偏り
+
+#### 5.14.5 レビュー収束過程の可視化（新規）
+
+ReviewCompass の重要な分析対象として、レビューがどう収束していくかの過程を可視化する。
+
+§5.11 現在位置可視化（「いま、どこにいるか」のスナップショット）とは性格が違い、analysis は「どう辿ってきたか、どう収束していくか」の **時系列・過程** を扱う。両者は補完的。
+
+可視化対象：
+
+- **所見の減少カーブ**：レビューラウンドごとの重大度別件数の推移（CRITICAL/ERROR が減り、WARN/INFO に推移する様子）
+- **judgment 分布の遷移**：must-fix → should-fix → leave-as-is へのラベル分布の変化
+- **手戻り（reopen）の累積**：何回 reopen したか、どの深さの手戻りか
+- **規律遵守率の改善曲線**：時間とともに遵守率が上がる（または下がる）パターン
+- **機能間整合性の収束**：機能間の依存衝突が解消されていく様子
+- **conformance-evaluation の差分減少**：意図適合・文書適合の改善傾向
+
+可視化形式：
+
+- 折れ線グラフ（時系列推移）
+- 積み上げ棒グラフ（レビューラウンドごとの所見分布）
+- バーンダウン（所見の減少カーブ、must-fix 件数の零への漸近）
+- Sankey 図（所見の流れ：主役発見 → 敵対役で増減 → 判定役での採否）
+- ヒートマップ（機能 × フェーズ × ラウンドの所見密度）
+- ガントチャート（手続きの進行と reopen 履歴）
+
+#### 5.14.6 主要な発見（insight）
+
+analysis 機能から見いだせる主要発見を統合的に整理：
+
+- **統合 1：LLM レビュー機構の効果実証**：3 役レビュー効果、モデル多様化、evidence_type 比率、代役有効性
+- **統合 2：規律と実体の双方向同期**：規律 drift の発見と抑制機構の効果
+- **統合 3：spec-driven 開発の品質指標**：手戻りパターンと意図実装乖離
+- **統合 4：運用効率**：コスト最適化と応答時間
+
+これらは論文化候補としてセッション 16 で議論済み（候補 D・E・F、§5.8 多層防御の B、3 役レビュー機構の A など）。
+
+#### 5.14.7 段階的導入
+
+論点 9（§5.9.9）への組み込み：
+
+- **フェーズ 1**：analysis 機能の役割を `docs/operations/ANALYSIS.md` に整理、10 メトリクスカテゴリと処理 A〜E のスキーマ定義
+- **フェーズ 2**：`docs/operations/ANALYSIS.md` を新リポジトリに配置、出力先 4 種のディレクトリ構造（`paper/`、`dashboard/`、`weekly-reports/`、`audit-reports/`）を準備
+- **フェーズ 3（スタブ実装）**：analysis のスタブコマンド（`reviewcompass analyze`、`reviewcompass visualize`）の骨子。出力は空の構造のみ
+- **フェーズ 4 第 1 サイクル**：処理 A（階層集約）と処理 E（論文用出力）の基本実装。旧 paper-interface のロジックを継承
+- **フェーズ 4 第 2 サイクル**：処理 B（時系列化）、収束過程の可視化（折れ線・バーンダウン）、運用ダッシュボード基本実装
+- **フェーズ 4 第 3 サイクル**：処理 C（claim 紐付け）、処理 D（成熟度・注意事項）、週次レポートと監査レポートの実装、ヒートマップ／Sankey 図
+- **フェーズ 4 完了後**：複雑な可視化（インタラクティブ dashboard、Web 表示）、外部ツール連携はスコープ外
+
+#### 5.14.8 依存関係（workflow-management パターン）
+
+analysis は workflow-management や conformance-evaluation と同じく後段機能：
+
+```yaml
+analysis:
+  depends_on:
+    foundation: hard
+    runtime: review
+    evaluation: hard
+    workflow-management: review
+    conformance-evaluation: review
+```
+
+evaluation は hard（一次メトリクスを必ず使う）、他は review（成果物を読むだけ）。`stages/feature-dependency.yaml` の phase_order でも analysis を含めた配置に更新する。
+
+### 5.15 runtime 仕様の整理（2026-05-21 確定）
+
+本セッションで dual-reviewer-rebuild の runtime（仕様と実装）を 7 階層で分析した結果を、ReviewCompass 再構築の runtime 仕様として集約する。
+
+#### 5.15.1 役割とデータの流れ
+
+runtime はレビューを実行して構造化ログを書き出す機能。下流の evaluation／self-improvement／analysis に証跡を供給。
+
+```
+[入力] 仕様文書 ＋ 設定（実行方式・モデル指定）
+   ↓
+[runtime] ケース束ね → 4 段実行 → 判定 → 書き出し
+   ↓
+[出力] experiments/runs/<run_id>/ に 8 グループのファイル群
+```
+
+#### 5.15.2 4 段構造と 3 つの実行方式（命名統一）
+
+4 段：
+
+- **primary 段**：主役検出（所見を網羅的に挙げる）
+- **adversarial 段**：敵対役レビュー（独立発見と反論）
+- **judgment 段**：判定（must-fix／should-fix／leave-as-is）
+- **integration 段**：統合（最終レビュー記録の作成）
+
+3 つの実行方式（§5.9.6 と統一）：
+
+| 実行方式 | primary 段 | adversarial 段 | judgment 段 | integration 段 |
+|---|---|---|---|---|
+| primary 方式 | 実行 | 省略 | 省略 | 実行 |
+| adversarial 方式 | 実行 | 実行 | 省略 | 実行 |
+| judgment 方式 | 実行 | 実行 | 実行 | 実行 |
+
+integration 段はどの方式でも必ず実行（省略の有無を含めた記録のため）。
+
+#### 5.15.3 出力ファイル群（新命名）
+
+```
+experiments/runs/<run_id>/
+├── run_manifest.yaml             ← グループ 1：メタデータ
+├── review_case.json              ← グループ 2：横断正本
+├── steps/                        ← グループ 3：段別の生記録
+│   ├── primary.json
+│   ├── adversarial.json
+│   ├── judgment.json
+│   └── integration.json
+├── decisions/                    ← グループ 4：判断
+│   ├── decision_units.json
+│   └── human_signoff.json
+├── failures/                     ← グループ 5：失敗観測
+│   └── failure_observation.json
+├── internal/                     ← グループ 6：内部正本（旧 v2/）
+│   ├── review_taxonomy.json      （旧 review_artifact.json）
+│   ├── metric_snapshot.json
+│   ├── trace_note.json
+│   └── signal_linkage_note.json
+├── validation/                   ← グループ 7：検証結果
+│   ├── validator_result.json
+│   └── invalidation_markers.json
+└── derived/                      ← グループ 8：補助
+    ├── runtime_summary.json
+    ├── comparison_eligibility_note.json
+    └── invalid_run_triage_note.json
+```
+
+下流の読み手（コード内で明示）：
+
+| グループ | evaluation | self-improvement | analysis |
+|---|---|---|---|
+| 1 メタデータ | ○ | ○ | × |
+| 2 横断正本 | ○ | × | × |
+| 3 段別生記録 | × | ○ | × |
+| 4 判断 | ○ | ○ | × |
+| 5 失敗観測 | × | ○ | × |
+| 6 内部正本 | × | ○ | × |
+| 7 検証結果 | ○ | ○ | × |
+| 8 補助 | ○（一部） | ○（一部） | × |
+
+analysis は直接読まず、evaluation を介して受け取る。
+
+#### 5.15.4 状態管理（4 軸の独立性）
+
+1 回の実行は 4 軸の状態を同時に持つ：
+
+- **実行ライフサイクル**：created → in_progress → closed → orchestration_failed
+- **検証状態**：not_run → passed / failed / blocked
+- **人間承認状態**：pending → approved / rejected / deferred
+- **証跡区分**：candidate → valid / invalid / exploratory
+
+混同しがちな点：
+
+- closed != valid（実行終了は妥当性ではない）
+- passed != approved（検証通過は人間承認ではない）
+- approved != valid（人間承認は証跡区分ではない）
+
+終了の順序保証：人間承認 → 検証 → 終了 の順序を実装で強制（fail-closed）。
+
+状態語彙は foundation の `metadata_contract.yaml` が所有、runtime は再定義しない。
+
+#### 5.15.5 4 つの設計の工夫
+
+- **工夫 1：LLM 接続点の差し替え可能化**
+  - 依存性注入で LLM 接続を差し替え可能
+  - テスト時はモック、本番は v2-acquisition で確定する実 LLM 接続
+- **工夫 2：強制的差異化（forced-divergence）**
+  - adversarial 段の各所見に 3 値（counter_evidence_raised / no_counter_evidence_after_challenge / not_assessed）の付与必須
+  - 「未試行」と「試行結果なし」を機械的に区別
+- **工夫 3：生の証跡の不変性**
+  - 段別ファイル（steps/）は 1 度だけ書き、書き換え禁止
+  - 検証結果や無効化マーカーは別ファイルとして重ねる
+- **工夫 4：下流の読み手の明示**
+  - どの機能がどのファイルを読むかをコード内で宣言
+  - 機能間の境界を機械的に把握可能
+
+共通する発想：「LLM の善意や人間の善意に依存せず、機構として正しさを担保する」（§5.8 の多層防御第 1 層の中核思想と一致）。
+
+#### 5.15.6 ReviewCompass で確定する命名変更
+
+- 機能名：paper-interface → analysis（§5.14）
+- 機能名：implementation-governance → workflow-management
+- ディレクトリ名：v2/ → internal/
+- 内部正本ファイル名：review_artifact.json → review_taxonomy.json
+- 段別ファイル名：step_a_primary_detection.json → primary.json
+  - 他 3 段も同様（adversarial.json、judgment.json、integration.json）
+- 実行方式の名称：single → primary、dual → adversarial、dual+judgment → judgment
+
+#### 5.15.7 ReviewCompass で拡張する 5 点
+
+本セッションで議論した新規機構を runtime のログ出力に組み込む：
+
+- **拡張 1：レビュー記録の front-matter（§5.9.3）**
+  - 各役のモデル特定情報（provider、model、model_full_id、temperature、prompt_artifact_path、prompt_artifact_hash）
+  - 各役の呼び出しメタデータ（attempts、total_tokens、cost_usd、duration_seconds）
+  - findings_by_method（3 方式比較集計）
+  - 所見ごとの evidence_type と verifying_commands
+- **拡張 2：API 障害ログ（§5.9.7）**
+  - リトライ履歴（attempts、retry_intervals）
+  - レート制限ヒット数、タイムアウト発生履歴
+  - 失敗時の in-progress 記録（§5.7 と統合）
+- **拡張 3：代役対話履歴（§5.12）**
+  - 新規ディレクトリ proxy-conversations/<日付>-<id>.md
+  - actor: human_proxy の判断記録（turns、confidence、決定内容）
+- **拡張 4：通知履歴（§5.13）**
+  - 新規ディレクトリ notifications/<日付>.yaml
+  - チャネル別の応答時間追跡
+- **拡張 5：conformance-evaluation ログ（§5.10）**
+  - 推定された上流文書（intent / requirements / design / tasks の推定版）
+  - 既存文書との差分集計
+  - 12 観点（4 評価軸 × 3 観点）の検査結果
+
+#### 5.15.8 段階的導入
+
+論点 9（§5.9.9）への組み込み：
+
+- **フェーズ 1（抽出作業）**：runtime 仕様の新命名版を `docs/operations/RUNTIME.md` の骨子として整理、8 グループのファイル配置と 4 状態軸を明示
+- **フェーズ 2（リポジトリ新設）**：`docs/operations/RUNTIME.md` を配置、5 つの JSON スキーマ（review_case／finding／impact_score／necessity_judgment／failure_observation）を `schemas/runtime/` に配置
+- **フェーズ 3（デプロイスタブ）**：runtime のスタブ実装。MockSeam（既定 LLM 接続点）を含む基本骨格、ファイル配置のみ
+- **フェーズ 4 第 1 サイクル**：4 段実行の本格実装、3 つの実行方式の対応、Claude CLI 経路の LLM 接続点、front-matter の拡張 1 を組み込む
+- **フェーズ 4 第 2 サイクル**：API 経路の追加（拡張 2 API 障害ログ）、3 方式比較データの取得（§5.9.6）、代役機構（拡張 3）と通知機構（拡張 4）の基本実装
+- **フェーズ 4 第 3 サイクル**：conformance-evaluation ログ（拡張 5）、現在位置可視化との統合（§5.11）
+
+#### 5.15.9 仕様と実装の乖離点（移行中の状態）
+
+抽出時に注意すべき点：
+
+- 実 LLM 呼び出しは MockSeam（既定）で空出力。実体の `experiments/runs/` のデータは pilot 段階の空出力
+- v2 取得方式への移行中、旧データは `_archived-analysis-2026-05-13/` に退避済み
+- ヒューリスティック撤廃（log-7）に伴う旧 v1 コードの破棄が完了
+- 拡張 1〜5 はすべて未実装（ReviewCompass で新規実装）
+
+### 5.16 self-improvement の workflow 改善仕様（2026-05-21 確定、全面書き直し）
+
+本セッションで「workflow 層改善のみ第 1 期に含める」と確定した（§3.1、§5.9.5）。従来の self-improvement 仕様（8 要件）は主に runtime 層改善（prompt／schema 改修など）を想定しており、workflow 改善の性格には合わない。ここでは workflow 改善に特化した仕様を再設計する。
+
+旧 8 要件をそのまま継承せず、workflow 改善の性格（規律と実体の双方向同期）に必要な要素を 8 構成で再定義。
+
+#### 5.16.1 役割と性格
+
+workflow 改善は、規律と実体の乖離を観察し、規律を実体に追従させるか、実体を規律に追従させるかを判断する機能。
+
+データの流れ：
+
+```
+[入力] 規律遵守検査の結果 ＋ 実体観察パターン ＋ 利用者監査での指摘
+   ↓
+[workflow 改善] signal 抽出 → 提案構築 → 検証 → 利用者承認 → 採用 or 却下 → ロールバック
+   ↓
+[出力] learning/workflow/ 配下の改善履歴 ＋ docs/disciplines/ の更新
+```
+
+#### 5.16.2 入力（何を見て改善するか）
+
+workflow 改善の入力源は規律と実体の乖離：
+
+- レビュー記録の規律違反検出結果（§5.9.3 の機械検査出力）
+- 規律遵守検査の結果（各規律の evidence_check_method の実行結果）
+- フェーズ境目の利用者監査での指摘
+- 実体運用で新たに観察された運用パターン（本セッションで発見したモデル多様化・ファイル遮断など）
+- 規律違反の累積データ（時系列、discipline-compliance-reports）
+
+旧 R1（入力定義）と性格が違う：「runtime 改善の入力」ではなく「規律と実体の乖離の観察」。
+
+#### 5.16.3 提案単位（何を改善するか）
+
+workflow 改善の対象は規律と運用ルール。提案種別は 5 つ：
+
+- **新規規律の起案**：実体パターンから規律への昇格（例：本セッションで発見したモデル多様化を `discipline_model_diversification.md` として新設）
+- **既存規律の更新**：実体と乖離した部分の修正（例：「箇所/現状/問題/修正後」→「severity/target_location/description/rationale」）
+- **規律のステータス変更**：enforced ↔ aspirational の切り替え
+- **規律の archive 退避**：撤廃（例：23 パターンの archive 退避）
+- **規律間の統廃合**：縮減義務（新規規律追加と既存規律削減のセット）
+
+旧 R2 の「対象層は 5 層」は workflow 層に固定。
+
+#### 5.16.4 提案の構造
+
+workflow 改善に特化した提案フォーマット：
+
+```yaml
+proposal_id: WP-001
+proposal_type: new_discipline       # new_discipline / update / status_change / archive / consolidation
+target_discipline_path: docs/disciplines/discipline_model_diversification.md
+motivating_evidence:
+  - source: review_record           # review_record / compliance_report / user_audit
+    location: foundation/.../review-2026-05-13.md
+    observation: 「主役 Sonnet・敵対役 Opus・判定役 Opus」が複数レビューで一貫して使われている
+  - source: compliance_report
+    location: docs/discipline-compliance-reports/2026-05-20.yaml
+    observation: 文書化されていない運用パターンが定常化
+proposed_change: |
+  以下の新規規律を作成：
+  - 異なるモデルファミリーまたは異なるバージョンを 3 役に割り当てる
+  - 同モデル使用は禁止
+  - 機械検査で確認
+expected_effect:
+  - 3 役の独立性が機構として担保される
+  - レビュー品質の向上
+statistical_evidence:
+  observed_runs: 17
+  consistent_pattern_ratio: 100%
+status: pending                     # pending / approved / rejected / superseded
+```
+
+#### 5.16.5 検証（採用前にどう試すか）
+
+workflow 改善は replay/backtest（runtime 改善向け）が使いにくい。代わりに 3 つの検証方法：
+
+- **過去データへの遡及シミュレーション**：過去レビュー記録に新規律を当てて違反検出率を見る。たとえばモデル多様化規律を過去レビュー 17 件に当てると遵守率 100%
+- **パイロット運用**：新規律を `status: aspirational` で一定期間運用、遵守率を観察してから `enforced` 昇格
+- **影響範囲の事前分析**：既存規律との衝突、撤廃予定規律との関係を機械検査
+
+旧 R3 の replay/backtest は workflow 改善では使わない。
+
+#### 5.16.6 承認
+
+フェーズ境目の利用者監査でまとめて判断。重要な点：
+
+- 規律の正式化（aspirational → enforced）は明示承認必須
+- 規律の archive 退避は撤廃 README を必須化（撤廃理由の記録）
+- 規律間の統廃合は対応表を必須化（何と何が統合されたか）
+- 提案レビュー／承認／却下／採用の 4 状態を明示
+
+旧 R4 の承認フローを継承するが、対象は規律のみ。
+
+#### 5.16.7 履歴とロールバック
+
+workflow 改善の履歴保管：
+
+- `learning/workflow/proposals/<日付>-<id>.yaml`：提案
+- `learning/workflow/approved-updates/<日付>-<id>.yaml`：承認済み
+- `learning/workflow/rejected-updates/<日付>-<id>.yaml`：却下済み
+- `learning/workflow/rollback/<日付>-<id>.yaml`：ロールバック履歴
+- `docs/discipline-compliance-reports/<日付>.yaml`：遵守検査の時系列（§5.9.5 既存）
+- `docs/archive/disciplines/<日付>/README.md`：撤廃の経緯（§5.9.5 既存）
+
+ロールバック方法（旧 R5 を継承）：
+
+- archive から復活：撤廃された規律を `docs/disciplines/` に戻す
+- ステータス変更を戻す：enforced → aspirational に格下げ
+- 規律の更新を取り消す：過去版に戻す（git の履歴を活用）
+- ロールバック理由を `learning/workflow/rollback/<日付>-<id>.yaml` に保存
+
+#### 5.16.8 効果測定
+
+§5.9.5 で確定済みの 3 指標を継承：
+
+- 規律遵守率
+- 昇格件数（aspirational → enforced）
+- 退避件数（規律 → archive）
+
+これに加えて workflow 改善の運用指標 4 件：
+
+- 提案件数（種別ごと）
+- 採用率（採用 / 提案合計）
+- ロールバック率（ロールバック / 採用）
+- 提案から採用までの平均日数
+
+合計 7 指標を `phase-review-metric-register.md` の workflow 改善カテゴリとして追加。
+
+#### 5.16.9 スコープと旧 8 要件との関係
+
+ReviewCompass 第 1 期で含めるもの：
+
+- 上記 §5.16.1〜§5.16.8 の構成（役割・入力・提案単位・提案構造・検証・承認・履歴ロールバック・効果測定）
+
+スコープ外（明示）：
+
+- 他 4 層改善（prompt / policy / schema / runtime）：別計画書、フェーズ 4 完了後
+- 旧 R3 の replay/backtest：workflow 改善では使わない、別形式の検証（5.16.5 参照）
+- 旧 R6 の論文化からの分離：方針は継承するが、個別の規律ファイルとしては立てない
+- 旧 R7 の手動 vs runtime 証跡：規律の出所識別子（source）として motivating_evidence の source フィールドで吸収
+- 旧 R8 の取り込み証跡：フェーズ 4 完了後、外部プロジェクトとの規律共有時に検討
+
+#### 5.16.10 命名と配置
+
+- 機能名：self-improvement（変更なし、ただし第 1 期は workflow 改善に特化）
+- 仕様正本：`docs/operations/SELF_IMPROVEMENT.md`（新リポジトリ、workflow 改善仕様として記述）
+- 出力先：`learning/workflow/` 配下に 4 サブディレクトリ（proposals／approved-updates／rejected-updates／rollback）
+- 既存ディレクトリ `learning/findings/`、`learning/backtests/`、`learning/templates/` は他層改善で使うため第 1 期は空、フェーズ 4 完了後に活用
+
+#### 5.16.11 旧実装モジュールとの関係
+
+旧 dual-reviewer-rebuild の 8 モジュールは runtime 改善前提で書かれているため、そのまま流用せず、workflow 改善向けに再設計：
+
+- 旧 `input_model.rb`（647 行）→ workflow 改善版を新規（規律違反検出と実体パターン抽出に特化）
+- 旧 `proposal_model.rb`（542 行）→ workflow 改善版を新規（5 種類の提案種別に特化）
+- 旧 `replay_backtest_model.rb`（465 行）→ workflow 改善版は別形式（過去遡及シミュレーション・パイロット運用・影響範囲分析）
+- 旧 `signal_extraction.rb`（397 行）→ workflow 改善版を新規（規律遵守検査結果を入力にする）
+- 旧 `decision_adoption_model.rb`（323 行）→ 継承可能（規律状態管理）
+- 旧 `rollback_model.rb`（303 行）→ 継承可能（git 連携の枠組み）
+- 旧 `pipeline_driver.rb`（169 行）→ 継承可能（パイプライン制御）
+- 旧 `learning_layout.rb`（156 行）→ 継承可能（成果物配置、ディレクトリ構造のみ調整）
+
+つまり 8 モジュールの半分（後者 4 件）は継承、前者 4 件は workflow 改善向けに新規実装。
+
+#### 5.16.12 段階的導入
+
+論点 9（§5.9.9）への組み込み：
+
+- **フェーズ 1（抽出作業）**：本節の workflow 改善仕様を `docs/operations/SELF_IMPROVEMENT.md` の骨子として整理。旧 8 モジュールから継承可能なもの・新規実装が必要なものを区別
+- **フェーズ 2（リポジトリ新設）**：`docs/operations/SELF_IMPROVEMENT.md` を配置、`learning/workflow/` の 4 サブディレクトリを準備
+- **フェーズ 3（デプロイスタブ）**：workflow 改善のスタブコマンド（`reviewcompass workflow-extract-signals`、`reviewcompass workflow-propose` 等）の骨格。出力は空の構造のみ
+- **フェーズ 4 第 1 サイクル**：入力（§5.16.2）と提案構造（§5.16.4）の実装。signal_extraction と proposal_model の workflow 改善版を新規実装
+- **フェーズ 4 第 2 サイクル**：検証（§5.16.5）と承認（§5.16.6）の実装。過去遡及シミュレーションと利用者監査の組み込み
+- **フェーズ 4 第 3 サイクル**：履歴とロールバック（§5.16.7）の実装、効果測定 7 指標の集計、§5.9.5 の本格運用
+- **フェーズ 4 完了後**：他 4 層改善（prompt / policy / schema / runtime）の本格設計。旧 8 要件の枠組みを他 4 層で再評価、本節の枠組みとの統合判断
+
 ## 6. 統合する課題と機能採用判断（本セッション発見の 5 つ ＋ 機能採用 1 件）
 
 それぞれを再構築の初期設計に反映する：
@@ -1474,7 +1978,7 @@ review:
 |---|---|
 | 3 軸統一 | レビュー記録テンプレートで重大度・対応優先度・深さの 3 軸を必須項目とする |
 | I-1 記号 | 深さの記号体系（N／R／D／A／I × 0／1／2／3／4）を完全に導入する |
-| 名称変更（ReviewCompass） | 新リポジトリ名・ディレクトリ名・コード内の名称を一貫させる。加えて機能名の改名（`implementation-governance` → `workflow-management`、`paper-interface` → `report-interface`）も同時に適用する |
+| 名称変更（ReviewCompass） | 新リポジトリ名・ディレクトリ名・コード内の名称を一貫させる。加えて機能名の改名（`implementation-governance` → `workflow-management`、`paper-interface` → `analysis`）も同時に適用する |
 | アプリとツールの分離 | パス解決・スキーマ版整合・テンプレート配布・ワークフロー管理機能の対象範囲を明示的に設計 |
 | アプリ側ディレクトリ規約 | アプリ側構造を `.reviewcompass/specs/` に確定済み（§4 参照） |
 | 7 番目機能 conformance-evaluation の採用 | v3-plan.md の future feature を第 1 期から含める。実装コードから上流文書を推定生成・照合する逆方向機能（§5.10） |
