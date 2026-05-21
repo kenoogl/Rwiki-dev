@@ -46,15 +46,33 @@ _配置先：新リポジトリ作成時に ReviewCompass 側へ移管する暫�
 - スタブがエンドツーエンドで動くようになったら、それを土台に実機能を順次載せる
 - いきなり全機能を作らない
 
+### 2.5 相対リンクの徹底（設計時の注意）
+
+- ReviewCompass の文書・コード・設定・スキーマで参照を書くときは **必ず相対リンク** を使う
+- 絶対パス（`/Users/...`）、特定の作業ディレクトリ前提のパス、特定リポジトリ名を含むパスは禁止
+- 理由：ReviewCompass は対象アプリの任意の場所にデプロイされる前提のため、配置先に依存しない参照が必要
+- フェーズ 1〜4 の各段階で新規ファイルや既存ファイルへの参照を追加するときは、相対リンクであることを確認する
+- 外部リポジトリへの参照が必要な場合は、明示的に「外部リポジトリ」と注記する（パス参照ではなくコミットハッシュや URL で記録）
+
 ## 3. 抽出計画
 
 抽出対象を 5 カテゴリに分け、それぞれの抽出方針を定める。
 
-### 3.1 対象機能の仕様（self-improvement は workflow 層のみ）
+### 3.1 対象機能の仕様（7 機能体制、self-improvement は workflow 層のみ）
 
-対象：`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-{foundation, runtime, evaluation, paper-interface, implementation-governance}/`
+対象：`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-{foundation, runtime, evaluation, paper-interface, implementation-governance}/` ＋ self-improvement の workflow 層 ＋ conformance-evaluation（新規 7 番目機能）
 
-self-improvement は仕様 Requirement 2 で 5 層（prompt ／ policy ／ schema ／ runtime ／ workflow）の改善を扱う。再構築では **workflow 層改善のみ第 1 期に含め、他 4 層はスコープ外** とする（§5.9.5 で確定）。
+ReviewCompass は 7 機能体制で構築する：
+
+1. foundation
+2. runtime
+3. evaluation
+4. report-interface（旧 paper-interface）
+5. workflow-management（旧 implementation-governance）
+6. self-improvement（workflow 層のみ第 1 期、他 4 層スコープ外）
+7. **conformance-evaluation**（新規、§5.10 で確定）：v3-plan.md の future feature を第 1 期から導入。実装コードから上流文書を推定生成し、既存上流文書との照合を行う逆方向機能
+
+self-improvement の扱い：仕様 Requirement 2 で 5 層（prompt ／ policy ／ schema ／ runtime ／ workflow）の改善を扱うが、再構築では **workflow 層改善のみ第 1 期に含め、他 4 層はスコープ外** とする（§5.9.5 で確定）。
 
 - **第 1 期に含める**：workflow 層改善（規律と実体の双方向同期、規律 archive 機構、遵守検査、効果測定 3 指標）
 - **スコープ外**：prompt ／ policy ／ schema ／ runtime の 4 層改善（フェーズ 4 完了後の宿題）
@@ -119,14 +137,14 @@ self-improvement は仕様 Requirement 2 で 5 層（prompt ／ policy ／ schem
 
 抽出方針：
 
-- 観点（criteria）構造に対応した雛形：要件 5・設計 10・タスク 7・実装適合 5（§5.9.2）
+- 観点（criteria）構造に対応した雛形：要件 5・設計 10・タスク 7・実装適合 5（§5.9.2）。conformance-evaluation 用に 12 criteria 雛形（intent 3・requirements 3・design 3・tasks 3、§5.10.2）も別途準備
 - 3 軸対応の新テンプレートとして書き直す（severity ／ judgment ／ depth、§5.9.3）
 - レビュー記録テンプレートに front-matter スキーマを必須化（§5.9.3）：type／target／target_commit／target_content_hash／3 役のメタデータ／findings_by_method
 - アプリ側に配置するもの（記入用）とツール側に配置するもの（プロンプト本体）を分ける
 
 ## 4. ReviewCompass リポジトリの初期構造案
 
-抽出対象の 5 機能は `foundation` / `runtime` / `evaluation` / `report-interface` / `workflow-management` の 5 つ（旧 `paper-interface` を `report-interface` に、旧 `implementation-governance` を `workflow-management` に改名済み）。
+対象 7 機能：`foundation` / `runtime` / `evaluation` / `report-interface` / `workflow-management` / `self-improvement`（workflow 層のみ） / `conformance-evaluation`（新規、§5.10）。旧 `paper-interface` を `report-interface` に、旧 `implementation-governance` を `workflow-management` に改名済み。
 
 ```
 ReviewCompass/
@@ -221,6 +239,10 @@ ReviewCompass/
 5. reopen の trigger_map による機械強制（§5.6）
 6. session 跨ぎ用の in-progress 機構（§5.7）
 7. workflow 層 self-improvement の最小実装（§5.9.5）
+
+**conformance-evaluation 機能**（§5.10、7 番目の独立機能）：
+
+8. conformance-evaluation の本格実装（実装コードから上流文書を推定生成、既存上流文書との照合チェック）。3 役レビュー機構を流用、12 criteria 構造
 
 レビュー方法の再設計（3 役・観点・所見メタデータ・3 方式比較・API 障害対応など）の詳細は §5.9 を参照。
 
@@ -321,12 +343,20 @@ intent 層の設計補足：
       depends_on: [foundation, evaluation]
     workflow-management:
       depends_on: [foundation, runtime, evaluation, report-interface]
+    conformance-evaluation:
+      depends_on:
+        foundation: hard
+        runtime: review
+        evaluation: review
+        report-interface: review
+        workflow-management: review
   phase_order:
     - foundation
     - runtime
     - evaluation
     - report-interface
     - workflow-management
+    - conformance-evaluation
   ```
 
 - requirements.yaml／design.yaml／tasks.yaml／implementation.yaml の草案段とレビュー波段は `feature_order: <feature-dependency.yaml#phase_order>` のような参照を持つ
@@ -536,7 +566,7 @@ session 開始時の標準フロー：
 
 #### 第 2〜5 層（フェーズ 4 以降の宿題）
 
-スタブが動き、基本機能（5 機能のうち 1〜2 機能）が動くようになった後、次の層を順次導入する。
+スタブが動き、基本機能（7 機能のうち 1〜2 機能）が動くようになった後、次の層を順次導入する。
 
 - **第 2 層：git フックによる外部強制**
   - 検査スクリプトを git の commit／push フックに組み込み、LLM が「呼ばない」選択をできなくする
@@ -837,7 +867,115 @@ review:
 - マルチプロバイダー対応の拡張（OpenAI、Google API など）
 - UK スペル統一の判断（judgement vs judgment）
 
-## 6. 統合する課題（本セッション発見の 5 つ）
+### 5.10 conformance-evaluation 機能の組み込み（7 番目の機能、2026-05-21 確定）
+
+`.kiro/methodology/dual-reviewer-spec-driven-paper/v3-plan.md` で future feature として記録されていた「artifact-to-spec conformance evaluation」を、ReviewCompass の 7 番目の独立機能として **第 1 期（フェーズ 1〜4）から含める** ことを確定した。
+
+#### 5.10.1 機能の性格
+
+conformance-evaluation は、本機能の議論の中で「実装適合レビューを吸収する」案から「実装適合レビューとは分離する」案に再判断した。性格は次のとおり。
+
+- **方向**：下流 → 上流（逆方向）。実装コードから上流文書を推定する
+- **前提**：上流文書がなくてもよい（既存コードベースへの導入を想定）
+- **主要用途 1：文書生成（オンボーディング）**：既存コードから intent / requirements / design / tasks を推定生成し、ReviewCompass を既存プロジェクトに導入する
+- **主要用途 2：照合チェック**：既存上流文書と推定上流文書を比較し、実装中の意図ずれ・文書連携不足を検出
+- **実装適合レビューとの関係**：実装適合レビューは §5.9 に残す（吸収しない）。実装適合レビューは上流文書がある前提でフェーズ終端で実施する順方向のレビュー、conformance-evaluation は下流から上流を推定・照合する逆方向の機能、と性格が違うため分離する
+
+#### 5.10.2 評価軸と criteria 構造
+
+5 評価軸のうち実装適合は §5.9 の実装適合レビューに任せ、conformance-evaluation は上流 4 軸を担当する。
+
+```
+intent conformance（3 criteria）
+  - Criterion 1: 目的が実装で保たれているか
+  - Criterion 2: 制約が実装で守られているか
+  - Criterion 3: 優先順位が実装で反映されているか
+requirements conformance（3 criteria）
+  - Criterion 1: 受け入れ基準と実装の対応
+  - Criterion 2: API ・データ契約と実装の対応
+  - Criterion 3: 例外系・境界条件と実装の対応
+design conformance（3 criteria）
+  - Criterion 1: モジュール構成・データモデルと実装の対応
+  - Criterion 2: 接合面（API シグネチャ・エラーモデル）と実装の対応
+  - Criterion 3: アルゴリズム・性能達成手段と実装の対応
+tasks conformance（3 criteria）
+  - Criterion 1: タスク完了基準と実装の対応
+  - Criterion 2: 依存と順序の遵守状況
+  - Criterion 3: 横断タスクの実施状況
+```
+
+合計 12 criteria。各 criterion のサブ構造（要点／詳細抽出／深掘り／該当なし）は §5.9.2 の規律をそのまま継承。
+
+#### 5.10.3 3 役レビュー機構の流用
+
+conformance-evaluation も 3 役レビュー機構を流用する。
+
+- **文書生成タスク**：主役（コードから生成）→ 敵対役（生成文書の誤推定を独立指摘）→ 判定役（採否判断）
+- **照合チェック**：主役（食い違いを列挙）→ 敵対役（妥当性検証）→ 判定役（must-fix ／ should-fix ／ leave-as-is）
+
+モデル多様化規律、ファイル遮断規律、β 逐次方式などは §5.9.1 と同じ規律を適用。
+
+#### 5.10.4 評価記録の type 値と正本文書
+
+- **type 値**：`conformance_evaluation` に統合（生成モード／照合モードの区別は内部フィールドで識別）
+- **正本文書**：`docs/operations/CONFORMANCE_EVALUATION.md` として独立。REVIEW_PROTOCOL.md §6 は実装適合レビューのまま維持
+- **評価記録の配置**：対象アプリ側 `.reviewcompass/specs/<feature>/conformance/` に保管（reviews/ とは別ディレクトリ）
+
+#### 5.10.5 依存関係（workflow-management パターン）
+
+`stages/feature-dependency.yaml` への追記：
+
+```yaml
+features:
+  foundation:
+    depends_on: []
+  runtime:
+    depends_on: [foundation]
+  evaluation:
+    depends_on: [foundation, runtime]
+  report-interface:
+    depends_on: [foundation, evaluation]
+  workflow-management:
+    depends_on: [foundation, runtime, evaluation, report-interface]
+  conformance-evaluation:
+    depends_on:
+      foundation: hard
+      runtime: review
+      evaluation: review
+      report-interface: review
+      workflow-management: review
+phase_order:
+  - foundation
+  - runtime
+  - evaluation
+  - report-interface
+  - workflow-management
+  - conformance-evaluation
+```
+
+phase_order の最後に位置付ける。workflow-management と同じく review dependency 中心の後段機能。
+
+#### 5.10.6 v3-plan §3.3 の扱い
+
+v3-plan §3.3「実装で得た知見の文書への戻し」は次のように分割：
+
+- **文書レベルの戻し（intent / requirements / design / tasks）**：conformance-evaluation の主機能に含まれる
+- **規律レベルの戻し**：workflow 層 self-improvement（§5.9.5）が扱う
+- **schema / prompt / code レベルの戻し**：self-improvement の他 4 層改善、スコープ外
+
+#### 5.10.7 段階的導入（§5.9.9 への追加）
+
+- **フェーズ 1（抽出作業）**：v3-plan.md を抽出して conformance-evaluation の仕様骨子を準備、依存関係マップに追加、criteria 構造の定義
+- **フェーズ 2（リポジトリ新設）**：`docs/operations/CONFORMANCE_EVALUATION.md` を配置、12 criteria の検査仕様を `schemas/review-criteria/conformance_evaluation.yaml` に準備
+- **フェーズ 3（デプロイスタブ）**：conformance-evaluation のスタブコマンド（`reviewcompass generate-spec` ／ `reviewcompass conformance-check`）の骨子を準備
+- **フェーズ 4 第 3 サイクル**：conformance-evaluation の本格実装。文書生成モードと照合チェックモードの両方を 3 役レビュー機構で動かす
+
+#### 5.10.8 関連参照
+
+- 元計画：`.kiro/methodology/dual-reviewer-spec-driven-paper/v3-plan.md`
+- 過去議論：`dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md` の項 6.80 付近
+
+## 6. 統合する課題と機能採用判断（本セッション発見の 5 つ ＋ 機能採用 1 件）
 
 それぞれを再構築の初期設計に反映する：
 
@@ -848,6 +986,7 @@ review:
 | 名称変更（ReviewCompass） | 新リポジトリ名・ディレクトリ名・コード内の名称を一貫させる。加えて機能名の改名（`implementation-governance` → `workflow-management`、`paper-interface` → `report-interface`）も同時に適用する |
 | アプリとツールの分離 | パス解決・スキーマ版整合・テンプレート配布・ワークフロー管理機能の対象範囲を明示的に設計 |
 | アプリ側ディレクトリ規約 | アプリ側構造を `.reviewcompass/specs/` に確定済み（§4 参照） |
+| 7 番目機能 conformance-evaluation の採用 | v3-plan.md の future feature を第 1 期から含める。実装コードから上流文書を推定生成・照合する逆方向機能（§5.10） |
 
 ## 7. 段階的スケジュール
 
@@ -857,14 +996,15 @@ review:
 
 作業内容：
 
-- 5 機能の仕様の抽出と一般化（self-improvement は workflow 層のみ第 1 期、他 4 層はスコープ外）
+- 7 機能の仕様の抽出と一般化（5 機能 ＋ self-improvement の workflow 層 ＋ conformance-evaluation の新規追加）
 - 正本文書の整理
 - 規律ファイルの一般化
 - レビュー方法の抽出整理（§5.9）：規律ステータス付与、形骸化規律 archive、重大度語彙統一マッピング、criteria 構造整理、メトリクス台帳新表記対応
+- conformance-evaluation の準備（§5.10）：v3-plan.md からの抽出、12 criteria 構造の定義、`docs/operations/CONFORMANCE_EVALUATION.md` の骨子作成
 
 完了条件（すべて満たす）：
 
-- 5 機能分の仕様一式（intent.md／brief.md／requirements.md／design.md／tasks.md／spec.json の構造）が ReviewCompass 用に書き換えられ、自己適用前提の表現（「dual-reviewer 自身」「本対象システム」等）が grep で 0 件であることを確認できる
+- 7 機能分の仕様一式（5 機能 ＋ self-improvement workflow 層 ＋ conformance-evaluation）が ReviewCompass 用に書き換えられ、自己適用前提の表現（「dual-reviewer 自身」「本対象システム」等）が grep で 0 件であることを確認できる
 - 正本文書（operations 配下 6 件、docs/coordination 1 件、リポジトリ直下 7 件、計 14 件）が `docs/operations/` に配置済みで、抽出元と抽出先の対応表が `docs/extraction-mapping.md` に記録されている
 - 規律ファイル（`dual-reviewer-rebuild/.kiro/memory/discipline_*.md` 10 件程度）が `docs/disciplines/` に配置済みで、内容が「アプリ開発支援ツールとしての規律」に書き換えられている。全規律ファイルに status メタデータ（enforced ／ aspirational ／ archived）が付与されている
 - 23 パターン規律と必要性 5 観点規律が `docs/archive/disciplines/<日付>/` に退避済み、撤廃 README に経緯（ヒューリスティック撤廃方針との整合）が記録されている
@@ -910,11 +1050,11 @@ review:
 - ReviewCompass 自身を ReviewCompass で開発する（デプロイ前提の自己適用）
 - 第 1 サイクル：3 役完成（Claude CLI 経路、§5.9.1）
 - 第 2 サイクル：API 対応と 3 方式比較データ取得、API 障害対応（§5.9.6・§5.9.7）
-- 第 3 サイクル：workflow 層 self-improvement と最適化（§5.9.5・§5.9.8）
+- 第 3 サイクル：workflow 層 self-improvement と最適化、conformance-evaluation の本格実装（§5.9.5・§5.9.8・§5.10）
 
 完了条件（すべて満たす）：
 
-- 5 機能のうち少なくとも 1 機能（主役レビューを推奨）が、実 LLM（大規模言語モデル）呼び出しを伴って動き、スタブ版でなく実 LLM 版のレビュー記録を出力する
+- 7 機能のうち少なくとも 1 機能（主役レビューを推奨）が、実 LLM（大規模言語モデル）呼び出しを伴って動き、スタブ版でなく実 LLM 版のレビュー記録を出力する
 - その 1 機能について、自己適用の最初の 1 サイクルが完走している（仕様 → 主役レビュー → 利用者承認）
 - 3 役（主役・敵対役・判定役）が異なるモデルで動作し、レビュー記録の front-matter に 3 役のモデル多様化が検査済みであることが記録されている
 - 3 方式比較データ（findings_by_method）が機械抽出可能な形でレビュー記録に含まれている
@@ -932,6 +1072,7 @@ self-improvement は仕様 Requirement 2 で 5 層（prompt ／ policy ／ schem
 
 ## 8. 関連文書
 
+- `v3-plan.md`：artifact-to-spec conformance evaluation の元計画。conformance-evaluation 機能（§5.10）の元になった文書
 - `rework-classification-unification-plan-2026-05-21.md`：3 軸統一計画。フェーズ 1〜3 の設計に組み込む
 - 個人記憶 `feedback_completion_verification_protocol.md`：規律として継承
 - 個人記憶 `feedback_no_unilateral_approach_change.md`（射程外を含む）：規律として継承
@@ -941,3 +1082,11 @@ self-improvement は仕様 Requirement 2 で 5 層（prompt ／ policy ／ schem
 ## 9. 本ドキュメントの位置付け
 
 本ドキュメントは戦略転換の記録と再構築方針の整理であり、本セッションで実装は行わない。次セッション以降、本計画に沿ってフェーズ 1（抽出作業）から着手する。
+
+本ドキュメント自体のリンクと、ReviewCompass 移管時の対応：
+
+- 本ドキュメント内の同ディレクトリ参照（v3-plan.md 等）：相対リンクとして機能
+- 本ドキュメント内の外部リポジトリ参照（`dual-reviewer-rebuild/`）：抽出元として記述、注記なし
+- **ReviewCompass への移管時**：外部リポジトリへの参照は切り離す（フェーズ 2 の作業に含める）
+
+ReviewCompass 全体の相対リンク方針は §2.5 を参照。
