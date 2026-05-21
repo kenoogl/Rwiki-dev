@@ -22,6 +22,10 @@
 
 [メモリ、規律、運用md](##メモリ、規律、運用md)
 
+[INTENT再構築](##INTENT再構築)
+
+
+
 
 
 ```
@@ -8204,22 +8208,203 @@ workflow 改善のロールバックは規律レベルで起きる：
 
 
 
-
-
-Memory, md
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## メモリ、規律、運用md
+
+```
+プロジェクトメモリはどうすべきか？
+```
+
+ご指摘の通りです。本セッションでは計画書に「すべきこと（手順）」を記入するだけにします。各規律ファイルの個別判定はフェーズ 1 抽出作業の中で行います。
+
+## 計画書に追記する内容の骨子
+
+§5 系の末尾に **§5.21 規律ファイルの ReviewCompass 方針への取り入れ手順** を新設します。
+
+### 5.21.1 取り入れの基本方針
+
+§3.3 で大まかに書いた抽出方針を、§5 系で確定した方針（§5.4〜§5.18）との照合手順として明示
+
+### 5.21.2 規律ファイルの判定手順
+
+各規律ファイルについて、4 通りの判定を行う：
+
+- 継承（enforced）：そのまま規律として保つ
+- 継承＋調整：用語・方針を ReviewCompass に合わせて書き換えて継承
+- 退避（archived）：撤廃して `docs/archive/disciplines/<日付>/` へ
+- 昇格候補との統合：§5.9.5 の実体運用パターン規律化（モデル多様化・ファイル遮断・所見項目名）と関連する場合は統合
+
+### 5.21.3 判定の照合先
+
+- §5.4〜§5.8 ワークフロー管理
+- §5.9 レビュー方法
+- §5.9.4 形骸化規律の取り下げ（既に確定した撤廃事項）
+- §5.9.5 workflow 層 self-improvement
+- §5.14〜§5.18 各機能の継承方針
+
+### 5.21.4 既存規律ファイル一覧（フェーズ 1 で個別判定）
+
+9 件の規律ファイルと一般化計画 1 件、MEMORY.md 索引。本節では個別判定は行わず、フェーズ 1 抽出作業に委ねる旨を明示。
+
+### 5.21.5 各規律のステータスメタデータの付与
+
+§5.9.5 で確定済みの status（enforced／aspirational／archived）を全規律に必須付与。last_verified、evidence_check_method、abolish_reason、created_by_consolidating、consolidation_reason の追加メタデータも併せて。
+
+### 5.21.6 段階的導入
+
+フェーズ 1（個別判定と分類）→ フェーズ 2（`docs/disciplines/` に配置）→ フェーズ 4 第 3 サイクル（workflow 層 self-improvement で運用）
+
+## 確認
+
+この骨子で §5.21 を書き込みます。よろしいですか。
+
+
+
+```
+同様にdual-reviewer-rebuild/operations/のファイル群もReviewCompassの仕様に合わせて取り込む必要がある。
+```
+
+§5.22 として「正本文書の ReviewCompass 方針への取り入れ手順」を §5.21 と同じ構造で新設します。骨子を簡潔に確認してから書き込みます。
+
+## §5.22 の骨子（§5.21 と並列）
+
+### 5.22.1 取り入れの基本方針
+
+§3.2 で大まかに書いた抽出方針を、§5 系で確定した方針との照合手順として明示
+
+### 5.22.2 各正本文書の判定（4 通り）
+
+- **継承**：そのまま取り入れる
+- **継承＋調整**：用語・方針を ReviewCompass に合わせて書き換え（特にパス例の抽象化、機能名の置換、命名変更の反映）
+- **撤廃**：実体撤廃や統合により不要になった文書
+- **統合**：複数文書を 1 つに統合（例：実装適合レビューを REVIEW_PROTOCOL.md §6 に統合）
+
+### 5.22.3 判定の照合先
+
+§5.4〜§5.18 の各節
+
+### 5.22.4 既存正本文書一覧
+
+- A 群：`operations/` 配下 6 件（DATA_INVALIDATION_POLICY／DEPLOYMENT_MODEL／HUMAN_WORKFLOW／REVIEW_PROTOCOL／TRUST_BOUNDARY／WORKFLOW_OVERVIEW）
+- B 群：`docs/coordination/` 配下（必須抽出は workflow-repair-procedure のみ、他は参考）
+- C 群：リポジトリ直下 7 件（CONVENTIONS／DOCUMENT_INDEX／EVIDENCE_PROTOCOL／MIGRATION_MANIFEST／SELF_IMPROVEMENT_LOOP／SYSTEM_BOUNDARY／REPRODUCIBILITY_CONTRACT／README）
+
+### 5.22.5 §5 系で確定済みの統合・更新事項
+
+§5.20.3 で既に対応表に書かれている個別事項を、ここで「すべきこと」として明示：
+
+- REVIEW_PROTOCOL.md に §6 実装適合レビューを統合（§5.9）
+- WORKFLOW_OVERVIEW.md に §5.4 軽量化方針を反映
+- REOPEN_PROCEDURE.md（新規）に §5.6 機械強制を反映
+- workflow-repair-procedure.md を REOPEN_PROCEDURE.md に改名・更新
+
+### 5.22.6 段階的導入
+
+- フェーズ 1：個別判定と統合・更新、`docs/extraction-mapping.md` に記録
+- フェーズ 2：`docs/operations/` に集約配置
+
+### 5.22.7 関連参照
+
+§3.2／§5.20.3／§5 系の各節
+
+## 確認
+
+この骨子で §5.22 を書き込みます。よろしいですか。
+
+
+
+
+
+## INTENT再構築
+
+```
+計画書とdual-reviewer-rebuild/intent/にある文書をみて、intent.mdおよび関連文書をReviewCompass向けに再構築してください。
+```
+
+
+
+まず `dual-reviewer-rebuild/intent/` の中身と関連文書を確認します。
+
+タスクを整理してから作業に入ります。
+
+4 件すべて読み終えました。書き込みに入る前に、判断根拠を整理してから進め方を提示します。
+
+## 判断材料
+
+### 配置先
+
+- ReviewCompass リポジトリはまだ存在しない（フェーズ 2 で新設予定）
+- 計画書 §4 では `docs/operations/` 配下に正本を置く方針
+- 暫定配置として、計画書と並列の新規ディレクトリを作るのが筋
+
+候補：
+
+| 配置先                                                       | 利点                                    | 欠点                                                         |
+| ------------------------------------------------------------ | --------------------------------------- | ------------------------------------------------------------ |
+| `.kiro/methodology/reviewcompass/intent/`                    | 計画書と並列、フェーズ 2 で移管しやすい | ディレクトリを新設                                           |
+| `.kiro/methodology/dual-reviewer-spec-driven-paper/reviewcompass-intent/` | 計画書と同居                            | dual-reviewer-spec-driven-paper の中に ReviewCompass 専用ディレクトリ |
+| 計画書本体に組み込む                                         | 計画書 1 つで完結                       | 計画書がさらに肥大化                                         |
+
+→ **`.kiro/methodology/reviewcompass/intent/` が筋**（独立ディレクトリ、フェーズ 2 移管の前提と整合）
+
+### 再構築の範囲
+
+- 4 件は相互参照あり：INTENT.md → NON_GOALS.md／DESIGN_PRINCIPLES.md／TRACEABILITY.md
+- まとめて再構築する方が整合が取りやすい
+
+→ **4 件まとめて再構築する**
+
+### 未決定事項の扱い
+
+- 計画書 §5.19 で未決定事項 15 件を明示済み
+- 手動 dogfooding／中央側集約モード等は intent 文書でも触れざるを得ない
+- intent 文書では「§5.19 で未決定として明示」と書き、結論を出さない
+
+→ **計画書 §5 系の現時点の方針に従って書き、未決定は §5.19 を参照させる**
+
+### 既存 4 件との主な変更点
+
+- 対象：dual-reviewer-rebuild の自己適用 → ReviewCompass の対象アプリへの配置
+- 機能体制：5 機能 → 7 機能（foundation／runtime／evaluation／analysis／workflow-management／self-improvement／conformance-evaluation）
+- 名称：paper-interface → analysis、implementation-governance → workflow-management
+- 背景：v1 取得処理汚染・旧 repo 再構築 → ReviewCompass への戦略転換（§1）
+- paper-first：完全に削除（論文化は別計画書）
+- 手動 dogfooding：未決定として明示
+- 実装言語：Ruby（暗黙）→ Python（§5.1 で確定）
+
+## 進め方の確定
+
+以下で進めます：
+
+1. `.kiro/methodology/reviewcompass/intent/` を新設
+2. INTENT.md → NON_GOALS.md → DESIGN_PRINCIPLES.md → TRACEABILITY.md の順に再構築
+3. 計画書 §5 系の方針に従う
+4. 未決定事項は §5.19 を参照させる
+
+書き始めます。
+
+ReviewCompass 向けの intent 文書 4 件の再構築が完了しました。
+
+## 作成内容
+
+配置先：`.kiro/methodology/reviewcompass/intent/`（計画書ディレクトリと並列、フェーズ 2 で ReviewCompass リポジトリへ移管予定）
+
+| ファイル             | 行数   | 主な変更点（先行版との対比）                                 |
+| -------------------- | ------ | ------------------------------------------------------------ |
+| INTENT.md            | 292 行 | 対象を「dual-reviewer-rebuild の自己適用」から「対象アプリへの配置」へ。7 機能体制（旧 paper-interface → analysis、旧 implementation-governance → workflow-management、新規 conformance-evaluation）に更新。背景を ReviewCompass への戦略転換に書き換え。手動 dogfooding を未決定として §5.19 を参照 |
+| NON_GOALS.md         | 216 行 | 配布パッケージは外すがコマンドライン道具は採用（§5.1）。自己改善の他 4 層改善と多層防御の第 2〜5 層を明示的にスコープ外として追記 |
+| DESIGN_PRINCIPLES.md | 355 行 | 旧 14 原則を継承し、新規 2 原則（軽量化方針＝原則 15、相対リンクの徹底＝原則 16）を追加。優先順位を §5.4 軽量化方針が手軽さより上位に来るよう更新 |
+| TRACEABILITY.md      | 452 行 | 5 層トレース構造を維持。7 機能体制に更新、ディレクトリ構造を §5.20 の抽出対応表と整合。現在位置可視化機構（§5.11）と修復手続きの機械強制（§5.6）を反映 |
+
+## 計画書の方針との整合
+
+各文書に再構築計画書 §1〜§5.22 への明示的な参照を埋め込み：
+
+- §1 戦略転換、§2 基本方針（§2.2 クリーンスレート、§2.3 配置強制、§2.5 相対リンク）
+- §3.1 7 機能体制、§3.2 正本文書、§3.3 規律ファイル
+- §5.4 軽量化方針、§5.6 修復手続き、§5.9 レビュー方法、§5.10 conformance-evaluation
+- §5.14 analysis、§5.15 runtime、§5.16 self-improvement、§5.17 evaluation、§5.18 foundation
+- §5.19 利用者判断事項（未決定 15 件）、§5.20 抽出対応表
+
+## 未コミットの変更
+
+4 件の新規ファイル（合計 1315 行）が未追跡です。コミットしますか。
