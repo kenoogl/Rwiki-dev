@@ -2531,6 +2531,226 @@ ReviewCompass リポジトリへの移管時に判断：
 - 雛形は不完全な初版であり、フェーズ 1 着手時に網羅性と粒度を見直す
 - 本節は計画書の正本、`docs/extraction-mapping.md` はフェーズ 1 進行中の作業記録（性格が違う）
 
+### 5.21 規律ファイルの ReviewCompass 方針への取り入れ手順（2026-05-21 確定）
+
+本節はサブツリー `dual-reviewer-rebuild/.kiro/memory/` の規律ファイル群を、ReviewCompass の方針（§5.4〜§5.18）に合わせて取り入れる手順を定義する。§3.3 の抽出方針を §5 系の確定方針と照合する具体的な作業手順として整理する。個別判定はフェーズ 1 抽出作業に委ね、本節は手順と判定基準のみを明示する。
+
+#### 5.21.1 取り入れの基本方針
+
+- 規律ファイルはそのまま採り入れず、§5 系の確定方針との照合を経て取り入れる（§2.2 クリーンスレートと整合）
+- 適用範囲を「アプリ開発支援ツールとしての規律」に書き換える（§3.3 既存方針）
+- 規律間の優先順位、3 役レビュー、観点構造などの本質的な規律は内容を継承
+- ReviewCompass 方針との照合で衝突が見つかった場合は、規律側を ReviewCompass 方針に合わせる
+
+#### 5.21.2 各規律ファイルの判定（4 通り）
+
+各規律について、次の 4 通りのいずれかに分類する：
+
+- **継承（enforced）**：そのまま規律として ReviewCompass に取り入れる。`docs/disciplines/` へ配置
+- **継承＋調整**：内容を ReviewCompass の用語・方針に合わせて書き換えて継承。例：「ラウンド」→「criterion／criteria」（§5.9.2 で確定）、機能名 paper-interface → analysis（§5.15.6 で確定）など
+- **退避（archived）**：撤廃して `docs/archive/disciplines/<日付>/` へ。撤廃 README に経緯を記録（§5.9.4 で確定済みの 23 パターン規律と必要性 5 観点規律はこの分類）
+- **昇格候補との統合**：§5.9.5 の実体運用パターン規律化（モデル多様化／ファイル遮断／所見項目名）と関連する場合は、新規規律として統合する（縮減義務として既存規律 1 つ以上を統廃合する、§5.9.5）
+
+#### 5.21.3 判定の照合先
+
+各規律ファイルの判定にあたり、次の節と照合する：
+
+- §5.4〜§5.8：ワークフロー管理（軽量化方針、所定手続きの階層、reopen 機械強制、session 跨ぎ、多層防御）
+- §5.9：レビュー方法の再設計（3 役、観点、所見メタデータ、機械検査、形骸化規律の取り下げ）
+- §5.9.4：形骸化規律の取り下げ（既に確定した撤廃事項）
+- §5.9.5：workflow 層 self-improvement（規律ステータス、遵守検査、昇格機構、archive 構造、効果測定 3 指標）
+- §5.10：conformance-evaluation
+- §5.11〜§5.13：現在位置可視化／人間代役機構／人間への通知
+- §5.14〜§5.18：各機能の継承方針
+
+#### 5.21.4 既存規律ファイル一覧（個別判定はフェーズ 1）
+
+抽出対象の規律ファイルは次の 3 群に分かれて配置されている。本節では個別判定は行わず、フェーズ 1 抽出作業の中で §5.21.2 の 4 通り判定を適用する。
+
+**A 群：サブツリー `dual-reviewer-rebuild/.kiro/memory/` 配下（応答品質に関する行動規律、9 件＋索引＋一般化計画）**
+
+- `MEMORY.md`（索引）
+- `_generalization-plan.md`（一般化計画、既存）
+- `discipline_approval_required.md`
+- `discipline_choice_presentation.md`
+- `discipline_finding_4elements.md`
+- `discipline_inconsistency_response_discipline.md`
+- `discipline_no_round_batching.md`
+- `discipline_review_save_immediately.md`
+- `discipline_ssot_structural_decision_check.md`
+- `discipline_table_scope_screen_only.md`
+- `discipline_wave_procedure_compliance.md`
+
+**B 群：サブツリー `dual-reviewer-rebuild/operations/disciplines/` 配下（ワークフロー実行の手順・方針に関する規律、7 件）**
+
+- `dual-reviewer-rebuild/operations/WORKFLOW_OVERVIEW.md` の節 8 文書構造マップで「手順 5 件 ＋ 方針 2 件」と記載。具体ファイル名はフェーズ 1 着手時に確認する
+
+**C 群：撤廃済み規律（§5.9.4 で確定、退避先確定済み）**
+
+- `discipline_review_judgment_patterns.md`（23 パターン）：退避済み（DR-rebuild-log-7 でヒューリスティック撤廃方針として実体撤廃）
+- `discipline_review_necessity_judgment.md`（必要性 5 観点、参照ゼロ）：退避方針確定
+- 上記 2 件は `docs/archive/disciplines/<日付>/` へ。撤廃 README を必須化
+
+#### 5.21.5 ステータスメタデータの必須付与
+
+§5.9.5 で確定済み。すべての規律ファイル（継承・継承＋調整・退避・新規追加）に次のメタデータを必須付与する：
+
+- `status`：`enforced`（運用中）／`aspirational`（運用目標、機械検査なし）／`archived`（撤廃済み）
+- `last_verified`：直近の遵守検査日
+- `evidence_check_method`：規律 → 実体の自動検査手段（grep パターン、機械検査ルール等）
+- `abolish_reason`：archived のときの撤廃理由（archive README と対応）
+- `created_by_consolidating`：他規律の統廃合で新設された場合の元規律一覧
+- `consolidation_reason`：統廃合の理由
+
+#### 5.21.6 §5.9.5 昇格候補との統合方針
+
+§5.9.5 で挙げられた実体運用パターン（モデル多様化、ファイル遮断、所見項目名）は、新規規律として規律化する候補。新規追加時には縮減義務（既存規律 1 つ以上を統廃合）を併せて適用する。
+
+具体的な統廃合の候補：
+
+- **モデル多様化規律（新規）**：3 役のモデル多様化を機械検査の対象とする。既存規律のうち統廃合可能なものをフェーズ 1 で見極める
+- **ファイル遮断規律（新規）**：各役のファイルアクセス遮断を技術的に保証
+- **所見項目名規律（新規）**：severity／target_location／description／rationale の 4 要素を必須化（§5.9.3 で確定）。`discipline_finding_4elements.md`（既存）を更新して統合候補
+
+#### 5.21.7 段階的導入
+
+- **フェーズ 1（抽出作業）**：
+  - A 群・B 群の各規律ファイルを §5.21.2 の 4 通り判定で分類
+  - C 群（撤廃済み 2 件）を `docs/archive/disciplines/<日付>/` に退避、撤廃 README を作成
+  - §5.21.5 のステータスメタデータを全規律に付与
+  - §5.21.6 の昇格候補規律を新規起案、縮減義務を満たす形で統廃合
+  - 判定結果と統廃合履歴を `docs/extraction-mapping.md` に記録
+- **フェーズ 2（リポジトリ新設）**：
+  - 継承・継承＋調整の規律を `docs/disciplines/` に配置
+  - 退避の規律を `docs/archive/disciplines/<日付>/` に配置（撤廃 README 含む）
+  - 規律ファイル索引（MEMORY.md 相当）を `docs/disciplines/INDEX.md` として配置
+- **フェーズ 4 第 3 サイクル**：
+  - workflow 層 self-improvement で遵守検査を実装（§5.9.5、§5.16）
+  - 効果測定 3 指標（規律遵守率／昇格件数／退避件数）の集計開始
+  - 利用者監査ステップとセットで運用
+
+#### 5.21.8 関連参照
+
+- §3.3 規律ファイル抽出方針（基本方針）
+- §5.9.4 形骸化規律の取り下げ（既確定の撤廃事項）
+- §5.9.5 workflow 層 self-improvement（ステータス管理と昇格機構）
+- §5.16 self-improvement の workflow 改善仕様（運用機構）
+- §5.20.4 規律ファイルの対応表（抽出元 → 抽出先のパス対応）
+
+### 5.22 正本文書の ReviewCompass 方針への取り入れ手順（2026-05-21 確定）
+
+本節はサブツリー `dual-reviewer-rebuild/operations/` および関連文書群（`dual-reviewer-rebuild/docs/coordination/`、リポジトリ直下の正本文書）を、ReviewCompass の方針（§5.4〜§5.18）に合わせて取り入れる手順を定義する。§3.2 の抽出方針を §5 系の確定方針と照合する具体的な作業手順として整理する。個別判定はフェーズ 1 抽出作業に委ね、本節は手順と判定基準のみを明示する。§5.21（規律ファイルの取り入れ手順）と並列の位置付け。
+
+#### 5.22.1 取り入れの基本方針
+
+- 正本文書はそのまま採り入れず、§5 系の確定方針との照合を経て取り入れる（§2.2 クリーンスレートと整合）
+- 規律と用語の定義はそのまま継承（§3.2 既存方針）
+- パス例などの自己適用前提を一般化：`dual-reviewer-rebuild/...` のような具体例を抽象化し、対象アプリは外部にある前提に書き換える
+- リポジトリ直下に分散している正本文書は ReviewCompass では `docs/operations/` に集約（§3.2 既存方針）
+- ReviewCompass 方針との照合で衝突が見つかった場合は、正本文書側を ReviewCompass 方針に合わせる
+
+#### 5.22.2 各正本文書の判定（4 通り）
+
+各正本文書について、次の 4 通りのいずれかに分類する：
+
+- **継承**：そのまま `docs/operations/` に配置（パス例の抽象化と機能名置換のみ）
+- **継承＋調整**：内容を ReviewCompass の用語・方針に合わせて書き換えて継承。例：軽量化方針（§5.4）の反映、命名変更（§5.15.6）の全件適用、4 段名称・3 役名・4 状態軸の所有関係（§5.18）の反映
+- **撤廃**：実体撤廃や統合により不要になった文書（撤廃 README に経緯を記録、`docs/archive/operations/<日付>/` へ退避）
+- **統合**：複数文書を 1 つに統合、または新規文書として再構成（例：実装適合レビューを REVIEW_PROTOCOL.md §6 として統合、workflow-repair-procedure.md を REOPEN_PROCEDURE.md として再構成）
+
+#### 5.22.3 判定の照合先
+
+各正本文書の判定にあたり、次の節と照合する：
+
+- §5.4〜§5.8：ワークフロー管理（軽量化方針、所定手続きの階層、reopen 機械強制、session 跨ぎ、多層防御）
+- §5.9：レビュー方法の再設計
+- §5.10〜§5.13：conformance-evaluation／現在位置可視化／人間代役機構／人間への通知
+- §5.14〜§5.18：各機能の継承方針（特に §5.15.4 状態軸の所有者、§5.18 foundation の契約所有）
+- §5.15.6：命名変更の確定事項（paper-interface → analysis、single → primary 等）
+
+#### 5.22.4 既存正本文書一覧（個別判定はフェーズ 1）
+
+抽出対象の正本文書は次の 3 群に分かれて配置されている。本節では個別判定は行わず、フェーズ 1 抽出作業の中で §5.22.2 の 4 通り判定を適用する。
+
+**A 群：サブツリー `dual-reviewer-rebuild/operations/` 配下（6 件）**
+
+- `DATA_INVALIDATION_POLICY.md`：無効化方針
+- `DEPLOYMENT_MODEL.md`：配置モデル
+- `HUMAN_WORKFLOW.md`：人間の関わり方
+- `REVIEW_PROTOCOL.md`：レビュー方法の正本（§5.9 と §5.22.5 で「§6 として実装適合レビューを統合」が確定）
+- `TRUST_BOUNDARY.md`：信頼境界
+- `WORKFLOW_OVERVIEW.md`：ワークフロー全体像（§5.4 軽量化方針の反映が必要）
+
+**B 群：サブツリー `dual-reviewer-rebuild/docs/coordination/` 配下（必須抽出 1 件、他は参考）**
+
+- `workflow-repair-procedure.md`：修復手続き（必須抽出、§5.22.5 で「REOPEN_PROCEDURE.md として再構成」が確定）
+- 他の調整記録は実例として参考、必須抽出対象ではない（§3.2 既存方針）
+
+**C 群：サブツリー `dual-reviewer-rebuild/` 直下（7 件）**
+
+- `CONVENTIONS.md`：共通規約
+- `DOCUMENT_INDEX.md`：文書索引
+- `EVIDENCE_PROTOCOL.md`：証跡プロトコル
+- `MIGRATION_MANIFEST.md`：移行明細
+- `SELF_IMPROVEMENT_LOOP.md`：自己改善ループ
+- `SYSTEM_BOUNDARY.md`：システム境界
+- `REPRODUCIBILITY_CONTRACT.md`：再現性契約
+- `README.md`：プロジェクト説明（ReviewCompass 用に全面書き直し、§7 フェーズ 2 完了条件と整合）
+
+#### 5.22.5 §5 系で確定済みの統合・更新事項
+
+§5.20.3 で対応先が確定している事項のうち、内容変更を伴うものを「すべきこと」として明示する。フェーズ 1 抽出作業で次を実施：
+
+| 対象文書 | 統合・更新内容 | 根拠節 |
+|---|---|---|
+| REVIEW_PROTOCOL.md | §6 として実装適合レビューを統合（旧 implementation-governance から移管） | §5.9 |
+| REVIEW_PROTOCOL.md | 27 criteria 構造（要件 5 ＋ 設計 10 ＋ タスク 7 ＋ 実装適合 5）に整理 | §5.9.2 |
+| REVIEW_PROTOCOL.md | 重大度語彙（CRITICAL／ERROR／WARN／INFO）と所見メタデータ 3 軸（severity／judgment／depth）に統一 | §5.9.2／§5.9.3 |
+| WORKFLOW_OVERVIEW.md | §5.4 軽量化方針を反映（節ハッシュ・独立再導出パーサ等を削減した記述に書き換え） | §5.4 |
+| WORKFLOW_OVERVIEW.md | §5.5 の階層構造（intent／feature-partitioning／フェーズ別 4 ＋ reopen ＋ cross-spec-alignment の 9 ファイル構成）を反映 | §5.5 |
+| REOPEN_PROCEDURE.md（新規） | workflow-repair-procedure.md を再構成、§5.6 機械強制（trigger_map・新表記 N／R／D／A／I × 0〜4）を反映 | §5.6 |
+| HUMAN_WORKFLOW.md | 人間代役機構（§5.12）と人間への通知（§5.13）の節を追加 | §5.12／§5.13 |
+| DEPLOYMENT_MODEL.md | アプリ側 `.reviewcompass/specs/` 規約、ツール側の Python 実装方針、コマンドライン道具としての配置を反映 | §2.3／§4／§5.1 |
+| 全文書 | 命名変更（paper-interface → analysis、implementation-governance → workflow-management、single → primary、dual → adversarial、dual+judgment → judgment 等）を全件適用 | §5.15.6 |
+| 全文書 | 自己適用前提の表現（「dual-reviewer 自身」「本対象システム」等）を grep で 0 件にする | §7 フェーズ 1 完了条件 |
+| 全文書 | パス例の抽象化（`dual-reviewer-rebuild/...` を一般化） | §3.2 |
+| 全文書 | 相対リンクで参照を書き、絶対パスと特定リポジトリ名を含むパスを排除 | §2.5 |
+
+新規作成する文書：
+
+| 新規文書 | 内容 | 根拠節 |
+|---|---|---|
+| `docs/operations/CONFORMANCE_EVALUATION.md` | conformance-evaluation 機能の正本 | §5.10 |
+| `docs/operations/ANALYSIS.md` | analysis 機能の正本 | §5.14 |
+| `docs/operations/RUNTIME.md` | runtime 機能の正本 | §5.15 |
+| `docs/operations/SELF_IMPROVEMENT.md` | self-improvement の workflow 改善仕様 | §5.16 |
+| `docs/operations/EVALUATION.md` | evaluation 機能の正本 | §5.17 |
+| `docs/operations/FOUNDATION.md` | foundation 機能の正本 | §5.18 |
+| `docs/operations/WORKFLOW_MANAGEMENT.md` | workflow-management 機能の正本 | §5.4〜§5.8 |
+
+#### 5.22.6 段階的導入
+
+- **フェーズ 1（抽出作業）**：
+  - A 群・B 群・C 群の各正本文書を §5.22.2 の 4 通り判定で分類
+  - §5.22.5 の統合・更新事項を実施
+  - 自己適用前提の除去（grep で 0 件）
+  - 命名変更の全件適用
+  - パス例の抽象化と相対リンク化
+  - 判定結果と統合・更新履歴を `docs/extraction-mapping.md` に記録
+- **フェーズ 2（リポジトリ新設）**：
+  - 継承・継承＋調整・統合の正本文書を `docs/operations/` に配置
+  - 撤廃の文書を `docs/archive/operations/<日付>/` に配置（撤廃 README 含む）
+  - 新規 7 文書（§5.22.5 末尾の表）を §5.14〜§5.18 と §5.10／§5.4〜§5.8 を骨子に作成
+- **フェーズ 3〜4**：
+  - スタブ実装と実機能開発の進行に合わせて、正本文書の中身を随時更新（運用しながらの整合確認）
+
+#### 5.22.7 関連参照
+
+- §3.2 正本文書の抽出方針（基本方針）
+- §5.20.3 正本文書の対応表（抽出元 → 抽出先のパス対応）
+- §5.21 規律ファイルの取り入れ手順（並列の節）
+- §5.4〜§5.18 各節の確定方針（照合先）
+
 ## 6. 統合する課題と機能採用判断（本セッション発見の 5 つ ＋ 機能採用 1 件）
 
 それぞれを再構築の初期設計に反映する：
