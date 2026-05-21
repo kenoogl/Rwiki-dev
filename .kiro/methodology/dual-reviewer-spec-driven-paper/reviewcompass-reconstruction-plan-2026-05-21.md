@@ -588,6 +588,21 @@ session 開始時の標準フロー：
   - 「新規規律を追加するときは既存規律 1 つ以上を統廃合する」等の縮減義務を併設
   - 複雑性の累積を構造的に防ぐ
 
+#### 補助層（本セッション後半で追加、§5.12・§5.13）
+
+第 1 層と第 2 層の間に、人間関与の頻度・即時性を調整する補助層を 2 件追加：
+
+- **補助層 A：人間代役機構（§5.12）**
+  - 軽い判断を外部モデルが代行、本人関与の頻度を下げる
+  - マルチターン対話で文脈を踏まえた判断
+  - 不可逆操作・承認系・CRITICAL／ERROR は代行不可、本人エスカレーション
+- **補助層 B：人間への通知機構（§5.13）**
+  - 本人判断が必要な場面（代役からのエスカレーション、ゲート承認待ち、致命的エラー、タイムアウト）で外部チャネル（メール・LINE 等）に即時通知
+  - 利用者が気づかず処理が止まる事態を防ぐ
+  - 補助層 A と補助層 B は相補的（代役で頻度を下げ、通知で即時性を確保）
+
+補助層 A・B は第 1 層と第 2 層の中間に位置し、本人関与の調整層として動く。
+
 #### 受け入れる残余リスク
 
 第 1〜5 層を重ねても、次の残余リスクは残る。これは明示的に受け入れる。
@@ -652,7 +667,7 @@ review:
   - INFO はタスクと実装適合でも使えるよう拡張
 - **重み**：CRITICAL=4 ／ ERROR=3 ／ WARN=2 ／ INFO=1（全フェーズ共通）
 
-#### 5.9.3 所見メタデータの 3 軸必須化と機械検査
+#### 5.9.3 所見メタデータの必須化と機械検査
 
 各所見が次の 3 軸を必須項目として持つ。
 
@@ -705,7 +720,54 @@ findings_by_method:
 
 - **第 1 層：front-matter 構造検査**：必須フィールド存在、3 役モデル多様化、集計整合
 - **第 2 層：必須節存在検査**：レビュー種別ごとの schema を `schemas/review-criteria/<種別>.yaml` に保管
-- **第 3 層：軽量中身検査**：説明 30 文字以上、根拠 100 文字以上、判断根拠 50 文字以上、対象箇所の具体性（ファイル名＋節番号／行番号／AC 番号）、コピペ防止、「該当なし」明示
+- **第 3 層：軽量中身検査**：説明 30 文字以上、根拠 100 文字以上、判断根拠 50 文字以上、対象箇所の具体性（ファイル名＋節番号／行番号／AC 番号）、コピペ防止、「該当なし」明示、evidence_type 検査（後述）
+
+#### evidence_type ラベルと verifying_commands
+
+所見の根拠が「検証可能な事実」か「未検証の解釈」かを明示するため、各所見に次のフィールドを追加する。中身の空疎を抑え、判定役の判定根拠を強化する。
+
+- **evidence_type**：所見の根拠の性質を分類するラベル
+  - `fact`：検証可能な事実に基づく（コード行・grep 結果・コマンド出力など）
+  - `inference`：解釈・推論ベース（「〜と思われる」「〜の可能性がある」）
+  - `mixed`：事実と推論が混在
+- **verifying_commands**：fact または mixed の場合、根拠を検証可能にするコマンドを併記（grep / find / awk / git log など）
+
+所見メタデータの拡張例：
+
+```yaml
+- finding_id: F-001
+  severity: ERROR
+  target_location: foundation/requirements.md §3.1
+  description: 用語「P1」が複数箇所で別の意味で使われている
+  rationale: foundation/requirements.md §3.1 では重大度 P1、design.md §2.3 では優先度 P1 として使用、定義の統一なし
+  evidence_type: fact
+  verifying_commands:
+    - "grep -n 'P1' foundation/requirements.md"
+    - "grep -n 'P1' design.md"
+```
+
+重大度別の必須度ルール：
+
+- **CRITICAL ／ ERROR**：`evidence_type` 必須、かつ `fact` または `mixed` に分類されること。`verifying_commands` 必須（最低 1 つ）
+- **WARN**：`evidence_type` 必須。`fact` または `mixed` の場合は `verifying_commands` 必須、`inference` の場合は不要
+- **INFO**：`evidence_type` 任意、`verifying_commands` 任意
+
+機械検査の第 3 層に次を追加：
+
+- evidence_type フィールドの存在検査（重大度に応じて必須／任意を判定）
+- verifying_commands の存在検査（fact 系所見には必須）
+- コマンド形式の文字列パターン検出（`grep` ／ `awk` ／ `sed` ／ `ls` ／ `find` ／ `wc` ／ `git log` などのコマンド名と引数を検出）
+
+効果測定への組み込み（phase-review-metric-register.md に追加）：
+
+- `phase_fact_based_finding_ratio`：所見全体のうち `evidence_type: fact` の割合
+- `phase_inference_based_finding_ratio`：`evidence_type: inference` の割合
+- `phase_verifying_command_coverage`：fact 系所見のうち `verifying_commands` を持つ割合
+
+受け入れる残余リスク：
+
+- evidence_type の妥当性は LLM の自己申告に依存。誤分類のリスクは残る
+- 多層防御の他層（フェーズ境目の利用者監査、定期事後監査）で補完する前提
 
 YAML キーは英語、本文の見出しは日本語可。
 
@@ -810,7 +872,7 @@ review:
 
 #### 5.9.9 段階的導入順序
 
-論点 1〜8 と派生事項を、本計画書のフェーズ 1〜4 に振り分け。
+論点 1〜8 と派生事項、加えて §5.10〜§5.13 の追加機構を、本計画書のフェーズ 1〜4 に振り分け。
 
 **フェーズ 1（抽出作業）：**
 
@@ -820,7 +882,11 @@ review:
 - criteria 構造の整理（27 criteria、実装適合を REVIEW_PROTOCOL.md §6 に統合）
 - メトリクス台帳の新表記対応と効果測定 3 指標の追加
 - ヒューリスティック撤廃方針の取り込み
-- reviewcompass.yaml の api_settings 設定項目を schema として定義
+- reviewcompass.yaml の各種設定項目を schema として定義：api_settings（§5.9.7）、default_assignment（§5.9.1）、human_proxy（§5.12）、human_notification（§5.13）
+- conformance-evaluation の準備（§5.10.7）：v3-plan.md からの抽出、12 criteria 構造の定義、`docs/operations/CONFORMANCE_EVALUATION.md` の骨子作成
+- 現在位置可視化（§5.11.7）：機能 × フェーズマトリックスの schema 定義
+- 人間代役機構（§5.12.10）：代行可能／本人必須の線引きルールを設計
+- 人間への通知（§5.13.10）：通知内容の必須フィールドを設計
 - extraction-mapping.md への記録
 
 **フェーズ 2（リポジトリ新設）：**
@@ -829,6 +895,7 @@ review:
 - archive 構造を `docs/archive/disciplines/<日付>/` に配置、撤廃 README を含む
 - レビュー方法正本を `docs/operations/REVIEW_PROTOCOL.md` に配置（§6 実装適合レビュー含む）
 - メトリクス台帳を `docs/operations/metric-registers/` に配置
+- conformance-evaluation 正本を `docs/operations/CONFORMANCE_EVALUATION.md` に配置、検査仕様を `schemas/review-criteria/conformance_evaluation.yaml` に準備
 
 **フェーズ 3（デプロイスタブ）：**
 
@@ -836,6 +903,9 @@ review:
 - レビュー記録の front-matter スキーマ定義
 - 検査スクリプトのスタブ（front-matter 読み込み、必須節検査のみ）
 - スタブでタイムアウト・リトライの最低限の骨子を準備
+- conformance-evaluation のスタブコマンド（`reviewcompass generate-spec` ／ `reviewcompass conformance-check`）の骨子（§5.10.7）
+- `reviewcompass status` コマンドの骨子（最小版：in-progress ファイルの一覧表示のみ、§5.11.7）
+- 代役機構と通知機構は実装しない（API 経路本格実装はフェーズ 4 から）
 
 **フェーズ 4（実機能開発、3 サイクル）：**
 
@@ -844,28 +914,37 @@ review:
   - 主役・敵対役・判定役の β 逐次方式実装、独立 session とファイル遮断
   - レビュー記録の front-matter 完全実装、機械検査の本格実装（3 層）
   - モデル多様化規律の機械確認
+  - 現在位置可視化のマトリックス表示と次ステップ推奨（§5.11.7）
 
-- **第 2 サイクル：API 対応と 3 方式比較**
+- **第 2 サイクル：API 対応と 3 方式比較、補助層の基本実装**
   - プロバイダー抽象層の実装（初期は Anthropic API のみ）
   - API 経路でのファイル遮断、レスポンス YAML パース、schema 検証
   - メタデータ拡張（provider／model／version／temperature／attempts／cost）
   - API キー管理（環境変数経由）
   - 3 方式比較データ（§1.4.2）の取得実装、集計の整合検査
   - 障害対応の本格実装（指数バックオフ、レート制限尊重、不正レスポンス対応、コスト警告）
+  - 人間代役機構（§5.12）の基本実装：マルチターン対話、エスカレーション条件、対話履歴保存
+  - 人間への通知機構（§5.13）の基本実装：メール ＋ LINE Notify、proxy_escalation と approval_gate に対応
 
-- **第 3 サイクル：workflow 層 self-improvement と最適化**
+- **第 3 サイクル：workflow 層 self-improvement と最適化、機構の拡張**
   - workflow 層 self-improvement の最小実装（規律遵守検査、利用者監査ステップ、効果測定 3 指標集計）
   - キャッシュとリプレイ（content hash ベース）
   - 機能間並列化（同一機能内の直列は維持）
   - 軽微フィルタの導入判断（運用データを見て）
+  - conformance-evaluation の本格実装（§5.10.7、文書生成モードと照合チェックモード、3 役レビュー機構）
+  - 現在位置可視化の拡張：Mermaid 図出力（`reviewcompass map`）、不可逆操作直前レポート（§5.11.7）
+  - 代役機構の効果測定指標集計（代役判断件数、エスカレーション率、一致率、§5.12.10）
+  - 通知機構の拡張（Zulip、Slack、Webhook 等を抽象層に追加、severity_routing 本格実装、fatal_error と timeout_warning への対応、§5.13.10）
 
 **フェーズ 4 完了後の宿題：**
 
 - self-improvement の他 4 層改善（prompt ／ policy ／ schema ／ runtime）
 - 多層防御の第 2 層（git フック）・第 4 層（定期事後監査）の本格実装
 - API バッチ呼び出しの再検討
-- マルチプロバイダー対応の拡張（OpenAI、Google API など）
+- マルチプロバイダー対応の拡張（OpenAI、Google API、Discord、Telegram など）
 - UK スペル統一の判断（judgement vs judgment）
+- 代役モデルのプロンプト改善（prompt 層 self-improvement と組み合わせ、§5.12.10）
+- 通知履歴の自動分析・dashboard 化（§5.13.10）
 
 ### 5.10 conformance-evaluation 機能の組み込み（7 番目の機能、2026-05-21 確定）
 
@@ -913,7 +992,14 @@ conformance-evaluation も 3 役レビュー機構を流用する。
 - **文書生成タスク**：主役（コードから生成）→ 敵対役（生成文書の誤推定を独立指摘）→ 判定役（採否判断）
 - **照合チェック**：主役（食い違いを列挙）→ 敵対役（妥当性検証）→ 判定役（must-fix ／ should-fix ／ leave-as-is）
 
-モデル多様化規律、ファイル遮断規律、β 逐次方式などは §5.9.1 と同じ規律を適用。
+§5.9 のレビュー方法規律全般を適用する：
+
+- モデル多様化規律、ファイル遮断規律、β 逐次方式（§5.9.1）
+- 重大度語彙 4 段（CRITICAL ／ ERROR ／ WARN ／ INFO、§5.9.2）
+- 所見メタデータの必須化（severity ／ judgment ／ depth ＋ evidence_type ＋ verifying_commands、§5.9.3）
+- 機械検査の 3 層（§5.9.3）
+- 3 方式比較データの取得（§5.9.6）
+- API 経路と障害対応（§5.9.7）
 
 #### 5.10.4 評価記録の type 値と正本文書
 
@@ -974,6 +1060,411 @@ v3-plan §3.3「実装で得た知見の文書への戻し」は次のように�
 
 - 元計画：`.kiro/methodology/dual-reviewer-spec-driven-paper/v3-plan.md`
 - 過去議論：`dual-reviewer-rebuild/docs/coordination/implementation-coordination-log.md` の項 6.80 付近
+
+### 5.11 現在位置の可視化（2026-05-21 確定）
+
+長期にわたる実行で利用者と LLM が「いま全体のどこにいるか」を見失う課題に対し、4 層の可視化機構を導入する。
+
+#### 5.11.1 解決する迷子のパターン
+
+次の場面での迷子を解消する：
+
+- 複数機能を並列に進めている時、どこまで進んだか不明
+- reopen 中、第何ステップにいるか忘れる
+- session を跨いだ後、続きから再開する場所が不明
+- レビュー波の途中で session が切れて何ラウンド目まで完了したか不明
+- フェーズ境目で次に進むべき条件が満たされているか不明
+- 多層防御のどの層を通過済みか把握できない
+
+#### 5.11.2 第 1 層：機械可読な状態台帳
+
+既存機構を統合し、機械的に「現在位置」を構築できる状態にする：
+
+- `stages/in-progress/`（§5.7）：進行中の手続き
+- `stages/completed/`（§5.7）：完了済み手続きの記録
+- `workflow-gate-status.md`（旧名、ReviewCompass で継承）：状態台帳
+- `feature-dependency.yaml`（§5.5）：機能間依存マップ
+- 各種レビュー記録の front-matter（§5.9.3）
+
+これらから「機能 × フェーズ × 段」のマトリックスを内部表現として構築。
+
+#### 5.11.3 第 2 層：`reviewcompass status` コマンド
+
+現在位置を一目で把握する CLI コマンド。表示内容：
+
+- **進行中の手続き**：in-progress 配下のファイルから、何が走っているか、どのステップまで完了したか
+- **機能 × フェーズ 進捗マトリックス**：7 機能 × 5 フェーズの状態（承認済／進行中／未着手）
+- **次にやるべきステップ**：機能依存マップと現在状態から導出
+- **不可逆操作の遮断状況**：spec.json 書き込み、フェーズ移行、承認依頼生成の許可／遮断状態
+
+表示例：
+
+```
+ReviewCompass Status (2026-05-21 14:30)
+
+== 進行中の手続き ==
+- reopen-procedure (foundation, D-2 手戻り中)
+  完了: ステップ 1〜6
+  次: ステップ 7 該当ゲートの再実施
+  in-progress: stages/in-progress/reopen-2026-05-21.yaml
+
+== 機能 × フェーズ 進捗マトリックス ==
+                  intent  feature-part  req    design  tasks  impl
+foundation        承認済  承認済        承認済  承認済  承認済  進行中
+runtime           承認済  承認済        承認済  進行中  未着手  未着手
+（他機能省略）
+
+== 次にやるべきステップ ==
+1. reopen 手続き 第 7 ステップを完了（最優先）
+2. 完了後、foundation の implementation conformance review を再実施
+3. その後、runtime の design レビュー波を継続
+
+== 不可逆操作の遮断状況 ==
+- spec.json 書き込み: 遮断中（reopen 進行中のため）
+- フェーズ移行: 遮断中
+```
+
+#### 5.11.4 第 3 層：`reviewcompass map` コマンド
+
+機能依存マップに進捗を重ねた図を出力する CLI コマンド。形式の選択肢：
+
+- **Mermaid 図**：Markdown 内で表示可能、GitHub で render される
+- **テキストツリー**：ターミナル表示用
+- **PNG / SVG ファイル**：外部出力、報告書に貼り付け可
+
+Mermaid 形式の例：
+
+```mermaid
+graph TD
+    F[foundation 全完了]:::done --> R[runtime design 進行中]:::wip
+    F --> E[evaluation requirements 完了]:::partial
+    F --> RI[report-interface requirements 完了]:::partial
+    F --> WM[workflow-mgmt requirements 完了]:::partial
+    R --> SI[self-improvement requirements 完了]:::partial
+    E --> SI
+    F --> CE[conformance-eval requirements 完了]:::partial
+    classDef done fill:#cfc
+    classDef wip fill:#ffc
+    classDef partial fill:#cef
+```
+
+#### 5.11.5 第 4 層：session 開始時のオリエンテーション
+
+§5.7 で確定した session 跨ぎ時の標準フローを拡張：
+
+1. TODO_NEXT_SESSION.md を読む
+2. **`reviewcompass status` を実行（自動）** ← 追加
+3. `reviewcompass map` を実行（任意）
+4. 進行中手続きがあれば、それを優先処理
+5. 完了済み・未着手の状態に基づき次の作業を決定
+
+これにより、session 開始の数分で「いま全体のどこにいて、次に何をすべきか」が把握できる。
+
+#### 5.11.6 第 5 層（オプション）：不可逆操作直前のレポート
+
+不可逆操作（spec.json 書き込み、フェーズ移行、承認依頼生成）の直前に、現在位置レポートを自動生成して利用者に提示。
+
+- 「これから何を実行しようとしているか」
+- 「過去にどこまで完了しているか」
+- 「進行中の他手続きはあるか」
+
+判断ミスする余地を減らす。
+
+#### 5.11.7 段階的導入
+
+論点 9（§5.9.9）のフェーズ振り分けに追加：
+
+- **フェーズ 1**：機能 × フェーズマトリックスの schema 定義
+- **フェーズ 3（スタブ実装）**：`reviewcompass status` コマンドの骨子（最小版：in-progress ファイルの一覧表示のみ）
+- **フェーズ 4 第 1 サイクル**：マトリックス表示と次ステップ推奨
+- **フェーズ 4 第 3 サイクル**：Mermaid 図出力（`reviewcompass map`）、不可逆操作直前レポート
+
+### 5.12 人間代役機構（2026-05-21 確定）
+
+長時間自動実行で、ゲート以外の場面で利用者問い合わせが頻発して処理が止まる課題に対し、外部モデルを「人間代役」として位置付け、マルチターン対話（複数回の会話）で軽い判断を代行する機構を導入する。
+
+#### 5.12.1 解決する課題
+
+- ゲート（不可逆操作直前）以外でも、LLM が利用者問い合わせで止まる場面が頻発
+- 軽微な判断（命名・配置・軽微な構造選択など）でも本人関与が必要となり、長時間自動実行の継続性が落ちる
+- 夜間バッチや無人運用が困難
+
+#### 5.12.2 設計の核心
+
+外部モデルを「人間代役」役として位置付ける。主役・敵対役・判定役とは別の独立した役。**マルチターン対話**（1 件の問い合わせを複数回の会話で詰める）が肝。
+
+`reviewcompass.yaml` で代役モデルを指定：
+
+```yaml
+review:
+  human_proxy:
+    provider: anthropic-api
+    model: claude-opus-4-7
+    temperature: 0
+    max_turns: 5                    # 1 件の問い合わせの上限ターン数
+    escalation_threshold: 0.7       # 信頼度閾値、未満は本人エスカレーション
+```
+
+#### 5.12.3 マルチターン対話プロトコル
+
+1. LLM が利用者問い合わせを発するとき、まず代役に投げる
+2. 代役は単純な質問なら 1 ターンで答える
+3. 複雑な質問なら、代役が「条件を聞き返す」「文脈を確認する」など複数ターン
+4. 上限 5 ターンで結論が出れば採用、対話履歴と判断を記録
+5. 出なければ本人エスカレーション
+
+API 呼び出しの形：`messages` 配列を対話のたびに伸ばしていく。
+
+#### 5.12.4 代役の権限範囲
+
+代行可能な判断と本人必須の判断を明示的に線引き：
+
+**代役が代行可能（軽い判断）：**
+
+- 軽微所見の採否（INFO ／ WARN レベル）
+- 既知パターンの選択肢提示への回答（命名・配置・軽微な構造選択）
+- ファイルパスの確認
+- 細かい仕様判断（YAML キー名など）
+- 過去同様事例があるパターン
+
+**本人必須（代役は代行不可、必ずエスカレーション）：**
+
+- 不可逆操作（spec.json 書き込み、フェーズ移行、commit / push）
+- 承認系（intent 承認、フェーズ移行承認）
+- 戦略転換
+- ヒューリスティック撤廃のような大方針変更
+- 新機能採用
+- 規律変更
+- CRITICAL ／ ERROR レベルの所見への対応
+
+設定ファイルで線引きを定義可能：
+
+```yaml
+human_proxy:
+  proxy_allowed:
+    - finding_severity: [WARN, INFO]
+    - decision_type: [naming, placement, formatting]
+    - escalate_keywords_excluded: [approve, commit, push, intent, 戦略, 撤廃]
+  human_only:
+    - irreversible_operations
+    - approval_gates
+    - severity: [CRITICAL, ERROR]
+```
+
+#### 5.12.5 記録上の区別
+
+代役の判断と本人の判断を明示的に区別。決定記録の front-matter に：
+
+```yaml
+- decision_id: D-001
+  question: "観点 9 テスト戦略のサブ構造をどう書くか"
+  actor: human_proxy              # human / human_proxy / llm
+  proxy_provider: anthropic-api
+  proxy_model: claude-opus-4-7
+  turns: 3
+  confidence: 0.85
+  conversation_log: docs/proxy-conversations/2026-05-21-D-001.md
+  decision: "テスト戦略は単体・統合の境界明示のみ"
+  rationale: ...
+```
+
+後の監査で「代役判断」と「本人判断」を機械的に区別可能。
+
+#### 5.12.6 対話履歴の保存
+
+代役との対話履歴を `docs/proxy-conversations/<日付>-<id>.md` に保存。
+
+- 推論過程の追跡可能性
+- 代役判断が後で誤りと判明した場合、対話履歴から原因分析
+- 効果測定の素材
+
+#### 5.12.7 エスカレーション条件
+
+代役で結論が出ない場合に本人へエスカレーション：
+
+- 対話が `max_turns`（既定 5）に到達
+- 代役の信頼度が `escalation_threshold` 未満
+- 不可逆操作・本人必須カテゴリに該当
+- 利用者の規律と齟齬する判断を求められる
+- 代役自身が「これは本人判断が必要」と明示宣言
+
+エスカレーション時は in-progress ファイル（§5.7）に「人間承認待ち」を記録、session 跨ぎ対応と統合。
+
+#### 5.12.8 多層防御との関係
+
+§5.8 の多層防御に **新しい補助層** として位置付ける：
+
+- 第 1 層：軽量版 YAML 検査機構（既存）
+- **新規補助層：人間代役**（軽い判断を代行、本人関与を減らす）
+- 第 2 層：git フック（スコープ外）
+- 第 3 層：フェーズ境目の利用者監査（既存）
+- 第 4 層：定期事後監査（スコープ外）
+- 第 5 層：処理表面積の抑制方針（既存）
+
+代役機構は **「人間関与の頻度を下げる緩衝層」**。本人関与の重さを軽い判断から重い判断に絞る。
+
+#### 5.12.9 効果と限界
+
+**効果：**
+
+- 長時間自動実行の継続性向上
+- 利用者の負担軽減（夜間バッチや無人運用が可能に）
+- ゲート以外の軽微な判断による中断が減る
+
+**残るリスク（明文化）：**
+
+- 代役の判断が利用者の真の意図と外れる可能性（代役は意図を推定するだけ）
+- 誤判断の累積（複数の代役判断が連鎖した結果、大きく外れる）
+- 代役の権限範囲設定ミスで本来本人判断すべきものが代行される
+- API コスト増（マルチターン対話は単発より高コスト）
+
+**対応策：**
+
+- 効果測定指標を追加：代役判断件数、エスカレーション率、本人によるサンプル監査の一致率
+- 定期事後監査（多層防御第 4 層、スコープ外）で代役判断の妥当性を検証
+- 代行可能の線引きを設定で調整可能、運用データで見直し
+
+#### 5.12.10 段階的導入
+
+論点 9（§5.9.9）のフェーズ振り分けに追加：
+
+- **フェーズ 1**：`reviewcompass.yaml` の `human_proxy` 設定項目を schema として定義、代行可能／本人必須の線引きルールを設計
+- **フェーズ 3（スタブ実装）**：代役機構は実装しない（API 経路の本格実装はフェーズ 4 から）
+- **フェーズ 4 第 2 サイクル（API 対応）**：代役機構の基本実装。マルチターン対話、エスカレーション条件、対話履歴保存
+- **フェーズ 4 第 3 サイクル**：効果測定指標の集計（代役判断件数、エスカレーション率、一致率）
+- **フェーズ 4 完了後**：他層 self-improvement と組み合わせて代役モデルのプロンプト改善（prompt 層 self-improvement、スコープ外）
+
+### 5.13 人間への通知（外部チャネル経由、2026-05-21 確定）
+
+人間判断が必要な場面（代役からのエスカレーション、ゲート承認待ち、致命的エラー、タイムアウト）で、利用者が気づかずに処理が止まることを防ぐため、外部チャネル（メール・LINE 等）への通知機構を導入する。
+
+#### 5.13.1 解決する課題
+
+- 代役機構（§5.12）からエスカレーションされても、利用者が気づかなければ処理は止まったまま
+- 不可逆操作直前のゲートで本人承認待ちが続いても、利用者が画面を見ていなければ気づかない
+- 致命的エラー（fail-closed 遮断、検査スクリプト失敗など）の発生が即時に伝わらない
+- 夜間バッチや無人運用時、利用者の介入タイミングが遅れる
+
+#### 5.13.2 通知タイミング（4 種類）
+
+- **proxy_escalation**：代役機構（§5.12）から本人へエスカレーションされたとき
+- **approval_gate**：不可逆操作（spec.json 書き込み、フェーズ移行、commit / push）の直前で本人承認待ち
+- **fatal_error**：致命的エラー（fail-closed 遮断、検査スクリプト失敗、API 障害の連続）
+- **timeout_warning**：一定時間（既定 60 分）進捗がない場合の警告（任意）
+
+#### 5.13.3 通知チャネル
+
+プロバイダー抽象層として設計、複数チャネル並列対応。
+
+- **メール（SMTP）**：最も汎用、すべての利用者が持つ
+- **LINE Notify**：日本でよく使われる、即時性が高い
+- **Zulip**：グループ通知、開発チーム向け、過去ログ追跡可
+- **Slack**：同上
+- **Webhook（汎用）**：任意ツールへの転送可
+- **Discord ／ Telegram**：個人利用向け
+
+初期実装はメール ＋ LINE Notify の 2 チャネル（フェーズ 4 第 2 サイクル）。他チャネルはフェーズ 4 第 3 サイクル以降にプロバイダー抽象層に追加。
+
+#### 5.13.4 通知の内容と構造
+
+各通知に含める情報：
+
+- session ID、コミットハッシュ
+- どの手続きで止まっているか（process_id、フェーズ、機能名）
+- なぜ人間判断が必要か（理由、エスカレーション根拠）
+- どこを確認すれば良いか（ファイルパス、対象箇所）
+- 何を判断すべきか（選択肢があれば提示）
+- 再開方法（コマンド例）
+
+セキュリティ上、通知に含めるべきでない情報：
+
+- API キー、秘密情報
+- ソースコード本文（パス参照のみに留める）
+
+#### 5.13.5 設定例
+
+`reviewcompass.yaml` の追加項目：
+
+```yaml
+review:
+  human_notification:
+    enabled: true
+    trigger_on:
+      - proxy_escalation
+      - approval_gate
+      - fatal_error
+      - timeout_warning
+    timeout_warning_minutes: 60
+    channels:
+      - type: email
+        to: user@example.com
+        smtp_env: ENV_SMTP_CONFIG
+      - type: line
+        token_env: ENV_LINE_NOTIFY_TOKEN
+    severity_routing:
+      proxy_escalation: [line]
+      approval_gate: [email, line]
+      fatal_error: [email, line]
+      timeout_warning: [line]
+```
+
+#### 5.13.6 API キー・トークン管理
+
+§5.9.1 と同じ方針：環境変数のみで管理、`reviewcompass.yaml` には書かない。チャネル接続情報は `*_env` フィールドで参照先の環境変数名を指定。
+
+#### 5.13.7 通知履歴の保存
+
+送信した通知の履歴を `docs/notifications/<日付>.yaml` に保存。
+
+- いつ何を送信したかの追跡可能性
+- 利用者の応答時間の集計
+- 効果測定の素材（応答時間・エスカレーション件数）
+
+#### 5.13.8 多層防御との関係
+
+§5.8 の多層防御に **新しい補助層** として追加：
+
+- 第 1 層：軽量版 YAML 検査機構（既存）
+- 補助層：人間代役機構（§5.12）
+- **補助層：人間への通知機構（§5.13、新規）**
+- 第 2 層：git フック（スコープ外）
+- 第 3 層：フェーズ境目の利用者監査（既存）
+- 第 4 層：定期事後監査（スコープ外）
+- 第 5 層：処理表面積の抑制方針（既存）
+
+代役機構が「人間関与の頻度を下げる」のに対し、通知機構は「必要な人間関与を即時に届ける」。両者は相補的。
+
+#### 5.13.9 効果と限界
+
+**効果：**
+
+- 夜間バッチや無人運用が現実的になる
+- 利用者の介入タイミングが早まる
+- 長時間放置による機会損失が減る
+
+**残るリスク（明文化）：**
+
+- 通知チャネル自体の障害（メールサーバー停止、LINE API 障害など）で通知が届かない
+- 利用者が通知を見落とす
+- 通知過剰でアラート疲れ
+- セキュリティ上、通知内容に機密情報が混入するリスク
+
+**対応策：**
+
+- 複数チャネル並列送信で単一障害点を回避
+- severity_routing で重要度に応じたチャネル選択
+- 通知頻度の上限を設定（例：同一カテゴリ 1 時間に 1 通まで）
+- 通知内容のフィルタリング規則を schema 検査
+
+#### 5.13.10 段階的導入
+
+論点 9（§5.9.9）のフェーズ振り分けに追加：
+
+- **フェーズ 1**：`reviewcompass.yaml` の `human_notification` 設定項目を schema として定義、通知内容の必須フィールドを設計
+- **フェーズ 3（スタブ実装）**：通知機構は実装しない
+- **フェーズ 4 第 2 サイクル（API 対応）**：メール ＋ LINE Notify の基本実装、proxy_escalation と approval_gate に対応
+- **フェーズ 4 第 3 サイクル**：複数チャネル対応の拡張（Zulip、Slack、Webhook、Discord、Telegram）、fatal_error と timeout_warning への対応、severity_routing の本格実装、通知履歴の集計
+- **フェーズ 4 完了後**：通知履歴の自動分析・dashboard 化はスコープ外
 
 ## 6. 統合する課題と機能採用判断（本セッション発見の 5 つ ＋ 機能採用 1 件）
 
