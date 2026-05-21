@@ -50,7 +50,7 @@ _配置先：新リポジトリ作成時に ReviewCompass 側へ移管する暫�
 
 抽出対象を 5 カテゴリに分け、それぞれの抽出方針を定める。
 
-### 3.1 5 機能の仕様（self-improvement の workflow 層のみ含める）
+### 3.1 対象機能の仕様（self-improvement は workflow 層のみ）
 
 対象：`dual-reviewer-rebuild/.kiro/specs/dual-reviewer-{foundation, runtime, evaluation, paper-interface, implementation-governance}/`
 
@@ -119,10 +119,10 @@ self-improvement は仕様 Requirement 2 で 5 層（prompt ／ policy ／ schem
 
 抽出方針：
 
-- 3 軸対応の新テンプレートとして書き直す（severity ／ judgment ／ depth、§5.9.3）
-- アプリ側に配置するもの（記入用）とツール側に配置するもの（プロンプト本体）を分ける
-- レビュー記録テンプレートに front-matter スキーマを必須化（§5.9.3）：type／target／target_commit／target_content_hash／3 役のメタデータ／findings_by_method
 - 観点（criteria）構造に対応した雛形：要件 5・設計 10・タスク 7・実装適合 5（§5.9.2）
+- 3 軸対応の新テンプレートとして書き直す（severity ／ judgment ／ depth、§5.9.3）
+- レビュー記録テンプレートに front-matter スキーマを必須化（§5.9.3）：type／target／target_commit／target_content_hash／3 役のメタデータ／findings_by_method
+- アプリ側に配置するもの（記入用）とツール側に配置するもの（プロンプト本体）を分ける
 
 ## 4. ReviewCompass リポジトリの初期構造案
 
@@ -698,7 +698,7 @@ YAML キーは英語、本文の見出しは日本語可。
 
 #### 5.9.5 workflow 層 self-improvement の組み込み
 
-§3.1 で「self-improvement は当初対象外」としたが、workflow 層改善（規律と実体の双方向同期）に限り **第 1 期（フェーズ 1〜4）に含める**。他層（prompt ／ policy ／ schema ／ runtime）は引き続きスコープ外。
+§3.1 で確定したとおり、self-improvement の **workflow 層改善（規律と実体の双方向同期）のみ第 1 期（フェーズ 1〜4）に含める**。他 4 層（prompt ／ policy ／ schema ／ runtime）はスコープ外。本節は workflow 層改善の具体内容を定義する。
 
 - **規律ステータスメタデータの導入**：`status: enforced / aspirational / archived` を全規律ファイルに必須化
 - **規律ファイルへの追加メタデータ**：last_verified、evidence_check_method、abolish_reason、created_by_consolidating、consolidation_reason
@@ -847,7 +847,7 @@ review:
 | I-1 記号 | 深さの記号体系（N／R／D／A／I × 0／1／2／3／4）を完全に導入する |
 | 名称変更（ReviewCompass） | 新リポジトリ名・ディレクトリ名・コード内の名称を一貫させる。加えて機能名の改名（`implementation-governance` → `workflow-management`、`paper-interface` → `report-interface`）も同時に適用する |
 | アプリとツールの分離 | パス解決・スキーマ版整合・テンプレート配布・ワークフロー管理機能の対象範囲を明示的に設計 |
-| アプリ側ディレクトリ規約 | `.reviewcompass/specs/` などのアプリ側構造を仕様化 |
+| アプリ側ディレクトリ規約 | アプリ側構造を `.reviewcompass/specs/` に確定済み（§4 参照） |
 
 ## 7. 段階的スケジュール
 
