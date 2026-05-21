@@ -2107,11 +2107,13 @@ evaluation の現仕様には次の自己適用前提が残っており、抽出
 
 #### 5.17.10 手動 dogfooding の存廃判断（残課題）
 
-現仕様の要件 9 は「手動 dogfooding（人手で運用しながらの自己適用検証）と runtime 経由」を直交独立軸として保つことを必須化している。ReviewCompass で手動 dogfooding が存続するかどうかは現時点で未決定。
+現仕様の要件 9 は「手動 dogfooding（人手で運用しながらの自己適用検証）と runtime 経由」を直交独立軸として保つことを必須化している。
 
-未決定として明示するに留め、本節では結論を出さない。フェーズ 1 の抽出作業の中で利用者判断を仰ぐ。
+**2026-05-21 確定（本セッション 17、§5.23）**：手動 dogfooding は **存続する**。ReviewCompass 開発のテストケースとして恒久運用する（先行プロジェクトの「Phase 1 限定」とは性格が違う、§5.23.1）。よって evaluation 仕様の要件 9（直交独立軸）はそのまま継承する。
 
-foundation との連動（§5.18.13）：foundation 仕様の要件 6 受入 6 はレビューモード語彙に `manual_dogfooding` と `runtime_mediated` の区別を最低限必須化している。手動 dogfooding を ReviewCompass で存続させる場合は foundation の `metadata_contract.yaml` のレビューモード語彙に `manual_dogfooding` を残す、廃止する場合は foundation の要件 6 受入 6 自体を修正、と直接連動するため、判断は foundation 側の修正と同時に行う。
+foundation との連動（§5.18.13）：foundation 仕様の要件 6 受入 6 はレビューモード語彙に `manual_dogfooding` と `runtime_mediated` の区別を最低限必須化している。手動 dogfooding を ReviewCompass で存続させる方針が確定したため、foundation の `metadata_contract.yaml` のレビューモード語彙に `manual_dogfooding` を残す（§5.18.13 で確定済み）。
+
+実施計画の詳細：§5.23 ReviewCompass 開発における手動 dogfooding 計画を参照。
 
 #### 5.17.11 比較適格性ノートのスキーマ所有者の継承
 
@@ -2320,12 +2322,14 @@ ReviewCompass/
 
 foundation 仕様の要件 6 受入 6 は「レビューモード語彙が最低限 `manual_dogfooding`（手動 dogfooding）と `runtime_mediated`（runtime 経由）を区別できる」ことを必須化している。
 
-§5.17.10（手動 dogfooding の存廃判断）で「ReviewCompass で手動 dogfooding が存続するかは未決定」とした。この判断は foundation 仕様の要件 6 受入 6 と直接連動する：
+**2026-05-21 確定（本セッション 17、§5.23）**：手動 dogfooding は **存続する**。よって foundation の `metadata_contract.yaml` のレビューモード語彙に `manual_dogfooding` を残す。要件 6 受入 6 はそのまま継承。
 
-- 存続させる場合：foundation の `metadata_contract.yaml` のレビューモード語彙に `manual_dogfooding` を残す
-- 廃止する場合：foundation の要件 6 受入 6 自体を修正し、レビューモード語彙から `manual_dogfooding` を除く
+確定の根拠：
 
-§5.17.10 にこの連動関係を併記する（§5.18 から §5.17.10 への波及）。
+- §5.23 で ReviewCompass 開発における手動 dogfooding 計画を確定。手動 dogfooding は「配置前のシミュレーション ＋ 有効性評価のテストケース」として恒久運用する（先行プロジェクトの Phase 1 限定とは性格が違う）
+- evaluation 仕様の要件 9（手動 dogfooding と runtime 経由の直交独立軸）も同時に継承（§5.17.10 で確定）
+
+§5.17.10 にこの連動関係を併記する（§5.18 から §5.17.10 への波及、両節とも 2026-05-21 に存続方針確定）。
 
 #### 5.18.14 来歴項目と §5.17.5 の連動
 
@@ -2362,19 +2366,21 @@ foundation 仕様の `config.yaml.template` はアプリ側の設定雛形、計
 
 ### 5.19 利用者判断事項の一覧（2026-05-21 確定）
 
-本計画書には、各節に分散して利用者判断を仰ぐべき事項が記録されている。フェーズ 1 抽出作業に入る前に、これらを横断的に確認できるよう本節で集約する。判断は本セッション内で行わず、次セッション 18 以降のフェーズ 1 着手時に利用者判断を仰ぐ。
+本計画書には、各節に分散して利用者判断を仰ぐべき事項が記録されている。フェーズ 1 抽出作業に入る前に、これらを横断的に確認できるよう本節で集約する。原則として判断は本セッション内で行わず、次セッション 18 以降のフェーズ 1 着手時に利用者判断を仰ぐ。
 
-#### 5.19.1 フェーズ 1 着手前に必須の判断（5 件）
+ただし、§5.19.1 のうち手動 dogfooding 存廃の 1 件は、本セッション 17 で §5.23 として実施計画を確定したため、「存続」で確定済み（2026-05-21）。
+
+#### 5.19.1 フェーズ 1 着手前に必須の判断（5 件、うち 1 件は 2026-05-21 確定済み）
 
 これらの判断が確定しないと、フェーズ 1 抽出作業の入り口が決まらない：
 
-| 判断事項 | 影響範囲 | 連動節 |
-|---|---|---|
-| 手動 dogfooding（人手で運用しながらの自己適用検証）を ReviewCompass で存続させるか廃止するか | foundation 仕様の要件 6 受入 6（レビューモード語彙必須化）の修正可否、evaluation 仕様の要件 9 の継承可否 | §5.17.10／§5.18.13 |
-| 他環境からの取り込み機構（中央側集約モード）を残すかアプリ側完結に縮退するか | foundation 仕様の要件 6 受入 7（来歴項目必須化）の修正可否、evaluation 仕様の要件 10（外部 bundle 取り込み）の継承可否 | §5.17.5／§5.18.14 |
-| 設定成果物の境界：foundation 由来 `config.yaml.template`（アプリ側雛形）と計画書 `reviewcompass.yaml`（ツール側設定）の関係 | フェーズ 1〜2 の配置先、フェーズ 3 のスタブ設計 | §5.18.15 |
-| 対象利用者の特定：個人利用者／開発チーム／企業のどこを想定するか | README.md の方針、デプロイモデルの設計 | §4／§7 フェーズ 2 |
-| §5.10.5 の `analysis: review` 削除提案（循環依存解消） | conformance-evaluation の依存マップ | §5.17.13 |
+| 判断事項 | 影響範囲 | 連動節 | 状態 |
+|---|---|---|---|
+| 手動 dogfooding（人手で運用しながらの自己適用検証）を ReviewCompass で存続させるか廃止するか | foundation 仕様の要件 6 受入 6（レビューモード語彙必須化）の修正可否、evaluation 仕様の要件 9 の継承可否 | §5.17.10／§5.18.13／§5.23 | **2026-05-21 確定：存続**（§5.23 で実施計画確定） |
+| 他環境からの取り込み機構（中央側集約モード）を残すかアプリ側完結に縮退するか | foundation 仕様の要件 6 受入 7（来歴項目必須化）の修正可否、evaluation 仕様の要件 10（外部 bundle 取り込み）の継承可否 | §5.17.5／§5.18.14 | 未決定 |
+| 設定成果物の境界：foundation 由来 `config.yaml.template`（アプリ側雛形）と計画書 `reviewcompass.yaml`（ツール側設定）の関係 | フェーズ 1〜2 の配置先、フェーズ 3 のスタブ設計 | §5.18.15 | 未決定 |
+| 対象利用者の特定：個人利用者／開発チーム／企業のどこを想定するか | README.md の方針、デプロイモデルの設計 | §4／§7 フェーズ 2 | 未決定 |
+| §5.10.5 の `analysis: review` 削除提案（循環依存解消） | conformance-evaluation の依存マップ | §5.17.13 | 未決定 |
 
 #### 5.19.2 フェーズ 1 抽出作業中に確定する判断（4 件）
 
@@ -2750,6 +2756,223 @@ ReviewCompass リポジトリへの移管時に判断：
 - §5.20.3 正本文書の対応表（抽出元 → 抽出先のパス対応）
 - §5.21 規律ファイルの取り入れ手順（並列の節）
 - §5.4〜§5.18 各節の確定方針（照合先）
+
+### 5.23 ReviewCompass 開発における手動 dogfooding 計画（2026-05-21 確定）
+
+本節は ReviewCompass 自身の開発に ReviewCompass の方針（§5.4〜§5.22）を手動で適用する計画を定義する。手動 dogfooding（自己適用検証）を「配置前のシミュレーション ＋ 有効性評価のテストケース」として位置付け、§5.19.1 の判断 1（手動 dogfooding 存廃）に「存続」の方向で答えを与える。
+
+#### 5.23.1 位置付けと先行プロジェクトとの違い
+
+先行プロジェクト `dual-reviewer-rebuild` の手動 dogfooding（INTENT.md §12.5「本 repo への手動適用」）と次の点で性格が違う：
+
+| 項目 | 先行プロジェクト | ReviewCompass |
+|---|---|---|
+| 自己適用の対象 | dual-reviewer-rebuild 自身 | ReviewCompass 自身 |
+| 主目的 | 方法論の初期検証 | 配置前のシミュレーション ＋ 有効性評価のテストケース |
+| 廃止予定 | runtime-mediated に切り替えて廃止 | 配置先候補として継続価値あり、恒久運用 |
+
+ReviewCompass の手動 dogfooding は「ReviewCompass を最初の対象アプリとみなす」位置付け。これにより、配置時の挙動を実機能完成前から先行体験し、3 役レビュー仕様の自己整合性を実地で検証する。
+
+#### 5.23.2 目的（4 点）
+
+1. **配置時の挙動の先行体験**：ReviewCompass が対象アプリに配置されたときの動きを、実機能完成前から手動で再現
+2. **3 役レビュー仕様の実地検証**：§5.9.1〜§5.9.3 の規律（モデル多様化、ファイル遮断、所見メタデータ、機械検査）を手動で運用し、仕様の妥当性を確認
+3. **メトリクス初期データの取得**：§5.9.5 の効果測定 3 指標と §5.14 の 10 メトリクスカテゴリの一部を、フェーズ 4 完成前から手動集計
+4. **スタブ・実機能の設計の実地検証**：手動で運用しながら、スタブ（§5.2）と実機能（§5.3）の設計に必要な改善点を発見
+
+#### 5.23.3 実施可能な範囲と不可能な範囲
+
+**手動で実施可能（フェーズ 1 から着手可能）：**
+
+- 意図フェーズ：本セッション 17 で作成済みの 4 件（INTENT.md／NON_GOALS.md／DESIGN_PRINCIPLES.md／TRACEABILITY.md）を 3 役模倣でレビュー
+- 要件フェーズ：7 機能の要件文書を作成しながら手動レビュー
+- 設計フェーズ：7 機能の設計文書の手動レビュー
+- タスクフェーズ：実装タスクの手動レビュー
+- 実装適合レビュー：実装コードの手動レビュー
+- レビュー記録の front-matter（§5.9.3）：手動で必須項目を埋める
+- 所見メタデータ（severity／judgment／depth／evidence_type／verifying_commands）：手動で記録
+- 3 方式比較データ（§5.9.6 の primary／adversarial／judgment）：1 案件を 3 回手動で実行することで取得可能
+- メトリクスの手動集計
+
+**自動化が必要（手動では困難、実機能完成後）：**
+
+- 機械検査の自動化（規律遵守率、所見数の集計の機械実行）：フェーズ 4 第 1 サイクル以降
+- API 経路の障害対応：フェーズ 4 第 2 サイクル以降
+- 機能間並列化：フェーズ 4 第 3 サイクル以降
+- 大規模言語モデル呼び出しを伴う実 LLM レビュー：フェーズ 4 第 1 サイクル以降
+
+#### 5.23.4 実施手順（手動 3 役模倣）
+
+§5.9.1 の β 逐次方式（主役 → 敵対役 → 判定役の直列）を手動で模倣する：
+
+1. **主役（primary）レビューの手動模倣**：
+   - 対象文書を読む
+   - 所見を網羅的に挙げる（§5.9.2 の観点：要件 5／設計 10／タスク 7／実装適合 5）
+   - 所見メタデータ（severity／target_location／description／rationale／evidence_type／verifying_commands）を記録
+   - 1 観点 ＝ 1 応答単位の規律（§5.9.2）を守る
+
+2. **敵対役（adversarial）レビューの手動模倣**：
+   - 主役のレビュー記録を読む
+   - 独立発見と反論を生成（強制的差異化、§5.15.5 工夫 2）
+   - 各所見に 3 値（counter_evidence_raised／no_counter_evidence_after_challenge／not_assessed）の付与
+   - 同じ人間が主役と敵対役を兼ねる場合は、時間を空ける・別観点を強制する等の工夫
+
+3. **判定役（judgment）レビューの手動模倣**：
+   - 主役と敵対役のレビュー記録を読む
+   - must-fix／should-fix／leave-as-is を判定
+   - 採否の根拠を記録
+
+4. **統合段（integration）**：
+   - 3 役のレビュー記録を統合した最終レビュー記録を作成
+   - 追加の LLM 呼び出しは不要（§5.15.2 で確定）
+
+手動模倣の限界（明文化）：
+
+- 同じ人間が複数の役を兼ねると、独立性が損なわれる
+- モデル多様化規律（§5.9.1）は手動模倣では適用できない
+- ファイル遮断規律（§5.9.1）も手動模倣では完全には保証できない
+- これらの限界は手動 dogfooding 記録の `mode: manual_dogfooding` で明示し、実 LLM 経路（runtime-mediated）の記録とは別集団として扱う（§5.17.10 で確定）
+
+#### 5.23.5 記録フォーマット
+
+レビュー記録の front-matter は §5.9.3 のスキーマに準拠する。手動 dogfooding 用に追加するフィールド：
+
+```yaml
+---
+type: requirements_local_review  # § 5.9.3 の type 値
+target: reviewcompass/intent/INTENT.md
+target_commit: <commit_hash>
+target_content_hash: <sha256>
+date: 2026-05-21
+mode: manual_dogfooding         # 手動 dogfooding を明示（runtime_mediated との直交軸）
+primary:
+  provider: human_manual         # 手動模倣
+  model: <reviewer_name>         # 人間レビュー者の名前
+  attempts: 1
+  duration_minutes: <分>
+  prompt_artifact_path: templates/prompts/primary_detection/primary_reviewer.prompt.md  # 模倣の根拠
+  prompt_artifact_hash: <sha256>
+adversarial:
+  provider: human_manual
+  model: <reviewer_name>         # 主役と異なる人間が望ましい、同じ場合は明示
+  prompt_artifact_path: templates/prompts/adversarial_review/adversarial_reviewer.prompt.md
+  prompt_artifact_hash: <sha256>
+judgment:
+  provider: human_manual
+  model: <reviewer_name>
+  prompt_artifact_path: templates/prompts/judgment/judgment_reviewer.prompt.md
+  prompt_artifact_hash: <sha256>
+findings_by_method:
+  primary:
+    by_severity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 }
+    count: 0
+  adversarial:
+    by_severity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 }
+    count: 0
+  judgment:
+    by_severity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 }
+    count: 0
+    judgment_distribution: { must-fix: 0, should-fix: 0, leave-as-is: 0 }
+manual_dogfooding_caveats:       # 手動模倣の限界を明示
+  - <例：主役と敵対役が同じレビュー者で独立性が損なわれる可能性>
+  - <例：モデル多様化規律は適用不可>
+---
+```
+
+所見メタデータも §5.9.3 に準拠：severity／target_location／description／rationale ＋ evidence_type ＋ verifying_commands。
+
+#### 5.23.6 メトリクス集計
+
+フェーズ 1〜3 では手動集計、フェーズ 4 第 1 サイクル以降で自動化を進める。
+
+**フェーズ 1 から手動集計可能なメトリクス：**
+
+- §5.9.5 効果測定 3 指標：規律遵守率（手動カウント）／昇格件数／退避件数
+- §5.14.3 カテゴリ 1：レビュー所見の基本集計（重大度別件数、judgment 分布、手戻り種別、役別所見数）
+- §5.14.3 カテゴリ 2：3 方式比較メトリクス（findings_by_method）
+- §5.14.3 カテゴリ 3：evidence_type メトリクス（fact 比率、inference 比率、コマンド併記率）
+
+**フェーズ 4 第 1 サイクル以降で自動化：**
+
+- §5.14.3 カテゴリ 6：API 呼び出しメトリクス
+- §5.14.3 カテゴリ 7：代役機構メトリクス
+- §5.14.3 カテゴリ 8：通知機構メトリクス
+
+#### 5.23.7 配置（ReviewCompass を最初の対象アプリとみなす）
+
+ReviewCompass リポジトリ自身を最初の対象アプリとみなし、§4 で確定したアプリ側ディレクトリ規約 `.reviewcompass/specs/<feature>/` を ReviewCompass リポジトリ内に作る。
+
+```
+ReviewCompass/                           # フェーズ 2 で新設
+├── .reviewcompass/                      # ReviewCompass 自身を対象アプリとして扱う
+│   ├── config.yaml                      # ReviewCompass 版数の指定
+│   └── specs/
+│       ├── foundation/
+│       │   ├── intent.md
+│       │   ├── requirements.md
+│       │   ├── design.md
+│       │   ├── tasks.md
+│       │   ├── spec.json
+│       │   └── reviews/                 # 手動 dogfooding のレビュー記録
+│       │       └── <日付>-<種別>.md
+│       ├── runtime/
+│       │   └── （同上）
+│       └── …
+├── docs/
+├── schemas/
+├── templates/
+├── stages/
+└── src/
+```
+
+これにより：
+
+- ReviewCompass が「自分自身を対象アプリとして配置する」という配置パターンを実地で検証できる
+- アプリ側のディレクトリ規約（§4）と実際の使い勝手を確認できる
+- 配置先依存性（外部リポジトリへの絶対パス参照禁止、§2.5）を実地で検証できる
+
+#### 5.23.8 自動化との関係（段階的移行）
+
+手動 dogfooding は実機能完成後も継続価値があるが、段階的に自動化へ移行する：
+
+- **フェーズ 1〜2**：手動 dogfooding のみ（実機能なし）
+- **フェーズ 3（スタブ実装）**：スタブが動くようになったら、`reviewcompass review` コマンドのスタブを手動 dogfooding と並行運用。スタブが「人間が記録する形式と同じレビュー記録」を出力できるかを検証
+- **フェーズ 4 第 1 サイクル**：実 LLM レビューが動くようになったら、手動と実 LLM の結果を比較。3 方式比較データ（§5.9.6）の母集団に手動 dogfooding と実 LLM を別軸として記録
+- **フェーズ 4 完了後**：手動 dogfooding は「配置先候補のテストケース」として恒久運用。実 LLM の振る舞いの監視（手動と実 LLM の乖離検出）に使う
+
+つまり、手動 dogfooding は「Phase 1 限定」ではなく、**ReviewCompass の配置形態のテストケースとして恒久的な役割を持つ**。
+
+#### 5.23.9 関連する利用者判断事項の更新
+
+本節の確定により、関連する利用者判断事項が更新される：
+
+| 判断事項 | 旧状態 | 新状態 |
+|---|---|---|
+| §5.19.1 判断 1：手動 dogfooding の存廃 | 未決定 | **存続確定**（本節 §5.23 で実施計画を確定） |
+| §5.17.10 手動 dogfooding の存廃判断 | 未決定 | **存続確定**（evaluation 要件 9 の直交独立軸を継承） |
+| §5.18.13 レビューモード語彙との連動 | 連動関係のみ | **存続確定**（foundation 仕様の要件 6 受入 6 のレビューモード語彙に `manual_dogfooding` を残す） |
+
+§5.17.10／§5.18.13／§5.19.1 の該当節を「存続方針確定」に更新する（同セッションで実施）。
+
+#### 5.23.10 段階的導入
+
+- **フェーズ 1（抽出作業）**：本セッション 17 で作成済みの意図文書 4 件を手動 dogfooding の最初の対象とする。3 役レビューの手動模倣を 1 件実施し、レビュー記録のフォーマットと手順を実地で検証
+- **フェーズ 1 進行中**：7 機能の要件文書を作成しながら、各機能の要件に対して手動 dogfooding を実施。`docs/extraction-mapping.md` に手動 dogfooding の実施履歴を記録
+- **フェーズ 2（リポジトリ新設）**：ReviewCompass リポジトリに `.reviewcompass/specs/<feature>/reviews/` を作る。意図フェーズと要件フェーズの手動 dogfooding 記録を新リポジトリに移す
+- **フェーズ 3（デプロイスタブ）**：スタブが出力するレビュー記録形式が、手動 dogfooding 記録と互換であることを確認
+- **フェーズ 4 全サイクル**：実 LLM レビューと手動 dogfooding を並行運用。手動と実 LLM の乖離を §5.14.3 カテゴリ 9 として記録
+
+#### 5.23.11 関連参照
+
+- §5.17.10 手動 dogfooding の存廃判断（連動）
+- §5.18.13 レビューモード語彙との連動
+- §5.19.1 フェーズ 1 着手前必須判断（連動）
+- §5.9.1〜§5.9.3 レビュー方法の規律（手動模倣の根拠）
+- §5.9.5 効果測定 3 指標
+- §5.9.6 3 方式比較データ
+- §5.14.3 10 メトリクスカテゴリ
+- §5.15.5 強制的差異化（forced-divergence）
+- §4 アプリ側ディレクトリ規約
 
 ## 6. 統合する課題と機能採用判断（本セッション発見の 5 つ ＋ 機能採用 1 件）
 
