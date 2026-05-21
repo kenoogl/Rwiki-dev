@@ -2360,6 +2360,177 @@ foundation 仕様の `config.yaml.template` はアプリ側の設定雛形、計
 - 受入規律：§2.2 クリーンスレート
 - 連動する他節：§4（ディレクトリ構造）、§5.9.1（3 役抽象名）、§5.15.2（4 段名称）、§5.15.4（4 状態軸）、§5.17.5（来歴項目）、§5.17.10（レビューモード語彙）
 
+### 5.19 利用者判断事項の一覧（2026-05-21 確定）
+
+本計画書には、各節に分散して利用者判断を仰ぐべき事項が記録されている。フェーズ 1 抽出作業に入る前に、これらを横断的に確認できるよう本節で集約する。判断は本セッション内で行わず、次セッション 18 以降のフェーズ 1 着手時に利用者判断を仰ぐ。
+
+#### 5.19.1 フェーズ 1 着手前に必須の判断（5 件）
+
+これらの判断が確定しないと、フェーズ 1 抽出作業の入り口が決まらない：
+
+| 判断事項 | 影響範囲 | 連動節 |
+|---|---|---|
+| 手動 dogfooding（人手で運用しながらの自己適用検証）を ReviewCompass で存続させるか廃止するか | foundation 仕様の要件 6 受入 6（レビューモード語彙必須化）の修正可否、evaluation 仕様の要件 9 の継承可否 | §5.17.10／§5.18.13 |
+| 他環境からの取り込み機構（中央側集約モード）を残すかアプリ側完結に縮退するか | foundation 仕様の要件 6 受入 7（来歴項目必須化）の修正可否、evaluation 仕様の要件 10（外部 bundle 取り込み）の継承可否 | §5.17.5／§5.18.14 |
+| 設定成果物の境界：foundation 由来 `config.yaml.template`（アプリ側雛形）と計画書 `reviewcompass.yaml`（ツール側設定）の関係 | フェーズ 1〜2 の配置先、フェーズ 3 のスタブ設計 | §5.18.15 |
+| 対象利用者の特定：個人利用者／開発チーム／企業のどこを想定するか | README.md の方針、デプロイモデルの設計 | §4／§7 フェーズ 2 |
+| §5.10.5 の `analysis: review` 削除提案（循環依存解消） | conformance-evaluation の依存マップ | §5.17.13 |
+
+#### 5.19.2 フェーズ 1 抽出作業中に確定する判断（4 件）
+
+フェーズ 1 抽出作業を進めながら確定する：
+
+| 判断事項 | 影響範囲 | 連動節 |
+|---|---|---|
+| 機能依存マップの一元化（§5.5・§5.10.5・§5.14.8 の 3 箇所統合） | feature-dependency.yaml の正本確定 | §5.5／§5.10.5／§5.14.8 |
+| §5.3 実装順序と §5.9.9 の 3 サイクル方式の整合（並行関係の整理） | フェーズ 4 実機能開発の作業順序 | §5.3／§5.9.9 |
+| 探索的（exploratory）区分のフィールド整合：§5.9 の所見メタデータに探索的フラグが必要か | レビュー記録のスキーマ | §5.17.12 |
+| 必須／先送り（mandatory／deferred）の符号化規約の継承可否 | foundation 5 スキーマ＋ 2 検証スキーマの形式 | §5.18.8 |
+
+#### 5.19.3 フェーズ 2〜3 着手時に判断（3 件）
+
+フェーズ 2 リポジトリ新設・フェーズ 3 スタブ実装の段階で判断：
+
+| 判断事項 | 影響範囲 | 連動節 |
+|---|---|---|
+| README.md の中身（目的・対象利用者・スタブ完成までの段取り） | フェーズ 2 完了条件 | §7 フェーズ 2 |
+| コマンドラインの詳細設計（サブコマンド名と引数仕様） | フェーズ 3 スタブ実装 | §5.1／§5.2 |
+| テスト戦略の全体方針（機能ごとに散在しているテスト方針の統合） | フェーズ 4 各サイクル | §5.9.9／§5.14.7／§5.15.8／§5.17.14／§5.18.16 |
+
+#### 5.19.4 フェーズ 4 進行中に判断（2 件）
+
+フェーズ 4 実機能開発を進めながら判断：
+
+| 判断事項 | 影響範囲 | 連動節 |
+|---|---|---|
+| 軽微フィルタ（INFO の 3 役通過省略）の導入可否 | コスト最適化 | §5.9.8 |
+| モデル特定情報の追加項目（provider_endpoint／SDK バージョン／fingerprint／request_id） | レビュー記録の front-matter 拡張 | §5.9.3 |
+
+#### 5.19.5 移管時に判断（1 件）
+
+ReviewCompass リポジトリへの移管時に判断：
+
+| 判断事項 | 影響範囲 | 連動節 |
+|---|---|---|
+| 計画書本体のどの部分を移管し、どの部分を旧リポジトリに残すか | 移管後の正本と歴史的記録の分離 | §9 |
+
+#### 5.19.6 利用者判断の運用ルール
+
+- LLM は本一覧の判断を単独で確定しない（feedback_no_unilateral_approach_change 規律）
+- 各判断は利用者明示承認が必須（feedback_approval_required 規律）
+- 判断結果は本計画書の該当節に記録し、決定日付を付す
+- 一度確定した判断は、新たな根拠が出るまで維持する
+
+### 5.20 抽出対応表の雛形（2026-05-21 確定）
+
+フェーズ 1 抽出作業で作成する `docs/extraction-mapping.md` の雛形を本節に置く。抽出元（dual-reviewer-rebuild）と抽出先（ReviewCompass）の対応を、機能ごと・成果物ごとに一覧化する。フェーズ 1 抽出作業の入り口として使う。
+
+#### 5.20.1 雛形の構造
+
+各機能について、次の 3 項目を記録する：
+
+- **抽出元パス**：dual-reviewer-rebuild の具体パス
+- **抽出先パス**：ReviewCompass の具体パス（§4 ディレクトリ構造に従う）
+- **抽出時のクリーニング作業**：自己適用前提の除去、命名変更、自己適用前提の抽象化など
+
+#### 5.20.2 機能別対応表（初版骨子）
+
+##### foundation（基盤機能）
+
+| 抽出元 | 抽出先 | クリーニング |
+|---|---|---|
+| `.kiro/specs/dual-reviewer-foundation/requirements.md` | `docs/operations/FOUNDATION.md`（§5.18.16） | 機能名 dual-reviewer-* → ReviewCompass の機能名、自己適用表現の除去 |
+| `.kiro/specs/dual-reviewer-foundation/design.md` | 同上（§5.18 の継承方針に従い再編） | 同上 |
+| `runtime/foundation/layer1_framework.yaml` | `schemas/foundation/layer1_framework.yaml` | パス相対化 |
+| `runtime/foundation/metadata_contract.yaml` | `schemas/foundation/metadata_contract.yaml` | パス相対化 |
+| `runtime/schemas/review_case.schema.json` | `schemas/domain/review_case.schema.json` | パス相対化 |
+| `runtime/schemas/finding.schema.json` | `schemas/domain/finding.schema.json` | パス相対化 |
+| `runtime/schemas/impact_score.schema.json` | `schemas/domain/impact_score.schema.json` | パス相対化 |
+| `runtime/schemas/failure_observation.schema.json` | `schemas/domain/failure_observation.schema.json` | パス相対化 |
+| `runtime/schemas/necessity_judgment.schema.json` | `schemas/domain/necessity_judgment.schema.json` | パス相対化 |
+| `runtime/validators/contracts/validator_result.schema.json` | `schemas/validators/validator_result.schema.json` | パス相対化 |
+| `runtime/validators/contracts/invalidation_marker.schema.json` | `schemas/validators/invalidation_marker.schema.json` | パス相対化 |
+| `runtime/prompts/primary_detection/primary_reviewer.prompt.md` | `templates/prompts/primary_detection/primary_reviewer.prompt.md` | パス相対化、prompt 内容のレビューと一般化 |
+| `runtime/prompts/adversarial_review/adversarial_reviewer.prompt.md` | `templates/prompts/adversarial_review/adversarial_reviewer.prompt.md` | 同上 |
+| `runtime/prompts/judgment/judgment_reviewer.prompt.md` | `templates/prompts/judgment/judgment_reviewer.prompt.md` | 同上 |
+| `runtime/config/config.yaml.template` | `templates/config/config.yaml.template` | §5.18.15 残課題（reviewcompass.yaml との境界）の確定後に整備 |
+| `runtime/config/terminology.yaml.template` | `templates/config/terminology.yaml.template` | パス相対化 |
+
+##### runtime（実行時機能）
+
+| 抽出元 | 抽出先 | クリーニング |
+|---|---|---|
+| `.kiro/specs/dual-reviewer-runtime/requirements.md` | `docs/operations/RUNTIME.md`（§5.15.8） | 自己適用表現の除去、実行方式名の置換（§5.15.6） |
+| `.kiro/specs/dual-reviewer-runtime/design.md` | 同上 | 同上、ファイル名置換（v2/ → internal/、review_artifact.json → review_taxonomy.json 等） |
+| `scripts/run_review_session.rb` 等の実行スクリプト | （実装は移植しない、§2.2 クリーンスレート） | 思想のみ継承 |
+
+##### evaluation（評価機能）
+
+| 抽出元 | 抽出先 | クリーニング |
+|---|---|---|
+| `.kiro/specs/dual-reviewer-evaluation/requirements.md` | `docs/operations/EVALUATION.md`（§5.17.14） | 機能名置換、実行方式名置換（single/dual/dual+judgment → primary/adversarial/judgment、§5.17.8）、自己適用表現の除去 |
+| `.kiro/specs/dual-reviewer-evaluation/design.md` | 同上 | 同上、固定パス（experiments/analysis/／experiments/runs/）の抽象化 |
+| `scripts/evaluation/*.rb`（実装 18 ファイル） | （実装は移植しない、§2.2 クリーンスレート） | 思想・構造のみ継承（5 段パイプライン、4 状態区分、3 階層 2 層指標等） |
+
+##### analysis（分析機能、旧 paper-interface）
+
+| 抽出元 | 抽出先 | クリーニング |
+|---|---|---|
+| `.kiro/specs/dual-reviewer-paper-interface/requirements.md` | `docs/operations/ANALYSIS.md`（§5.14.7） | 機能名 paper-interface → analysis（§5.15.6）、自己適用表現の除去 |
+| `.kiro/specs/dual-reviewer-paper-interface/design.md` | 同上 | 同上、§5.14 の役割拡張（論文用以外に運用ダッシュボード・週次・監査）を反映 |
+| `scripts/paper_interface/*.rb` | （実装は移植しない） | 思想のみ継承 |
+
+##### workflow-management（旧 implementation-governance）
+
+| 抽出元 | 抽出先 | クリーニング |
+|---|---|---|
+| `.kiro/specs/dual-reviewer-implementation-governance/requirements.md` | `docs/operations/WORKFLOW_MANAGEMENT.md` | 機能名 implementation-governance → workflow-management（§5.15.6）、§5.4 軽量化方針に従い大部分を削減 |
+| `.kiro/specs/dual-reviewer-implementation-governance/design.md` | 同上 | 同上 |
+| `scripts/governance/*.rb` | （実装は移植しない、軽量版を新規実装） | §5.4 の軽量化方針に従い静的 YAML 検査に置換 |
+
+##### self-improvement（改善機能、workflow 層のみ）
+
+| 抽出元 | 抽出先 | クリーニング |
+|---|---|---|
+| `.kiro/specs/dual-reviewer-self-improvement/requirements.md` | `docs/operations/SELF_IMPROVEMENT.md`（§5.16.12） | 旧 8 要件のうち workflow 層改善向け部分のみ継承、§5.16 の 8 構成で再設計 |
+| `.kiro/specs/dual-reviewer-self-improvement/design.md` | 同上 | 同上 |
+| `scripts/self_improvement/*.rb`（旧 8 モジュール） | （継承 4 モジュール、新規実装 4 モジュール、§5.16.11） | 継承可能：decision_adoption_model／rollback_model／pipeline_driver／learning_layout。新規：input_model／proposal_model／replay_backtest_model 相当／signal_extraction |
+
+##### conformance-evaluation（新規 7 番目機能）
+
+| 抽出元 | 抽出先 | クリーニング |
+|---|---|---|
+| `.kiro/methodology/dual-reviewer-spec-driven-paper/v3-plan.md` | `docs/operations/CONFORMANCE_EVALUATION.md`（§5.10.7） | future feature 記述を実機能仕様として書き起こし、12 criteria 構造（§5.10.2）を明示 |
+
+#### 5.20.3 正本文書の対応表
+
+| 抽出元 | 抽出先 |
+|---|---|
+| `operations/REVIEW_PROTOCOL.md` | `docs/operations/REVIEW_PROTOCOL.md`（§6 実装適合レビューを統合、§5.9） |
+| `operations/HUMAN_WORKFLOW.md` | `docs/operations/HUMAN_WORKFLOW.md` |
+| `operations/DATA_INVALIDATION_POLICY.md` | `docs/operations/DATA_INVALIDATION_POLICY.md` |
+| `operations/DEPLOYMENT_MODEL.md` | `docs/operations/DEPLOYMENT_MODEL.md` |
+| `operations/TRUST_BOUNDARY.md` | `docs/operations/TRUST_BOUNDARY.md` |
+| `operations/WORKFLOW_OVERVIEW.md` | `docs/operations/WORKFLOW_OVERVIEW.md`（§5.4 軽量化方針を反映） |
+| `docs/coordination/workflow-repair-procedure.md` | `docs/operations/REOPEN_PROCEDURE.md`（§5.6 機械強制を反映） |
+| リポジトリ直下 CONVENTIONS.md／DOCUMENT_INDEX.md／EVIDENCE_PROTOCOL.md／MIGRATION_MANIFEST.md／SELF_IMPROVEMENT_LOOP.md／SYSTEM_BOUNDARY.md／REPRODUCIBILITY_CONTRACT.md／README.md | `docs/operations/` に集約（§3.2） |
+
+#### 5.20.4 規律ファイルの対応表
+
+| 抽出元 | 抽出先 |
+|---|---|
+| `.kiro/memory/discipline_*.md`（活用される規律 8 件程度） | `docs/disciplines/discipline_*.md`（status: enforced、§5.9.4） |
+| `.kiro/memory/discipline_review_judgment_patterns.md`（23 パターン） | `docs/archive/disciplines/<日付>/discipline_review_judgment_patterns.md`（§5.9.4） |
+| `.kiro/memory/discipline_review_necessity_judgment.md`（必要性 5 観点、参照ゼロ） | `docs/archive/disciplines/<日付>/`（§5.9.4） |
+| `operations/disciplines/discipline_*.md`（7 件） | `docs/disciplines/discipline_*.md` |
+
+#### 5.20.5 雛形の運用方法
+
+- フェーズ 1 抽出作業の入り口として、本節を出発点に `docs/extraction-mapping.md` を作成する
+- 抽出を進めながら、各成果物の抽出完了日と備考を `docs/extraction-mapping.md` に追記する
+- 雛形は不完全な初版であり、フェーズ 1 着手時に網羅性と粒度を見直す
+- 本節は計画書の正本、`docs/extraction-mapping.md` はフェーズ 1 進行中の作業記録（性格が違う）
+
 ## 6. 統合する課題と機能採用判断（本セッション発見の 5 つ ＋ 機能採用 1 件）
 
 それぞれを再構築の初期設計に反映する：
