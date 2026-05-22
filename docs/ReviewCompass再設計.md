@@ -8507,3 +8507,142 @@ dogfeedingについて考える。ReviewCompass自体の開発意図は決まっ
 案 R
 ```
 
+
+
+------
+
+判断材料を整理して提示します。
+
+## 別マシンに移すべき項目を 3 層に分けて整理
+
+### 層 1：リポジトリ本体（git で同期）
+
+`git clone` または `git pull` で取得できる：
+
+- 計画書：`.kiro/methodology/dual-reviewer-spec-driven-paper/reviewcompass-reconstruction-plan-2026-05-21.md`（3094 行）
+- ReviewCompass 向け意図文書：`.kiro/methodology/reviewcompass/intent/INTENT.md`／NON_GOALS.md／DESIGN_PRINCIPLES.md／TRACEABILITY.md
+- ReviewCompass再設計.md：`docs/ReviewCompass再設計.md`
+- サブツリー：`dual-reviewer-rebuild/` 配下全体
+- ルート CLAUDE.md：cc-sdd テンプレート
+
+→ 別マシンで `git clone https://github.com/kenoogl/Rwiki-dev.git` してから `git checkout claude/v2-acquisition-code-mod` で OK。
+
+### 層 2：git 非追跡だが重要なファイル（別途コピーが必要）
+
+- **`TODO_NEXT_SESSION.md`**（セッション 18 の起点）：156 行、セッション 18 で最初に読むべき文書
+- **`docs/DR-rebuild-log-13.md`**：セッション 13 のログ
+- **`docs/DR-rebuild-log-14.md`**：セッション 14 のログ（未追跡）
+- **`docs/DR-build-log-15.md`**：セッション 15 のログ（未追跡）
+- **`.claude/settings.local.json`**：プロジェクト固有のローカル設定
+- **`.agents/`、`AGENTS.md`**：用途不明（未追跡）
+
+→ これらは USB／クラウドストレージ等でコピーする必要があります。
+
+### 層 3：Claude Code 側の設定と記憶（重要）
+
+Claude Code がこのプロジェクトで「同様の動作」をするために必要なもの。
+
+#### 3-1：個人記憶（自動メモリ）
+
+場所：`~/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/`
+
+内容：
+
+- `MEMORY.md`（索引）
+- 12 件の feedback_*.md（応答品質の規律、起動時自動ロード）：
+  - feedback_intent_conformance_is_the_acceptance_gate.md
+  - feedback_standing_directives_are_hard_constraints.md
+  - feedback_no_unilateral_approach_change.md
+  - feedback_check_logs_and_git_not_memory.md
+  - feedback_separate_facts_from_interpretation.md
+  - feedback_completion_verification_protocol.md
+  - feedback_concise_complete_report.md
+  - feedback_approval_required.md
+  - feedback_reactive_rewriting_model.md
+  - feedback_multi_file_dependency_precheck.md
+  - feedback_pre_action_checklist.md
+  - feedback_plain_japanese.md
+- 参照層のその他の feedback_*.md（必要時に grep で参照）
+
+これらは Claude が「あなた固有の応答品質規律」を覚えている根拠です。コピーしないと、別マシンで Claude が同じ応答品質規律を持たない（混乱の元）。
+
+#### 3-2：Claude Code 設定
+
+場所：`~/.claude/` 配下
+
+- `~/.claude/CLAUDE.md`：あなたの全プロジェクト共通の指示（「常に日本語で会話する」「ユーザの指示どおりに処理する」「TDD」「2 スペースインデント」等）
+- `~/.claude/settings.json`：Claude Code の動作設定
+- `~/.claude/hooks/`：フックスクリプト（`jargon-check.sh` 等、応答品質を機械強制する）
+- `~/.claude/keybindings.json`：キーバインド（あれば）
+
+#### 3-3：パスの違いに注意
+
+- 現マシン：`/Users/keno/.claude/` と `/Users/Daily/Development/Rwiki-v2-code-mod/`
+- 別マシン：ユーザー名やホームディレクトリが違う可能性
+- 個人記憶のパス：`/Users/keno/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/` は、Claude Code が自動的にプロジェクトパスから生成するため、別マシンでも作業ディレクトリのパスが同じならパスが一致する
+- 作業ディレクトリのパスが違う場合：個人記憶ディレクトリ名が変わり、自動ロードされない可能性あり
+
+### 層 4：環境（Ruby／Python／gh／git）
+
+- **Ruby**：dual-reviewer-rebuild の実装が Ruby（テスト実行に必要、ただし ReviewCompass では使わない予定）
+- **Python**：ReviewCompass の実装言語（フェーズ 3 以降で必要）
+- **git**：必須
+- **gh**（GitHub CLI）：PR 作成等で使う場合
+- **大規模言語モデルの API キー**：実 LLM レビューを動かす場合（フェーズ 4 第 2 サイクル以降）
+
+## 推奨される移行手順
+
+1. **リポジトリの同期**：
+
+   ```
+   git clone https://github.com/kenoogl/Rwiki-dev.git
+   cd Rwiki-dev
+   git checkout claude/v2-acquisition-code-mod
+   ```
+
+2. **git 非追跡ファイルのコピー**：
+
+   - `TODO_NEXT_SESSION.md` を必ずコピー
+   - `.claude/settings.local.json` をコピー
+   - DR-rebuild-log-* と DR-build-log-* をコピー（過去の議論経緯）
+
+3. **Claude Code 個人記憶のコピー**：
+
+   - `~/.claude/projects/-Users-Daily-Development-Rwiki-dev/memory/` 全体を、別マシンの対応する場所にコピー
+   - 別マシンでも作業ディレクトリのパスを `/Users/Daily/Development/Rwiki-v2-code-mod` に揃えるか、新しいパスに合わせてディレクトリ名を変える必要がある
+
+4. **Claude Code 全体設定のコピー**：
+
+   - `~/.claude/CLAUDE.md`
+   - `~/.claude/settings.json`
+   - `~/.claude/hooks/` 配下のフックスクリプト
+
+5. **環境のインストール**：
+
+   - Ruby、Python、git、gh、Claude Code 本体
+
+6. **動作確認**：
+
+   - 別マシンで Claude Code を起動
+   - 個人記憶の 12 件が起動時自動ロードされるか確認
+   - フックが動作するか確認（jargon-check.sh）
+   - `TODO_NEXT_SESSION.md` を読んで、セッション 18 の起点を確認
+
+## 確認したい点（重要）
+
+私が完全には把握していない情報があります：
+
+1. **別マシンのユーザー名と作業ディレクトリのパス**
+   - 同じ `keno` ユーザーで `/Users/Daily/Development/Rwiki-v2-code-mod` を使うのか、別のパスを使うのか
+   - 別パスの場合、個人記憶のディレクトリ名（プロジェクトパスから自動生成）が変わるため、対応が必要
+2. **API キーや認証情報の扱い**
+   - 大規模言語モデルの API キー、GitHub の認証情報など
+   - `~/.claude/` 配下に保存されている認証情報があれば、それらの移行が必要
+3. **`.agents/` と `AGENTS.md` の正体**
+   - これらは未追跡で、私が中身を見ていません
+   - 移行対象に含めるべきか、ユーザー判断が必要
+4. **複数マシン間の同期方針**
+   - 一回限りの移動か、両マシンで作業を続けるのか
+   - 後者の場合、`TODO_NEXT_SESSION.md` 等の git 非追跡ファイルの同期方法を別途決める必要
+
+これらをご確認の上で、必要な手順を進めてください。
