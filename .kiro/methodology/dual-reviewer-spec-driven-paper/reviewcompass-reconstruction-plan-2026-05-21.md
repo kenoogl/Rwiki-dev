@@ -3,6 +3,7 @@
 _作成日: 2026-05-21（セッション 14 末）_
 _位置付け: 現リポジトリ（dual-reviewer-rebuild）の知見を抽出し、ReviewCompass という名称の新リポジトリでデプロイ可能な形に再構築する計画。本セッションで利用者が決定した戦略転換を記録し、抽出計画・再構築方針・段階的スケジュールを示す_
 _配置先：新リポジトリ作成時に ReviewCompass 側へ移管する暫定保管。現時点は現リポジトリ内に置く_
+_新リポジトリ URL: <https://github.com/kenoogl/ReviewCompass>（セッション 18 で空コミット 1 件のみ先行作成、本格的な配置はフェーズ 2 で実施）_
 
 ---
 
@@ -143,6 +144,8 @@ self-improvement の扱い：仕様 Requirement 2 で 5 層（prompt ／ policy 
 - アプリ側に配置するもの（記入用）とツール側に配置するもの（プロンプト本体）を分ける
 
 ## 4. ReviewCompass リポジトリの初期構造案
+
+新リポジトリ URL：<https://github.com/kenoogl/ReviewCompass>（セッション 18 で空コミットのみ先行作成。下記の構造に従った中身の配置はフェーズ 2 で実施）
 
 対象 7 機能：`foundation` / `runtime` / `evaluation` / `analysis` / `workflow-management` / `self-improvement`（workflow 層のみ） / `conformance-evaluation`（新規、§5.10）。旧 `paper-interface` を `analysis` に、旧 `implementation-governance` を `workflow-management` に改名済み。
 
@@ -3023,7 +3026,7 @@ ReviewCompass/                           # フェーズ 2 で新設
 
 完了条件（すべて満たす）：
 
-- GitHub 上に新リポジトリが存在し、URL が本計画書に追記されている
+- GitHub 上に新リポジトリが存在し、URL が本計画書に追記されている（**セッション 18 で先行達成**：<https://github.com/kenoogl/ReviewCompass>、空コミット `6aa73d9` 1 件、Public、main ブランチ。本書冒頭・§4 にも URL を記載）
 - フェーズ 1 の抽出物が新リポジトリの該当パスに配置済み（`docs/operations/EVALUATION.md`／`docs/operations/FOUNDATION.md`／`docs/operations/CONFORMANCE_EVALUATION.md`／`docs/operations/ANALYSIS.md`／`docs/operations/RUNTIME.md`／`docs/operations/SELF_IMPROVEMENT.md` を含む 7 機能分の正本、§5.14〜§5.18 の段階的導入で定義した配置先）
 - foundation 由来の成果物が §4 ディレクトリ構造に従って配置済み（`schemas/foundation/`、`schemas/domain/`、`schemas/validators/`、`templates/prompts/`、`templates/config/`）
 - README.md に「目的」「対象利用者」「スタブ完成までの段取り」の 3 つの見出しが存在する（各 1 ページ以内）
